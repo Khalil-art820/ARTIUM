@@ -92,3 +92,4 @@ npm run preview
   instead of being pasted inside the code, so your editor stays fast.
 - Icons come from `lucide-react`; fonts (Fraunces, Inter, JetBrains Mono) load
   from Google Fonts, so the first load needs an internet connection.
+# artium
