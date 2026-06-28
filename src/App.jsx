@@ -7,6 +7,9 @@ import {
   Pencil, Plus, Trash2, Home, Upload,
 } from "lucide-react";
 import AMBIENT_AUDIO_SRC from "./assets/ambient.mp3";
+import { useAuth } from "./contexts/AuthContext";
+import { supabase } from "./lib/supabase";
+import { toDbProfile, fromDbProfile } from "./lib/profiles";
 
 /* ---------------------------------------------------------------- */
 /* THEME                                                              */
@@ -54,6 +57,16 @@ const CONSERVATORIES = [
   { id: "eisler", name: "Hanns Eisler Berlin", short: "HfM", city: "Berlin", country: "Germany", x: 537, y: 96, founded: 1950, code: "DE-BE" },
   { id: "rcmt", name: "The Royal Conservatory", short: "TRC", city: "Toronto", country: "Canada", x: 279, y: 118, founded: 1886, code: "CA-ON" },
   { id: "sydney", name: "Sydney Conservatorium", short: "SCM", city: "Sydney", country: "Australia", x: 920, y: 316, founded: 1915, code: "AU-SY" },
+  { id: "milan", name: "Milan Conservatory 'Giuseppe Verdi'", short: "Cons. Verdi", city: "Milan", country: "Italy", x: 525, y: 113, founded: 1807, code: "IT-MI" },
+  { id: "hague", name: "Royal Conservatoire The Hague", short: "KC Den Haag", city: "The Hague", country: "Netherlands", x: 512, y: 97, founded: 1826, code: "NL-ZH" },
+  { id: "geneva", name: "Haute École de Musique de Genève", short: "HEM Genève", city: "Geneva", country: "Switzerland", x: 517, y: 112, founded: 1835, code: "CH-GE" },
+  { id: "helsinki", name: "Sibelius Academy", short: "Sibelius", city: "Helsinki", country: "Finland", x: 569, y: 77, founded: 1882, code: "FI-HE" },
+  { id: "stpetersburg", name: "St Petersburg Conservatory", short: "SPb Cons.", city: "St Petersburg", country: "Russia", x: 584, y: 78, founded: 1862, code: "RU-78" },
+  { id: "singapore", name: "Yong Siew Toh Conservatory", short: "YST", city: "Singapore", country: "Singapore", x: 788, y: 222, founded: 2001, code: "SG-01" },
+  { id: "nec", name: "New England Conservatory", short: "NEC", city: "Boston", country: "USA", x: 302, y: 121, founded: 1867, code: "US-MA" },
+  { id: "peabody", name: "Peabody Institute", short: "Peabody", city: "Baltimore", country: "USA", x: 288, y: 129, founded: 1857, code: "US-MD" },
+  { id: "saopaulo", name: "Escola de Música da USP", short: "USP Música", city: "São Paulo", country: "Brazil", x: 370, y: 283, founded: 1938, code: "BR-SP" },
+  { id: "capetown", name: "South African College of Music", short: "SACM", city: "Cape Town", country: "South Africa", x: 551, y: 309, founded: 1910, code: "ZA-WC" },
 ];
 
 const TASTE_OPTIONS = [
@@ -103,7 +116,22 @@ const INSTRUMENT_OPTIONS = [
   "Oboe", "Bassoon", "Trumpet", "Horn", "Trombone", "Guitar", "Harp", "Percussion", "Organ", "Composition",
 ];
 
+// A signup's profile data is stashed here while we wait for the user to click
+// the email confirmation link — only then do we have a session to insert with.
+function pendingDraftKey(email) { return `artium_pending_${email.trim().toLowerCase()}`; }
+function savePendingDraft(email, draft) {
+  try { localStorage.setItem(pendingDraftKey(email), JSON.stringify(draft)); } catch {}
+}
+function loadPendingDraft(email) {
+  try { const raw = localStorage.getItem(pendingDraftKey(email)); return raw ? JSON.parse(raw) : null; } catch { return null; }
+}
+function clearPendingDraft(email) {
+  try { localStorage.removeItem(pendingDraftKey(email)); } catch {}
+}
+
 const emptyDraft = () => ({
+  id: null,
+  email: "", password: "",
   name: "", years: "", instrument: "",
   conservatoryId: null,
   tastes: [],
@@ -505,13 +533,58 @@ function WorldMap({ selectedId, onSelect, studentsByCons, dotted = true, height 
 /* APP                                                                 */
 /* ---------------------------------------------------------------- */
 export default function App() {
+  const { user: authUser, profile: authProfile, loading: authLoading } = useAuth();
   const [screen, setScreen] = useState("entry");
   const [appTab, setAppTab] = useState("map");
   const [editingProfile, setEditingProfile] = useState(false);
   const [previewOnly, setPreviewOnly] = useState(false);
+  const [authError, setAuthError] = useState("");
 
   const [students, setStudents] = useState(() => seedTeaching(SAMPLE_STUDENTS));
   const [myProfile, setMyProfile] = useState(null);
+
+  // Returning signed-in user: load their profile and skip straight to the app.
+  // Newly-confirmed user (clicked the email link): their profiles row doesn't
+  // exist yet — create it now from the draft we stashed locally at signup time.
+  useEffect(() => {
+    if (authLoading) return;
+    if (authProfile) {
+      const me = fromDbProfile(authProfile);
+      setMyProfile(me);
+      setStudents((arr) => [...arr.filter((s) => s.id !== me.id), me]);
+      if (screen === "entry" || screen === "landing" || screen === "login" || screen === "confirmEmail") {
+        setSelectedConsId(me.conservatoryId);
+        setScreen("app");
+        setAppTab("map");
+      }
+      return;
+    }
+    if (authUser) {
+      const pending = loadPendingDraft(authUser.email);
+      if (!pending) return;
+      supabase.from("profiles").insert(toDbProfile(pending, authUser.id)).then(({ error }) => {
+        if (error) { setAuthError(error.message); return; }
+        clearPendingDraft(authUser.email);
+        const me = { id: authUser.id, name: pending.name, instrument: pending.instrument, conservatoryId: pending.conservatoryId, year: pending.years, bio: pending.bio, tastes: pending.tastes, pieces: pending.pieces, videoLink: pending.videoLink, top: pending.top, flop: pending.flop, photoUrl: pending.photoUrl, teaching: pending.teaching, online: true };
+        setMyProfile(me);
+        setStudents((arr) => [...arr.filter((s) => s.id !== me.id), me]);
+        setSelectedConsId(me.conservatoryId);
+        setScreen("app");
+        setAppTab("map");
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, authProfile, authUser]);
+
+  // Pull in any real signups so they show up on the map alongside the sample data.
+  useEffect(() => {
+    supabase.from("profiles").select("*").eq("approved", true).then(({ data, error }) => {
+      if (error || !data) return;
+      const real = data.map(fromDbProfile);
+      const realIds = new Set(real.map((r) => r.id));
+      setStudents((arr) => [...arr.filter((s) => !realIds.has(s.id)), ...real]);
+    });
+  }, []);
 
   const [learnerProfile, setLearnerProfile] = useState(null);
   const [teachRequests, setTeachRequests] = useState({});
@@ -550,7 +623,24 @@ export default function App() {
     setDraft(emptyDraft());
     setStep(0);
     setEditingProfile(false);
+    setAuthError("");
     setScreen("signup");
+  }
+  function startLogin() {
+    setAuthError("");
+    setScreen("login");
+  }
+  async function handleLogin(email, password) {
+    setAuthError("");
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) setAuthError(error.message);
+  }
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    setMyProfile(null);
+    setStudents((arr) => arr.filter((s) => s.id !== myProfile?.id));
+    setScreen("landing");
+    setAppTab("map");
   }
   function startPreview() {
     setPreviewOnly(true);
@@ -586,20 +676,35 @@ export default function App() {
   function toggleTaste(t) {
     setDraft((d) => ({ ...d, tastes: d.tastes.includes(t) ? d.tastes.filter((x) => x !== t) : [...d.tastes, t] }));
   }
-  function submitApplication() {
+  async function submitApplication() {
+    setAuthError("");
     if (editingProfile) {
+      const { error } = await supabase.from("profiles").update(toDbProfile(draft, myProfile.id)).eq("id", myProfile.id);
+      if (error) { setAuthError(error.message); return; }
       const updated = { ...myProfile, ...draft };
       setMyProfile(updated);
-      setStudents((arr) => arr.map((s) => (s.id === "me" ? updated : s)));
+      setStudents((arr) => arr.map((s) => (s.id === myProfile.id ? updated : s)));
       setScreen("app"); setAppTab("profile");
     } else {
-      setScreen("pending");
+      const { data, error } = await supabase.auth.signUp({ email: draft.email, password: draft.password });
+      if (error) { setAuthError(error.message); return; }
+      if (data.session && data.user) {
+        // Email confirmation is off — we already have an active session, insert right away.
+        const { error: insertError } = await supabase.from("profiles").insert(toDbProfile(draft, data.user.id));
+        if (insertError) { setAuthError(insertError.message); return; }
+        setDraft((d) => ({ ...d, id: data.user.id }));
+        setScreen("pending");
+      } else {
+        // Email confirmation required — stash the draft and wait for the user to click the link.
+        savePendingDraft(draft.email, draft);
+        setScreen("confirmEmail");
+      }
     }
   }
   function simulateApproval() {
-    const me = { id: "me", name: draft.name || "Your name", instrument: draft.instrument, conservatoryId: draft.conservatoryId, year: draft.years || "Current student", bio: draft.bio, tastes: draft.tastes, pieces: draft.pieces, videoLink: draft.videoLink, top: draft.top, flop: draft.flop, photoUrl: draft.photoUrl, teaching: draft.teaching, online: true };
+    const me = { id: draft.id, name: draft.name || "Your name", instrument: draft.instrument, conservatoryId: draft.conservatoryId, year: draft.years || "Current student", bio: draft.bio, tastes: draft.tastes, pieces: draft.pieces, videoLink: draft.videoLink, top: draft.top, flop: draft.flop, photoUrl: draft.photoUrl, teaching: draft.teaching, online: true };
     setMyProfile(me);
-    setStudents((arr) => [...arr.filter((s) => s.id !== "me"), me]);
+    setStudents((arr) => [...arr.filter((s) => s.id !== me.id), me]);
     setPreviewOnly(false);
     setSelectedConsId(me.conservatoryId);
     setScreen("app"); setAppTab("map");
@@ -662,7 +767,7 @@ export default function App() {
         />
       )}
 
-      {screen === "entry" && <EntryGate onLearner={chooseLearner} onStudent={chooseStudent} />}
+      {screen === "entry" && <EntryGate onLearner={chooseLearner} onStudent={chooseStudent} onLogin={startLogin} />}
       {screen === "learnerSignup" && <LearnerSignup onSubmit={submitLearner} onBack={backToEntry} />}
       {screen === "learnerMap" && (
         <LearnerScreen
@@ -678,15 +783,17 @@ export default function App() {
         />
       )}
 
-      {screen === "landing" && <Landing onApply={startApply} onPreview={startPreview} onProfile={goToProfile} myProfile={myProfile} musicOn={musicOn} onMusicToggle={toggleMusic} audioRef={audioRef} />}
+      {screen === "landing" && <Landing onApply={startApply} onLogin={startLogin} onPreview={startPreview} onProfile={goToProfile} myProfile={myProfile} musicOn={musicOn} onMusicToggle={toggleMusic} audioRef={audioRef} />}
+      {screen === "login" && <LoginScreen onSubmit={handleLogin} onBack={goHome} error={authError} />}
       {screen === "signup" && (
         <SignupFlow
           draft={draft} update={update} toggleTaste={toggleTaste} step={step} setStep={setStep}
-          editing={editingProfile} onSubmit={submitApplication}
+          editing={editingProfile} onSubmit={submitApplication} authError={authError}
           onCancel={() => setScreen(editingProfile ? "app" : "landing")}
           onHome={goHome}
         />
       )}
+      {screen === "confirmEmail" && <ConfirmEmail email={draft.email} onLogin={startLogin} onHome={goHome} />}
       {screen === "pending" && <Pending name={draft.name} onApprove={simulateApproval} onHome={goHome} />}
       {screen === "app" && (
         <AppShell
@@ -726,7 +833,7 @@ export default function App() {
             />
           )}
           {appTab === "profile" && !selectedStudentId && myProfile && (
-            <MyProfile profile={myProfile} onEdit={editProfile} onBack={() => setAppTab("map")} />
+            <MyProfile profile={myProfile} onEdit={editProfile} onLogout={handleLogout} onBack={() => setAppTab("map")} />
           )}
           {selectedStudentId && myProfile && (
             <StudentProfile
@@ -747,16 +854,20 @@ export default function App() {
 /* ---------------------------------------------------------------- */
 /* LANDING                                                             */
 /* ---------------------------------------------------------------- */
-function Landing({ onApply, onPreview, onProfile, myProfile, musicOn, onMusicToggle, audioRef }) {
+function Landing({ onApply, onLogin, onPreview, onProfile, myProfile, musicOn, onMusicToggle, audioRef }) {
   return (
     <div style={{ color: C.ivory }}>
       <div className="max-w-6xl mx-auto px-6 pt-8 pb-4 flex items-center justify-between">
         <Logo slogan />
         <div className="hidden sm:flex items-center gap-3">
           <MusicBtn playing={musicOn} onToggle={onMusicToggle} audioRef={audioRef} />
-          <GhostBtn onClick={onProfile} icon={Users} disabled={!myProfile}>My profile</GhostBtn>
-          {myProfile && (
-            <Avatar name={myProfile.name} id="me" size={38} photoUrl={myProfile.photoUrl} online />
+          {myProfile ? (
+            <>
+              <GhostBtn onClick={onProfile} icon={Users}>My profile</GhostBtn>
+              <Avatar name={myProfile.name} id="me" size={38} photoUrl={myProfile.photoUrl} online />
+            </>
+          ) : (
+            <GhostBtn onClick={onLogin} icon={Users}>Log in</GhostBtn>
           )}
         </div>
       </div>
@@ -771,8 +882,10 @@ function Landing({ onApply, onPreview, onProfile, myProfile, musicOn, onMusicTog
             Artium connects piano students across the world's conservatories — share repertoire, technical language, interpretation traditions, exam culture, musical tastes and more. Message one another, conservatory to conservatory!
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
-            <PrimaryBtn onClick={onApply} icon={ArrowRight}>Sign up</PrimaryBtn>
-            <span className="text-xs" style={{ color: C.ivoryDim, fontFamily: FONT_MONO }}>Free to join.</span>
+            {!myProfile && <PrimaryBtn onClick={onApply} icon={ArrowRight}>Sign up</PrimaryBtn>}
+            <span className="text-xs" style={{ color: C.ivoryDim, fontFamily: FONT_MONO }}>
+              {myProfile ? "You're signed in." : "Free to join."}
+            </span>
           </div>
         </div>
         <div className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${C.inkLine}`, background: C.inkSoft }}>
@@ -823,9 +936,13 @@ function Landing({ onApply, onPreview, onProfile, myProfile, musicOn, onMusicTog
 /* ---------------------------------------------------------------- */
 const STEP_LABELS = ["Introduce yourself", "Choose your conservatory", "Your musical voice", "Current repertoire", "Top & Flop", "Teaching", "Review & submit"];
 
-function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubmit, onCancel, onHome }) {
-  const lastStep = STEP_LABELS.length - 1;
+function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubmit, onCancel, onHome, authError }) {
+  const [submitting, setSubmitting] = useState(false);
+  const labels = editing ? STEP_LABELS : ["Create your account", ...STEP_LABELS];
+  const lastStep = labels.length - 1;
+  const idx = editing ? step : step - 1;
   const canNext = [
+    !editing ? draft.email.trim().length > 3 && draft.password.length >= 6 : null,
     draft.name.trim().length > 1 && !!draft.instrument,
     !!draft.conservatoryId,
     draft.tastes.length >= 3,
@@ -833,7 +950,13 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
     true,
     !draft.teaching.open || !!draft.teaching.mode,
     true,
-  ][step];
+  ].filter((v) => v !== null)[step];
+
+  async function handleSubmit() {
+    setSubmitting(true);
+    await onSubmit();
+    setSubmitting(false);
+  }
 
   return (
     <div className="min-h-full" style={{ background: C.ink, color: C.ivory }}>
@@ -848,23 +971,30 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
         <div className="mt-8 flex items-center gap-4">
           <span style={{ fontFamily: FONT_MONO, color: C.brass, fontSize: 13 }}>Step {ROMAN[step]} of {ROMAN[lastStep]}</span>
           <div className="flex-1 flex gap-1">
-            {STEP_LABELS.map((_, i) => (
+            {labels.map((_, i) => (
               <div key={i} className="flex-1 rounded-full" style={{ height: 3, background: i <= step ? C.brass : C.inkLine }} />
             ))}
           </div>
         </div>
-        <h2 className="mt-5" style={{ fontFamily: FONT_DISPLAY, fontSize: 30, fontWeight: 600 }}>{STEP_LABELS[step]}</h2>
+        <h2 className="mt-5" style={{ fontFamily: FONT_DISPLAY, fontSize: 30, fontWeight: 600 }}>{labels[step]}</h2>
       </div>
 
       <div className="max-w-3xl mx-auto px-6 py-10 lg-fade" key={step}>
-        {step === 0 && <StepIntro draft={draft} update={update} />}
-        {step === 1 && <StepConservatory draft={draft} update={update} />}
-        {step === 2 && <StepTastes draft={draft} toggleTaste={toggleTaste} />}
-        {step === 3 && <StepPieces draft={draft} update={update} />}
-        {step === 4 && <StepTopFlop draft={draft} update={update} />}
-        {step === 5 && <StepTeaching draft={draft} update={update} />}
-        {step === 6 && <StepReview draft={draft} />}
+        {!editing && step === 0 && <StepAccount draft={draft} update={update} error={authError} />}
+        {idx === 0 && <StepIntro draft={draft} update={update} />}
+        {idx === 1 && <StepConservatory draft={draft} update={update} />}
+        {idx === 2 && <StepTastes draft={draft} toggleTaste={toggleTaste} />}
+        {idx === 3 && <StepPieces draft={draft} update={update} />}
+        {idx === 4 && <StepTopFlop draft={draft} update={update} />}
+        {idx === 5 && <StepTeaching draft={draft} update={update} />}
+        {idx === 6 && <StepReview draft={draft} />}
       </div>
+
+      {editing && authError && (
+        <div className="max-w-3xl mx-auto px-6 pb-4">
+          <p className="text-sm" style={{ color: C.burgundy }}>{authError}</p>
+        </div>
+      )}
 
       <div className="max-w-3xl mx-auto px-6 pb-12 flex items-center justify-between">
         <button
@@ -877,7 +1007,9 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
         {step < lastStep ? (
           <PrimaryBtn disabled={!canNext} onClick={() => setStep(step + 1)} icon={ChevronRight}>Continue</PrimaryBtn>
         ) : (
-          <PrimaryBtn onClick={onSubmit} icon={editing ? Check : ArrowRight}>{editing ? "Save changes" : "Submit application"}</PrimaryBtn>
+          <PrimaryBtn disabled={submitting} onClick={handleSubmit} icon={editing ? Check : ArrowRight}>
+            {submitting ? "Submitting…" : editing ? "Save changes" : "Submit application"}
+          </PrimaryBtn>
         )}
       </div>
     </div>
@@ -924,6 +1056,21 @@ function PhotoUpload({ name, photoUrl, onChange }) {
         <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
         <p className="text-xs mt-2" style={{ color: C.ivoryDim, fontFamily: FONT_MONO }}>Optional — JPG or PNG.</p>
       </div>
+    </div>
+  );
+}
+
+function StepAccount({ draft, update, error }) {
+  return (
+    <div>
+      <p className="text-sm mb-6" style={{ color: C.ivoryDim }}>Create the login you'll use to come back and manage your profile.</p>
+      <Field label="Email">
+        <input style={inputStyle} type="email" value={draft.email} onChange={(e) => update({ email: e.target.value })} placeholder="you@example.com" />
+      </Field>
+      <Field label="Password">
+        <input style={inputStyle} type="password" value={draft.password} onChange={(e) => update({ password: e.target.value })} placeholder="At least 6 characters" />
+      </Field>
+      {error && <p className="text-sm" style={{ color: C.burgundy }}>{error}</p>}
     </div>
   );
 }
@@ -1169,6 +1316,66 @@ function Pending({ name, onApprove, onHome }) {
   );
 }
 
+function ConfirmEmail({ email, onLogin, onHome }) {
+  return (
+    <div className="min-h-full flex flex-col" style={{ background: C.ink, color: C.ivory }}>
+      <div className="px-6 py-4 flex items-center gap-5">
+        <Logo size={18} />
+        <HomeBtn onClick={onHome} />
+      </div>
+      <div className="flex-1 flex items-center justify-center px-6">
+        <div className="max-w-md text-center lg-fade">
+          <div className="mx-auto mb-6 rounded-full flex items-center justify-center lg-blink" style={{ width: 64, height: 64, border: `1px solid ${C.brass}` }}>
+            <Music2 color={C.brass} size={26} />
+          </div>
+          <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600 }}>Check your inbox</h2>
+          <p className="mt-3 text-sm" style={{ color: C.ivoryDim, lineHeight: 1.6 }}>
+            We sent a confirmation link to <strong style={{ color: C.ivory }}>{email}</strong>. Click it to activate your account — your profile will be created automatically as soon as you do.
+          </p>
+          <p className="mt-6 text-sm" style={{ color: C.ivoryDim }}>
+            Already confirmed? <button onClick={onLogin} style={{ color: C.brass, fontWeight: 600 }}>Log in</button>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LoginScreen({ onSubmit, onBack, error }) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  async function handleSubmit() {
+    setSubmitting(true);
+    await onSubmit(email, password);
+    setSubmitting(false);
+  }
+  return (
+    <div className="min-h-full flex flex-col" style={{ background: C.ink, color: C.ivory }}>
+      <div className="px-6 py-4 flex items-center gap-5">
+        <Logo size={18} />
+        <HomeBtn onClick={onBack} />
+      </div>
+      <div className="flex-1 flex items-center justify-center px-6">
+        <div className="w-full max-w-sm lg-fade">
+          <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600 }}>Log in</h2>
+          <p className="mt-2 mb-6 text-sm" style={{ color: C.ivoryDim }}>Welcome back.</p>
+          <Field label="Email">
+            <input style={inputStyle} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
+          </Field>
+          <Field label="Password">
+            <input style={inputStyle} type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Your password" />
+          </Field>
+          {error && <p className="text-sm mb-4" style={{ color: C.burgundy }}>{error}</p>}
+          <PrimaryBtn full disabled={submitting || !email || !password} onClick={handleSubmit} icon={ArrowRight}>
+            {submitting ? "Logging in…" : "Log in"}
+          </PrimaryBtn>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ---------------------------------------------------------------- */
 /* APP SHELL                                                          */
 /* ---------------------------------------------------------------- */
@@ -1399,7 +1606,7 @@ function StudentProfile({ student, conservatory, onBack, onMessage, locked, onAp
 /* ---------------------------------------------------------------- */
 /* MY PROFILE                                                         */
 /* ---------------------------------------------------------------- */
-function MyProfile({ profile, onEdit, onBack }) {
+function MyProfile({ profile, onEdit, onLogout, onBack }) {
   const cons = CONSERVATORIES.find((c) => c.id === profile.conservatoryId);
   return (
     <div className="max-w-2xl mx-auto px-6 py-8">
@@ -1411,7 +1618,10 @@ function MyProfile({ profile, onEdit, onBack }) {
             <p className="text-sm" style={{ color: C.ivoryDim }}>{profile.instrument ? `${profile.instrument} · ` : ""}{profile.year} · {cons?.name}, {cons?.city}</p>
           </div>
         </div>
-        <GhostBtn onClick={onEdit} icon={Pencil}>Edit</GhostBtn>
+        <div className="flex items-center gap-2">
+          <GhostBtn onClick={onEdit} icon={Pencil}>Edit</GhostBtn>
+          {onLogout && <GhostBtn onClick={onLogout}>Log out</GhostBtn>}
+        </div>
       </div>
       <p className="mt-5 text-sm" style={{ color: C.ivoryDim, lineHeight: 1.6 }}>{profile.bio || "No bio yet."}</p>
       {(() => {
@@ -1607,7 +1817,7 @@ function StepTeaching({ draft, update }) {
 }
 
 /* ---- First screen: pick your role ---- */
-function EntryGate({ onLearner, onStudent }) {
+function EntryGate({ onLearner, onStudent, onLogin }) {
   return (
     <div className="min-h-full flex flex-col" style={{ background: C.ink, color: C.ivory }}>
       <div className="max-w-5xl w-full mx-auto px-6 pt-10">
@@ -1643,6 +1853,9 @@ function EntryGate({ onLearner, onStudent }) {
               </span>
             </button>
           </div>
+          <p className="text-center mt-8 text-sm" style={{ color: C.ivoryDim }}>
+            Already have a profile? <button onClick={onLogin} style={{ color: C.brass, fontWeight: 600 }}>Log in</button>
+          </p>
         </div>
       </div>
     </div>
