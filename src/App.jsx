@@ -119,18 +119,6 @@ const INSTRUMENT_OPTIONS = [
   "Oboe", "Bassoon", "Trumpet", "Horn", "Trombone", "Guitar", "Harp", "Percussion", "Organ", "Composition",
 ];
 
-// A signup's profile data is stashed here while we wait for the user to click
-// the email confirmation link — only then do we have a session to insert with.
-function pendingDraftKey(email) { return `artium_pending_${email.trim().toLowerCase()}`; }
-function savePendingDraft(email, draft) {
-  try { localStorage.setItem(pendingDraftKey(email), JSON.stringify(draft)); } catch {}
-}
-function loadPendingDraft(email) {
-  try { const raw = localStorage.getItem(pendingDraftKey(email)); return raw ? JSON.parse(raw) : null; } catch { return null; }
-}
-function clearPendingDraft(email) {
-  try { localStorage.removeItem(pendingDraftKey(email)); } catch {}
-}
 
 const emptyDraft = () => ({
   id: null,
@@ -589,7 +577,9 @@ export default function App() {
 
   // Returning signed-in user: load their profile and skip straight to the app.
   // Newly-confirmed user (clicked the email link): their profiles row doesn't
-  // exist yet — create it now from the draft we stashed locally at signup time.
+  // exist yet — create it now from the draft we stashed in their auth metadata
+  // at signup time (stored server-side, so it survives the confirmation link
+  // being opened in a different browser/device than the one used to sign up).
   useEffect(() => {
     if (authLoading) return;
     if (authProfile) {
@@ -604,11 +594,11 @@ export default function App() {
       return;
     }
     if (authUser) {
-      const pending = loadPendingDraft(authUser.email);
+      const pending = authUser.user_metadata?.pendingProfile;
       if (!pending) return;
       supabase.from("profiles").insert(toDbProfile(pending, authUser.id)).then(({ error }) => {
         if (error) { setAuthError(error.message); return; }
-        clearPendingDraft(authUser.email);
+        supabase.auth.updateUser({ data: { pendingProfile: null } });
         const me = { id: authUser.id, name: pending.name, instrument: pending.instrument, conservatoryId: pending.conservatoryId, year: pending.years, bio: pending.bio, tastes: pending.tastes, pieces: pending.pieces, videoLink: pending.videoLink, top: pending.top, flop: pending.flop, photoUrl: pending.photoUrl, teaching: pending.teaching, online: true };
         setMyProfile(me);
         setStudents((arr) => [...arr.filter((s) => s.id !== me.id), me]);
@@ -730,17 +720,22 @@ export default function App() {
       setStudents((arr) => arr.map((s) => (s.id === myProfile.id ? updated : s)));
       setScreen("app"); setAppTab("profile");
     } else {
-      const { data, error } = await supabase.auth.signUp({ email: draft.email, password: draft.password });
+      const { data, error } = await supabase.auth.signUp({
+        email: draft.email,
+        password: draft.password,
+        options: { data: { pendingProfile: draft } },
+      });
       if (error) { setAuthError(error.message); return; }
       if (data.session && data.user) {
         // Email confirmation is off — we already have an active session, insert right away.
         const { error: insertError } = await supabase.from("profiles").insert(toDbProfile(draft, data.user.id));
         if (insertError) { setAuthError(insertError.message); return; }
+        await supabase.auth.updateUser({ data: { pendingProfile: null } });
         setDraft((d) => ({ ...d, id: data.user.id }));
         setScreen("pending");
       } else {
-        // Email confirmation required — stash the draft and wait for the user to click the link.
-        savePendingDraft(draft.email, draft);
+        // Email confirmation required — the draft is stored server-side in the
+        // user's auth metadata, so it's picked up after confirming on any device.
         setScreen("confirmEmail");
       }
     }
