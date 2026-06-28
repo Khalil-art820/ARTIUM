@@ -10,6 +10,9 @@ import AMBIENT_AUDIO_SRC from "./assets/ambient.mp3";
 import { useAuth } from "./contexts/AuthContext";
 import { supabase } from "./lib/supabase";
 import { toDbProfile, fromDbProfile } from "./lib/profiles";
+import L from "leaflet";
+import { MapContainer, TileLayer, Marker, Tooltip } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
 
 /* ---------------------------------------------------------------- */
 /* THEME                                                              */
@@ -45,28 +48,28 @@ const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII"];
 /* DATA                                                                */
 /* ---------------------------------------------------------------- */
 const CONSERVATORIES = [
-  { id: "paris", name: "Conservatoire de Paris", short: "CNSMDP", city: "Paris", country: "France", x: 506, y: 105, founded: 1795, code: "FR-75" },
-  { id: "vienna", name: "University of Music Vienna", short: "mdw", city: "Vienna", country: "Austria", x: 545, y: 107, founded: 1817, code: "AT-01" },
-  { id: "moscow", name: "Moscow Tchaikovsky Conservatory", short: "MGK", city: "Moscow", country: "Russia", x: 604, y: 88, founded: 1866, code: "RU-77" },
-  { id: "juilliard", name: "The Juilliard School", short: "Juilliard", city: "New York", country: "USA", x: 294, y: 126, founded: 1905, code: "US-NY" },
-  { id: "curtis", name: "Curtis Institute of Music", short: "Curtis", city: "Philadelphia", country: "USA", x: 291, y: 128, founded: 1924, code: "US-PA" },
-  { id: "rcm", name: "Royal College of Music", short: "RCM", city: "London", country: "UK", x: 500, y: 98, founded: 1882, code: "UK-LN" },
-  { id: "shanghai", name: "Shanghai Conservatory of Music", short: "SHCM", city: "Shanghai", country: "China", x: 837, y: 150, founded: 1927, code: "CN-SH" },
-  { id: "geidai", name: "Tokyo University of the Arts", short: "Geidai", city: "Tokyo", country: "Japan", x: 888, y: 139, founded: 1887, code: "JP-TK" },
-  { id: "snu", name: "Seoul National University", short: "SNU", city: "Seoul", country: "South Korea", x: 853, y: 134, founded: 1946, code: "KR-SE" },
-  { id: "eisler", name: "Hanns Eisler Berlin", short: "HfM", city: "Berlin", country: "Germany", x: 537, y: 96, founded: 1950, code: "DE-BE" },
-  { id: "rcmt", name: "The Royal Conservatory", short: "TRC", city: "Toronto", country: "Canada", x: 279, y: 118, founded: 1886, code: "CA-ON" },
-  { id: "sydney", name: "Sydney Conservatorium", short: "SCM", city: "Sydney", country: "Australia", x: 920, y: 316, founded: 1915, code: "AU-SY" },
-  { id: "milan", name: "Milan Conservatory 'Giuseppe Verdi'", short: "Cons. Verdi", city: "Milan", country: "Italy", x: 525, y: 113, founded: 1807, code: "IT-MI" },
-  { id: "hague", name: "Royal Conservatoire The Hague", short: "KC Den Haag", city: "The Hague", country: "Netherlands", x: 512, y: 97, founded: 1826, code: "NL-ZH" },
-  { id: "geneva", name: "Haute École de Musique de Genève", short: "HEM Genève", city: "Geneva", country: "Switzerland", x: 517, y: 112, founded: 1835, code: "CH-GE" },
-  { id: "helsinki", name: "Sibelius Academy", short: "Sibelius", city: "Helsinki", country: "Finland", x: 569, y: 77, founded: 1882, code: "FI-HE" },
-  { id: "stpetersburg", name: "St Petersburg Conservatory", short: "SPb Cons.", city: "St Petersburg", country: "Russia", x: 584, y: 78, founded: 1862, code: "RU-78" },
-  { id: "singapore", name: "Yong Siew Toh Conservatory", short: "YST", city: "Singapore", country: "Singapore", x: 788, y: 222, founded: 2001, code: "SG-01" },
-  { id: "nec", name: "New England Conservatory", short: "NEC", city: "Boston", country: "USA", x: 302, y: 121, founded: 1867, code: "US-MA" },
-  { id: "peabody", name: "Peabody Institute", short: "Peabody", city: "Baltimore", country: "USA", x: 288, y: 129, founded: 1857, code: "US-MD" },
-  { id: "saopaulo", name: "Escola de Música da USP", short: "USP Música", city: "São Paulo", country: "Brazil", x: 370, y: 283, founded: 1938, code: "BR-SP" },
-  { id: "capetown", name: "South African College of Music", short: "SACM", city: "Cape Town", country: "South Africa", x: 551, y: 309, founded: 1910, code: "ZA-WC" },
+  { id: "paris", name: "Conservatoire de Paris", short: "CNSMDP", city: "Paris", country: "France", x: 506.0, y: 105.0, lat: 48.8566, lng: 2.3522, founded: 1795, code: "FR-75" },
+  { id: "vienna", name: "University of Music Vienna", short: "mdw", city: "Vienna", country: "Austria", x: 545.0, y: 106.6, lat: 48.2082, lng: 16.3738, founded: 1817, code: "AT-01" },
+  { id: "moscow", name: "Moscow Tchaikovsky Conservatory", short: "MGK", city: "Moscow", country: "Russia", x: 604.1, y: 88.0, lat: 55.7558, lng: 37.6173, founded: 1866, code: "RU-77" },
+  { id: "juilliard", name: "The Juilliard School", short: "Juilliard", city: "New York", country: "USA", x: 293.8, y: 125.1, lat: 40.7128, lng: -74.0060, founded: 1905, code: "US-NY" },
+  { id: "curtis", name: "Curtis Institute of Music", short: "Curtis", city: "Philadelphia", country: "USA", x: 290.5, y: 127.0, lat: 39.9526, lng: -75.1652, founded: 1924, code: "US-PA" },
+  { id: "rcm", name: "Royal College of Music", short: "RCM", city: "London", country: "UK", x: 499.1, y: 98.5, lat: 51.5074, lng: -0.1278, founded: 1882, code: "UK-LN" },
+  { id: "shanghai", name: "Shanghai Conservatory of Music", short: "SHCM", city: "Shanghai", country: "China", x: 837.2, y: 148.4, lat: 31.2304, lng: 121.4737, founded: 1927, code: "CN-SH" },
+  { id: "geidai", name: "Tokyo University of the Arts", short: "Geidai", city: "Tokyo", country: "Japan", x: 887.7, y: 137.5, lat: 35.6762, lng: 139.6503, founded: 1887, code: "JP-TK" },
+  { id: "snu", name: "Seoul National University", short: "SNU", city: "Seoul", country: "South Korea", x: 852.5, y: 132.8, lat: 37.5665, lng: 126.9780, founded: 1946, code: "KR-SE" },
+  { id: "eisler", name: "Hanns Eisler Berlin", short: "HfM", city: "Berlin", country: "Germany", x: 536.8, y: 96.0, lat: 52.5200, lng: 13.4050, founded: 1950, code: "DE-BE" },
+  { id: "rcmt", name: "The Royal Conservatory", short: "TRC", city: "Toronto", country: "Canada", x: 278.8, y: 117.8, lat: 43.6532, lng: -79.3832, founded: 1886, code: "CA-ON" },
+  { id: "sydney", name: "Sydney Conservatorium", short: "SCM", city: "Sydney", country: "Australia", x: 919.9, y: 308.9, lat: -33.8688, lng: 151.2093, founded: 1915, code: "AU-SY" },
+  { id: "milan", name: "Milan Conservatory 'Giuseppe Verdi'", short: "Cons. Verdi", city: "Milan", country: "Italy", x: 525.0, y: 113.4, lat: 45.4642, lng: 9.1900, founded: 1807, code: "IT-MI" },
+  { id: "hague", name: "Royal Conservatoire The Hague", short: "KC Den Haag", city: "The Hague", country: "Netherlands", x: 511.5, y: 97.1, lat: 52.0705, lng: 4.3007, founded: 1826, code: "NL-ZH" },
+  { id: "geneva", name: "Haute École de Musique de Genève", short: "HEM Genève", city: "Geneva", country: "Switzerland", x: 516.6, y: 111.6, lat: 46.2044, lng: 6.1432, founded: 1835, code: "CH-GE" },
+  { id: "helsinki", name: "Sibelius Academy", short: "Sibelius", city: "Helsinki", country: "Finland", x: 568.8, y: 77.1, lat: 60.1699, lng: 24.9384, founded: 1882, code: "FI-HE" },
+  { id: "stpetersburg", name: "St Petersburg Conservatory", short: "SPb Cons.", city: "St Petersburg", country: "Russia", x: 583.9, y: 77.7, lat: 59.9311, lng: 30.3609, founded: 1862, code: "RU-78" },
+  { id: "singapore", name: "Yong Siew Toh Conservatory", short: "YST", city: "Singapore", country: "Singapore", x: 788.1, y: 222.1, lat: 1.3521, lng: 103.8198, founded: 2001, code: "SG-01" },
+  { id: "nec", name: "New England Conservatory", short: "NEC", city: "Boston", country: "USA", x: 302.0, y: 121.0, lat: 42.3601, lng: -71.0589, founded: 1867, code: "US-MA" },
+  { id: "peabody", name: "Peabody Institute", short: "Peabody", city: "Baltimore", country: "USA", x: 286.5, y: 128.6, lat: 39.2904, lng: -76.6122, founded: 1857, code: "US-MD" },
+  { id: "saopaulo", name: "Escola de Música da USP", short: "USP Música", city: "São Paulo", country: "Brazil", x: 369.9, y: 283.4, lat: -23.5505, lng: -46.6333, founded: 1938, code: "BR-SP" },
+  { id: "capetown", name: "South African College of Music", short: "SACM", city: "Cape Town", country: "South Africa", x: 550.7, y: 309.0, lat: -33.9249, lng: 18.4241, founded: 1910, code: "ZA-WC" },
 ];
 
 const TASTE_OPTIONS = [
@@ -496,36 +499,77 @@ function MapTitle() {
   );
 }
 
-function WorldMap({ selectedId, onSelect, studentsByCons, dotted = true, height = "100%" }) {
+const TILE_URL = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+const TILE_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions" target="_blank" rel="noreferrer">CARTO</a>';
+
+function consPinIcon({ active, count }) {
+  const w = active ? 30 : 24;
+  const h = Math.round(w * 1.28);
+  const pinColor = active ? C.brass : C.ivory;
+  const badge = count > 0
+    ? `<div style="
+        position:absolute; top:-6px; left:50%; transform:translateX(-50%);
+        min-width:16px; height:16px; padding:0 4px; border-radius:8px;
+        background:${C.ink}; border:1px solid ${active ? C.brass : "rgba(244,238,219,0.35)"};
+        display:flex; align-items:center; justify-content:center;
+        font-family:${FONT_MONO}; font-weight:600; font-size:9px; line-height:1;
+        color:${active ? C.brass : C.ivory};
+      ">${count}</div>`
+    : "";
+  return L.divIcon({
+    className: "artium-pin",
+    html: `
+      <div style="position:relative; width:${w}px; height:${h}px; filter:drop-shadow(0 2px 3px rgba(0,0,0,0.6));">
+        ${badge}
+        <svg width="${w}" height="${h}" viewBox="0 0 24 30" style="display:block;">
+          <path d="M12 0C5.4 0 0 5 0 11.4 0 19.6 12 30 12 30s12-10.4 12-18.6C24 5 18.6 0 12 0z"
+            fill="${pinColor}" stroke="${C.ink}" stroke-width="1.1" />
+          <circle cx="12" cy="11.5" r="4.4" fill="${C.ink}" opacity="${active ? 1 : 0.8}" />
+        </svg>
+      </div>
+    `,
+    iconSize: [w, h],
+    iconAnchor: [w / 2, h],
+  });
+}
+
+function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", interactive = false }) {
   return (
-    <svg viewBox="0 0 1000 460" style={{ width: "100%", height, display: "block" }}>
-      <defs>
-        <pattern id="lg-dots" width="14" height="14" patternUnits="userSpaceOnUse">
-          <circle cx="1" cy="1" r="1" fill="rgba(244,238,219,0.05)" />
-        </pattern>
-      </defs>
-      <rect width="1000" height="460" fill="url(#lg-dots)" />
-      {[80, 160, 230, 300, 380].map((y) => (
-        <line key={y} x1="0" x2="1000" y1={y} y2={y} stroke="rgba(244,238,219,0.05)" strokeWidth="1" />
-      ))}
-      {CONTINENTS.map((d, i) => (
-        <path key={i} d={d} fill={C.parchmentDim} opacity="0.16" stroke={C.parchmentDim} strokeOpacity="0.3" />
-      ))}
-      {CONSERVATORIES.map((cons) => {
-        const n = (studentsByCons[cons.id] || []).length;
-        const active = selectedId === cons.id;
-        return (
-          <g key={cons.id} transform={`translate(${cons.x},${cons.y})`} style={{ cursor: "pointer" }} onClick={() => onSelect(cons.id)}>
-            {active && <circle r="11" fill="none" stroke={C.brass} strokeWidth="1" className="lg-pulse" />}
-            <line x1="0" y1="-4" x2="0" y2="-13" stroke={C.brass} strokeWidth="1" opacity={active ? 1 : 0.55} />
-            <circle r={active ? 5.5 : 4} fill={active ? C.brass : C.ivory} fillOpacity={active ? 1 : 0.65} stroke={C.ink} strokeWidth="1" />
-            {n > 0 && (
-              <text y="-17" textAnchor="middle" fontFamily={FONT_MONO} fontSize="8" fill={active ? C.brass : "rgba(244,238,219,0.45)"}>{n}</text>
-            )}
-          </g>
-        );
-      })}
-    </svg>
+    <div className="artium-map" style={{ width: "100%", height }}>
+      <MapContainer
+        center={[24, 14]}
+        zoom={2}
+        zoomSnap={0.5}
+        minZoom={2}
+        maxZoom={9}
+        maxBounds={[[-85, -200], [85, 200]]}
+        maxBoundsViscosity={1}
+        scrollWheelZoom={interactive}
+        style={{ width: "100%", height: "100%", background: C.ink }}
+      >
+        <TileLayer url={TILE_URL} attribution={TILE_ATTRIBUTION} />
+        {CONSERVATORIES.map((cons) => {
+          const n = (studentsByCons[cons.id] || []).length;
+          const active = selectedId === cons.id;
+          return (
+            <Marker
+              key={cons.id}
+              position={[cons.lat, cons.lng]}
+              icon={consPinIcon({ active, count: n })}
+              eventHandlers={{ click: () => onSelect(cons.id) }}
+            >
+              <Tooltip direction="top" offset={[0, -28]}>
+                <span style={{ fontFamily: FONT_BODY, fontWeight: 600 }}>{cons.short}</span>
+                <br />
+                <span style={{ fontFamily: FONT_MONO, fontSize: 11 }}>
+                  {cons.city}, {cons.country}{n > 0 ? ` · ${n} student${n === 1 ? "" : "s"}` : ""}
+                </span>
+              </Tooltip>
+            </Marker>
+          );
+        })}
+      </MapContainer>
+    </div>
   );
 }
 
@@ -756,6 +800,17 @@ export default function App() {
         input[type=range].artium-slider::-webkit-slider-thumb { -webkit-appearance: none !important; appearance: none !important; width: 6px !important; height: 6px !important; border-radius: 50% !important; background: #C9A24B !important; cursor: pointer !important; border: none !important; }
         input[type=range].artium-slider::-moz-range-thumb { width: 6px !important; height: 6px !important; border-radius: 50% !important; background: #C9A24B !important; border: none !important; cursor: pointer !important; }
         input[type=range].artium-slider::-ms-thumb { width: 6px !important; height: 6px !important; border-radius: 50% !important; background: #C9A24B !important; border: none !important; cursor: pointer !important; }
+
+        .artium-map, .artium-map .leaflet-container { border-radius: inherit; }
+        .artium-map .leaflet-tile-pane { filter: brightness(0.88) contrast(1.08) sepia(0.12) hue-rotate(-6deg); }
+        .artium-map .leaflet-control-zoom { border: 1px solid rgba(244,238,219,0.14) !important; box-shadow: none !important; }
+        .artium-map .leaflet-control-zoom a { background: #1D1A15 !important; color: #F4EEDB !important; border-color: rgba(244,238,219,0.14) !important; }
+        .artium-map .leaflet-control-zoom a:hover { background: #14120F !important; }
+        .artium-map .leaflet-control-attribution { background: rgba(20,18,15,0.65) !important; color: rgba(244,238,219,0.5) !important; font-size: 9px !important; }
+        .artium-map .leaflet-control-attribution a { color: rgba(244,238,219,0.7) !important; }
+        .artium-map .leaflet-tooltip { background: #1D1A15 !important; border: 1px solid rgba(244,238,219,0.14) !important; color: #F4EEDB !important; border-radius: 8px !important; box-shadow: 0 2px 10px rgba(0,0,0,0.4) !important; padding: 6px 10px !important; }
+        .artium-map .leaflet-tooltip-top:before { border-top-color: #1D1A15 !important; }
+        .artium-pin { background: transparent !important; border: none !important; }
       `}</style>
 
       <audio ref={audioRef} src={AMBIENT_AUDIO_SRC} loop preload="none" />
@@ -1470,7 +1525,7 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
     <div className="lg-split-map h-full">
       <div style={{ background: C.inkSoft }}>
         <MapTitle />
-        <WorldMap selectedId={selectedConsId} onSelect={setSelectedConsId} studentsByCons={studentsByCons} height={520} />
+        <WorldMap selectedId={selectedConsId} onSelect={setSelectedConsId} studentsByCons={studentsByCons} height={520} interactive />
       </div>
       <div className="lg-scroll overflow-y-auto" style={{ borderLeft: `1px solid ${C.inkLine}`, maxHeight: 600 }}>
         {!cons ? (
