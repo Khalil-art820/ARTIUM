@@ -1040,7 +1040,7 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
         {idx === 6 && <StepReview draft={draft} />}
       </div>
 
-      {editing && authError && (
+      {step === lastStep && authError && (
         <div className="max-w-3xl mx-auto px-6 pb-4">
           <p className="text-sm" style={{ color: C.burgundy }}>{authError}</p>
         </div>
