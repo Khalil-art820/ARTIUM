@@ -955,7 +955,7 @@ export default function App() {
 /* ---------------------------------------------------------------- */
 /* LANDING                                                             */
 /* ---------------------------------------------------------------- */
-function Landing({ onApply, onLogin, onBack, onPreview, onProfile, myProfile, musicOn, onMusicToggle, audioRef }) {
+function Landing({ onApply, onBack, onPreview, onProfile, myProfile, musicOn, onMusicToggle, audioRef }) {
   return (
     <div style={{ color: C.ivory }}>
       <div className="max-w-6xl mx-auto px-6 pt-8 pb-4 flex items-center justify-between">
@@ -965,12 +965,10 @@ function Landing({ onApply, onLogin, onBack, onPreview, onProfile, myProfile, mu
         </div>
         <div className="hidden sm:flex items-center gap-3">
           <MusicBtn playing={musicOn} onToggle={onMusicToggle} audioRef={audioRef} />
-          {myProfile ? (
+          {myProfile && (
             <button onClick={onProfile} title="My profile">
               <Avatar name={myProfile.name} id="me" size={38} photoUrl={myProfile.photoUrl} online />
             </button>
-          ) : (
-            <GhostBtn onClick={onLogin} icon={Users}>Log in</GhostBtn>
           )}
         </div>
       </div>
