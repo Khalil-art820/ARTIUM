@@ -120,6 +120,18 @@ const INSTRUMENT_OPTIONS = [
 ];
 
 
+// Every account shares one email across both registration paths (Supabase
+// enforces this), so a duplicate-email signup error always means someone is
+// trying to register twice — once as a piano enthusiast, once as a
+// conservatory student (or the same path twice). Give a clear explanation
+// instead of Supabase's generic message.
+function friendlyAuthError(message) {
+  if (/already registered/i.test(message)) {
+    return "This email is already registered. You can't sign up as both a piano enthusiast and a conservatory student — try logging in instead.";
+  }
+  return message;
+}
+
 const emptyDraft = () => ({
   id: null,
   email: "", password: "", confirmPassword: "",
@@ -571,11 +583,13 @@ export default function App() {
   const [editingProfile, setEditingProfile] = useState(false);
   const [previewOnly, setPreviewOnly] = useState(false);
   const [authError, setAuthError] = useState("");
+  const [pendingEmail, setPendingEmail] = useState("");
 
   const [students, setStudents] = useState(() => seedTeaching(SAMPLE_STUDENTS));
   const [myProfile, setMyProfile] = useState(null);
 
-  // Returning signed-in user: load their profile and skip straight to the app.
+  // Returning signed-in user: load their profile and skip straight to the app
+  // (conservatory students) or the teacher map (piano-enthusiast learners).
   // Newly-confirmed user (clicked the email link): their profiles row doesn't
   // exist yet — create it now from the draft we stashed in their auth metadata
   // at signup time (stored server-side, so it survives the confirmation link
@@ -583,6 +597,13 @@ export default function App() {
   useEffect(() => {
     if (authLoading) return;
     if (authProfile) {
+      if (authProfile.role === "learner") {
+        setLearnerProfile({ name: authProfile.name, location: authProfile.location });
+        if (["entry", "landing", "login", "confirmEmail", "learnerSignup"].includes(screen)) {
+          setScreen("learnerMap");
+        }
+        return;
+      }
       const me = fromDbProfile(authProfile);
       setMyProfile(me);
       setStudents((arr) => [...arr.filter((s) => s.id !== me.id), me]);
@@ -594,25 +615,35 @@ export default function App() {
       return;
     }
     if (authUser) {
-      const pending = authUser.user_metadata?.pendingProfile;
-      if (!pending) return;
-      supabase.from("profiles").insert(toDbProfile(pending, authUser.id)).then(({ error }) => {
-        if (error) { setAuthError(error.message); return; }
-        supabase.auth.updateUser({ data: { pendingProfile: null } });
-        const me = { id: authUser.id, name: pending.name, instrument: pending.instrument, conservatoryId: pending.conservatoryId, year: pending.years, bio: pending.bio, tastes: pending.tastes, pieces: pending.pieces, videoLink: pending.videoLink, top: pending.top, flop: pending.flop, photoUrl: pending.photoUrl, teaching: pending.teaching, online: true };
-        setMyProfile(me);
-        setStudents((arr) => [...arr.filter((s) => s.id !== me.id), me]);
-        setSelectedConsId(me.conservatoryId);
-        setScreen("app");
-        setAppTab("map");
-      });
+      const pendingStudent = authUser.user_metadata?.pendingProfile;
+      const pendingLearner = authUser.user_metadata?.pendingLearner;
+      if (pendingStudent) {
+        supabase.from("profiles").insert(toDbProfile(pendingStudent, authUser.id)).then(({ error }) => {
+          if (error) { setAuthError(error.message); return; }
+          supabase.auth.updateUser({ data: { pendingProfile: null } });
+          const me = { id: authUser.id, name: pendingStudent.name, instrument: pendingStudent.instrument, conservatoryId: pendingStudent.conservatoryId, year: pendingStudent.years, bio: pendingStudent.bio, tastes: pendingStudent.tastes, pieces: pendingStudent.pieces, videoLink: pendingStudent.videoLink, top: pendingStudent.top, flop: pendingStudent.flop, photoUrl: pendingStudent.photoUrl, teaching: pendingStudent.teaching, online: true };
+          setMyProfile(me);
+          setStudents((arr) => [...arr.filter((s) => s.id !== me.id), me]);
+          setSelectedConsId(me.conservatoryId);
+          setScreen("app");
+          setAppTab("map");
+        });
+      } else if (pendingLearner) {
+        supabase.from("profiles").insert({ id: authUser.id, role: "learner", name: pendingLearner.name, location: pendingLearner.location, approved: true }).then(({ error }) => {
+          if (error) { setAuthError(error.message); return; }
+          supabase.auth.updateUser({ data: { pendingLearner: null } });
+          setLearnerProfile({ name: pendingLearner.name, location: pendingLearner.location });
+          setScreen("learnerMap");
+        });
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, authProfile, authUser]);
 
-  // Pull in any real signups so they show up on the map alongside the sample data.
+  // Pull in any real conservatory-student signups so they show up on the map
+  // alongside the sample data (learner accounts aren't conservatory students).
   useEffect(() => {
-    supabase.from("profiles").select("*").eq("approved", true).then(({ data, error }) => {
+    supabase.from("profiles").select("*").eq("approved", true).eq("role", "student").then(({ data, error }) => {
       if (error || !data) return;
       const real = data.map(fromDbProfile);
       const realIds = new Set(real.map((r) => r.id));
@@ -687,8 +718,27 @@ export default function App() {
     setAppTab("map");
   }
   function chooseStudent() { setScreen("landing"); }
-  function chooseLearner() { setLearnerProfile(null); setScreen("learnerSignup"); }
-  function submitLearner(profile) { setLearnerProfile(profile); setScreen("learnerMap"); }
+  function chooseLearner() { setLearnerProfile(null); setAuthError(""); setScreen("learnerSignup"); }
+  async function submitLearner({ name, location, email, password }) {
+    setAuthError("");
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { pendingLearner: { name, location } } },
+    });
+    if (error) { setAuthError(friendlyAuthError(error.message)); return; }
+    if (data.session && data.user) {
+      const { error: insertError } = await supabase.from("profiles").insert({ id: data.user.id, role: "learner", name, location, approved: true });
+      if (insertError) { setAuthError(insertError.message); return; }
+      await supabase.auth.updateUser({ data: { pendingLearner: null } });
+      setLearnerProfile({ name, location });
+      setScreen("learnerMap");
+    } else {
+      setLearnerProfile({ name, location });
+      setPendingEmail(email);
+      setScreen("confirmEmail");
+    }
+  }
   function backToEntry() { setScreen("entry"); }
   function sendTeachRequest(teacherId) {
     setTeachRequests((r) => ({ ...r, [teacherId]: "pending" }));
@@ -725,7 +775,7 @@ export default function App() {
         password: draft.password,
         options: { data: { pendingProfile: draft } },
       });
-      if (error) { setAuthError(error.message); return; }
+      if (error) { setAuthError(friendlyAuthError(error.message)); return; }
       if (data.session && data.user) {
         // Email confirmation is off — we already have an active session, insert right away.
         const { error: insertError } = await supabase.from("profiles").insert(toDbProfile(draft, data.user.id));
@@ -736,6 +786,7 @@ export default function App() {
       } else {
         // Email confirmation required — the draft is stored server-side in the
         // user's auth metadata, so it's picked up after confirming on any device.
+        setPendingEmail(draft.email);
         setScreen("confirmEmail");
       }
     }
@@ -818,7 +869,7 @@ export default function App() {
       )}
 
       {screen === "entry" && <EntryGate onLearner={chooseLearner} onStudent={chooseStudent} onLogin={startLogin} />}
-      {screen === "learnerSignup" && <LearnerSignup onSubmit={submitLearner} onBack={backToEntry} />}
+      {screen === "learnerSignup" && <LearnerSignup onSubmit={submitLearner} onBack={backToEntry} onLogin={startLogin} error={authError} />}
       {screen === "learnerMap" && (
         <LearnerScreen
           learner={learnerProfile}
@@ -843,7 +894,7 @@ export default function App() {
           onHome={goHome}
         />
       )}
-      {screen === "confirmEmail" && <ConfirmEmail email={draft.email} onLogin={startLogin} onHome={goHome} />}
+      {screen === "confirmEmail" && <ConfirmEmail email={pendingEmail} onLogin={startLogin} onHome={goHome} />}
       {screen === "pending" && <Pending name={draft.name} onApprove={simulateApproval} onHome={goHome} />}
       {screen === "app" && (
         <AppShell
@@ -1465,7 +1516,6 @@ function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, mus
   const tabs = [
     { id: "map", label: "Map", icon: Globe2, locked: false },
     { id: "messages", label: "Messages", icon: MessageCircle, locked: !myProfile },
-    { id: "profile", label: "My profile", icon: Users, locked: !myProfile },
   ];
   return (
     <div className="min-h-full flex flex-col" style={{ background: C.ink, color: C.ivory }}>
@@ -1495,7 +1545,13 @@ function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, mus
         </div>
         <div className="flex items-center gap-3">
           <MusicBtn playing={musicOn} onToggle={onMusicToggle} audioRef={audioRef} />
-          {!myProfile ? <PrimaryBtn onClick={onApply}>Sign up to connect</PrimaryBtn> : <Avatar name={myProfile.name} id="me" size={34} photoUrl={myProfile.photoUrl} online />}
+          {!myProfile ? (
+            <PrimaryBtn onClick={onApply}>Sign up to connect</PrimaryBtn>
+          ) : (
+            <button onClick={() => setAppTab("profile")} title="My profile">
+              <Avatar name={myProfile.name} id="me" size={34} photoUrl={myProfile.photoUrl} online />
+            </button>
+          )}
         </div>
       </div>
       {onBack && (
@@ -1945,10 +2001,23 @@ function EntryGate({ onLearner, onStudent, onLogin }) {
 }
 
 /* ---- Learner: name + location ---- */
-function LearnerSignup({ onSubmit, onBack }) {
+function LearnerSignup({ onSubmit, onBack, onLogin, error }) {
   const [name, setName] = useState("");
   const [location, setLocation] = useState("");
-  const canGo = name.trim().length > 1 && location.trim().length > 1;
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const mismatch = confirmPassword.length > 0 && password !== confirmPassword;
+  const canGo = name.trim().length > 1 && location.trim().length > 1
+    && email.trim().length > 3 && password.length >= 6 && password === confirmPassword;
+
+  async function handleSubmit() {
+    setSubmitting(true);
+    await onSubmit({ name: name.trim(), location: location.trim(), email: email.trim(), password });
+    setSubmitting(false);
+  }
+
   return (
     <div className="min-h-full" style={{ background: C.ink, color: C.ivory }}>
       <div className="max-w-2xl mx-auto px-6 pt-8">
@@ -1968,8 +2037,24 @@ function LearnerSignup({ onSubmit, onBack }) {
         <Field label="Where are you based?">
           <input style={inputStyle} value={location} onChange={(e) => setLocation(e.target.value)} placeholder="City, country" />
         </Field>
-        <div className="mt-2">
-          <PrimaryBtn disabled={!canGo} onClick={() => onSubmit({ name: name.trim(), location: location.trim() })} icon={ArrowRight}>See teachers</PrimaryBtn>
+        <Field label="Email">
+          <input style={inputStyle} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
+        </Field>
+        <Field label="Password">
+          <PasswordField value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 6 characters" />
+        </Field>
+        <Field label="Confirm password">
+          <PasswordField value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Re-enter your password" />
+        </Field>
+        {mismatch && <p className="text-sm mb-4" style={{ color: C.burgundy }}>Passwords don't match.</p>}
+        {error && <p className="text-sm mb-4" style={{ color: C.burgundy }}>{error}</p>}
+        <div className="mt-2 flex items-center gap-4">
+          <PrimaryBtn disabled={!canGo || submitting} onClick={handleSubmit} icon={ArrowRight}>
+            {submitting ? "Submitting…" : "See teachers"}
+          </PrimaryBtn>
+          <span className="text-sm" style={{ color: C.ivoryDim }}>
+            Already have a profile? <button onClick={onLogin} style={{ color: C.brass, fontWeight: 600 }}>Log in</button>
+          </span>
         </div>
       </div>
     </div>
