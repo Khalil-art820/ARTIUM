@@ -4,7 +4,7 @@ import {
   ChevronRight, Check, X, Instagram, Facebook,
   Music2, Users, MessageCircle, ArrowRight, ArrowLeft, Play, Pause, Globe2,
   Volume1, Volume2, VolumeX,
-  Pencil, Plus, Trash2, Home, Upload,
+  Pencil, Plus, Trash2, Home, Upload, Eye, EyeOff,
 } from "lucide-react";
 import AMBIENT_AUDIO_SRC from "./assets/ambient.mp3";
 import { useAuth } from "./contexts/AuthContext";
@@ -116,13 +116,13 @@ const SAMPLE_CONVERSATIONS = {
 
 const INSTRUMENT_OPTIONS = [
   "Piano", "Violin", "Viola", "Cello", "Double Bass", "Voice", "Flute", "Clarinet",
-  "Oboe", "Bassoon", "Trumpet", "Horn", "Trombone", "Guitar", "Harp", "Percussion", "Organ", "Composition",
+  "Oboe", "Bassoon", "Trumpet", "Horn", "Trombone", "Guitar", "Harp", "Percussion", "Organ", "Cimbalom",
 ];
 
 
 const emptyDraft = () => ({
   id: null,
-  email: "", password: "",
+  email: "", password: "", confirmPassword: "",
   name: "", years: "", instrument: "",
   conservatoryId: null,
   tastes: [],
@@ -833,7 +833,7 @@ export default function App() {
         />
       )}
 
-      {screen === "landing" && <Landing onApply={startApply} onLogin={startLogin} onPreview={startPreview} onProfile={goToProfile} myProfile={myProfile} musicOn={musicOn} onMusicToggle={toggleMusic} audioRef={audioRef} />}
+      {screen === "landing" && <Landing onApply={startApply} onLogin={startLogin} onBack={backToEntry} onPreview={startPreview} onProfile={goToProfile} myProfile={myProfile} musicOn={musicOn} onMusicToggle={toggleMusic} audioRef={audioRef} />}
       {screen === "login" && <LoginScreen onSubmit={handleLogin} onBack={goHome} error={authError} />}
       {screen === "signup" && (
         <SignupFlow
@@ -904,11 +904,14 @@ export default function App() {
 /* ---------------------------------------------------------------- */
 /* LANDING                                                             */
 /* ---------------------------------------------------------------- */
-function Landing({ onApply, onLogin, onPreview, onProfile, myProfile, musicOn, onMusicToggle, audioRef }) {
+function Landing({ onApply, onLogin, onBack, onPreview, onProfile, myProfile, musicOn, onMusicToggle, audioRef }) {
   return (
     <div style={{ color: C.ivory }}>
       <div className="max-w-6xl mx-auto px-6 pt-8 pb-4 flex items-center justify-between">
-        <Logo slogan />
+        <div className="flex items-center gap-5">
+          <Logo slogan />
+          <HomeBtn onClick={onBack} />
+        </div>
         <div className="hidden sm:flex items-center gap-3">
           <MusicBtn playing={musicOn} onToggle={onMusicToggle} audioRef={audioRef} />
           {myProfile ? (
@@ -992,7 +995,7 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
   const lastStep = labels.length - 1;
   const idx = editing ? step : step - 1;
   const canNext = [
-    !editing ? draft.email.trim().length > 3 && draft.password.length >= 6 : null,
+    !editing ? draft.email.trim().length > 3 && draft.password.length >= 6 && draft.password === draft.confirmPassword : null,
     draft.name.trim().length > 1 && !!draft.instrument,
     !!draft.conservatoryId,
     draft.tastes.length >= 3,
@@ -1076,6 +1079,30 @@ function Field({ label, children }) {
 }
 const inputStyle = { width: "100%", background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "12px 14px", color: C.ivory, fontFamily: FONT_BODY, fontSize: 15, outline: "none" };
 
+function PasswordField({ value, onChange, placeholder }) {
+  const [visible, setVisible] = useState(false);
+  return (
+    <div className="relative">
+      <input
+        style={{ ...inputStyle, paddingRight: 42 }}
+        type={visible ? "text" : "password"}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+      />
+      <button
+        type="button"
+        onClick={() => setVisible((v) => !v)}
+        className="absolute"
+        style={{ right: 12, top: "50%", transform: "translateY(-50%)", color: C.ivoryDim, lineHeight: 0 }}
+        aria-label={visible ? "Hide password" : "Show password"}
+      >
+        {visible ? <EyeOff size={16} /> : <Eye size={16} />}
+      </button>
+    </div>
+  );
+}
+
 function PhotoUpload({ name, photoUrl, onChange }) {
   const inputRef = useRef(null);
   function handleFile(e) {
@@ -1111,6 +1138,7 @@ function PhotoUpload({ name, photoUrl, onChange }) {
 }
 
 function StepAccount({ draft, update, error }) {
+  const mismatch = draft.confirmPassword.length > 0 && draft.password !== draft.confirmPassword;
   return (
     <div>
       <p className="text-sm mb-6" style={{ color: C.ivoryDim }}>Create the login you'll use to come back and manage your profile.</p>
@@ -1118,8 +1146,12 @@ function StepAccount({ draft, update, error }) {
         <input style={inputStyle} type="email" value={draft.email} onChange={(e) => update({ email: e.target.value })} placeholder="you@example.com" />
       </Field>
       <Field label="Password">
-        <input style={inputStyle} type="password" value={draft.password} onChange={(e) => update({ password: e.target.value })} placeholder="At least 6 characters" />
+        <PasswordField value={draft.password} onChange={(e) => update({ password: e.target.value })} placeholder="At least 6 characters" />
       </Field>
+      <Field label="Confirm password">
+        <PasswordField value={draft.confirmPassword} onChange={(e) => update({ confirmPassword: e.target.value })} placeholder="Re-enter your password" />
+      </Field>
+      {mismatch && <p className="text-sm" style={{ color: C.burgundy }}>Passwords don't match.</p>}
       {error && <p className="text-sm" style={{ color: C.burgundy }}>{error}</p>}
     </div>
   );
@@ -1414,7 +1446,7 @@ function LoginScreen({ onSubmit, onBack, error }) {
             <input style={inputStyle} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
           </Field>
           <Field label="Password">
-            <input style={inputStyle} type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Your password" />
+            <PasswordField value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Your password" />
           </Field>
           {error && <p className="text-sm mb-4" style={{ color: C.burgundy }}>{error}</p>}
           <PrimaryBtn full disabled={submitting || !email || !password} onClick={handleSubmit} icon={ArrowRight}>
