@@ -885,6 +885,8 @@ export default function App() {
           setActiveChatId={setActiveChatId}
           onSend={sendMessage}
           onBack={backToEntry}
+          onUpdateProfile={(updates) => setLearnerProfile((p) => ({ ...p, ...updates }))}
+          onLogout={async () => { await supabase.auth.signOut(); setLearnerProfile(null); setScreen("entry"); }}
         />
       )}
 
@@ -2099,14 +2101,26 @@ function TeacherMap({ teachers, selectedId, onSelect, height = 520 }) {
 }
 
 /* ---- Learner home: map + request + chat ---- */
-function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conversations, activeChatId, setActiveChatId, onSend, onBack }) {
+function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conversations, activeChatId, setActiveChatId, onSend, onBack, onUpdateProfile, onLogout }) {
+  const [tab, setTab] = useState("teachers");
   const [selectedId, setSelectedId] = useState(null);
   const selected = teachers.find((t) => t.id === selectedId);
-  const status = selectedId ? teachRequests[selectedId] : undefined; // undefined | "pending" | "accepted"
+  const status = selectedId ? teachRequests[selectedId] : undefined;
+
+  // profile editing state
+  const [editName, setEditName] = useState(learner?.name || "");
+  const [editLocation, setEditLocation] = useState(learner?.location || "");
+  const [saved, setSaved] = useState(false);
 
   function selectTeacher(id) {
     setSelectedId(id);
     setActiveChatId(id);
+  }
+
+  function saveProfile() {
+    onUpdateProfile({ name: editName.trim(), location: editLocation.trim() });
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
   }
 
   return (
@@ -2115,7 +2129,18 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
         <Logo slogan />
         <button onClick={onBack} className="text-sm flex items-center gap-1" style={{ color: C.ivoryDim }}><ArrowLeft size={15} /> Back</button>
       </div>
-      <div className="max-w-6xl mx-auto px-6 pt-6 pb-2">
+
+      {/* Tab bar */}
+      <div className="max-w-6xl mx-auto px-6 pt-5 flex gap-1" style={{ borderBottom: `1px solid ${C.inkLine}` }}>
+        {[["teachers", "Find a teacher"], ["profile", "My profile"]].map(([key, label]) => (
+          <button key={key} onClick={() => setTab(key)}
+            className="px-4 py-2 text-sm rounded-t-lg"
+            style={{ fontWeight: tab === key ? 600 : 400, color: tab === key ? C.brass : C.ivoryDim, borderBottom: tab === key ? `2px solid ${C.brass}` : "2px solid transparent", background: "transparent" }}>
+            {label}
+          </button>
+        ))}
+      </div>
+      {tab === "teachers" && <div className="max-w-6xl mx-auto px-6 pt-6 pb-2">
         <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600 }}>
           {learner ? `Welcome, ${learner.name.split(" ")[0]}` : "Find a teacher"}
         </h2>
@@ -2123,8 +2148,42 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
           {teachers.length} conservatory student{teachers.length === 1 ? "" : "s"} offering lessons
           {learner && learner.location ? ` · you're in ${learner.location}` : ""}.
         </p>
-      </div>
-      <div className="max-w-6xl mx-auto px-6 pb-12 lg-split-map">
+      </div>}
+      {tab === "profile" && (
+        <div className="max-w-lg mx-auto px-6 pt-10 pb-16">
+          <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600 }}>My profile</h2>
+          <p className="mt-1 text-sm" style={{ color: C.ivoryDim }}>Update your name and location.</p>
+          <div className="mt-8 flex flex-col gap-5">
+            <div>
+              <label className="block mb-1.5 text-xs" style={{ fontFamily: FONT_MONO, color: C.ivoryDim }}>FULL NAME</label>
+              <input value={editName} onChange={(e) => { setEditName(e.target.value); setSaved(false); }}
+                className="w-full rounded-xl px-4 py-3 text-sm"
+                style={{ background: C.inkSoft, border: `1px solid ${C.inkLine}`, color: C.ivory, outline: "none" }}
+                placeholder="Your name" />
+            </div>
+            <div>
+              <label className="block mb-1.5 text-xs" style={{ fontFamily: FONT_MONO, color: C.ivoryDim }}>LOCATION</label>
+              <input value={editLocation} onChange={(e) => { setEditLocation(e.target.value); setSaved(false); }}
+                className="w-full rounded-xl px-4 py-3 text-sm"
+                style={{ background: C.inkSoft, border: `1px solid ${C.inkLine}`, color: C.ivory, outline: "none" }}
+                placeholder="City, Country" />
+            </div>
+            <button onClick={saveProfile} disabled={!editName.trim() || !editLocation.trim()}
+              className="w-full rounded-xl py-3 text-sm font-semibold mt-1"
+              style={{ background: C.brass, color: C.inkText, opacity: !editName.trim() || !editLocation.trim() ? 0.5 : 1 }}>
+              {saved ? "Saved ✓" : "Save changes"}
+            </button>
+          </div>
+          <div className="mt-10 pt-8" style={{ borderTop: `1px solid ${C.inkLine}` }}>
+            <button onClick={onLogout} className="w-full rounded-xl py-3 text-sm font-semibold"
+              style={{ border: `1px solid ${C.burgundy}`, color: C.burgundy, background: "transparent" }}>
+              Log out
+            </button>
+          </div>
+        </div>
+      )}
+
+      {tab === "teachers" && <div className="max-w-6xl mx-auto px-6 pb-12 lg-split-map">
         <div className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${C.inkLine}`, background: C.inkSoft }}>
           <MapTitle />
           <TeacherMap teachers={teachers} selectedId={selectedId} onSelect={selectTeacher} height={500} />
@@ -2234,7 +2293,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
             </div>
           )}
         </div>
-      </div>
+      </div>}
     </div>
   );
 }
