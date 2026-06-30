@@ -722,7 +722,7 @@ export default function App() {
     setAppTab("map");
   }
   function chooseStudent() { setScreen("landing"); }
-  function chooseLearner() { setLearnerProfile(null); setAuthError(""); setScreen("learnerSignup"); }
+  function chooseLearner() { if (learnerProfile) { setScreen("learnerMap"); return; } setLearnerProfile(null); setAuthError(""); setScreen("learnerSignup"); }
   async function submitLearner({ name, location, email, password }) {
     setAuthError("");
     const { data, error } = await supabase.auth.signUp({
