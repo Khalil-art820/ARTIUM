@@ -1976,7 +1976,7 @@ function EntryGate({ onLearner, onStudent, onLogin }) {
               <Music2 size={26} color={C.brass} />
               <h3 className="mt-4" style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600 }}>I'm a piano enthusiast</h3>
               <p className="mt-2 text-sm" style={{ color: C.ivoryDim, lineHeight: 1.6 }}>
-                I want to learn the piano with the best — find me a conservatory student to teach me.
+                I want to learn the piano with the best — find me a top conservatory musician to teach me.
               </p>
               <span className="mt-5 inline-flex items-center gap-1.5 text-sm" style={{ color: C.brass, fontWeight: 600 }}>
                 Find a teacher <ArrowRight size={15} />
