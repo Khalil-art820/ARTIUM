@@ -872,7 +872,7 @@ export default function App() {
         />
       )}
 
-      {screen === "entry" && <EntryGate onLearner={chooseLearner} onStudent={chooseStudent} onLogin={startLogin} />}
+      {screen === "entry" && <EntryGate onLearner={chooseLearner} onStudent={chooseStudent} onLogin={startLogin} learnerProfile={learnerProfile} />}
       {screen === "learnerSignup" && <LearnerSignup onSubmit={submitLearner} onBack={backToEntry} onLogin={startLogin} error={authError} />}
       {screen === "learnerMap" && (
         <LearnerScreen
@@ -1957,7 +1957,7 @@ function StepTeaching({ draft, update }) {
 }
 
 /* ---- First screen: pick your role ---- */
-function EntryGate({ onLearner, onStudent, onLogin }) {
+function EntryGate({ onLearner, onStudent, onLogin, learnerProfile }) {
   return (
     <div className="min-h-full flex flex-col" style={{ background: C.ink, color: C.ivory }}>
       <div className="max-w-5xl w-full mx-auto px-6 pt-10">
@@ -1971,7 +1971,7 @@ function EntryGate({ onLearner, onStudent, onLogin }) {
           <p className="text-center mt-4 mx-auto max-w-md" style={{ color: C.ivoryDim, fontSize: 16, lineHeight: 1.6 }}>
             How would you like to join?
           </p>
-          <div className="mt-10 grid md:grid-cols-2 gap-5">
+          <div className={`mt-10 grid gap-5 ${learnerProfile ? "" : "md:grid-cols-2"}`}>
             <button onClick={onLearner} className="text-left rounded-2xl p-7" style={{ border: `1px solid ${C.inkLine}`, background: C.inkSoft }}>
               <Music2 size={26} color={C.brass} />
               <h3 className="mt-4" style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600 }}>I'm a piano enthusiast</h3>
@@ -1982,19 +1982,24 @@ function EntryGate({ onLearner, onStudent, onLogin }) {
                 Find a teacher <ArrowRight size={15} />
               </span>
             </button>
-            <button onClick={onStudent} className="text-left rounded-2xl p-7" style={{ border: `1px solid ${C.inkLine}`, background: C.inkSoft }}>
-              <Users size={26} color={C.brass} />
-              <h3 className="mt-4" style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600 }}>I'm a conservatory student</h3>
-              <p className="mt-2 text-sm" style={{ color: C.ivoryDim, lineHeight: 1.6 }}>
-                I study at an accredited music school — connect me with students worldwide.
-              </p>
-              <span className="mt-5 inline-flex items-center gap-1.5 text-sm" style={{ color: C.brass, fontWeight: 600 }}>
-                Enter Artium <ArrowRight size={15} />
-              </span>
-            </button>
+            {!learnerProfile && (
+              <button onClick={onStudent} className="text-left rounded-2xl p-7" style={{ border: `1px solid ${C.inkLine}`, background: C.inkSoft }}>
+                <Users size={26} color={C.brass} />
+                <h3 className="mt-4" style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600 }}>I'm a conservatory student</h3>
+                <p className="mt-2 text-sm" style={{ color: C.ivoryDim, lineHeight: 1.6 }}>
+                  I study at an accredited music school — connect me with students worldwide.
+                </p>
+                <span className="mt-5 inline-flex items-center gap-1.5 text-sm" style={{ color: C.brass, fontWeight: 600 }}>
+                  Enter Artium <ArrowRight size={15} />
+                </span>
+              </button>
+            )}
           </div>
           <p className="text-center mt-8 text-sm" style={{ color: C.ivoryDim }}>
-            Already have a profile? <button onClick={onLogin} style={{ color: C.brass, fontWeight: 600 }}>Log in</button>
+            {learnerProfile
+              ? <>Logged in as a piano enthusiast — <span style={{ color: C.brass, fontWeight: 600 }}>{learnerProfile.name}</span></>
+              : <>Already have a profile? <button onClick={onLogin} style={{ color: C.brass, fontWeight: 600 }}>Log in</button></>
+            }
           </p>
         </div>
       </div>
