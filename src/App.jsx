@@ -685,6 +685,10 @@ export default function App() {
   }, {});
 
   function startApply() {
+    if (authUser && authProfile?.role === "learner") {
+      setAuthError("You're already registered as a piano enthusiast with this account. You can't also sign up as a conservatory student — log out first if you want to create a separate account with a different email.");
+      return;
+    }
     setDraft(emptyDraft());
     setStep(0);
     setEditingProfile(false);
@@ -884,7 +888,7 @@ export default function App() {
         />
       )}
 
-      {screen === "landing" && <Landing onApply={startApply} onLogin={startLogin} onBack={backToEntry} onPreview={startPreview} onProfile={goToProfile} myProfile={myProfile} musicOn={musicOn} onMusicToggle={toggleMusic} audioRef={audioRef} />}
+      {screen === "landing" && <Landing onApply={startApply} onBack={backToEntry} onPreview={startPreview} onProfile={goToProfile} myProfile={myProfile} musicOn={musicOn} onMusicToggle={toggleMusic} audioRef={audioRef} error={authError} />}
       {screen === "login" && <LoginScreen onSubmit={handleLogin} onBack={goHome} error={authError} />}
       {screen === "signup" && (
         <SignupFlow
@@ -955,7 +959,7 @@ export default function App() {
 /* ---------------------------------------------------------------- */
 /* LANDING                                                             */
 /* ---------------------------------------------------------------- */
-function Landing({ onApply, onBack, onPreview, onProfile, myProfile, musicOn, onMusicToggle, audioRef }) {
+function Landing({ onApply, onBack, onPreview, onProfile, myProfile, musicOn, onMusicToggle, audioRef, error }) {
   return (
     <div style={{ color: C.ivory }}>
       <div className="max-w-6xl mx-auto px-6 pt-8 pb-4 flex items-center justify-between">
@@ -988,6 +992,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, myProfile, musicOn, on
               {myProfile ? "You're signed in." : "Free to join."}
             </span>
           </div>
+          {error && <p className="mt-4 text-sm max-w-md" style={{ color: C.burgundy, lineHeight: 1.5 }}>{error}</p>}
         </div>
         <div className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${C.inkLine}`, background: C.inkSoft }}>
           <div className="px-5 pt-4 pb-2">
