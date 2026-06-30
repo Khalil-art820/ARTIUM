@@ -966,10 +966,9 @@ function Landing({ onApply, onLogin, onBack, onPreview, onProfile, myProfile, mu
         <div className="hidden sm:flex items-center gap-3">
           <MusicBtn playing={musicOn} onToggle={onMusicToggle} audioRef={audioRef} />
           {myProfile ? (
-            <>
-              <GhostBtn onClick={onProfile} icon={Users}>My profile</GhostBtn>
+            <button onClick={onProfile} title="My profile">
               <Avatar name={myProfile.name} id="me" size={38} photoUrl={myProfile.photoUrl} online />
-            </>
+            </button>
           ) : (
             <GhostBtn onClick={onLogin} icon={Users}>Log in</GhostBtn>
           )}
