@@ -895,8 +895,10 @@ export default function App() {
           onUpdateProfile={(updates) => setLearnerProfile((p) => ({ ...p, ...updates }))}
           onLogout={async () => { await supabase.auth.signOut(); setLearnerProfile(null); setLearnerLoggedOut(true); setScreen("entry"); }}
           onDeleteAccount={async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) await supabase.from("profiles").delete().eq("id", user.id);
+            const { data: { session } } = await supabase.auth.getSession();
+            await supabase.functions.invoke("delete-account", {
+              headers: { Authorization: `Bearer ${session.access_token}` },
+            });
             await supabase.auth.signOut();
             setLearnerProfile(null);
             setLearnerLoggedOut(false);
