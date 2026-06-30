@@ -2153,13 +2153,64 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
                 <Avatar name={selected.name} id={selected.id} size={52} photoUrl={selected.photoUrl} online={selected.online} />
                 <div>
                   <p style={{ fontFamily: FONT_DISPLAY, fontSize: 20, fontWeight: 600 }}>{selected.name}</p>
-                  <p style={{ fontSize: 12, color: C.ivoryDim }}>{(CONSERVATORIES.find((c) => c.id === selected.conservatoryId) || {}).name}</p>
+                  <p style={{ fontSize: 12, color: C.ivoryDim }}>
+                    {selected.instrument ? `${selected.instrument} · ` : ""}{selected.year ? `${selected.year} · ` : ""}
+                    {(CONSERVATORIES.find((c) => c.id === selected.conservatoryId) || {}).name}
+                  </p>
                 </div>
               </div>
               <div className="mt-4 flex flex-wrap gap-2">
                 <span className="px-3 py-1 rounded-full text-xs" style={{ border: `1px solid ${C.inkLine}`, color: C.ivoryDim }}>{teachingModeLabel(selected.teaching.mode)}</span>
                 {selected.teaching.price && <span className="px-3 py-1 rounded-full text-xs" style={{ border: `1px solid ${C.inkLine}`, color: C.brass }}>€{selected.teaching.price} / session</span>}
               </div>
+
+              {selected.bio && <p className="mt-4 text-sm" style={{ color: C.ivoryDim, lineHeight: 1.6 }}>{selected.bio}</p>}
+
+              {(() => {
+                const linkMeta = videoLinkMeta(selected.videoLink);
+                return linkMeta ? (
+                  <a href={selected.videoLink} target="_blank" rel="noreferrer" className="mt-4 rounded-xl flex items-center gap-3 p-3" style={{ border: `1px solid ${C.inkLine}`, textDecoration: "none", color: "inherit" }}>
+                    <div className="rounded-lg flex items-center justify-center shrink-0" style={{ width: 40, height: 40, background: colorFor(selected.id) }}>
+                      <Play size={16} color={C.ivory} />
+                    </div>
+                    <div>
+                      <p style={{ fontSize: 12, fontWeight: 600 }}>Watch performance on {linkMeta.label}</p>
+                      <p className="flex items-center gap-1" style={{ fontSize: 10, color: C.ivoryDim }}><linkMeta.Icon size={11} /> Opens in a new tab</p>
+                    </div>
+                  </a>
+                ) : null;
+              })()}
+
+              {selected.tastes && selected.tastes.length > 0 && (
+                <div className="mt-5">
+                  <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.ivoryDim }}>MUSICAL PREFERENCES</p>
+                  <div className="flex flex-wrap gap-1.5 mt-2">{selected.tastes.map((t) => <span key={t} className="text-xs px-2.5 py-1 rounded-full" style={{ border: `1px solid ${C.inkLine}` }}>{t}</span>)}</div>
+                </div>
+              )}
+
+              {selected.pieces && selected.pieces.length > 0 && (
+                <div className="mt-5">
+                  <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.ivoryDim }}>CURRENT REPERTOIRE</p>
+                  <div className="flex flex-col gap-1.5 mt-2">
+                    {selected.pieces.map((p, i) => (
+                      <p key={i} className="text-sm"><span style={{ fontFamily: FONT_MONO, color: C.brass, fontSize: 11 }}>No.{i + 1}</span> {p.title} <span style={{ color: C.ivoryDim }}>— {p.composer}</span></p>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {selected.top && (
+                <div className="mt-5">
+                  <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.ivoryDim }}>TOP</p>
+                  <p className="text-sm mt-2" style={{ lineHeight: 1.6 }}>{selected.top}</p>
+                </div>
+              )}
+              {selected.flop && (
+                <div className="mt-5">
+                  <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.ivoryDim }}>FLOP</p>
+                  <p className="text-sm mt-2" style={{ lineHeight: 1.6 }}>{selected.flop}</p>
+                </div>
+              )}
 
               {status === "accepted" ? (
                 <LearnerChat teacher={selected} messages={conversations[selected.id] || []} onSend={onSend} />
