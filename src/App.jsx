@@ -599,6 +599,7 @@ export default function App() {
     if (authProfile) {
       if (authProfile.role === "learner") {
         setLearnerProfile({ name: authProfile.name, location: authProfile.location });
+        setLearnerLoggedOut(false);
         if (["entry", "landing", "login", "confirmEmail", "learnerSignup"].includes(screen)) {
           setScreen("learnerMap");
         }
@@ -652,6 +653,7 @@ export default function App() {
   }, []);
 
   const [learnerProfile, setLearnerProfile] = useState(null);
+  const [learnerLoggedOut, setLearnerLoggedOut] = useState(false);
   const [teachRequests, setTeachRequests] = useState({});
 
   const [draft, setDraft] = useState(emptyDraft());
@@ -722,7 +724,11 @@ export default function App() {
     setAppTab("map");
   }
   function chooseStudent() { setScreen("landing"); }
-  function chooseLearner() { if (learnerProfile) { setScreen("learnerMap"); return; } setLearnerProfile(null); setAuthError(""); setScreen("learnerSignup"); }
+  function chooseLearner() {
+    if (learnerProfile) { setScreen("learnerMap"); return; }
+    if (learnerLoggedOut) { startLogin(); return; }
+    setLearnerProfile(null); setAuthError(""); setScreen("learnerSignup");
+  }
   async function submitLearner({ name, location, email, password }) {
     setAuthError("");
     const { data, error } = await supabase.auth.signUp({
@@ -736,6 +742,7 @@ export default function App() {
       if (insertError) { setAuthError(insertError.message); return; }
       await supabase.auth.updateUser({ data: { pendingLearner: null } });
       setLearnerProfile({ name, location });
+      setLearnerLoggedOut(false);
       setScreen("learnerMap");
     } else {
       setLearnerProfile({ name, location });
@@ -872,7 +879,7 @@ export default function App() {
         />
       )}
 
-      {screen === "entry" && <EntryGate onLearner={chooseLearner} onStudent={chooseStudent} onLogin={startLogin} learnerProfile={learnerProfile} />}
+      {screen === "entry" && <EntryGate onLearner={chooseLearner} onStudent={chooseStudent} onLogin={startLogin} learnerProfile={learnerProfile} learnerLoggedOut={learnerLoggedOut} />}
       {screen === "learnerSignup" && <LearnerSignup onSubmit={submitLearner} onBack={backToEntry} onLogin={startLogin} error={authError} />}
       {screen === "learnerMap" && (
         <LearnerScreen
@@ -886,7 +893,15 @@ export default function App() {
           onSend={sendMessage}
           onBack={backToEntry}
           onUpdateProfile={(updates) => setLearnerProfile((p) => ({ ...p, ...updates }))}
-          onLogout={async () => { await supabase.auth.signOut(); setLearnerProfile(null); setScreen("entry"); }}
+          onLogout={async () => { await supabase.auth.signOut(); setLearnerProfile(null); setLearnerLoggedOut(true); setScreen("entry"); }}
+          onDeleteAccount={async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) await supabase.from("profiles").delete().eq("id", user.id);
+            await supabase.auth.signOut();
+            setLearnerProfile(null);
+            setLearnerLoggedOut(false);
+            setScreen("entry");
+          }}
         />
       )}
 
@@ -1959,7 +1974,8 @@ function StepTeaching({ draft, update }) {
 }
 
 /* ---- First screen: pick your role ---- */
-function EntryGate({ onLearner, onStudent, onLogin, learnerProfile }) {
+function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLoggedOut }) {
+  const singleCard = !!learnerProfile || learnerLoggedOut;
   return (
     <div className="min-h-full flex flex-col" style={{ background: C.ink, color: C.ivory }}>
       <div className="max-w-5xl w-full mx-auto px-6 pt-10">
@@ -1973,7 +1989,7 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile }) {
           <p className="text-center mt-4 mx-auto max-w-md" style={{ color: C.ivoryDim, fontSize: 16, lineHeight: 1.6 }}>
             How would you like to join?
           </p>
-          <div className={`mt-10 grid gap-5 ${learnerProfile ? "" : "md:grid-cols-2"}`}>
+          <div className={`mt-10 grid gap-5 ${singleCard ? "" : "md:grid-cols-2"}`}>
             <button onClick={onLearner} className="text-left rounded-2xl p-7" style={{ border: `1px solid ${C.inkLine}`, background: C.inkSoft }}>
               <Music2 size={26} color={C.brass} />
               <h3 className="mt-4" style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600 }}>I'm a piano enthusiast</h3>
@@ -1981,10 +1997,10 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile }) {
                 I want to learn the piano with the best — find me a top conservatory musician to teach me.
               </p>
               <span className="mt-5 inline-flex items-center gap-1.5 text-sm" style={{ color: C.brass, fontWeight: 600 }}>
-                Find a teacher <ArrowRight size={15} />
+                {learnerLoggedOut ? <>Log in <ArrowRight size={15} /></> : <>Find a teacher <ArrowRight size={15} /></>}
               </span>
             </button>
-            {!learnerProfile && (
+            {!singleCard && (
               <button onClick={onStudent} className="text-left rounded-2xl p-7" style={{ border: `1px solid ${C.inkLine}`, background: C.inkSoft }}>
                 <Users size={26} color={C.brass} />
                 <h3 className="mt-4" style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600 }}>I'm a conservatory student</h3>
@@ -2101,7 +2117,7 @@ function TeacherMap({ teachers, selectedId, onSelect, height = 520 }) {
 }
 
 /* ---- Learner home: map + request + chat ---- */
-function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conversations, activeChatId, setActiveChatId, onSend, onBack, onUpdateProfile, onLogout }) {
+function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conversations, activeChatId, setActiveChatId, onSend, onBack, onUpdateProfile, onLogout, onDeleteAccount }) {
   const [tab, setTab] = useState("teachers");
   const [selectedId, setSelectedId] = useState(null);
   const selected = teachers.find((t) => t.id === selectedId);
@@ -2174,10 +2190,15 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
               {saved ? "Saved ✓" : "Save changes"}
             </button>
           </div>
-          <div className="mt-10 pt-8" style={{ borderTop: `1px solid ${C.inkLine}` }}>
+          <div className="mt-10 pt-8 flex flex-col gap-3" style={{ borderTop: `1px solid ${C.inkLine}` }}>
             <button onClick={onLogout} className="w-full rounded-xl py-3 text-sm font-semibold"
-              style={{ border: `1px solid ${C.burgundy}`, color: C.burgundy, background: "transparent" }}>
+              style={{ border: `1px solid ${C.inkLine}`, color: C.ivoryDim, background: "transparent" }}>
               Log out
+            </button>
+            <button onClick={() => { if (window.confirm("Delete your account? This will permanently remove all your data and cannot be undone.")) onDeleteAccount(); }}
+              className="w-full rounded-xl py-3 text-sm font-semibold"
+              style={{ border: `1px solid ${C.burgundy}`, color: C.burgundy, background: "transparent" }}>
+              Delete account
             </button>
           </div>
         </div>
