@@ -499,8 +499,8 @@ function MapTitle() {
   );
 }
 
-const TILE_URL = "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png";
-const TILE_ATTRIBUTION = '&copy; <a href="https://stadiamaps.com/" target="_blank" rel="noreferrer">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank" rel="noreferrer">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a>';
+const TILE_URL = "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
+const TILE_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions" target="_blank" rel="noreferrer">CARTO</a>';
 
 const REGION_COLOR = {
   "FR": "#C9A24B", "AT": "#9B7FD4", "DE": "#9B7FD4", "NL": "#9B7FD4",
@@ -875,13 +875,13 @@ export default function App() {
         input[type=range].artium-slider::-ms-thumb { width: 6px !important; height: 6px !important; border-radius: 50% !important; background: #C9A24B !important; border: none !important; cursor: pointer !important; }
 
         .artium-map, .artium-map .leaflet-container { border-radius: inherit; }
-        .artium-map .leaflet-tile-pane { filter: brightness(0.92) contrast(1.1) saturate(1.15); }
-        .artium-map .leaflet-control-zoom { border: 1px solid rgba(244,238,219,0.14) !important; box-shadow: none !important; }
-        .artium-map .leaflet-control-zoom a { background: #1D1A15 !important; color: #F4EEDB !important; border-color: rgba(244,238,219,0.14) !important; }
-        .artium-map .leaflet-control-zoom a:hover { background: #14120F !important; }
-        .artium-map .leaflet-control-attribution { background: rgba(20,18,15,0.65) !important; color: rgba(244,238,219,0.5) !important; font-size: 9px !important; }
-        .artium-map .leaflet-control-attribution a { color: rgba(244,238,219,0.7) !important; }
-        .artium-map .leaflet-tooltip { background: #1D1A15 !important; border: 1px solid rgba(244,238,219,0.14) !important; color: #F4EEDB !important; border-radius: 8px !important; box-shadow: 0 2px 10px rgba(0,0,0,0.4) !important; padding: 6px 10px !important; }
+        .artium-map .leaflet-tile-pane { filter: saturate(1.2) contrast(1.05); }
+        .artium-map .leaflet-control-zoom { border: none !important; box-shadow: 0 2px 8px rgba(0,0,0,0.25) !important; }
+        .artium-map .leaflet-control-zoom a { background: #fff !important; color: #333 !important; border-color: #ddd !important; font-weight: 700 !important; }
+        .artium-map .leaflet-control-zoom a:hover { background: #f4f4f4 !important; }
+        .artium-map .leaflet-control-attribution { background: rgba(255,255,255,0.75) !important; color: #666 !important; font-size: 9px !important; }
+        .artium-map .leaflet-control-attribution a { color: #444 !important; }
+        .artium-map .leaflet-tooltip { background: #1D1A15 !important; border: 1px solid rgba(244,238,219,0.2) !important; color: #F4EEDB !important; border-radius: 8px !important; box-shadow: 0 4px 14px rgba(0,0,0,0.35) !important; padding: 6px 10px !important; }
         .artium-map .leaflet-tooltip-top:before { border-top-color: #1D1A15 !important; }
         .artium-pin { background: transparent !important; border: none !important; }
       `}</style>
