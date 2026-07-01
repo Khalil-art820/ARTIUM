@@ -502,45 +502,22 @@ function MapTitle() {
 const TILE_URL = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}";
 const TILE_ATTRIBUTION = 'Tiles &copy; <a href="https://www.esri.com/" target="_blank" rel="noreferrer">Esri</a>';
 
-const REGION_COLOR = {
-  "FR": "#C9A24B", "AT": "#9B7FD4", "DE": "#9B7FD4", "NL": "#9B7FD4",
-  "CH": "#9B7FD4", "FI": "#9B7FD4", "IT": "#9B7FD4", "UK": "#9B7FD4",
-  "RU": "#5B9BD4", "US": "#4BBFA0", "CA": "#4BBFA0",
-  "CN": "#E8724A", "JP": "#E8724A", "KR": "#E8724A", "SG": "#E8724A",
-  "BR": "#6BBF4B", "ZA": "#E8C84A", "AU": "#E8724A",
-};
-
-function consColor(cons) {
-  const prefix = cons.code ? cons.code.split("-")[0] : "";
-  return REGION_COLOR[prefix] || C.brass;
-}
-
-function consPinIcon({ active, count, color }) {
-  const w = active ? 34 : 26;
+function consPinIcon({ active, hasTeacher }) {
+  const w = active ? 18 : 14;
   const h = Math.round(w * 1.28);
-  const pinColor = color || C.brass;
-  const glowColor = pinColor + "99";
-  const badge = count > 0
-    ? `<div style="
-        position:absolute; top:-7px; left:50%; transform:translateX(-50%);
-        min-width:17px; height:17px; padding:0 4px; border-radius:9px;
-        background:${pinColor}; border:1.5px solid ${C.ink};
-        display:flex; align-items:center; justify-content:center;
-        font-family:monospace; font-weight:700; font-size:9px; line-height:1;
-        color:${C.ink};
-      ">${count}</div>`
-    : "";
-  const glow = active ? `filter:drop-shadow(0 0 8px ${glowColor}) drop-shadow(0 2px 4px rgba(0,0,0,0.7));` : `filter:drop-shadow(0 2px 4px rgba(0,0,0,0.6));`;
+  const pinColor = hasTeacher ? "#C0392B" : "#1a1a1a";
+  const strokeColor = hasTeacher ? "#8B1A1A" : "#555";
+  const glow = active
+    ? `filter:drop-shadow(0 0 6px ${pinColor}99) drop-shadow(0 2px 3px rgba(0,0,0,0.7));`
+    : `filter:drop-shadow(0 1px 3px rgba(0,0,0,0.5));`;
   return L.divIcon({
     className: "artium-pin",
     html: `
       <div style="position:relative; width:${w}px; height:${h}px; ${glow}">
-        ${badge}
         <svg width="${w}" height="${h}" viewBox="0 0 24 30" style="display:block;">
           <path d="M12 0C5.4 0 0 5 0 11.4 0 19.6 12 30 12 30s12-10.4 12-18.6C24 5 18.6 0 12 0z"
-            fill="${pinColor}" stroke="${C.ink}" stroke-width="1" opacity="${active ? 1 : 0.85}" />
-          <circle cx="12" cy="11.5" r="4" fill="${C.ink}" opacity="0.85" />
-          ${active ? `<circle cx="12" cy="11.5" r="2" fill="${pinColor}" />` : ""}
+            fill="${pinColor}" stroke="${strokeColor}" stroke-width="1.5" />
+          <circle cx="12" cy="11.5" r="4" fill="white" opacity="0.9" />
         </svg>
       </div>
     `,
@@ -563,7 +540,7 @@ function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", inter
         scrollWheelZoom={interactive}
         style={{ width: "100%", height: "100%", background: C.ink }}
       >
-        <TileLayer url={TILE_URL} attribution={TILE_ATTRIBUTION} />
+        <TileLayer url={TILE_URL} attribution="" />
         {CONSERVATORIES.map((cons) => {
           const n = (studentsByCons[cons.id] || []).length;
           const active = selectedId === cons.id;
@@ -571,7 +548,7 @@ function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", inter
             <Marker
               key={cons.id}
               position={[cons.lat, cons.lng]}
-              icon={consPinIcon({ active, count: n, color: consColor(cons) })}
+              icon={consPinIcon({ active, hasTeacher: n > 0 })}
               eventHandlers={{ click: () => onSelect(cons.id) }}
             >
               <Tooltip direction="top" offset={[0, -28]}>
@@ -879,8 +856,7 @@ export default function App() {
         .artium-map .leaflet-control-zoom { border: none !important; box-shadow: 0 2px 8px rgba(0,0,0,0.25) !important; }
         .artium-map .leaflet-control-zoom a { background: #fff !important; color: #333 !important; border-color: #ddd !important; font-weight: 700 !important; }
         .artium-map .leaflet-control-zoom a:hover { background: #f4f4f4 !important; }
-        .artium-map .leaflet-control-attribution { background: rgba(255,255,255,0.75) !important; color: #666 !important; font-size: 9px !important; }
-        .artium-map .leaflet-control-attribution a { color: #444 !important; }
+        .artium-map .leaflet-control-attribution { display: none !important; }
         .artium-map .leaflet-tooltip { background: #1D1A15 !important; border: 1px solid rgba(244,238,219,0.2) !important; color: #F4EEDB !important; border-radius: 8px !important; box-shadow: 0 4px 14px rgba(0,0,0,0.35) !important; padding: 6px 10px !important; }
         .artium-map .leaflet-tooltip-top:before { border-top-color: #1D1A15 !important; }
         .artium-pin { background: transparent !important; border: none !important; }
