@@ -554,8 +554,8 @@ const TILE_ATTRIBUTION = 'Tiles &copy; <a href="https://www.esri.com/" target="_
 function consPinIcon({ active, hasStudents, hasTeacher }) {
   const w = active ? 18 : 14;
   const h = Math.round(w * 1.28);
-  const pinColor = hasTeacher ? "#C0392B" : hasStudents ? "#ffffff" : "#cccccc";
-  const strokeColor = hasTeacher ? "#8B1A1A" : hasStudents ? "#aaaaaa" : "#999999";
+  const pinColor = hasTeacher ? "#C0392B" : hasStudents ? "#cccccc" : "#ffffff";
+  const strokeColor = hasTeacher ? "#8B1A1A" : hasStudents ? "#999999" : "#aaaaaa";
   const glow = active
     ? `filter:drop-shadow(0 0 6px ${pinColor}99) drop-shadow(0 2px 3px rgba(0,0,0,0.7));`
     : `filter:drop-shadow(0 1px 3px rgba(0,0,0,0.5));`;
@@ -578,8 +578,8 @@ function consPinIcon({ active, hasStudents, hasTeacher }) {
 function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", interactive = false }) {
   const legend = [
     { color: "#C0392B", label: "Open to teaching" },
-    { color: "#ffffff", label: "Registered students" },
-    { color: "#cccccc", label: "No students yet" },
+    { color: "#cccccc", label: "Has students, not teaching" },
+    { color: "#ffffff", label: "No students yet" },
   ];
   return (
     <div className="artium-map" style={{ width: "100%", height, position: "relative" }}>
