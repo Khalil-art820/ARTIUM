@@ -554,8 +554,8 @@ const TILE_ATTRIBUTION = 'Tiles &copy; <a href="https://www.esri.com/" target="_
 function consPinIcon({ active, hasTeacher }) {
   const w = active ? 18 : 14;
   const h = Math.round(w * 1.28);
-  const pinColor = hasTeacher ? "#C0392B" : "#1a1a1a";
-  const strokeColor = hasTeacher ? "#8B1A1A" : "#555";
+  const pinColor = hasTeacher ? "#C0392B" : "#ffffff";
+  const strokeColor = hasTeacher ? "#8B1A1A" : "#aaaaaa";
   const glow = active
     ? `filter:drop-shadow(0 0 6px ${pinColor}99) drop-shadow(0 2px 3px rgba(0,0,0,0.7));`
     : `filter:drop-shadow(0 1px 3px rgba(0,0,0,0.5));`;
