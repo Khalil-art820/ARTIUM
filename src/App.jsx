@@ -895,22 +895,7 @@ export default function App() {
           onUpdateProfile={(updates) => setLearnerProfile((p) => ({ ...p, ...updates }))}
           onLogout={async () => { await supabase.auth.signOut(); setLearnerProfile(null); setLearnerLoggedOut(true); setScreen("entry"); }}
           onDeleteAccount={async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            // Delete profile row (works client-side)
-            if (session?.user?.id) {
-              await supabase.from("profiles").delete().eq("id", session.user.id);
-            }
-            // Fire-and-forget: remove auth user via edge function (requires service role)
-            if (session?.access_token) {
-              fetch(
-                `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-account`,
-                {
-                  method: "POST",
-                  headers: { Authorization: `Bearer ${session.access_token}`, "Content-Type": "application/json" },
-                }
-              ).catch(() => {});
-            }
-            // Always sign out and redirect immediately
+            await supabase.rpc("delete_own_account");
             await supabase.auth.signOut();
             setLearnerProfile(null);
             setLearnerLoggedOut(false);
