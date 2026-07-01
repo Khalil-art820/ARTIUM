@@ -777,9 +777,9 @@ function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", inter
             </span>
           ))}
         </div>
-        <div style={{ display: "flex", gap: 16, fontSize: 11, fontFamily: FONT_MONO, color: "rgba(244,238,219,0.55)", borderTop: "1px solid rgba(244,238,219,0.1)", paddingTop: 5 }}>
-          <span><span style={{ color: "rgba(244,238,219,0.85)", fontWeight: 600 }}>{totalStudents}</span> students registered</span>
-          <span><span style={{ color: "#C0392B", fontWeight: 600 }}>{totalTeachers}</span> open to teaching</span>
+        <div style={{ display: "flex", gap: 16, fontSize: 11, fontFamily: FONT_MONO, color: "rgba(244,238,219,0.55)", borderTop: "1px solid rgba(244,238,219,0.1)", paddingTop: 5, marginTop: 2 }}>
+          <span><span style={{ color: "#ffffff", fontWeight: 600 }}>{totalStudents}</span> conservatory students registered</span>
+          <span><span style={{ color: "#ffffff", fontWeight: 600 }}>{totalTeachers}</span> open to teaching</span>
         </div>
       </div>
       <MapContainer
