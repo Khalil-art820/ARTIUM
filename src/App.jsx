@@ -551,11 +551,11 @@ function MapTitle() {
 const TILE_URL = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}";
 const TILE_ATTRIBUTION = 'Tiles &copy; <a href="https://www.esri.com/" target="_blank" rel="noreferrer">Esri</a>';
 
-function consPinIcon({ active, hasTeacher }) {
+function consPinIcon({ active, hasStudents, hasTeacher }) {
   const w = active ? 18 : 14;
   const h = Math.round(w * 1.28);
-  const pinColor = hasTeacher ? "#C0392B" : "#ffffff";
-  const strokeColor = hasTeacher ? "#8B1A1A" : "#aaaaaa";
+  const pinColor = hasTeacher ? "#C0392B" : hasStudents ? "#ffffff" : "#cccccc";
+  const strokeColor = hasTeacher ? "#8B1A1A" : hasStudents ? "#aaaaaa" : "#999999";
   const glow = active
     ? `filter:drop-shadow(0 0 6px ${pinColor}99) drop-shadow(0 2px 3px rgba(0,0,0,0.7));`
     : `filter:drop-shadow(0 1px 3px rgba(0,0,0,0.5));`;
@@ -597,7 +597,7 @@ function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", inter
             <Marker
               key={cons.id}
               position={[cons.lat, cons.lng]}
-              icon={consPinIcon({ active, hasTeacher: n > 0 })}
+              icon={consPinIcon({ active, hasStudents: n > 0, hasTeacher: (studentsByCons[cons.id] || []).some(s => s.teaching && s.teaching.open) })}
               eventHandlers={{ click: () => onSelect(cons.id) }}
             >
               <Tooltip direction="top" offset={[0, -28]}>
