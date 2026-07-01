@@ -499,32 +499,48 @@ function MapTitle() {
   );
 }
 
-const TILE_URL = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
-const TILE_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions" target="_blank" rel="noreferrer">CARTO</a>';
+const TILE_URL = "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png";
+const TILE_ATTRIBUTION = '&copy; <a href="https://stadiamaps.com/" target="_blank" rel="noreferrer">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank" rel="noreferrer">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a>';
 
-function consPinIcon({ active, count }) {
-  const w = active ? 30 : 24;
+const REGION_COLOR = {
+  "FR": "#C9A24B", "AT": "#9B7FD4", "DE": "#9B7FD4", "NL": "#9B7FD4",
+  "CH": "#9B7FD4", "FI": "#9B7FD4", "IT": "#9B7FD4", "UK": "#9B7FD4",
+  "RU": "#5B9BD4", "US": "#4BBFA0", "CA": "#4BBFA0",
+  "CN": "#E8724A", "JP": "#E8724A", "KR": "#E8724A", "SG": "#E8724A",
+  "BR": "#6BBF4B", "ZA": "#E8C84A", "AU": "#E8724A",
+};
+
+function consColor(cons) {
+  const prefix = cons.code ? cons.code.split("-")[0] : "";
+  return REGION_COLOR[prefix] || C.brass;
+}
+
+function consPinIcon({ active, count, color }) {
+  const w = active ? 34 : 26;
   const h = Math.round(w * 1.28);
-  const pinColor = active ? C.brass : C.ivory;
+  const pinColor = color || C.brass;
+  const glowColor = pinColor + "99";
   const badge = count > 0
     ? `<div style="
-        position:absolute; top:-6px; left:50%; transform:translateX(-50%);
-        min-width:16px; height:16px; padding:0 4px; border-radius:8px;
-        background:${C.ink}; border:1px solid ${active ? C.brass : "rgba(244,238,219,0.35)"};
+        position:absolute; top:-7px; left:50%; transform:translateX(-50%);
+        min-width:17px; height:17px; padding:0 4px; border-radius:9px;
+        background:${pinColor}; border:1.5px solid ${C.ink};
         display:flex; align-items:center; justify-content:center;
-        font-family:${FONT_MONO}; font-weight:600; font-size:9px; line-height:1;
-        color:${active ? C.brass : C.ivory};
+        font-family:monospace; font-weight:700; font-size:9px; line-height:1;
+        color:${C.ink};
       ">${count}</div>`
     : "";
+  const glow = active ? `filter:drop-shadow(0 0 8px ${glowColor}) drop-shadow(0 2px 4px rgba(0,0,0,0.7));` : `filter:drop-shadow(0 2px 4px rgba(0,0,0,0.6));`;
   return L.divIcon({
     className: "artium-pin",
     html: `
-      <div style="position:relative; width:${w}px; height:${h}px; filter:drop-shadow(0 2px 3px rgba(0,0,0,0.6));">
+      <div style="position:relative; width:${w}px; height:${h}px; ${glow}">
         ${badge}
         <svg width="${w}" height="${h}" viewBox="0 0 24 30" style="display:block;">
           <path d="M12 0C5.4 0 0 5 0 11.4 0 19.6 12 30 12 30s12-10.4 12-18.6C24 5 18.6 0 12 0z"
-            fill="${pinColor}" stroke="${C.ink}" stroke-width="1.1" />
-          <circle cx="12" cy="11.5" r="4.4" fill="${C.ink}" opacity="${active ? 1 : 0.8}" />
+            fill="${pinColor}" stroke="${C.ink}" stroke-width="1" opacity="${active ? 1 : 0.85}" />
+          <circle cx="12" cy="11.5" r="4" fill="${C.ink}" opacity="0.85" />
+          ${active ? `<circle cx="12" cy="11.5" r="2" fill="${pinColor}" />` : ""}
         </svg>
       </div>
     `,
@@ -555,7 +571,7 @@ function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", inter
             <Marker
               key={cons.id}
               position={[cons.lat, cons.lng]}
-              icon={consPinIcon({ active, count: n })}
+              icon={consPinIcon({ active, count: n, color: consColor(cons) })}
               eventHandlers={{ click: () => onSelect(cons.id) }}
             >
               <Tooltip direction="top" offset={[0, -28]}>
@@ -859,7 +875,7 @@ export default function App() {
         input[type=range].artium-slider::-ms-thumb { width: 6px !important; height: 6px !important; border-radius: 50% !important; background: #C9A24B !important; border: none !important; cursor: pointer !important; }
 
         .artium-map, .artium-map .leaflet-container { border-radius: inherit; }
-        .artium-map .leaflet-tile-pane { filter: brightness(0.88) contrast(1.08) sepia(0.12) hue-rotate(-6deg); }
+        .artium-map .leaflet-tile-pane { filter: brightness(0.92) contrast(1.1) saturate(1.15); }
         .artium-map .leaflet-control-zoom { border: 1px solid rgba(244,238,219,0.14) !important; box-shadow: none !important; }
         .artium-map .leaflet-control-zoom a { background: #1D1A15 !important; color: #F4EEDB !important; border-color: rgba(244,238,219,0.14) !important; }
         .artium-map .leaflet-control-zoom a:hover { background: #14120F !important; }
