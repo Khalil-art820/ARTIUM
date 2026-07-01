@@ -896,9 +896,21 @@ export default function App() {
           onLogout={async () => { await supabase.auth.signOut(); setLearnerProfile(null); setLearnerLoggedOut(true); setScreen("entry"); }}
           onDeleteAccount={async () => {
             const { data: { session } } = await supabase.auth.getSession();
-            await supabase.functions.invoke("delete-account", {
-              headers: { Authorization: `Bearer ${session.access_token}` },
-            });
+            const res = await fetch(
+              `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-account`,
+              {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${session.access_token}`,
+                  "Content-Type": "application/json",
+                },
+              }
+            );
+            if (!res.ok) {
+              const body = await res.json().catch(() => ({}));
+              alert("Could not delete account: " + (body.error || res.status));
+              return;
+            }
             await supabase.auth.signOut();
             setLearnerProfile(null);
             setLearnerLoggedOut(false);
