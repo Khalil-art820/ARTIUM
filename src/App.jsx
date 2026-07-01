@@ -566,7 +566,7 @@ function consPinIcon({ active, hasStudents, hasTeacher }) {
         <svg width="${w}" height="${h}" viewBox="0 0 24 30" style="display:block;">
           <path d="M12 0C5.4 0 0 5 0 11.4 0 19.6 12 30 12 30s12-10.4 12-18.6C24 5 18.6 0 12 0z"
             fill="${pinColor}" stroke="${strokeColor}" stroke-width="1.5" />
-          <circle cx="12" cy="11.5" r="4" fill="white" opacity="0.9" />
+          <circle cx="12" cy="11.5" r="4" fill="${pinColor === "#ffffff" ? "#1a1a1a" : "white"}" opacity="0.9" />
         </svg>
       </div>
     `,
