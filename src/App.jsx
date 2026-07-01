@@ -584,11 +584,11 @@ function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", inter
   return (
     <div className="artium-map" style={{ width: "100%", height, position: "relative" }}>
       <div style={{
-        position: "absolute", bottom: 10, left: 10,
+        position: "absolute", bottom: 0, left: 0,
         zIndex: 1000, display: "flex", gap: 16, alignItems: "center",
         background: "rgba(20,18,15,0.82)", backdropFilter: "blur(6px)",
-        borderRadius: 20, padding: "6px 14px",
-        border: "1px solid rgba(244,238,219,0.12)",
+        borderRadius: 0, padding: "8px 14px",
+        border: "none",
         pointerEvents: "none",
       }}>
         {legend.map(({ color, label }) => (
