@@ -108,6 +108,27 @@ const CONSERVATORIES = [
   { id: "berklee", name: "Berklee College of Music", short: "Berklee", city: "Boston", country: "USA", x: 302.6, y: 121.8, lat: 42.3467, lng: -71.0865, founded: 1945, code: "US-MA" },
   { id: "cim", name: "Cleveland Institute of Music", short: "CIM", city: "Cleveland", country: "USA", x: 273.4, y: 123.9, lat: 41.5100, lng: -81.6089, founded: 1920, code: "US-OH" },
   { id: "usc", name: "USC Thornton School of Music", short: "USC Thornton", city: "Los Angeles", country: "USA", x: 171.4, y: 143.1, lat: 34.0224, lng: -118.2851, founded: 1884, code: "US-CA" },
+  // USA (more)
+  { id: "northwestern", name: "Northwestern University Bienen School of Music", short: "Northwestern", city: "Evanston", country: "USA", x: 257.5, y: 122.8, lat: 42.0565, lng: -87.6753, founded: 1895, code: "US-IL" },
+  { id: "rice", name: "Rice University Shepherd School of Music", short: "Rice Shepherd", city: "Houston", country: "USA", x: 231.0, y: 155.5, lat: 29.7175, lng: -95.4024, founded: 1974, code: "US-TX" },
+  { id: "michigan", name: "University of Michigan School of Music", short: "U-M Music", city: "Ann Arbor", country: "USA", x: 266.0, y: 122.0, lat: 42.2808, lng: -83.7430, founded: 1880, code: "US-MI" },
+  { id: "ucla", name: "UCLA Herb Alpert School of Music", short: "UCLA Music", city: "Los Angeles", country: "USA", x: 170.2, y: 143.8, lat: 34.0709, lng: -118.4439, founded: 1960, code: "US-CA" },
+  { id: "cincinnati", name: "University of Cincinnati College-Conservatory of Music", short: "CCM", city: "Cincinnati", country: "USA", x: 268.0, y: 128.5, lat: 39.1329, lng: -84.5150, founded: 1867, code: "US-OH" },
+  { id: "boston-univ", name: "Boston University College of Fine Arts — Music", short: "BU Music", city: "Boston", country: "USA", x: 302.2, y: 121.5, lat: 42.3505, lng: -71.1054, founded: 1872, code: "US-MA" },
+  { id: "carnegie-mellon", name: "Carnegie Mellon University School of Music", short: "CMU Music", city: "Pittsburgh", country: "USA", x: 279.5, y: 126.0, lat: 40.4433, lng: -79.9436, founded: 1912, code: "US-PA" },
+  { id: "manhattan-school", name: "Aaron Copland School of Music — Queens College", short: "Copland School", city: "Queens", country: "USA", x: 294.0, y: 125.9, lat: 40.7366, lng: -73.8200, founded: 1937, code: "US-NY" },
+  { id: "new-school", name: "The New School — College of Performing Arts", short: "New School", city: "New York", country: "USA", x: 294.3, y: 125.5, lat: 40.7353, lng: -74.0027, founded: 1919, code: "US-NY" },
+  { id: "texas", name: "Butler School of Music — UT Austin", short: "UT Austin Music", city: "Austin", country: "USA", x: 224.8, y: 158.0, lat: 30.2849, lng: -97.7341, founded: 1938, code: "US-TX" },
+  { id: "florida", name: "University of Florida School of Music", short: "UF Music", city: "Gainesville", country: "USA", x: 261.8, y: 163.5, lat: 29.6516, lng: -82.3248, founded: 1906, code: "US-FL" },
+  { id: "north-carolina", name: "UNC School of the Arts — School of Music", short: "UNCSA Music", city: "Winston-Salem", country: "USA", x: 277.0, y: 140.8, lat: 36.0999, lng: -80.2442, founded: 1963, code: "US-NC" },
+  { id: "minnesota", name: "University of Minnesota School of Music", short: "UMN Music", city: "Minneapolis", country: "USA", x: 240.5, y: 110.5, lat: 44.9742, lng: -93.2277, founded: 1902, code: "US-MN" },
+  { id: "arizona", name: "Arizona State University School of Music", short: "ASU Music", city: "Tempe", country: "USA", x: 185.8, y: 148.0, lat: 33.4255, lng: -111.9400, founded: 1885, code: "US-AZ" },
+  { id: "colorado", name: "University of Colorado Boulder College of Music", short: "CU Boulder Music", city: "Boulder", country: "USA", x: 200.0, y: 130.0, lat: 40.0150, lng: -105.2705, founded: 1920, code: "US-CO" },
+  { id: "miami", name: "Frost School of Music — University of Miami", short: "Frost School", city: "Coral Gables", country: "USA", x: 263.5, y: 170.0, lat: 25.7209, lng: -80.2784, founded: 1926, code: "US-FL" },
+  { id: "vanderbilt", name: "Blair School of Music — Vanderbilt University", short: "Blair School", city: "Nashville", country: "USA", x: 258.5, y: 140.0, lat: 36.1474, lng: -86.8028, founded: 1964, code: "US-TN" },
+  { id: "temple", name: "Boyer College of Music and Dance — Temple University", short: "Boyer College", city: "Philadelphia", country: "USA", x: 290.8, y: 127.3, lat: 39.9814, lng: -75.1548, founded: 1962, code: "US-PA" },
+  { id: "michigan-state", name: "Michigan State University College of Music", short: "MSU Music", city: "East Lansing", country: "USA", x: 264.8, y: 120.0, lat: 42.7284, lng: -84.4822, founded: 1870, code: "US-MI" },
+  { id: "penn-state", name: "Penn State School of Music", short: "Penn State Music", city: "University Park", country: "USA", x: 284.0, y: 124.5, lat: 40.7982, lng: -77.8599, founded: 1929, code: "US-PA" },
   // Asia (additional)
   { id: "ccom", name: "Central Conservatory of Music", short: "CCOM", city: "Beijing", country: "China", x: 823.6, y: 128.1, lat: 39.9042, lng: 116.4074, founded: 1950, code: "CN-BJ" },
   { id: "sichuan", name: "Sichuan Conservatory of Music", short: "SCCOM", city: "Chengdu", country: "China", x: 789.3, y: 151.9, lat: 30.5728, lng: 104.0668, founded: 1939, code: "CN-SC" },
@@ -119,6 +140,160 @@ const CONSERVATORIES = [
   { id: "jerusalem", name: "Jerusalem Academy of Music and Dance", short: "JAMD", city: "Jerusalem", country: "Israel", x: 598.1, y: 148.9, lat: 31.7767, lng: 35.2345, founded: 1933, code: "IL-JR" },
   { id: "cairo", name: "Cairo Conservatory of Music", short: "Cairo Cons.", city: "Cairo", country: "Egypt", x: 587.2, y: 153.2, lat: 30.0626, lng: 31.2497, founded: 1959, code: "EG-CA" },
   { id: "stellenbosch", name: "Stellenbosch University Conservatory", short: "SU Cons.", city: "Stellenbosch", country: "South Africa", x: 553.3, y: 314.7, lat: -33.9321, lng: 18.8602, founded: 1905, code: "ZA-ST" },
+
+  // USA (further)
+  { id: "illinois", name: "University of Illinois School of Music", short: "UIUC Music", city: "Urbana-Champaign", country: "USA", x: 255.0, y: 127.0, lat: 40.1020, lng: -88.2272, founded: 1895, code: "US-IL" },
+  { id: "umd", name: "University of Maryland School of Music", short: "UMD Music", city: "College Park", country: "USA", x: 287.5, y: 130.0, lat: 38.9897, lng: -76.9378, founded: 1960, code: "US-MD" },
+  { id: "duke", name: "Duke University Department of Music", short: "Duke Music", city: "Durham", country: "USA", x: 278.0, y: 140.5, lat: 36.0014, lng: -78.9382, founded: 1924, code: "US-NC" },
+  { id: "usc-upstate", name: "University of South Carolina School of Music", short: "USC Music", city: "Columbia", country: "USA", x: 272.0, y: 147.0, lat: 33.9969, lng: -81.0298, founded: 1895, code: "US-SC" },
+  { id: "pittsburgh", name: "University of Pittsburgh Music Department", short: "Pitt Music", city: "Pittsburgh", country: "USA", x: 279.8, y: 126.5, lat: 40.4443, lng: -79.9601, founded: 1927, code: "US-PA" },
+  { id: "louisiana", name: "LSU School of Music", short: "LSU Music", city: "Baton Rouge", country: "USA", x: 242.0, y: 163.0, lat: 30.4133, lng: -91.1800, founded: 1932, code: "US-LA" },
+  { id: "oklahoma", name: "University of Oklahoma School of Music", short: "OU Music", city: "Norman", country: "USA", x: 217.5, y: 148.5, lat: 35.2059, lng: -97.4454, founded: 1899, code: "US-OK" },
+  { id: "kansas", name: "University of Kansas Murphy Hall — Music", short: "KU Music", city: "Lawrence", country: "USA", x: 230.0, y: 135.0, lat: 38.9543, lng: -95.2558, founded: 1876, code: "US-KS" },
+  { id: "iowa", name: "University of Iowa School of Music", short: "UI Music", city: "Iowa City", country: "USA", x: 244.5, y: 122.5, lat: 41.6611, lng: -91.5302, founded: 1855, code: "US-IA" },
+  { id: "ohio-state", name: "Ohio State University School of Music", short: "OSU Music", city: "Columbus", country: "USA", x: 270.0, y: 127.0, lat: 40.0003, lng: -83.0153, founded: 1878, code: "US-OH" },
+  { id: "byu", name: "Brigham Young University School of Music", short: "BYU Music", city: "Provo", country: "USA", x: 196.0, y: 132.5, lat: 40.2338, lng: -111.6585, founded: 1875, code: "US-UT" },
+  { id: "utah", name: "University of Utah School of Music", short: "Utah Music", city: "Salt Lake City", country: "USA", x: 193.5, y: 130.5, lat: 40.7649, lng: -111.8421, founded: 1900, code: "US-UT" },
+  { id: "new-mexico", name: "University of New Mexico Department of Music", short: "UNM Music", city: "Albuquerque", country: "USA", x: 197.5, y: 148.0, lat: 35.0844, lng: -106.6504, founded: 1889, code: "US-NM" },
+  { id: "georgia", name: "University of Georgia Hugh Hodgson School of Music", short: "UGA Music", city: "Athens", country: "USA", x: 264.0, y: 150.0, lat: 33.9481, lng: -83.3781, founded: 1884, code: "US-GA" },
+  { id: "kentucky", name: "University of Kentucky School of Music", short: "UK Music", city: "Lexington", country: "USA", x: 266.0, y: 135.5, lat: 38.0406, lng: -84.5037, founded: 1917, code: "US-KY" },
+  { id: "oregon", name: "University of Oregon School of Music", short: "UO Music", city: "Eugene", country: "USA", x: 155.5, y: 115.0, lat: 44.0521, lng: -123.0868, founded: 1886, code: "US-OR" },
+  { id: "washington", name: "University of Washington School of Music", short: "UW Music", city: "Seattle", country: "USA", x: 157.5, y: 107.0, lat: 47.6553, lng: -122.3035, founded: 1897, code: "US-WA" },
+  { id: "stanford", name: "Stanford University Center for Computer Research in Music", short: "Stanford Music", city: "Stanford", country: "USA", x: 159.0, y: 134.0, lat: 37.4275, lng: -122.1697, founded: 1947, code: "US-CA" },
+  { id: "mannes", name: "Mannes School of Music — The New School", short: "Mannes", city: "New York", country: "USA", x: 294.1, y: 125.4, lat: 40.7308, lng: -73.9975, founded: 1916, code: "US-NY" },
+  { id: "hartt", name: "Hartt School — University of Hartford", short: "Hartt School", city: "West Hartford", country: "USA", x: 298.5, y: 123.0, lat: 41.7658, lng: -72.7441, founded: 1920, code: "US-CT" },
+  { id: "depaul", name: "DePaul University School of Music", short: "DePaul Music", city: "Chicago", country: "USA", x: 257.0, y: 123.5, lat: 41.9241, lng: -87.6547, founded: 1898, code: "US-IL" },
+  { id: "purdue", name: "Purdue University School of Music", short: "Purdue Music", city: "West Lafayette", country: "USA", x: 261.0, y: 126.0, lat: 40.4259, lng: -86.9081, founded: 1874, code: "US-IN" },
+  { id: "arizona-univ", name: "University of Arizona Fred Fox School of Music", short: "UA Music", city: "Tucson", country: "USA", x: 188.0, y: 153.5, lat: 32.2319, lng: -110.9501, founded: 1891, code: "US-AZ" },
+  { id: "san-diego", name: "UC San Diego Department of Music", short: "UCSD Music", city: "San Diego", country: "USA", x: 172.5, y: 150.5, lat: 32.8801, lng: -117.2340, founded: 1967, code: "US-CA" },
+
+  // Canada
+  { id: "mcgill", name: "McGill Schulich School of Music", short: "McGill Music", city: "Montreal", country: "Canada", x: 290.5, y: 114.0, lat: 45.5017, lng: -73.5673, founded: 1904, code: "CA-QC" },
+  { id: "ubc", name: "UBC School of Music", short: "UBC Music", city: "Vancouver", country: "Canada", x: 158.5, y: 106.0, lat: 49.2827, lng: -123.1207, founded: 1946, code: "CA-BC" },
+  { id: "toronto", name: "University of Toronto Faculty of Music", short: "U of T Music", city: "Toronto", country: "Canada", x: 278.5, y: 118.0, lat: 43.6629, lng: -79.3957, founded: 1918, code: "CA-ON" },
+  { id: "victoria", name: "University of Victoria School of Music", short: "UVic Music", city: "Victoria", country: "Canada", x: 156.5, y: 107.5, lat: 48.4634, lng: -123.3117, founded: 1963, code: "CA-BC" },
+  { id: "laval", name: "Université Laval École de musique", short: "Laval Music", city: "Quebec City", country: "Canada", x: 293.5, y: 112.0, lat: 46.7800, lng: -71.2750, founded: 1937, code: "CA-QC" },
+
+  // UK (further)
+  { id: "birmingham", name: "Birmingham Conservatoire", short: "BCU Cons.", city: "Birmingham", country: "UK", x: 496.0, y: 95.5, lat: 52.4862, lng: -1.8904, founded: 1886, code: "UK-BM" },
+  { id: "leeds", name: "Royal Birmingham Conservatoire — Leeds Campus", short: "Leeds Music", city: "Leeds", country: "UK", x: 495.5, y: 92.0, lat: 53.8008, lng: -1.5491, founded: 1818, code: "UK-LD" },
+  { id: "cardiff", name: "Royal Welsh College of Music & Drama", short: "RWCMD", city: "Cardiff", country: "UK", x: 489.5, y: 97.5, lat: 51.4816, lng: -3.1791, founded: 1949, code: "UK-WL" },
+  { id: "wells", name: "Wells Cathedral School", short: "Wells", city: "Wells", country: "UK", x: 490.5, y: 98.8, lat: 51.2094, lng: -2.6434, founded: 909, code: "UK-SM" },
+  { id: "guildhall-london", name: "Junior Guildhall School", short: "Junior GSMD", city: "London", country: "UK", x: 500.3, y: 98.5, lat: 51.5210, lng: -0.0950, founded: 1977, code: "UK-LN" },
+
+  // Germany (further)
+  { id: "frankfurt", name: "Hochschule für Musik und Darstellende Kunst Frankfurt", short: "HfMDK Frankfurt", city: "Frankfurt", country: "Germany", x: 524.5, y: 100.5, lat: 50.1109, lng: 8.6821, founded: 1878, code: "DE-HE" },
+  { id: "freiburg", name: "Hochschule für Musik Freiburg", short: "HfM Freiburg", city: "Freiburg", country: "Germany", x: 519.5, y: 107.5, lat: 47.9990, lng: 7.8421, founded: 1946, code: "DE-BW" },
+  { id: "hannover", name: "Hochschule für Musik, Theater und Medien Hannover", short: "HMTM Hannover", city: "Hannover", country: "Germany", x: 527.0, y: 95.5, lat: 52.3759, lng: 9.7320, founded: 1897, code: "DE-NI" },
+  { id: "stuttgart", name: "Hochschule für Musik und Darstellende Kunst Stuttgart", short: "HfMDK Stuttgart", city: "Stuttgart", country: "Germany", x: 525.0, y: 103.0, lat: 48.7758, lng: 9.1829, founded: 1857, code: "DE-BW" },
+  { id: "leipzig", name: "Hochschule für Musik und Theater Leipzig", short: "HMT Leipzig", city: "Leipzig", country: "Germany", x: 534.0, y: 97.5, lat: 51.3397, lng: 12.3731, founded: 1843, code: "DE-SN" },
+  { id: "dresden", name: "Hochschule für Musik Carl Maria von Weber Dresden", short: "HfM Dresden", city: "Dresden", country: "Germany", x: 538.0, y: 98.5, lat: 51.0504, lng: 13.7373, founded: 1856, code: "DE-SN" },
+  { id: "saarbrucken", name: "Hochschule für Musik Saar", short: "HfM Saar", city: "Saarbrücken", country: "Germany", x: 518.0, y: 103.5, lat: 49.2354, lng: 7.0042, founded: 1947, code: "DE-SL" },
+  { id: "nuremberg", name: "Hochschule für Musik Nürnberg", short: "HfM Nürnberg", city: "Nuremberg", country: "Germany", x: 531.0, y: 103.5, lat: 49.4521, lng: 11.0767, founded: 1804, code: "DE-BY" },
+  { id: "rostock", name: "Hochschule für Musik und Theater Rostock", short: "HMT Rostock", city: "Rostock", country: "Germany", x: 535.0, y: 90.0, lat: 54.0887, lng: 12.1403, founded: 1994, code: "DE-MV" },
+  { id: "lubeck", name: "Musikhochschule Lübeck", short: "MHL", city: "Lübeck", country: "Germany", x: 530.5, y: 90.5, lat: 53.8655, lng: 10.6866, founded: 1911, code: "DE-SH" },
+
+  // France (further)
+  { id: "strasbourg", name: "Conservatoire de Strasbourg", short: "Cons. Strasbourg", city: "Strasbourg", country: "France", x: 520.0, y: 105.5, lat: 48.5734, lng: 7.7521, founded: 1855, code: "FR-67" },
+  { id: "bordeaux", name: "Conservatoire de Bordeaux", short: "Cons. Bordeaux", city: "Bordeaux", country: "France", x: 503.5, y: 118.5, lat: 44.8378, lng: -0.5792, founded: 1815, code: "FR-33" },
+  { id: "nice", name: "Conservatoire de Nice", short: "Cons. Nice", city: "Nice", country: "France", x: 522.0, y: 117.0, lat: 43.7102, lng: 7.2620, founded: 1877, code: "FR-06" },
+  { id: "toulouse", name: "Conservatoire de Toulouse", short: "Cons. Toulouse", city: "Toulouse", country: "France", x: 506.5, y: 121.5, lat: 43.6047, lng: 1.4442, founded: 1816, code: "FR-31" },
+
+  // Italy (further)
+  { id: "napoli", name: "Conservatorio San Pietro a Majella", short: "Cons. Napoli", city: "Naples", country: "Italy", x: 540.5, y: 127.0, lat: 40.8518, lng: 14.2681, founded: 1537, code: "IT-NA" },
+  { id: "venezia", name: "Conservatorio Benedetto Marcello", short: "Cons. Venezia", city: "Venice", country: "Italy", x: 533.0, y: 113.0, lat: 45.4408, lng: 12.3155, founded: 1876, code: "IT-VE" },
+  { id: "torino", name: "Conservatorio Giuseppe Verdi Torino", short: "Cons. Torino", city: "Turin", country: "Italy", x: 519.0, y: 114.5, lat: 45.0703, lng: 7.6869, founded: 1866, code: "IT-TO" },
+  { id: "genova", name: "Conservatorio Niccolò Paganini", short: "Cons. Genova", city: "Genoa", country: "Italy", x: 523.0, y: 117.0, lat: 44.4056, lng: 8.9463, founded: 1829, code: "IT-GE" },
+  { id: "bologna", name: "Conservatorio G.B. Martini Bologna", short: "Cons. Bologna", city: "Bologna", country: "Italy", x: 530.0, y: 116.0, lat: 44.4949, lng: 11.3426, founded: 1804, code: "IT-BO" },
+  { id: "palermo", name: "Conservatorio V. Bellini Palermo", short: "Cons. Palermo", city: "Palermo", country: "Italy", x: 537.0, y: 133.0, lat: 38.1157, lng: 13.3615, founded: 1617, code: "IT-PA" },
+
+  // Spain (further)
+  { id: "barcelona", name: "Conservatori Superior de Música del Liceu", short: "Liceu", city: "Barcelona", country: "Spain", x: 503.0, y: 119.5, lat: 41.3851, lng: 2.1734, founded: 1837, code: "ES-CT" },
+  { id: "seville", name: "Conservatorio Superior de Música de Sevilla", short: "Cons. Sevilla", city: "Seville", country: "Spain", x: 485.0, y: 133.0, lat: 37.3891, lng: -5.9845, founded: 1933, code: "ES-AN" },
+  { id: "valencia", name: "Conservatori Superior de Música Joaquín Rodrigo", short: "Cons. Valencia", city: "Valencia", country: "Spain", x: 499.5, y: 127.0, lat: 39.4699, lng: -0.3763, founded: 1879, code: "ES-VC" },
+  { id: "bilbao", name: "Musikene — Centro Superior de Música del País Vasco", short: "Musikene", city: "Bilbao", country: "Spain", x: 492.5, y: 116.0, lat: 43.2630, lng: -2.9350, founded: 2001, code: "ES-PV" },
+
+  // Netherlands & Belgium
+  { id: "amsterdam", name: "Conservatorium van Amsterdam", short: "CvA", city: "Amsterdam", country: "Netherlands", x: 512.5, y: 96.0, lat: 52.3676, lng: 4.9041, founded: 1884, code: "NL-NH" },
+  { id: "rotterdam", name: "Codarts Rotterdam", short: "Codarts", city: "Rotterdam", country: "Netherlands", x: 511.5, y: 97.5, lat: 51.9225, lng: 4.4792, founded: 1930, code: "NL-ZH" },
+  { id: "antwerp", name: "Royal Conservatoire Antwerp", short: "AP Conservatoire", city: "Antwerp", country: "Belgium", x: 512.0, y: 99.0, lat: 51.2194, lng: 4.4025, founded: 1898, code: "BE-AN" },
+  { id: "ghent", name: "KASK & Conservatorium Ghent", short: "KASK Cons.", city: "Ghent", country: "Belgium", x: 511.0, y: 99.5, lat: 51.0543, lng: 3.7174, founded: 1835, code: "BE-OV" },
+
+  // Switzerland
+  { id: "zurich", name: "Zurich University of the Arts — Music", short: "ZHdK Music", city: "Zurich", country: "Switzerland", x: 524.5, y: 108.0, lat: 47.3769, lng: 8.5417, founded: 1999, code: "CH-ZH" },
+  { id: "bern", name: "Hochschule der Künste Bern — Musik", short: "HKB Musik", city: "Bern", country: "Switzerland", x: 520.0, y: 109.5, lat: 46.9480, lng: 7.4474, founded: 1874, code: "CH-BE" },
+  { id: "basel", name: "Musik-Akademie Basel — Hochschule für Musik", short: "HfM Basel", city: "Basel", country: "Switzerland", x: 520.5, y: 107.0, lat: 47.5596, lng: 7.5886, founded: 1867, code: "CH-BS" },
+
+  // Scandinavia (further)
+  { id: "gothenburg", name: "Academy of Music and Drama Gothenburg", short: "HDK Gothenburg", city: "Gothenburg", country: "Sweden", x: 535.0, y: 83.5, lat: 57.7089, lng: 11.9746, founded: 1971, code: "SE-VG" },
+  { id: "malmo", name: "Malmö Academy of Music", short: "Malmö Music", city: "Malmö", country: "Sweden", x: 537.5, y: 86.5, lat: 55.6050, lng: 13.0038, founded: 1907, code: "SE-SK" },
+  { id: "aarhus", name: "Royal Academy of Music Aarhus", short: "RAMA", city: "Aarhus", country: "Denmark", x: 529.0, y: 89.5, lat: 56.1629, lng: 10.2039, founded: 1927, code: "DK-MJ" },
+  { id: "tampere", name: "Tampere University of Applied Sciences — Music", short: "TAMK Music", city: "Tampere", country: "Finland", x: 563.5, y: 79.5, lat: 61.4978, lng: 23.7610, founded: 1932, code: "FI-PI" },
+  { id: "reykjavik", name: "Iceland University of the Arts — Music", short: "LHÍ Music", city: "Reykjavik", country: "Iceland", x: 449.5, y: 63.5, lat: 64.1355, lng: -21.8954, founded: 1999, code: "IS-RV" },
+
+  // Eastern Europe (further)
+  { id: "bucharest", name: "National University of Music Bucharest", short: "UNMB", city: "Bucharest", country: "Romania", x: 563.0, y: 112.5, lat: 44.4268, lng: 26.1025, founded: 1864, code: "RO-BU" },
+  { id: "sofia", name: "National Academy of Music Pancho Vladigerov", short: "NMA Sofia", city: "Sofia", country: "Bulgaria", x: 555.5, y: 116.5, lat: 42.6977, lng: 23.3219, founded: 1921, code: "BG-SO" },
+  { id: "zagreb", name: "Academy of Music Zagreb", short: "MU Zagreb", city: "Zagreb", country: "Croatia", x: 541.5, y: 112.0, lat: 45.8150, lng: 15.9819, founded: 1829, code: "HR-ZG" },
+  { id: "ljubljana", name: "Academy of Music Ljubljana", short: "AG Ljubljana", city: "Ljubljana", country: "Slovenia", x: 537.0, y: 111.0, lat: 46.0569, lng: 14.5058, founded: 1919, code: "SI-LJ" },
+  { id: "bratislava", name: "Academy of Music and Dramatic Arts Bratislava", short: "VŠMU Bratislava", city: "Bratislava", country: "Slovakia", x: 547.5, y: 106.0, lat: 48.1486, lng: 17.1077, founded: 1949, code: "SK-BA" },
+  { id: "vilnius", name: "Lithuanian Academy of Music and Theatre", short: "LMTA", city: "Vilnius", country: "Lithuania", x: 562.5, y: 90.0, lat: 54.6872, lng: 25.2797, founded: 1933, code: "LT-VN" },
+  { id: "tallinn", name: "Estonian Academy of Music and Theatre", short: "EAMT", city: "Tallinn", country: "Estonia", x: 563.5, y: 83.0, lat: 59.4370, lng: 24.7536, founded: 1919, code: "EE-TL" },
+  { id: "riga", name: "Jāzeps Vītols Latvian Academy of Music", short: "JVLMA", city: "Riga", country: "Latvia", x: 560.5, y: 86.0, lat: 56.9496, lng: 24.1052, founded: 1919, code: "LV-RI" },
+  { id: "minsk", name: "Belarusian State Academy of Music", short: "BSAM", city: "Minsk", country: "Belarus", x: 568.0, y: 92.5, lat: 53.9045, lng: 27.5615, founded: 1932, code: "BY-MI" },
+  { id: "kyiv", name: "Tchaikovsky National Music Academy of Ukraine", short: "NMAU", city: "Kyiv", country: "Ukraine", x: 574.5, y: 98.5, lat: 50.4501, lng: 30.5234, founded: 1913, code: "UA-KY" },
+  { id: "lviv", name: "Mykola Lysenko Lviv National Music Academy", short: "LNMA", city: "Lviv", country: "Ukraine", x: 560.0, y: 101.5, lat: 49.8397, lng: 24.0297, founded: 1939, code: "UA-LV" },
+  { id: "baku", name: "Baku Music Academy", short: "BMA", city: "Baku", country: "Azerbaijan", x: 622.5, y: 124.0, lat: 40.4093, lng: 49.8671, founded: 1920, code: "AZ-BA" },
+  { id: "tbilisi", name: "Tbilisi State Conservatory", short: "TSC", city: "Tbilisi", country: "Georgia", x: 617.0, y: 120.0, lat: 41.6938, lng: 44.8015, founded: 1917, code: "GE-TB" },
+  { id: "yerevan", name: "Komitas State Conservatory of Yerevan", short: "KSCY", city: "Yerevan", country: "Armenia", x: 613.5, y: 122.5, lat: 40.1772, lng: 44.5035, founded: 1921, code: "AM-YE" },
+
+  // Russia (further)
+  { id: "nizhny", name: "Nizhny Novgorod State Conservatory", short: "NNSK", city: "Nizhny Novgorod", country: "Russia", x: 619.0, y: 88.5, lat: 56.3287, lng: 44.0020, founded: 1946, code: "RU-52" },
+  { id: "kazan", name: "Kazan State Conservatory", short: "KGK", city: "Kazan", country: "Russia", x: 628.5, y: 88.5, lat: 55.7887, lng: 49.1221, founded: 1945, code: "RU-16" },
+  { id: "novosibirsk", name: "Novosibirsk State Conservatory", short: "NGK", city: "Novosibirsk", country: "Russia", x: 702.0, y: 91.5, lat: 54.9885, lng: 82.9207, founded: 1956, code: "RU-54" },
+  { id: "saratov", name: "Saratov State Conservatory", short: "SGK", city: "Saratov", country: "Russia", x: 617.0, y: 99.5, lat: 51.5924, lng: 46.0342, founded: 1912, code: "RU-64" },
+  { id: "ufa", name: "Ufa State Institute of Arts", short: "UGII", city: "Ufa", country: "Russia", x: 637.5, y: 90.5, lat: 54.7348, lng: 55.9578, founded: 1968, code: "RU-02" },
+
+  // Asia (further)
+  { id: "wuhan", name: "Wuhan Conservatory of Music", short: "WHCM", city: "Wuhan", country: "China", x: 820.5, y: 148.5, lat: 30.5928, lng: 114.3055, founded: 1953, code: "CN-HB" },
+  { id: "tianjin", name: "Tianjin Conservatory of Music", short: "TJCM", city: "Tianjin", country: "China", x: 828.0, y: 130.5, lat: 39.0842, lng: 117.2010, founded: 1958, code: "CN-TJ" },
+  { id: "xian", name: "Xi'an Conservatory of Music", short: "XACM", city: "Xi'an", country: "China", x: 808.0, y: 141.0, lat: 34.3416, lng: 108.9398, founded: 1949, code: "CN-SN" },
+  { id: "guangzhou", name: "Xinghai Conservatory of Music", short: "XHCM", city: "Guangzhou", country: "China", x: 820.5, y: 158.5, lat: 23.1291, lng: 113.2644, founded: 1957, code: "CN-GD" },
+  { id: "hkapa", name: "Hong Kong Academy for Performing Arts", short: "HKAPA", city: "Hong Kong", country: "China", x: 827.0, y: 157.5, lat: 22.3193, lng: 114.1694, founded: 1984, code: "CN-HK" },
+  { id: "nagoya", name: "Nagoya University of Arts", short: "NUA", city: "Nagoya", country: "Japan", x: 878.0, y: 139.5, lat: 35.1815, lng: 136.9066, founded: 1966, code: "JP-AI" },
+  { id: "toho", name: "Toho Gakuen School of Music", short: "Toho", city: "Tokyo", country: "Japan", x: 886.5, y: 138.0, lat: 35.6197, lng: 139.5393, founded: 1955, code: "JP-TK" },
+  { id: "shobi", name: "Shobi University Music", short: "Shobi", city: "Saitama", country: "Japan", x: 888.0, y: 137.0, lat: 35.8617, lng: 139.6455, founded: 1904, code: "JP-SA" },
+  { id: "yonsei", name: "Yonsei University College of Music", short: "Yonsei Music", city: "Seoul", country: "South Korea", x: 852.0, y: 133.0, lat: 37.5638, lng: 126.9388, founded: 1947, code: "KR-SE" },
+  { id: "ehwa", name: "Ewha Womans University College of Music", short: "Ewha Music", city: "Seoul", country: "South Korea", x: 852.5, y: 133.5, lat: 37.5631, lng: 126.9467, founded: 1925, code: "KR-SE" },
+  { id: "jakarta", name: "Institut Seni Indonesia Jakarta", short: "ISI Jakarta", city: "Jakarta", country: "Indonesia", x: 802.5, y: 228.5, lat: -6.2088, lng: 106.8456, founded: 1964, code: "ID-JK" },
+  { id: "manila", name: "University of the Philippines College of Music", short: "UP Music", city: "Manila", country: "Philippines", x: 848.0, y: 187.5, lat: 14.5995, lng: 120.9842, founded: 1916, code: "PH-MN" },
+  { id: "mumbai", name: "Bhatkhande Music Institute Deemed University", short: "Bhatkhande", city: "Lucknow", country: "India", x: 736.0, y: 163.0, lat: 26.8467, lng: 80.9462, founded: 1926, code: "IN-UP" },
+  { id: "delhi", name: "Faculty of Music — Delhi University", short: "DU Music", city: "New Delhi", country: "India", x: 722.5, y: 152.5, lat: 28.6139, lng: 77.2090, founded: 1922, code: "IN-DL" },
+
+  // Latin America
+  { id: "buenos-aires", name: "Conservatorio Nacional de Música Buenos Aires", short: "CNM Buenos Aires", city: "Buenos Aires", country: "Argentina", x: 362.5, y: 325.0, lat: -34.6037, lng: -58.3816, founded: 1924, code: "AR-BA" },
+  { id: "mexico-city", name: "Conservatorio Nacional de Música de México", short: "CNM México", city: "Mexico City", country: "Mexico", x: 210.0, y: 178.0, lat: 19.4326, lng: -99.1332, founded: 1866, code: "MX-CM" },
+  { id: "rio", name: "Escola de Música da UFRJ", short: "UFRJ Música", city: "Rio de Janeiro", country: "Brazil", x: 376.0, y: 286.5, lat: -22.9068, lng: -43.1729, founded: 1848, code: "BR-RJ" },
+  { id: "santiago", name: "Conservatorio de Música de la Universidad de Chile", short: "UCH Música", city: "Santiago", country: "Chile", x: 330.5, y: 313.5, lat: -33.4569, lng: -70.6483, founded: 1850, code: "CL-RM" },
+  { id: "bogota", name: "Conservatorio Nacional de Música de Colombia", short: "CNM Colombia", city: "Bogotá", country: "Colombia", x: 316.5, y: 237.0, lat: 4.7110, lng: -74.0721, founded: 1882, code: "CO-DC" },
+  { id: "lima", name: "Conservatorio Nacional de Música del Perú", short: "CNM Perú", city: "Lima", country: "Peru", x: 310.5, y: 265.5, lat: -12.0464, lng: -77.0428, founded: 1908, code: "PE-LM" },
+  { id: "havana", name: "Instituto Superior de Arte La Habana", short: "ISA Habana", city: "Havana", country: "Cuba", x: 252.5, y: 183.0, lat: 23.1136, lng: -82.3666, founded: 1976, code: "CU-LH" },
+  { id: "caracas", name: "Academia de Música Juan José Landaeta", short: "Landaeta Caracas", city: "Caracas", country: "Venezuela", x: 330.0, y: 224.5, lat: 10.4806, lng: -66.9036, founded: 1877, code: "VE-CA" },
+
+  // Middle East (further)
+  { id: "tel-aviv", name: "Buchmann-Mehta School of Music Tel Aviv", short: "BMSM Tel Aviv", city: "Tel Aviv", country: "Israel", x: 597.5, y: 148.0, lat: 32.0853, lng: 34.7818, founded: 1945, code: "IL-TA" },
+  { id: "beirut", name: "Lebanese National Higher Conservatory of Music", short: "LNHCM", city: "Beirut", country: "Lebanon", x: 600.0, y: 148.5, lat: 33.8886, lng: 35.4955, founded: 1929, code: "LB-BA" },
+  { id: "amman", name: "National Music Conservatory of Jordan", short: "NMC Jordan", city: "Amman", country: "Jordan", x: 601.0, y: 152.5, lat: 31.9454, lng: 35.9284, founded: 1986, code: "JO-AM" },
+  { id: "tehran", name: "University of Tehran Faculty of Music", short: "UT Music Tehran", city: "Tehran", country: "Iran", x: 632.5, y: 138.0, lat: 35.6892, lng: 51.3890, founded: 1939, code: "IR-TE" },
+  { id: "istanbul", name: "Istanbul University State Conservatory", short: "İÜDK", city: "Istanbul", country: "Turkey", x: 575.5, y: 121.5, lat: 41.0082, lng: 28.9784, founded: 1936, code: "TR-IS" },
+  { id: "ankara", name: "Hacettepe University State Conservatory", short: "HÜ Konservatuvarı", city: "Ankara", country: "Turkey", x: 582.0, y: 125.5, lat: 39.9334, lng: 32.8597, founded: 1936, code: "TR-AN" },
+
+  // Africa & Oceania (further)
+  { id: "nairobi", name: "Kenya Music Conservatoire", short: "KMC Nairobi", city: "Nairobi", country: "Kenya", x: 592.5, y: 238.0, lat: -1.2921, lng: 36.8219, founded: 1944, code: "KE-NR" },
+  { id: "accra", name: "National Academy of Music Ghana", short: "NAM Ghana", city: "Accra", country: "Ghana", x: 512.5, y: 228.0, lat: 5.6037, lng: -0.1870, founded: 1953, code: "GH-GA" },
+  { id: "melbourne", name: "Melbourne Conservatorium of Music", short: "MCM", city: "Melbourne", country: "Australia", x: 912.5, y: 320.5, lat: -37.8136, lng: 144.9631, founded: 1895, code: "AU-VIC" },
+  { id: "brisbane", name: "Queensland Conservatorium Griffith University", short: "QCon", city: "Brisbane", country: "Australia", x: 923.5, y: 300.5, lat: -27.4698, lng: 153.0251, founded: 1957, code: "AU-QLD" },
+  { id: "auckland", name: "New Zealand School of Music", short: "NZSM", city: "Wellington", country: "New Zealand", x: 956.0, y: 337.5, lat: -41.2865, lng: 174.7762, founded: 2005, code: "NZ-WN" },
 ];
 
 const TASTE_OPTIONS = [
@@ -554,8 +729,8 @@ const TILE_ATTRIBUTION = 'Tiles &copy; <a href="https://www.esri.com/" target="_
 function consPinIcon({ active, hasStudents, hasTeacher }) {
   const w = active ? 18 : 14;
   const h = Math.round(w * 1.28);
-  const pinColor = hasTeacher ? "#C0392B" : hasStudents ? "#cccccc" : "#ffffff";
-  const strokeColor = hasTeacher ? "#8B1A1A" : hasStudents ? "#999999" : "#aaaaaa";
+  const pinColor = hasTeacher ? "#C0392B" : hasStudents ? "#27AE60" : "#ffffff";
+  const strokeColor = hasTeacher ? "#8B1A1A" : hasStudents ? "#1E8449" : "#aaaaaa";
   const glow = active
     ? `filter:drop-shadow(0 0 6px ${pinColor}99) drop-shadow(0 2px 3px rgba(0,0,0,0.7));`
     : `filter:drop-shadow(0 1px 3px rgba(0,0,0,0.5));`;
@@ -578,7 +753,7 @@ function consPinIcon({ active, hasStudents, hasTeacher }) {
 function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", interactive = false }) {
   const legend = [
     { color: "#C0392B", label: "Open to teaching" },
-    { color: "#cccccc", label: "Has students, not teaching" },
+    { color: "#27AE60", label: "Has students, not teaching" },
     { color: "#ffffff", label: "No students yet" },
   ];
   return (
@@ -593,7 +768,7 @@ function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", inter
       }}>
         {legend.map(({ color, label }) => (
           <span key={label} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "rgba(244,238,219,0.85)", fontFamily: FONT_MONO, whiteSpace: "nowrap" }}>
-            <span style={{ width: 10, height: 10, borderRadius: "50%", background: color, border: `1.5px solid ${color === "#cccccc" ? "#999" : color === "#ffffff" ? "#aaa" : "#8B1A1A"}`, display: "inline-block", flexShrink: 0 }} />
+            <span style={{ width: 10, height: 10, borderRadius: "50%", background: color, border: `1.5px solid ${color === "#27AE60" ? "#1E8449" : color === "#ffffff" ? "#aaaaaa" : "#8B1A1A"}`, display: "inline-block", flexShrink: 0 }} />
             {label}
           </span>
         ))}
@@ -638,7 +813,45 @@ function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", inter
 /* ---------------------------------------------------------------- */
 /* APP                                                                 */
 /* ---------------------------------------------------------------- */
+const ACCESS_KEY = "artium_access_v1";
+const SITE_PASSWORD = "artium2025";
+
+function AccessGate({ onUnlock }) {
+  const [value, setValue] = useState("");
+  const [error, setError] = useState(false);
+  function attempt() {
+    if (value.trim() === SITE_PASSWORD) { onUnlock(); }
+    else { setError(true); setValue(""); }
+  }
+  return (
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#0e0d0b", fontFamily: FONT_BODY, padding: 24 }}>
+      <div style={{ marginBottom: 32, textAlign: "center" }}>
+        <Logo />
+        <p style={{ color: "rgba(244,238,219,0.5)", fontSize: 14, marginTop: 10 }}>Private beta — enter access key to continue</p>
+      </div>
+      <div style={{ width: "100%", maxWidth: 320 }}>
+        <input
+          type="password"
+          value={value}
+          onChange={(e) => { setValue(e.target.value); setError(false); }}
+          onKeyDown={(e) => e.key === "Enter" && attempt()}
+          placeholder="Access key"
+          autoComplete="off"
+          autoFocus
+          style={{ width: "100%", background: "#1c1a16", border: `1px solid ${error ? "#c0392b" : "rgba(244,238,219,0.15)"}`, borderRadius: 10, padding: "12px 16px", color: "#f4eedb", fontSize: 15, outline: "none", boxSizing: "border-box" }}
+        />
+        {error && <p style={{ color: "#c0392b", fontSize: 13, marginTop: 8 }}>Incorrect key — try again.</p>}
+        <button
+          onClick={attempt}
+          style={{ marginTop: 12, width: "100%", background: "#b8935a", color: "#0e0d0b", border: "none", borderRadius: 10, padding: "12px 0", fontSize: 15, fontWeight: 700, cursor: "pointer" }}
+        >Enter</button>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
+  const [unlocked, setUnlocked] = useState(() => localStorage.getItem(ACCESS_KEY) === "1");
   const { user: authUser, profile: authProfile, loading: authLoading } = useAuth();
   const [screen, setScreen] = useState("entry");
   const [appTab, setAppTab] = useState("map");
@@ -669,6 +882,7 @@ export default function App() {
       }
       const me = fromDbProfile(authProfile);
       setMyProfile(me);
+      setPreviewOnly(false);
       setStudents((arr) => [...arr.filter((s) => s.id !== me.id), me]);
       if (screen === "entry" || screen === "landing" || screen === "login" || screen === "confirmEmail") {
         setSelectedConsId(me.conservatoryId);
@@ -785,7 +999,10 @@ export default function App() {
     setSelectedStudentId(null);
     setAppTab("map");
   }
-  function chooseStudent() { setScreen("landing"); }
+  function chooseStudent() {
+    if (myProfile) { setScreen("app"); setAppTab("map"); return; }
+    setScreen("landing");
+  }
   function chooseLearner() {
     if (learnerProfile) { setScreen("learnerMap"); return; }
     if (learnerLoggedOut) { startLogin(); return; }
@@ -897,6 +1114,8 @@ export default function App() {
     }, 1400);
   }
 
+  if (!unlocked) return <AccessGate onUnlock={() => { localStorage.setItem(ACCESS_KEY, "1"); setUnlocked(true); }} />;
+
   return (
     <div style={{ fontFamily: FONT_BODY, background: C.ink, minHeight: "100%", width: "100%" }}>
       <style>{`
@@ -940,7 +1159,7 @@ export default function App() {
         />
       )}
 
-      {screen === "entry" && <EntryGate onLearner={chooseLearner} onStudent={chooseStudent} onLogin={startLogin} learnerProfile={learnerProfile} learnerLoggedOut={learnerLoggedOut} />}
+      {screen === "entry" && <EntryGate onLearner={chooseLearner} onStudent={chooseStudent} onLogin={startLogin} learnerProfile={learnerProfile} learnerLoggedOut={learnerLoggedOut} studentLoggedIn={!!myProfile} />}
       {screen === "learnerSignup" && <LearnerSignup onSubmit={submitLearner} onBack={backToEntry} onLogin={startLogin} error={authError} />}
       {screen === "learnerMap" && (
         <LearnerScreen
@@ -1015,7 +1234,15 @@ export default function App() {
             />
           )}
           {appTab === "profile" && !selectedStudentId && myProfile && (
-            <MyProfile profile={myProfile} onEdit={editProfile} onLogout={handleLogout} onBack={() => setAppTab("map")} />
+            <MyProfile profile={myProfile} onEdit={editProfile} onLogout={handleLogout} onDeleteAccount={async () => {
+              await supabase.rpc("delete_own_account");
+              await supabase.auth.signOut();
+              setMyProfile(null);
+              setStudents((arr) => arr.filter((s) => s.id !== myProfile?.id));
+              setLearnerLoggedOut(false);
+              setScreen("entry");
+              setAppTab("map");
+            }} onBack={() => setAppTab("map")} />
           )}
           {selectedStudentId && myProfile && (
             <StudentProfile
@@ -1274,13 +1501,13 @@ function StepAccount({ draft, update, error }) {
     <div>
       <p className="text-sm mb-6" style={{ color: C.ivoryDim }}>Create the login you'll use to come back and manage your profile.</p>
       <Field label="Email">
-        <input style={inputStyle} type="email" value={draft.email} onChange={(e) => update({ email: e.target.value })} placeholder="you@example.com" />
+        <input style={inputStyle} type="email" value={draft.email} onChange={(e) => update({ email: e.target.value })} placeholder="you@example.com" autoComplete="off" />
       </Field>
       <Field label="Password">
-        <PasswordField value={draft.password} onChange={(e) => update({ password: e.target.value })} placeholder="At least 6 characters" />
+        <PasswordField value={draft.password} onChange={(e) => update({ password: e.target.value })} placeholder="At least 6 characters" autoComplete="new-password" />
       </Field>
       <Field label="Confirm password">
-        <PasswordField value={draft.confirmPassword} onChange={(e) => update({ confirmPassword: e.target.value })} placeholder="Re-enter your password" />
+        <PasswordField value={draft.confirmPassword} onChange={(e) => update({ confirmPassword: e.target.value })} placeholder="Re-enter your password" autoComplete="new-password" />
       </Field>
       {mismatch && <p className="text-sm" style={{ color: C.burgundy }}>Passwords don't match.</p>}
       {error && <p className="text-sm" style={{ color: C.burgundy }}>{error}</p>}
@@ -1824,8 +2051,10 @@ function StudentProfile({ student, conservatory, onBack, onMessage, locked, onAp
 /* ---------------------------------------------------------------- */
 /* MY PROFILE                                                         */
 /* ---------------------------------------------------------------- */
-function MyProfile({ profile, onEdit, onLogout, onBack }) {
+function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack }) {
   const cons = CONSERVATORIES.find((c) => c.id === profile.conservatoryId);
+  const [confirmDelete, setConfirmDelete] = React.useState(false);
+  const [deleting, setDeleting] = React.useState(false);
   return (
     <div className="max-w-2xl mx-auto px-6 py-8">
       <div className="flex items-start justify-between">
@@ -1839,6 +2068,25 @@ function MyProfile({ profile, onEdit, onLogout, onBack }) {
         <div className="flex items-center gap-2">
           <GhostBtn onClick={onEdit} icon={Pencil}>Edit</GhostBtn>
           {onLogout && <GhostBtn onClick={onLogout}>Log out</GhostBtn>}
+          {onDeleteAccount && !confirmDelete && (
+            <GhostBtn onClick={() => setConfirmDelete(true)} style={{ color: "#c0392b", borderColor: "#c0392b" }}>Delete account</GhostBtn>
+          )}
+          {confirmDelete && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs" style={{ color: C.ivoryDim }}>Are you sure?</span>
+              <button
+                onClick={async () => { setDeleting(true); await onDeleteAccount(); setDeleting(false); }}
+                disabled={deleting}
+                className="text-xs px-3 py-1.5 rounded-lg font-semibold"
+                style={{ background: "#c0392b", color: "#fff", opacity: deleting ? 0.6 : 1 }}
+              >{deleting ? "Deleting…" : "Yes, delete"}</button>
+              <button
+                onClick={() => setConfirmDelete(false)}
+                className="text-xs px-3 py-1.5 rounded-lg"
+                style={{ border: `1px solid ${C.inkLine}`, color: C.ivoryDim }}
+              >Cancel</button>
+            </div>
+          )}
         </div>
       </div>
       <p className="mt-5 text-sm" style={{ color: C.ivoryDim, lineHeight: 1.6 }}>{profile.bio || "No bio yet."}</p>
@@ -2035,8 +2283,8 @@ function StepTeaching({ draft, update }) {
 }
 
 /* ---- First screen: pick your role ---- */
-function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLoggedOut }) {
-  const singleCard = !!learnerProfile || learnerLoggedOut;
+function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLoggedOut, studentLoggedIn }) {
+  const singleCard = !!learnerProfile || learnerLoggedOut || studentLoggedIn;
   return (
     <div className="min-h-full flex flex-col" style={{ background: C.ink, color: C.ivory }}>
       <div className="max-w-5xl w-full mx-auto px-6 pt-10">
@@ -2051,17 +2299,19 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
             How would you like to join?
           </p>
           <div className={`mt-10 grid gap-5 ${singleCard ? "" : "md:grid-cols-2"}`}>
-            <button onClick={onLearner} className="text-left rounded-2xl p-7" style={{ border: `1px solid ${C.inkLine}`, background: C.inkSoft }}>
-              <Music2 size={26} color={C.brass} />
-              <h3 className="mt-4" style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600 }}>I'm a piano enthusiast</h3>
-              <p className="mt-2 text-sm" style={{ color: C.ivoryDim, lineHeight: 1.6 }}>
-                I want to learn the piano with the best — find me a top conservatory musician to teach me.
-              </p>
-              <span className="mt-5 inline-flex items-center gap-1.5 text-sm" style={{ color: C.brass, fontWeight: 600 }}>
-                {learnerLoggedOut ? <>Log in <ArrowRight size={15} /></> : <>Find a teacher <ArrowRight size={15} /></>}
-              </span>
-            </button>
-            {!singleCard && (
+            {!studentLoggedIn && (
+              <button onClick={onLearner} className="text-left rounded-2xl p-7" style={{ border: `1px solid ${C.inkLine}`, background: C.inkSoft }}>
+                <Music2 size={26} color={C.brass} />
+                <h3 className="mt-4" style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600 }}>I am a classical music enthusiast</h3>
+                <p className="mt-2 text-sm" style={{ color: C.ivoryDim, lineHeight: 1.6 }}>
+                  I want to learn my favourite instrument with the best — find me a top conservatory musician to teach me.
+                </p>
+                <span className="mt-5 inline-flex items-center gap-1.5 text-sm" style={{ color: C.brass, fontWeight: 600 }}>
+                  {learnerLoggedOut ? <>Log in <ArrowRight size={15} /></> : <>Find a teacher <ArrowRight size={15} /></>}
+                </span>
+              </button>
+            )}
+            {(!singleCard || studentLoggedIn) && (
               <button onClick={onStudent} className="text-left rounded-2xl p-7" style={{ border: `1px solid ${C.inkLine}`, background: C.inkSoft }}>
                 <Users size={26} color={C.brass} />
                 <h3 className="mt-4" style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600 }}>I'm a conservatory student</h3>
@@ -2069,13 +2319,15 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
                   I study at an accredited music school — connect me with students worldwide.
                 </p>
                 <span className="mt-5 inline-flex items-center gap-1.5 text-sm" style={{ color: C.brass, fontWeight: 600 }}>
-                  Enter Artium <ArrowRight size={15} />
+                  {studentLoggedIn ? <>Continue <ArrowRight size={15} /></> : <>Enter Artium <ArrowRight size={15} /></>}
                 </span>
               </button>
             )}
           </div>
           <p className="text-center mt-8 text-sm" style={{ color: C.ivoryDim }}>
-            {learnerProfile
+            {studentLoggedIn
+              ? <>Logged in as a conservatory student</>
+              : learnerProfile
               ? <>Logged in as a piano enthusiast — <span style={{ color: C.brass, fontWeight: 600 }}>{learnerProfile.name}</span></>
               : <>Already have a profile? <button onClick={onLogin} style={{ color: C.brass, fontWeight: 600 }}>Log in</button></>
             }
