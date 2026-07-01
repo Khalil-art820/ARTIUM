@@ -576,8 +576,28 @@ function consPinIcon({ active, hasStudents, hasTeacher }) {
 }
 
 function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", interactive = false }) {
+  const legend = [
+    { color: "#C0392B", label: "Open to teaching" },
+    { color: "#ffffff", label: "Registered students" },
+    { color: "#cccccc", label: "No students yet" },
+  ];
   return (
-    <div className="artium-map" style={{ width: "100%", height }}>
+    <div className="artium-map" style={{ width: "100%", height, position: "relative" }}>
+      <div style={{
+        position: "absolute", bottom: 10, left: "50%", transform: "translateX(-50%)",
+        zIndex: 1000, display: "flex", gap: 16, alignItems: "center",
+        background: "rgba(20,18,15,0.82)", backdropFilter: "blur(6px)",
+        borderRadius: 20, padding: "6px 14px",
+        border: "1px solid rgba(244,238,219,0.12)",
+        pointerEvents: "none",
+      }}>
+        {legend.map(({ color, label }) => (
+          <span key={label} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "rgba(244,238,219,0.85)", fontFamily: FONT_MONO, whiteSpace: "nowrap" }}>
+            <span style={{ width: 10, height: 10, borderRadius: "50%", background: color, border: `1.5px solid ${color === "#cccccc" ? "#999" : color === "#ffffff" ? "#aaa" : "#8B1A1A"}`, display: "inline-block", flexShrink: 0 }} />
+            {label}
+          </span>
+        ))}
+      </div>
       <MapContainer
         center={[24, 14]}
         zoom={2}
