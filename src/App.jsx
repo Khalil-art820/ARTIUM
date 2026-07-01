@@ -630,7 +630,7 @@ export default function App() {
           setAppTab("map");
         });
       } else if (pendingLearner) {
-        supabase.from("profiles").insert({ id: authUser.id, role: "learner", name: pendingLearner.name, location: pendingLearner.location, approved: true }).then(({ error }) => {
+        supabase.from("profiles").insert({ id: authUser.id, role: "learner", name: pendingLearner.name, location: pendingLearner.location, instrument: pendingLearner.instrument, bio: pendingLearner.motivation, approved: true }).then(({ error }) => {
           if (error) { setAuthError(error.message); return; }
           supabase.auth.updateUser({ data: { pendingLearner: null } });
           setLearnerProfile({ name: pendingLearner.name, location: pendingLearner.location });
@@ -729,16 +729,16 @@ export default function App() {
     if (learnerLoggedOut) { startLogin(); return; }
     setLearnerProfile(null); setAuthError(""); setScreen("learnerSignup");
   }
-  async function submitLearner({ name, location, email, password }) {
+  async function submitLearner({ name, location, email, password, instrument, motivation }) {
     setAuthError("");
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { pendingLearner: { name, location } } },
+      options: { data: { pendingLearner: { name, location, instrument, motivation } } },
     });
     if (error) { setAuthError(friendlyAuthError(error.message)); return; }
     if (data.session && data.user) {
-      const { error: insertError } = await supabase.from("profiles").insert({ id: data.user.id, role: "learner", name, location, approved: true });
+      const { error: insertError } = await supabase.from("profiles").insert({ id: data.user.id, role: "learner", name, location, instrument, bio: motivation, approved: true });
       if (insertError) { setAuthError(insertError.message); return; }
       await supabase.auth.updateUser({ data: { pendingLearner: null } });
       setLearnerProfile({ name, location });
@@ -1148,7 +1148,7 @@ function Field({ label, children }) {
 }
 const inputStyle = { width: "100%", background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "12px 14px", color: C.ivory, fontFamily: FONT_BODY, fontSize: 15, outline: "none" };
 
-function PasswordField({ value, onChange, placeholder }) {
+function PasswordField({ value, onChange, placeholder, autoComplete }) {
   const [visible, setVisible] = useState(false);
   return (
     <div className="relative">
@@ -1158,6 +1158,7 @@ function PasswordField({ value, onChange, placeholder }) {
         value={value}
         onChange={onChange}
         placeholder={placeholder}
+        autoComplete={autoComplete || "off"}
       />
       <button
         type="button"
@@ -2024,21 +2025,24 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
   );
 }
 
-/* ---- Learner: name + location ---- */
+/* ---- Learner: signup form ---- */
 function LearnerSignup({ onSubmit, onBack, onLogin, error }) {
   const [name, setName] = useState("");
   const [location, setLocation] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [instrument, setInstrument] = useState("");
+  const [motivation, setMotivation] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const mismatch = confirmPassword.length > 0 && password !== confirmPassword;
   const canGo = name.trim().length > 1 && location.trim().length > 1
-    && email.trim().length > 3 && password.length >= 6 && password === confirmPassword;
+    && email.trim().length > 3 && password.length >= 6 && password === confirmPassword
+    && instrument.trim().length > 0 && motivation.trim().length > 5;
 
   async function handleSubmit() {
     setSubmitting(true);
-    await onSubmit({ name: name.trim(), location: location.trim(), email: email.trim(), password });
+    await onSubmit({ name: name.trim(), location: location.trim(), email: email.trim(), password, instrument: instrument.trim(), motivation: motivation.trim() });
     setSubmitting(false);
   }
 
@@ -2051,34 +2055,45 @@ function LearnerSignup({ onSubmit, onBack, onLogin, error }) {
         </div>
         <h2 className="mt-10" style={{ fontFamily: FONT_DISPLAY, fontSize: 30, fontWeight: 600 }}>Find your teacher</h2>
         <p className="mt-3" style={{ color: C.ivoryDim, fontSize: 15, lineHeight: 1.6 }}>
-          Tell us a little about you, and we'll show conservatory students who give lessons.
+          Tell us a little about you, and we'll show conservatory musicians who give lessons.
         </p>
       </div>
       <div className="max-w-2xl mx-auto px-6 py-10">
         <Field label="Full name">
-          <input style={inputStyle} value={name} onChange={(e) => setName(e.target.value)} placeholder="Your full name" autoFocus />
+          <input style={inputStyle} value={name} onChange={(e) => setName(e.target.value)} placeholder="Your full name" autoComplete="off" autoFocus />
         </Field>
         <Field label="Where are you based?">
-          <input style={inputStyle} value={location} onChange={(e) => setLocation(e.target.value)} placeholder="City, country" />
+          <input style={inputStyle} value={location} onChange={(e) => setLocation(e.target.value)} placeholder="City, country" autoComplete="off" />
         </Field>
         <Field label="Email">
-          <input style={inputStyle} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
+          <input style={inputStyle} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="off" />
         </Field>
         <Field label="Password">
-          <PasswordField value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 6 characters" />
+          <PasswordField value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 6 characters" autoComplete="new-password" />
         </Field>
         <Field label="Confirm password">
-          <PasswordField value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Re-enter your password" />
+          <PasswordField value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Re-enter your password" autoComplete="new-password" />
         </Field>
         {mismatch && <p className="text-sm mb-4" style={{ color: C.burgundy }}>Passwords don't match.</p>}
+        <Field label="Which instrument would you like to learn?">
+          <select style={{ ...inputStyle, background: C.inkSoft }} value={instrument} onChange={(e) => setInstrument(e.target.value)}>
+            <option value="">Select an instrument…</option>
+            {INSTRUMENT_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
+          </select>
+        </Field>
+        <Field label="Why do you want to learn, and what are your expectations?">
+          <textarea
+            style={{ ...inputStyle, resize: "vertical", minHeight: 100, lineHeight: 1.6 }}
+            value={motivation}
+            onChange={(e) => setMotivation(e.target.value)}
+            placeholder="Tell the teacher about your goals, experience level, and what you're hoping to achieve…"
+          />
+        </Field>
         {error && <p className="text-sm mb-4" style={{ color: C.burgundy }}>{error}</p>}
-        <div className="mt-2 flex items-center gap-4">
+        <div className="mt-2">
           <PrimaryBtn disabled={!canGo || submitting} onClick={handleSubmit} icon={ArrowRight}>
-            {submitting ? "Submitting…" : "See teachers"}
+            {submitting ? "Submitting…" : "Submit"}
           </PrimaryBtn>
-          <span className="text-sm" style={{ color: C.ivoryDim }}>
-            Already have a profile? <button onClick={onLogin} style={{ color: C.brass, fontWeight: 600 }}>Log in</button>
-          </span>
         </div>
       </div>
     </div>
