@@ -584,7 +584,7 @@ function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", inter
   return (
     <div className="artium-map" style={{ width: "100%", height, position: "relative" }}>
       <div style={{
-        position: "absolute", bottom: 10, left: "50%", transform: "translateX(-50%)",
+        position: "absolute", bottom: 10, left: 10,
         zIndex: 1000, display: "flex", gap: 16, alignItems: "center",
         background: "rgba(20,18,15,0.82)", backdropFilter: "blur(6px)",
         borderRadius: 20, padding: "6px 14px",
