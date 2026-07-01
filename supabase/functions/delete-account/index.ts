@@ -1,18 +1,26 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+const CORS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
 Deno.serve(async (req) => {
-  // Only allow POST
-  if (req.method !== "POST") {
-    return new Response("Method not allowed", { status: 405 });
+  // Browser preflight
+  if (req.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers: CORS });
   }
 
-  // Get the calling user's JWT from the Authorization header
+  if (req.method !== "POST") {
+    return new Response("Method not allowed", { status: 405, headers: CORS });
+  }
+
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) {
-    return new Response("Unauthorized", { status: 401 });
+    return new Response("Unauthorized", { status: 401, headers: CORS });
   }
 
-  // Create an anon client to verify who is calling
   const anonClient = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_ANON_KEY")!,
@@ -21,10 +29,9 @@ Deno.serve(async (req) => {
 
   const { data: { user }, error: userError } = await anonClient.auth.getUser();
   if (userError || !user) {
-    return new Response("Unauthorized", { status: 401 });
+    return new Response("Unauthorized", { status: 401, headers: CORS });
   }
 
-  // Create an admin client with the service role key to delete the user
   const adminClient = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -34,12 +41,12 @@ Deno.serve(async (req) => {
   if (error) {
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
-      headers: { "Content-Type": "application/json" },
+      headers: { ...CORS, "Content-Type": "application/json" },
     });
   }
 
   return new Response(JSON.stringify({ success: true }), {
     status: 200,
-    headers: { "Content-Type": "application/json" },
+    headers: { ...CORS, "Content-Type": "application/json" },
   });
 });
