@@ -2141,6 +2141,9 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
   const [editName, setEditName] = useState(learner?.name || "");
   const [editLocation, setEditLocation] = useState(learner?.location || "");
   const [saved, setSaved] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   function selectTeacher(id) {
     setSelectedId(id);
@@ -2209,11 +2212,37 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
               style={{ border: `1px solid ${C.inkLine}`, color: C.ivoryDim, background: "transparent" }}>
               Log out
             </button>
-            <button onClick={() => { if (window.confirm("Delete your account? This will permanently remove all your data and cannot be undone.")) onDeleteAccount(); }}
-              className="w-full rounded-xl py-3 text-sm font-semibold"
-              style={{ border: `1px solid ${C.burgundy}`, color: C.burgundy, background: "transparent" }}>
-              Delete account
-            </button>
+            {!confirmDelete ? (
+              <button onClick={() => setConfirmDelete(true)}
+                className="w-full rounded-xl py-3 text-sm font-semibold"
+                style={{ border: `1px solid ${C.burgundy}`, color: C.burgundy, background: "transparent" }}>
+                Delete account
+              </button>
+            ) : (
+              <div className="rounded-xl p-4 flex flex-col gap-3" style={{ border: `1px solid ${C.burgundy}`, background: "rgba(138,54,54,0.08)" }}>
+                <p className="text-sm" style={{ color: C.ivory }}>This will permanently delete your account and all your data. Are you sure?</p>
+                {deleteError && <p className="text-xs" style={{ color: C.burgundy }}>{deleteError}</p>}
+                <div className="flex gap-2">
+                  <button onClick={() => { setConfirmDelete(false); setDeleteError(""); }}
+                    className="flex-1 rounded-lg py-2 text-sm"
+                    style={{ border: `1px solid ${C.inkLine}`, color: C.ivoryDim, background: "transparent" }}>
+                    Cancel
+                  </button>
+                  <button
+                    disabled={deleting}
+                    onClick={async () => {
+                      setDeleting(true);
+                      setDeleteError("");
+                      try { await onDeleteAccount(); }
+                      catch (e) { setDeleteError(e.message || "Something went wrong"); setDeleting(false); setConfirmDelete(false); }
+                    }}
+                    className="flex-1 rounded-lg py-2 text-sm font-semibold"
+                    style={{ background: C.burgundy, color: C.ivory, opacity: deleting ? 0.6 : 1 }}>
+                    {deleting ? "Deleting…" : "Yes, delete"}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
