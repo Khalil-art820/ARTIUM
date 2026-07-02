@@ -763,24 +763,26 @@ function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", inter
     <div className="artium-map" style={{ width: "100%", height, position: "relative" }}>
       <div style={{
         position: "absolute", bottom: 0, left: 0,
-        zIndex: 1000, display: "flex", flexDirection: "column", gap: 0,
+        zIndex: 1000, display: "flex", flexDirection: "row", alignItems: "center", gap: 16,
         background: "rgba(20,18,15,0.82)", backdropFilter: "blur(6px)",
         borderRadius: 0, padding: "8px 14px",
         border: "none",
         pointerEvents: "none",
+        flexWrap: "nowrap",
       }}>
-        <div style={{ display: "flex", gap: 16, alignItems: "center", marginBottom: 6 }}>
-          {legend.map(({ color, label }) => (
-            <span key={label} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "rgba(244,238,219,0.85)", fontFamily: FONT_MONO, whiteSpace: "nowrap" }}>
-              <span style={{ width: 10, height: 10, borderRadius: "50%", background: color, border: `1.5px solid ${color === "#27AE60" ? "#1E8449" : color === "#ffffff" ? "#aaaaaa" : "#8B1A1A"}`, display: "inline-block", flexShrink: 0 }} />
-              {label}
-            </span>
-          ))}
-        </div>
-        <div style={{ display: "flex", gap: 16, fontSize: 11, fontFamily: FONT_MONO, color: "rgba(244,238,219,0.55)", borderTop: "1px solid rgba(244,238,219,0.1)", paddingTop: 5, marginTop: 2 }}>
-          <span><span style={{ color: "#ffffff", fontWeight: 600 }}>{totalStudents}</span> conservatory students registered</span>
-          <span><span style={{ color: "#ffffff", fontWeight: 600 }}>{totalTeachers}</span> open to teaching</span>
-        </div>
+        {legend.map(({ color, label }) => (
+          <span key={label} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "rgba(244,238,219,0.85)", fontFamily: FONT_MONO, whiteSpace: "nowrap" }}>
+            <span style={{ width: 10, height: 10, borderRadius: "50%", background: color, border: `1.5px solid ${color === "#27AE60" ? "#1E8449" : color === "#ffffff" ? "#aaaaaa" : "#8B1A1A"}`, display: "inline-block", flexShrink: 0 }} />
+            {label}
+          </span>
+        ))}
+        <span style={{ width: 1, height: 14, background: "rgba(244,238,219,0.2)", flexShrink: 0 }} />
+        <span style={{ fontSize: 11, fontFamily: FONT_MONO, color: "rgba(244,238,219,0.55)", whiteSpace: "nowrap" }}>
+          <span style={{ color: "#ffffff", fontWeight: 600 }}>{totalStudents}</span> conservatory students
+        </span>
+        <span style={{ fontSize: 11, fontFamily: FONT_MONO, color: "rgba(244,238,219,0.55)", whiteSpace: "nowrap" }}>
+          <span style={{ color: "#ffffff", fontWeight: 600 }}>{totalTeachers}</span> open to teaching
+        </span>
       </div>
       <MapContainer
         center={[24, 14]}
