@@ -1207,10 +1207,11 @@ export default function App() {
             setLearnerLoggedOut(false);
             setScreen("entry");
           }}
+          onlineCount={onlineCount}
         />
       )}
 
-      {screen === "landing" && <Landing onApply={startApply} onBack={backToEntry} onPreview={startPreview} onProfile={goToProfile} myProfile={myProfile} musicOn={musicOn} onMusicToggle={toggleMusic} audioRef={audioRef} error={authError} />}
+      {screen === "landing" && <Landing onApply={startApply} onBack={backToEntry} onPreview={startPreview} onProfile={goToProfile} myProfile={myProfile} musicOn={musicOn} onMusicToggle={toggleMusic} audioRef={audioRef} error={authError} onlineCount={onlineCount} />}
       {screen === "login" && <LoginScreen onSubmit={handleLogin} onBack={goHome} error={authError} />}
       {screen === "signup" && (
         <SignupFlow
@@ -1289,7 +1290,7 @@ export default function App() {
 /* ---------------------------------------------------------------- */
 /* LANDING                                                             */
 /* ---------------------------------------------------------------- */
-function Landing({ onApply, onBack, onPreview, onProfile, myProfile, musicOn, onMusicToggle, audioRef, error }) {
+function Landing({ onApply, onBack, onPreview, onProfile, myProfile, musicOn, onMusicToggle, audioRef, error, onlineCount }) {
   return (
     <div style={{ color: C.ivory }}>
       <div className="max-w-6xl mx-auto px-6 pt-8 pb-4 flex items-center justify-between">
@@ -1298,6 +1299,12 @@ function Landing({ onApply, onBack, onPreview, onProfile, myProfile, musicOn, on
           <HomeBtn onClick={onBack} />
         </div>
         <div className="hidden sm:flex items-center gap-3">
+          {onlineCount != null && (
+            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontFamily: FONT_MONO, color: "rgba(244,238,219,0.55)", whiteSpace: "nowrap" }}>
+              <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#27AE60", display: "inline-block", flexShrink: 0 }} />
+              <span style={{ color: "#ffffff", fontWeight: 600 }}>{onlineCount}</span> online
+            </span>
+          )}
           <MusicBtn playing={musicOn} onToggle={onMusicToggle} audioRef={audioRef} />
           {myProfile && (
             <button onClick={onProfile} title="My profile">
@@ -2476,7 +2483,7 @@ function TeacherMap({ teachers, selectedId, onSelect, height = 520 }) {
 }
 
 /* ---- Learner home: map + request + chat ---- */
-function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conversations, activeChatId, setActiveChatId, onSend, onBack, onUpdateProfile, onLogout, onDeleteAccount }) {
+function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conversations, activeChatId, setActiveChatId, onSend, onBack, onUpdateProfile, onLogout, onDeleteAccount, onlineCount }) {
   const [tab, setTab] = useState("teachers");
   const [selectedId, setSelectedId] = useState(null);
   const selected = teachers.find((t) => t.id === selectedId);
@@ -2505,7 +2512,15 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
     <div className="min-h-full" style={{ background: C.ink, color: C.ivory }}>
       <div className="max-w-6xl mx-auto px-6 pt-8 flex items-center justify-between">
         <Logo slogan />
-        <button onClick={onBack} className="text-sm flex items-center gap-1" style={{ color: C.ivoryDim }}><ArrowLeft size={15} /> Back</button>
+        <div className="flex items-center gap-4">
+          {onlineCount != null && (
+            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontFamily: FONT_MONO, color: "rgba(244,238,219,0.55)", whiteSpace: "nowrap" }}>
+              <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#27AE60", display: "inline-block", flexShrink: 0 }} />
+              <span style={{ color: "#ffffff", fontWeight: 600 }}>{onlineCount}</span> online
+            </span>
+          )}
+          <button onClick={onBack} className="text-sm flex items-center gap-1" style={{ color: C.ivoryDim }}><ArrowLeft size={15} /> Back</button>
+        </div>
       </div>
 
       {/* Tab bar */}
