@@ -750,7 +750,7 @@ function consPinIcon({ active, hasStudents, hasTeacher }) {
   });
 }
 
-function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", interactive = false }) {
+function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", interactive = false, onlineCount = null }) {
   const legend = [
     { color: "#C0392B", label: "Open to teaching" },
     { color: "#27AE60", label: "Has students, not teaching" },
@@ -783,6 +783,13 @@ function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", inter
         <span style={{ fontSize: 11, fontFamily: FONT_MONO, color: "rgba(244,238,219,0.55)", whiteSpace: "nowrap" }}>
           <span style={{ color: "#ffffff", fontWeight: 600 }}>{totalTeachers}</span> open to teaching
         </span>
+        {onlineCount !== null && <>
+          <span style={{ width: 1, height: 14, background: "rgba(244,238,219,0.2)", flexShrink: 0 }} />
+          <span style={{ fontSize: 11, fontFamily: FONT_MONO, color: "rgba(244,238,219,0.55)", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 5 }}>
+            <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#27AE60", display: "inline-block", flexShrink: 0 }} />
+            <span style={{ color: "#ffffff", fontWeight: 600 }}>{onlineCount}</span> online
+          </span>
+        </>}
       </div>
       <MapContainer
         center={[24, 14]}
@@ -863,6 +870,7 @@ function AccessGate({ onUnlock }) {
 
 export default function App() {
   const [unlocked, setUnlocked] = useState(() => localStorage.getItem(ACCESS_KEY) === "1");
+  const [onlineCount, setOnlineCount] = useState(1);
   const { user: authUser, profile: authProfile, loading: authLoading } = useAuth();
   const [screen, setScreen] = useState("entry");
   const [appTab, setAppTab] = useState("map");
@@ -879,6 +887,20 @@ export default function App() {
   // Newly-confirmed user (clicked the email link): their profiles row doesn't
   // exist yet — create it now from the draft we stashed in their auth metadata
   // at signup time (stored server-side, so it survives the confirmation link
+  // Realtime presence — track how many browser tabs are on the site
+  useEffect(() => {
+    if (!unlocked) return;
+    const channel = supabase.channel("online_users", { config: { presence: { key: crypto.randomUUID() } } });
+    channel
+      .on("presence", { event: "sync" }, () => {
+        setOnlineCount(Object.keys(channel.presenceState()).length);
+      })
+      .subscribe(async (status) => {
+        if (status === "SUBSCRIBED") await channel.track({ online_at: new Date().toISOString() });
+      });
+    return () => { supabase.removeChannel(channel); };
+  }, [unlocked]);
+
   // being opened in a different browser/device than the one used to sign up).
   useEffect(() => {
     if (authLoading) return;
@@ -1926,7 +1948,7 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
     <div className="lg-split-map h-full">
       <div style={{ background: C.inkSoft }}>
         <MapTitle />
-        <WorldMap selectedId={selectedConsId} onSelect={setSelectedConsId} studentsByCons={studentsByCons} height={520} interactive />
+        <WorldMap selectedId={selectedConsId} onSelect={setSelectedConsId} studentsByCons={studentsByCons} height={520} interactive onlineCount={onlineCount} />
       </div>
       <div className="lg-scroll overflow-y-auto" style={{ borderLeft: `1px solid ${C.inkLine}`, maxHeight: 600 }}>
         {!cons ? (
