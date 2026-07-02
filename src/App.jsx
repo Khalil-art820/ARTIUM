@@ -1255,6 +1255,7 @@ export default function App() {
               isGuest={!myProfile}
               onGuestClick={() => setShowGuestPrompt(true)}
               onBack={goHome}
+              onlineCount={onlineCount}
             />
           )}
           {appTab === "messages" && !selectedStudentId && (
@@ -1941,14 +1942,14 @@ function SignupPromptModal({ onClose, onSignup }) {
   );
 }
 
-function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId, onOpenStudent, isGuest, onGuestClick, onBack }) {
+function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId, onOpenStudent, isGuest, onGuestClick, onBack, onlineCount }) {
   const cons = CONSERVATORIES.find((c) => c.id === selectedConsId);
   const roster = selectedConsId ? studentsByCons[selectedConsId] || [] : [];
   return (
     <div className="lg-split-map h-full">
       <div style={{ background: C.inkSoft }}>
         <MapTitle />
-        <WorldMap selectedId={selectedConsId} onSelect={setSelectedConsId} studentsByCons={studentsByCons} height={520} interactive onlineCount={onlineCount} />
+        <WorldMap selectedId={selectedConsId} onSelect={setSelectedConsId} studentsByCons={studentsByCons} height={520} interactive onlineCount={onlineCount ?? null} />
       </div>
       <div className="lg-scroll overflow-y-auto" style={{ borderLeft: `1px solid ${C.inkLine}`, maxHeight: 600 }}>
         {!cons ? (
