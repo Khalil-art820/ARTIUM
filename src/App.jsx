@@ -750,7 +750,7 @@ function consPinIcon({ active, hasStudents, hasTeacher }) {
   });
 }
 
-function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", interactive = false, onlineCount = null }) {
+function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", interactive = false }) {
   const legend = [
     { color: "#C0392B", label: "Open to teaching" },
     { color: "#27AE60", label: "Has students, not teaching" },
@@ -783,13 +783,6 @@ function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", inter
         <span style={{ fontSize: 11, fontFamily: FONT_MONO, color: "rgba(244,238,219,0.55)", whiteSpace: "nowrap" }}>
           <span style={{ color: "#ffffff", fontWeight: 600 }}>{totalTeachers}</span> open to teaching
         </span>
-        {onlineCount !== null && <>
-          <span style={{ width: 1, height: 14, background: "rgba(244,238,219,0.2)", flexShrink: 0 }} />
-          <span style={{ fontSize: 11, fontFamily: FONT_MONO, color: "rgba(244,238,219,0.55)", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 5 }}>
-            <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#27AE60", display: "inline-block", flexShrink: 0 }} />
-            <span style={{ color: "#ffffff", fontWeight: 600 }}>{onlineCount}</span> online
-          </span>
-        </>}
       </div>
       <MapContainer
         center={[24, 14]}
@@ -1233,7 +1226,7 @@ export default function App() {
         <AppShell
           appTab={appTab} setAppTab={setAppTab} myProfile={myProfile}
           onApply={startApply} onHome={goHome} musicOn={musicOn} onMusicToggle={toggleMusic} audioRef={audioRef}
-          onGuestTabClick={() => setShowGuestPrompt(true)}
+          onGuestTabClick={() => setShowGuestPrompt(true)} onlineCount={onlineCount}
           onBack={
             selectedStudentId ? backFromProfile :
             appTab === "messages" ? () => setAppTab("map") :
@@ -1255,7 +1248,6 @@ export default function App() {
               isGuest={!myProfile}
               onGuestClick={() => setShowGuestPrompt(true)}
               onBack={goHome}
-              onlineCount={onlineCount}
             />
           )}
           {appTab === "messages" && !selectedStudentId && (
@@ -1853,7 +1845,7 @@ function LoginScreen({ onSubmit, onBack, error }) {
 /* ---------------------------------------------------------------- */
 /* APP SHELL                                                          */
 /* ---------------------------------------------------------------- */
-function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, musicOn, onMusicToggle, audioRef, onBack, backLabel, onGuestTabClick }) {
+function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, musicOn, onMusicToggle, audioRef, onBack, backLabel, onGuestTabClick, onlineCount }) {
   const tabs = [
     { id: "map", label: "Map", icon: Globe2, locked: false },
     { id: "messages", label: "Messages", icon: MessageCircle, locked: !myProfile },
@@ -1885,6 +1877,12 @@ function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, mus
           ))}
         </div>
         <div className="flex items-center gap-3">
+          {onlineCount != null && (
+            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontFamily: FONT_MONO, color: "rgba(244,238,219,0.55)", whiteSpace: "nowrap" }}>
+              <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#27AE60", display: "inline-block", flexShrink: 0 }} />
+              <span style={{ color: "#ffffff", fontWeight: 600 }}>{onlineCount}</span> online
+            </span>
+          )}
           <MusicBtn playing={musicOn} onToggle={onMusicToggle} audioRef={audioRef} />
           {!myProfile ? (
             <PrimaryBtn onClick={onApply}>Sign up to connect</PrimaryBtn>
@@ -1942,14 +1940,14 @@ function SignupPromptModal({ onClose, onSignup }) {
   );
 }
 
-function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId, onOpenStudent, isGuest, onGuestClick, onBack, onlineCount }) {
+function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId, onOpenStudent, isGuest, onGuestClick, onBack }) {
   const cons = CONSERVATORIES.find((c) => c.id === selectedConsId);
   const roster = selectedConsId ? studentsByCons[selectedConsId] || [] : [];
   return (
     <div className="lg-split-map h-full">
       <div style={{ background: C.inkSoft }}>
         <MapTitle />
-        <WorldMap selectedId={selectedConsId} onSelect={setSelectedConsId} studentsByCons={studentsByCons} height={520} interactive onlineCount={onlineCount ?? null} />
+        <WorldMap selectedId={selectedConsId} onSelect={setSelectedConsId} studentsByCons={studentsByCons} height={520} interactive />
       </div>
       <div className="lg-scroll overflow-y-auto" style={{ borderLeft: `1px solid ${C.inkLine}`, maxHeight: 600 }}>
         {!cons ? (
