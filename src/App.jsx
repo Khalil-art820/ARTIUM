@@ -511,7 +511,7 @@ function HomeBtn({ onClick }) {
   );
 }
 
-function MusicBtn({ playing, onToggle, audioRef, bare = false }) {
+function MusicBtn({ playing, onToggle, audioRef }) {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(1);
@@ -564,20 +564,6 @@ function MusicBtn({ playing, onToggle, audioRef, bare = false }) {
   }
 
   const VolumeIcon = muted || volume === 0 ? VolumeX : volume < 0.4 ? Volume1 : Volume2;
-
-  if (bare) {
-    return (
-      <div style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
-        <button onClick={onToggle} title={playing ? "Pause" : "Play"} style={{ background: "none", border: "none", cursor: "pointer", color: C.ivoryDim, display: "flex", alignItems: "center", padding: 0 }}>
-          {playing ? <Pause size={14} /> : <Play size={14} />}
-        </button>
-        <button onClick={toggleMute} title={muted ? "Unmute" : "Mute"} style={{ background: "none", border: "none", cursor: "pointer", color: C.ivoryDim, display: "flex", alignItems: "center", padding: 0 }}>
-          <VolumeIcon size={14} />
-        </button>
-        <input type="range" min="0" max="1" step="0.02" value={volume} onChange={changeVolume} className="artium-slider" style={{ width: 56, accentColor: C.brass, cursor: "pointer" }} title="Volume" />
-      </div>
-    );
-  }
 
   return (
     <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(10,37,64,0.05)", borderRadius: 999, padding: "5px 10px 5px 8px", border: `1px solid ${C.inkLine}` }}>
@@ -1315,6 +1301,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, myProfile, musicOn, on
             <Logo size={22} />
           </div>
           <div className="flex items-center gap-3">
+            <MusicBtn playing={musicOn} onToggle={onMusicToggle} audioRef={audioRef} />
             {onlineCount != null && (
               <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 13, color: C.ivoryDim }}>
                 <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#1A9E6E", display: "inline-block" }} />
@@ -1382,9 +1369,9 @@ function Landing({ onApply, onBack, onPreview, onProfile, myProfile, musicOn, on
         </div>
       </div>
 
-      <div style={{ borderTop: `1px solid ${C.inkLine}`, padding: "16px 0" }}>
+      <div style={{ borderTop: `1px solid ${C.inkLine}`, padding: "20px 0" }}>
         <div className="max-w-6xl mx-auto px-8" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <MusicBtn playing={musicOn} onToggle={onMusicToggle} audioRef={audioRef} bare />
+          <Logo size={18} />
           <p style={{ fontSize: 13, color: C.ivoryDim }}>Beta — for demonstration purposes only.</p>
         </div>
       </div>
@@ -1944,12 +1931,11 @@ function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, mus
           </div>
         )}
         <div className="flex items-center gap-3">
-          <MusicBtn playing={musicOn} onToggle={onMusicToggle} audioRef={audioRef} bare />
+          <MusicBtn playing={musicOn} onToggle={onMusicToggle} audioRef={audioRef} />
           {onlineCount != null && (
             <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: C.ivoryDim, whiteSpace: "nowrap" }}>
               <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#1A9E6E", display: "inline-block", flexShrink: 0 }} />
-              <span style={{ color: C.ivory, fontWeight: 600 }}>{onlineCount}</span>
-              <span style={{ color: C.ivory, fontWeight: 600 }}>online</span>
+              <span style={{ color: C.ivory, fontWeight: 600 }}>{onlineCount}</span> online
             </span>
           )}
           {!myProfile ? (
