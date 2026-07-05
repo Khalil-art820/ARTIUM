@@ -4,7 +4,7 @@ import {
   ChevronRight, Check, X, Instagram, Facebook,
   Music2, Users, MessageCircle, ArrowRight, ArrowLeft, Play, Pause, Globe2,
   Volume1, Volume2, VolumeX,
-  Pencil, Plus, Trash2, Home, Upload, Eye, EyeOff,
+  Pencil, Plus, Trash2, Home, Upload, Eye, EyeOff, ChevronLeft,
 } from "lucide-react";
 import AMBIENT_AUDIO_SRC from "./assets/ambient.mp3";
 import { useAuth } from "./contexts/AuthContext";
@@ -1323,10 +1323,9 @@ function Landing({ onApply, onBack, onPreview, onProfile, myProfile, musicOn, on
                 <Avatar name={myProfile.name} id="me" size={36} photoUrl={myProfile.photoUrl} online />
               </button>
             ) : (
-              <div style={{ display: "flex", gap: 8 }}>
-                <HomeBtn onClick={onBack} />
-                <PrimaryBtn onClick={onApply}>Sign up free</PrimaryBtn>
-              </div>
+              <button onClick={onBack} className="inline-flex items-center gap-1.5 text-sm" style={{ color: C.ivoryDim, fontFamily: FONT_BODY, fontWeight: 500 }}>
+                <ChevronLeft size={16} /> Back
+              </button>
             )}
           </div>
         </div>
@@ -1355,7 +1354,9 @@ function Landing({ onApply, onBack, onPreview, onProfile, myProfile, musicOn, on
           </div>
           <div style={{ borderRadius: 12, overflow: "hidden", border: `1px solid ${C.inkLine}`, boxShadow: "0 8px 32px rgba(10,37,64,0.10)" }}>
             <div style={{ padding: "14px 18px", background: "#FFFFFF", borderBottom: `1px solid ${C.inkLine}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <span style={{ fontSize: 14, fontWeight: 600, color: C.ivory }}>Global network</span>
+              <button onClick={onPreview} style={{ fontSize: 14, fontWeight: 600, color: C.brass, background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: FONT_BODY, display: "inline-flex", alignItems: "center", gap: 6 }}>
+                <Globe2 size={15} /> Explore
+              </button>
               <span style={{ fontSize: 12, color: C.ivoryDim }}>200+ conservatories</span>
             </div>
             <WorldMap selectedId={null} onSelect={() => {}} studentsByCons={SAMPLE_STUDENTS.reduce((a, s) => { (a[s.conservatoryId] = a[s.conservatoryId] || []).push(s); return a; }, {})} height={280} />
