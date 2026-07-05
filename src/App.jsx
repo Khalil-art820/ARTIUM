@@ -1306,6 +1306,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, myProfile, musicOn, on
               <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 13, color: C.ivoryDim }}>
                 <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#1A9E6E", display: "inline-block" }} />
                 <span style={{ color: C.ivory, fontWeight: 600 }}>{onlineCount}</span>
+                <span style={{ color: C.ivory, fontWeight: 600 }}>online</span>
               </span>
             )}
             {myProfile && (
@@ -1408,12 +1409,11 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
   return (
     <div className="min-h-full" style={{ background: C.ink, color: C.ivory }}>
       <div className="max-w-3xl mx-auto px-6 pt-8">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-5">
-            <Logo slogan />
-            <HomeBtn onClick={onHome} />
-          </div>
-          <button onClick={onCancel} className="text-sm flex items-center gap-1" style={{ color: C.ivoryDim }}><X size={15} /> Cancel</button>
+        <div className="flex items-center gap-3">
+          <button onClick={step === 0 ? onCancel : () => setStep(step - 1)} style={{ color: C.ivoryDim, background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", padding: 0 }}>
+            <ChevronLeft size={18} />
+          </button>
+          <Logo slogan />
         </div>
         <div className="mt-8 flex items-center gap-4">
           <span style={{ fontFamily: FONT_MONO, color: C.brass, fontSize: 13 }}>Step {ROMAN[step]} of {ROMAN[lastStep]}</span>
@@ -1443,14 +1443,7 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
         </div>
       )}
 
-      <div className="max-w-3xl mx-auto px-6 pb-12 flex items-center justify-between">
-        <button
-          onClick={() => (step === 0 ? onCancel() : setStep(step - 1))}
-          className="inline-flex items-center gap-2 text-sm"
-          style={{ color: C.ivoryDim }}
-        >
-          <ArrowLeft size={15} /> {step === 0 ? "Cancel" : "Back"}
-        </button>
+      <div className="max-w-3xl mx-auto px-6 pb-12 flex items-center justify-end">
         {step < lastStep ? (
           <PrimaryBtn disabled={!canNext} onClick={() => setStep(step + 1)} icon={ChevronRight}>Continue</PrimaryBtn>
         ) : (
@@ -2383,6 +2376,7 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
             <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 13, color: C.ivoryDim }}>
               <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#1A9E6E", display: "inline-block" }} />
               <span style={{ color: C.ivory, fontWeight: 600 }}>{onlineCount}</span>
+              <span style={{ color: C.ivory, fontWeight: 600 }}>online</span>
             </span>
           )}
         </div>
