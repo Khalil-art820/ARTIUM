@@ -1346,7 +1346,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, myProfile, musicOn, on
           <div style={{ borderRadius: 12, overflow: "hidden", border: `1px solid ${C.inkLine}`, boxShadow: "0 8px 32px rgba(10,37,64,0.10)" }}>
             <div style={{ padding: "14px 18px", background: "#FFFFFF", borderBottom: `1px solid ${C.inkLine}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
               <button onClick={onPreview} style={{ fontSize: 14, fontWeight: 600, color: C.brass, background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: FONT_BODY, display: "inline-flex", alignItems: "center", gap: 6 }}>
-                <Globe2 size={15} /> Explore
+                <Globe2 size={15} /> Explore your network
               </button>
             </div>
             <WorldMap selectedId={null} onSelect={() => {}} studentsByCons={SAMPLE_STUDENTS.reduce((a, s) => { (a[s.conservatoryId] = a[s.conservatoryId] || []).push(s); return a; }, {})} height={280} />
