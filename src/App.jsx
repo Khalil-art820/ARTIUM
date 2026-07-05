@@ -761,37 +761,28 @@ function consPinIcon({ active, hasStudents, hasTeacher }) {
 }
 
 function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", interactive = false }) {
-  const legend = [
-    { color: "#C0392B", label: "Open to teaching" },
-    { color: "#27AE60", label: "Has students, not teaching" },
-    { color: "#ffffff", label: "No students yet" },
-  ];
   const allStudents = Object.values(studentsByCons).flat();
-  const totalStudents = allStudents.length;
+  const totalJoined = allStudents.length;
   const totalTeachers = allStudents.filter(s => s.teaching && s.teaching.open).length;
   return (
     <div className="artium-map" style={{ width: "100%", height, position: "relative" }}>
       <div style={{
         position: "absolute", bottom: 0, left: 0, right: 0,
-        zIndex: 1000, display: "flex", flexDirection: "column", gap: 4,
+        zIndex: 1000, display: "flex", flexDirection: "row", alignItems: "center", gap: 14,
         background: "rgba(255,255,255,0.92)", backdropFilter: "blur(8px)",
         borderTop: "1px solid #E6EBF1",
-        padding: "6px 12px",
+        padding: "7px 12px",
         pointerEvents: "none",
+        flexWrap: "nowrap",
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          {legend.map(({ color, label }) => (
-            <span key={label} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "#425466", fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>
-              <span style={{ width: 9, height: 9, borderRadius: "50%", background: color, border: `1.5px solid ${color === "#27AE60" ? "#1E8449" : color === "#ffffff" ? "#E6EBF1" : "#8B1A1A"}`, display: "inline-block", flexShrink: 0 }} />
-              {label}
-            </span>
-          ))}
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 11, fontFamily: FONT_BODY, color: "#425466" }}>
-          <span><span style={{ color: "#0A2540", fontWeight: 700 }}>{totalStudents}</span> students</span>
-          <span style={{ width: 1, height: 10, background: "#E6EBF1", display: "inline-block" }} />
-          <span><span style={{ color: "#0A2540", fontWeight: 700 }}>{totalTeachers}</span> open to teaching</span>
-        </div>
+        <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "#425466", fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>
+          <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#C0392B", border: "1.5px solid #8B1A1A", display: "inline-block", flexShrink: 0 }} />
+          Open to teaching ({totalTeachers})
+        </span>
+        <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "#425466", fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>
+          <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#27AE60", border: "1.5px solid #1E8449", display: "inline-block", flexShrink: 0 }} />
+          Joined the network ({totalJoined})
+        </span>
       </div>
       <MapContainer
         center={[24, 14]}
@@ -807,19 +798,20 @@ function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", inter
         <TileLayer url={TILE_URL} attribution="" />
         {CONSERVATORIES.map((cons) => {
           const n = (studentsByCons[cons.id] || []).length;
+          if (n === 0) return null;
           const active = selectedId === cons.id;
           return (
             <Marker
               key={cons.id}
               position={[cons.lat, cons.lng]}
-              icon={consPinIcon({ active, hasStudents: n > 0, hasTeacher: (studentsByCons[cons.id] || []).some(s => s.teaching && s.teaching.open) })}
+              icon={consPinIcon({ active, hasStudents: true, hasTeacher: (studentsByCons[cons.id] || []).some(s => s.teaching && s.teaching.open) })}
               eventHandlers={{ click: () => onSelect(cons.id) }}
             >
               <Tooltip direction="top" offset={[0, -28]}>
                 <span style={{ fontFamily: FONT_BODY, fontWeight: 600 }}>{cons.short}</span>
                 <br />
                 <span style={{ fontFamily: FONT_MONO, fontSize: 11 }}>
-                  {cons.city}, {cons.country}{n > 0 ? ` · ${n} student${n === 1 ? "" : "s"}` : ""}
+                  {cons.city}, {cons.country} · {n} student{n === 1 ? "" : "s"}
                 </span>
               </Tooltip>
             </Marker>
