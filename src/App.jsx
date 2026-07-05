@@ -1155,9 +1155,12 @@ export default function App() {
         .lg-scroll::-webkit-scrollbar-thumb { background: rgba(244,238,219,0.18); border-radius: 3px; }
         .lg-split-map { display: grid; grid-template-columns: 1fr; }
         .lg-split-chat { display: grid; grid-template-columns: 1fr; }
-        @media (min-width: 1024px) {
+        @media (min-width: 768px) {
           .lg-split-map { grid-template-columns: 1fr 380px; }
           .lg-split-chat { grid-template-columns: 300px 1fr; }
+        }
+        @media (max-width: 767px) {
+          .lg-split-map > :last-child { max-height: 45vh !important; overflow-y: auto; -webkit-overflow-scrolling: touch; }
         }
         input[type=range].artium-slider { -webkit-appearance: none; appearance: none; height: 3px !important; outline: none; border-radius: 2px; }
         input[type=range].artium-slider::-webkit-slider-thumb { -webkit-appearance: none !important; appearance: none !important; width: 6px !important; height: 6px !important; border-radius: 50% !important; background: #C9A24B !important; cursor: pointer !important; border: none !important; }
@@ -1898,8 +1901,8 @@ function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, mus
   ];
   return (
     <div className="min-h-full flex flex-col" style={{ background: C.ink, color: C.ivory }}>
-      <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.inkLine}` }}>
-        <div className="flex items-center gap-5">
+      <div className="px-4 py-3 flex items-center justify-between flex-wrap gap-2" style={{ borderBottom: `1px solid ${C.inkLine}` }}>
+        <div className="flex items-center gap-3">
           <Logo size={18} />
           <HomeBtn onClick={onHome} />
         </div>
