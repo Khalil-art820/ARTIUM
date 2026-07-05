@@ -393,14 +393,13 @@ function Logo({ tone = "light", size = 20, slogan = false }) {
     <div className="flex items-center gap-2.5">
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ flexShrink: 0 }}>
         <rect width={size} height={size} rx={size * 0.22} fill={C.brass} />
-        <text
-          x={r} y={textY}
-          textAnchor="middle"
-          fontFamily="Inter, sans-serif"
-          fontWeight="700"
-          fontSize={fontSize}
-          fill="white"
-        >A</text>
+        <path
+          d={`M ${size * 0.2} ${size * 0.62} Q ${size * 0.5} ${size * 0.28} ${size * 0.8} ${size * 0.62}`}
+          stroke="white"
+          strokeWidth={size * 0.11}
+          fill="none"
+          strokeLinecap="round"
+        />
       </svg>
       <span style={{ fontFamily: FONT_DISPLAY, color: col, fontSize: size * 0.9, fontWeight: 600, letterSpacing: -0.3 }}>Artium</span>
       {slogan && (
