@@ -387,24 +387,24 @@ function Logo({ tone = "light", size = 20, slogan = false }) {
   const col = tone === "light" ? C.ivory : C.inkText;
   const dim = tone === "light" ? C.ivoryDim : C.inkTextDim;
   const r = size / 2;
-  const fontSize = size * 0.68;
-  const textY = r + fontSize * 0.36;
+  const fontSize = size * 0.62;
+  const textY = r + fontSize * 0.38;
   return (
-    <div className="flex items-center gap-2">
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        <circle cx={r} cy={r} r={r} fill="white" />
+    <div className="flex items-center gap-2.5">
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ flexShrink: 0 }}>
+        <rect width={size} height={size} rx={size * 0.22} fill={C.brass} />
         <text
           x={r} y={textY}
           textAnchor="middle"
-          fontFamily="Georgia, 'Times New Roman', serif"
+          fontFamily="Inter, sans-serif"
           fontWeight="700"
           fontSize={fontSize}
-          fill="black"
+          fill="white"
         >A</text>
       </svg>
-      <span style={{ fontFamily: FONT_DISPLAY, color: col, fontSize: size * 0.85, letterSpacing: 0.3 }}>Artium</span>
+      <span style={{ fontFamily: FONT_DISPLAY, color: col, fontSize: size * 0.9, fontWeight: 600, letterSpacing: -0.3 }}>Artium</span>
       {slogan && (
-        <span style={{ fontFamily: FONT_DISPLAY, color: dim, fontSize: size * 0.62, letterSpacing: 0.5, fontWeight: 400, fontStyle: "italic", opacity: 0.75 }}>
+        <span style={{ fontFamily: FONT_DISPLAY, color: dim, fontSize: size * 0.6, fontWeight: 400, opacity: 0.6 }}>
           — A World Connected by Music
         </span>
       )}
@@ -463,30 +463,40 @@ function PrimaryBtn({ children, onClick, disabled, full, icon: Icon }) {
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm transition-opacity ${full ? "w-full" : ""}`}
+      className={`inline-flex items-center justify-center gap-2 ${full ? "w-full" : ""}`}
       style={{
-        fontFamily: FONT_BODY, fontWeight: 600,
-        background: disabled ? "rgba(99,91,255,0.15)" : C.brass,
-        color: C.inkText,
+        fontFamily: FONT_BODY, fontWeight: 500, fontSize: 15,
+        background: disabled ? "rgba(99,91,255,0.20)" : C.brass,
+        color: "#FFFFFF",
+        border: "none",
+        borderRadius: 6,
+        padding: "10px 20px",
+        boxShadow: disabled ? "none" : "0 1px 3px rgba(99,91,255,0.25)",
         cursor: disabled ? "not-allowed" : "pointer",
+        transition: "opacity 0.15s",
+        opacity: disabled ? 0.7 : 1,
       }}
     >
-      {children} {Icon && <Icon size={16} />}
+      {children} {Icon && <Icon size={15} />}
     </button>
   );
 }
 
 function GhostBtn({ children, onClick, icon: Icon, tone = "light", disabled }) {
-  const col = tone === "light" ? C.ivory : C.inkText;
   return (
     <button
       onClick={disabled ? undefined : onClick}
-      className="inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm"
+      className="inline-flex items-center gap-2"
       style={{
-        fontFamily: FONT_BODY, fontWeight: 600, color: col,
-        border: `1px solid ${tone === "light" ? C.inkLine : C.parchmentLine}`,
-        opacity: disabled ? 0.6 : 1,
+        fontFamily: FONT_BODY, fontWeight: 500, fontSize: 15,
+        color: C.ivory,
+        background: "#FFFFFF",
+        border: `1px solid ${C.inkLine}`,
+        borderRadius: 6,
+        padding: "9px 18px",
+        opacity: disabled ? 0.5 : 1,
         cursor: disabled ? "default" : "pointer",
+        transition: "border-color 0.15s",
       }}
     >
       {Icon && <Icon size={15} />} {children}
@@ -496,7 +506,7 @@ function GhostBtn({ children, onClick, icon: Icon, tone = "light", disabled }) {
 
 function HomeBtn({ onClick }) {
   return (
-    <button onClick={onClick} className="inline-flex items-center gap-1.5 text-sm" style={{ color: C.ivoryDim, fontFamily: FONT_BODY, fontWeight: 600 }}>
+    <button onClick={onClick} className="inline-flex items-center gap-1.5 text-sm" style={{ color: C.ivoryDim, fontFamily: FONT_BODY, fontWeight: 500 }}>
       <Home size={15} /> Home
     </button>
   );
@@ -835,12 +845,12 @@ function AccessGate({ onUnlock }) {
     else { setError(true); setValue(""); }
   }
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#FFFFFF", fontFamily: FONT_BODY, padding: 24 }}>
-      <div style={{ marginBottom: 32, textAlign: "center" }}>
-        <Logo />
-        <p style={{ color: "#425466", fontSize: 14, marginTop: 10 }}>Private beta — enter access key to continue</p>
-      </div>
-      <div style={{ width: "100%", maxWidth: 320 }}>
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: C.inkSoft, fontFamily: FONT_BODY, padding: 24 }}>
+      <div style={{ width: "100%", maxWidth: 400, background: "#FFFFFF", border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: 40, boxShadow: "0 4px 24px rgba(10,37,64,0.07)" }}>
+        <div style={{ marginBottom: 28 }}>
+          <Logo size={22} />
+          <p style={{ color: C.ivoryDim, fontSize: 14, marginTop: 12 }}>Private beta — enter access key to continue.</p>
+        </div>
         <input
           type="password"
           value={value}
@@ -849,13 +859,13 @@ function AccessGate({ onUnlock }) {
           placeholder="Access key"
           autoComplete="off"
           autoFocus
-          style={{ width: "100%", background: "#F6F9FC", border: `1px solid ${error ? "#c0392b" : "#E6EBF1"}`, borderRadius: 10, padding: "12px 16px", color: "#0A2540", fontSize: 15, outline: "none", boxSizing: "border-box" }}
+          style={{ ...inputStyle, boxSizing: "border-box", border: `1px solid ${error ? C.burgundy : C.inkLine}`, marginBottom: 8 }}
         />
-        {error && <p style={{ color: "#c0392b", fontSize: 13, marginTop: 8 }}>Incorrect key — try again.</p>}
+        {error && <p style={{ color: C.burgundy, fontSize: 13, marginBottom: 12 }}>Incorrect key — try again.</p>}
         <button
           onClick={attempt}
           style={{ marginTop: 12, width: "100%", background: "#635BFF", color: "#FFFFFF", border: "none", borderRadius: 10, padding: "12px 0", fontSize: 15, fontWeight: 700, cursor: "pointer" }}
-        >Enter</button>
+        >Continue</button>
       </div>
     </div>
   );
@@ -1295,83 +1305,89 @@ export default function App() {
 /* ---------------------------------------------------------------- */
 function Landing({ onApply, onBack, onPreview, onProfile, myProfile, musicOn, onMusicToggle, audioRef, error, onlineCount }) {
   return (
-    <div style={{ color: C.ivory }}>
-      <div className="max-w-6xl mx-auto px-6 pt-8 pb-4 flex items-center justify-between">
-        <div className="flex items-center gap-5">
-          <Logo slogan />
-          <HomeBtn onClick={onBack} />
-        </div>
-        <div className="hidden sm:flex items-center gap-3">
-          {onlineCount != null && (
-            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontFamily: FONT_MONO, color: "#425466", whiteSpace: "nowrap" }}>
-              <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#27AE60", display: "inline-block", flexShrink: 0 }} />
-              <span style={{ color: "#0A2540", fontWeight: 700 }}>{onlineCount}</span> online
-            </span>
-          )}
-          <MusicBtn playing={musicOn} onToggle={onMusicToggle} audioRef={audioRef} />
-          {myProfile && (
-            <button onClick={onProfile} title="My profile">
-              <Avatar name={myProfile.name} id="me" size={38} photoUrl={myProfile.photoUrl} online />
-            </button>
-          )}
-        </div>
-      </div>
-
-      <div className="max-w-6xl mx-auto px-6 py-14 grid md:grid-cols-2 gap-12 items-center">
-        <div>
-          <p style={{ fontFamily: FONT_MONO, color: C.brass, letterSpacing: 1.5, fontSize: 12 }}>FOR CONSERVATORY PIANISTS</p>
-          <h1 className="mt-4" style={{ fontFamily: FONT_DISPLAY, fontSize: "clamp(38px,5.5vw,64px)", lineHeight: 1.05, fontWeight: 600 }}>
-            Every conservatory.<br />One place.
-          </h1>
-          <p className="mt-6 max-w-md" style={{ color: C.ivoryDim, fontSize: 17, lineHeight: 1.6 }}>
-            Artium connects piano students across the world's conservatories — share repertoire, technical language, interpretation traditions, exam culture, musical tastes and more. Message one another, conservatory to conservatory!
-          </p>
-          <div className="mt-8 flex flex-wrap items-center gap-3">
-            {!myProfile && <PrimaryBtn onClick={onApply} icon={ArrowRight}>Sign up</PrimaryBtn>}
-            <span className="text-xs" style={{ color: C.ivoryDim, fontFamily: FONT_MONO }}>
-              {myProfile ? "You're signed in." : "Free to join."}
-            </span>
-          </div>
-          {error && <p className="mt-4 text-sm max-w-md" style={{ color: C.burgundy, lineHeight: 1.5 }}>{error}</p>}
-        </div>
-        <div className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${C.inkLine}`, background: C.inkSoft }}>
-          <div className="px-5 pt-4 pb-2">
-            <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 16, fontWeight: 600, color: C.ivory, letterSpacing: 0.2, lineHeight: 1.4 }}>
-              The Artium Network <span style={{ color: C.ivoryDim, fontWeight: 400 }}>— Bridging Musicians Worldwide</span>
-            </h3>
-          </div>
-          <WorldMap selectedId={null} onSelect={() => {}} studentsByCons={SAMPLE_STUDENTS.reduce((a, s) => { (a[s.conservatoryId] = a[s.conservatoryId] || []).push(s); return a; }, {})} height={300} />
-          <div className="flex items-center justify-center py-4">
-            <button
-              onClick={onPreview}
-              className="inline-flex items-center gap-2 rounded-full px-5 py-2.5"
-              style={{ fontFamily: FONT_BODY, fontWeight: 600, fontSize: 15, color: C.ivory, border: `1px solid ${C.inkLine}`, background: "transparent" }}
-            >
-              <Globe2 size={15} /> Explore the map
-            </button>
+    <div style={{ background: "#FFFFFF", color: C.ivory, minHeight: "100vh" }}>
+      {/* Nav */}
+      <div style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#FFFFFF" }}>
+        <div className="max-w-6xl mx-auto px-8" style={{ height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <Logo size={22} slogan />
+          <div className="flex items-center gap-4">
+            {onlineCount != null && (
+              <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 13, color: C.ivoryDim }}>
+                <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#1A9E6E", display: "inline-block" }} />
+                <span style={{ color: C.ivory, fontWeight: 600 }}>{onlineCount}</span> online
+              </span>
+            )}
+            <MusicBtn playing={musicOn} onToggle={onMusicToggle} audioRef={audioRef} />
+            {myProfile ? (
+              <button onClick={onProfile} title="My profile">
+                <Avatar name={myProfile.name} id="me" size={36} photoUrl={myProfile.photoUrl} online />
+              </button>
+            ) : (
+              <div style={{ display: "flex", gap: 8 }}>
+                <HomeBtn onClick={onBack} />
+                <PrimaryBtn onClick={onApply}>Sign up free</PrimaryBtn>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-6 py-16">
-        <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600 }}>How it works</h2>
-        <div className="mt-8 grid sm:grid-cols-4 gap-8">
+      {/* Hero */}
+      <div style={{ background: C.inkSoft, borderBottom: `1px solid ${C.inkLine}` }}>
+        <div className="max-w-6xl mx-auto px-8 py-20 grid md:grid-cols-2 gap-16 items-center">
+          <div>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: C.brassDim, borderRadius: 20, padding: "5px 14px", marginBottom: 24 }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: C.brass, display: "inline-block" }} />
+              <span style={{ fontSize: 13, fontWeight: 500, color: C.brass }}>For conservatory musicians</span>
+            </div>
+            <h1 style={{ fontSize: "clamp(36px,5vw,60px)", fontWeight: 700, lineHeight: 1.08, letterSpacing: -1, color: C.ivory, margin: 0 }}>
+              Every conservatory.<br />One network.
+            </h1>
+            <p style={{ color: C.ivoryDim, fontSize: 18, lineHeight: 1.65, marginTop: 20, maxWidth: 460 }}>
+              Artium connects students across the world's top conservatories — share repertoire, message peers, find teachers, and earn while you teach.
+            </p>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 32, flexWrap: "wrap" }}>
+              {!myProfile && <PrimaryBtn onClick={onApply} icon={ArrowRight}>Get started free</PrimaryBtn>}
+              <GhostBtn onClick={onPreview} icon={Globe2}>Explore the map</GhostBtn>
+            </div>
+            {error && <p style={{ marginTop: 16, fontSize: 14, color: C.burgundy, lineHeight: 1.5 }}>{error}</p>}
+            <p style={{ marginTop: 16, fontSize: 13, color: C.ivoryDim }}>{myProfile ? "You're signed in." : "No credit card required."}</p>
+          </div>
+          <div style={{ borderRadius: 12, overflow: "hidden", border: `1px solid ${C.inkLine}`, boxShadow: "0 8px 32px rgba(10,37,64,0.10)" }}>
+            <div style={{ padding: "14px 18px", background: "#FFFFFF", borderBottom: `1px solid ${C.inkLine}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span style={{ fontSize: 14, fontWeight: 600, color: C.ivory }}>Global network</span>
+              <span style={{ fontSize: 12, color: C.ivoryDim }}>200+ conservatories</span>
+            </div>
+            <WorldMap selectedId={null} onSelect={() => {}} studentsByCons={SAMPLE_STUDENTS.reduce((a, s) => { (a[s.conservatoryId] = a[s.conservatoryId] || []).push(s); return a; }, {})} height={280} />
+          </div>
+        </div>
+      </div>
+
+      {/* How it works */}
+      <div className="max-w-6xl mx-auto px-8 py-20">
+        <p style={{ fontSize: 13, fontWeight: 500, color: C.brass, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 12 }}>How it works</p>
+        <h2 style={{ fontSize: 32, fontWeight: 700, letterSpacing: -0.5, color: C.ivory, marginBottom: 48 }}>Simple, from day one.</h2>
+        <div className="grid sm:grid-cols-4 gap-8">
           {[
-            { m: "I", t: "Submit your information", d: "Build your profile — conservatory, repertoire, preferences — and optionally link a performance video." },
-            { m: "II", t: "Take your seat on the map", d: "Once accepted, you appear under your conservatory, alongside pianists studying there now." },
-            { m: "III", t: "Connect across borders", d: "Message students at any conservatory in the world." },
-            { m: "IV", t: "Earn while you teach", d: "Accept tutoring requests from amateur piano enthusiasts and start earning money." },
+            { n: "01", t: "Build your profile", d: "Add your conservatory, repertoire, and a performance video to stand out." },
+            { n: "02", t: "Join the map", d: "Your pin appears on the global map under your conservatory alongside current students." },
+            { n: "03", t: "Connect worldwide", d: "Message students at any conservatory in the world, directly." },
+            { n: "04", t: "Earn while you teach", d: "Accept tutoring requests from music enthusiasts and set your own rate." },
           ].map((s) => (
-            <div key={s.m}>
-              <p style={{ fontFamily: FONT_MONO, color: C.brass, fontSize: 13 }}>Step {s.m}</p>
-              <h3 className="mt-2" style={{ fontFamily: FONT_DISPLAY, fontSize: 19, fontWeight: 600 }}>{s.t}</h3>
-              <p className="mt-2 text-sm" style={{ color: C.ivoryDim, lineHeight: 1.6 }}>{s.d}</p>
+            <div key={s.n} style={{ padding: "24px", background: "#FFFFFF", border: `1px solid ${C.inkLine}`, borderRadius: 10, boxShadow: "0 2px 8px rgba(10,37,64,0.05)" }}>
+              <p style={{ fontSize: 12, fontWeight: 700, color: C.brass, letterSpacing: 1, marginBottom: 12 }}>{s.n}</p>
+              <h3 style={{ fontSize: 16, fontWeight: 600, color: C.ivory, marginBottom: 8 }}>{s.t}</h3>
+              <p style={{ fontSize: 14, color: C.ivoryDim, lineHeight: 1.65 }}>{s.d}</p>
             </div>
           ))}
         </div>
       </div>
-      <div className="max-w-6xl mx-auto px-6 py-8 text-xs" style={{ color: C.ivoryDim, fontFamily: FONT_MONO }}>
-        Prototype — for demonstration purposes only.
+
+      <div style={{ borderTop: `1px solid ${C.inkLine}`, padding: "20px 0" }}>
+        <div className="max-w-6xl mx-auto px-8" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <Logo size={18} />
+          <p style={{ fontSize: 13, color: C.ivoryDim }}>Beta — for demonstration purposes only.</p>
+        </div>
       </div>
     </div>
   );
@@ -1464,13 +1480,13 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
 
 function Field({ label, children }) {
   return (
-    <label className="block mb-6">
-      <span className="block text-xs mb-2" style={{ fontFamily: FONT_MONO, color: C.ivoryDim, letterSpacing: 0.5 }}>{label}</span>
+    <label className="block mb-5">
+      <span className="block mb-1.5" style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500, color: C.ivory }}>{label}</span>
       {children}
     </label>
   );
 }
-const inputStyle = { width: "100%", background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "12px 14px", color: C.ivory, fontFamily: FONT_BODY, fontSize: 15, outline: "none" };
+const inputStyle = { width: "100%", background: "#FFFFFF", border: `1px solid ${C.inkLine}`, borderRadius: 6, padding: "10px 14px", color: C.ivory, fontFamily: FONT_BODY, fontSize: 15, outline: "none", boxShadow: "0 1px 2px rgba(10,37,64,0.04)" };
 
 function PasswordField({ value, onChange, placeholder, autoComplete }) {
   const [visible, setVisible] = useState(false);
@@ -1546,8 +1562,9 @@ function GoogleBtn({ label = "Continue with Google" }) {
       disabled={loading}
       style={{
         width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
-        background: "#fff", color: "#1a1a1a", border: "1px solid #ddd",
-        borderRadius: 10, padding: "11px 16px", fontSize: 14, fontWeight: 600,
+        background: "#FFFFFF", color: C.ivory, border: `1px solid ${C.inkLine}`,
+        borderRadius: 6, padding: "10px 16px", fontSize: 14, fontWeight: 500,
+        boxShadow: "0 1px 2px rgba(10,37,64,0.04)",
         cursor: loading ? "default" : "pointer", opacity: loading ? 0.7 : 1,
       }}
     >
@@ -1865,26 +1882,26 @@ function LoginScreen({ onSubmit, onBack, error }) {
     setSubmitting(false);
   }
   return (
-    <div className="min-h-full flex flex-col" style={{ background: C.ink, color: C.ivory }}>
-      <div className="px-6 py-4 flex items-center gap-5">
-        <Logo size={18} />
+    <div className="min-h-full flex flex-col" style={{ background: C.inkSoft, color: C.ivory }}>
+      <div style={{ background: "#FFFFFF", borderBottom: `1px solid ${C.inkLine}`, padding: "0 32px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <Logo size={20} />
         <HomeBtn onClick={onBack} />
       </div>
-      <div className="flex-1 flex items-center justify-center px-6">
-        <div className="w-full max-w-sm lg-fade">
-          <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600 }}>Log in</h2>
-          <p className="mt-2 mb-6 text-sm" style={{ color: C.ivoryDim }}>Welcome back.</p>
+      <div className="flex-1 flex items-center justify-center px-6 py-12">
+        <div className="w-full max-w-md lg-fade" style={{ background: "#FFFFFF", border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: 40, boxShadow: "0 4px 24px rgba(10,37,64,0.07)" }}>
+          <h2 style={{ fontSize: 24, fontWeight: 700, letterSpacing: -0.3, marginBottom: 4 }}>Welcome back</h2>
+          <p style={{ color: C.ivoryDim, fontSize: 15, marginBottom: 24 }}>Log in to your Artium account.</p>
           <GoogleBtn />
           <Divider />
-          <Field label="Email">
+          <Field label="Email address">
             <input style={inputStyle} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
           </Field>
           <Field label="Password">
             <PasswordField value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Your password" />
           </Field>
-          {error && <p className="text-sm mb-4" style={{ color: C.burgundy }}>{error}</p>}
+          {error && <p style={{ fontSize: 13, color: C.burgundy, marginBottom: 16 }}>{error}</p>}
           <PrimaryBtn full disabled={submitting || !email || !password} onClick={handleSubmit} icon={ArrowRight}>
-            {submitting ? "Logging in…" : "Log in"}
+            {submitting ? "Logging in…" : "Continue"}
           </PrimaryBtn>
         </div>
       </div>
@@ -1901,24 +1918,26 @@ function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, mus
     { id: "messages", label: "Messages", icon: MessageCircle, locked: !myProfile },
   ];
   return (
-    <div className="min-h-full flex flex-col" style={{ background: C.ink, color: C.ivory }}>
-      <div className="px-4 py-3 flex items-center justify-between flex-wrap gap-2" style={{ borderBottom: `1px solid ${C.inkLine}` }}>
-        <div className="flex items-center gap-3">
-          <Logo size={18} />
+    <div className="min-h-full flex flex-col" style={{ background: C.inkSoft, color: C.ivory }}>
+      <div className="px-6 flex items-center justify-between gap-4" style={{ height: 60, background: "#FFFFFF", borderBottom: `1px solid ${C.inkLine}` }}>
+        <div className="flex items-center gap-4">
+          <Logo size={20} />
+          <div style={{ width: 1, height: 18, background: C.inkLine }} />
           <HomeBtn onClick={onHome} />
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1">
           {tabs.map((t) => (
             <button
               key={t.id}
               onClick={() => t.locked ? onGuestTabClick() : setAppTab(t.id)}
-              className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm"
+              className="inline-flex items-center gap-1.5"
               style={{
-                fontFamily: FONT_BODY, fontWeight: 600,
-                background: appTab === t.id ? C.brass : "transparent",
-                color: appTab === t.id ? C.inkText : t.locked ? C.ivory : C.ivoryDim,
-                border: `1px solid ${appTab === t.id ? C.brass : t.locked ? C.inkLine : "transparent"}`,
-                opacity: t.locked ? 0.6 : 1,
+                fontFamily: FONT_BODY, fontWeight: 500, fontSize: 14,
+                background: appTab === t.id ? C.brassDim : "transparent",
+                color: appTab === t.id ? C.brass : C.ivoryDim,
+                border: "none",
+                borderRadius: 6, padding: "6px 14px",
+                opacity: t.locked ? 0.5 : 1,
                 cursor: t.locked ? "default" : "pointer",
               }}
             >
@@ -1928,17 +1947,17 @@ function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, mus
         </div>
         <div className="flex items-center gap-3">
           {onlineCount != null && (
-            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontFamily: FONT_MONO, color: "#425466", whiteSpace: "nowrap" }}>
-              <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#27AE60", display: "inline-block", flexShrink: 0 }} />
-              <span style={{ color: "#0A2540", fontWeight: 700 }}>{onlineCount}</span> online
+            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: C.ivoryDim, whiteSpace: "nowrap" }}>
+              <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#1A9E6E", display: "inline-block", flexShrink: 0 }} />
+              <span style={{ color: C.ivory, fontWeight: 600 }}>{onlineCount}</span> online
             </span>
           )}
           <MusicBtn playing={musicOn} onToggle={onMusicToggle} audioRef={audioRef} />
           {!myProfile ? (
-            <PrimaryBtn onClick={onApply}>Sign up to connect</PrimaryBtn>
+            <PrimaryBtn onClick={onApply}>Sign up</PrimaryBtn>
           ) : (
             <button onClick={() => setAppTab("profile")} title="My profile">
-              <Avatar name={myProfile.name} id="me" size={34} photoUrl={myProfile.photoUrl} online />
+              <Avatar name={myProfile.name} id="me" size={32} photoUrl={myProfile.photoUrl} online />
             </button>
           )}
         </div>
@@ -2367,51 +2386,62 @@ function StepTeaching({ draft, update }) {
 /* ---- First screen: pick your role ---- */
 function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLoggedOut, studentLoggedIn }) {
   const singleCard = !!learnerProfile || learnerLoggedOut || studentLoggedIn;
+  const cardStyle = {
+    textAlign: "left", background: "#FFFFFF", border: `1px solid ${C.inkLine}`,
+    borderRadius: 12, padding: 32,
+    boxShadow: "0 4px 24px rgba(10,37,64,0.07), 0 1px 4px rgba(10,37,64,0.04)",
+    cursor: "pointer", transition: "box-shadow 0.2s, transform 0.15s",
+  };
   return (
-    <div className="min-h-full flex flex-col" style={{ background: C.ink, color: C.ivory }}>
-      <div className="max-w-5xl w-full mx-auto px-6 pt-10">
-        <Logo slogan />
+    <div className="min-h-full flex flex-col" style={{ background: C.inkSoft, color: C.ivory }}>
+      <div className="max-w-5xl w-full mx-auto px-8 pt-8 pb-4" style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#FFFFFF" }}>
+        <Logo size={22} />
       </div>
-      <div className="flex-1 flex items-center justify-center px-6 py-12">
-        <div className="w-full max-w-4xl">
-          <h1 className="text-center" style={{ fontFamily: FONT_DISPLAY, fontSize: "clamp(30px,4.5vw,48px)", fontWeight: 600, lineHeight: 1.1 }}>
-            Welcome to Artium
+      <div className="flex-1 flex items-center justify-center px-6 py-16">
+        <div className="w-full max-w-3xl">
+          <p style={{ fontSize: 13, fontWeight: 500, color: C.brass, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 12 }}>Get started</p>
+          <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: "clamp(28px,4vw,44px)", fontWeight: 700, lineHeight: 1.1, color: C.ivory, letterSpacing: -0.5 }}>
+            Connect with musicians worldwide.
           </h1>
-          <p className="text-center mt-4 mx-auto max-w-md" style={{ color: C.ivoryDim, fontSize: 16, lineHeight: 1.6 }}>
-            How would you like to join?
+          <p style={{ color: C.ivoryDim, fontSize: 17, lineHeight: 1.65, marginTop: 14, maxWidth: 480 }}>
+            Join the global network of conservatory students and music enthusiasts.
           </p>
-          <div className={`mt-10 grid gap-5 ${singleCard ? "" : "md:grid-cols-2"}`}>
+          <div className={`mt-10 grid gap-6 ${singleCard ? "" : "md:grid-cols-2"}`}>
             {!studentLoggedIn && (
-              <button onClick={onLearner} className="text-left rounded-2xl p-7" style={{ border: `1px solid ${C.inkLine}`, background: C.inkSoft }}>
-                <Music2 size={26} color={C.brass} />
-                <h3 className="mt-4" style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600 }}>I am a classical music enthusiast</h3>
-                <p className="mt-2 text-sm" style={{ color: C.ivoryDim, lineHeight: 1.6 }}>
-                  I want to learn my favourite instrument with the best — find me a top conservatory musician to teach me.
+              <button onClick={onLearner} style={cardStyle}>
+                <div style={{ width: 44, height: 44, borderRadius: 10, background: C.brassDim, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
+                  <Music2 size={22} color={C.brass} />
+                </div>
+                <h3 style={{ fontSize: 18, fontWeight: 600, color: C.ivory, marginBottom: 8 }}>Classical music enthusiast</h3>
+                <p style={{ color: C.ivoryDim, fontSize: 14, lineHeight: 1.65, marginBottom: 20 }}>
+                  Learn from top conservatory musicians. Find a teacher who matches your level, instrument, and taste.
                 </p>
-                <span className="mt-5 inline-flex items-center gap-1.5 text-sm" style={{ color: C.brass, fontWeight: 600 }}>
-                  {learnerLoggedOut ? <>Log in <ArrowRight size={15} /></> : <>Find a teacher <ArrowRight size={15} /></>}
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 14, color: C.brass, fontWeight: 600 }}>
+                  {learnerLoggedOut ? "Log in" : "Find a teacher"} <ArrowRight size={14} />
                 </span>
               </button>
             )}
             {(!singleCard || studentLoggedIn) && (
-              <button onClick={onStudent} className="text-left rounded-2xl p-7" style={{ border: `1px solid ${C.inkLine}`, background: C.inkSoft }}>
-                <Users size={26} color={C.brass} />
-                <h3 className="mt-4" style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600 }}>I'm a conservatory student</h3>
-                <p className="mt-2 text-sm" style={{ color: C.ivoryDim, lineHeight: 1.6 }}>
-                  I study at an accredited music school — connect me with students worldwide.
+              <button onClick={onStudent} style={cardStyle}>
+                <div style={{ width: 44, height: 44, borderRadius: 10, background: C.brassDim, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
+                  <Users size={22} color={C.brass} />
+                </div>
+                <h3 style={{ fontSize: 18, fontWeight: 600, color: C.ivory, marginBottom: 8 }}>Conservatory student</h3>
+                <p style={{ color: C.ivoryDim, fontSize: 14, lineHeight: 1.65, marginBottom: 20 }}>
+                  Connect with students at the world's top conservatories. Share repertoire, culture, and musical ideas.
                 </p>
-                <span className="mt-5 inline-flex items-center gap-1.5 text-sm" style={{ color: C.brass, fontWeight: 600 }}>
-                  {studentLoggedIn ? <>Continue <ArrowRight size={15} /></> : <>Enter Artium <ArrowRight size={15} /></>}
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 14, color: C.brass, fontWeight: 600 }}>
+                  {studentLoggedIn ? "Continue" : "Enter Artium"} <ArrowRight size={14} />
                 </span>
               </button>
             )}
           </div>
-          <p className="text-center mt-8 text-sm" style={{ color: C.ivoryDim }}>
+          <p style={{ textAlign: "center", marginTop: 28, fontSize: 14, color: C.ivoryDim }}>
             {studentLoggedIn
-              ? <>Logged in as a conservatory student</>
+              ? "Logged in as a conservatory student"
               : learnerProfile
-              ? <>Logged in as a piano enthusiast — <span style={{ color: C.brass, fontWeight: 600 }}>{learnerProfile.name}</span></>
-              : <>Already have a profile? <button onClick={onLogin} style={{ color: C.brass, fontWeight: 600 }}>Log in</button></>
+              ? <>Logged in as {learnerProfile.name}</>
+              : <>Already have an account?{" "}<button onClick={onLogin} style={{ color: C.brass, fontWeight: 600, background: "none", border: "none", cursor: "pointer", fontSize: 14 }}>Log in</button></>
             }
           </p>
         </div>
