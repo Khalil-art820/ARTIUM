@@ -773,26 +773,25 @@ function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", inter
     <div className="artium-map" style={{ width: "100%", height, position: "relative" }}>
       <div style={{
         position: "absolute", bottom: 0, left: 0, right: 0,
-        zIndex: 1000, display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+        zIndex: 1000, display: "flex", flexDirection: "column", gap: 4,
         background: "rgba(255,255,255,0.92)", backdropFilter: "blur(8px)",
         borderTop: "1px solid #E6EBF1",
-        borderRadius: 0, padding: "8px 14px",
-        border: "none",
+        padding: "6px 12px",
         pointerEvents: "none",
       }}>
-        {legend.map(({ color, label }) => (
-          <span key={label} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "#425466", fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>
-            <span style={{ width: 10, height: 10, borderRadius: "50%", background: color, border: `1.5px solid ${color === "#27AE60" ? "#1E8449" : color === "#ffffff" ? "#E6EBF1" : "#8B1A1A"}`, display: "inline-block", flexShrink: 0 }} />
-            {label}
-          </span>
-        ))}
-        <span style={{ width: 1, height: 14, background: "#E6EBF1", flexShrink: 0 }} />
-        <span style={{ fontSize: 11, fontFamily: FONT_BODY, color: "#425466", whiteSpace: "nowrap" }}>
-          <span style={{ color: "#0A2540", fontWeight: 700 }}>{totalStudents}</span> conservatory students
-        </span>
-        <span style={{ fontSize: 11, fontFamily: FONT_BODY, color: "#425466", whiteSpace: "nowrap" }}>
-          <span style={{ color: "#0A2540", fontWeight: 700 }}>{totalTeachers}</span> open to teaching
-        </span>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          {legend.map(({ color, label }) => (
+            <span key={label} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "#425466", fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>
+              <span style={{ width: 9, height: 9, borderRadius: "50%", background: color, border: `1.5px solid ${color === "#27AE60" ? "#1E8449" : color === "#ffffff" ? "#E6EBF1" : "#8B1A1A"}`, display: "inline-block", flexShrink: 0 }} />
+              {label}
+            </span>
+          ))}
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 11, fontFamily: FONT_BODY, color: "#425466" }}>
+          <span><span style={{ color: "#0A2540", fontWeight: 700 }}>{totalStudents}</span> students</span>
+          <span style={{ width: 1, height: 10, background: "#E6EBF1", display: "inline-block" }} />
+          <span><span style={{ color: "#0A2540", fontWeight: 700 }}>{totalTeachers}</span> open to teaching</span>
+        </div>
       </div>
       <MapContainer
         center={[24, 14]}
