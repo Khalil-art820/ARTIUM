@@ -18,25 +18,25 @@ import "leaflet/dist/leaflet.css";
 /* THEME                                                              */
 /* ---------------------------------------------------------------- */
 const C = {
-  ink: "#09090B",
-  inkSoft: "#111113",
-  inkLine: "rgba(255,255,255,0.07)",
-  parchment: "#18181B",
-  parchmentDim: "#27272A",
-  parchmentLine: "rgba(255,255,255,0.05)",
-  ivory: "#F4F4F5",
-  ivoryDim: "rgba(244,244,245,0.45)",
-  inkText: "#09090B",
-  inkTextDim: "rgba(9,9,11,0.55)",
-  brass: "#D4A853",
-  brassDim: "rgba(212,168,83,0.12)",
-  burgundy: "#F87171",
-  forest: "#34D399",
+  ink: "#FFFFFF",
+  inkSoft: "#F7F7F7",
+  inkLine: "#DDDDDD",
+  parchment: "#FFFFFF",
+  parchmentDim: "#F7F7F7",
+  parchmentLine: "#EBEBEB",
+  ivory: "#222222",
+  ivoryDim: "#717171",
+  inkText: "#222222",
+  inkTextDim: "#717171",
+  brass: "#FF385C",
+  brassDim: "rgba(255,56,92,0.10)",
+  burgundy: "#C13515",
+  forest: "#008A05",
 };
 
 const FONT_DISPLAY = "'Inter', sans-serif";
 const FONT_BODY = "'Inter', sans-serif";
-const FONT_MONO = "'ui-monospace', 'JetBrains Mono', monospace";
+const FONT_MONO = "'Inter', monospace";
 
 const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII"];
 
@@ -466,7 +466,7 @@ function PrimaryBtn({ children, onClick, disabled, full, icon: Icon }) {
       className={`inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm transition-opacity ${full ? "w-full" : ""}`}
       style={{
         fontFamily: FONT_BODY, fontWeight: 600,
-        background: disabled ? "rgba(212,168,83,0.15)" : C.brass,
+        background: disabled ? "rgba(255,56,92,0.15)" : C.brass,
         color: C.inkText,
         cursor: disabled ? "not-allowed" : "pointer",
       }}
@@ -764,23 +764,24 @@ function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", inter
       <div style={{
         position: "absolute", bottom: 0, left: 0, right: 0,
         zIndex: 1000, display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-        background: "rgba(20,18,15,0.82)", backdropFilter: "blur(6px)",
+        background: "rgba(255,255,255,0.92)", backdropFilter: "blur(8px)",
+        borderTop: "1px solid #DDDDDD",
         borderRadius: 0, padding: "8px 14px",
         border: "none",
         pointerEvents: "none",
       }}>
         {legend.map(({ color, label }) => (
-          <span key={label} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "rgba(255,255,255,0.85)", fontFamily: FONT_MONO, whiteSpace: "nowrap" }}>
-            <span style={{ width: 10, height: 10, borderRadius: "50%", background: color, border: `1.5px solid ${color === "#27AE60" ? "#1E8449" : color === "#ffffff" ? "#aaaaaa" : "#8B1A1A"}`, display: "inline-block", flexShrink: 0 }} />
+          <span key={label} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "#717171", fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>
+            <span style={{ width: 10, height: 10, borderRadius: "50%", background: color, border: `1.5px solid ${color === "#27AE60" ? "#1E8449" : color === "#ffffff" ? "#DDDDDD" : "#8B1A1A"}`, display: "inline-block", flexShrink: 0 }} />
             {label}
           </span>
         ))}
-        <span style={{ width: 1, height: 14, background: "rgba(255,255,255,0.2)", flexShrink: 0 }} />
-        <span style={{ fontSize: 11, fontFamily: FONT_MONO, color: "rgba(255,255,255,0.55)", whiteSpace: "nowrap" }}>
-          <span style={{ color: "#ffffff", fontWeight: 700 }}>{totalStudents}</span> conservatory students
+        <span style={{ width: 1, height: 14, background: "#DDDDDD", flexShrink: 0 }} />
+        <span style={{ fontSize: 11, fontFamily: FONT_BODY, color: "#717171", whiteSpace: "nowrap" }}>
+          <span style={{ color: "#222222", fontWeight: 700 }}>{totalStudents}</span> conservatory students
         </span>
-        <span style={{ fontSize: 11, fontFamily: FONT_MONO, color: "rgba(255,255,255,0.55)", whiteSpace: "nowrap" }}>
-          <span style={{ color: "#ffffff", fontWeight: 700 }}>{totalTeachers}</span> open to teaching
+        <span style={{ fontSize: 11, fontFamily: FONT_BODY, color: "#717171", whiteSpace: "nowrap" }}>
+          <span style={{ color: "#222222", fontWeight: 700 }}>{totalTeachers}</span> open to teaching
         </span>
       </div>
       <MapContainer
@@ -834,10 +835,10 @@ function AccessGate({ onUnlock }) {
     else { setError(true); setValue(""); }
   }
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#09090B", fontFamily: FONT_BODY, padding: 24 }}>
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#FFFFFF", fontFamily: FONT_BODY, padding: 24 }}>
       <div style={{ marginBottom: 32, textAlign: "center" }}>
         <Logo />
-        <p style={{ color: "rgba(244,244,245,0.45)", fontSize: 14, marginTop: 10 }}>Private beta — enter access key to continue</p>
+        <p style={{ color: "#717171", fontSize: 14, marginTop: 10 }}>Private beta — enter access key to continue</p>
       </div>
       <div style={{ width: "100%", maxWidth: 320 }}>
         <input
@@ -848,12 +849,12 @@ function AccessGate({ onUnlock }) {
           placeholder="Access key"
           autoComplete="off"
           autoFocus
-          style={{ width: "100%", background: "#18181B", border: `1px solid ${error ? "#c0392b" : "rgba(255,255,255,0.10)"}`, borderRadius: 10, padding: "12px 16px", color: "#ffffff", fontSize: 15, outline: "none", boxSizing: "border-box" }}
+          style={{ width: "100%", background: "#F7F7F7", border: `1px solid ${error ? "#c0392b" : "#DDDDDD"}`, borderRadius: 10, padding: "12px 16px", color: "#222222", fontSize: 15, outline: "none", boxSizing: "border-box" }}
         />
         {error && <p style={{ color: "#c0392b", fontSize: 13, marginTop: 8 }}>Incorrect key — try again.</p>}
         <button
           onClick={attempt}
-          style={{ marginTop: 12, width: "100%", background: "#D4A853", color: "#09090B", border: "none", borderRadius: 10, padding: "12px 0", fontSize: 15, fontWeight: 700, cursor: "pointer" }}
+          style={{ marginTop: 12, width: "100%", background: "#FF385C", color: "#FFFFFF", border: "none", borderRadius: 10, padding: "12px 0", fontSize: 15, fontWeight: 700, cursor: "pointer" }}
         >Enter</button>
       </div>
     </div>
@@ -1144,15 +1145,16 @@ export default function App() {
   return (
     <div style={{ fontFamily: FONT_BODY, background: C.ink, minHeight: "100%", width: "100%" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
         .lg-pulse { animation: lgpulse 2.2s ease-out infinite; transform-origin: center; }
         @keyframes lgpulse { 0% { opacity:0.9; transform:scale(0.6);} 100% { opacity:0; transform:scale(2.4);} }
-        .lg-fade { animation: lgfade 0.4s ease both; }
-        @keyframes lgfade { from { opacity:0; transform:translateY(8px);} to { opacity:1; transform:translateY(0);} }
+        .lg-fade { animation: lgfade 0.3s ease both; }
+        @keyframes lgfade { from { opacity:0; transform:translateY(6px);} to { opacity:1; transform:translateY(0);} }
         .lg-blink { animation: lgblink 1.6s ease-in-out infinite; }
         @keyframes lgblink { 0%,100% { opacity:1;} 50% { opacity:0.25;} }
         .lg-scroll::-webkit-scrollbar { width: 4px; }
-        .lg-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.10); border-radius: 2px; }
+        .lg-scroll::-webkit-scrollbar-thumb { background: #DDDDDD; border-radius: 2px; }
         .lg-split-map { display: grid; grid-template-columns: 1fr; }
         .lg-split-chat { display: grid; grid-template-columns: 1fr; }
         @media (min-width: 768px) {
@@ -1163,17 +1165,17 @@ export default function App() {
           .lg-split-map > :last-child { max-height: 45vh !important; overflow-y: auto; -webkit-overflow-scrolling: touch; }
         }
         input[type=range].artium-slider { -webkit-appearance: none; appearance: none; height: 2px !important; outline: none; border-radius: 2px; }
-        input[type=range].artium-slider::-webkit-slider-thumb { -webkit-appearance: none !important; appearance: none !important; width: 10px !important; height: 10px !important; border-radius: 50% !important; background: #D4A853 !important; cursor: pointer !important; border: none !important; }
-        input[type=range].artium-slider::-moz-range-thumb { width: 10px !important; height: 10px !important; border-radius: 50% !important; background: #D4A853 !important; border: none !important; cursor: pointer !important; }
+        input[type=range].artium-slider::-webkit-slider-thumb { -webkit-appearance: none !important; appearance: none !important; width: 10px !important; height: 10px !important; border-radius: 50% !important; background: #FF385C !important; cursor: pointer !important; border: none !important; }
+        input[type=range].artium-slider::-moz-range-thumb { width: 10px !important; height: 10px !important; border-radius: 50% !important; background: #FF385C !important; border: none !important; cursor: pointer !important; }
 
         .artium-map, .artium-map .leaflet-container { border-radius: inherit; }
-        .artium-map .leaflet-tile-pane { filter: saturate(0.9) brightness(0.85) contrast(1.1); }
-        .artium-map .leaflet-control-zoom { border: none !important; box-shadow: none !important; }
-        .artium-map .leaflet-control-zoom a { background: #18181B !important; color: #F4F4F5 !important; border: 1px solid rgba(255,255,255,0.08) !important; font-weight: 500 !important; }
-        .artium-map .leaflet-control-zoom a:hover { background: #27272A !important; }
+        .artium-map .leaflet-tile-pane { filter: saturate(1.05) brightness(1.0) contrast(1.0); }
+        .artium-map .leaflet-control-zoom { border: 1px solid #DDDDDD !important; box-shadow: 0 1px 4px rgba(0,0,0,0.12) !important; border-radius: 8px !important; overflow: hidden; }
+        .artium-map .leaflet-control-zoom a { background: #FFFFFF !important; color: #222222 !important; border-color: #DDDDDD !important; font-weight: 600 !important; }
+        .artium-map .leaflet-control-zoom a:hover { background: #F7F7F7 !important; }
         .artium-map .leaflet-control-attribution { display: none !important; }
-        .artium-map .leaflet-tooltip { background: #18181B !important; border: 1px solid rgba(255,255,255,0.10) !important; color: #F4F4F5 !important; border-radius: 8px !important; box-shadow: 0 8px 24px rgba(0,0,0,0.6) !important; padding: 8px 12px !important; font-family: Inter, sans-serif !important; font-size: 12px !important; }
-        .artium-map .leaflet-tooltip-top:before { border-top-color: #18181B !important; }
+        .artium-map .leaflet-tooltip { background: #FFFFFF !important; border: 1px solid #DDDDDD !important; color: #222222 !important; border-radius: 10px !important; box-shadow: 0 4px 16px rgba(0,0,0,0.12) !important; padding: 8px 12px !important; font-family: Inter, sans-serif !important; font-size: 13px !important; }
+        .artium-map .leaflet-tooltip-top:before { border-top-color: #DDDDDD !important; }
         .artium-pin { background: transparent !important; border: none !important; }
       `}</style>
 
@@ -1301,9 +1303,9 @@ function Landing({ onApply, onBack, onPreview, onProfile, myProfile, musicOn, on
         </div>
         <div className="hidden sm:flex items-center gap-3">
           {onlineCount != null && (
-            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontFamily: FONT_MONO, color: "rgba(244,244,245,0.45)", whiteSpace: "nowrap" }}>
+            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontFamily: FONT_MONO, color: "#717171", whiteSpace: "nowrap" }}>
               <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#27AE60", display: "inline-block", flexShrink: 0 }} />
-              <span style={{ color: "#F4F4F5", fontWeight: 600 }}>{onlineCount}</span> online
+              <span style={{ color: "#222222", fontWeight: 700 }}>{onlineCount}</span> online
             </span>
           )}
           <MusicBtn playing={musicOn} onToggle={onMusicToggle} audioRef={audioRef} />
@@ -1558,9 +1560,9 @@ function GoogleBtn({ label = "Continue with Google" }) {
 function Divider() {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "18px 0" }}>
-      <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.08)" }} />
-      <span style={{ fontSize: 11, fontFamily: FONT_MONO, color: "rgba(244,244,245,0.35)" }}>OR</span>
-      <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.08)" }} />
+      <div style={{ flex: 1, height: 1, background: "#DDDDDD" }} />
+      <span style={{ fontSize: 11, fontFamily: FONT_MONO, color: "#B0B0B0" }}>OR</span>
+      <div style={{ flex: 1, height: 1, background: "#DDDDDD" }} />
     </div>
   );
 }
@@ -1926,9 +1928,9 @@ function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, mus
         </div>
         <div className="flex items-center gap-3">
           {onlineCount != null && (
-            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontFamily: FONT_MONO, color: "rgba(244,244,245,0.45)", whiteSpace: "nowrap" }}>
+            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontFamily: FONT_MONO, color: "#717171", whiteSpace: "nowrap" }}>
               <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#27AE60", display: "inline-block", flexShrink: 0 }} />
-              <span style={{ color: "#F4F4F5", fontWeight: 600 }}>{onlineCount}</span> online
+              <span style={{ color: "#222222", fontWeight: 700 }}>{onlineCount}</span> online
             </span>
           )}
           <MusicBtn playing={musicOn} onToggle={onMusicToggle} audioRef={audioRef} />
@@ -2499,12 +2501,12 @@ function TeacherMap({ teachers, selectedId, onSelect, height = 520 }) {
     <svg viewBox="0 0 1000 460" style={{ width: "100%", height, display: "block" }}>
       <defs>
         <pattern id="lg-dots-t" width="14" height="14" patternUnits="userSpaceOnUse">
-          <circle cx="1" cy="1" r="1" fill="rgba(255,255,255,0.04)" />
+          <circle cx="1" cy="1" r="1" fill="rgba(0,0,0,0.03)" />
         </pattern>
       </defs>
       <rect width="1000" height="460" fill="url(#lg-dots-t)" />
       {[80, 160, 230, 300, 380].map((y) => (
-        <line key={y} x1="0" x2="1000" y1={y} y2={y} stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
+        <line key={y} x1="0" x2="1000" y1={y} y2={y} stroke="rgba(0,0,0,0.03)" strokeWidth="1" />
       ))}
       {CONTINENTS.map((d, i) => (
         <path key={i} d={d} fill={C.parchmentDim} opacity="0.16" stroke={C.parchmentDim} strokeOpacity="0.3" />
@@ -2555,9 +2557,9 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
         <Logo slogan />
         <div className="flex items-center gap-4">
           {onlineCount != null && (
-            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontFamily: FONT_MONO, color: "rgba(244,244,245,0.45)", whiteSpace: "nowrap" }}>
+            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontFamily: FONT_MONO, color: "#717171", whiteSpace: "nowrap" }}>
               <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#27AE60", display: "inline-block", flexShrink: 0 }} />
-              <span style={{ color: "#F4F4F5", fontWeight: 600 }}>{onlineCount}</span> online
+              <span style={{ color: "#222222", fontWeight: 700 }}>{onlineCount}</span> online
             </span>
           )}
           <button onClick={onBack} className="text-sm flex items-center gap-1" style={{ color: C.ivoryDim }}><ArrowLeft size={15} /> Back</button>
