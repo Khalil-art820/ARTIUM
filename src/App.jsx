@@ -783,6 +783,7 @@ function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", inter
           <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#27AE60", border: "1.5px solid #1E8449", display: "inline-block", flexShrink: 0 }} />
           Joined the network ({totalJoined})
         </span>
+        <span style={{ marginLeft: "auto", fontSize: 11, color: "#425466", fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>200+ conservatories</span>
       </div>
       <MapContainer
         center={[24, 14]}
@@ -1343,11 +1344,10 @@ function Landing({ onApply, onBack, onPreview, onProfile, myProfile, musicOn, on
             {error && <p style={{ marginTop: 16, fontSize: 14, color: C.burgundy, lineHeight: 1.5 }}>{error}</p>}
           </div>
           <div style={{ borderRadius: 12, overflow: "hidden", border: `1px solid ${C.inkLine}`, boxShadow: "0 8px 32px rgba(10,37,64,0.10)" }}>
-            <div style={{ padding: "14px 18px", background: "#FFFFFF", borderBottom: `1px solid ${C.inkLine}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ padding: "14px 18px", background: "#FFFFFF", borderBottom: `1px solid ${C.inkLine}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
               <button onClick={onPreview} style={{ fontSize: 14, fontWeight: 600, color: C.brass, background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: FONT_BODY, display: "inline-flex", alignItems: "center", gap: 6 }}>
                 <Globe2 size={15} /> Explore
               </button>
-              <span style={{ fontSize: 12, color: C.ivoryDim }}>200+ conservatories</span>
             </div>
             <WorldMap selectedId={null} onSelect={() => {}} studentsByCons={SAMPLE_STUDENTS.reduce((a, s) => { (a[s.conservatoryId] = a[s.conservatoryId] || []).push(s); return a; }, {})} height={280} />
           </div>
