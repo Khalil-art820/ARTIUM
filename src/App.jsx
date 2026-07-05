@@ -1338,10 +1338,9 @@ function Landing({ onApply, onBack, onPreview, onProfile, myProfile, musicOn, on
             </p>
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 32, flexWrap: "wrap" }}>
               {!myProfile && <PrimaryBtn onClick={onApply} icon={ArrowRight}>Get started free</PrimaryBtn>}
-              <GhostBtn onClick={onPreview} icon={Globe2}>Explore the map</GhostBtn>
+              <span style={{ fontSize: 13, color: C.ivoryDim }}>{myProfile ? "You're signed in." : "No credit card required."}</span>
             </div>
             {error && <p style={{ marginTop: 16, fontSize: 14, color: C.burgundy, lineHeight: 1.5 }}>{error}</p>}
-            <p style={{ marginTop: 16, fontSize: 13, color: C.ivoryDim }}>{myProfile ? "You're signed in." : "No credit card required."}</p>
           </div>
           <div style={{ borderRadius: 12, overflow: "hidden", border: `1px solid ${C.inkLine}`, boxShadow: "0 8px 32px rgba(10,37,64,0.10)" }}>
             <div style={{ padding: "14px 18px", background: "#FFFFFF", borderBottom: `1px solid ${C.inkLine}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
