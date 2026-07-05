@@ -1300,7 +1300,14 @@ function Landing({ onApply, onBack, onPreview, onProfile, myProfile, musicOn, on
       {/* Nav */}
       <div style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#FFFFFF" }}>
         <div className="max-w-6xl mx-auto px-8" style={{ height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Logo size={22} />
+          <div className="flex items-center gap-3">
+            {!myProfile && (
+              <button onClick={onBack} style={{ color: C.ivoryDim, background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", padding: 0 }}>
+                <ChevronLeft size={18} />
+              </button>
+            )}
+            <Logo size={22} />
+          </div>
           <div className="flex items-center gap-4">
             {onlineCount != null && (
               <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 13, color: C.ivoryDim }}>
@@ -1309,13 +1316,9 @@ function Landing({ onApply, onBack, onPreview, onProfile, myProfile, musicOn, on
               </span>
             )}
             <MusicBtn playing={musicOn} onToggle={onMusicToggle} audioRef={audioRef} />
-            {myProfile ? (
+            {myProfile && (
               <button onClick={onProfile} title="My profile">
                 <Avatar name={myProfile.name} id="me" size={36} photoUrl={myProfile.photoUrl} online />
-              </button>
-            ) : (
-              <button onClick={onBack} className="inline-flex items-center gap-1.5 text-sm" style={{ color: C.ivoryDim, fontFamily: FONT_BODY, fontWeight: 500 }}>
-                <ChevronLeft size={16} /> Back
               </button>
             )}
           </div>
@@ -1873,9 +1876,11 @@ function LoginScreen({ onSubmit, onBack, error }) {
   }
   return (
     <div className="min-h-full flex flex-col" style={{ background: C.inkSoft, color: C.ivory }}>
-      <div style={{ background: "#FFFFFF", borderBottom: `1px solid ${C.inkLine}`, padding: "0 32px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div style={{ background: "#FFFFFF", borderBottom: `1px solid ${C.inkLine}`, padding: "0 32px", height: 60, display: "flex", alignItems: "center" }}>
+        <button onClick={onBack} style={{ color: C.ivoryDim, background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", padding: 0, marginRight: 12 }}>
+          <ChevronLeft size={18} />
+        </button>
         <Logo size={20} />
-        <HomeBtn onClick={onBack} />
       </div>
       <div className="flex-1 flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-md lg-fade" style={{ background: "#FFFFFF", border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: 40, boxShadow: "0 4px 24px rgba(10,37,64,0.07)" }}>
@@ -1910,21 +1915,14 @@ function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, mus
   return (
     <div className="min-h-full flex flex-col" style={{ background: C.inkSoft, color: C.ivory }}>
       <div className="px-6 flex items-center justify-between gap-4" style={{ height: 60, background: "#FFFFFF", borderBottom: `1px solid ${C.inkLine}` }}>
-        {previewOnly ? (
-          <div className="flex items-center gap-4">
-            <Logo size={20} />
-            <div style={{ width: 1, height: 18, background: C.inkLine }} />
-            <button onClick={onHome} className="inline-flex items-center gap-1.5 text-sm" style={{ color: C.ivoryDim, fontFamily: FONT_BODY, fontWeight: 500 }}>
-              <ChevronLeft size={16} /> Back
+        <div className="flex items-center gap-3">
+          {(previewOnly || onBack) && (
+            <button onClick={previewOnly ? onHome : onBack} style={{ color: C.ivoryDim, background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", padding: 0 }}>
+              <ChevronLeft size={18} />
             </button>
-          </div>
-        ) : (
-          <div className="flex items-center gap-4">
-            <Logo size={20} />
-            <div style={{ width: 1, height: 18, background: C.inkLine }} />
-            <HomeBtn onClick={onHome} />
-          </div>
-        )}
+          )}
+          <Logo size={20} />
+        </div>
         {!previewOnly && (
           <div className="flex items-center gap-1">
             {tabs.map((t) => (
@@ -1964,17 +1962,6 @@ function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, mus
           )}
         </div>
       </div>
-      {onBack && (
-        <div className="px-6 py-3" style={{ borderBottom: `1px solid ${C.inkLine}` }}>
-          <button
-            onClick={onBack}
-            className="inline-flex items-center gap-2 text-sm"
-            style={{ color: C.ivory, fontFamily: FONT_BODY, fontWeight: 600 }}
-          >
-            <ArrowLeft size={16} /> {backLabel || "Back"}
-          </button>
-        </div>
-      )}
       <div className="flex-1">{children}</div>
     </div>
   );
@@ -2476,9 +2463,9 @@ function LearnerSignup({ onSubmit, onBack, onLogin, error }) {
   return (
     <div className="min-h-full" style={{ background: C.ink, color: C.ivory }}>
       <div className="max-w-2xl mx-auto px-6 pt-8">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <button onClick={onBack} style={{ color: C.ivoryDim, background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", padding: 0 }}><ChevronLeft size={18} /></button>
           <Logo slogan />
-          <button onClick={onBack} className="text-sm flex items-center gap-1" style={{ color: C.ivoryDim }}><ArrowLeft size={15} /> Back</button>
         </div>
         <h2 className="mt-10" style={{ fontFamily: FONT_DISPLAY, fontSize: 30, fontWeight: 600 }}>Find your teacher</h2>
         <p className="mt-3" style={{ color: C.ivoryDim, fontSize: 15, lineHeight: 1.6 }}>
@@ -2586,16 +2573,16 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
   return (
     <div className="min-h-full" style={{ background: C.ink, color: C.ivory }}>
       <div className="max-w-6xl mx-auto px-6 pt-8 flex items-center justify-between">
-        <Logo slogan />
-        <div className="flex items-center gap-4">
-          {onlineCount != null && (
-            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontFamily: FONT_MONO, color: "#425466", whiteSpace: "nowrap" }}>
-              <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#27AE60", display: "inline-block", flexShrink: 0 }} />
-              <span style={{ color: "#0A2540", fontWeight: 700 }}>{onlineCount}</span> online
-            </span>
-          )}
-          <button onClick={onBack} className="text-sm flex items-center gap-1" style={{ color: C.ivoryDim }}><ArrowLeft size={15} /> Back</button>
+        <div className="flex items-center gap-3">
+          <button onClick={onBack} style={{ color: C.ivoryDim, background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", padding: 0 }}><ChevronLeft size={18} /></button>
+          <Logo slogan />
         </div>
+        {onlineCount != null && (
+          <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontFamily: FONT_MONO, color: "#425466", whiteSpace: "nowrap" }}>
+            <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#27AE60", display: "inline-block", flexShrink: 0 }} />
+            <span style={{ color: "#0A2540", fontWeight: 700 }}>{onlineCount}</span> online
+          </span>
+        )}
       </div>
 
       {/* Tab bar */}
