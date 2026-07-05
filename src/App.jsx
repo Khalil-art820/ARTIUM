@@ -18,25 +18,25 @@ import "leaflet/dist/leaflet.css";
 /* THEME                                                              */
 /* ---------------------------------------------------------------- */
 const C = {
-  ink: "#FFFFFF",
-  inkSoft: "#F7F7F7",
-  inkLine: "rgba(0,0,0,0.08)",
-  parchment: "#F7F7F7",
-  parchmentDim: "#EBEBEB",
-  parchmentLine: "rgba(0,0,0,0.08)",
-  ivory: "#222222",
-  ivoryDim: "rgba(34,34,34,0.55)",
-  inkText: "#222222",
-  inkTextDim: "rgba(34,34,34,0.55)",
-  brass: "#FF385C",
-  brassDim: "rgba(255,56,92,0.12)",
-  burgundy: "#C13515",
-  forest: "#008A05",
+  ink: "#09090B",
+  inkSoft: "#111113",
+  inkLine: "rgba(255,255,255,0.07)",
+  parchment: "#18181B",
+  parchmentDim: "#27272A",
+  parchmentLine: "rgba(255,255,255,0.05)",
+  ivory: "#F4F4F5",
+  ivoryDim: "rgba(244,244,245,0.45)",
+  inkText: "#09090B",
+  inkTextDim: "rgba(9,9,11,0.55)",
+  brass: "#D4A853",
+  brassDim: "rgba(212,168,83,0.12)",
+  burgundy: "#F87171",
+  forest: "#34D399",
 };
 
 const FONT_DISPLAY = "'Inter', sans-serif";
 const FONT_BODY = "'Inter', sans-serif";
-const FONT_MONO = "'Inter', monospace";
+const FONT_MONO = "'ui-monospace', 'JetBrains Mono', monospace";
 
 const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII"];
 
@@ -466,7 +466,7 @@ function PrimaryBtn({ children, onClick, disabled, full, icon: Icon }) {
       className={`inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm transition-opacity ${full ? "w-full" : ""}`}
       style={{
         fontFamily: FONT_BODY, fontWeight: 600,
-        background: disabled ? "rgba(255,56,92,0.20)" : C.brass,
+        background: disabled ? "rgba(212,168,83,0.15)" : C.brass,
         color: C.inkText,
         cursor: disabled ? "not-allowed" : "pointer",
       }}
@@ -834,10 +834,10 @@ function AccessGate({ onUnlock }) {
     else { setError(true); setValue(""); }
   }
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#FFFFFF", fontFamily: FONT_BODY, padding: 24 }}>
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#09090B", fontFamily: FONT_BODY, padding: 24 }}>
       <div style={{ marginBottom: 32, textAlign: "center" }}>
         <Logo />
-        <p style={{ color: "rgba(34,34,34,0.5)", fontSize: 14, marginTop: 10 }}>Private beta — enter access key to continue</p>
+        <p style={{ color: "rgba(244,244,245,0.45)", fontSize: 14, marginTop: 10 }}>Private beta — enter access key to continue</p>
       </div>
       <div style={{ width: "100%", maxWidth: 320 }}>
         <input
@@ -848,12 +848,12 @@ function AccessGate({ onUnlock }) {
           placeholder="Access key"
           autoComplete="off"
           autoFocus
-          style={{ width: "100%", background: "#F7F7F7", border: `1px solid ${error ? "#c0392b" : "rgba(0,0,0,0.15)"}`, borderRadius: 10, padding: "12px 16px", color: "#ffffff", fontSize: 15, outline: "none", boxSizing: "border-box" }}
+          style={{ width: "100%", background: "#18181B", border: `1px solid ${error ? "#c0392b" : "rgba(255,255,255,0.10)"}`, borderRadius: 10, padding: "12px 16px", color: "#ffffff", fontSize: 15, outline: "none", boxSizing: "border-box" }}
         />
         {error && <p style={{ color: "#c0392b", fontSize: 13, marginTop: 8 }}>Incorrect key — try again.</p>}
         <button
           onClick={attempt}
-          style={{ marginTop: 12, width: "100%", background: "#FF385C", color: "#ffffff", border: "none", borderRadius: 10, padding: "12px 0", fontSize: 15, fontWeight: 700, cursor: "pointer" }}
+          style={{ marginTop: 12, width: "100%", background: "#D4A853", color: "#09090B", border: "none", borderRadius: 10, padding: "12px 0", fontSize: 15, fontWeight: 700, cursor: "pointer" }}
         >Enter</button>
       </div>
     </div>
@@ -1144,15 +1144,15 @@ export default function App() {
   return (
     <div style={{ fontFamily: FONT_BODY, background: C.ink, minHeight: "100%", width: "100%" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
         .lg-pulse { animation: lgpulse 2.2s ease-out infinite; transform-origin: center; }
         @keyframes lgpulse { 0% { opacity:0.9; transform:scale(0.6);} 100% { opacity:0; transform:scale(2.4);} }
-        .lg-fade { animation: lgfade 0.35s ease both; }
-        @keyframes lgfade { from { opacity:0; transform:translateY(6px);} to { opacity:1; transform:translateY(0);} }
+        .lg-fade { animation: lgfade 0.4s ease both; }
+        @keyframes lgfade { from { opacity:0; transform:translateY(8px);} to { opacity:1; transform:translateY(0);} }
         .lg-blink { animation: lgblink 1.6s ease-in-out infinite; }
         @keyframes lgblink { 0%,100% { opacity:1;} 50% { opacity:0.25;} }
-        .lg-scroll::-webkit-scrollbar { width: 6px; }
-        .lg-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.18); border-radius: 3px; }
+        .lg-scroll::-webkit-scrollbar { width: 4px; }
+        .lg-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.10); border-radius: 2px; }
         .lg-split-map { display: grid; grid-template-columns: 1fr; }
         .lg-split-chat { display: grid; grid-template-columns: 1fr; }
         @media (min-width: 768px) {
@@ -1162,19 +1162,18 @@ export default function App() {
         @media (max-width: 767px) {
           .lg-split-map > :last-child { max-height: 45vh !important; overflow-y: auto; -webkit-overflow-scrolling: touch; }
         }
-        input[type=range].artium-slider { -webkit-appearance: none; appearance: none; height: 3px !important; outline: none; border-radius: 2px; }
-        input[type=range].artium-slider::-webkit-slider-thumb { -webkit-appearance: none !important; appearance: none !important; width: 6px !important; height: 6px !important; border-radius: 50% !important; background: #C9A24B !important; cursor: pointer !important; border: none !important; }
-        input[type=range].artium-slider::-moz-range-thumb { width: 6px !important; height: 6px !important; border-radius: 50% !important; background: #C9A24B !important; border: none !important; cursor: pointer !important; }
-        input[type=range].artium-slider::-ms-thumb { width: 6px !important; height: 6px !important; border-radius: 50% !important; background: #C9A24B !important; border: none !important; cursor: pointer !important; }
+        input[type=range].artium-slider { -webkit-appearance: none; appearance: none; height: 2px !important; outline: none; border-radius: 2px; }
+        input[type=range].artium-slider::-webkit-slider-thumb { -webkit-appearance: none !important; appearance: none !important; width: 10px !important; height: 10px !important; border-radius: 50% !important; background: #D4A853 !important; cursor: pointer !important; border: none !important; }
+        input[type=range].artium-slider::-moz-range-thumb { width: 10px !important; height: 10px !important; border-radius: 50% !important; background: #D4A853 !important; border: none !important; cursor: pointer !important; }
 
         .artium-map, .artium-map .leaflet-container { border-radius: inherit; }
-        .artium-map .leaflet-tile-pane { filter: saturate(1.2) contrast(1.05); }
-        .artium-map .leaflet-control-zoom { border: none !important; box-shadow: 0 2px 8px rgba(0,0,0,0.25) !important; }
-        .artium-map .leaflet-control-zoom a { background: #fff !important; color: #333 !important; border-color: #ddd !important; font-weight: 700 !important; }
-        .artium-map .leaflet-control-zoom a:hover { background: #f4f4f4 !important; }
+        .artium-map .leaflet-tile-pane { filter: saturate(0.9) brightness(0.85) contrast(1.1); }
+        .artium-map .leaflet-control-zoom { border: none !important; box-shadow: none !important; }
+        .artium-map .leaflet-control-zoom a { background: #18181B !important; color: #F4F4F5 !important; border: 1px solid rgba(255,255,255,0.08) !important; font-weight: 500 !important; }
+        .artium-map .leaflet-control-zoom a:hover { background: #27272A !important; }
         .artium-map .leaflet-control-attribution { display: none !important; }
-        .artium-map .leaflet-tooltip { background: #111111 !important; border: 1px solid rgba(255,255,255,0.15) !important; color: #ffffff !important; border-radius: 8px !important; box-shadow: 0 4px 14px rgba(0,0,0,0.5) !important; padding: 6px 10px !important; }
-        .artium-map .leaflet-tooltip-top:before { border-top-color: #111111 !important; }
+        .artium-map .leaflet-tooltip { background: #18181B !important; border: 1px solid rgba(255,255,255,0.10) !important; color: #F4F4F5 !important; border-radius: 8px !important; box-shadow: 0 8px 24px rgba(0,0,0,0.6) !important; padding: 8px 12px !important; font-family: Inter, sans-serif !important; font-size: 12px !important; }
+        .artium-map .leaflet-tooltip-top:before { border-top-color: #18181B !important; }
         .artium-pin { background: transparent !important; border: none !important; }
       `}</style>
 
@@ -1302,9 +1301,9 @@ function Landing({ onApply, onBack, onPreview, onProfile, myProfile, musicOn, on
         </div>
         <div className="hidden sm:flex items-center gap-3">
           {onlineCount != null && (
-            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontFamily: FONT_MONO, color: "rgba(34,34,34,0.55)", whiteSpace: "nowrap" }}>
+            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontFamily: FONT_MONO, color: "rgba(244,244,245,0.45)", whiteSpace: "nowrap" }}>
               <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#27AE60", display: "inline-block", flexShrink: 0 }} />
-              <span style={{ color: "#222222", fontWeight: 700 }}>{onlineCount}</span> online
+              <span style={{ color: "#F4F4F5", fontWeight: 600 }}>{onlineCount}</span> online
             </span>
           )}
           <MusicBtn playing={musicOn} onToggle={onMusicToggle} audioRef={audioRef} />
@@ -1559,9 +1558,9 @@ function GoogleBtn({ label = "Continue with Google" }) {
 function Divider() {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "18px 0" }}>
-      <div style={{ flex: 1, height: 1, background: "rgba(0,0,0,0.10)" }} />
-      <span style={{ fontSize: 11, fontFamily: FONT_MONO, color: "rgba(34,34,34,0.35)" }}>OR</span>
-      <div style={{ flex: 1, height: 1, background: "rgba(0,0,0,0.10)" }} />
+      <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.08)" }} />
+      <span style={{ fontSize: 11, fontFamily: FONT_MONO, color: "rgba(244,244,245,0.35)" }}>OR</span>
+      <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.08)" }} />
     </div>
   );
 }
@@ -1927,9 +1926,9 @@ function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, mus
         </div>
         <div className="flex items-center gap-3">
           {onlineCount != null && (
-            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontFamily: FONT_MONO, color: "rgba(34,34,34,0.55)", whiteSpace: "nowrap" }}>
+            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontFamily: FONT_MONO, color: "rgba(244,244,245,0.45)", whiteSpace: "nowrap" }}>
               <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#27AE60", display: "inline-block", flexShrink: 0 }} />
-              <span style={{ color: "#222222", fontWeight: 700 }}>{onlineCount}</span> online
+              <span style={{ color: "#F4F4F5", fontWeight: 600 }}>{onlineCount}</span> online
             </span>
           )}
           <MusicBtn playing={musicOn} onToggle={onMusicToggle} audioRef={audioRef} />
@@ -2500,12 +2499,12 @@ function TeacherMap({ teachers, selectedId, onSelect, height = 520 }) {
     <svg viewBox="0 0 1000 460" style={{ width: "100%", height, display: "block" }}>
       <defs>
         <pattern id="lg-dots-t" width="14" height="14" patternUnits="userSpaceOnUse">
-          <circle cx="1" cy="1" r="1" fill="rgba(0,0,0,0.04)" />
+          <circle cx="1" cy="1" r="1" fill="rgba(255,255,255,0.04)" />
         </pattern>
       </defs>
       <rect width="1000" height="460" fill="url(#lg-dots-t)" />
       {[80, 160, 230, 300, 380].map((y) => (
-        <line key={y} x1="0" x2="1000" y1={y} y2={y} stroke="rgba(0,0,0,0.04)" strokeWidth="1" />
+        <line key={y} x1="0" x2="1000" y1={y} y2={y} stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
       ))}
       {CONTINENTS.map((d, i) => (
         <path key={i} d={d} fill={C.parchmentDim} opacity="0.16" stroke={C.parchmentDim} strokeOpacity="0.3" />
@@ -2556,9 +2555,9 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
         <Logo slogan />
         <div className="flex items-center gap-4">
           {onlineCount != null && (
-            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontFamily: FONT_MONO, color: "rgba(34,34,34,0.55)", whiteSpace: "nowrap" }}>
+            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontFamily: FONT_MONO, color: "rgba(244,244,245,0.45)", whiteSpace: "nowrap" }}>
               <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#27AE60", display: "inline-block", flexShrink: 0 }} />
-              <span style={{ color: "#222222", fontWeight: 700 }}>{onlineCount}</span> online
+              <span style={{ color: "#F4F4F5", fontWeight: 600 }}>{onlineCount}</span> online
             </span>
           )}
           <button onClick={onBack} className="text-sm flex items-center gap-1" style={{ color: C.ivoryDim }}><ArrowLeft size={15} /> Back</button>
