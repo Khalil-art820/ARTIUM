@@ -1189,7 +1189,7 @@ export default function App() {
         />
       )}
 
-      {screen === "entry" && <EntryGate onLearner={chooseLearner} onStudent={chooseStudent} onLogin={startLogin} learnerProfile={learnerProfile} learnerLoggedOut={learnerLoggedOut} studentLoggedIn={!!myProfile} />}
+      {screen === "entry" && <EntryGate onLearner={chooseLearner} onStudent={chooseStudent} onLogin={startLogin} learnerProfile={learnerProfile} learnerLoggedOut={learnerLoggedOut} studentLoggedIn={!!myProfile} musicOn={musicOn} onMusicToggle={toggleMusic} audioRef={audioRef} />}
       {screen === "learnerSignup" && <LearnerSignup onSubmit={submitLearner} onBack={backToEntry} onLogin={startLogin} error={authError} />}
       {screen === "learnerMap" && (
         <LearnerScreen
@@ -1315,7 +1315,6 @@ function Landing({ onApply, onBack, onPreview, onProfile, myProfile, musicOn, on
                 <span style={{ color: C.ivory, fontWeight: 600 }}>{onlineCount}</span> online
               </span>
             )}
-            <MusicBtn playing={musicOn} onToggle={onMusicToggle} audioRef={audioRef} />
             {myProfile && (
               <button onClick={onProfile} title="My profile">
                 <Avatar name={myProfile.name} id="me" size={36} photoUrl={myProfile.photoUrl} online />
@@ -2373,7 +2372,7 @@ function StepTeaching({ draft, update }) {
 }
 
 /* ---- First screen: pick your role ---- */
-function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLoggedOut, studentLoggedIn }) {
+function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLoggedOut, studentLoggedIn, musicOn, onMusicToggle, audioRef }) {
   const singleCard = !!learnerProfile || learnerLoggedOut || studentLoggedIn;
   const cardStyle = {
     textAlign: "left", background: "#FFFFFF", border: `1px solid ${C.inkLine}`,
@@ -2383,8 +2382,9 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
   };
   return (
     <div className="min-h-full flex flex-col" style={{ background: C.inkSoft, color: C.ivory }}>
-      <div className="max-w-5xl w-full mx-auto px-8 pt-8 pb-4" style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#FFFFFF" }}>
+      <div className="max-w-5xl w-full mx-auto px-8" style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#FFFFFF", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <Logo size={22} slogan />
+        <MusicBtn playing={musicOn} onToggle={onMusicToggle} audioRef={audioRef} />
       </div>
       <div className="flex-1 flex items-center justify-center px-6 py-16">
         <div className="w-full max-w-3xl">
