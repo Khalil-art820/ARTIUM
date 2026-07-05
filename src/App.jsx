@@ -1301,12 +1301,6 @@ function Landing({ onApply, onBack, onPreview, onProfile, myProfile, musicOn, on
             <Logo size={22} />
           </div>
           <div className="flex items-center gap-4">
-            {onlineCount != null && (
-              <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 13, color: C.ivoryDim }}>
-                <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#1A9E6E", display: "inline-block" }} />
-                <span style={{ color: C.ivory, fontWeight: 600 }}>{onlineCount}</span>
-              </span>
-            )}
             {myProfile && (
               <button onClick={onProfile} title="My profile">
                 <Avatar name={myProfile.name} id="me" size={36} photoUrl={myProfile.photoUrl} online />
@@ -1937,13 +1931,13 @@ function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, mus
           </div>
         )}
         <div className="flex items-center gap-3">
+          <MusicBtn playing={musicOn} onToggle={onMusicToggle} audioRef={audioRef} />
           {onlineCount != null && (
             <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: C.ivoryDim, whiteSpace: "nowrap" }}>
               <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#1A9E6E", display: "inline-block", flexShrink: 0 }} />
               <span style={{ color: C.ivory, fontWeight: 600 }}>{onlineCount}</span> online
             </span>
           )}
-          <MusicBtn playing={musicOn} onToggle={onMusicToggle} audioRef={audioRef} />
           {!myProfile ? (
             !previewOnly && <PrimaryBtn onClick={onApply}>Sign up</PrimaryBtn>
           ) : (
