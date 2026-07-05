@@ -2473,6 +2473,8 @@ function LearnerSignup({ onSubmit, onBack, onLogin, error }) {
         </p>
       </div>
       <div className="max-w-2xl mx-auto px-6 py-10">
+        <GoogleBtn label="Sign up with Google" />
+        <Divider />
         <Field label="Full name">
           <input style={inputStyle} value={name} onChange={(e) => setName(e.target.value)} placeholder="Your full name" autoComplete="off" autoFocus />
         </Field>
