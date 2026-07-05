@@ -1232,7 +1232,7 @@ export default function App() {
         <AppShell
           appTab={appTab} setAppTab={setAppTab} myProfile={myProfile}
           onApply={startApply} onHome={goHome} musicOn={musicOn} onMusicToggle={toggleMusic} audioRef={audioRef}
-          onGuestTabClick={() => setShowGuestPrompt(true)} onlineCount={onlineCount}
+          onGuestTabClick={() => setShowGuestPrompt(true)} onlineCount={onlineCount} previewOnly={previewOnly}
           onBack={
             selectedStudentId ? backFromProfile :
             appTab === "messages" ? () => setAppTab("map") :
@@ -1903,7 +1903,7 @@ function LoginScreen({ onSubmit, onBack, error }) {
 /* ---------------------------------------------------------------- */
 /* APP SHELL                                                          */
 /* ---------------------------------------------------------------- */
-function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, musicOn, onMusicToggle, audioRef, onBack, backLabel, onGuestTabClick, onlineCount }) {
+function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, musicOn, onMusicToggle, audioRef, onBack, backLabel, onGuestTabClick, onlineCount, previewOnly }) {
   const tabs = [
     { id: "map", label: "Map", icon: Globe2, locked: false },
     { id: "messages", label: "Messages", icon: MessageCircle, locked: !myProfile },
@@ -1911,31 +1911,43 @@ function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, mus
   return (
     <div className="min-h-full flex flex-col" style={{ background: C.inkSoft, color: C.ivory }}>
       <div className="px-6 flex items-center justify-between gap-4" style={{ height: 60, background: "#FFFFFF", borderBottom: `1px solid ${C.inkLine}` }}>
-        <div className="flex items-center gap-4">
-          <Logo size={20} />
-          <div style={{ width: 1, height: 18, background: C.inkLine }} />
-          <HomeBtn onClick={onHome} />
-        </div>
-        <div className="flex items-center gap-1">
-          {tabs.map((t) => (
-            <button
-              key={t.id}
-              onClick={() => t.locked ? onGuestTabClick() : setAppTab(t.id)}
-              className="inline-flex items-center gap-1.5"
-              style={{
-                fontFamily: FONT_BODY, fontWeight: 500, fontSize: 14,
-                background: appTab === t.id ? C.brassDim : "transparent",
-                color: appTab === t.id ? C.brass : C.ivoryDim,
-                border: "none",
-                borderRadius: 6, padding: "6px 14px",
-                opacity: t.locked ? 0.5 : 1,
-                cursor: t.locked ? "default" : "pointer",
-              }}
-            >
-              <t.icon size={14} /> {t.label}
+        {previewOnly ? (
+          <div className="flex items-center gap-4">
+            <Logo size={20} />
+            <div style={{ width: 1, height: 18, background: C.inkLine }} />
+            <button onClick={onHome} className="inline-flex items-center gap-1.5 text-sm" style={{ color: C.ivoryDim, fontFamily: FONT_BODY, fontWeight: 500 }}>
+              <ChevronLeft size={16} /> Back
             </button>
-          ))}
-        </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-4">
+            <Logo size={20} />
+            <div style={{ width: 1, height: 18, background: C.inkLine }} />
+            <HomeBtn onClick={onHome} />
+          </div>
+        )}
+        {!previewOnly && (
+          <div className="flex items-center gap-1">
+            {tabs.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => t.locked ? onGuestTabClick() : setAppTab(t.id)}
+                className="inline-flex items-center gap-1.5"
+                style={{
+                  fontFamily: FONT_BODY, fontWeight: 500, fontSize: 14,
+                  background: appTab === t.id ? C.brassDim : "transparent",
+                  color: appTab === t.id ? C.brass : C.ivoryDim,
+                  border: "none",
+                  borderRadius: 6, padding: "6px 14px",
+                  opacity: t.locked ? 0.5 : 1,
+                  cursor: t.locked ? "default" : "pointer",
+                }}
+              >
+                <t.icon size={14} /> {t.label}
+              </button>
+            ))}
+          </div>
+        )}
         <div className="flex items-center gap-3">
           {onlineCount != null && (
             <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: C.ivoryDim, whiteSpace: "nowrap" }}>
@@ -1945,7 +1957,7 @@ function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, mus
           )}
           <MusicBtn playing={musicOn} onToggle={onMusicToggle} audioRef={audioRef} />
           {!myProfile ? (
-            <PrimaryBtn onClick={onApply}>Sign up</PrimaryBtn>
+            !previewOnly && <PrimaryBtn onClick={onApply}>Sign up</PrimaryBtn>
           ) : (
             <button onClick={() => setAppTab("profile")} title="My profile">
               <Avatar name={myProfile.name} id="me" size={32} photoUrl={myProfile.photoUrl} online />
@@ -2037,7 +2049,7 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
               {roster.map((s) => (
                 <button
                   key={s.id}
-                  onClick={() => isGuest && s.id !== "me" ? onGuestClick() : onOpenStudent(s.id)}
+                  onClick={() => { if (!isGuest) { onOpenStudent(s.id); } }}
                   className="text-left flex items-center gap-3 p-3 rounded-xl"
                   style={{ border: `1px solid ${C.inkLine}` }}
                 >
