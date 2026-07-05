@@ -1147,7 +1147,7 @@ export default function App() {
   return (
     <div style={{ fontFamily: FONT_BODY, background: C.ink, minHeight: "100%", width: "100%" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Serif+Display&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap');
         * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
         .lg-pulse { animation: lgpulse 2.2s ease-out infinite; transform-origin: center; }
         @keyframes lgpulse { 0% { opacity:0.9; transform:scale(0.6);} 100% { opacity:0; transform:scale(2.4);} }
@@ -1331,7 +1331,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, myProfile, musicOn, on
               <span style={{ width: 6, height: 6, borderRadius: "50%", background: C.brass, display: "inline-block" }} />
               <span style={{ fontSize: 13, fontWeight: 500, color: C.brass }}>For conservatory musicians</span>
             </div>
-            <h1 style={{ fontSize: "clamp(40px,5vw,68px)", fontWeight: 700, lineHeight: 1.08, letterSpacing: 0, color: C.ivory, margin: 0, fontFamily: "'DM Serif Display', serif" }}>
+            <h1 style={{ fontSize: "clamp(40px,5vw,68px)", fontWeight: 700, lineHeight: 1.08, letterSpacing: 0, color: C.ivory, margin: 0, fontFamily: "'Playfair Display', serif" }}>
               Every Conservatory.<br />One Network.
             </h1>
             <p style={{ color: C.ivoryDim, fontSize: 18, lineHeight: 1.65, marginTop: 20, maxWidth: 460 }}>
