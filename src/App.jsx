@@ -566,30 +566,22 @@ function MusicBtn({ playing, onToggle, audioRef }) {
   const VolumeIcon = muted || volume === 0 ? VolumeX : volume < 0.4 ? Volume1 : Volume2;
 
   return (
-    <div className="flex items-center gap-2">
+    <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(10,37,64,0.05)", borderRadius: 999, padding: "5px 10px 5px 8px", border: `1px solid ${C.inkLine}` }}>
       <button
         onClick={onToggle}
-        title={playing ? "Pause music" : "Play music"}
-        className="flex items-center justify-center rounded-full shrink-0"
-        style={{ width: 30, height: 30, background: playing ? C.brass : "transparent", border: `1px solid ${playing ? C.brass : C.inkLine}` }}
+        title={playing ? "Pause" : "Play"}
+        style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 24, height: 24, borderRadius: "50%", background: playing ? C.brass : "transparent", border: "none", cursor: "pointer", flexShrink: 0, transition: "background 0.15s" }}
       >
-        {playing ? <Pause size={12} color={playing ? C.inkText : C.ivory} /> : <Play size={12} color={C.ivory} />}
+        {playing ? <Pause size={10} color="#fff" /> : <Play size={10} color={C.ivory} />}
       </button>
-      <input
-        type="range" min="0" max={duration || 100} step="0.5" value={currentTime}
-        onChange={seek}
-        className="artium-slider"
-        style={{ width: 80, accentColor: C.brass, cursor: "pointer" }}
-        title="Seek"
-      />
-      <button onClick={toggleMute} title={muted ? "Unmute" : "Mute"} style={{ color: C.ivoryDim, lineHeight: 0 }}>
-        <VolumeIcon size={14} />
+      <button onClick={toggleMute} title={muted ? "Unmute" : "Mute"} style={{ background: "none", border: "none", cursor: "pointer", color: C.ivoryDim, display: "flex", alignItems: "center", padding: 0, lineHeight: 0 }}>
+        <VolumeIcon size={13} />
       </button>
       <input
         type="range" min="0" max="1" step="0.02" value={volume}
         onChange={changeVolume}
         className="artium-slider"
-        style={{ width: 48, accentColor: C.brass, cursor: "pointer" }}
+        style={{ width: 52, accentColor: C.brass, cursor: "pointer" }}
         title="Volume"
       />
     </div>
@@ -1312,7 +1304,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, myProfile, musicOn, on
             {onlineCount != null && (
               <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 13, color: C.ivoryDim }}>
                 <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#1A9E6E", display: "inline-block" }} />
-                <span style={{ color: C.ivory, fontWeight: 600 }}>{onlineCount}</span> online
+                <span style={{ color: C.ivory, fontWeight: 600 }}>{onlineCount}</span>
               </span>
             )}
             {myProfile && (
@@ -2383,7 +2375,7 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
   return (
     <div className="min-h-full flex flex-col" style={{ background: C.inkSoft, color: C.ivory }}>
       <div className="max-w-5xl w-full mx-auto px-8" style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#FFFFFF", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <Logo size={22} slogan />
+        <Logo size={22} />
         <MusicBtn playing={musicOn} onToggle={onMusicToggle} audioRef={audioRef} />
       </div>
       <div className="flex-1 flex items-center justify-center px-6 py-16">
