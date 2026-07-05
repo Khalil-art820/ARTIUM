@@ -1332,7 +1332,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, myProfile, musicOn, on
               <span style={{ fontSize: 13, fontWeight: 500, color: C.brass }}>For conservatory musicians</span>
             </div>
             <h1 style={{ fontSize: "clamp(36px,5vw,60px)", fontWeight: 700, lineHeight: 1.08, letterSpacing: -1, color: C.ivory, margin: 0 }}>
-              Every conservatory.<br />One network.
+              Every Conservatory.<br />One Network.
             </h1>
             <p style={{ color: C.ivoryDim, fontSize: 18, lineHeight: 1.65, marginTop: 20, maxWidth: 460 }}>
               Artium connects students across the world's top conservatories — share repertoire, message peers, find teachers, and earn while you teach.
@@ -1346,7 +1346,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, myProfile, musicOn, on
           <div style={{ borderRadius: 12, overflow: "hidden", border: `1px solid ${C.inkLine}`, boxShadow: "0 8px 32px rgba(10,37,64,0.10)" }}>
             <div style={{ padding: "14px 18px", background: "#FFFFFF", borderBottom: `1px solid ${C.inkLine}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
               <button onClick={onPreview} style={{ fontSize: 14, fontWeight: 600, color: C.brass, background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: FONT_BODY, display: "inline-flex", alignItems: "center", gap: 6 }}>
-                <Globe2 size={15} /> Explore your network
+                <Globe2 size={15} /> Explore The Network
               </button>
             </div>
             <WorldMap selectedId={null} onSelect={() => {}} studentsByCons={SAMPLE_STUDENTS.reduce((a, s) => { (a[s.conservatoryId] = a[s.conservatoryId] || []).push(s); return a; }, {})} height={280} />
