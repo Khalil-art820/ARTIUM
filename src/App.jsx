@@ -1300,7 +1300,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, myProfile, musicOn, on
       {/* Nav */}
       <div style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#FFFFFF" }}>
         <div className="max-w-6xl mx-auto px-8" style={{ height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Logo size={22} slogan />
+          <Logo size={22} />
           <div className="flex items-center gap-4">
             {onlineCount != null && (
               <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 13, color: C.ivoryDim }}>
@@ -2397,7 +2397,7 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
   return (
     <div className="min-h-full flex flex-col" style={{ background: C.inkSoft, color: C.ivory }}>
       <div className="max-w-5xl w-full mx-auto px-8 pt-8 pb-4" style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#FFFFFF" }}>
-        <Logo size={22} />
+        <Logo size={22} slogan />
       </div>
       <div className="flex-1 flex items-center justify-center px-6 py-16">
         <div className="w-full max-w-3xl">
