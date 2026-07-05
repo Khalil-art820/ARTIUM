@@ -1181,7 +1181,7 @@ export default function App() {
         />
       )}
 
-      {screen === "entry" && <EntryGate onLearner={chooseLearner} onStudent={chooseStudent} onLogin={startLogin} learnerProfile={learnerProfile} learnerLoggedOut={learnerLoggedOut} studentLoggedIn={!!myProfile} musicOn={musicOn} onMusicToggle={toggleMusic} audioRef={audioRef} />}
+      {screen === "entry" && <EntryGate onLearner={chooseLearner} onStudent={chooseStudent} onLogin={startLogin} learnerProfile={learnerProfile} learnerLoggedOut={learnerLoggedOut} studentLoggedIn={!!myProfile} musicOn={musicOn} onMusicToggle={toggleMusic} audioRef={audioRef} onlineCount={onlineCount} />}
       {screen === "learnerSignup" && <LearnerSignup onSubmit={submitLearner} onBack={backToEntry} onLogin={startLogin} error={authError} />}
       {screen === "learnerMap" && (
         <LearnerScreen
@@ -1300,7 +1300,14 @@ function Landing({ onApply, onBack, onPreview, onProfile, myProfile, musicOn, on
             )}
             <Logo size={22} />
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <MusicBtn playing={musicOn} onToggle={onMusicToggle} audioRef={audioRef} />
+            {onlineCount != null && (
+              <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 13, color: C.ivoryDim }}>
+                <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#1A9E6E", display: "inline-block" }} />
+                <span style={{ color: C.ivory, fontWeight: 600 }}>{onlineCount}</span>
+              </span>
+            )}
             {myProfile && (
               <button onClick={onProfile} title="My profile">
                 <Avatar name={myProfile.name} id="me" size={36} photoUrl={myProfile.photoUrl} online />
@@ -2358,7 +2365,7 @@ function StepTeaching({ draft, update }) {
 }
 
 /* ---- First screen: pick your role ---- */
-function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLoggedOut, studentLoggedIn, musicOn, onMusicToggle, audioRef }) {
+function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLoggedOut, studentLoggedIn, musicOn, onMusicToggle, audioRef, onlineCount }) {
   const singleCard = !!learnerProfile || learnerLoggedOut || studentLoggedIn;
   const cardStyle = {
     textAlign: "left", background: "#FFFFFF", border: `1px solid ${C.inkLine}`,
@@ -2370,7 +2377,15 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
     <div className="min-h-full flex flex-col" style={{ background: C.inkSoft, color: C.ivory }}>
       <div className="max-w-5xl w-full mx-auto px-8" style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#FFFFFF", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <Logo size={22} />
-        <MusicBtn playing={musicOn} onToggle={onMusicToggle} audioRef={audioRef} />
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <MusicBtn playing={musicOn} onToggle={onMusicToggle} audioRef={audioRef} />
+          {onlineCount != null && (
+            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 13, color: C.ivoryDim }}>
+              <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#1A9E6E", display: "inline-block" }} />
+              <span style={{ color: C.ivory, fontWeight: 600 }}>{onlineCount}</span>
+            </span>
+          )}
+        </div>
       </div>
       <div className="flex-1 flex items-center justify-center px-6 py-16">
         <div className="w-full max-w-3xl">
