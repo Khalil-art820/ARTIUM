@@ -18,25 +18,25 @@ import "leaflet/dist/leaflet.css";
 /* THEME                                                              */
 /* ---------------------------------------------------------------- */
 const C = {
-  ink: "#14120F",
-  inkSoft: "#1D1A15",
-  inkLine: "rgba(244,238,219,0.14)",
-  parchment: "#EFE6CD",
-  parchmentDim: "#E3D7B0",
-  parchmentLine: "rgba(31,28,22,0.14)",
-  ivory: "#F4EEDB",
-  ivoryDim: "rgba(244,238,219,0.62)",
-  inkText: "#1F1C16",
-  inkTextDim: "rgba(31,28,22,0.6)",
-  brass: "#C9A24B",
-  brassDim: "rgba(201,162,75,0.35)",
-  burgundy: "#8A3636",
-  forest: "#33503F",
+  ink: "#000000",
+  inkSoft: "#111111",
+  inkLine: "rgba(255,255,255,0.10)",
+  parchment: "#FFFFFF",
+  parchmentDim: "#E0E0E0",
+  parchmentLine: "rgba(0,0,0,0.10)",
+  ivory: "#FFFFFF",
+  ivoryDim: "rgba(255,255,255,0.60)",
+  inkText: "#000000",
+  inkTextDim: "rgba(0,0,0,0.55)",
+  brass: "#06C167",
+  brassDim: "rgba(6,193,103,0.25)",
+  burgundy: "#E11900",
+  forest: "#05944F",
 };
 
-const FONT_DISPLAY = "'Fraunces', serif";
+const FONT_DISPLAY = "'Inter', sans-serif";
 const FONT_BODY = "'Inter', sans-serif";
-const FONT_MONO = "'JetBrains Mono', monospace";
+const FONT_MONO = "'Inter', monospace";
 
 const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII"];
 
@@ -466,7 +466,7 @@ function PrimaryBtn({ children, onClick, disabled, full, icon: Icon }) {
       className={`inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm transition-opacity ${full ? "w-full" : ""}`}
       style={{
         fontFamily: FONT_BODY, fontWeight: 600,
-        background: disabled ? "rgba(201,162,75,0.35)" : C.brass,
+        background: disabled ? "rgba(6,193,103,0.25)" : C.brass,
         color: C.inkText,
         cursor: disabled ? "not-allowed" : "pointer",
       }}
@@ -770,16 +770,16 @@ function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", inter
         pointerEvents: "none",
       }}>
         {legend.map(({ color, label }) => (
-          <span key={label} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "rgba(244,238,219,0.85)", fontFamily: FONT_MONO, whiteSpace: "nowrap" }}>
+          <span key={label} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "rgba(255,255,255,0.85)", fontFamily: FONT_MONO, whiteSpace: "nowrap" }}>
             <span style={{ width: 10, height: 10, borderRadius: "50%", background: color, border: `1.5px solid ${color === "#27AE60" ? "#1E8449" : color === "#ffffff" ? "#aaaaaa" : "#8B1A1A"}`, display: "inline-block", flexShrink: 0 }} />
             {label}
           </span>
         ))}
-        <span style={{ width: 1, height: 14, background: "rgba(244,238,219,0.2)", flexShrink: 0 }} />
-        <span style={{ fontSize: 11, fontFamily: FONT_MONO, color: "rgba(244,238,219,0.55)", whiteSpace: "nowrap" }}>
+        <span style={{ width: 1, height: 14, background: "rgba(255,255,255,0.2)", flexShrink: 0 }} />
+        <span style={{ fontSize: 11, fontFamily: FONT_MONO, color: "rgba(255,255,255,0.55)", whiteSpace: "nowrap" }}>
           <span style={{ color: "#ffffff", fontWeight: 600 }}>{totalStudents}</span> conservatory students
         </span>
-        <span style={{ fontSize: 11, fontFamily: FONT_MONO, color: "rgba(244,238,219,0.55)", whiteSpace: "nowrap" }}>
+        <span style={{ fontSize: 11, fontFamily: FONT_MONO, color: "rgba(255,255,255,0.55)", whiteSpace: "nowrap" }}>
           <span style={{ color: "#ffffff", fontWeight: 600 }}>{totalTeachers}</span> open to teaching
         </span>
       </div>
@@ -834,10 +834,10 @@ function AccessGate({ onUnlock }) {
     else { setError(true); setValue(""); }
   }
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#0e0d0b", fontFamily: FONT_BODY, padding: 24 }}>
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#000000", fontFamily: FONT_BODY, padding: 24 }}>
       <div style={{ marginBottom: 32, textAlign: "center" }}>
         <Logo />
-        <p style={{ color: "rgba(244,238,219,0.5)", fontSize: 14, marginTop: 10 }}>Private beta — enter access key to continue</p>
+        <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 14, marginTop: 10 }}>Private beta — enter access key to continue</p>
       </div>
       <div style={{ width: "100%", maxWidth: 320 }}>
         <input
@@ -848,12 +848,12 @@ function AccessGate({ onUnlock }) {
           placeholder="Access key"
           autoComplete="off"
           autoFocus
-          style={{ width: "100%", background: "#1c1a16", border: `1px solid ${error ? "#c0392b" : "rgba(244,238,219,0.15)"}`, borderRadius: 10, padding: "12px 16px", color: "#f4eedb", fontSize: 15, outline: "none", boxSizing: "border-box" }}
+          style={{ width: "100%", background: "#111111", border: `1px solid ${error ? "#c0392b" : "rgba(255,255,255,0.12)"}`, borderRadius: 10, padding: "12px 16px", color: "#ffffff", fontSize: 15, outline: "none", boxSizing: "border-box" }}
         />
         {error && <p style={{ color: "#c0392b", fontSize: 13, marginTop: 8 }}>Incorrect key — try again.</p>}
         <button
           onClick={attempt}
-          style={{ marginTop: 12, width: "100%", background: "#b8935a", color: "#0e0d0b", border: "none", borderRadius: 10, padding: "12px 0", fontSize: 15, fontWeight: 700, cursor: "pointer" }}
+          style={{ marginTop: 12, width: "100%", background: "#06C167", color: "#000000", border: "none", borderRadius: 10, padding: "12px 0", fontSize: 15, fontWeight: 700, cursor: "pointer" }}
         >Enter</button>
       </div>
     </div>
@@ -1144,7 +1144,7 @@ export default function App() {
   return (
     <div style={{ fontFamily: FONT_BODY, background: C.ink, minHeight: "100%", width: "100%" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         .lg-pulse { animation: lgpulse 2.2s ease-out infinite; transform-origin: center; }
         @keyframes lgpulse { 0% { opacity:0.9; transform:scale(0.6);} 100% { opacity:0; transform:scale(2.4);} }
         .lg-fade { animation: lgfade 0.35s ease both; }
@@ -1152,7 +1152,7 @@ export default function App() {
         .lg-blink { animation: lgblink 1.6s ease-in-out infinite; }
         @keyframes lgblink { 0%,100% { opacity:1;} 50% { opacity:0.25;} }
         .lg-scroll::-webkit-scrollbar { width: 6px; }
-        .lg-scroll::-webkit-scrollbar-thumb { background: rgba(244,238,219,0.18); border-radius: 3px; }
+        .lg-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.18); border-radius: 3px; }
         .lg-split-map { display: grid; grid-template-columns: 1fr; }
         .lg-split-chat { display: grid; grid-template-columns: 1fr; }
         @media (min-width: 768px) {
@@ -1173,8 +1173,8 @@ export default function App() {
         .artium-map .leaflet-control-zoom a { background: #fff !important; color: #333 !important; border-color: #ddd !important; font-weight: 700 !important; }
         .artium-map .leaflet-control-zoom a:hover { background: #f4f4f4 !important; }
         .artium-map .leaflet-control-attribution { display: none !important; }
-        .artium-map .leaflet-tooltip { background: #1D1A15 !important; border: 1px solid rgba(244,238,219,0.2) !important; color: #F4EEDB !important; border-radius: 8px !important; box-shadow: 0 4px 14px rgba(0,0,0,0.35) !important; padding: 6px 10px !important; }
-        .artium-map .leaflet-tooltip-top:before { border-top-color: #1D1A15 !important; }
+        .artium-map .leaflet-tooltip { background: #111111 !important; border: 1px solid rgba(255,255,255,0.15) !important; color: #ffffff !important; border-radius: 8px !important; box-shadow: 0 4px 14px rgba(0,0,0,0.5) !important; padding: 6px 10px !important; }
+        .artium-map .leaflet-tooltip-top:before { border-top-color: #111111 !important; }
         .artium-pin { background: transparent !important; border: none !important; }
       `}</style>
 
@@ -1302,7 +1302,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, myProfile, musicOn, on
         </div>
         <div className="hidden sm:flex items-center gap-3">
           {onlineCount != null && (
-            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontFamily: FONT_MONO, color: "rgba(244,238,219,0.55)", whiteSpace: "nowrap" }}>
+            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontFamily: FONT_MONO, color: "rgba(255,255,255,0.55)", whiteSpace: "nowrap" }}>
               <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#27AE60", display: "inline-block", flexShrink: 0 }} />
               <span style={{ color: "#ffffff", fontWeight: 600 }}>{onlineCount}</span> online
             </span>
@@ -1559,9 +1559,9 @@ function GoogleBtn({ label = "Continue with Google" }) {
 function Divider() {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "18px 0" }}>
-      <div style={{ flex: 1, height: 1, background: "rgba(244,238,219,0.12)" }} />
-      <span style={{ fontSize: 11, fontFamily: FONT_MONO, color: "rgba(244,238,219,0.35)" }}>OR</span>
-      <div style={{ flex: 1, height: 1, background: "rgba(244,238,219,0.12)" }} />
+      <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.12)" }} />
+      <span style={{ fontSize: 11, fontFamily: FONT_MONO, color: "rgba(255,255,255,0.35)" }}>OR</span>
+      <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.12)" }} />
     </div>
   );
 }
@@ -1927,7 +1927,7 @@ function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, mus
         </div>
         <div className="flex items-center gap-3">
           {onlineCount != null && (
-            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontFamily: FONT_MONO, color: "rgba(244,238,219,0.55)", whiteSpace: "nowrap" }}>
+            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontFamily: FONT_MONO, color: "rgba(255,255,255,0.55)", whiteSpace: "nowrap" }}>
               <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#27AE60", display: "inline-block", flexShrink: 0 }} />
               <span style={{ color: "#ffffff", fontWeight: 600 }}>{onlineCount}</span> online
             </span>
@@ -2500,12 +2500,12 @@ function TeacherMap({ teachers, selectedId, onSelect, height = 520 }) {
     <svg viewBox="0 0 1000 460" style={{ width: "100%", height, display: "block" }}>
       <defs>
         <pattern id="lg-dots-t" width="14" height="14" patternUnits="userSpaceOnUse">
-          <circle cx="1" cy="1" r="1" fill="rgba(244,238,219,0.05)" />
+          <circle cx="1" cy="1" r="1" fill="rgba(255,255,255,0.05)" />
         </pattern>
       </defs>
       <rect width="1000" height="460" fill="url(#lg-dots-t)" />
       {[80, 160, 230, 300, 380].map((y) => (
-        <line key={y} x1="0" x2="1000" y1={y} y2={y} stroke="rgba(244,238,219,0.05)" strokeWidth="1" />
+        <line key={y} x1="0" x2="1000" y1={y} y2={y} stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
       ))}
       {CONTINENTS.map((d, i) => (
         <path key={i} d={d} fill={C.parchmentDim} opacity="0.16" stroke={C.parchmentDim} strokeOpacity="0.3" />
@@ -2556,7 +2556,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
         <Logo slogan />
         <div className="flex items-center gap-4">
           {onlineCount != null && (
-            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontFamily: FONT_MONO, color: "rgba(244,238,219,0.55)", whiteSpace: "nowrap" }}>
+            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontFamily: FONT_MONO, color: "rgba(255,255,255,0.55)", whiteSpace: "nowrap" }}>
               <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#27AE60", display: "inline-block", flexShrink: 0 }} />
               <span style={{ color: "#ffffff", fontWeight: 600 }}>{onlineCount}</span> online
             </span>
