@@ -396,7 +396,7 @@ function Logo({ tone = "light", size = 20, slogan = false }) {
         <path
           d={`M ${size * 0.22} ${size * 0.78} A ${size * 0.56} ${size * 0.56} 0 0 1 ${size * 0.78} ${size * 0.22}`}
           stroke="white"
-          strokeWidth={size * 0.11}
+          strokeWidth={size * 0.055}
           fill="none"
           strokeLinecap="round"
         />
