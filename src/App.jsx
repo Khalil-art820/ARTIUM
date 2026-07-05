@@ -394,7 +394,7 @@ function Logo({ tone = "light", size = 20, slogan = false }) {
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ flexShrink: 0 }}>
         <rect width={size} height={size} rx={size * 0.22} fill={C.brass} />
         <path
-          d={`M ${size * 0.2} ${size * 0.62} Q ${size * 0.5} ${size * 0.28} ${size * 0.8} ${size * 0.62}`}
+          d={`M ${size * 0.22} ${size * 0.78} A ${size * 0.56} ${size * 0.56} 0 0 1 ${size * 0.78} ${size * 0.22}`}
           stroke="white"
           strokeWidth={size * 0.11}
           fill="none"
