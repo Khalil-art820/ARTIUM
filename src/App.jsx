@@ -2403,7 +2403,7 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
           <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: "clamp(28px,4vw,44px)", fontWeight: 700, lineHeight: 1.1, color: C.ivory, letterSpacing: -0.5 }}>
             Connect with musicians worldwide.
           </h1>
-          <p style={{ color: C.ivoryDim, fontSize: 17, lineHeight: 1.65, marginTop: 14, maxWidth: 480 }}>
+          <p style={{ color: C.ivoryDim, fontSize: 16, lineHeight: 1.65, marginTop: 14 }}>
             Join the global network of conservatory students and music enthusiasts.
           </p>
           <div className={`mt-10 grid gap-6 ${singleCard ? "" : "md:grid-cols-2"}`}>
