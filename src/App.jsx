@@ -19,24 +19,24 @@ import "leaflet/dist/leaflet.css";
 /* ---------------------------------------------------------------- */
 const C = {
   ink: "#FFFFFF",
-  inkSoft: "#F7F7F7",
-  inkLine: "#DDDDDD",
+  inkSoft: "#F6F9FC",
+  inkLine: "#E6EBF1",
   parchment: "#FFFFFF",
-  parchmentDim: "#F7F7F7",
-  parchmentLine: "#EBEBEB",
-  ivory: "#222222",
-  ivoryDim: "#717171",
-  inkText: "#222222",
-  inkTextDim: "#717171",
-  brass: "#FF385C",
-  brassDim: "rgba(255,56,92,0.10)",
-  burgundy: "#C13515",
-  forest: "#008A05",
+  parchmentDim: "#F6F9FC",
+  parchmentLine: "#E6EBF1",
+  ivory: "#0A2540",
+  ivoryDim: "#425466",
+  inkText: "#0A2540",
+  inkTextDim: "#425466",
+  brass: "#635BFF",
+  brassDim: "rgba(99,91,255,0.10)",
+  burgundy: "#DF1B41",
+  forest: "#1A9E6E",
 };
 
 const FONT_DISPLAY = "'Inter', sans-serif";
 const FONT_BODY = "'Inter', sans-serif";
-const FONT_MONO = "'Inter', monospace";
+const FONT_MONO = "'ui-monospace', monospace";
 
 const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII"];
 
@@ -466,7 +466,7 @@ function PrimaryBtn({ children, onClick, disabled, full, icon: Icon }) {
       className={`inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm transition-opacity ${full ? "w-full" : ""}`}
       style={{
         fontFamily: FONT_BODY, fontWeight: 600,
-        background: disabled ? "rgba(255,56,92,0.15)" : C.brass,
+        background: disabled ? "rgba(99,91,255,0.15)" : C.brass,
         color: C.inkText,
         cursor: disabled ? "not-allowed" : "pointer",
       }}
@@ -765,23 +765,23 @@ function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", inter
         position: "absolute", bottom: 0, left: 0, right: 0,
         zIndex: 1000, display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-between",
         background: "rgba(255,255,255,0.92)", backdropFilter: "blur(8px)",
-        borderTop: "1px solid #DDDDDD",
+        borderTop: "1px solid #E6EBF1",
         borderRadius: 0, padding: "8px 14px",
         border: "none",
         pointerEvents: "none",
       }}>
         {legend.map(({ color, label }) => (
-          <span key={label} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "#717171", fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>
-            <span style={{ width: 10, height: 10, borderRadius: "50%", background: color, border: `1.5px solid ${color === "#27AE60" ? "#1E8449" : color === "#ffffff" ? "#DDDDDD" : "#8B1A1A"}`, display: "inline-block", flexShrink: 0 }} />
+          <span key={label} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "#425466", fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>
+            <span style={{ width: 10, height: 10, borderRadius: "50%", background: color, border: `1.5px solid ${color === "#27AE60" ? "#1E8449" : color === "#ffffff" ? "#E6EBF1" : "#8B1A1A"}`, display: "inline-block", flexShrink: 0 }} />
             {label}
           </span>
         ))}
-        <span style={{ width: 1, height: 14, background: "#DDDDDD", flexShrink: 0 }} />
-        <span style={{ fontSize: 11, fontFamily: FONT_BODY, color: "#717171", whiteSpace: "nowrap" }}>
-          <span style={{ color: "#222222", fontWeight: 700 }}>{totalStudents}</span> conservatory students
+        <span style={{ width: 1, height: 14, background: "#E6EBF1", flexShrink: 0 }} />
+        <span style={{ fontSize: 11, fontFamily: FONT_BODY, color: "#425466", whiteSpace: "nowrap" }}>
+          <span style={{ color: "#0A2540", fontWeight: 700 }}>{totalStudents}</span> conservatory students
         </span>
-        <span style={{ fontSize: 11, fontFamily: FONT_BODY, color: "#717171", whiteSpace: "nowrap" }}>
-          <span style={{ color: "#222222", fontWeight: 700 }}>{totalTeachers}</span> open to teaching
+        <span style={{ fontSize: 11, fontFamily: FONT_BODY, color: "#425466", whiteSpace: "nowrap" }}>
+          <span style={{ color: "#0A2540", fontWeight: 700 }}>{totalTeachers}</span> open to teaching
         </span>
       </div>
       <MapContainer
@@ -838,7 +838,7 @@ function AccessGate({ onUnlock }) {
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#FFFFFF", fontFamily: FONT_BODY, padding: 24 }}>
       <div style={{ marginBottom: 32, textAlign: "center" }}>
         <Logo />
-        <p style={{ color: "#717171", fontSize: 14, marginTop: 10 }}>Private beta — enter access key to continue</p>
+        <p style={{ color: "#425466", fontSize: 14, marginTop: 10 }}>Private beta — enter access key to continue</p>
       </div>
       <div style={{ width: "100%", maxWidth: 320 }}>
         <input
@@ -849,12 +849,12 @@ function AccessGate({ onUnlock }) {
           placeholder="Access key"
           autoComplete="off"
           autoFocus
-          style={{ width: "100%", background: "#F7F7F7", border: `1px solid ${error ? "#c0392b" : "#DDDDDD"}`, borderRadius: 10, padding: "12px 16px", color: "#222222", fontSize: 15, outline: "none", boxSizing: "border-box" }}
+          style={{ width: "100%", background: "#F6F9FC", border: `1px solid ${error ? "#c0392b" : "#E6EBF1"}`, borderRadius: 10, padding: "12px 16px", color: "#0A2540", fontSize: 15, outline: "none", boxSizing: "border-box" }}
         />
         {error && <p style={{ color: "#c0392b", fontSize: 13, marginTop: 8 }}>Incorrect key — try again.</p>}
         <button
           onClick={attempt}
-          style={{ marginTop: 12, width: "100%", background: "#FF385C", color: "#FFFFFF", border: "none", borderRadius: 10, padding: "12px 0", fontSize: 15, fontWeight: 700, cursor: "pointer" }}
+          style={{ marginTop: 12, width: "100%", background: "#635BFF", color: "#FFFFFF", border: "none", borderRadius: 10, padding: "12px 0", fontSize: 15, fontWeight: 700, cursor: "pointer" }}
         >Enter</button>
       </div>
     </div>
@@ -1154,7 +1154,7 @@ export default function App() {
         .lg-blink { animation: lgblink 1.6s ease-in-out infinite; }
         @keyframes lgblink { 0%,100% { opacity:1;} 50% { opacity:0.25;} }
         .lg-scroll::-webkit-scrollbar { width: 4px; }
-        .lg-scroll::-webkit-scrollbar-thumb { background: #DDDDDD; border-radius: 2px; }
+        .lg-scroll::-webkit-scrollbar-thumb { background: #E6EBF1; border-radius: 2px; }
         .lg-split-map { display: grid; grid-template-columns: 1fr; }
         .lg-split-chat { display: grid; grid-template-columns: 1fr; }
         @media (min-width: 768px) {
@@ -1165,17 +1165,17 @@ export default function App() {
           .lg-split-map > :last-child { max-height: 45vh !important; overflow-y: auto; -webkit-overflow-scrolling: touch; }
         }
         input[type=range].artium-slider { -webkit-appearance: none; appearance: none; height: 2px !important; outline: none; border-radius: 2px; }
-        input[type=range].artium-slider::-webkit-slider-thumb { -webkit-appearance: none !important; appearance: none !important; width: 10px !important; height: 10px !important; border-radius: 50% !important; background: #FF385C !important; cursor: pointer !important; border: none !important; }
-        input[type=range].artium-slider::-moz-range-thumb { width: 10px !important; height: 10px !important; border-radius: 50% !important; background: #FF385C !important; border: none !important; cursor: pointer !important; }
+        input[type=range].artium-slider::-webkit-slider-thumb { -webkit-appearance: none !important; appearance: none !important; width: 10px !important; height: 10px !important; border-radius: 50% !important; background: #635BFF !important; cursor: pointer !important; border: none !important; }
+        input[type=range].artium-slider::-moz-range-thumb { width: 10px !important; height: 10px !important; border-radius: 50% !important; background: #635BFF !important; border: none !important; cursor: pointer !important; }
 
         .artium-map, .artium-map .leaflet-container { border-radius: inherit; }
         .artium-map .leaflet-tile-pane { filter: saturate(1.05) brightness(1.0) contrast(1.0); }
-        .artium-map .leaflet-control-zoom { border: 1px solid #DDDDDD !important; box-shadow: 0 1px 4px rgba(0,0,0,0.12) !important; border-radius: 8px !important; overflow: hidden; }
-        .artium-map .leaflet-control-zoom a { background: #FFFFFF !important; color: #222222 !important; border-color: #DDDDDD !important; font-weight: 600 !important; }
-        .artium-map .leaflet-control-zoom a:hover { background: #F7F7F7 !important; }
+        .artium-map .leaflet-control-zoom { border: 1px solid #E6EBF1 !important; box-shadow: 0 2px 8px rgba(10,37,64,0.08) !important; border-radius: 8px !important; overflow: hidden; }
+        .artium-map .leaflet-control-zoom a { background: #FFFFFF !important; color: #0A2540 !important; border-color: #E6EBF1 !important; font-weight: 600 !important; }
+        .artium-map .leaflet-control-zoom a:hover { background: #F6F9FC !important; }
         .artium-map .leaflet-control-attribution { display: none !important; }
-        .artium-map .leaflet-tooltip { background: #FFFFFF !important; border: 1px solid #DDDDDD !important; color: #222222 !important; border-radius: 10px !important; box-shadow: 0 4px 16px rgba(0,0,0,0.12) !important; padding: 8px 12px !important; font-family: Inter, sans-serif !important; font-size: 13px !important; }
-        .artium-map .leaflet-tooltip-top:before { border-top-color: #DDDDDD !important; }
+        .artium-map .leaflet-tooltip { background: #FFFFFF !important; border: 1px solid #E6EBF1 !important; color: #0A2540 !important; border-radius: 10px !important; box-shadow: 0 4px 20px rgba(10,37,64,0.12) !important; padding: 8px 14px !important; font-family: Inter, sans-serif !important; font-size: 13px !important; }
+        .artium-map .leaflet-tooltip-top:before { border-top-color: #E6EBF1 !important; }
         .artium-pin { background: transparent !important; border: none !important; }
       `}</style>
 
@@ -1303,9 +1303,9 @@ function Landing({ onApply, onBack, onPreview, onProfile, myProfile, musicOn, on
         </div>
         <div className="hidden sm:flex items-center gap-3">
           {onlineCount != null && (
-            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontFamily: FONT_MONO, color: "#717171", whiteSpace: "nowrap" }}>
+            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontFamily: FONT_MONO, color: "#425466", whiteSpace: "nowrap" }}>
               <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#27AE60", display: "inline-block", flexShrink: 0 }} />
-              <span style={{ color: "#222222", fontWeight: 700 }}>{onlineCount}</span> online
+              <span style={{ color: "#0A2540", fontWeight: 700 }}>{onlineCount}</span> online
             </span>
           )}
           <MusicBtn playing={musicOn} onToggle={onMusicToggle} audioRef={audioRef} />
@@ -1560,9 +1560,9 @@ function GoogleBtn({ label = "Continue with Google" }) {
 function Divider() {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "18px 0" }}>
-      <div style={{ flex: 1, height: 1, background: "#DDDDDD" }} />
-      <span style={{ fontSize: 11, fontFamily: FONT_MONO, color: "#B0B0B0" }}>OR</span>
-      <div style={{ flex: 1, height: 1, background: "#DDDDDD" }} />
+      <div style={{ flex: 1, height: 1, background: "#E6EBF1" }} />
+      <span style={{ fontSize: 11, fontFamily: FONT_MONO, color: "#8898AA" }}>OR</span>
+      <div style={{ flex: 1, height: 1, background: "#E6EBF1" }} />
     </div>
   );
 }
@@ -1928,9 +1928,9 @@ function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, mus
         </div>
         <div className="flex items-center gap-3">
           {onlineCount != null && (
-            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontFamily: FONT_MONO, color: "#717171", whiteSpace: "nowrap" }}>
+            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontFamily: FONT_MONO, color: "#425466", whiteSpace: "nowrap" }}>
               <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#27AE60", display: "inline-block", flexShrink: 0 }} />
-              <span style={{ color: "#222222", fontWeight: 700 }}>{onlineCount}</span> online
+              <span style={{ color: "#0A2540", fontWeight: 700 }}>{onlineCount}</span> online
             </span>
           )}
           <MusicBtn playing={musicOn} onToggle={onMusicToggle} audioRef={audioRef} />
@@ -2557,9 +2557,9 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
         <Logo slogan />
         <div className="flex items-center gap-4">
           {onlineCount != null && (
-            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontFamily: FONT_MONO, color: "#717171", whiteSpace: "nowrap" }}>
+            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontFamily: FONT_MONO, color: "#425466", whiteSpace: "nowrap" }}>
               <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#27AE60", display: "inline-block", flexShrink: 0 }} />
-              <span style={{ color: "#222222", fontWeight: 700 }}>{onlineCount}</span> online
+              <span style={{ color: "#0A2540", fontWeight: 700 }}>{onlineCount}</span> online
             </span>
           )}
           <button onClick={onBack} className="text-sm flex items-center gap-1" style={{ color: C.ivoryDim }}><ArrowLeft size={15} /> Back</button>
