@@ -1916,7 +1916,6 @@ function LoginScreen({ onSubmit, onBack, error }) {
 /* ---------------------------------------------------------------- */
 function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, musicOn, onMusicToggle, audioRef, onBack, backLabel, onGuestTabClick, onlineCount, previewOnly }) {
   const tabs = [
-    { id: "map", label: "Map", icon: Globe2, locked: false },
     { id: "messages", label: "Messages", icon: MessageCircle, locked: !myProfile },
   ];
   return (
