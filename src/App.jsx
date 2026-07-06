@@ -1248,7 +1248,7 @@ export default function App() {
             selectedStudentId ? backFromProfile :
             appTab === "messages" ? () => setAppTab("map") :
             appTab === "profile" ? () => setAppTab("map") :
-            null
+            () => setScreen("landing")
           }
           backLabel={
             selectedStudentId ? "Back to conservatory" :
