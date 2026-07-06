@@ -1363,7 +1363,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, myProfile, musicOn, on
               <h3 style={{ fontSize: 16, fontWeight: 600, color: C.ivory, marginBottom: 8, marginTop: 4 }}>{s.t}</h3>
               <p style={{ fontSize: 14, color: C.ivoryDim, lineHeight: 1.65 }}>
                 {s.n === "5"
-                  ? <>Claim your promotional video on <a href="https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==" target="_blank" rel="noreferrer" style={{ color: C.brass, fontWeight: 600, textDecoration: "none" }}>aclassicaltone</a> (may be subject to fees).</>
+                  ? <>Claim your promotional video on <a href="https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==" target="_blank" rel="noreferrer" style={{ color: C.brass, fontWeight: 600, textDecoration: "none" }}>aclassicaltone</a> (may be subject to fees, as per our partnership agreement).</>
                   : s.d}
               </p>
             </div>
