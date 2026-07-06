@@ -1336,8 +1336,8 @@ function Landing({ onApply, onBack, onPreview, onProfile, myProfile, musicOn, on
             {error && <p style={{ marginTop: 16, fontSize: 14, color: C.burgundy, lineHeight: 1.5 }}>{error}</p>}
           </div>
           <div style={{ borderRadius: 12, overflow: "hidden", border: `1px solid ${C.inkLine}`, boxShadow: "0 8px 32px rgba(10,37,64,0.10)" }}>
-            <div style={{ padding: "14px 18px", background: "#FFFFFF", borderBottom: `1px solid ${C.inkLine}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <button onClick={onPreview} style={{ fontSize: 14, fontWeight: 600, color: C.brass, background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: FONT_BODY, display: "inline-flex", alignItems: "center", gap: 6 }}>
+            <div style={{ padding: "14px 18px", background: C.brass, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <button onClick={onPreview} style={{ fontSize: 14, fontWeight: 600, color: "#FFFFFF", background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: FONT_BODY, display: "inline-flex", alignItems: "center", gap: 6 }}>
                 <Globe2 size={15} /> Explore The Network
               </button>
             </div>
