@@ -931,6 +931,19 @@ export default function App() {
           setLearnerProfile({ name: pendingLearner.name, location: pendingLearner.location });
           setScreen("learnerMap");
         });
+      } else {
+        // Google OAuth user with no profile yet — route to signup flow to collect info
+        const googleRole = localStorage.getItem("artium_google_role") || "student";
+        localStorage.removeItem("artium_google_role");
+        const googleName = authUser.user_metadata?.full_name || authUser.user_metadata?.name || "";
+        if (googleRole === "learner") {
+          setScreen("learnerSignup");
+        } else {
+          setDraft((d) => ({ ...d, name: googleName, email: authUser.email || "", password: "__google__", confirmPassword: "__google__" }));
+          setEditingProfile(false);
+          setStep(1);
+          setScreen("signup");
+        }
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1078,6 +1091,12 @@ export default function App() {
       setMyProfile(updated);
       setStudents((arr) => arr.map((s) => (s.id === myProfile.id ? updated : s)));
       setScreen("app"); setAppTab("profile");
+    } else if (authUser && draft.password === "__google__") {
+      // Google OAuth user completing profile for the first time
+      const { error: insertError } = await supabase.from("profiles").insert(toDbProfile(draft, authUser.id));
+      if (insertError) { setAuthError(insertError.message); return; }
+      setDraft((d) => ({ ...d, id: authUser.id }));
+      setScreen("pending");
     } else {
       const { data, error } = await supabase.auth.signUp({
         email: draft.email,
@@ -1527,10 +1546,11 @@ function PhotoUpload({ name, photoUrl, onChange }) {
   );
 }
 
-function GoogleBtn({ label = "Continue with Google" }) {
+function GoogleBtn({ label = "Continue with Google", role = "student" }) {
   const [loading, setLoading] = useState(false);
   async function handleClick() {
     setLoading(true);
+    localStorage.setItem("artium_google_role", role);
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: window.location.origin },
@@ -2472,7 +2492,7 @@ function LearnerSignup({ onSubmit, onBack, onLogin, error }) {
         </p>
       </div>
       <div className="max-w-2xl mx-auto px-6 py-10">
-        <GoogleBtn label="Sign up with Google" />
+        <GoogleBtn label="Sign up with Google" role="learner" />
         <Divider />
         <Field label="Full name">
           <input style={inputStyle} value={name} onChange={(e) => setName(e.target.value)} placeholder="Your full name" autoComplete="off" autoFocus />
