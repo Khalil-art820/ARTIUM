@@ -1336,8 +1336,8 @@ function Landing({ onApply, onBack, onPreview, onProfile, myProfile, musicOn, on
             {error && <p style={{ marginTop: 16, fontSize: 14, color: C.burgundy, lineHeight: 1.5 }}>{error}</p>}
           </div>
           <div style={{ borderRadius: 12, overflow: "hidden", border: `1px solid ${C.inkLine}`, boxShadow: "0 8px 32px rgba(10,37,64,0.10)" }}>
-            <div style={{ padding: "14px 18px", background: "#bababa", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <button onClick={onPreview} style={{ fontSize: 14, fontWeight: 600, color: C.ivory, background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: FONT_BODY, display: "inline-flex", alignItems: "center", gap: 6 }}>
+            <div style={{ padding: "14px 18px", background: "#2C3E50", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <button onClick={onPreview} style={{ fontSize: 14, fontWeight: 600, color: "#fff", background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: FONT_BODY, display: "inline-flex", alignItems: "center", gap: 6 }}>
                 <Globe2 size={15} /> Explore Artium's Network
               </button>
             </div>
