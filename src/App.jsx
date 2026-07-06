@@ -2157,16 +2157,22 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack }) {
   const [confirmDelete, setConfirmDelete] = React.useState(false);
   const [deleting, setDeleting] = React.useState(false);
   return (
-    <div className="max-w-2xl mx-auto px-6 py-8">
-      <div className="flex items-start justify-between">
-        <div className="flex items-center gap-4">
-          <Avatar name={profile.name} id="me" size={64} photoUrl={profile.photoUrl} online />
+    <div className="max-w-2xl mx-auto px-6 py-10">
+
+      {/* ── Header row: avatar + name/subtitle + action buttons ── */}
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-center gap-5">
+          <Avatar name={profile.name} id="me" size={72} photoUrl={profile.photoUrl} online />
           <div>
-            <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 600 }}>{profile.name}</h2>
-            <p className="text-sm" style={{ color: C.ivoryDim }}>{profile.instrument ? `${profile.instrument} · ` : ""}{profile.year} · {cons?.name}, {cons?.city}</p>
+            <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 28, fontWeight: 700, letterSpacing: "-0.3px", color: C.ivory, lineHeight: 1.2 }}>
+              {profile.name}
+            </h2>
+            <p className="mt-1 text-sm whitespace-nowrap" style={{ color: C.ivoryDim }}>
+              {[profile.instrument, profile.year, cons ? `${cons.name}, ${cons.city}` : null].filter(Boolean).join(" · ")}
+            </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
           <GhostBtn onClick={onEdit} icon={Pencil}>Edit</GhostBtn>
           {onLogout && <GhostBtn onClick={onLogout}>Log out</GhostBtn>}
           {onDeleteAccount && !confirmDelete && (
@@ -2190,41 +2196,86 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack }) {
           )}
         </div>
       </div>
-      <p className="mt-5 text-sm" style={{ color: C.ivoryDim, lineHeight: 1.6 }}>{profile.bio || "No bio yet."}</p>
+
+      {/* ── Bio ── */}
+      {profile.bio && (
+        <p className="mt-6 text-sm" style={{ color: C.ivory, lineHeight: 1.75, maxWidth: 560 }}>{profile.bio}</p>
+      )}
+
+      {/* ── Performance video link ── */}
       {(() => {
         const linkMeta = videoLinkMeta(profile.videoLink);
         return linkMeta ? (
-          <a href={profile.videoLink} target="_blank" rel="noreferrer" className="mt-5 inline-flex items-center gap-2 text-sm" style={{ color: C.brass, textDecoration: "none" }}>
+          <a href={profile.videoLink} target="_blank" rel="noreferrer" className="mt-4 inline-flex items-center gap-2 text-sm" style={{ color: C.brass, textDecoration: "none" }}>
             <linkMeta.Icon size={14} /> Performance video on {linkMeta.label}
           </a>
-        ) : (
-          <p className="mt-5 text-sm" style={{ color: C.ivoryDim }}>No performance video linked yet.</p>
-        );
+        ) : null;
       })()}
-      <div className="mt-6 grid sm:grid-cols-2 gap-6">
-        <div>
-          <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.ivoryDim }}>MUSICAL PREFERENCES</p>
-          <div className="flex flex-wrap gap-1.5 mt-2">{(profile.tastes || []).map((t) => <span key={t} className="text-xs px-2.5 py-1 rounded-full" style={{ border: `1px solid ${C.inkLine}` }}>{t}</span>)}</div>
-        </div>
-        <div>
-          <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.ivoryDim }}>CURRENT REPERTOIRE</p>
-          <div className="flex flex-col gap-1.5 mt-2">
-            {(profile.pieces || []).map((p, i) => <p key={i} className="text-sm"><span style={{ fontFamily: FONT_MONO, color: C.brass, fontSize: 11 }}>No.{i + 1}</span> {p.title} <span style={{ color: C.ivoryDim }}>— {p.composer}</span></p>)}
+
+      {/* ── Section divider helper (inline) ── */}
+
+      {/* ── Musical Preferences ── */}
+      {(profile.tastes || []).length > 0 && (
+        <>
+          <div style={{ borderTop: `1px solid ${C.inkLine}`, marginTop: 28, marginBottom: 20 }} />
+          <p style={{ fontFamily: FONT_MONO, fontSize: 10, letterSpacing: "0.1em", color: C.ivoryDim, marginBottom: 12 }}>MUSICAL PREFERENCES</p>
+          <div className="flex flex-wrap gap-2">
+            {(profile.tastes || []).map((t) => (
+              <span key={t} className="text-xs px-3 py-1 rounded-full" style={{ border: `1px solid ${C.inkLine}`, color: C.ivory, background: C.inkSoft }}>
+                {t}
+              </span>
+            ))}
           </div>
-        </div>
-        {profile.top && (
-          <div>
-            <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.ivoryDim }}>TOP</p>
-            <p className="text-sm mt-2" style={{ lineHeight: 1.6 }}>{profile.top}</p>
+        </>
+      )}
+
+      {/* ── Current Repertoire ── */}
+      {(profile.pieces || []).length > 0 && (
+        <>
+          <div style={{ borderTop: `1px solid ${C.inkLine}`, marginTop: 28, marginBottom: 20 }} />
+          <p style={{ fontFamily: FONT_MONO, fontSize: 10, letterSpacing: "0.1em", color: C.ivoryDim, marginBottom: 12 }}>CURRENT REPERTOIRE</p>
+          <div className="flex flex-col gap-3">
+            {(profile.pieces || []).map((p, i) => (
+              <div key={i} className="flex items-baseline gap-3">
+                <span style={{ fontFamily: FONT_MONO, color: C.brass, fontSize: 10, minWidth: 28 }}>No.{i + 1}</span>
+                <span className="text-sm" style={{ color: C.ivory, fontWeight: 500 }}>{p.title}</span>
+                <span className="text-sm" style={{ color: C.ivoryDim }}>— {p.composer}</span>
+              </div>
+            ))}
           </div>
-        )}
-        {profile.flop && (
-          <div>
-            <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.ivoryDim }}>FLOP</p>
-            <p className="text-sm mt-2" style={{ lineHeight: 1.6 }}>{profile.flop}</p>
+        </>
+      )}
+
+      {/* ── Top / Flop side-by-side ── */}
+      {(profile.top || profile.flop) && (
+        <>
+          <div style={{ borderTop: `1px solid ${C.inkLine}`, marginTop: 28, marginBottom: 20 }} />
+          <div className="grid sm:grid-cols-2 gap-6">
+            {profile.top && (
+              <div>
+                <p style={{ fontFamily: FONT_MONO, fontSize: 10, letterSpacing: "0.1em", color: C.brass, marginBottom: 8 }}>TOP</p>
+                <p className="text-sm" style={{ color: C.ivory, lineHeight: 1.65 }}>{profile.top}</p>
+              </div>
+            )}
+            {profile.flop && (
+              <div>
+                <p style={{ fontFamily: FONT_MONO, fontSize: 10, letterSpacing: "0.1em", color: C.ivoryDim, marginBottom: 8 }}>FLOP</p>
+                <p className="text-sm" style={{ color: C.ivory, lineHeight: 1.65 }}>{profile.flop}</p>
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        </>
+      )}
+
+      {/* ── Teaching ── */}
+      {profile.teaching && (
+        <>
+          <div style={{ borderTop: `1px solid ${C.inkLine}`, marginTop: 28, marginBottom: 20 }} />
+          <p style={{ fontFamily: FONT_MONO, fontSize: 10, letterSpacing: "0.1em", color: C.ivoryDim, marginBottom: 8 }}>TEACHING</p>
+          <p className="text-sm" style={{ color: C.ivory, lineHeight: 1.65 }}>{profile.teaching}</p>
+        </>
+      )}
+
     </div>
   );
 }
