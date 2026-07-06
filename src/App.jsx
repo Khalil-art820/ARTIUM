@@ -774,7 +774,7 @@ function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", inter
           <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#27AE60", border: "1.5px solid #1E8449", display: "inline-block", flexShrink: 0 }} />
           Joined ({totalJoined})
         </span>
-        <span style={{ marginLeft: "auto", fontSize: 11, color: "#425466", fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>200+ conservatories</span>
+        <span style={{ marginLeft: 16, fontSize: 11, color: "#425466", fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>200+ conservatories</span>
       </div>
       <MapContainer
         center={[24, 14]}
