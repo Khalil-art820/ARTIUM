@@ -299,7 +299,8 @@ const CONSERVATORIES = [
 const TASTE_OPTIONS = [
   "Bach", "Mozart", "Beethoven", "Schubert", "Chopin", "Schumann", "Brahms",
   "Liszt", "Debussy", "Ravel", "Rachmaninoff", "Scriabin", "Prokofiev",
-  "Messiaen", "Baroque", "Classical Era", "Romantic Era", "Impressionism", "20th Century",
+  "Messiaen", "Handel", "Vivaldi", "Mahler", "Shostakovich", "Sibelius", "Fauré",
+  "Baroque", "Classical Era", "Romantic Era", "Impressionism", "20th Century",
 ];
 
 const PALETTE = [C.burgundy, C.forest, "#3B4A6B", "#8A5A2B", "#5B3A66"];
@@ -1688,7 +1689,7 @@ function StepTastes({ draft, toggleTaste }) {
   }
   return (
     <div>
-      <p className="text-sm mb-5" style={{ color: C.ivoryDim }}>Select at least three — composers and eras you gravitate toward, as a listener or a performer. ({draft.tastes.length} selected)</p>
+      <p className="text-sm mb-5" style={{ color: C.ivoryDim }}>Select at least three — composers and/or eras you gravitate toward, as a listener or a performer. ({draft.tastes.length} selected)</p>
       <div className="flex flex-wrap gap-2">
         {TASTE_OPTIONS.map((t) => (
           <Chip key={t} active={draft.tastes.includes(t)} onClick={() => toggleTaste(t)}>{t}</Chip>
