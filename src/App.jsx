@@ -1132,7 +1132,7 @@ export default function App() {
     setStep(0); setEditingProfile(true); setScreen("signup");
   }
   function openStudent(id, from) { setSelectedStudentId(id); setProfileBack(from); }
-  function backFromProfile() { setSelectedStudentId(null); setAppTab("messages"); }
+  function backFromProfile() { setSelectedStudentId(null); setAppTab(profileBack === "chat" ? "messages" : "map"); }
   function openChat(id) {
     setConversations((c) => (c[id] ? c : { ...c, [id]: [] }));
     setActiveChatId(id); setSelectedStudentId(null); setAppTab("messages");
