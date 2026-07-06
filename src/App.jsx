@@ -581,7 +581,7 @@ function MusicBtn({ playing, onToggle, audioRef }) {
         type="range" min="0" max="1" step="0.02" value={volume}
         onChange={changeVolume}
         className="artium-slider"
-        style={{ width: 52, accentColor: C.brass, cursor: "pointer" }}
+        style={{ width: 52, accentColor: "#888", cursor: "pointer" }}
         title="Volume"
       />
     </div>
