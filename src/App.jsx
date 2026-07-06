@@ -1356,6 +1356,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, myProfile, musicOn, on
             { n: "2", t: "Join the map", d: "Your pin appears on the global map under your conservatory alongside current students." },
             { n: "3", t: "Connect worldwide", d: "Message students at any conservatory in the world, directly." },
             { n: "4", t: "Earn while you teach", d: "Accept tutoring requests from music enthusiasts and set your own rate." },
+            { n: "5", t: "Marketing and Advertising", d: "Claim your promotional video on aclassicaltone (may be subject to fees)." },
           ].map((s) => (
             <div key={s.n} style={{ padding: "24px", background: "#FFFFFF", border: `1px solid ${C.inkLine}`, borderRadius: 10, boxShadow: "0 2px 8px rgba(10,37,64,0.05)", position: "relative" }}>
               <p style={{ position: "absolute", top: 16, right: 18, fontSize: 13, fontWeight: 700, color: C.brass, letterSpacing: 0.5, margin: 0 }}>{s.n}</p>
