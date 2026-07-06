@@ -1158,8 +1158,8 @@ export default function App() {
           .lg-split-map > :last-child { max-height: 45vh !important; overflow-y: auto; -webkit-overflow-scrolling: touch; }
         }
         input[type=range].artium-slider { -webkit-appearance: none; appearance: none; height: 2px !important; outline: none; border-radius: 2px; }
-        input[type=range].artium-slider::-webkit-slider-thumb { -webkit-appearance: none !important; appearance: none !important; width: 10px !important; height: 10px !important; border-radius: 50% !important; background: #888 !important; cursor: pointer !important; border: none !important; }
-        input[type=range].artium-slider::-moz-range-thumb { width: 10px !important; height: 10px !important; border-radius: 50% !important; background: #888 !important; border: none !important; cursor: pointer !important; }
+        input[type=range].artium-slider::-webkit-slider-thumb { -webkit-appearance: none !important; appearance: none !important; width: 7px !important; height: 7px !important; border-radius: 50% !important; background: #000 !important; cursor: pointer !important; border: none !important; }
+        input[type=range].artium-slider::-moz-range-thumb { width: 7px !important; height: 7px !important; border-radius: 50% !important; background: #000 !important; border: none !important; cursor: pointer !important; }
 
         .artium-map, .artium-map .leaflet-container { border-radius: inherit; }
         .artium-map .leaflet-tile-pane { filter: saturate(1.05) brightness(1.0) contrast(1.0); }
@@ -1327,7 +1327,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, myProfile, musicOn, on
               Every Conservatory.<br />One Network.
             </h1>
             <p style={{ color: C.ivoryDim, fontSize: 18, lineHeight: 1.65, marginTop: 20, maxWidth: 460 }}>
-              Artium connects students across the world's top conservatories — share repertoire, message peers, find teachers, and earn while you teach.
+              Artium connects students across the world's top conservatories — share repertoire, message peers and earn while you teach.
             </p>
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 32, flexWrap: "wrap" }}>
               {!myProfile && <PrimaryBtn onClick={onApply} icon={ArrowRight}>Get started free</PrimaryBtn>}
@@ -1336,8 +1336,8 @@ function Landing({ onApply, onBack, onPreview, onProfile, myProfile, musicOn, on
             {error && <p style={{ marginTop: 16, fontSize: 14, color: C.burgundy, lineHeight: 1.5 }}>{error}</p>}
           </div>
           <div style={{ borderRadius: 12, overflow: "hidden", border: `1px solid ${C.inkLine}`, boxShadow: "0 8px 32px rgba(10,37,64,0.10)" }}>
-            <div style={{ padding: "14px 18px", background: "#3a3a3a", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <button onClick={onPreview} style={{ fontSize: 14, fontWeight: 600, color: "#FFFFFF", background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: FONT_BODY, display: "inline-flex", alignItems: "center", gap: 6 }}>
+            <div style={{ padding: "14px 18px", background: "#e8e8e8", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <button onClick={onPreview} style={{ fontSize: 14, fontWeight: 600, color: C.ivory, background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: FONT_BODY, display: "inline-flex", alignItems: "center", gap: 6 }}>
                 <Globe2 size={15} /> Explore Artium's Network
               </button>
             </div>
