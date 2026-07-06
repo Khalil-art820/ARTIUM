@@ -1336,9 +1336,9 @@ function Landing({ onApply, onBack, onPreview, onProfile, myProfile, musicOn, on
             {error && <p style={{ marginTop: 16, fontSize: 14, color: C.burgundy, lineHeight: 1.5 }}>{error}</p>}
           </div>
           <div style={{ borderRadius: 12, overflow: "hidden", border: `1px solid ${C.inkLine}`, boxShadow: "0 8px 32px rgba(10,37,64,0.10)" }}>
-            <div style={{ padding: "14px 18px", background: C.brass, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ padding: "14px 18px", background: "#3a3a3a", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <button onClick={onPreview} style={{ fontSize: 14, fontWeight: 600, color: "#FFFFFF", background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: FONT_BODY, display: "inline-flex", alignItems: "center", gap: 6 }}>
-                <Globe2 size={15} /> Explore The Network
+                <Globe2 size={15} /> Explore Artium's Network
               </button>
             </div>
             <WorldMap selectedId={null} onSelect={() => {}} studentsByCons={SAMPLE_STUDENTS.reduce((a, s) => { (a[s.conservatoryId] = a[s.conservatoryId] || []).push(s); return a; }, {})} height={280} />
@@ -1352,14 +1352,14 @@ function Landing({ onApply, onBack, onPreview, onProfile, myProfile, musicOn, on
         <h2 style={{ fontSize: "clamp(28px,3.5vw,48px)", fontWeight: 700, lineHeight: 1.08, letterSpacing: 0, color: C.ivory, margin: 0, marginBottom: 48, fontFamily: "'DM Serif Display', serif" }}>Simple, from day one.</h2>
         <div className="grid sm:grid-cols-4 gap-8">
           {[
-            { n: "01", t: "Build your profile", d: "Add your conservatory, repertoire, and a performance video to stand out." },
-            { n: "02", t: "Join the map", d: "Your pin appears on the global map under your conservatory alongside current students." },
-            { n: "03", t: "Connect worldwide", d: "Message students at any conservatory in the world, directly." },
-            { n: "04", t: "Earn while you teach", d: "Accept tutoring requests from music enthusiasts and set your own rate." },
+            { n: "1", t: "Build your profile", d: "Add your conservatory, repertoire, and a performance video to stand out." },
+            { n: "2", t: "Join the map", d: "Your pin appears on the global map under your conservatory alongside current students." },
+            { n: "3", t: "Connect worldwide", d: "Message students at any conservatory in the world, directly." },
+            { n: "4", t: "Earn while you teach", d: "Accept tutoring requests from music enthusiasts and set your own rate." },
           ].map((s) => (
-            <div key={s.n} style={{ padding: "24px", background: "#FFFFFF", border: `1px solid ${C.inkLine}`, borderRadius: 10, boxShadow: "0 2px 8px rgba(10,37,64,0.05)" }}>
-              <p style={{ fontSize: 12, fontWeight: 700, color: C.brass, letterSpacing: 1, marginBottom: 12 }}>{s.n}</p>
-              <h3 style={{ fontSize: 16, fontWeight: 600, color: C.ivory, marginBottom: 8 }}>{s.t}</h3>
+            <div key={s.n} style={{ padding: "24px", background: "#FFFFFF", border: `1px solid ${C.inkLine}`, borderRadius: 10, boxShadow: "0 2px 8px rgba(10,37,64,0.05)", position: "relative" }}>
+              <p style={{ position: "absolute", top: 16, right: 18, fontSize: 13, fontWeight: 700, color: C.brass, letterSpacing: 0.5, margin: 0 }}>{s.n}</p>
+              <h3 style={{ fontSize: 16, fontWeight: 600, color: C.ivory, marginBottom: 8, marginTop: 4 }}>{s.t}</h3>
               <p style={{ fontSize: 14, color: C.ivoryDim, lineHeight: 1.65 }}>{s.d}</p>
             </div>
           ))}
