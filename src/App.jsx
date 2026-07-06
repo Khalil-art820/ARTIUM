@@ -2389,31 +2389,33 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
           </p>
           <div className={`mt-10 grid gap-6 ${singleCard ? "" : "md:grid-cols-2"}`}>
             {!studentLoggedIn && (
-              <button onClick={onLearner} style={cardStyle}>
-                <div style={{ width: 44, height: 44, borderRadius: 10, background: C.brassDim, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
-                  <Music2 size={22} color={C.brass} />
+              <button onClick={onLearner} style={{ ...cardStyle, background: "none", border: "none", padding: 0, overflow: "hidden", position: "relative", minHeight: 260 }}>
+                <div style={{ position: "absolute", inset: 0, backgroundImage: "url('/piano.png')", backgroundSize: "cover", backgroundPosition: "center", filter: "grayscale(100%) contrast(1.1) brightness(0.85)" }} />
+                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.72) 60%, rgba(0,0,0,0.25) 100%)" }} />
+                <div style={{ position: "relative", padding: 28, textAlign: "left", display: "flex", flexDirection: "column", justifyContent: "flex-end", minHeight: 260 }}>
+                  <h3 style={{ fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 8 }}>Classical music enthusiast</h3>
+                  <p style={{ color: "rgba(255,255,255,0.78)", fontSize: 13, lineHeight: 1.6, marginBottom: 20 }}>
+                    Learn from top conservatory musicians. Find a teacher who matches your level, instrument, and taste.
+                  </p>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: "#fff", fontWeight: 600, borderBottom: "1px solid rgba(255,255,255,0.5)", paddingBottom: 2, width: "fit-content" }}>
+                    {learnerLoggedOut ? "Log in" : "Find a teacher"} <ArrowRight size={13} />
+                  </span>
                 </div>
-                <h3 style={{ fontSize: 18, fontWeight: 600, color: C.ivory, marginBottom: 8 }}>Classical music enthusiast</h3>
-                <p style={{ color: C.ivoryDim, fontSize: 14, lineHeight: 1.65, marginBottom: 20 }}>
-                  Learn from top conservatory musicians. Find a teacher who matches your level, instrument, and taste.
-                </p>
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 14, color: C.brass, fontWeight: 600 }}>
-                  {learnerLoggedOut ? "Log in" : "Find a teacher"} <ArrowRight size={14} />
-                </span>
               </button>
             )}
             {(!singleCard || studentLoggedIn) && (
-              <button onClick={onStudent} style={cardStyle}>
-                <div style={{ width: 44, height: 44, borderRadius: 10, background: C.brassDim, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
-                  <Users size={22} color={C.brass} />
+              <button onClick={onStudent} style={{ ...cardStyle, background: "none", border: "none", padding: 0, overflow: "hidden", position: "relative", minHeight: 260 }}>
+                <div style={{ position: "absolute", inset: 0, backgroundImage: "url('/juilliard.png')", backgroundSize: "cover", backgroundPosition: "center top", filter: "grayscale(100%) contrast(1.1) brightness(0.85)" }} />
+                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.72) 60%, rgba(0,0,0,0.25) 100%)" }} />
+                <div style={{ position: "relative", padding: 28, textAlign: "left", display: "flex", flexDirection: "column", justifyContent: "flex-end", minHeight: 260 }}>
+                  <h3 style={{ fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 8 }}>Conservatory student</h3>
+                  <p style={{ color: "rgba(255,255,255,0.78)", fontSize: 13, lineHeight: 1.6, marginBottom: 20 }}>
+                    Connect with students at the world's top conservatories. Share repertoire, culture, and musical ideas.
+                  </p>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: "#fff", fontWeight: 600, borderBottom: "1px solid rgba(255,255,255,0.5)", paddingBottom: 2, width: "fit-content" }}>
+                    {studentLoggedIn ? "Continue" : "Enter Artium"} <ArrowRight size={13} />
+                  </span>
                 </div>
-                <h3 style={{ fontSize: 18, fontWeight: 600, color: C.ivory, marginBottom: 8 }}>Conservatory student</h3>
-                <p style={{ color: C.ivoryDim, fontSize: 14, lineHeight: 1.65, marginBottom: 20 }}>
-                  Connect with students at the world's top conservatories. Share repertoire, culture, and musical ideas.
-                </p>
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 14, color: C.brass, fontWeight: 600 }}>
-                  {studentLoggedIn ? "Continue" : "Enter Artium"} <ArrowRight size={14} />
-                </span>
               </button>
             )}
           </div>
