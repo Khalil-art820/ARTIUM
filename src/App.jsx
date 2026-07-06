@@ -495,6 +495,7 @@ function GhostBtn({ children, onClick, icon: Icon, tone = "light", disabled, sty
         border: `1px solid ${C.inkLine}`,
         borderRadius: 6,
         padding: "9px 18px",
+        whiteSpace: "nowrap",
         opacity: disabled ? 0.5 : 1,
         cursor: disabled ? "default" : "pointer",
         transition: "border-color 0.15s",
