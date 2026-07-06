@@ -483,7 +483,7 @@ function PrimaryBtn({ children, onClick, disabled, full, icon: Icon }) {
   );
 }
 
-function GhostBtn({ children, onClick, icon: Icon, tone = "light", disabled }) {
+function GhostBtn({ children, onClick, icon: Icon, tone = "light", disabled, style: extraStyle }) {
   return (
     <button
       onClick={disabled ? undefined : onClick}
@@ -498,6 +498,7 @@ function GhostBtn({ children, onClick, icon: Icon, tone = "light", disabled }) {
         opacity: disabled ? 0.5 : 1,
         cursor: disabled ? "default" : "pointer",
         transition: "border-color 0.15s",
+        ...extraStyle,
       }}
     >
       {Icon && <Icon size={15} />} {children}
