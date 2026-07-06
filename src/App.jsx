@@ -1243,6 +1243,7 @@ export default function App() {
           appTab={appTab} setAppTab={setAppTab} myProfile={myProfile}
           onApply={startApply} onHome={goHome} musicOn={musicOn} onMusicToggle={toggleMusic} audioRef={audioRef}
           onGuestTabClick={() => setShowGuestPrompt(true)} onlineCount={onlineCount} previewOnly={previewOnly}
+          hideTabs={!!selectedStudentId}
           onBack={
             selectedStudentId ? backFromProfile :
             appTab === "messages" ? () => setAppTab("map") :
@@ -1914,7 +1915,7 @@ function LoginScreen({ onSubmit, onBack, error }) {
 /* ---------------------------------------------------------------- */
 /* APP SHELL                                                          */
 /* ---------------------------------------------------------------- */
-function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, musicOn, onMusicToggle, audioRef, onBack, backLabel, onGuestTabClick, onlineCount, previewOnly }) {
+function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, musicOn, onMusicToggle, audioRef, onBack, backLabel, onGuestTabClick, onlineCount, previewOnly, hideTabs }) {
   const tabs = [
     { id: "messages", label: "Messages", icon: MessageCircle, locked: !myProfile },
   ];
@@ -1929,7 +1930,7 @@ function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, mus
           )}
           <Logo size={20} />
         </div>
-        {!previewOnly && (
+        {!previewOnly && !hideTabs && (
           <div className="flex items-center gap-1">
             {tabs.map((t) => (
               <button
