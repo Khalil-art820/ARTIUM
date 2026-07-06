@@ -1322,7 +1322,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, myProfile, musicOn, on
       <div style={{ background: C.inkSoft, borderBottom: `1px solid ${C.inkLine}` }}>
         <div className="max-w-6xl mx-auto px-8 py-20 grid md:grid-cols-2 gap-16 items-center">
           <div>
-            <p style={{ fontSize: 12.3, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.brass, borderLeft: `3px solid ${C.brass}`, paddingLeft: 10, marginBottom: 24, lineHeight: 1 }}>For conservatory musicians</p>
+            <p style={{ fontSize: 12.3, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.brass, borderLeft: `3px solid ${C.brass}`, paddingLeft: 10, marginBottom: 24, lineHeight: 1 }}>For conservatory students only</p>
             <h1 style={{ fontSize: "clamp(28px,3.5vw,48px)", fontWeight: 700, lineHeight: 1.08, letterSpacing: 0, color: C.ivory, margin: 0, fontFamily: "'DM Serif Display', serif" }}>
               Every Conservatory.<br />One Network.
             </h1>
@@ -2410,7 +2410,7 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
                 <div style={{ position: "relative", padding: 28, textAlign: "left", display: "flex", flexDirection: "column", justifyContent: "flex-end", minHeight: 260 }}>
                   <h3 style={{ fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 8 }}>Conservatory student</h3>
                   <p style={{ color: "rgba(255,255,255,0.78)", fontSize: 13, lineHeight: 1.6, marginBottom: 20 }}>
-                    Connect with students at the world's top conservatories. Share repertoire, culture, and musical ideas.
+                    Connect with conservatory students at the world's top conservatories. Share repertoire, culture, and musical ideas.
                   </p>
                   <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: "#fff", fontWeight: 600, borderBottom: "1px solid rgba(255,255,255,0.5)", paddingBottom: 2, width: "fit-content" }}>
                     {studentLoggedIn ? "Continue" : "Enter Artium"} <ArrowRight size={13} />
