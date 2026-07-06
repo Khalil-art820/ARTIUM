@@ -28,7 +28,7 @@ const C = {
   ivoryDim: "#425466",
   inkText: "#0A2540",
   inkTextDim: "#425466",
-  brass: "#2E86C1",
+  brass: "#4aab8c",
   brassDim: "rgba(46,134,193,0.10)",
   burgundy: "#DF1B41",
   forest: "#1A9E6E",
@@ -847,7 +847,7 @@ function AccessGate({ onUnlock }) {
         {error && <p style={{ color: C.burgundy, fontSize: 13, marginBottom: 12 }}>Incorrect key — try again.</p>}
         <button
           onClick={attempt}
-          style={{ marginTop: 12, width: "100%", background: "#2E86C1", color: "#FFFFFF", border: "none", borderRadius: 10, padding: "12px 0", fontSize: 15, fontWeight: 700, cursor: "pointer" }}
+          style={{ marginTop: 12, width: "100%", background: "#4aab8c", color: "#FFFFFF", border: "none", borderRadius: 10, padding: "12px 0", fontSize: 15, fontWeight: 700, cursor: "pointer" }}
         >Continue</button>
       </div>
     </div>
@@ -1158,8 +1158,8 @@ export default function App() {
           .lg-split-map > :last-child { max-height: 45vh !important; overflow-y: auto; -webkit-overflow-scrolling: touch; }
         }
         input[type=range].artium-slider { -webkit-appearance: none; appearance: none; height: 2px !important; outline: none; border-radius: 2px; }
-        input[type=range].artium-slider::-webkit-slider-thumb { -webkit-appearance: none !important; appearance: none !important; width: 10px !important; height: 10px !important; border-radius: 50% !important; background: #2E86C1 !important; cursor: pointer !important; border: none !important; }
-        input[type=range].artium-slider::-moz-range-thumb { width: 10px !important; height: 10px !important; border-radius: 50% !important; background: #2E86C1 !important; border: none !important; cursor: pointer !important; }
+        input[type=range].artium-slider::-webkit-slider-thumb { -webkit-appearance: none !important; appearance: none !important; width: 10px !important; height: 10px !important; border-radius: 50% !important; background: #4aab8c !important; cursor: pointer !important; border: none !important; }
+        input[type=range].artium-slider::-moz-range-thumb { width: 10px !important; height: 10px !important; border-radius: 50% !important; background: #4aab8c !important; border: none !important; cursor: pointer !important; }
 
         .artium-map, .artium-map .leaflet-container { border-radius: inherit; }
         .artium-map .leaflet-tile-pane { filter: saturate(1.05) brightness(1.0) contrast(1.0); }
