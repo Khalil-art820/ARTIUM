@@ -772,7 +772,7 @@ function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", inter
         </span>
         <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "#425466", fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>
           <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#27AE60", border: "1.5px solid #1E8449", display: "inline-block", flexShrink: 0 }} />
-          Joined the network ({totalJoined})
+          Joined ({totalJoined})
         </span>
         <span style={{ marginLeft: "auto", fontSize: 11, color: "#425466", fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>200+ conservatories</span>
       </div>
