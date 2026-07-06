@@ -1361,7 +1361,11 @@ function Landing({ onApply, onBack, onPreview, onProfile, myProfile, musicOn, on
             <div key={s.n} style={{ padding: "24px", background: "#FFFFFF", border: `1px solid ${C.inkLine}`, borderRadius: 10, boxShadow: "0 2px 8px rgba(10,37,64,0.05)", position: "relative" }}>
               <p style={{ position: "absolute", top: 16, right: 18, fontSize: 13, fontWeight: 700, color: C.brass, letterSpacing: 0.5, margin: 0 }}>{s.n}</p>
               <h3 style={{ fontSize: 16, fontWeight: 600, color: C.ivory, marginBottom: 8, marginTop: 4 }}>{s.t}</h3>
-              <p style={{ fontSize: 14, color: C.ivoryDim, lineHeight: 1.65 }}>{s.d}</p>
+              <p style={{ fontSize: 14, color: C.ivoryDim, lineHeight: 1.65 }}>
+                {s.n === "5"
+                  ? <>Claim your promotional video on <a href="https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==" target="_blank" rel="noreferrer" style={{ color: C.brass, fontWeight: 600, textDecoration: "none" }}>aclassicaltone</a> (may be subject to fees).</>
+                  : s.d}
+              </p>
             </div>
           ))}
         </div>
