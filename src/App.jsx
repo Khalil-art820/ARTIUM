@@ -2194,7 +2194,7 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack }) {
       {/* Header */}
       <div style={{ marginBottom: 28 }}>
         <div style={{ display: "flex", alignItems: "flex-start", gap: 16, marginBottom: 16 }}>
-          <div style={{ marginTop: -8 }}>
+          <div style={{ marginTop: 4 }}>
             <Avatar name={profile.name} id="me" size={64} photoUrl={profile.photoUrl} online />
           </div>
           <div>
