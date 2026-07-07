@@ -2161,7 +2161,7 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack }) {
     : "Not offering lessons";
 
   const Row = ({ label, children }) => (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+    <div style={{ background: "#fff", border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
       <span style={{ fontSize: 11, fontWeight: 600, color: C.brass, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
       <div style={{ fontSize: 15, color: C.ivory, lineHeight: 1.6 }}>{children}</div>
     </div>
