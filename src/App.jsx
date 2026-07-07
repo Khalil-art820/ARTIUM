@@ -2551,18 +2551,20 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
 
 /* ---- Learner: signup form ---- */
 function LearnerSignup({ onSubmit, onBack, onLogin, error }) {
-  const [name, setName] = useState("");
-  const [location, setLocation] = useState("");
+  const [step, setStep] = useState(1);
+  const [forWhom, setForWhom] = useState(""); // "self" | "other"
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [name, setName] = useState("");
+  const [location, setLocation] = useState("");
   const [instrument, setInstrument] = useState("");
   const [motivation, setMotivation] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
   const mismatch = confirmPassword.length > 0 && password !== confirmPassword;
-  const canGo = name.trim().length > 1 && location.trim().length > 1
-    && email.trim().length > 3 && password.length >= 6 && password === confirmPassword
-    && instrument.trim().length > 0 && motivation.trim().length > 5;
+  const step1Ready = forWhom !== "" && email.trim().length > 3 && password.length >= 6 && password === confirmPassword;
+  const step2Ready = name.trim().length > 1 && location.trim().length > 1 && instrument.trim().length > 0 && motivation.trim().length > 5;
 
   async function handleSubmit() {
     setSubmitting(true);
@@ -2570,57 +2572,125 @@ function LearnerSignup({ onSubmit, onBack, onLogin, error }) {
     setSubmitting(false);
   }
 
+  const isForOther = forWhom === "other";
+
   return (
     <div className="min-h-full" style={{ background: C.ink, color: C.ivory }}>
       <div className="max-w-2xl mx-auto px-6 pt-8">
         <div className="flex items-center gap-3">
-          <button onClick={onBack} style={{ color: C.ivoryDim, background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", padding: 0 }}><ChevronLeft size={18} /></button>
+          <button onClick={step === 1 ? onBack : () => setStep(1)} style={{ color: C.ivoryDim, background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", padding: 0 }}>
+            <ChevronLeft size={18} />
+          </button>
           <Logo slogan />
         </div>
-        <h2 className="mt-10" style={{ fontFamily: FONT_DISPLAY, fontSize: 30, fontWeight: 600 }}>Find your teacher</h2>
-        <p className="mt-3" style={{ color: C.ivoryDim, fontSize: 15, lineHeight: 1.6 }}>
-          Tell us a little about you, and we'll show conservatory musicians who give lessons.
-        </p>
-      </div>
-      <div className="max-w-2xl mx-auto px-6 py-10">
-        <GoogleBtn label="Sign up with Google" role="learner" />
-        <Divider />
-        <Field label="Full name">
-          <input style={inputStyle} value={name} onChange={(e) => setName(e.target.value)} placeholder="Your full name" autoComplete="off" autoFocus />
-        </Field>
-        <Field label="Where are you based?">
-          <input style={inputStyle} value={location} onChange={(e) => setLocation(e.target.value)} placeholder="City, country" autoComplete="off" />
-        </Field>
-        <Field label="Email">
-          <input style={inputStyle} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="off" />
-        </Field>
-        <Field label="Password">
-          <PasswordField value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 6 characters" autoComplete="new-password" />
-        </Field>
-        <Field label="Confirm password">
-          <PasswordField value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Re-enter your password" autoComplete="new-password" />
-        </Field>
-        {mismatch && <p className="text-sm mb-4" style={{ color: C.burgundy }}>Passwords don't match.</p>}
-        <Field label="Which instrument would you like to learn?">
-          <select style={{ ...inputStyle, background: C.inkSoft }} value={instrument} onChange={(e) => setInstrument(e.target.value)}>
-            <option value="">Select an instrument…</option>
-            {INSTRUMENT_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
-          </select>
-        </Field>
-        <Field label="Why do you want to learn, and what are your expectations?">
-          <textarea
-            style={{ ...inputStyle, resize: "vertical", minHeight: 100, lineHeight: 1.6 }}
-            value={motivation}
-            onChange={(e) => setMotivation(e.target.value)}
-            placeholder="Tell the teacher about your goals, experience level, and what you're hoping to achieve…"
-          />
-        </Field>
-        {error && <p className="text-sm mb-4" style={{ color: C.burgundy }}>{error}</p>}
-        <div className="mt-2">
-          <PrimaryBtn disabled={!canGo || submitting} onClick={handleSubmit} icon={ArrowRight}>
-            {submitting ? "Submitting…" : "Submit"}
-          </PrimaryBtn>
+
+        {/* Step indicator */}
+        <div style={{ display: "flex", gap: 6, marginTop: 28 }}>
+          {[1, 2].map((s) => (
+            <div key={s} style={{ height: 3, flex: 1, borderRadius: 99, background: step >= s ? C.brass : "#333" }} />
+          ))}
         </div>
+
+        {step === 1 ? (
+          <>
+            <h2 className="mt-8" style={{ fontFamily: FONT_DISPLAY, fontSize: 30, fontWeight: 600 }}>Create your account</h2>
+            <p className="mt-3" style={{ color: C.ivoryDim, fontSize: 15, lineHeight: 1.6 }}>
+              First, let's set up your account.
+            </p>
+          </>
+        ) : (
+          <>
+            <h2 className="mt-8" style={{ fontFamily: FONT_DISPLAY, fontSize: 30, fontWeight: 600 }}>
+              {isForOther ? "Tell us about the learner" : "Tell us about you"}
+            </h2>
+            <p className="mt-3" style={{ color: C.ivoryDim, fontSize: 15, lineHeight: 1.6 }}>
+              {isForOther
+                ? "Help us match them with the right teacher."
+                : "We'll show conservatory musicians who give lessons near you."}
+            </p>
+          </>
+        )}
+      </div>
+
+      <div className="max-w-2xl mx-auto px-6 py-10">
+        {step === 1 ? (
+          <>
+            {/* Who is this for? */}
+            <Field label="Who is this registration for?">
+              <div style={{ display: "flex", gap: 10 }}>
+                {[
+                  { value: "self", label: "For me" },
+                  { value: "other", label: "On behalf of someone (e.g. my child)" },
+                ].map((opt) => (
+                  <button key={opt.value} onClick={() => setForWhom(opt.value)}
+                    style={{
+                      flex: 1, padding: "12px 8px", borderRadius: 8, fontSize: 13, fontWeight: 600,
+                      border: `1.5px solid ${forWhom === opt.value ? C.brass : "#444"}`,
+                      background: forWhom === opt.value ? "rgba(74,171,140,0.1)" : "transparent",
+                      color: forWhom === opt.value ? C.brass : C.ivoryDim,
+                      cursor: "pointer", textAlign: "center", lineHeight: 1.4,
+                    }}>
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </Field>
+
+            <GoogleBtn label="Sign up with Google" role="learner" />
+            <Divider />
+
+            <Field label="Email">
+              <input style={inputStyle} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="off" />
+            </Field>
+            <Field label="Password">
+              <PasswordField value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 6 characters" autoComplete="new-password" />
+            </Field>
+            <Field label="Confirm password">
+              <PasswordField value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Re-enter your password" autoComplete="new-password" />
+            </Field>
+            {mismatch && <p className="text-sm mb-4" style={{ color: C.burgundy }}>Passwords don't match.</p>}
+            {error && <p className="text-sm mb-4" style={{ color: C.burgundy }}>{error}</p>}
+            <div className="mt-2">
+              <PrimaryBtn disabled={!step1Ready} onClick={() => setStep(2)} icon={ArrowRight}>Continue</PrimaryBtn>
+            </div>
+            <p style={{ textAlign: "center", marginTop: 20, fontSize: 14, color: C.ivoryDim }}>
+              Already have an account?{" "}
+              <button onClick={onLogin} style={{ color: C.brass, fontWeight: 600, background: "none", border: "none", cursor: "pointer", fontSize: 14 }}>Log in</button>
+            </p>
+          </>
+        ) : (
+          <>
+            <Field label={isForOther ? "Learner's full name" : "Your full name"}>
+              <input style={inputStyle} value={name} onChange={(e) => setName(e.target.value)}
+                placeholder={isForOther ? "Your child's name" : "Your full name"} autoComplete="off" autoFocus />
+            </Field>
+            <Field label={isForOther ? "Where is the learner based?" : "Where are you based?"}>
+              <input style={inputStyle} value={location} onChange={(e) => setLocation(e.target.value)} placeholder="City, country" autoComplete="off" />
+            </Field>
+            <Field label={isForOther ? "Which instrument would they like to learn?" : "Which instrument would you like to learn?"}>
+              <select style={{ ...inputStyle, background: C.inkSoft }} value={instrument} onChange={(e) => setInstrument(e.target.value)}>
+                <option value="">Select an instrument…</option>
+                {INSTRUMENT_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
+              </select>
+            </Field>
+            <Field label={isForOther ? "Goals and expectations for the learner" : "Why do you want to learn, and what are your expectations?"}>
+              <textarea
+                style={{ ...inputStyle, resize: "vertical", minHeight: 100, lineHeight: 1.6 }}
+                value={motivation}
+                onChange={(e) => setMotivation(e.target.value)}
+                placeholder={isForOther
+                  ? "Tell the teacher about your child's goals, current level, and what you're hoping to achieve…"
+                  : "Tell the teacher about your goals, experience level, and what you're hoping to achieve…"}
+              />
+            </Field>
+            {error && <p className="text-sm mb-4" style={{ color: C.burgundy }}>{error}</p>}
+            <div className="mt-2">
+              <PrimaryBtn disabled={!step2Ready || submitting} onClick={handleSubmit} icon={ArrowRight}>
+                {submitting ? "Submitting…" : "Find my teacher"}
+              </PrimaryBtn>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
