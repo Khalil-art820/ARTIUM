@@ -937,11 +937,12 @@ export default function App() {
         });
       } else {
         // Google OAuth user with no profile yet — route to signup flow to collect info.
-        // Only act if the role key is present; if it's already been removed a prior
-        // auth-state-change already handled the routing — don't overwrite it.
-        const googleRole = localStorage.getItem("artium_google_role");
+        // Use the ref (read at mount) as primary so the key is available even if
+        // the auth effect fires after sessionStorage was already cleared.
+        const googleRole = pendingGoogleRoleRef.current || sessionStorage.getItem("artium_google_role");
         if (googleRole) {
-          localStorage.removeItem("artium_google_role");
+          pendingGoogleRoleRef.current = "";
+          sessionStorage.removeItem("artium_google_role");
           const googleName = authUser.user_metadata?.full_name || authUser.user_metadata?.name || "";
           if (googleRole === "learner") {
             setLearnerGoogleName(googleName);
@@ -973,6 +974,8 @@ export default function App() {
   const [learnerLoggedOut, setLearnerLoggedOut] = useState(false);
   const [studentLoggedOut, setStudentLoggedOut] = useState(false);
   const [learnerGoogleName, setLearnerGoogleName] = useState("");
+  // Read Google role eagerly on mount so it's available before auth state fires
+  const pendingGoogleRoleRef = React.useRef(sessionStorage.getItem("artium_google_role") || "");
   const [teachRequests, setTeachRequests] = useState({});
 
   const [draft, setDraft] = useState(emptyDraft());
@@ -1579,7 +1582,7 @@ function GoogleBtn({ label = "Continue with Google", role = "student" }) {
   const [loading, setLoading] = useState(false);
   async function handleClick() {
     setLoading(true);
-    localStorage.setItem("artium_google_role", role);
+    sessionStorage.setItem("artium_google_role", role);
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: window.location.origin },
