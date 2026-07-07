@@ -1230,7 +1230,7 @@ export default function App() {
         />
       )}
 
-      {screen === "landing" && <Landing onApply={startApply} onBack={backToEntry} onPreview={startPreview} onProfile={goToProfile} myProfile={myProfile} musicOn={musicOn} onMusicToggle={toggleMusic} audioRef={audioRef} error={authError} onlineCount={onlineCount} />}
+      {screen === "landing" && <Landing onApply={startApply} onBack={backToEntry} onPreview={startPreview} onProfile={goToProfile} onLogin={startLogin} myProfile={myProfile} musicOn={musicOn} onMusicToggle={toggleMusic} audioRef={audioRef} error={authError} onlineCount={onlineCount} />}
       {screen === "login" && <LoginScreen onSubmit={handleLogin} onBack={goHome} error={authError} />}
       {screen === "signup" && (
         <SignupFlow
@@ -1310,7 +1310,7 @@ export default function App() {
 /* ---------------------------------------------------------------- */
 /* LANDING                                                             */
 /* ---------------------------------------------------------------- */
-function Landing({ onApply, onBack, onPreview, onProfile, myProfile, musicOn, onMusicToggle, audioRef, error, onlineCount }) {
+function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, musicOn, onMusicToggle, audioRef, error, onlineCount }) {
   return (
     <div style={{ background: "#FFFFFF", color: C.ivory, minHeight: "100vh" }}>
       {/* Nav */}
@@ -1354,7 +1354,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, myProfile, musicOn, on
               Artium connects students across the world's top conservatories — share repertoire, message peers and earn while you teach.
             </p>
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 32, flexWrap: "wrap" }}>
-              {!myProfile && <PrimaryBtn onClick={onApply} icon={ArrowRight}>Get started free</PrimaryBtn>}
+              {!myProfile && <PrimaryBtn onClick={onLogin} icon={ArrowRight}>Log in</PrimaryBtn>}
               <span style={{ fontSize: 13, color: C.ivoryDim }}>{myProfile ? "You're signed in." : "No credit card required."}</span>
             </div>
             {error && <p style={{ marginTop: 16, fontSize: 14, color: C.burgundy, lineHeight: 1.5 }}>{error}</p>}
