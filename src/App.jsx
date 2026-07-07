@@ -1315,7 +1315,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, myProfile, musicOn, on
     <div style={{ background: "#FFFFFF", color: C.ivory, minHeight: "100vh" }}>
       {/* Nav */}
       <div style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#FFFFFF" }}>
-        <div className="max-w-6xl mx-auto px-8" style={{ height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div className="max-w-6xl mx-auto px-8" style={{ height: 64, display: "flex", alignItems: "center" }}>
           <div className="flex items-center gap-3">
             {!myProfile && (
               <button onClick={onBack} style={{ color: C.ivoryDim, background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", padding: 0 }}>
@@ -1324,7 +1324,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, myProfile, musicOn, on
             )}
             <Logo size={22} />
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3" style={{ marginLeft: "auto" }}>
             <MusicBtn playing={musicOn} onToggle={onMusicToggle} audioRef={audioRef} />
             {onlineCount != null && (
               <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 13, color: C.ivoryDim }}>
@@ -1334,7 +1334,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, myProfile, musicOn, on
               </span>
             )}
             {myProfile && (
-              <button onClick={onProfile} title="My profile">
+              <button onClick={onProfile} title="My profile" style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}>
                 <Avatar name={myProfile.name} id="me" size={36} photoUrl={myProfile.photoUrl} online />
               </button>
             )}
