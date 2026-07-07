@@ -1796,36 +1796,48 @@ function StepTopFlop({ draft, update }) {
 
 function StepReview({ draft }) {
   const cons = CONSERVATORIES.find((c) => c.id === draft.conservatoryId);
+  const teachingText = draft.teaching.open
+    ? `${draft.teaching.mode === "online" ? "Online" : draft.teaching.mode === "in-person" ? "In-person" : "Online & in-person"} · €${draft.teaching.price}/session`
+    : "Not offering lessons";
+
+  const Card = ({ label, children }) => (
+    <div style={{ background: "#fff", border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "14px 18px", display: "flex", flexDirection: "column", gap: 6 }}>
+      <span style={{ fontSize: 11, fontWeight: 600, color: C.brass, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
+      <div style={{ fontSize: 14, color: C.ivory, lineHeight: 1.6 }}>{children}</div>
+    </div>
+  );
+
   return (
-    <div className="rounded-2xl p-6" style={{ background: C.parchment, color: C.inkText }}>
-      <div className="flex items-center gap-4 mb-5">
-        <Avatar name={draft.name || "?"} photoUrl={draft.photoUrl} size={56} />
+    <div>
+      <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 24 }}>
+        <Avatar name={draft.name || "?"} photoUrl={draft.photoUrl} size={60} />
         <div>
-          <p style={{ fontFamily: FONT_DISPLAY, fontSize: 20, fontWeight: 600 }}>{draft.name || "—"}</p>
-          <p style={{ fontSize: 13, color: C.inkTextDim }}>{draft.instrument || "—"} · {draft.years || "—"} · {cons ? `${cons.name}, ${cons.city}` : "No conservatory chosen"}</p>
+          <p style={{ fontSize: 20, fontWeight: 700, color: C.ivory, margin: 0 }}>{draft.name || "—"}</p>
+          <p style={{ fontSize: 13, color: C.ivoryDim, margin: "3px 0 0" }}>{[draft.instrument, draft.years].filter(Boolean).join(" · ")}</p>
+          {cons && <p style={{ fontSize: 13, color: C.ivoryDim, margin: "1px 0 0" }}>{cons.name}, {cons.city}</p>}
         </div>
       </div>
-      <div className="mt-5 grid sm:grid-cols-2 gap-5 text-sm">
-        <div>
-          <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.inkTextDim }}>MUSICAL PREFERENCES</p>
-          <p className="mt-1">{draft.tastes.join(", ") || "—"}</p>
-        </div>
-        <div>
-          <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.inkTextDim }}>CURRENT REPERTOIRE</p>
-          <p className="mt-1">{draft.pieces.map((p) => p.title).join(", ") || "—"}</p>
-        </div>
-        <div>
-          <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.inkTextDim }}>TOP</p>
-          <p className="mt-1">{draft.top || "—"}</p>
-        </div>
-        <div>
-          <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.inkTextDim }}>FLOP</p>
-          <p className="mt-1">{draft.flop || "—"}</p>
-        </div>
-        <div>
-          <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.inkTextDim }}>TEACHING</p>
-          <p className="mt-1">{draft.teaching.open ? `${teachingModeLabel(draft.teaching.mode)}${draft.teaching.price ? ` · €${draft.teaching.price}/session` : ""}` : "Not offering lessons"}</p>
-        </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+        {draft.tastes.length > 0 && (
+          <Card label="Musical preferences">
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+              {draft.tastes.map((t) => (
+                <span key={t} style={{ fontSize: 12, padding: "2px 9px", borderRadius: 20, border: `1px solid ${C.inkLine}`, color: C.ivory, background: C.inkSoft }}>{t}</span>
+              ))}
+            </div>
+          </Card>
+        )}
+        {draft.pieces.length > 0 && (
+          <Card label="Current repertoire">
+            {draft.pieces.map((p, i) => (
+              <div key={i}><span style={{ fontWeight: 600 }}>{p.title}</span><span style={{ color: C.ivoryDim }}> — {p.composer}</span></div>
+            ))}
+          </Card>
+        )}
+        {draft.top && <Card label="Recent win">{draft.top}</Card>}
+        {draft.flop && <Card label="Current challenge">{draft.flop}</Card>}
+        <Card label="Teaching">{teachingText}</Card>
+        {draft.composerDay && <Card label="A day with a composer">{draft.composerDay}</Card>}
       </div>
     </div>
   );
