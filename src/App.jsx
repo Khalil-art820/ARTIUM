@@ -1809,8 +1809,8 @@ function StepReview({ draft }) {
 
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 24 }}>
-        <Avatar name={draft.name || "?"} photoUrl={draft.photoUrl} size={60} />
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 16, marginBottom: 24 }}>
+        <div style={{ marginTop: -8 }}><Avatar name={draft.name || "?"} photoUrl={draft.photoUrl} size={60} /></div>
         <div>
           <p style={{ fontSize: 20, fontWeight: 700, color: C.ivory, margin: 0 }}>{draft.name || "—"}</p>
           <p style={{ fontSize: 13, color: C.ivoryDim, margin: "3px 0 0" }}>{[draft.instrument, draft.years].filter(Boolean).join(" · ")}</p>
