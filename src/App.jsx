@@ -366,7 +366,7 @@ const emptyDraft = () => ({
   tastes: [],
   pieces: [],
   videoLink: "",
-  top: "", flop: "",
+  top: "", flop: "", composerDay: "",
   photoUrl: "",
   teaching: { open: false, mode: "", price: "" },
 });
@@ -1782,6 +1782,16 @@ function StepTopFlop({ draft, update }) {
         />
       </Field>
       <p className="text-xs -mt-4" style={{ color: C.ivoryDim, fontFamily: FONT_MONO }}>Whatever's been hard lately — this isn't graded.</p>
+
+      <Field label="If you could spend a day with any composer in history, who would it be — and why?">
+        <textarea
+          rows={3}
+          style={{ ...inputStyle, resize: "vertical", lineHeight: 1.5 }}
+          value={draft.composerDay}
+          onChange={(e) => update({ composerDay: e.target.value })}
+          placeholder="Bach, to ask him about the Goldberg Variations. Satie, just to see what a Tuesday looks like for him…"
+        />
+      </Field>
     </div>
   );
 }
@@ -1920,9 +1930,7 @@ function LoginScreen({ onSubmit, onBack, error }) {
 /* APP SHELL                                                          */
 /* ---------------------------------------------------------------- */
 function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, musicOn, onMusicToggle, audioRef, onBack, backLabel, onGuestTabClick, onlineCount, previewOnly, hideTabs }) {
-  const tabs = [
-    { id: "messages", label: "Messages", icon: MessageCircle, locked: !myProfile },
-  ];
+  const tabs = [];
   return (
     <div className="min-h-full flex flex-col" style={{ background: C.inkSoft, color: C.ivory }}>
       <div className="px-6 flex items-center justify-between gap-4" style={{ height: 60, background: "#FFFFFF", borderBottom: `1px solid ${C.inkLine}` }}>
@@ -2245,6 +2253,7 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack }) {
         {profile.top && <Row label="Recent win">{profile.top}</Row>}
         {profile.flop && <Row label="Current challenge">{profile.flop}</Row>}
         <Row label="Teaching">{teachingText}</Row>
+        {profile.composerDay && <Row label="A day with a composer">{profile.composerDay}</Row>}
 
       </div>
     </div>
