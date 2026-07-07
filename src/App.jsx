@@ -2224,18 +2224,12 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack }) {
           <div style={{ marginTop: 4 }}>
             <Avatar name={profile.name} id="me" size={64} photoUrl={profile.photoUrl} online />
           </div>
-          <div>
+          <div style={{ flex: 1 }}>
             <h2 style={{ fontSize: 20, fontWeight: 700, color: C.ivory, margin: 0, lineHeight: 1.3 }}>{profile.name}</h2>
             <p style={{ fontSize: 13, color: C.ivoryDim, margin: "3px 0 0", lineHeight: 1.5 }}>
               {[profile.instrument, profile.year].filter(Boolean).join(" · ")}
             </p>
             {cons && <p style={{ fontSize: 13, color: C.ivoryDim, margin: "1px 0 0" }}>{cons.name}, {cons.city}</p>}
-            {(() => { const linkMeta = videoLinkMeta(profile.videoLink); return linkMeta ? (
-              <a href={profile.videoLink} target="_blank" rel="noreferrer"
-                style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: C.brass, textDecoration: "none", marginTop: 4 }}>
-                <linkMeta.Icon size={13} /> Performance video on {linkMeta.label}
-              </a>
-            ) : null; })()}
           </div>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -2262,8 +2256,24 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack }) {
 
       {/* Bio */}
       {profile.bio && (
-        <p style={{ fontSize: 15, color: C.ivoryDim, lineHeight: 1.75, marginBottom: 32 }}>{profile.bio}</p>
+        <p style={{ fontSize: 15, color: C.ivoryDim, lineHeight: 1.75, marginBottom: 24 }}>{profile.bio}</p>
       )}
+
+      {/* Video link card */}
+      {(() => { const linkMeta = videoLinkMeta(profile.videoLink); return linkMeta ? (
+        <a href={profile.videoLink} target="_blank" rel="noreferrer"
+          style={{ display: "flex", alignItems: "center", gap: 16, padding: 16, borderRadius: 16, border: `1px solid ${C.inkLine}`, textDecoration: "none", color: "inherit", marginBottom: 24 }}>
+          <div style={{ width: 52, height: 52, background: colorFor("me"), borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <Play size={20} color={C.ivory} />
+          </div>
+          <div>
+            <p style={{ fontSize: 13, fontWeight: 600 }}>Watch performance on {linkMeta.label}</p>
+            <p style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: C.ivoryDim }}><linkMeta.Icon size={12} /> Opens in a new tab</p>
+          </div>
+        </a>
+      ) : (
+        <p style={{ fontSize: 13, color: C.ivoryDim, marginBottom: 24 }}>No performance video shared.</p>
+      ); })()}
 
 
       {/* Data grid — 2 columns */}
