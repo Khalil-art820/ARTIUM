@@ -2171,17 +2171,18 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack }) {
     <div style={{ maxWidth: 640, margin: "0 auto", padding: "40px 24px" }}>
 
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, marginBottom: 32 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
-          <Avatar name={profile.name} id="me" size={68} photoUrl={profile.photoUrl} online />
+      <div style={{ marginBottom: 28 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 16 }}>
+          <Avatar name={profile.name} id="me" size={64} photoUrl={profile.photoUrl} online />
           <div>
-            <h2 style={{ fontSize: 22, fontWeight: 700, color: C.ivory, margin: 0, lineHeight: 1.2 }}>{profile.name}</h2>
-            <p style={{ fontSize: 14, color: C.ivoryDim, margin: "4px 0 0", lineHeight: 1.5 }}>
-              {[profile.instrument, profile.year, cons ? `${cons.name}, ${cons.city}` : null].filter(Boolean).join("  ·  ")}
+            <h2 style={{ fontSize: 20, fontWeight: 700, color: C.ivory, margin: 0, lineHeight: 1.3 }}>{profile.name}</h2>
+            <p style={{ fontSize: 13, color: C.ivoryDim, margin: "3px 0 0", lineHeight: 1.5 }}>
+              {[profile.instrument, profile.year].filter(Boolean).join(" · ")}
             </p>
+            {cons && <p style={{ fontSize: 13, color: C.ivoryDim, margin: "1px 0 0" }}>{cons.name}, {cons.city}</p>}
           </div>
         </div>
-        <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <GhostBtn onClick={onEdit} icon={Pencil}>Edit</GhostBtn>
           {onLogout && <GhostBtn onClick={onLogout}>Log out</GhostBtn>}
           {onDeleteAccount && !confirmDelete && (
