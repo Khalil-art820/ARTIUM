@@ -1985,7 +1985,8 @@ function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, mus
           {!myProfile ? (
             !previewOnly && <PrimaryBtn onClick={onApply}>Sign up</PrimaryBtn>
           ) : (
-            <button onClick={() => setAppTab("profile")} title="My profile">
+            <button onClick={hideTabs ? undefined : () => setAppTab("profile")} title={hideTabs ? undefined : "My profile"}
+              style={{ background: "none", border: "none", padding: 0, cursor: hideTabs ? "default" : "pointer" }}>
               <Avatar name={myProfile.name} id="me" size={32} photoUrl={myProfile.photoUrl} online />
             </button>
           )}
