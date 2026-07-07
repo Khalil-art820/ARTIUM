@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
   Search, Send,
-  ChevronRight, Check, X, Instagram, Facebook,
+  ChevronRight, Check, X, Instagram, Facebook, Youtube,
   Music2, Users, MessageCircle, ArrowRight, ArrowLeft, Play, Pause, Globe2,
   Volume1, Volume2, VolumeX,
   Pencil, Plus, Trash2, Home, Upload, Eye, EyeOff, ChevronLeft,
@@ -1612,7 +1612,7 @@ function StepAccount({ draft, update, error }) {
 }
 
 function StepIntro({ draft, update }) {
-  const linkValid = !draft.videoLink || /instagram\.com|facebook\.com|fb\.com|fb\.watch/i.test(draft.videoLink);
+  const linkValid = !draft.videoLink || /instagram\.com|facebook\.com|fb\.com|fb\.watch|youtube\.com|youtu\.be/i.test(draft.videoLink);
   const instrumentIsOther = draft.instrument && !INSTRUMENT_OPTIONS.includes(draft.instrument);
   const [otherInstrument, setOtherInstrument] = useState(instrumentIsOther);
   return (
@@ -1645,7 +1645,7 @@ function StepIntro({ draft, update }) {
       <div className="mt-2">
         <p className="text-xs mb-3" style={{ fontFamily: FONT_MONO, color: C.ivoryDim, letterSpacing: 0.5 }}>OPTIONAL</p>
         <Field label="Link to a performance video">
-          <input style={inputStyle} value={draft.videoLink} onChange={(e) => update({ videoLink: e.target.value })} placeholder="https://instagram.com/... or https://facebook.com/..." />
+          <input style={inputStyle} value={draft.videoLink} onChange={(e) => update({ videoLink: e.target.value })} placeholder="https://instagram.com/... or https://youtube.com/..." />
         </Field>
         <p className="text-xs -mt-4" style={{ color: linkValid ? C.ivoryDim : C.burgundy, fontFamily: FONT_MONO }}>
           {linkValid ? "Instagram or Facebook links only." : "Only Instagram or Facebook links are accepted."}
@@ -2096,8 +2096,11 @@ function videoLinkMeta(url) {
   if (!url) return null;
   const isInstagram = /instagram\.com/i.test(url);
   const isFacebook = /facebook\.com|fb\.com|fb\.watch/i.test(url);
-  if (!isInstagram && !isFacebook) return null;
-  return { Icon: isInstagram ? Instagram : Facebook, label: isInstagram ? "Instagram" : "Facebook" };
+  const isYoutube = /youtube\.com|youtu\.be/i.test(url);
+  if (!isInstagram && !isFacebook && !isYoutube) return null;
+  return isInstagram ? { Icon: Instagram, label: "Instagram" }
+    : isYoutube ? { Icon: Youtube, label: "YouTube" }
+    : { Icon: Facebook, label: "Facebook" };
 }
 
 function StudentProfile({ student, conservatory, onBack, onMessage, locked, onApply }) {
