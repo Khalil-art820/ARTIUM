@@ -1645,7 +1645,7 @@ function StepIntro({ draft, update }) {
       <div className="mt-2">
         <p className="text-xs mb-3" style={{ fontFamily: FONT_MONO, color: C.ivoryDim, letterSpacing: 0.5 }}>OPTIONAL</p>
         <Field label="Link to a performance video">
-          <input style={inputStyle} value={draft.videoLink} onChange={(e) => update({ videoLink: e.target.value })} placeholder="https://instagram.com/... or https://facebook.com/..." />
+          <input style={inputStyle} value={draft.videoLink} onChange={(e) => update({ videoLink: e.target.value })} placeholder="https://instagram.com/... or https://facebook.com/... or https://youtube.com/..." />
         </Field>
         <p className="text-xs -mt-4" style={{ color: linkValid ? C.ivoryDim : C.burgundy, fontFamily: FONT_MONO }}>
           {linkValid ? "Instagram, Facebook or YouTube links only." : "Only Instagram, Facebook or YouTube links are accepted."}
