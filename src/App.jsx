@@ -2216,14 +2216,14 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack }) {
       )}
 
 
-      {/* Data grid */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
+      {/* Data grid — 2 columns */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
 
         {(profile.tastes || []).length > 0 && (
           <Row label="Musical preferences">
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 4 }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 4 }}>
               {profile.tastes.map((t) => (
-                <span key={t} style={{ fontSize: 13, padding: "4px 12px", borderRadius: 20, border: `1px solid ${C.inkLine}`, color: C.ivory, background: "#fff" }}>{t}</span>
+                <span key={t} style={{ fontSize: 12, padding: "3px 10px", borderRadius: 20, border: `1px solid ${C.inkLine}`, color: C.ivory, background: C.inkSoft }}>{t}</span>
               ))}
             </div>
           </Row>
@@ -2231,9 +2231,9 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack }) {
 
         {(profile.pieces || []).length > 0 && (
           <Row label="Current repertoire">
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 4 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
               {profile.pieces.map((p, i) => (
-                <div key={i} style={{ fontSize: 15, color: C.ivory }}>
+                <div key={i} style={{ fontSize: 14, color: C.ivory }}>
                   <span style={{ fontWeight: 600 }}>{p.title}</span>
                   <span style={{ color: C.ivoryDim }}> — {p.composer}</span>
                 </div>
