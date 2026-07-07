@@ -2180,6 +2180,12 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack }) {
               {[profile.instrument, profile.year].filter(Boolean).join(" · ")}
             </p>
             {cons && <p style={{ fontSize: 13, color: C.ivoryDim, margin: "1px 0 0" }}>{cons.name}, {cons.city}</p>}
+            {(() => { const linkMeta = videoLinkMeta(profile.videoLink); return linkMeta ? (
+              <a href={profile.videoLink} target="_blank" rel="noreferrer"
+                style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: C.brass, textDecoration: "none", marginTop: 4 }}>
+                <linkMeta.Icon size={13} /> Performance video on {linkMeta.label}
+              </a>
+            ) : null; })()}
           </div>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -2209,16 +2215,6 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack }) {
         <p style={{ fontSize: 15, color: C.ivoryDim, lineHeight: 1.75, marginBottom: 32 }}>{profile.bio}</p>
       )}
 
-      {/* Video link */}
-      {(() => {
-        const linkMeta = videoLinkMeta(profile.videoLink);
-        return linkMeta ? (
-          <a href={profile.videoLink} target="_blank" rel="noreferrer"
-            style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 14, color: C.brass, textDecoration: "none", marginBottom: 32 }}>
-            <linkMeta.Icon size={14} /> Performance video on {linkMeta.label}
-          </a>
-        ) : null;
-      })()}
 
       {/* Data grid */}
       <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
