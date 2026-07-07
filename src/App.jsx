@@ -941,6 +941,7 @@ export default function App() {
         localStorage.removeItem("artium_google_role");
         const googleName = authUser.user_metadata?.full_name || authUser.user_metadata?.name || "";
         if (googleRole === "learner") {
+          setLearnerGoogleName(googleName);
           setScreen("learnerSignup");
         } else {
           setDraft((d) => ({ ...d, name: googleName, email: authUser.email || "", password: "__google__", confirmPassword: "__google__" }));
@@ -967,6 +968,7 @@ export default function App() {
   const [learnerProfile, setLearnerProfile] = useState(null);
   const [learnerLoggedOut, setLearnerLoggedOut] = useState(false);
   const [studentLoggedOut, setStudentLoggedOut] = useState(false);
+  const [learnerGoogleName, setLearnerGoogleName] = useState("");
   const [teachRequests, setTeachRequests] = useState({});
 
   const [draft, setDraft] = useState(emptyDraft());
@@ -1048,6 +1050,18 @@ export default function App() {
   }
   async function submitLearner({ name, location, email, password, instrument, motivation }) {
     setAuthError("");
+    if (password === "__google__") {
+      // Google OAuth user — already authenticated, just insert profile
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) { setAuthError("Session expired. Please try again."); return; }
+      const { error: insertError } = await supabase.from("profiles").insert({ id: authUser.id, role: "learner", name, location, instrument, bio: motivation, approved: true });
+      if (insertError) { setAuthError(insertError.message); return; }
+      setLearnerGoogleName("");
+      setLearnerProfile({ name, location });
+      setLearnerLoggedOut(false);
+      setScreen("learnerMap");
+      return;
+    }
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -1067,7 +1081,7 @@ export default function App() {
       setScreen("confirmEmail");
     }
   }
-  function backToEntry() { setScreen("entry"); }
+  function backToEntry() { setLearnerGoogleName(""); setScreen("entry"); }
   function sendTeachRequest(teacherId) {
     setTeachRequests((r) => ({ ...r, [teacherId]: "pending" }));
     // No backend yet: simulate the teacher receiving and accepting the request.
@@ -1207,7 +1221,7 @@ export default function App() {
       )}
 
       {screen === "entry" && <EntryGate onLearner={chooseLearner} onStudent={chooseStudent} onLogin={startLogin} learnerProfile={learnerProfile} learnerLoggedOut={learnerLoggedOut} studentLoggedIn={!!myProfile} musicOn={musicOn} onMusicToggle={toggleMusic} audioRef={audioRef} onlineCount={onlineCount} />}
-      {screen === "learnerSignup" && <LearnerSignup onSubmit={submitLearner} onBack={backToEntry} onLogin={startLogin} error={authError} />}
+      {screen === "learnerSignup" && <LearnerSignup onSubmit={submitLearner} onBack={backToEntry} onLogin={startLogin} error={authError} googleName={learnerGoogleName} />}
       {screen === "learnerMap" && (
         <LearnerScreen
           learner={learnerProfile}
@@ -2550,13 +2564,14 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
 }
 
 /* ---- Learner: signup form ---- */
-function LearnerSignup({ onSubmit, onBack, onLogin, error }) {
-  const [step, setStep] = useState(1);
-  const [forWhom, setForWhom] = useState(""); // "self" | "other"
+function LearnerSignup({ onSubmit, onBack, onLogin, error, googleName = "" }) {
+  const isGoogle = googleName.length > 0;
+  const [step, setStep] = useState(isGoogle ? 2 : 1);
+  const [forWhom, setForWhom] = useState(isGoogle ? "self" : ""); // "self" | "other"
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [name, setName] = useState("");
+  const [password, setPassword] = useState(isGoogle ? "__google__" : "");
+  const [confirmPassword, setConfirmPassword] = useState(isGoogle ? "__google__" : "");
+  const [name, setName] = useState(googleName);
   const [location, setLocation] = useState("");
   const [instrument, setInstrument] = useState("");
   const [motivation, setMotivation] = useState("");
