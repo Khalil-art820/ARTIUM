@@ -1408,7 +1408,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, myProfile, musicOn, on
 /* ---------------------------------------------------------------- */
 /* SIGNUP FLOW                                                        */
 /* ---------------------------------------------------------------- */
-const STEP_LABELS = ["Introduce yourself", "Choose your conservatory", "Your musical voice", "Current repertoire", "Top & Flop", "Teaching", "Review & submit"];
+const STEP_LABELS = ["Introduce yourself", "Choose your conservatory", "Your musical voice", "Current repertoire", "Top | Flop | Composer", "Teaching", "Review & submit"];
 
 function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubmit, onCancel, onHome, authError }) {
   const [submitting, setSubmitting] = useState(false);
@@ -1767,10 +1767,9 @@ function StepTopFlop({ draft, update }) {
           style={{ ...inputStyle, resize: "vertical", lineHeight: 1.5 }}
           value={draft.top}
           onChange={(e) => update({ top: e.target.value })}
-          placeholder="Finishing an exam, finally nailing a piece, falling back in love with something you're playing, finishing a composition…"
+          placeholder="Whatever's been a win lately, big or small — finishing an exam, finally nailing a piece…"
         />
       </Field>
-      <p className="text-xs mb-6 -mt-4" style={{ color: C.ivoryDim, fontFamily: FONT_MONO }}>Whatever's been a win lately, big or small.</p>
 
       <Field label="Flop — what you're struggling with right now">
         <textarea
@@ -1778,10 +1777,9 @@ function StepTopFlop({ draft, update }) {
           style={{ ...inputStyle, resize: "vertical", lineHeight: 1.5 }}
           value={draft.flop}
           onChange={(e) => update({ flop: e.target.value })}
-          placeholder="A technical passage that won't cooperate, a piece you can't connect with yet, a wall you keep hitting…"
+          placeholder="Whatever's been hard lately — a technical passage, a wall you keep hitting. This isn't graded."
         />
       </Field>
-      <p className="text-xs -mt-4" style={{ color: C.ivoryDim, fontFamily: FONT_MONO }}>Whatever's been hard lately — this isn't graded.</p>
 
       <Field label="If you could spend a day with any composer in history, who would it be — and why?">
         <textarea
