@@ -1408,7 +1408,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, myProfile, musicOn, on
 /* ---------------------------------------------------------------- */
 /* SIGNUP FLOW                                                        */
 /* ---------------------------------------------------------------- */
-const STEP_LABELS = ["Introduce yourself", "Choose your conservatory", "Your musical voice", "Current repertoire", "Top | Flop | Composer", "Teaching", "Review & submit"];
+const STEP_LABELS = ["Introduce yourself", "Choose your conservatory", "Your musical voice", "Current repertoire", "Top | Flop | Composer", "Teaching", "Review and submit"];
 
 function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubmit, onCancel, onHome, authError }) {
   const [submitting, setSubmitting] = useState(false);
