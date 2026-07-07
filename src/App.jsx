@@ -2132,12 +2132,6 @@ function StudentProfile({ student, conservatory, onBack, onMessage, locked, onAp
               {[student.instrument, student.year].filter(Boolean).join(" · ")}
             </p>
             {conservatory && <p style={{ fontSize: 13, color: C.ivoryDim, margin: "1px 0 0" }}>{conservatory.name}, {conservatory.city}</p>}
-            {linkMeta && (
-              <a href={student.videoLink} target="_blank" rel="noreferrer"
-                style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: C.brass, textDecoration: "none", marginTop: 4 }}>
-                <linkMeta.Icon size={13} /> Performance video on {linkMeta.label}
-              </a>
-            )}
           </div>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
@@ -2151,10 +2145,21 @@ function StudentProfile({ student, conservatory, onBack, onMessage, locked, onAp
 
       {/* Bio */}
       {student.bio && (
-        <p style={{ fontSize: 15, color: C.ivoryDim, lineHeight: 1.75, marginBottom: 32 }}>{student.bio}</p>
+        <p style={{ fontSize: 15, color: C.ivoryDim, lineHeight: 1.75, marginBottom: 24 }}>{student.bio}</p>
       )}
 
-      {!linkMeta && (
+      {/* Video link card */}
+      {linkMeta ? (
+        <a href={student.videoLink} target="_blank" rel="noreferrer" className="mt-6 rounded-2xl flex items-center gap-4 p-4" style={{ border: `1px solid ${C.inkLine}`, textDecoration: "none", color: "inherit", display: "flex", alignItems: "center", gap: 16, padding: 16, borderRadius: 16, marginBottom: 24 }}>
+          <div className="rounded-xl flex items-center justify-center shrink-0" style={{ width: 52, height: 52, background: colorFor(student.id), borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <Play size={20} color={C.ivory} />
+          </div>
+          <div>
+            <p style={{ fontSize: 13, fontWeight: 600 }}>Watch performance on {linkMeta.label}</p>
+            <p style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: C.ivoryDim }}><linkMeta.Icon size={12} /> Opens in a new tab</p>
+          </div>
+        </a>
+      ) : (
         <p style={{ fontSize: 13, color: C.ivoryDim, marginBottom: 24 }}>No performance video shared.</p>
       )}
 
