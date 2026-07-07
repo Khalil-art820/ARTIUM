@@ -936,18 +936,22 @@ export default function App() {
           setScreen("learnerMap");
         });
       } else {
-        // Google OAuth user with no profile yet — route to signup flow to collect info
-        const googleRole = localStorage.getItem("artium_google_role") || "student";
-        localStorage.removeItem("artium_google_role");
-        const googleName = authUser.user_metadata?.full_name || authUser.user_metadata?.name || "";
-        if (googleRole === "learner") {
-          setLearnerGoogleName(googleName);
-          setScreen("learnerSignup");
-        } else {
-          setDraft((d) => ({ ...d, name: googleName, email: authUser.email || "", password: "__google__", confirmPassword: "__google__" }));
-          setEditingProfile(false);
-          setStep(1);
-          setScreen("signup");
+        // Google OAuth user with no profile yet — route to signup flow to collect info.
+        // Only act if the role key is present; if it's already been removed a prior
+        // auth-state-change already handled the routing — don't overwrite it.
+        const googleRole = localStorage.getItem("artium_google_role");
+        if (googleRole) {
+          localStorage.removeItem("artium_google_role");
+          const googleName = authUser.user_metadata?.full_name || authUser.user_metadata?.name || "";
+          if (googleRole === "learner") {
+            setLearnerGoogleName(googleName);
+            setScreen("learnerSignup");
+          } else {
+            setDraft((d) => ({ ...d, name: googleName, email: authUser.email || "", password: "__google__", confirmPassword: "__google__" }));
+            setEditingProfile(false);
+            setStep(1);
+            setScreen("signup");
+          }
         }
       }
     }
