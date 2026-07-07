@@ -2106,65 +2106,89 @@ function videoLinkMeta(url) {
 function StudentProfile({ student, conservatory, onBack, onMessage, locked, onApply }) {
   if (!student) return null;
   const linkMeta = videoLinkMeta(student.videoLink);
+  const teachingText = student.teaching?.open
+    ? `${student.teaching.mode === "online" ? "Online" : student.teaching.mode === "in-person" ? "In-person" : "Online & in-person"} · €${student.teaching.price}/session`
+    : "Not offering lessons";
+
+  const Row = ({ label, children }) => (
+    <div style={{ background: "#fff", border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
+      <span style={{ fontSize: 11, fontWeight: 600, color: C.brass, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
+      <div style={{ fontSize: 15, color: C.ivory, lineHeight: 1.6 }}>{children}</div>
+    </div>
+  );
+
   return (
-    <div className="max-w-2xl mx-auto px-6 py-8 lg-fade">
-      <div className="flex items-start gap-4">
-        <Avatar name={student.name} id={student.id} size={64} photoUrl={student.photoUrl} online={student.online} />
-        <div className="flex-1">
-          <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600 }}>{student.name}</h2>
-          <p className="text-sm mt-1" style={{ color: C.ivoryDim }}>{student.instrument ? `${student.instrument} · ` : ""}{student.year} · {conservatory?.name}, {conservatory?.city}</p>
+    <div style={{ maxWidth: 640, margin: "0 auto", padding: "40px 24px" }}>
+
+      {/* Header */}
+      <div style={{ marginBottom: 28 }}>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 16, marginBottom: 16 }}>
+          <div style={{ marginTop: 4 }}>
+            <Avatar name={student.name} id={student.id} size={64} photoUrl={student.photoUrl} online={student.online} />
+          </div>
+          <div>
+            <h2 style={{ fontSize: 20, fontWeight: 700, color: C.ivory, margin: 0, lineHeight: 1.3 }}>{student.name}</h2>
+            <p style={{ fontSize: 13, color: C.ivoryDim, margin: "3px 0 0", lineHeight: 1.5 }}>
+              {[student.instrument, student.year].filter(Boolean).join(" · ")}
+            </p>
+            {conservatory && <p style={{ fontSize: 13, color: C.ivoryDim, margin: "1px 0 0" }}>{conservatory.name}, {conservatory.city}</p>}
+            {linkMeta && (
+              <a href={student.videoLink} target="_blank" rel="noreferrer"
+                style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: C.brass, textDecoration: "none", marginTop: 4 }}>
+                <linkMeta.Icon size={13} /> Performance video on {linkMeta.label}
+              </a>
+            )}
+          </div>
+        </div>
+        <div style={{ display: "flex", gap: 8 }}>
+          {locked ? (
+            <PrimaryBtn onClick={onApply} icon={ArrowRight}>Sign up to message {student.name.split(" ")[0]}</PrimaryBtn>
+          ) : (
+            <PrimaryBtn onClick={onMessage} icon={MessageCircle}>Message</PrimaryBtn>
+          )}
         </div>
       </div>
 
-      <p className="mt-5 text-sm" style={{ color: C.ivoryDim, lineHeight: 1.6 }}>{student.bio}</p>
-
-      {linkMeta ? (
-        <a href={student.videoLink} target="_blank" rel="noreferrer" className="mt-6 rounded-2xl flex items-center gap-4 p-4" style={{ border: `1px solid ${C.inkLine}`, textDecoration: "none", color: "inherit" }}>
-          <div className="rounded-xl flex items-center justify-center shrink-0" style={{ width: 52, height: 52, background: colorFor(student.id) }}>
-            <Play size={20} color={C.ivory} />
-          </div>
-          <div>
-            <p style={{ fontSize: 13, fontWeight: 600 }}>Watch performance on {linkMeta.label}</p>
-            <p className="flex items-center gap-1" style={{ fontSize: 11, color: C.ivoryDim }}><linkMeta.Icon size={12} /> Opens in a new tab</p>
-          </div>
-        </a>
-      ) : (
-        <p className="mt-6 text-sm" style={{ color: C.ivoryDim }}>No performance video shared.</p>
+      {/* Bio */}
+      {student.bio && (
+        <p style={{ fontSize: 15, color: C.ivoryDim, lineHeight: 1.75, marginBottom: 32 }}>{student.bio}</p>
       )}
 
-      <div className="mt-6 grid sm:grid-cols-2 gap-6">
-        <div>
-          <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.ivoryDim }}>MUSICAL PREFERENCES</p>
-          <div className="flex flex-wrap gap-1.5 mt-2">{student.tastes.map((t) => <span key={t} className="text-xs px-2.5 py-1 rounded-full" style={{ border: `1px solid ${C.inkLine}` }}>{t}</span>)}</div>
-        </div>
-        <div>
-          <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.ivoryDim }}>CURRENT REPERTOIRE</p>
-          <div className="flex flex-col gap-1.5 mt-2">
-            {student.pieces.map((p, i) => (
-              <p key={i} className="text-sm"><span style={{ fontFamily: FONT_MONO, color: C.brass, fontSize: 11 }}>No.{i + 1}</span> {p.title} <span style={{ color: C.ivoryDim }}>— {p.composer}</span></p>
-            ))}
-          </div>
-        </div>
-        {student.top && (
-          <div>
-            <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.ivoryDim }}>TOP</p>
-            <p className="text-sm mt-2" style={{ lineHeight: 1.6 }}>{student.top}</p>
-          </div>
-        )}
-        {student.flop && (
-          <div>
-            <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.ivoryDim }}>FLOP</p>
-            <p className="text-sm mt-2" style={{ lineHeight: 1.6 }}>{student.flop}</p>
-          </div>
-        )}
-      </div>
+      {!linkMeta && (
+        <p style={{ fontSize: 13, color: C.ivoryDim, marginBottom: 24 }}>No performance video shared.</p>
+      )}
 
-      <div className="mt-10 flex items-center gap-3">
-        {locked ? (
-          <PrimaryBtn onClick={onApply} icon={ArrowRight}>Sign up to message {student.name.split(" ")[0]}</PrimaryBtn>
-        ) : (
-          <PrimaryBtn onClick={onMessage} icon={MessageCircle}>Message</PrimaryBtn>
+      {/* Data grid — 2 columns */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+
+        {(student.tastes || []).length > 0 && (
+          <Row label="Musical preferences">
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 4 }}>
+              {student.tastes.map((t) => (
+                <span key={t} style={{ fontSize: 12, padding: "3px 10px", borderRadius: 20, border: `1px solid ${C.inkLine}`, color: C.ivory, background: C.inkSoft }}>{t}</span>
+              ))}
+            </div>
+          </Row>
         )}
+
+        {(student.pieces || []).length > 0 && (
+          <Row label="Current repertoire">
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
+              {student.pieces.map((p, i) => (
+                <div key={i} style={{ fontSize: 14, color: C.ivory }}>
+                  <span style={{ fontWeight: 600 }}>{p.title}</span>
+                  <span style={{ color: C.ivoryDim }}> — {p.composer}</span>
+                </div>
+              ))}
+            </div>
+          </Row>
+        )}
+
+        {student.top && <Row label="Recent win">{student.top}</Row>}
+        {student.flop && <Row label="Current challenge">{student.flop}</Row>}
+        <Row label="Teaching">{teachingText}</Row>
+        {student.composerDay && <Row label="A day with a composer">{student.composerDay}</Row>}
+
       </div>
     </div>
   );
