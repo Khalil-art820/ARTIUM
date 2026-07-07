@@ -1132,7 +1132,7 @@ export default function App() {
     setScreen("app"); setAppTab("map");
   }
   function editProfile() {
-    setDraft({ ...emptyDraft(), ...myProfile, pieces: myProfile.pieces || [], tastes: myProfile.tastes || [] });
+    setDraft({ ...emptyDraft(), ...myProfile, years: myProfile.year || "", pieces: myProfile.pieces || [], tastes: myProfile.tastes || [], composerDay: myProfile.composerDay || "" });
     setStep(0); setEditingProfile(true); setScreen("signup");
   }
   function openStudent(id, from) { setSelectedStudentId(id); setProfileBack(from); }
@@ -1645,10 +1645,10 @@ function StepIntro({ draft, update }) {
       <div className="mt-2">
         <p className="text-xs mb-3" style={{ fontFamily: FONT_MONO, color: C.ivoryDim, letterSpacing: 0.5 }}>OPTIONAL</p>
         <Field label="Link to a performance video">
-          <input style={inputStyle} value={draft.videoLink} onChange={(e) => update({ videoLink: e.target.value })} placeholder="https://instagram.com/... or https://youtube.com/..." />
+          <input style={inputStyle} value={draft.videoLink} onChange={(e) => update({ videoLink: e.target.value })} placeholder="https://instagram.com/... or https://facebook.com/... or https://youtube.com/..." />
         </Field>
         <p className="text-xs -mt-4" style={{ color: linkValid ? C.ivoryDim : C.burgundy, fontFamily: FONT_MONO }}>
-          {linkValid ? "Instagram or Facebook links only." : "Only Instagram or Facebook links are accepted."}
+          {linkValid ? "Instagram, Facebook or YouTube links only." : "Only Instagram, Facebook or YouTube links are accepted."}
         </p>
       </div>
     </div>
