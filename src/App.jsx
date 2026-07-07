@@ -2190,8 +2190,10 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack }) {
 
       {/* Header */}
       <div style={{ marginBottom: 28 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 16 }}>
-          <Avatar name={profile.name} id="me" size={64} photoUrl={profile.photoUrl} online />
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 16, marginBottom: 16 }}>
+          <div style={{ marginTop: -8 }}>
+            <Avatar name={profile.name} id="me" size={64} photoUrl={profile.photoUrl} online />
+          </div>
           <div>
             <h2 style={{ fontSize: 20, fontWeight: 700, color: C.ivory, margin: 0, lineHeight: 1.3 }}>{profile.name}</h2>
             <p style={{ fontSize: 13, color: C.ivoryDim, margin: "3px 0 0", lineHeight: 1.5 }}>
