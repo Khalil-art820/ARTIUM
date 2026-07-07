@@ -1315,7 +1315,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, myProfile, musicOn, on
     <div style={{ background: "#FFFFFF", color: C.ivory, minHeight: "100vh" }}>
       {/* Nav */}
       <div style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#FFFFFF" }}>
-        <div className="max-w-6xl mx-auto px-8" style={{ height: 64, display: "flex", alignItems: "center" }}>
+        <div style={{ height: 64, display: "flex", alignItems: "center", padding: "0 32px" }}>
           <div className="flex items-center gap-3">
             {!myProfile && (
               <button onClick={onBack} style={{ color: C.ivoryDim, background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", padding: 0 }}>
