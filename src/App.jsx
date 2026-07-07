@@ -1943,7 +1943,7 @@ function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, mus
   const tabs = [];
   return (
     <div className="min-h-full flex flex-col" style={{ background: C.inkSoft, color: C.ivory }}>
-      <div className="px-6 flex items-center justify-between gap-4" style={{ height: 60, background: "#FFFFFF", borderBottom: `1px solid ${C.inkLine}` }}>
+      <div className="px-6 flex items-center gap-4" style={{ height: 60, background: "#FFFFFF", borderBottom: `1px solid ${C.inkLine}` }}>
         <div className="flex items-center gap-3">
           {(previewOnly || onBack) && (
             <button onClick={previewOnly ? onHome : onBack} style={{ color: C.ivoryDim, background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", padding: 0 }}>
@@ -1974,7 +1974,7 @@ function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, mus
             ))}
           </div>
         )}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 ml-auto">
           <MusicBtn playing={musicOn} onToggle={onMusicToggle} audioRef={audioRef} />
           {onlineCount != null && (
             <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: C.ivoryDim, whiteSpace: "nowrap" }}>
