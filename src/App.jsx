@@ -1300,7 +1300,7 @@ export default function App() {
               conservatory={CONSERVATORIES.find((c) => c.id === students.find((s) => s.id === selectedStudentId)?.conservatoryId)}
               onBack={backFromProfile}
               onMessage={() => openChat(selectedStudentId)}
-              locked={previewOnly}
+              locked={previewOnly && !myProfile}
               onApply={startApply}
             />
           )}
