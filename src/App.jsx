@@ -2156,126 +2156,100 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack }) {
   const cons = CONSERVATORIES.find((c) => c.id === profile.conservatoryId);
   const [confirmDelete, setConfirmDelete] = React.useState(false);
   const [deleting, setDeleting] = React.useState(false);
-  return (
-    <div className="max-w-2xl mx-auto px-6 py-10">
+  const teachingText = profile.teaching?.open
+    ? `${profile.teaching.mode === "online" ? "Online" : profile.teaching.mode === "in-person" ? "In-person" : "Online & in-person"} · €${profile.teaching.price}/session`
+    : "Not offering lessons";
 
-      {/* ── Header row: avatar + name/subtitle + action buttons ── */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-center gap-5">
-          <Avatar name={profile.name} id="me" size={72} photoUrl={profile.photoUrl} online />
+  const Row = ({ label, children }) => (
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      <span style={{ fontSize: 11, fontWeight: 600, color: C.brass, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
+      <div style={{ fontSize: 15, color: C.ivory, lineHeight: 1.6 }}>{children}</div>
+    </div>
+  );
+
+  return (
+    <div style={{ maxWidth: 640, margin: "0 auto", padding: "40px 24px" }}>
+
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, marginBottom: 32 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+          <Avatar name={profile.name} id="me" size={68} photoUrl={profile.photoUrl} online />
           <div>
-            <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 28, fontWeight: 700, letterSpacing: "-0.3px", color: C.ivory, lineHeight: 1.2 }}>
-              {profile.name}
-            </h2>
-            <p className="mt-1 text-sm whitespace-nowrap" style={{ color: C.ivoryDim }}>
-              {[profile.instrument, profile.year, cons ? `${cons.name}, ${cons.city}` : null].filter(Boolean).join(" · ")}
+            <h2 style={{ fontSize: 22, fontWeight: 700, color: C.ivory, margin: 0, lineHeight: 1.2 }}>{profile.name}</h2>
+            <p style={{ fontSize: 14, color: C.ivoryDim, margin: "4px 0 0", lineHeight: 1.5 }}>
+              {[profile.instrument, profile.year, cons ? `${cons.name}, ${cons.city}` : null].filter(Boolean).join("  ·  ")}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
           <GhostBtn onClick={onEdit} icon={Pencil}>Edit</GhostBtn>
           {onLogout && <GhostBtn onClick={onLogout}>Log out</GhostBtn>}
           {onDeleteAccount && !confirmDelete && (
             <GhostBtn onClick={() => setConfirmDelete(true)} style={{ color: "#c0392b", borderColor: "#c0392b" }}>Delete account</GhostBtn>
           )}
           {confirmDelete && (
-            <div className="flex items-center gap-2">
-              <span className="text-xs" style={{ color: C.ivoryDim }}>Are you sure?</span>
-              <button
-                onClick={async () => { setDeleting(true); await onDeleteAccount(); setDeleting(false); }}
-                disabled={deleting}
-                className="text-xs px-3 py-1.5 rounded-lg font-semibold"
-                style={{ background: "#c0392b", color: "#fff", opacity: deleting ? 0.6 : 1 }}
-              >{deleting ? "Deleting…" : "Yes, delete"}</button>
-              <button
-                onClick={() => setConfirmDelete(false)}
-                className="text-xs px-3 py-1.5 rounded-lg"
-                style={{ border: `1px solid ${C.inkLine}`, color: C.ivoryDim }}
-              >Cancel</button>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 12, color: C.ivoryDim }}>Are you sure?</span>
+              <button onClick={async () => { setDeleting(true); await onDeleteAccount(); setDeleting(false); }} disabled={deleting}
+                style={{ fontSize: 12, padding: "6px 12px", borderRadius: 6, fontWeight: 600, background: "#c0392b", color: "#fff", border: "none", cursor: "pointer", opacity: deleting ? 0.6 : 1 }}>
+                {deleting ? "Deleting…" : "Yes, delete"}
+              </button>
+              <button onClick={() => setConfirmDelete(false)}
+                style={{ fontSize: 12, padding: "6px 12px", borderRadius: 6, border: `1px solid ${C.inkLine}`, color: C.ivoryDim, background: "none", cursor: "pointer" }}>
+                Cancel
+              </button>
             </div>
           )}
         </div>
       </div>
 
-      {/* ── Bio ── */}
+      {/* Bio */}
       {profile.bio && (
-        <p className="mt-6 text-sm" style={{ color: C.ivory, lineHeight: 1.75, maxWidth: 560 }}>{profile.bio}</p>
+        <p style={{ fontSize: 15, color: C.ivoryDim, lineHeight: 1.75, marginBottom: 32 }}>{profile.bio}</p>
       )}
 
-      {/* ── Performance video link ── */}
+      {/* Video link */}
       {(() => {
         const linkMeta = videoLinkMeta(profile.videoLink);
         return linkMeta ? (
-          <a href={profile.videoLink} target="_blank" rel="noreferrer" className="mt-4 inline-flex items-center gap-2 text-sm" style={{ color: C.brass, textDecoration: "none" }}>
+          <a href={profile.videoLink} target="_blank" rel="noreferrer"
+            style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 14, color: C.brass, textDecoration: "none", marginBottom: 32 }}>
             <linkMeta.Icon size={14} /> Performance video on {linkMeta.label}
           </a>
         ) : null;
       })()}
 
-      {/* ── Section divider helper (inline) ── */}
+      {/* Data grid */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
 
-      {/* ── Musical Preferences ── */}
-      {(profile.tastes || []).length > 0 && (
-        <>
-          <div style={{ borderTop: `1px solid ${C.inkLine}`, marginTop: 28, marginBottom: 20 }} />
-          <p style={{ fontFamily: FONT_MONO, fontSize: 10, letterSpacing: "0.1em", color: C.ivoryDim, marginBottom: 12 }}>MUSICAL PREFERENCES</p>
-          <div className="flex flex-wrap gap-2">
-            {(profile.tastes || []).map((t) => (
-              <span key={t} className="text-xs px-3 py-1 rounded-full" style={{ border: `1px solid ${C.inkLine}`, color: C.ivory, background: C.inkSoft }}>
-                {t}
-              </span>
-            ))}
-          </div>
-        </>
-      )}
+        {(profile.tastes || []).length > 0 && (
+          <Row label="Musical preferences">
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 4 }}>
+              {profile.tastes.map((t) => (
+                <span key={t} style={{ fontSize: 13, padding: "4px 12px", borderRadius: 20, border: `1px solid ${C.inkLine}`, color: C.ivory, background: "#fff" }}>{t}</span>
+              ))}
+            </div>
+          </Row>
+        )}
 
-      {/* ── Current Repertoire ── */}
-      {(profile.pieces || []).length > 0 && (
-        <>
-          <div style={{ borderTop: `1px solid ${C.inkLine}`, marginTop: 28, marginBottom: 20 }} />
-          <p style={{ fontFamily: FONT_MONO, fontSize: 10, letterSpacing: "0.1em", color: C.ivoryDim, marginBottom: 12 }}>CURRENT REPERTOIRE</p>
-          <div className="flex flex-col gap-3">
-            {(profile.pieces || []).map((p, i) => (
-              <div key={i} className="flex items-baseline gap-3">
-                <span style={{ fontFamily: FONT_MONO, color: C.brass, fontSize: 10, minWidth: 28 }}>No.{i + 1}</span>
-                <span className="text-sm" style={{ color: C.ivory, fontWeight: 500 }}>{p.title}</span>
-                <span className="text-sm" style={{ color: C.ivoryDim }}>— {p.composer}</span>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
+        {(profile.pieces || []).length > 0 && (
+          <Row label="Current repertoire">
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 4 }}>
+              {profile.pieces.map((p, i) => (
+                <div key={i} style={{ fontSize: 15, color: C.ivory }}>
+                  <span style={{ fontWeight: 600 }}>{p.title}</span>
+                  <span style={{ color: C.ivoryDim }}> — {p.composer}</span>
+                </div>
+              ))}
+            </div>
+          </Row>
+        )}
 
-      {/* ── Top / Flop side-by-side ── */}
-      {(profile.top || profile.flop) && (
-        <>
-          <div style={{ borderTop: `1px solid ${C.inkLine}`, marginTop: 28, marginBottom: 20 }} />
-          <div className="grid sm:grid-cols-2 gap-6">
-            {profile.top && (
-              <div>
-                <p style={{ fontFamily: FONT_MONO, fontSize: 10, letterSpacing: "0.1em", color: C.brass, marginBottom: 8 }}>TOP</p>
-                <p className="text-sm" style={{ color: C.ivory, lineHeight: 1.65 }}>{profile.top}</p>
-              </div>
-            )}
-            {profile.flop && (
-              <div>
-                <p style={{ fontFamily: FONT_MONO, fontSize: 10, letterSpacing: "0.1em", color: C.ivoryDim, marginBottom: 8 }}>FLOP</p>
-                <p className="text-sm" style={{ color: C.ivory, lineHeight: 1.65 }}>{profile.flop}</p>
-              </div>
-            )}
-          </div>
-        </>
-      )}
+        {profile.top && <Row label="Recent win">{profile.top}</Row>}
+        {profile.flop && <Row label="Current challenge">{profile.flop}</Row>}
+        <Row label="Teaching">{teachingText}</Row>
 
-      {/* ── Teaching ── */}
-      <div style={{ borderTop: `1px solid ${C.inkLine}`, marginTop: 28, marginBottom: 20 }} />
-      <p style={{ fontFamily: FONT_MONO, fontSize: 10, letterSpacing: "0.1em", color: C.ivoryDim, marginBottom: 8 }}>TEACHING</p>
-      <p className="text-sm" style={{ color: C.ivory, lineHeight: 1.65 }}>
-        {profile.teaching?.open
-          ? `${profile.teaching.mode === "online" ? "Online lessons" : profile.teaching.mode === "in-person" ? "In-person lessons" : "Online & in-person"} · €${profile.teaching.price}/session`
-          : "Not offering lessons"}
-      </p>
-
+      </div>
     </div>
   );
 }
