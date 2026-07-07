@@ -1320,7 +1320,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
       <div style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#FFFFFF" }}>
         <div style={{ height: 64, display: "flex", alignItems: "center", padding: "0 32px" }}>
           <div className="flex items-center gap-3">
-            {!myProfile && (
+            {!myProfile && !studentLoggedOut && (
               <button onClick={onBack} style={{ color: C.ivoryDim, background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", padding: 0 }}>
                 <ChevronLeft size={18} />
               </button>
@@ -2538,14 +2538,11 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
               </button>
             )}
           </div>
-          <p style={{ textAlign: "center", marginTop: 28, fontSize: 14, color: C.ivoryDim }}>
-            {studentLoggedIn
-              ? "Logged in as a conservatory student"
-              : learnerProfile
-              ? <>Logged in as {learnerProfile.name}</>
-              : <>Already have an account?{" "}<button onClick={onLogin} style={{ color: C.brass, fontWeight: 600, background: "none", border: "none", cursor: "pointer", fontSize: 14 }}>Log in</button></>
-            }
-          </p>
+          {(studentLoggedIn || learnerProfile) && (
+            <p style={{ textAlign: "center", marginTop: 28, fontSize: 14, color: C.ivoryDim }}>
+              {studentLoggedIn ? "Logged in as a conservatory student" : <>Logged in as {learnerProfile.name}</>}
+            </p>
+          )}
         </div>
       </div>
     </div>
