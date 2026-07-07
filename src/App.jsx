@@ -2121,20 +2121,18 @@ function StudentProfile({ student, conservatory, onBack, onMessage, locked, onAp
     <div style={{ maxWidth: 640, margin: "0 auto", padding: "40px 24px" }}>
 
       {/* Header */}
-      <div style={{ marginBottom: 28 }}>
-        <div style={{ display: "flex", alignItems: "flex-start", gap: 16, marginBottom: 16 }}>
-          <div style={{ marginTop: 4 }}>
-            <Avatar name={student.name} id={student.id} size={64} photoUrl={student.photoUrl} online={student.online} />
-          </div>
-          <div>
-            <h2 style={{ fontSize: 20, fontWeight: 700, color: C.ivory, margin: 0, lineHeight: 1.3 }}>{student.name}</h2>
-            <p style={{ fontSize: 13, color: C.ivoryDim, margin: "3px 0 0", lineHeight: 1.5 }}>
-              {[student.instrument, student.year].filter(Boolean).join(" · ")}
-            </p>
-            {conservatory && <p style={{ fontSize: 13, color: C.ivoryDim, margin: "1px 0 0" }}>{conservatory.name}, {conservatory.city}</p>}
-          </div>
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 16, marginBottom: 28 }}>
+        <div style={{ marginTop: 4 }}>
+          <Avatar name={student.name} id={student.id} size={64} photoUrl={student.photoUrl} online={student.online} />
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
+        <div style={{ flex: 1 }}>
+          <h2 style={{ fontSize: 20, fontWeight: 700, color: C.ivory, margin: 0, lineHeight: 1.3 }}>{student.name}</h2>
+          <p style={{ fontSize: 13, color: C.ivoryDim, margin: "3px 0 0", lineHeight: 1.5 }}>
+            {[student.instrument, student.year].filter(Boolean).join(" · ")}
+          </p>
+          {conservatory && <p style={{ fontSize: 13, color: C.ivoryDim, margin: "1px 0 0" }}>{conservatory.name}, {conservatory.city}</p>}
+        </div>
+        <div style={{ flexShrink: 0 }}>
           {locked ? (
             <PrimaryBtn onClick={onApply} icon={ArrowRight}>Sign up to message {student.name.split(" ")[0]}</PrimaryBtn>
           ) : (
