@@ -2268,13 +2268,13 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack }) {
       )}
 
       {/* ── Teaching ── */}
-      {profile.teaching && (
-        <>
-          <div style={{ borderTop: `1px solid ${C.inkLine}`, marginTop: 28, marginBottom: 20 }} />
-          <p style={{ fontFamily: FONT_MONO, fontSize: 10, letterSpacing: "0.1em", color: C.ivoryDim, marginBottom: 8 }}>TEACHING</p>
-          <p className="text-sm" style={{ color: C.ivory, lineHeight: 1.65 }}>{profile.teaching}</p>
-        </>
-      )}
+      <div style={{ borderTop: `1px solid ${C.inkLine}`, marginTop: 28, marginBottom: 20 }} />
+      <p style={{ fontFamily: FONT_MONO, fontSize: 10, letterSpacing: "0.1em", color: C.ivoryDim, marginBottom: 8 }}>TEACHING</p>
+      <p className="text-sm" style={{ color: C.ivory, lineHeight: 1.65 }}>
+        {profile.teaching?.open
+          ? `${profile.teaching.mode === "online" ? "Online lessons" : profile.teaching.mode === "in-person" ? "In-person lessons" : "Online & in-person"} · €${profile.teaching.price}/session`
+          : "Not offering lessons"}
+      </p>
 
     </div>
   );
