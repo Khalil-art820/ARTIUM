@@ -896,7 +896,7 @@ export default function App() {
     if (authLoading) return;
     if (authProfile) {
       if (authProfile.role === "learner") {
-        setLearnerProfile({ name: authProfile.name, location: authProfile.location });
+        setLearnerProfile({ name: authProfile.name, location: authProfile.location, instrument: authProfile.instrument, bio: authProfile.bio });
         setLearnerLoggedOut(false);
         if (["entry", "landing", "login", "confirmEmail", "learnerSignup"].includes(screen)) {
           setScreen("learnerMap");
@@ -932,7 +932,7 @@ export default function App() {
         supabase.from("profiles").insert({ id: authUser.id, role: "learner", name: pendingLearner.name, location: pendingLearner.location, instrument: pendingLearner.instrument, bio: pendingLearner.motivation, approved: true }).then(({ error }) => {
           if (error) { setAuthError(error.message); return; }
           supabase.auth.updateUser({ data: { pendingLearner: null } });
-          setLearnerProfile({ name: pendingLearner.name, location: pendingLearner.location });
+          setLearnerProfile({ name: pendingLearner.name, location: pendingLearner.location, instrument: pendingLearner.instrument, bio: pendingLearner.motivation });
           setScreen("learnerMap");
         });
       } else {
@@ -1064,7 +1064,7 @@ export default function App() {
       const { error: insertError } = await supabase.from("profiles").insert({ id: authUser.id, role: "learner", name, location, instrument, bio: motivation, approved: true });
       if (insertError) { setAuthError(insertError.message); return; }
       setLearnerGoogleName("");
-      setLearnerProfile({ name, location });
+      setLearnerProfile({ name, location, instrument, bio: motivation });
       setLearnerLoggedOut(false);
       setScreen("learnerMap");
       return;
@@ -1079,11 +1079,11 @@ export default function App() {
       const { error: insertError } = await supabase.from("profiles").insert({ id: data.user.id, role: "learner", name, location, instrument, bio: motivation, approved: true });
       if (insertError) { setAuthError(insertError.message); return; }
       await supabase.auth.updateUser({ data: { pendingLearner: null } });
-      setLearnerProfile({ name, location });
+      setLearnerProfile({ name, location, instrument, bio: motivation });
       setLearnerLoggedOut(false);
       setScreen("learnerMap");
     } else {
-      setLearnerProfile({ name, location });
+      setLearnerProfile({ name, location, instrument, bio: motivation });
       setPendingEmail(email);
       setScreen("confirmEmail");
     }
