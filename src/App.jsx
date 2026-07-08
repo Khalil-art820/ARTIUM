@@ -2640,7 +2640,10 @@ function LearnerSignup({ onSubmit, onBack, onLogin, error, googleName = "" }) {
         {/* Step indicator */}
         <div style={{ display: "flex", gap: 6, marginTop: 28 }}>
           {[1, 2].map((s) => (
-            <div key={s} style={{ height: 3, flex: 1, borderRadius: 99, background: step >= s ? C.brass : "#333" }} />
+            <div key={s} style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
+              <div style={{ height: 3, borderRadius: 99, background: step >= s ? C.brass : "#333" }} />
+              <span style={{ fontSize: 11, fontWeight: 600, color: step >= s ? C.brass : "#555", letterSpacing: "0.06em" }}>Step {s}</span>
+            </div>
           ))}
         </div>
 
@@ -2713,7 +2716,7 @@ function LearnerSignup({ onSubmit, onBack, onLogin, error, googleName = "" }) {
             <Field label="Learner's full name">
               <input style={inputStyle} value={learnerName} onChange={(e) => setLearnerName(e.target.value)} placeholder="e.g. Sophie" autoComplete="off" autoFocus />
             </Field>
-            <Field label="Learner's age (optional)">
+            <Field label="Learner's age">
               <input style={inputStyle} value={learnerAge} onChange={(e) => setLearnerAge(e.target.value)} placeholder="e.g. 10" autoComplete="off" />
             </Field>
             <Field label="Where is the learner based?">
