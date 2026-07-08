@@ -2574,7 +2574,19 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
 function LearnerSignup({ onSubmit, onBack, onLogin, error, googleName = "" }) {
   const isGoogle = googleName.length > 0;
   const [step, setStep] = useState(isGoogle ? 2 : 1);
-  const [forWhom, setForWhom] = useState(isGoogle ? "self" : ""); // "self" | "other"
+  const [forWhom, setForWhomRaw] = useState(() => {
+    if (isGoogle) {
+      // Restore the choice made before the OAuth redirect
+      const saved = sessionStorage.getItem("artium_learner_forWhom");
+      sessionStorage.removeItem("artium_learner_forWhom");
+      return saved || "self";
+    }
+    return "";
+  });
+  function setForWhom(val) {
+    sessionStorage.setItem("artium_learner_forWhom", val);
+    setForWhomRaw(val);
+  }
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState(isGoogle ? "__google__" : "");
   const [confirmPassword, setConfirmPassword] = useState(isGoogle ? "__google__" : "");
