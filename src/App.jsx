@@ -2843,6 +2843,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
   const [editName, setEditName] = useState(learner?.name || "");
   const [editLocation, setEditLocation] = useState(learner?.location || "");
   const [saved, setSaved] = useState(false);
+  const [editingProfile, setEditingProfile] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
@@ -2878,9 +2879,9 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
       onBack={selectedId ? () => setSelectedId(null) : appTab !== "map" ? () => setAppTab("map") : onBack}
       hideTabs={!!selectedId}
     >
-      {/* Tab bar */}
+      {/* Tab bar — only "Find a teacher"; profile accessed via avatar */}
       <div className="px-6 flex gap-1" style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#fff" }}>
-        {[["map", "Find a teacher"], ["profile", "My profile"]].map(([key, label]) => (
+        {[["map", "Find a teacher"]].map(([key, label]) => (
           <button key={key} onClick={() => setAppTab(key)}
             className="px-4 py-2 text-sm"
             style={{ fontWeight: appTab === key ? 600 : 400, color: appTab === key ? C.brass : C.ivoryDim, borderBottom: appTab === key ? `2px solid ${C.brass}` : "2px solid transparent", background: "transparent" }}>
@@ -3052,70 +3053,95 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
         );
       })()}
 
-      {appTab === "profile" && (
-        <div className="max-w-lg mx-auto px-6 pt-10 pb-16">
-          <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600, color: C.inkText }}>My profile</h2>
-          <p className="mt-1 text-sm" style={{ color: C.ivoryDim }}>Update your name and location.</p>
-          <div className="mt-8 flex flex-col gap-5">
-            <div>
-              <label className="block mb-1.5 text-xs" style={{ fontFamily: FONT_MONO, color: C.ivoryDim }}>FULL NAME</label>
-              <input value={editName} onChange={(e) => { setEditName(e.target.value); setSaved(false); }}
-                className="w-full rounded-xl px-4 py-3 text-sm"
-                style={{ background: C.inkSoft, border: `1px solid ${C.inkLine}`, color: C.inkText, outline: "none" }}
-                placeholder="Your name" />
-            </div>
-            <div>
-              <label className="block mb-1.5 text-xs" style={{ fontFamily: FONT_MONO, color: C.ivoryDim }}>LOCATION</label>
-              <input value={editLocation} onChange={(e) => { setEditLocation(e.target.value); setSaved(false); }}
-                className="w-full rounded-xl px-4 py-3 text-sm"
-                style={{ background: C.inkSoft, border: `1px solid ${C.inkLine}`, color: C.inkText, outline: "none" }}
-                placeholder="City, Country" />
-            </div>
-            <button onClick={saveProfile} disabled={!editName.trim() || !editLocation.trim()}
-              className="w-full rounded-xl py-3 text-sm font-semibold mt-1"
-              style={{ background: C.brass, color: C.inkText, opacity: !editName.trim() || !editLocation.trim() ? 0.5 : 1 }}>
-              {saved ? "Saved ✓" : "Save changes"}
-            </button>
+      {appTab === "profile" && (() => {
+        const Row = ({ label, children }) => (
+          <div style={{ background: "#fff", border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
+            <span style={{ fontSize: 11, fontWeight: 600, color: C.brass, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
+            <div style={{ fontSize: 15, color: C.inkText, lineHeight: 1.6 }}>{children}</div>
           </div>
-          <div className="mt-10 pt-8 flex flex-col gap-3" style={{ borderTop: `1px solid ${C.inkLine}` }}>
-            <button onClick={onLogout} className="w-full rounded-xl py-3 text-sm font-semibold"
-              style={{ border: `1px solid ${C.inkLine}`, color: C.ivoryDim, background: "transparent" }}>
-              Log out
-            </button>
-            {!confirmDelete ? (
-              <button onClick={() => setConfirmDelete(true)}
-                className="w-full rounded-xl py-3 text-sm font-semibold"
-                style={{ border: `1px solid ${C.burgundy}`, color: C.burgundy, background: "transparent" }}>
-                Delete account
-              </button>
-            ) : (
-              <div className="rounded-xl p-4 flex flex-col gap-3" style={{ border: `1px solid ${C.burgundy}`, background: "rgba(138,54,54,0.08)" }}>
-                <p className="text-sm" style={{ color: C.inkText }}>This will permanently delete your account and all your data. Are you sure?</p>
-                {deleteError && <p className="text-xs" style={{ color: C.burgundy }}>{deleteError}</p>}
-                <div className="flex gap-2">
-                  <button onClick={() => { setConfirmDelete(false); setDeleteError(""); }}
-                    className="flex-1 rounded-lg py-2 text-sm"
+        );
+        return (
+          <div style={{ maxWidth: 640, margin: "0 auto", padding: "40px 24px" }}>
+            {/* Header */}
+            <div style={{ marginBottom: 28 }}>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 16, marginBottom: 16 }}>
+                <div style={{ marginTop: 4 }}>
+                  <Avatar name={learner?.name || ""} id="me-learner" size={64} online />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <h2 style={{ fontSize: 20, fontWeight: 700, color: C.inkText, margin: 0, lineHeight: 1.3 }}>{learner?.name}</h2>
+                  {learner?.instrument && <p style={{ fontSize: 13, color: C.ivoryDim, margin: "3px 0 0" }}>{learner.instrument}</p>}
+                  {learner?.location && <p style={{ fontSize: 13, color: C.ivoryDim, margin: "1px 0 0" }}>{learner.location}</p>}
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <GhostBtn onClick={() => setEditingProfile(true)} icon={Pencil}>Edit</GhostBtn>
+                {onLogout && <GhostBtn onClick={onLogout}>Log out</GhostBtn>}
+                {onDeleteAccount && !confirmDelete && (
+                  <GhostBtn onClick={() => setConfirmDelete(true)} style={{ color: "#c0392b", borderColor: "#c0392b" }}>Delete account</GhostBtn>
+                )}
+                {confirmDelete && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: 12, color: C.ivoryDim }}>Are you sure?</span>
+                    <button onClick={async () => { setDeleting(true); await onDeleteAccount(); setDeleting(false); }} disabled={deleting}
+                      style={{ fontSize: 12, padding: "6px 12px", borderRadius: 6, fontWeight: 600, background: "#c0392b", color: "#fff", border: "none", cursor: "pointer", opacity: deleting ? 0.6 : 1 }}>
+                      {deleting ? "Deleting…" : "Yes, delete"}
+                    </button>
+                    <button onClick={() => setConfirmDelete(false)}
+                      style={{ fontSize: 12, padding: "6px 12px", borderRadius: 6, border: `1px solid ${C.inkLine}`, color: C.ivoryDim, background: "none", cursor: "pointer" }}>
+                      Cancel
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Bio / motivation */}
+            {learner?.bio && (
+              <p style={{ fontSize: 15, color: C.ivoryDim, lineHeight: 1.75, marginBottom: 24 }}>{learner.bio}</p>
+            )}
+
+            {/* Info cards */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              {learner?.instrument && <Row label="Instrument">{learner.instrument}</Row>}
+              {learner?.location && <Row label="Location">{learner.location}</Row>}
+            </div>
+
+            {/* Edit form (inline) */}
+            {editingProfile && (
+              <div className="mt-8 flex flex-col gap-5">
+                <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 18, fontWeight: 600, color: C.inkText, margin: 0 }}>Edit profile</h3>
+                <div>
+                  <label className="block mb-1.5 text-xs" style={{ fontFamily: FONT_MONO, color: C.ivoryDim }}>FULL NAME</label>
+                  <input value={editName} onChange={(e) => { setEditName(e.target.value); setSaved(false); }}
+                    className="w-full rounded-xl px-4 py-3 text-sm"
+                    style={{ background: C.inkSoft, border: `1px solid ${C.inkLine}`, color: C.inkText, outline: "none" }}
+                    placeholder="Your name" />
+                </div>
+                <div>
+                  <label className="block mb-1.5 text-xs" style={{ fontFamily: FONT_MONO, color: C.ivoryDim }}>LOCATION</label>
+                  <input value={editLocation} onChange={(e) => { setEditLocation(e.target.value); setSaved(false); }}
+                    className="w-full rounded-xl px-4 py-3 text-sm"
+                    style={{ background: C.inkSoft, border: `1px solid ${C.inkLine}`, color: C.inkText, outline: "none" }}
+                    placeholder="City, Country" />
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button onClick={() => { saveProfile(); setEditingProfile(false); }} disabled={!editName.trim() || !editLocation.trim()}
+                    className="rounded-xl py-3 px-6 text-sm font-semibold"
+                    style={{ background: C.brass, color: C.inkText, opacity: !editName.trim() || !editLocation.trim() ? 0.5 : 1 }}>
+                    {saved ? "Saved ✓" : "Save changes"}
+                  </button>
+                  <button onClick={() => setEditingProfile(false)}
+                    className="rounded-xl py-3 px-6 text-sm"
                     style={{ border: `1px solid ${C.inkLine}`, color: C.ivoryDim, background: "transparent" }}>
                     Cancel
-                  </button>
-                  <button
-                    disabled={deleting}
-                    onClick={async () => {
-                      setDeleting(true);
-                      setDeleteError("");
-                      try { await onDeleteAccount(); }
-                      catch (e) { setDeleteError(e.message || "Something went wrong"); setDeleting(false); setConfirmDelete(false); }
-                    }}
-                    className="flex-1 rounded-lg py-2 text-sm font-semibold"
-                    style={{ background: C.burgundy, color: C.ivory, opacity: deleting ? 0.6 : 1 }}>
-                    {deleting ? "Deleting…" : "Yes, delete"}
                   </button>
                 </div>
               </div>
             )}
           </div>
-        </div>
-      )}
+        );
+      })()}
     </AppShell>
   );
 }
