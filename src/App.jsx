@@ -2984,7 +2984,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
                 ) : status === "pending" ? (
                   <span style={{ fontSize: 12, color: C.ivoryDim, fontStyle: "italic" }}>Request sent…</span>
                 ) : (
-                  <PrimaryBtn onClick={() => onSendRequest(selected.id)} icon={Send}>Send request</PrimaryBtn>
+                  <PrimaryBtn onClick={() => onSendRequest(selected.id)} icon={Send}>Send teaching request</PrimaryBtn>
                 )}
               </div>
             </div>
