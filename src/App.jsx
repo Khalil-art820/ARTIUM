@@ -1478,6 +1478,11 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
             <ChevronLeft size={18} />
           </button>
           <Logo slogan />
+          {editing && (
+            <button onClick={onCancel} style={{ marginLeft: "auto", fontSize: 13, fontWeight: 600, color: C.ivoryDim, background: "none", border: `1px solid ${C.inkLine}`, borderRadius: 6, padding: "5px 14px", cursor: "pointer" }}>
+              Cancel
+            </button>
+          )}
         </div>
         <div className="mt-8 flex items-center gap-4">
           <span style={{ fontFamily: FONT_MONO, color: C.brass, fontSize: 13 }}>Step {ROMAN[step]} of {ROMAN[lastStep]}</span>
@@ -2412,13 +2417,13 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack, onUpdat
   return (
     <div style={{ display: "flex", minHeight: "calc(100vh - 60px)" }}>
       {/* Left: cover photo panel */}
+      <div style={{ width: 320, flexShrink: 0, position: "sticky", top: 0, alignSelf: "flex-start", height: "calc(100vh - 60px)", padding: "24px 0 24px 24px" }}>
       <div
         onClick={() => coverInputRef.current && coverInputRef.current.click()}
         style={{
-          width: 320, flexShrink: 0, position: "sticky", top: 0, alignSelf: "flex-start",
-          height: "calc(100vh - 60px)", cursor: "pointer", overflow: "hidden",
+          width: "100%", height: "100%", cursor: "pointer", overflow: "hidden", borderRadius: 16,
           background: profile.coverPhotoUrl ? "transparent" : C.inkSoft,
-          borderRight: `1px solid ${C.inkLine}`,
+          border: profile.coverPhotoUrl ? "none" : `1.5px dashed ${C.inkLine}`,
           display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
         }}
       >
@@ -2449,6 +2454,7 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack, onUpdat
           </div>
         )}
         <input ref={coverInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleCoverFile} />
+      </div>
       </div>
 
       {/* Right: cards */}
