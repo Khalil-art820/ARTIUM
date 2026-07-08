@@ -1308,7 +1308,14 @@ export default function App() {
             />
           )}
           {appTab === "profile" && !selectedStudentId && myProfile && (
-            <MyProfile profile={myProfile} onEdit={editProfile} onLogout={handleLogout} onDeleteAccount={async () => {
+            <MyProfile profile={myProfile} onEdit={editProfile} onLogout={handleLogout}
+              onUpdateCoverPhoto={async (coverPhotoUrl) => {
+                await supabase.from("profiles").update({ cover_photo_url: coverPhotoUrl || null }).eq("id", myProfile.id);
+                const updated = { ...myProfile, coverPhotoUrl };
+                setMyProfile(updated);
+                setStudents((arr) => arr.map((s) => (s.id === myProfile.id ? updated : s)));
+              }}
+              onDeleteAccount={async () => {
               await supabase.rpc("delete_own_account");
               await supabase.auth.signOut();
               setMyProfile(null);
@@ -1691,7 +1698,6 @@ function StepIntro({ draft, update }) {
   return (
     <div>
       <PhotoUpload name={draft.name} photoUrl={draft.photoUrl} onChange={(photoUrl) => update({ photoUrl })} />
-      <CoverPhotoUpload coverPhotoUrl={draft.coverPhotoUrl} onChange={(coverPhotoUrl) => update({ coverPhotoUrl })} />
       <Field label="Full name">
         <input style={inputStyle} value={draft.name} onChange={(e) => update({ name: e.target.value })} placeholder="Your full name" />
       </Field>
@@ -2284,7 +2290,7 @@ function StudentProfile({ student, conservatory, onBack, onMessage, locked, onAp
 /* ---------------------------------------------------------------- */
 /* MY PROFILE                                                         */
 /* ---------------------------------------------------------------- */
-function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack }) {
+function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack, onUpdateCoverPhoto }) {
   const cons = CONSERVATORIES.find((c) => c.id === profile.conservatoryId);
   const [confirmDelete, setConfirmDelete] = React.useState(false);
   const [deleting, setDeleting] = React.useState(false);
@@ -2392,30 +2398,69 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack }) {
     </>
   );
 
-  /* ── With cover photo: side-by-side layout ── */
-  if (profile.coverPhotoUrl) {
-    return (
-      <div style={{ display: "flex", minHeight: "calc(100vh - 60px)" }}>
-        {/* Left: cover photo */}
-        <div style={{ width: 320, flexShrink: 0, position: "sticky", top: 0, alignSelf: "flex-start", height: "calc(100vh - 60px)" }}>
-          <img
-            src={profile.coverPhotoUrl}
-            alt="Cover"
-            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-          />
-        </div>
-        {/* Right: cards */}
-        <div style={{ flex: 1, overflowY: "auto", padding: "40px 32px" }}>
-          {cards}
-        </div>
-      </div>
-    );
+  /* ── Always split: interactive cover panel on left ── */
+  const coverInputRef = useRef(null);
+  function handleCoverFile(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => { onUpdateCoverPhoto && onUpdateCoverPhoto(reader.result); };
+    reader.readAsDataURL(file);
+    e.target.value = "";
   }
 
-  /* ── Without cover photo: centered layout (original) ── */
   return (
-    <div style={{ maxWidth: 640, margin: "0 auto", padding: "40px 24px" }}>
-      {cards}
+    <div style={{ display: "flex", minHeight: "calc(100vh - 60px)" }}>
+      {/* Left: cover photo panel */}
+      <div
+        onClick={() => coverInputRef.current && coverInputRef.current.click()}
+        style={{
+          width: 320, flexShrink: 0, position: "sticky", top: 0, alignSelf: "flex-start",
+          height: "calc(100vh - 60px)", cursor: "pointer", overflow: "hidden",
+          background: profile.coverPhotoUrl ? "transparent" : C.inkSoft,
+          borderRight: `1px solid ${C.inkLine}`,
+          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+        }}
+      >
+        {profile.coverPhotoUrl ? (
+          <>
+            <img src={profile.coverPhotoUrl} alt="Cover" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+            <div style={{
+              position: "absolute", inset: 0, background: "rgba(0,0,0,0)", transition: "background 0.2s",
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}
+              onMouseEnter={e => e.currentTarget.style.background = "rgba(0,0,0,0.35)"}
+              onMouseLeave={e => e.currentTarget.style.background = "rgba(0,0,0,0)"}
+            >
+              <span style={{ color: "#fff", fontSize: 12, fontWeight: 600, opacity: 0, transition: "opacity 0.2s", display: "flex", alignItems: "center", gap: 6 }}
+                onMouseEnter={e => { e.currentTarget.style.opacity = 1; }}
+                onMouseLeave={e => { e.currentTarget.style.opacity = 0; }}>
+                <Upload size={14} /> Change photo
+              </span>
+            </div>
+          </>
+        ) : (
+          <div style={{ textAlign: "center", padding: 32 }}>
+            <div style={{ width: 56, height: 56, borderRadius: "50%", background: C.inkLine, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}>
+              <Upload size={22} color={C.ivoryDim} />
+            </div>
+            <p style={{ fontSize: 13, fontWeight: 600, color: C.ivoryDim, margin: 0 }}>Add cover photo</p>
+            <p style={{ fontSize: 11, color: C.ivoryDim, marginTop: 4, opacity: 0.7 }}>Click to upload</p>
+          </div>
+        )}
+        <input ref={coverInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleCoverFile} />
+      </div>
+
+      {/* Right: cards */}
+      <div style={{ flex: 1, overflowY: "auto", padding: "40px 32px" }}>
+        {cards}
+        {profile.coverPhotoUrl && (
+          <button onClick={() => onUpdateCoverPhoto && onUpdateCoverPhoto("")}
+            style={{ marginTop: 24, fontSize: 12, color: C.ivoryDim, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+            Remove cover photo
+          </button>
+        )}
+      </div>
     </div>
   );
 }
