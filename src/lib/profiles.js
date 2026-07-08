@@ -14,6 +14,7 @@ export function toDbProfile(draft, id) {
     flop: draft.flop,
     composer_day: draft.composerDay,
     photo_url: draft.photoUrl,
+    cover_photo_url: draft.coverPhotoUrl || null,
     is_online: true,
     approved: true,
     teaching_open: draft.teaching.open,
@@ -37,6 +38,7 @@ export function fromDbProfile(row) {
     flop: row.flop,
     composerDay: row.composer_day,
     photoUrl: row.photo_url,
+    coverPhotoUrl: row.cover_photo_url || "",
     teaching: { open: !!row.teaching_open, mode: row.teaching_mode || "", price: row.teaching_price || "" },
     online: row.is_online ?? true,
   };

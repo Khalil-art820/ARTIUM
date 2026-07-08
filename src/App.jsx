@@ -368,6 +368,7 @@ const emptyDraft = () => ({
   videoLink: "",
   top: "", flop: "", composerDay: "",
   photoUrl: "",
+  coverPhotoUrl: "",
   teaching: { open: false, mode: "", price: "" },
 });
 
@@ -1581,6 +1582,48 @@ function PhotoUpload({ name, photoUrl, onChange }) {
   );
 }
 
+function CoverPhotoUpload({ coverPhotoUrl, onChange }) {
+  const inputRef = useRef(null);
+  function handleFile(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => onChange(reader.result);
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  }
+  return (
+    <div className="mb-7">
+      <label className="block mb-2 text-xs" style={{ fontFamily: FONT_MONO, color: C.ivoryDim, letterSpacing: "0.06em" }}>COVER PHOTO</label>
+      {coverPhotoUrl ? (
+        <div style={{ position: "relative", width: "100%", height: 160, borderRadius: 12, overflow: "hidden", border: `1px solid ${C.inkLine}` }}>
+          <img src={coverPhotoUrl} alt="Cover" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          <div style={{ position: "absolute", bottom: 8, right: 8, display: "flex", gap: 6 }}>
+            <button type="button" onClick={() => inputRef.current && inputRef.current.click()}
+              className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold"
+              style={{ background: "rgba(0,0,0,0.55)", color: "#fff", border: "none", cursor: "pointer", backdropFilter: "blur(4px)" }}>
+              <Upload size={11} /> Change
+            </button>
+            <button type="button" onClick={() => onChange("")}
+              className="rounded-full px-3 py-1.5 text-xs font-semibold"
+              style={{ background: "rgba(0,0,0,0.55)", color: "#fff", border: "none", cursor: "pointer", backdropFilter: "blur(4px)" }}>
+              Remove
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button type="button" onClick={() => inputRef.current && inputRef.current.click()}
+          className="w-full inline-flex items-center justify-center gap-2 rounded-xl py-5 text-sm"
+          style={{ border: `1.5px dashed ${C.inkLine}`, color: C.ivoryDim, background: "transparent", cursor: "pointer" }}>
+          <Upload size={15} /> Upload cover photo
+        </button>
+      )}
+      <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
+      <p className="text-xs mt-1.5" style={{ color: C.ivoryDim, fontFamily: FONT_MONO }}>Optional — shown beside your profile cards.</p>
+    </div>
+  );
+}
+
 function GoogleBtn({ label = "Continue with Google", role = "student" }) {
   const [loading, setLoading] = useState(false);
   async function handleClick() {
@@ -1648,6 +1691,7 @@ function StepIntro({ draft, update }) {
   return (
     <div>
       <PhotoUpload name={draft.name} photoUrl={draft.photoUrl} onChange={(photoUrl) => update({ photoUrl })} />
+      <CoverPhotoUpload coverPhotoUrl={draft.coverPhotoUrl} onChange={(coverPhotoUrl) => update({ coverPhotoUrl })} />
       <Field label="Full name">
         <input style={inputStyle} value={draft.name} onChange={(e) => update({ name: e.target.value })} placeholder="Your full name" />
       </Field>
@@ -2148,9 +2192,8 @@ function StudentProfile({ student, conservatory, onBack, onMessage, locked, onAp
     </div>
   );
 
-  return (
-    <div style={{ maxWidth: 640, margin: "0 auto", padding: "40px 24px" }}>
-
+  const profileCards = (
+    <>
       {/* Header */}
       <div style={{ display: "flex", alignItems: "flex-start", gap: 16, marginBottom: 28 }}>
         <div style={{ marginTop: 4 }}>
@@ -2172,15 +2215,13 @@ function StudentProfile({ student, conservatory, onBack, onMessage, locked, onAp
         </div>
       </div>
 
-      {/* Bio */}
       {student.bio && (
         <p style={{ fontSize: 15, color: C.ivoryDim, lineHeight: 1.75, marginBottom: 24 }}>{student.bio}</p>
       )}
 
-      {/* Video link card */}
       {linkMeta ? (
-        <a href={student.videoLink} target="_blank" rel="noreferrer" className="mt-6 rounded-2xl flex items-center gap-4 p-4" style={{ border: `1px solid ${C.inkLine}`, textDecoration: "none", color: "inherit", display: "flex", alignItems: "center", gap: 16, padding: 16, borderRadius: 16, marginBottom: 24 }}>
-          <div className="rounded-xl flex items-center justify-center shrink-0" style={{ width: 52, height: 52, background: colorFor(student.id), borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        <a href={student.videoLink} target="_blank" rel="noreferrer" style={{ border: `1px solid ${C.inkLine}`, textDecoration: "none", color: "inherit", display: "flex", alignItems: "center", gap: 16, padding: 16, borderRadius: 16, marginBottom: 24 }}>
+          <div style={{ width: 52, height: 52, background: colorFor(student.id), borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
             <Play size={20} color={C.ivory} />
           </div>
           <div>
@@ -2192,9 +2233,7 @@ function StudentProfile({ student, conservatory, onBack, onMessage, locked, onAp
         <p style={{ fontSize: 13, color: C.ivoryDim, marginBottom: 24 }}>No performance video shared.</p>
       )}
 
-      {/* Data grid — 2 columns */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-
         {(student.tastes || []).length > 0 && (
           <Row label="Musical preferences">
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 4 }}>
@@ -2204,7 +2243,6 @@ function StudentProfile({ student, conservatory, onBack, onMessage, locked, onAp
             </div>
           </Row>
         )}
-
         {(student.pieces || []).length > 0 && (
           <Row label="Current repertoire">
             <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
@@ -2217,13 +2255,28 @@ function StudentProfile({ student, conservatory, onBack, onMessage, locked, onAp
             </div>
           </Row>
         )}
-
         {student.top && <Row label="Recent win">{student.top}</Row>}
         {student.flop && <Row label="Current challenge">{student.flop}</Row>}
         <Row label="Teaching">{teachingText}</Row>
         {student.composerDay && <Row label="A day with a composer">{student.composerDay}</Row>}
-
       </div>
+    </>
+  );
+
+  if (student.coverPhotoUrl) {
+    return (
+      <div style={{ display: "flex", minHeight: "calc(100vh - 60px)" }}>
+        <div style={{ width: 320, flexShrink: 0, position: "sticky", top: 0, alignSelf: "flex-start", height: "calc(100vh - 60px)" }}>
+          <img src={student.coverPhotoUrl} alt="Cover" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+        </div>
+        <div style={{ flex: 1, overflowY: "auto", padding: "40px 32px" }}>{profileCards}</div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ maxWidth: 640, margin: "0 auto", padding: "40px 24px" }}>
+      {profileCards}
     </div>
   );
 }
@@ -2246,9 +2299,11 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack }) {
     </div>
   );
 
-  return (
-    <div style={{ maxWidth: 640, margin: "0 auto", padding: "40px 24px" }}>
+  const linkMeta = videoLinkMeta(profile.videoLink);
 
+  /* ── Cards column (shared between both layout variants) ── */
+  const cards = (
+    <>
       {/* Header */}
       <div style={{ marginBottom: 28 }}>
         <div style={{ display: "flex", alignItems: "flex-start", gap: 16, marginBottom: 16 }}>
@@ -2290,8 +2345,8 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack }) {
         <p style={{ fontSize: 15, color: C.ivoryDim, lineHeight: 1.75, marginBottom: 24 }}>{profile.bio}</p>
       )}
 
-      {/* Video link card */}
-      {(() => { const linkMeta = videoLinkMeta(profile.videoLink); return linkMeta ? (
+      {/* Video link */}
+      {linkMeta ? (
         <a href={profile.videoLink} target="_blank" rel="noreferrer"
           style={{ display: "flex", alignItems: "center", gap: 16, padding: 16, borderRadius: 16, border: `1px solid ${C.inkLine}`, textDecoration: "none", color: "inherit", marginBottom: 24 }}>
           <div style={{ width: 52, height: 52, background: colorFor("me"), borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
@@ -2304,12 +2359,10 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack }) {
         </a>
       ) : (
         <p style={{ fontSize: 13, color: C.ivoryDim, marginBottom: 24 }}>No performance video shared.</p>
-      ); })()}
+      )}
 
-
-      {/* Data grid — 2 columns */}
+      {/* Data grid */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-
         {(profile.tastes || []).length > 0 && (
           <Row label="Musical preferences">
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 4 }}>
@@ -2319,7 +2372,6 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack }) {
             </div>
           </Row>
         )}
-
         {(profile.pieces || []).length > 0 && (
           <Row label="Current repertoire">
             <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
@@ -2332,13 +2384,38 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack }) {
             </div>
           </Row>
         )}
-
         {profile.top && <Row label="Recent win">{profile.top}</Row>}
         {profile.flop && <Row label="Current challenge">{profile.flop}</Row>}
         <Row label="Teaching">{teachingText}</Row>
         {profile.composerDay && <Row label="A day with a composer">{profile.composerDay}</Row>}
-
       </div>
+    </>
+  );
+
+  /* ── With cover photo: side-by-side layout ── */
+  if (profile.coverPhotoUrl) {
+    return (
+      <div style={{ display: "flex", minHeight: "calc(100vh - 60px)" }}>
+        {/* Left: cover photo */}
+        <div style={{ width: 320, flexShrink: 0, position: "sticky", top: 0, alignSelf: "flex-start", height: "calc(100vh - 60px)" }}>
+          <img
+            src={profile.coverPhotoUrl}
+            alt="Cover"
+            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+          />
+        </div>
+        {/* Right: cards */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "40px 32px" }}>
+          {cards}
+        </div>
+      </div>
+    );
+  }
+
+  /* ── Without cover photo: centered layout (original) ── */
+  return (
+    <div style={{ maxWidth: 640, margin: "0 auto", padding: "40px 24px" }}>
+      {cards}
     </div>
   );
 }
