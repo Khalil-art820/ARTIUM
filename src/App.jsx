@@ -1250,6 +1250,9 @@ export default function App() {
             setScreen("entry");
           }}
           onlineCount={onlineCount}
+          musicOn={musicOn}
+          onMusicToggle={toggleMusic}
+          audioRef={audioRef}
         />
       )}
 
@@ -2829,8 +2832,9 @@ function TeacherMap({ teachers, selectedId, onSelect, height = 520 }) {
 }
 
 /* ---- Learner home: map + request + chat ---- */
-function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conversations, activeChatId, setActiveChatId, onSend, onBack, onUpdateProfile, onLogout, onDeleteAccount, onlineCount }) {
-  const [tab, setTab] = useState("teachers");
+function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conversations, activeChatId, setActiveChatId, onSend, onBack, onUpdateProfile, onLogout, onDeleteAccount, onlineCount, musicOn, onMusicToggle, audioRef }) {
+  const [appTab, setAppTab] = useState("map");
+  const [selectedConsId, setSelectedConsId] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
   const selected = teachers.find((t) => t.id === selectedId);
   const status = selectedId ? teachRequests[selectedId] : undefined;
@@ -2843,6 +2847,15 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
 
+  // Group teachers by conservatory for WorldMap
+  const teachersByCons = teachers.reduce((acc, t) => {
+    if (t.conservatoryId) { (acc[t.conservatoryId] = acc[t.conservatoryId] || []).push(t); }
+    return acc;
+  }, {});
+
+  const consRoster = selectedConsId ? (teachersByCons[selectedConsId] || []) : [];
+  const cons = CONSERVATORIES.find((c) => c.id === selectedConsId);
+
   function selectTeacher(id) {
     setSelectedId(id);
     setActiveChatId(id);
@@ -2854,57 +2867,185 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
     setTimeout(() => setSaved(false), 2000);
   }
 
-  return (
-    <div className="min-h-full" style={{ background: C.ink, color: C.ivory }}>
-      <div className="max-w-6xl mx-auto px-6 pt-8 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <button onClick={onBack} style={{ color: C.ivoryDim, background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", padding: 0 }}><ChevronLeft size={18} /></button>
-          <Logo slogan />
-        </div>
-        {onlineCount != null && (
-          <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontFamily: FONT_MONO, color: "#425466", whiteSpace: "nowrap" }}>
-            <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#27AE60", display: "inline-block", flexShrink: 0 }} />
-            <span style={{ color: "#0A2540", fontWeight: 700 }}>{onlineCount}</span> online
-          </span>
-        )}
-      </div>
+  const learnerProfile = learner ? { name: learner.name, photoUrl: learner.photoUrl } : null;
 
+  return (
+    <AppShell
+      appTab={appTab} setAppTab={setAppTab}
+      myProfile={learnerProfile}
+      musicOn={musicOn} onMusicToggle={onMusicToggle} audioRef={audioRef}
+      onlineCount={onlineCount}
+      onBack={selectedId ? () => setSelectedId(null) : appTab !== "map" ? () => setAppTab("map") : onBack}
+      hideTabs={!!selectedId}
+    >
       {/* Tab bar */}
-      <div className="max-w-6xl mx-auto px-6 pt-5 flex gap-1" style={{ borderBottom: `1px solid ${C.inkLine}` }}>
-        {[["teachers", "Find a teacher"], ["profile", "My profile"]].map(([key, label]) => (
-          <button key={key} onClick={() => setTab(key)}
-            className="px-4 py-2 text-sm rounded-t-lg"
-            style={{ fontWeight: tab === key ? 600 : 400, color: tab === key ? C.brass : C.ivoryDim, borderBottom: tab === key ? `2px solid ${C.brass}` : "2px solid transparent", background: "transparent" }}>
+      <div className="px-6 flex gap-1" style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#fff" }}>
+        {[["map", "Find a teacher"], ["profile", "My profile"]].map(([key, label]) => (
+          <button key={key} onClick={() => setAppTab(key)}
+            className="px-4 py-2 text-sm"
+            style={{ fontWeight: appTab === key ? 600 : 400, color: appTab === key ? C.brass : C.ivoryDim, borderBottom: appTab === key ? `2px solid ${C.brass}` : "2px solid transparent", background: "transparent" }}>
             {label}
           </button>
         ))}
       </div>
-      {tab === "teachers" && <div className="max-w-6xl mx-auto px-6 pt-6 pb-2">
-        <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600 }}>
-          {learner ? `Welcome, ${learner.name.split(" ")[0]}` : "Find a teacher"}
-        </h2>
-        <p className="mt-1 text-sm" style={{ color: C.ivoryDim }}>
-          {teachers.length} conservatory student{teachers.length === 1 ? "" : "s"} offering lessons
-          {learner && learner.location ? ` · you're in ${learner.location}` : ""}.
-        </p>
-      </div>}
-      {tab === "profile" && (
+
+      {appTab === "map" && !selectedId && (
+        <>
+          <div className="px-6 pt-6 pb-2">
+            <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600, color: C.inkText }}>
+              {learner ? `Welcome, ${learner.name.split(" ")[0]}` : "Find a teacher"}
+            </h2>
+            <p className="mt-1 text-sm" style={{ color: C.ivoryDim }}>
+              {teachers.length} conservatory student{teachers.length === 1 ? "" : "s"} offering lessons
+              {learner && learner.location ? ` · you're in ${learner.location}` : ""}.
+            </p>
+          </div>
+          <div className="px-6 pb-12 lg-split-map">
+            <div style={{ background: C.inkSoft }}>
+              <MapTitle />
+              <WorldMap selectedId={selectedConsId} onSelect={setSelectedConsId} studentsByCons={teachersByCons} height={520} interactive />
+            </div>
+            <div className="lg-scroll overflow-y-auto" style={{ borderLeft: `1px solid ${C.inkLine}`, maxHeight: 600 }}>
+              {!cons ? (
+                <div className="p-6">
+                  <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.ivoryDim }}>{teachers.length} TEACHERS</p>
+                  <p className="mt-2 text-sm" style={{ color: C.ivoryDim }}>Select a pin on the map to see who's teaching there.</p>
+                  <div className="mt-5 flex flex-col gap-2">
+                    {teachers.map((t) => {
+                      const c = CONSERVATORIES.find((c) => c.id === t.conservatoryId);
+                      return (
+                        <button key={t.id} onClick={() => selectTeacher(t.id)} className="text-left flex items-center gap-3 p-3 rounded-xl" style={{ border: `1px solid ${C.inkLine}` }}>
+                          <Avatar name={t.name} id={t.id} size={40} photoUrl={t.photoUrl} online={t.online} />
+                          <div className="min-w-0">
+                            <p style={{ fontSize: 13, fontWeight: 600, color: C.inkText }}>{t.name}</p>
+                            <p style={{ fontSize: 11, color: C.ivoryDim }}>
+                              {c ? c.city : ""} · {teachingModeLabel(t.teaching.mode)}{t.teaching.price ? ` · €${t.teaching.price}` : ""}
+                            </p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                <div className="p-6">
+                  <button onClick={() => setSelectedConsId(null)} className="text-xs flex items-center gap-1 mb-4" style={{ color: C.ivoryDim }}><ArrowLeft size={13} /> All teachers</button>
+                  <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brass }}>{cons.city.toUpperCase()}, {cons.country.toUpperCase()} · EST. {cons.founded}</p>
+                  <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600, marginTop: 4, color: C.inkText }}>{cons.name}</h3>
+                  <p className="mt-1 text-xs" style={{ color: C.ivoryDim }}>{consRoster.length} teacher{consRoster.length === 1 ? "" : "s"} on Artium</p>
+                  <div className="mt-5 flex flex-col gap-2">
+                    {consRoster.length === 0 && <p className="text-sm" style={{ color: C.ivoryDim }}>No teachers from this conservatory yet.</p>}
+                    {consRoster.map((t) => (
+                      <button key={t.id} onClick={() => selectTeacher(t.id)} className="text-left flex items-center gap-3 p-3 rounded-xl" style={{ border: `1px solid ${C.inkLine}` }}>
+                        <Avatar name={t.name} id={t.id} size={40} photoUrl={t.photoUrl} online={t.online} />
+                        <div className="min-w-0">
+                          <p style={{ fontSize: 13, fontWeight: 600, color: C.inkText }}>{t.name}</p>
+                          <p style={{ fontSize: 11, color: C.ivoryDim }}>{t.year} · {t.tastes.slice(0, 2).join(", ")}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+
+      {appTab === "map" && selectedId && selected && (
+        <div className="max-w-2xl mx-auto px-6 pb-12 pt-6">
+          <button onClick={() => setSelectedId(null)} className="text-xs flex items-center gap-1 mb-6" style={{ color: C.ivoryDim }}><ArrowLeft size={13} /> All teachers</button>
+          <div className="flex items-center gap-3">
+            <Avatar name={selected.name} id={selected.id} size={52} photoUrl={selected.photoUrl} online={selected.online} />
+            <div>
+              <p style={{ fontFamily: FONT_DISPLAY, fontSize: 20, fontWeight: 600, color: C.inkText }}>{selected.name}</p>
+              <p style={{ fontSize: 12, color: C.ivoryDim }}>
+                {selected.instrument ? `${selected.instrument} · ` : ""}{selected.year ? `${selected.year} · ` : ""}
+                {(CONSERVATORIES.find((c) => c.id === selected.conservatoryId) || {}).name}
+              </p>
+            </div>
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <span className="px-3 py-1 rounded-full text-xs" style={{ border: `1px solid ${C.inkLine}`, color: C.ivoryDim }}>{teachingModeLabel(selected.teaching.mode)}</span>
+            {selected.teaching.price && <span className="px-3 py-1 rounded-full text-xs" style={{ border: `1px solid ${C.inkLine}`, color: C.brass }}>€{selected.teaching.price} / session</span>}
+          </div>
+          {selected.bio && <p className="mt-4 text-sm" style={{ color: C.ivoryDim, lineHeight: 1.6 }}>{selected.bio}</p>}
+          {(() => {
+            const linkMeta = videoLinkMeta(selected.videoLink);
+            return linkMeta ? (
+              <a href={selected.videoLink} target="_blank" rel="noreferrer" className="mt-4 rounded-xl flex items-center gap-3 p-3" style={{ border: `1px solid ${C.inkLine}`, textDecoration: "none", color: "inherit" }}>
+                <div className="rounded-lg flex items-center justify-center shrink-0" style={{ width: 40, height: 40, background: colorFor(selected.id) }}>
+                  <Play size={16} color={C.ivory} />
+                </div>
+                <div>
+                  <p style={{ fontSize: 12, fontWeight: 600, color: C.inkText }}>Watch performance on {linkMeta.label}</p>
+                  <p className="flex items-center gap-1" style={{ fontSize: 10, color: C.ivoryDim }}><linkMeta.Icon size={11} /> Opens in a new tab</p>
+                </div>
+              </a>
+            ) : null;
+          })()}
+          {selected.tastes && selected.tastes.length > 0 && (
+            <div className="mt-5">
+              <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.ivoryDim }}>MUSICAL PREFERENCES</p>
+              <div className="flex flex-wrap gap-1.5 mt-2">{selected.tastes.map((t) => <span key={t} className="text-xs px-2.5 py-1 rounded-full" style={{ border: `1px solid ${C.inkLine}`, color: C.ivoryDim }}>{t}</span>)}</div>
+            </div>
+          )}
+          {selected.pieces && selected.pieces.length > 0 && (
+            <div className="mt-5">
+              <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.ivoryDim }}>CURRENT REPERTOIRE</p>
+              <div className="flex flex-col gap-1.5 mt-2">
+                {selected.pieces.map((p, i) => (
+                  <p key={i} className="text-sm" style={{ color: C.inkText }}><span style={{ fontFamily: FONT_MONO, color: C.brass, fontSize: 11 }}>No.{i + 1}</span> {p.title} <span style={{ color: C.ivoryDim }}>— {p.composer}</span></p>
+                ))}
+              </div>
+            </div>
+          )}
+          {selected.top && (
+            <div className="mt-5">
+              <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.ivoryDim }}>TOP</p>
+              <p className="text-sm mt-2" style={{ lineHeight: 1.6, color: C.inkText }}>{selected.top}</p>
+            </div>
+          )}
+          {selected.flop && (
+            <div className="mt-5">
+              <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.ivoryDim }}>FLOP</p>
+              <p className="text-sm mt-2" style={{ lineHeight: 1.6, color: C.inkText }}>{selected.flop}</p>
+            </div>
+          )}
+          {status === "accepted" ? (
+            <LearnerChat teacher={selected} messages={conversations[selected.id] || []} onSend={onSend} />
+          ) : status === "pending" ? (
+            <div className="mt-6 rounded-xl p-4 text-sm" style={{ background: C.inkSoft, border: `1px solid ${C.inkLine}`, color: C.ivoryDim }}>
+              <p className="lg-blink">Request sent — waiting for {selected.name.split(" ")[0]} to accept…</p>
+            </div>
+          ) : (
+            <div className="mt-6">
+              <PrimaryBtn full onClick={() => onSendRequest(selected.id)} icon={Send}>Send teaching request</PrimaryBtn>
+              <p className="mt-2 text-xs" style={{ color: C.ivoryDim }}>
+                {selected.name.split(" ")[0]} receives your request and can accept to start messaging.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {appTab === "profile" && (
         <div className="max-w-lg mx-auto px-6 pt-10 pb-16">
-          <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600 }}>My profile</h2>
+          <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600, color: C.inkText }}>My profile</h2>
           <p className="mt-1 text-sm" style={{ color: C.ivoryDim }}>Update your name and location.</p>
           <div className="mt-8 flex flex-col gap-5">
             <div>
               <label className="block mb-1.5 text-xs" style={{ fontFamily: FONT_MONO, color: C.ivoryDim }}>FULL NAME</label>
               <input value={editName} onChange={(e) => { setEditName(e.target.value); setSaved(false); }}
                 className="w-full rounded-xl px-4 py-3 text-sm"
-                style={{ background: C.inkSoft, border: `1px solid ${C.inkLine}`, color: C.ivory, outline: "none" }}
+                style={{ background: C.inkSoft, border: `1px solid ${C.inkLine}`, color: C.inkText, outline: "none" }}
                 placeholder="Your name" />
             </div>
             <div>
               <label className="block mb-1.5 text-xs" style={{ fontFamily: FONT_MONO, color: C.ivoryDim }}>LOCATION</label>
               <input value={editLocation} onChange={(e) => { setEditLocation(e.target.value); setSaved(false); }}
                 className="w-full rounded-xl px-4 py-3 text-sm"
-                style={{ background: C.inkSoft, border: `1px solid ${C.inkLine}`, color: C.ivory, outline: "none" }}
+                style={{ background: C.inkSoft, border: `1px solid ${C.inkLine}`, color: C.inkText, outline: "none" }}
                 placeholder="City, Country" />
             </div>
             <button onClick={saveProfile} disabled={!editName.trim() || !editLocation.trim()}
@@ -2926,7 +3067,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
               </button>
             ) : (
               <div className="rounded-xl p-4 flex flex-col gap-3" style={{ border: `1px solid ${C.burgundy}`, background: "rgba(138,54,54,0.08)" }}>
-                <p className="text-sm" style={{ color: C.ivory }}>This will permanently delete your account and all your data. Are you sure?</p>
+                <p className="text-sm" style={{ color: C.inkText }}>This will permanently delete your account and all your data. Are you sure?</p>
                 {deleteError && <p className="text-xs" style={{ color: C.burgundy }}>{deleteError}</p>}
                 <div className="flex gap-2">
                   <button onClick={() => { setConfirmDelete(false); setDeleteError(""); }}
@@ -2952,119 +3093,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
           </div>
         </div>
       )}
-
-      {tab === "teachers" && <div className="max-w-6xl mx-auto px-6 pb-12 lg-split-map">
-        <div className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${C.inkLine}`, background: C.inkSoft }}>
-          <MapTitle />
-          <TeacherMap teachers={teachers} selectedId={selectedId} onSelect={selectTeacher} height={500} />
-        </div>
-        <div className="lg-scroll overflow-y-auto" style={{ borderLeft: `1px solid ${C.inkLine}`, maxHeight: 560 }}>
-          {!selected ? (
-            <div className="p-6">
-              <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.ivoryDim }}>{teachers.length} TEACHERS</p>
-              <p className="mt-2 text-sm" style={{ color: C.ivoryDim }}>Tap a gold pin on the map, or pick someone below.</p>
-              <div className="mt-5 flex flex-col gap-2">
-                {teachers.map((t) => {
-                  const cons = CONSERVATORIES.find((c) => c.id === t.conservatoryId);
-                  return (
-                    <button key={t.id} onClick={() => selectTeacher(t.id)} className="text-left flex items-center gap-3 p-3 rounded-xl" style={{ border: `1px solid ${C.inkLine}` }}>
-                      <Avatar name={t.name} id={t.id} size={40} photoUrl={t.photoUrl} online={t.online} />
-                      <div className="min-w-0">
-                        <p style={{ fontSize: 13, fontWeight: 600 }}>{t.name}</p>
-                        <p style={{ fontSize: 11, color: C.ivoryDim }}>
-                          {cons ? cons.city : ""} · {teachingModeLabel(t.teaching.mode)}{t.teaching.price ? ` · €${t.teaching.price}` : ""}
-                        </p>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          ) : (
-            <div className="p-6">
-              <button onClick={() => setSelectedId(null)} className="text-xs flex items-center gap-1 mb-4" style={{ color: C.ivoryDim }}><ArrowLeft size={13} /> All teachers</button>
-              <div className="flex items-center gap-3">
-                <Avatar name={selected.name} id={selected.id} size={52} photoUrl={selected.photoUrl} online={selected.online} />
-                <div>
-                  <p style={{ fontFamily: FONT_DISPLAY, fontSize: 20, fontWeight: 600 }}>{selected.name}</p>
-                  <p style={{ fontSize: 12, color: C.ivoryDim }}>
-                    {selected.instrument ? `${selected.instrument} · ` : ""}{selected.year ? `${selected.year} · ` : ""}
-                    {(CONSERVATORIES.find((c) => c.id === selected.conservatoryId) || {}).name}
-                  </p>
-                </div>
-              </div>
-              <div className="mt-4 flex flex-wrap gap-2">
-                <span className="px-3 py-1 rounded-full text-xs" style={{ border: `1px solid ${C.inkLine}`, color: C.ivoryDim }}>{teachingModeLabel(selected.teaching.mode)}</span>
-                {selected.teaching.price && <span className="px-3 py-1 rounded-full text-xs" style={{ border: `1px solid ${C.inkLine}`, color: C.brass }}>€{selected.teaching.price} / session</span>}
-              </div>
-
-              {selected.bio && <p className="mt-4 text-sm" style={{ color: C.ivoryDim, lineHeight: 1.6 }}>{selected.bio}</p>}
-
-              {(() => {
-                const linkMeta = videoLinkMeta(selected.videoLink);
-                return linkMeta ? (
-                  <a href={selected.videoLink} target="_blank" rel="noreferrer" className="mt-4 rounded-xl flex items-center gap-3 p-3" style={{ border: `1px solid ${C.inkLine}`, textDecoration: "none", color: "inherit" }}>
-                    <div className="rounded-lg flex items-center justify-center shrink-0" style={{ width: 40, height: 40, background: colorFor(selected.id) }}>
-                      <Play size={16} color={C.ivory} />
-                    </div>
-                    <div>
-                      <p style={{ fontSize: 12, fontWeight: 600 }}>Watch performance on {linkMeta.label}</p>
-                      <p className="flex items-center gap-1" style={{ fontSize: 10, color: C.ivoryDim }}><linkMeta.Icon size={11} /> Opens in a new tab</p>
-                    </div>
-                  </a>
-                ) : null;
-              })()}
-
-              {selected.tastes && selected.tastes.length > 0 && (
-                <div className="mt-5">
-                  <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.ivoryDim }}>MUSICAL PREFERENCES</p>
-                  <div className="flex flex-wrap gap-1.5 mt-2">{selected.tastes.map((t) => <span key={t} className="text-xs px-2.5 py-1 rounded-full" style={{ border: `1px solid ${C.inkLine}` }}>{t}</span>)}</div>
-                </div>
-              )}
-
-              {selected.pieces && selected.pieces.length > 0 && (
-                <div className="mt-5">
-                  <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.ivoryDim }}>CURRENT REPERTOIRE</p>
-                  <div className="flex flex-col gap-1.5 mt-2">
-                    {selected.pieces.map((p, i) => (
-                      <p key={i} className="text-sm"><span style={{ fontFamily: FONT_MONO, color: C.brass, fontSize: 11 }}>No.{i + 1}</span> {p.title} <span style={{ color: C.ivoryDim }}>— {p.composer}</span></p>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {selected.top && (
-                <div className="mt-5">
-                  <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.ivoryDim }}>TOP</p>
-                  <p className="text-sm mt-2" style={{ lineHeight: 1.6 }}>{selected.top}</p>
-                </div>
-              )}
-              {selected.flop && (
-                <div className="mt-5">
-                  <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.ivoryDim }}>FLOP</p>
-                  <p className="text-sm mt-2" style={{ lineHeight: 1.6 }}>{selected.flop}</p>
-                </div>
-              )}
-
-              {status === "accepted" ? (
-                <LearnerChat teacher={selected} messages={conversations[selected.id] || []} onSend={onSend} />
-              ) : status === "pending" ? (
-                <div className="mt-6 rounded-xl p-4 text-sm" style={{ background: C.inkSoft, border: `1px solid ${C.inkLine}`, color: C.ivoryDim }}>
-                  <p className="lg-blink">Request sent — waiting for {selected.name.split(" ")[0]} to accept…</p>
-                </div>
-              ) : (
-                <div className="mt-6">
-                  <PrimaryBtn full onClick={() => onSendRequest(selected.id)} icon={Send}>Send teaching request</PrimaryBtn>
-                  <p className="mt-2 text-xs" style={{ color: C.ivoryDim }}>
-                    {selected.name.split(" ")[0]} receives your request and can accept to start messaging.
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div>}
-    </div>
+    </AppShell>
   );
 }
 
