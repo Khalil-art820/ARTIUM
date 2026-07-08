@@ -2595,6 +2595,7 @@ function LearnerSignup({ onSubmit, onBack, onLogin, error, googleName = "" }) {
   const [name, setName] = useState(googleName);
   const [location, setLocation] = useState("");
   const [instrument, setInstrument] = useState("");
+  const [instrumentOther, setInstrumentOther] = useState("");
   const [motivation, setMotivation] = useState("");
 
   // "on behalf" fields
@@ -2602,6 +2603,7 @@ function LearnerSignup({ onSubmit, onBack, onLogin, error, googleName = "" }) {
   const [learnerAge, setLearnerAge] = useState("");
   const [learnerLocation, setLearnerLocation] = useState("");
   const [learnerInstrument, setLearnerInstrument] = useState("");
+  const [learnerInstrumentOther, setLearnerInstrumentOther] = useState("");
   const [learnerLevel, setLearnerLevel] = useState("");
   const [learnerGoals, setLearnerGoals] = useState("");
 
@@ -2611,15 +2613,18 @@ function LearnerSignup({ onSubmit, onBack, onLogin, error, googleName = "" }) {
   const mismatch = confirmPassword.length > 0 && password !== confirmPassword;
   const step1Ready = forWhom !== "" && email.trim().length > 3 && password.length >= 6 && password === confirmPassword;
 
-  const step2SelfReady = name.trim().length > 1 && location.trim().length > 1 && instrument.trim().length > 0 && motivation.trim().length > 5;
-  const step2OtherReady = learnerName.trim().length > 1 && learnerLocation.trim().length > 1 && learnerInstrument.trim().length > 0 && learnerGoals.trim().length > 5;
+  const resolvedInstrument = instrument === "Other" ? instrumentOther.trim() : instrument;
+  const resolvedLearnerInstrument = learnerInstrument === "Other" ? learnerInstrumentOther.trim() : learnerInstrument;
+
+  const step2SelfReady = name.trim().length > 1 && location.trim().length > 1 && resolvedInstrument.length > 0 && motivation.trim().length > 5;
+  const step2OtherReady = learnerName.trim().length > 1 && learnerLocation.trim().length > 1 && resolvedLearnerInstrument.length > 0 && learnerGoals.trim().length > 5;
   const step2Ready = isForOther ? step2OtherReady : step2SelfReady;
 
   async function handleSubmit() {
     setSubmitting(true);
     const submitName = isForOther ? learnerName.trim() : name.trim();
     const submitLocation = isForOther ? learnerLocation.trim() : location.trim();
-    const submitInstrument = isForOther ? learnerInstrument.trim() : instrument.trim();
+    const submitInstrument = isForOther ? resolvedLearnerInstrument : resolvedInstrument;
     const submitMotivation = isForOther
       ? `On behalf of ${learnerName.trim()}${learnerAge ? ` (age ${learnerAge})` : ""}. Level: ${learnerLevel || "beginner"}. Goals: ${learnerGoals.trim()}`
       : motivation.trim();
@@ -2726,7 +2731,11 @@ function LearnerSignup({ onSubmit, onBack, onLogin, error, googleName = "" }) {
               <select style={{ ...inputStyle, background: C.inkSoft }} value={learnerInstrument} onChange={(e) => setLearnerInstrument(e.target.value)}>
                 <option value="">Select an instrument…</option>
                 {INSTRUMENT_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
+                <option value="Other">Other</option>
               </select>
+              {learnerInstrument === "Other" && (
+                <input style={{ ...inputStyle, marginTop: 8 }} value={learnerInstrumentOther} onChange={(e) => setLearnerInstrumentOther(e.target.value)} placeholder="Please specify…" autoFocus />
+              )}
             </Field>
             <Field label="Current level">
               <select style={{ ...inputStyle, background: C.inkSoft }} value={learnerLevel} onChange={(e) => setLearnerLevel(e.target.value)}>
@@ -2762,7 +2771,11 @@ function LearnerSignup({ onSubmit, onBack, onLogin, error, googleName = "" }) {
               <select style={{ ...inputStyle, background: C.inkSoft }} value={instrument} onChange={(e) => setInstrument(e.target.value)}>
                 <option value="">Select an instrument…</option>
                 {INSTRUMENT_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
+                <option value="Other">Other</option>
               </select>
+              {instrument === "Other" && (
+                <input style={{ ...inputStyle, marginTop: 8 }} value={instrumentOther} onChange={(e) => setInstrumentOther(e.target.value)} placeholder="Please specify…" autoFocus />
+              )}
             </Field>
             <Field label="Why do you want to learn, and what are your expectations?">
               <textarea
