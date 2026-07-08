@@ -2710,6 +2710,25 @@ function LearnerSignup({ onSubmit, onBack, onLogin, error, googleName = "" }) {
         ) : isForOther ? (
           /* ── On behalf of someone ── */
           <>
+            <Field label="Who is this registration for?">
+              <div style={{ display: "flex", gap: 10 }}>
+                {[
+                  { value: "self", label: "For me" },
+                  { value: "other", label: "On behalf of someone (e.g. my child)" },
+                ].map((opt) => (
+                  <button key={opt.value} onClick={() => setForWhom(opt.value)}
+                    style={{
+                      flex: 1, padding: "12px 8px", borderRadius: 8, fontSize: 13, fontWeight: 600,
+                      border: `1.5px solid ${forWhom === opt.value ? C.brass : "#444"}`,
+                      background: forWhom === opt.value ? "rgba(74,171,140,0.1)" : "transparent",
+                      color: forWhom === opt.value ? C.brass : C.ivoryDim,
+                      cursor: "pointer", textAlign: "center", lineHeight: 1.4,
+                    }}>
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </Field>
             <Field label="Learner's full name">
               <input style={inputStyle} value={learnerName} onChange={(e) => setLearnerName(e.target.value)} placeholder="e.g. Sophie" autoComplete="off" autoFocus />
             </Field>
@@ -2749,6 +2768,25 @@ function LearnerSignup({ onSubmit, onBack, onLogin, error, googleName = "" }) {
         ) : (
           /* ── For myself ── */
           <>
+            <Field label="Who is this registration for?">
+              <div style={{ display: "flex", gap: 10 }}>
+                {[
+                  { value: "self", label: "For me" },
+                  { value: "other", label: "On behalf of someone (e.g. my child)" },
+                ].map((opt) => (
+                  <button key={opt.value} onClick={() => setForWhom(opt.value)}
+                    style={{
+                      flex: 1, padding: "12px 8px", borderRadius: 8, fontSize: 13, fontWeight: 600,
+                      border: `1.5px solid ${forWhom === opt.value ? C.brass : "#444"}`,
+                      background: forWhom === opt.value ? "rgba(74,171,140,0.1)" : "transparent",
+                      color: forWhom === opt.value ? C.brass : C.ivoryDim,
+                      cursor: "pointer", textAlign: "center", lineHeight: 1.4,
+                    }}>
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </Field>
             <Field label="Your full name">
               <input style={inputStyle} value={name} onChange={(e) => setName(e.target.value)} placeholder="Your full name" autoComplete="off" autoFocus />
             </Field>
