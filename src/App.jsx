@@ -2578,23 +2578,42 @@ function LearnerSignup({ onSubmit, onBack, onLogin, error, googleName = "" }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState(isGoogle ? "__google__" : "");
   const [confirmPassword, setConfirmPassword] = useState(isGoogle ? "__google__" : "");
+
+  // "for me" fields
   const [name, setName] = useState(googleName);
   const [location, setLocation] = useState("");
   const [instrument, setInstrument] = useState("");
   const [motivation, setMotivation] = useState("");
+
+  // "on behalf" fields
+  const [learnerName, setLearnerName] = useState("");
+  const [learnerAge, setLearnerAge] = useState("");
+  const [learnerLocation, setLearnerLocation] = useState("");
+  const [learnerInstrument, setLearnerInstrument] = useState("");
+  const [learnerLevel, setLearnerLevel] = useState("");
+  const [learnerGoals, setLearnerGoals] = useState("");
+
   const [submitting, setSubmitting] = useState(false);
 
+  const isForOther = forWhom === "other";
   const mismatch = confirmPassword.length > 0 && password !== confirmPassword;
   const step1Ready = forWhom !== "" && email.trim().length > 3 && password.length >= 6 && password === confirmPassword;
-  const step2Ready = name.trim().length > 1 && location.trim().length > 1 && instrument.trim().length > 0 && motivation.trim().length > 5;
+
+  const step2SelfReady = name.trim().length > 1 && location.trim().length > 1 && instrument.trim().length > 0 && motivation.trim().length > 5;
+  const step2OtherReady = learnerName.trim().length > 1 && learnerLocation.trim().length > 1 && learnerInstrument.trim().length > 0 && learnerGoals.trim().length > 5;
+  const step2Ready = isForOther ? step2OtherReady : step2SelfReady;
 
   async function handleSubmit() {
     setSubmitting(true);
-    await onSubmit({ name: name.trim(), location: location.trim(), email: email.trim(), password, instrument: instrument.trim(), motivation: motivation.trim() });
+    const submitName = isForOther ? learnerName.trim() : name.trim();
+    const submitLocation = isForOther ? learnerLocation.trim() : location.trim();
+    const submitInstrument = isForOther ? learnerInstrument.trim() : instrument.trim();
+    const submitMotivation = isForOther
+      ? `On behalf of ${learnerName.trim()}${learnerAge ? ` (age ${learnerAge})` : ""}. Level: ${learnerLevel || "beginner"}. Goals: ${learnerGoals.trim()}`
+      : motivation.trim();
+    await onSubmit({ name: submitName, location: submitLocation, email: email.trim(), password, instrument: submitInstrument, motivation: submitMotivation });
     setSubmitting(false);
   }
-
-  const isForOther = forWhom === "other";
 
   return (
     <div className="min-h-full" style={{ background: C.ink, color: C.ivory }}>
@@ -2616,20 +2635,17 @@ function LearnerSignup({ onSubmit, onBack, onLogin, error, googleName = "" }) {
         {step === 1 ? (
           <>
             <h2 className="mt-8" style={{ fontFamily: FONT_DISPLAY, fontSize: 30, fontWeight: 600 }}>Create your account</h2>
-            <p className="mt-3" style={{ color: C.ivoryDim, fontSize: 15, lineHeight: 1.6 }}>
-              First, let's set up your account.
-            </p>
+            <p className="mt-3" style={{ color: C.ivoryDim, fontSize: 15, lineHeight: 1.6 }}>First, let's set up your account.</p>
+          </>
+        ) : isForOther ? (
+          <>
+            <h2 className="mt-8" style={{ fontFamily: FONT_DISPLAY, fontSize: 30, fontWeight: 600 }}>About the learner</h2>
+            <p className="mt-3" style={{ color: C.ivoryDim, fontSize: 15, lineHeight: 1.6 }}>Tell us about the person you're registering. This helps us find the right teacher for them.</p>
           </>
         ) : (
           <>
-            <h2 className="mt-8" style={{ fontFamily: FONT_DISPLAY, fontSize: 30, fontWeight: 600 }}>
-              {isForOther ? "Tell us about the learner" : "Tell us about you"}
-            </h2>
-            <p className="mt-3" style={{ color: C.ivoryDim, fontSize: 15, lineHeight: 1.6 }}>
-              {isForOther
-                ? "Help us match them with the right teacher."
-                : "We'll show conservatory musicians who give lessons near you."}
-            </p>
+            <h2 className="mt-8" style={{ fontFamily: FONT_DISPLAY, fontSize: 30, fontWeight: 600 }}>Tell us about you</h2>
+            <p className="mt-3" style={{ color: C.ivoryDim, fontSize: 15, lineHeight: 1.6 }}>We'll show conservatory musicians who give lessons near you.</p>
           </>
         )}
       </div>
@@ -2637,7 +2653,6 @@ function LearnerSignup({ onSubmit, onBack, onLogin, error, googleName = "" }) {
       <div className="max-w-2xl mx-auto px-6 py-10">
         {step === 1 ? (
           <>
-            {/* Who is this for? */}
             <Field label="Who is this registration for?">
               <div style={{ display: "flex", gap: 10 }}>
                 {[
@@ -2661,7 +2676,7 @@ function LearnerSignup({ onSubmit, onBack, onLogin, error, googleName = "" }) {
             <GoogleBtn label="Sign up with Google" role="learner" />
             <Divider />
 
-            <Field label="Email">
+            <Field label="Your email">
               <input style={inputStyle} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="off" />
             </Field>
             <Field label="Password">
@@ -2680,29 +2695,66 @@ function LearnerSignup({ onSubmit, onBack, onLogin, error, googleName = "" }) {
               <button onClick={onLogin} style={{ color: C.brass, fontWeight: 600, background: "none", border: "none", cursor: "pointer", fontSize: 14 }}>Log in</button>
             </p>
           </>
-        ) : (
+        ) : isForOther ? (
+          /* ── On behalf of someone ── */
           <>
-            <Field label={isForOther ? "Learner's full name" : "Your full name"}>
-              <input style={inputStyle} value={name} onChange={(e) => setName(e.target.value)}
-                placeholder={isForOther ? "Your child's name" : "Your full name"} autoComplete="off" autoFocus />
+            <Field label="Learner's full name">
+              <input style={inputStyle} value={learnerName} onChange={(e) => setLearnerName(e.target.value)} placeholder="e.g. Sophie" autoComplete="off" autoFocus />
             </Field>
-            <Field label={isForOther ? "Where is the learner based?" : "Where are you based?"}>
+            <Field label="Learner's age (optional)">
+              <input style={inputStyle} value={learnerAge} onChange={(e) => setLearnerAge(e.target.value)} placeholder="e.g. 10" autoComplete="off" />
+            </Field>
+            <Field label="Where is the learner based?">
+              <input style={inputStyle} value={learnerLocation} onChange={(e) => setLearnerLocation(e.target.value)} placeholder="City, country" autoComplete="off" />
+            </Field>
+            <Field label="Which instrument would they like to learn?">
+              <select style={{ ...inputStyle, background: C.inkSoft }} value={learnerInstrument} onChange={(e) => setLearnerInstrument(e.target.value)}>
+                <option value="">Select an instrument…</option>
+                {INSTRUMENT_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
+              </select>
+            </Field>
+            <Field label="Current level">
+              <select style={{ ...inputStyle, background: C.inkSoft }} value={learnerLevel} onChange={(e) => setLearnerLevel(e.target.value)}>
+                <option value="">Select a level…</option>
+                {["Complete beginner", "Early beginner", "Intermediate", "Advanced"].map((l) => <option key={l} value={l}>{l}</option>)}
+              </select>
+            </Field>
+            <Field label="Goals and expectations">
+              <textarea
+                style={{ ...inputStyle, resize: "vertical", minHeight: 100, lineHeight: 1.6 }}
+                value={learnerGoals}
+                onChange={(e) => setLearnerGoals(e.target.value)}
+                placeholder="What do you hope they'll achieve? Any specific goals, pieces, or timeline in mind?"
+              />
+            </Field>
+            {error && <p className="text-sm mb-4" style={{ color: C.burgundy }}>{error}</p>}
+            <div className="mt-2">
+              <PrimaryBtn disabled={!step2Ready || submitting} onClick={handleSubmit} icon={ArrowRight}>
+                {submitting ? "Submitting…" : "Find a teacher"}
+              </PrimaryBtn>
+            </div>
+          </>
+        ) : (
+          /* ── For myself ── */
+          <>
+            <Field label="Your full name">
+              <input style={inputStyle} value={name} onChange={(e) => setName(e.target.value)} placeholder="Your full name" autoComplete="off" autoFocus />
+            </Field>
+            <Field label="Where are you based?">
               <input style={inputStyle} value={location} onChange={(e) => setLocation(e.target.value)} placeholder="City, country" autoComplete="off" />
             </Field>
-            <Field label={isForOther ? "Which instrument would they like to learn?" : "Which instrument would you like to learn?"}>
+            <Field label="Which instrument would you like to learn?">
               <select style={{ ...inputStyle, background: C.inkSoft }} value={instrument} onChange={(e) => setInstrument(e.target.value)}>
                 <option value="">Select an instrument…</option>
                 {INSTRUMENT_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
               </select>
             </Field>
-            <Field label={isForOther ? "Goals and expectations for the learner" : "Why do you want to learn, and what are your expectations?"}>
+            <Field label="Why do you want to learn, and what are your expectations?">
               <textarea
                 style={{ ...inputStyle, resize: "vertical", minHeight: 100, lineHeight: 1.6 }}
                 value={motivation}
                 onChange={(e) => setMotivation(e.target.value)}
-                placeholder={isForOther
-                  ? "Tell the teacher about your child's goals, current level, and what you're hoping to achieve…"
-                  : "Tell the teacher about your goals, experience level, and what you're hoping to achieve…"}
+                placeholder="Tell the teacher about your goals, experience level, and what you're hoping to achieve…"
               />
             </Field>
             {error && <p className="text-sm mb-4" style={{ color: C.burgundy }}>{error}</p>}
