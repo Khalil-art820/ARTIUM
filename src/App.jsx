@@ -38,7 +38,7 @@ const FONT_DISPLAY = "'Inter', sans-serif";
 const FONT_BODY = "'Inter', sans-serif";
 const FONT_MONO = "'ui-monospace', monospace";
 
-const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII"];
+const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII"];
 
 /* ---------------------------------------------------------------- */
 /* BACKGROUND MUSIC (original synthesized ambient track)              */
@@ -2952,82 +2952,105 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
         </>
       )}
 
-      {appTab === "map" && selectedId && selected && (
-        <div className="max-w-2xl mx-auto px-6 pb-12 pt-6">
-          <button onClick={() => setSelectedId(null)} className="text-xs flex items-center gap-1 mb-6" style={{ color: C.ivoryDim }}><ArrowLeft size={13} /> All teachers</button>
-          <div className="flex items-center gap-3">
-            <Avatar name={selected.name} id={selected.id} size={52} photoUrl={selected.photoUrl} online={selected.online} />
-            <div>
-              <p style={{ fontFamily: FONT_DISPLAY, fontSize: 20, fontWeight: 600, color: C.inkText }}>{selected.name}</p>
-              <p style={{ fontSize: 12, color: C.ivoryDim }}>
-                {selected.instrument ? `${selected.instrument} · ` : ""}{selected.year ? `${selected.year} · ` : ""}
-                {(CONSERVATORIES.find((c) => c.id === selected.conservatoryId) || {}).name}
-              </p>
-            </div>
+      {appTab === "map" && selectedId && selected && (() => {
+        const selCons = CONSERVATORIES.find((c) => c.id === selected.conservatoryId);
+        const linkMeta = videoLinkMeta(selected.videoLink);
+        const teachingText = selected.teaching?.open
+          ? `${selected.teaching.mode === "online" ? "Online" : selected.teaching.mode === "in-person" ? "In-person" : "Online & in-person"} · €${selected.teaching.price}/session`
+          : "Not offering lessons";
+        const Row = ({ label, children }) => (
+          <div style={{ background: "#fff", border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
+            <span style={{ fontSize: 11, fontWeight: 600, color: C.brass, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
+            <div style={{ fontSize: 15, color: C.inkText, lineHeight: 1.6 }}>{children}</div>
           </div>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <span className="px-3 py-1 rounded-full text-xs" style={{ border: `1px solid ${C.inkLine}`, color: C.ivoryDim }}>{teachingModeLabel(selected.teaching.mode)}</span>
-            {selected.teaching.price && <span className="px-3 py-1 rounded-full text-xs" style={{ border: `1px solid ${C.inkLine}`, color: C.brass }}>€{selected.teaching.price} / session</span>}
-          </div>
-          {selected.bio && <p className="mt-4 text-sm" style={{ color: C.ivoryDim, lineHeight: 1.6 }}>{selected.bio}</p>}
-          {(() => {
-            const linkMeta = videoLinkMeta(selected.videoLink);
-            return linkMeta ? (
-              <a href={selected.videoLink} target="_blank" rel="noreferrer" className="mt-4 rounded-xl flex items-center gap-3 p-3" style={{ border: `1px solid ${C.inkLine}`, textDecoration: "none", color: "inherit" }}>
-                <div className="rounded-lg flex items-center justify-center shrink-0" style={{ width: 40, height: 40, background: colorFor(selected.id) }}>
-                  <Play size={16} color={C.ivory} />
-                </div>
-                <div>
-                  <p style={{ fontSize: 12, fontWeight: 600, color: C.inkText }}>Watch performance on {linkMeta.label}</p>
-                  <p className="flex items-center gap-1" style={{ fontSize: 10, color: C.ivoryDim }}><linkMeta.Icon size={11} /> Opens in a new tab</p>
-                </div>
-              </a>
-            ) : null;
-          })()}
-          {selected.tastes && selected.tastes.length > 0 && (
-            <div className="mt-5">
-              <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.ivoryDim }}>MUSICAL PREFERENCES</p>
-              <div className="flex flex-wrap gap-1.5 mt-2">{selected.tastes.map((t) => <span key={t} className="text-xs px-2.5 py-1 rounded-full" style={{ border: `1px solid ${C.inkLine}`, color: C.ivoryDim }}>{t}</span>)}</div>
-            </div>
-          )}
-          {selected.pieces && selected.pieces.length > 0 && (
-            <div className="mt-5">
-              <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.ivoryDim }}>CURRENT REPERTOIRE</p>
-              <div className="flex flex-col gap-1.5 mt-2">
-                {selected.pieces.map((p, i) => (
-                  <p key={i} className="text-sm" style={{ color: C.inkText }}><span style={{ fontFamily: FONT_MONO, color: C.brass, fontSize: 11 }}>No.{i + 1}</span> {p.title} <span style={{ color: C.ivoryDim }}>— {p.composer}</span></p>
-                ))}
+        );
+        return (
+          <div style={{ maxWidth: 640, margin: "0 auto", padding: "40px 24px" }}>
+            {/* Header */}
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 16, marginBottom: 28 }}>
+              <div style={{ marginTop: 4 }}>
+                <Avatar name={selected.name} id={selected.id} size={64} photoUrl={selected.photoUrl} online={selected.online} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <h2 style={{ fontSize: 20, fontWeight: 700, color: C.inkText, margin: 0, lineHeight: 1.3 }}>{selected.name}</h2>
+                <p style={{ fontSize: 13, color: C.ivoryDim, margin: "3px 0 0", lineHeight: 1.5 }}>
+                  {[selected.instrument, selected.year].filter(Boolean).join(" · ")}
+                </p>
+                {selCons && <p style={{ fontSize: 13, color: C.ivoryDim, margin: "1px 0 0" }}>{selCons.name}, {selCons.city}</p>}
+              </div>
+              <div style={{ flexShrink: 0 }}>
+                {status === "accepted" ? (
+                  <PrimaryBtn onClick={() => {}} icon={MessageCircle}>Message</PrimaryBtn>
+                ) : status === "pending" ? (
+                  <span style={{ fontSize: 12, color: C.ivoryDim, fontStyle: "italic" }}>Request sent…</span>
+                ) : (
+                  <PrimaryBtn onClick={() => onSendRequest(selected.id)} icon={Send}>Send request</PrimaryBtn>
+                )}
               </div>
             </div>
-          )}
-          {selected.top && (
-            <div className="mt-5">
-              <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.ivoryDim }}>TOP</p>
-              <p className="text-sm mt-2" style={{ lineHeight: 1.6, color: C.inkText }}>{selected.top}</p>
+
+            {/* Bio */}
+            {selected.bio && (
+              <p style={{ fontSize: 15, color: C.ivoryDim, lineHeight: 1.75, marginBottom: 24 }}>{selected.bio}</p>
+            )}
+
+            {/* Video link card */}
+            {linkMeta ? (
+              <a href={selected.videoLink} target="_blank" rel="noreferrer" style={{ border: `1px solid ${C.inkLine}`, textDecoration: "none", color: "inherit", display: "flex", alignItems: "center", gap: 16, padding: 16, borderRadius: 16, marginBottom: 24 }}>
+                <div style={{ width: 52, height: 52, background: colorFor(selected.id), borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <Play size={20} color={C.ivory} />
+                </div>
+                <div>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: C.inkText }}>Watch performance on {linkMeta.label}</p>
+                  <p style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: C.ivoryDim }}><linkMeta.Icon size={12} /> Opens in a new tab</p>
+                </div>
+              </a>
+            ) : (
+              <p style={{ fontSize: 13, color: C.ivoryDim, marginBottom: 24 }}>No performance video shared.</p>
+            )}
+
+            {/* Data grid */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              {(selected.tastes || []).length > 0 && (
+                <Row label="Musical preferences">
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 4 }}>
+                    {selected.tastes.map((t) => (
+                      <span key={t} style={{ fontSize: 12, padding: "3px 10px", borderRadius: 20, border: `1px solid ${C.inkLine}`, color: C.inkText, background: C.inkSoft }}>{t}</span>
+                    ))}
+                  </div>
+                </Row>
+              )}
+              {(selected.pieces || []).length > 0 && (
+                <Row label="Current repertoire">
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
+                    {selected.pieces.map((p, i) => (
+                      <div key={i}>
+                        <span style={{ fontWeight: 600, color: C.inkText }}>{p.title}</span>
+                        <span style={{ color: C.ivoryDim }}> — {p.composer}</span>
+                      </div>
+                    ))}
+                  </div>
+                </Row>
+              )}
+              {selected.top && <Row label="Recent win">{selected.top}</Row>}
+              {selected.flop && <Row label="Current challenge">{selected.flop}</Row>}
+              <Row label="Teaching">{teachingText}</Row>
             </div>
-          )}
-          {selected.flop && (
-            <div className="mt-5">
-              <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.ivoryDim }}>FLOP</p>
-              <p className="text-sm mt-2" style={{ lineHeight: 1.6, color: C.inkText }}>{selected.flop}</p>
-            </div>
-          )}
-          {status === "accepted" ? (
-            <LearnerChat teacher={selected} messages={conversations[selected.id] || []} onSend={onSend} />
-          ) : status === "pending" ? (
-            <div className="mt-6 rounded-xl p-4 text-sm" style={{ background: C.inkSoft, border: `1px solid ${C.inkLine}`, color: C.ivoryDim }}>
-              <p className="lg-blink">Request sent — waiting for {selected.name.split(" ")[0]} to accept…</p>
-            </div>
-          ) : (
-            <div className="mt-6">
-              <PrimaryBtn full onClick={() => onSendRequest(selected.id)} icon={Send}>Send teaching request</PrimaryBtn>
-              <p className="mt-2 text-xs" style={{ color: C.ivoryDim }}>
-                {selected.name.split(" ")[0]} receives your request and can accept to start messaging.
-              </p>
-            </div>
-          )}
-        </div>
-      )}
+
+            {/* Chat (if accepted) */}
+            {status === "accepted" && (
+              <div className="mt-6">
+                <LearnerChat teacher={selected} messages={conversations[selected.id] || []} onSend={onSend} />
+              </div>
+            )}
+            {status === "pending" && (
+              <div className="mt-6 rounded-xl p-4 text-sm" style={{ background: C.inkSoft, border: `1px solid ${C.inkLine}`, color: C.ivoryDim }}>
+                <p className="lg-blink">Request sent — waiting for {selected.name.split(" ")[0]} to accept…</p>
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {appTab === "profile" && (
         <div className="max-w-lg mx-auto px-6 pt-10 pb-16">
