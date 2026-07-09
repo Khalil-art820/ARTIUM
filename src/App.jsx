@@ -2695,6 +2695,9 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
               {studentLoggedIn ? "Logged in as a conservatory student" : <>Logged in as {learnerProfile.name}</>}
             </p>
           )}
+          <p style={{ textAlign: "center", marginTop: 32, fontSize: 13, color: C.ivoryDim, fontStyle: "italic" }}>
+            In partnership with aclassicaltone
+          </p>
         </div>
       </div>
     </div>
