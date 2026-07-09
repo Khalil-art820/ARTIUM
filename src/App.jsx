@@ -1436,7 +1436,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
       <div style={{ borderTop: `1px solid ${C.inkLine}`, padding: "20px 0" }}>
         <div className="max-w-6xl mx-auto px-8" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <Logo size={18} />
-          <p style={{ fontSize: 13, color: C.ivoryDim }}>Beta — for demonstration purposes only.</p>
+          <p style={{ fontSize: 13, color: C.ivoryDim }}>A world connected by music.</p>
         </div>
       </div>
     </div>
@@ -2703,6 +2703,9 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
             </a>
           </p>
         </div>
+      </div>
+      <div style={{ position: "fixed", bottom: 24, left: 24 }}>
+        <Logo size={20} />
       </div>
     </div>
   );
