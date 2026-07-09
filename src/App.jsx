@@ -2695,17 +2695,17 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
               {studentLoggedIn ? "Logged in as a conservatory student" : <>Logged in as {learnerProfile.name}</>}
             </p>
           )}
-          <p style={{ textAlign: "center", marginTop: 32, fontSize: 13, color: C.ivoryDim, fontStyle: "italic" }}>
-            In partnership with{" "}
-            <a href="https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==" target="_blank" rel="noreferrer"
-              style={{ color: C.brass, textDecoration: "none", fontStyle: "italic" }}>
-              aclassicaltone
-            </a>
-          </p>
         </div>
       </div>
-      <div style={{ position: "fixed", bottom: 24, left: 24 }}>
+      <div style={{ position: "fixed", bottom: 24, left: 24, right: 24, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <Logo size={20} />
+        <p style={{ fontSize: 13, color: C.ivoryDim, fontStyle: "italic", margin: 0 }}>
+          In partnership with{" "}
+          <a href="https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==" target="_blank" rel="noreferrer"
+            style={{ color: C.brass, textDecoration: "none", fontStyle: "italic" }}>
+            aclassicaltone
+          </a>
+        </p>
       </div>
     </div>
   );
