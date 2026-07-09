@@ -1435,8 +1435,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
 
       <div style={{ borderTop: `1px solid ${C.inkLine}`, padding: "20px 0" }}>
         <div className="max-w-6xl mx-auto px-8" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <Logo size={18} />
-          <p style={{ fontSize: 13, color: C.ivoryDim }}>A world connected by music.</p>
+          <Logo size={18} slogan />
         </div>
       </div>
     </div>
@@ -2697,15 +2696,15 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
           )}
         </div>
       </div>
-      <div style={{ position: "fixed", bottom: 24, left: 24, right: 24, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div style={{ position: "fixed", bottom: 12, left: 24, display: "flex", alignItems: "center", gap: 0 }}>
         <Logo size={20} />
-        <p style={{ fontSize: 13, color: C.ivoryDim, fontStyle: "italic", margin: 0 }}>
-          In partnership with{" "}
+        <span style={{ fontSize: 13, color: C.ivoryDim, fontStyle: "italic", marginLeft: 10 }}>
+          — In partnership with{" "}
           <a href="https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==" target="_blank" rel="noreferrer"
             style={{ color: C.brass, textDecoration: "none", fontStyle: "italic" }}>
             aclassicaltone
           </a>
-        </p>
+        </span>
       </div>
     </div>
   );
