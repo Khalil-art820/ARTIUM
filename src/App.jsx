@@ -2664,7 +2664,7 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
                 <div style={{ position: "absolute", inset: 0, backgroundImage: "url('/piano.png')", backgroundSize: "cover", backgroundPosition: "center", filter: "grayscale(100%) contrast(1.1) brightness(0.85)" }} />
                 <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.72) 60%, rgba(0,0,0,0.25) 100%)" }} />
                 <div style={{ position: "relative", padding: 28, textAlign: "left", display: "flex", flexDirection: "column", justifyContent: "flex-end", minHeight: 260 }}>
-                  <h3 style={{ fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 8 }}>Classical music enthusiast</h3>
+                  <h3 style={{ fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 8 }}>Help me learn my favourite instrument</h3>
                   <p style={{ color: "rgba(255,255,255,0.78)", fontSize: 13, lineHeight: 1.6, marginBottom: 20 }}>
                     Learn from top conservatory musicians. Find a teacher who matches your level, instrument, and taste.
                   </p>
@@ -2679,9 +2679,9 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
                 <div style={{ position: "absolute", inset: 0, backgroundImage: "url('/juilliard.png')", backgroundSize: "cover", backgroundPosition: "center top", filter: "grayscale(100%) contrast(1.1) brightness(0.85)" }} />
                 <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.72) 60%, rgba(0,0,0,0.25) 100%)" }} />
                 <div style={{ position: "relative", padding: 28, textAlign: "left", display: "flex", flexDirection: "column", justifyContent: "flex-end", minHeight: 260 }}>
-                  <h3 style={{ fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 8 }}>Conservatory student</h3>
+                  <h3 style={{ fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 8 }}>I am a conservatory student</h3>
                   <p style={{ color: "rgba(255,255,255,0.78)", fontSize: 13, lineHeight: 1.6, marginBottom: 20 }}>
-                    Connect with conservatory students at the world's top conservatories. Share repertoire, culture, and musical ideas.
+                    Connect with conservatory students at the world's top conservatories. Share repertoire, culture, and musical ideas. Promote yourself. Earn while you teach.
                   </p>
                   <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: "#fff", fontWeight: 600, borderBottom: "1px solid rgba(255,255,255,0.5)", paddingBottom: 2, width: "fit-content" }}>
                     {studentLoggedIn ? "Continue" : "Enter Artium"} <ArrowRight size={13} />
