@@ -2696,7 +2696,11 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
             </p>
           )}
           <p style={{ textAlign: "center", marginTop: 32, fontSize: 13, color: C.ivoryDim, fontStyle: "italic" }}>
-            In partnership with aclassicaltone
+            In partnership with{" "}
+            <a href="https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==" target="_blank" rel="noreferrer"
+              style={{ color: C.brass, textDecoration: "none", fontStyle: "italic" }}>
+              aclassicaltone
+            </a>
           </p>
         </div>
       </div>
