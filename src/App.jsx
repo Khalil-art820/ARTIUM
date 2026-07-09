@@ -2656,7 +2656,7 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
             Your journey to classical music excellence.
           </h1>
           <p style={{ color: C.ivoryDim, fontSize: 16, lineHeight: 1.65, marginTop: 14 }}>
-            Join the global network of conservatory students and music enthusiasts.
+            Join the global network of top conservatory students and amateur music enthusiasts.
           </p>
           <div className={`mt-10 grid gap-6 ${singleCard ? "" : "md:grid-cols-2"}`}>
             {!studentLoggedIn && (
