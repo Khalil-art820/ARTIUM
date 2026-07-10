@@ -3351,10 +3351,12 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
   // Sessions are teacher-proposed; student can approve or counter-propose
   // status: "teacher_proposed" | "confirmed" | "counter_proposed"
   const [sessions, setSessions] = useState([
+    // Past session, already paid
+    { id: 0, date: "2026-07-05", time: "10:00", status: "confirmed", proposedBy: "teacher", paid: true },
     // Within 24h → cancel AND modify both locked
-    { id: 1, date: "2026-07-11", time: "22:00", status: "confirmed", proposedBy: "teacher" },
+    { id: 1, date: "2026-07-11", time: "22:00", status: "confirmed", proposedBy: "teacher", paid: false },
     // Between 24h and 48h → modify locked, cancel still open
-    { id: 2, date: "2026-07-12", time: "18:00", status: "confirmed", proposedBy: "teacher" },
+    { id: 2, date: "2026-07-12", time: "18:00", status: "confirmed", proposedBy: "teacher", paid: false },
   ]);
   const [counterDate, setCounterDate] = useState({});
   const [counterTime, setCounterTime] = useState({});
@@ -3444,9 +3446,12 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
                 return (
                   <button key={s.id} onClick={() => setSelectedSessionId(isSelected ? null : s.id)}
                     style={{ flexShrink: 0, width: 110, height: 110, borderRadius: 14, border: isSelected ? `2px solid ${C.brass}` : `1px solid ${isConfirmed ? "#A8D5B5" : C.inkLine}`, background: isConfirmed ? "#F4FBF6" : "#fff", display: "flex", flexDirection: "column", alignItems: "flex-start", justifyContent: "space-between", padding: 12, cursor: "pointer", boxShadow: isSelected ? `0 0 0 3px ${C.brassDim}` : "none", transition: "box-shadow 0.15s" }}>
-                    <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: isConfirmed ? "#1A9E6E" : "#D4810A" }}>
-                      {isConfirmed ? "Confirmed" : "Awaiting"}
-                    </span>
+                    <div style={{ display: "flex", justifyContent: "space-between", width: "100%", alignItems: "center" }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: isConfirmed ? "#1A9E6E" : "#D4810A" }}>
+                        {isConfirmed ? "Confirmed" : "Awaiting"}
+                      </span>
+                      {s.paid && <span style={{ fontSize: 9, fontWeight: 700, color: "#fff", background: "#1A9E6E", borderRadius: 20, padding: "2px 6px" }}>Paid</span>}
+                    </div>
                     <div style={{ textAlign: "left" }}>
                       <p style={{ fontSize: 18, fontWeight: 800, color: C.inkText, margin: 0, lineHeight: 1 }}>{dt.getDate()}</p>
                       <p style={{ fontSize: 11, color: C.ivoryDim, margin: "2px 0 0" }}>{dt.toLocaleDateString("en-GB", { month: "short" })} · {s.time}</p>
@@ -3507,11 +3512,17 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
                   ) : null}
 
                   {isConfirmed && teacher.teaching?.open && teacher.teaching?.price && (
-                    <button onClick={() => onPayLesson(teacher)} disabled={payLoading}
-                      style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, background: "none", border: `1px solid ${C.brass}`, color: C.brass, fontSize: 12, fontWeight: 600, cursor: payLoading ? "not-allowed" : "pointer", opacity: payLoading ? 0.6 : 1, marginBottom: 8 }}>
-                      <CreditCard size={13} />
-                      {payLoading ? "Redirecting…" : `Pay €${teacher.teaching.price}`}
-                    </button>
+                    sel.paid ? (
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, background: "#DFF2E8", color: "#1A9E6E", fontSize: 12, fontWeight: 700, marginBottom: 8 }}>
+                        <Check size={13} /> Paid
+                      </span>
+                    ) : (
+                      <button onClick={() => { onPayLesson(teacher); setSessions((prev) => prev.map((x) => x.id === sel.id ? { ...x, paid: true } : x)); }} disabled={payLoading}
+                        style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, background: "none", border: `1px solid ${C.brass}`, color: C.brass, fontSize: 12, fontWeight: 600, cursor: payLoading ? "not-allowed" : "pointer", opacity: payLoading ? 0.6 : 1, marginBottom: 8 }}>
+                        <CreditCard size={13} />
+                        {payLoading ? "Redirecting…" : `Pay €${teacher.teaching.price}`}
+                      </button>
+                    )
                   )}
                   {isConfirmed && payError && <p style={{ fontSize: 12, color: "#E34234", marginBottom: 6 }}>{payError}</p>}
 
