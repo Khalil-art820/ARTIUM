@@ -5,6 +5,7 @@ import {
   Music2, Users, MessageCircle, ArrowRight, ArrowLeft, Play, Pause, Globe2,
   Volume1, Volume2, VolumeX,
   Pencil, Plus, Trash2, Home, Upload, Eye, EyeOff, ChevronLeft,
+  Calendar, CreditCard, Video, Link2, Clock,
 } from "lucide-react";
 import AMBIENT_AUDIO_SRC from "./assets/ambient.mp3";
 import { useAuth } from "./contexts/AuthContext";
@@ -3153,19 +3154,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
               </div>
               <div style={{ flexShrink: 0 }}>
                 {status === "accepted" ? (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end" }}>
-                    <PrimaryBtn onClick={() => {}} icon={MessageCircle}>Message</PrimaryBtn>
-                    {selected.teaching?.open && selected.teaching?.price && (
-                      <button
-                        onClick={() => payForLesson(selected)}
-                        disabled={payLoading}
-                        style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 700, color: "#fff", background: C.brass, border: "none", borderRadius: 8, padding: "8px 16px", cursor: payLoading ? "not-allowed" : "pointer", opacity: payLoading ? 0.7 : 1 }}
-                      >
-                        💳 {payLoading ? "Redirecting…" : `Pay €${selected.teaching.price} for a lesson`}
-                      </button>
-                    )}
-                    {payError && <p style={{ fontSize: 12, color: "#E34234", margin: 0 }}>{payError}</p>}
-                  </div>
+                  <span style={{ fontSize: 12, color: C.brass, fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}><Check size={13} /> Accepted</span>
                 ) : status === "pending" ? (
                   <span style={{ fontSize: 12, color: C.ivoryDim, fontStyle: "italic" }}>Request sent…</span>
                 ) : (
@@ -3222,11 +3211,16 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
               <Row label="Teaching">{teachingText}</Row>
             </div>
 
-            {/* Chat (if accepted) */}
+            {/* Lesson room (if accepted) */}
             {status === "accepted" && (
-              <div className="mt-6">
-                <LearnerChat teacher={selected} messages={conversations[selected.id] || []} onSend={onSend} />
-              </div>
+              <LessonRoom
+                teacher={selected}
+                messages={conversations[selected.id] || []}
+                onSend={onSend}
+                onPayLesson={payForLesson}
+                payLoading={payLoading}
+                payError={payError}
+              />
             )}
             {status === "pending" && (
               <div className="mt-6 rounded-xl p-4 text-sm" style={{ background: C.inkSoft, border: `1px solid ${C.inkLine}`, color: C.ivoryDim }}>
@@ -3327,6 +3321,164 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
         );
       })()}
     </AppShell>
+  );
+}
+
+function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payError }) {
+  const [tab, setTab] = useState("chat");
+  const [sessions, setSessions] = useState([]);
+  const [proposedDate, setProposedDate] = useState("");
+  const [proposedTime, setProposedTime] = useState("");
+  const [zoomLink, setZoomLink] = useState("");
+  const [zoomSaved, setZoomSaved] = useState(false);
+
+  const tabs = [
+    { id: "chat", label: "Chat", Icon: MessageCircle },
+    { id: "schedule", label: "Schedule", Icon: Calendar },
+    { id: "pay", label: "Pay", Icon: CreditCard },
+    { id: "video", label: "Video", Icon: Video },
+  ];
+
+  function proposeSession() {
+    if (!proposedDate || !proposedTime) return;
+    setSessions((prev) => [...prev, { date: proposedDate, time: proposedTime, status: "proposed", id: Date.now() }]);
+    setProposedDate(""); setProposedTime("");
+  }
+
+  return (
+    <div style={{ border: `1px solid ${C.inkLine}`, borderRadius: 16, overflow: "hidden", marginTop: 24 }}>
+      {/* Tab bar */}
+      <div style={{ display: "flex", borderBottom: `1px solid ${C.inkLine}`, background: C.inkSoft }}>
+        {tabs.map(({ id, label, Icon }) => (
+          <button key={id} onClick={() => setTab(id)}
+            style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "10px 4px", fontSize: 11, fontWeight: tab === id ? 700 : 400, color: tab === id ? C.brass : C.ivoryDim, background: "none", border: "none", cursor: "pointer", borderBottom: tab === id ? `2px solid ${C.brass}` : "2px solid transparent" }}>
+            <Icon size={15} />
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Chat */}
+      {tab === "chat" && (
+        <div>
+          <div className="lg-scroll overflow-y-auto px-4 py-3 flex flex-col gap-2" style={{ maxHeight: 280 }}>
+            {messages.length === 0 && <p style={{ fontSize: 13, color: C.ivoryDim, textAlign: "center", padding: "24px 0" }}>Start the conversation with {teacher.name.split(" ")[0]}</p>}
+            {messages.map((m, i) => (
+              <div key={i} className="px-3.5 py-2 rounded-2xl text-sm" style={{ maxWidth: "80%", alignSelf: m.from === "me" ? "flex-end" : "flex-start", background: m.from === "me" ? C.brass : C.inkSoft, color: m.from === "me" ? "#fff" : C.inkText }}>
+                {m.text}
+              </div>
+            ))}
+          </div>
+          <div className="px-3 py-3 flex items-center gap-2" style={{ borderTop: `1px solid ${C.inkLine}` }}>
+            <input style={{ flex: 1, background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: "10px 14px", fontSize: 14, color: C.inkText, outline: "none" }}
+              placeholder={`Message ${teacher.name.split(" ")[0]}…`}
+              onKeyDown={(e) => { if (e.key === "Enter" && e.target.value.trim()) { onSend(e.target.value); e.target.value = ""; } }} />
+            <button onClick={(e) => { const inp = e.currentTarget.previousSibling; if (inp.value.trim()) { onSend(inp.value); inp.value = ""; } }}
+              className="rounded-full p-3" style={{ background: C.brass, flexShrink: 0 }}>
+              <Send size={15} color="#fff" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Schedule */}
+      {tab === "schedule" && (
+        <div className="p-5 flex flex-col gap-4">
+          <p style={{ fontSize: 13, fontWeight: 600, color: C.inkText, margin: 0 }}>Propose a session</p>
+          <div style={{ display: "flex", gap: 8 }}>
+            <input type="date" value={proposedDate} onChange={(e) => setProposedDate(e.target.value)}
+              style={{ flex: 1, background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "9px 12px", fontSize: 13, color: C.inkText, outline: "none" }} />
+            <input type="time" value={proposedTime} onChange={(e) => setProposedTime(e.target.value)}
+              style={{ flex: 1, background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "9px 12px", fontSize: 13, color: C.inkText, outline: "none" }} />
+            <button onClick={proposeSession} disabled={!proposedDate || !proposedTime}
+              style={{ padding: "9px 16px", borderRadius: 10, background: C.brass, color: "#fff", fontSize: 13, fontWeight: 600, border: "none", cursor: !proposedDate || !proposedTime ? "not-allowed" : "pointer", opacity: !proposedDate || !proposedTime ? 0.5 : 1 }}>
+              Propose
+            </button>
+          </div>
+          {sessions.length === 0 && <p style={{ fontSize: 13, color: C.ivoryDim }}>No sessions scheduled yet.</p>}
+          <div className="flex flex-col gap-2">
+            {sessions.map((s) => (
+              <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: C.inkSoft, borderRadius: 10, border: `1px solid ${C.inkLine}` }}>
+                <Clock size={14} color={C.brass} />
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: C.inkText, margin: 0 }}>{new Date(s.date + "T" + s.time).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })} at {s.time}</p>
+                </div>
+                <span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 20, background: s.status === "confirmed" ? "#E6F4EA" : "#FFF3E0", color: s.status === "confirmed" ? "#1A9E6E" : "#E67E22", fontWeight: 600 }}>
+                  {s.status === "confirmed" ? "Confirmed" : "Proposed"}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Pay */}
+      {tab === "pay" && (
+        <div className="p-5 flex flex-col gap-4">
+          <p style={{ fontSize: 13, color: C.ivoryDim, lineHeight: 1.6 }}>
+            Pay for a session with <strong style={{ color: C.inkText }}>{teacher.name.split(" ")[0]}</strong>
+            {teacher.teaching?.price ? ` — €${teacher.teaching.price}/session` : ""}.
+          </p>
+          {teacher.teaching?.open && teacher.teaching?.price ? (
+            <button onClick={() => onPayLesson(teacher)} disabled={payLoading}
+              style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "14px 20px", borderRadius: 12, background: C.brass, color: "#fff", fontSize: 15, fontWeight: 700, border: "none", cursor: payLoading ? "not-allowed" : "pointer", opacity: payLoading ? 0.7 : 1 }}>
+              <CreditCard size={17} />
+              {payLoading ? "Redirecting to Stripe…" : `Pay €${teacher.teaching.price} for a session`}
+            </button>
+          ) : (
+            <p style={{ fontSize: 13, color: C.ivoryDim }}>This teacher has not set up lesson payments yet.</p>
+          )}
+          {payError && <p style={{ fontSize: 12, color: "#E34234" }}>{payError}</p>}
+          <p style={{ fontSize: 11, color: C.ivoryDim }}>Secure payment via Stripe. 11% platform fee applies.</p>
+        </div>
+      )}
+
+      {/* Video */}
+      {tab === "video" && (
+        <div className="p-5 flex flex-col gap-4">
+          {/* Zoom card */}
+          <div style={{ border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: "#2D8CFF", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Video size={16} color="#fff" />
+              </div>
+              <p style={{ fontSize: 14, fontWeight: 600, color: C.inkText, margin: 0 }}>Zoom</p>
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <input value={zoomLink} onChange={(e) => { setZoomLink(e.target.value); setZoomSaved(false); }}
+                placeholder="Paste Zoom meeting link…"
+                style={{ flex: 1, background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 9, padding: "9px 12px", fontSize: 13, color: C.inkText, outline: "none" }} />
+              <button onClick={() => setZoomSaved(true)} disabled={!zoomLink.trim()}
+                style={{ padding: "9px 14px", borderRadius: 9, background: C.brass, color: "#fff", fontSize: 13, fontWeight: 600, border: "none", cursor: !zoomLink.trim() ? "not-allowed" : "pointer", opacity: !zoomLink.trim() ? 0.5 : 1 }}>
+                Save
+              </button>
+            </div>
+            {zoomSaved && zoomLink && (
+              <a href={zoomLink} target="_blank" rel="noreferrer"
+                style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 600, color: "#2D8CFF", textDecoration: "none" }}>
+                <Link2 size={13} /> Join Zoom meeting
+              </a>
+            )}
+          </div>
+
+          {/* LiveKit card */}
+          <div style={{ border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: 16, opacity: 0.7 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: C.brass, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Video size={16} color="#fff" />
+              </div>
+              <div>
+                <p style={{ fontSize: 14, fontWeight: 600, color: C.inkText, margin: 0 }}>LiveKit</p>
+                <span style={{ fontSize: 10, padding: "1px 7px", borderRadius: 20, background: C.brassDim, color: C.brass, fontWeight: 700 }}>COMING SOON</span>
+              </div>
+            </div>
+            <p style={{ fontSize: 12, color: C.ivoryDim, lineHeight: 1.6, margin: 0 }}>
+              In-app HD video sessions. Connect a LiveKit account to enable.
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
