@@ -3348,9 +3348,15 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
 
 function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payError }) {
   const [tab, setTab] = useState("chat");
-  const [sessions, setSessions] = useState([]);
-  const [proposedDate, setProposedDate] = useState("");
-  const [proposedTime, setProposedTime] = useState("");
+  // Sessions are teacher-proposed; student can approve or counter-propose
+  // status: "teacher_proposed" | "confirmed" | "counter_proposed"
+  const [sessions, setSessions] = useState([
+    { id: 1, date: "2026-07-18", time: "14:00", status: "teacher_proposed", proposedBy: "teacher" },
+    { id: 2, date: "2026-07-22", time: "10:30", status: "teacher_proposed", proposedBy: "teacher" },
+  ]);
+  const [counterDate, setCounterDate] = useState({});
+  const [counterTime, setCounterTime] = useState({});
+  const [showCounter, setShowCounter] = useState({});
   const [zoomLink, setZoomLink] = useState("");
   const [zoomSaved, setZoomSaved] = useState(false);
 
@@ -3361,10 +3367,21 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
     { id: "video", label: "Video", Icon: Video },
   ];
 
-  function proposeSession() {
-    if (!proposedDate || !proposedTime) return;
-    setSessions((prev) => [...prev, { date: proposedDate, time: proposedTime, status: "proposed", id: Date.now() }]);
-    setProposedDate(""); setProposedTime("");
+  function approveSession(id) {
+    setSessions((prev) => prev.map((s) => s.id === id ? { ...s, status: "confirmed" } : s));
+  }
+
+  function submitCounter(id) {
+    const d = counterDate[id]; const t = counterTime[id];
+    if (!d || !t) return;
+    setSessions((prev) => prev.map((s) => s.id === id ? { ...s, date: d, time: t, status: "teacher_proposed", proposedBy: "student" } : s));
+    setShowCounter((prev) => ({ ...prev, [id]: false }));
+  }
+
+  function isLocked(s) {
+    if (s.status !== "confirmed") return false;
+    const sessionMs = new Date(s.date + "T" + s.time).getTime();
+    return sessionMs - Date.now() < 36 * 60 * 60 * 1000;
   }
 
   return (
@@ -3405,32 +3422,87 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
 
       {/* Schedule */}
       {tab === "schedule" && (
-        <div className="p-5 flex flex-col gap-4">
-          <p style={{ fontSize: 13, fontWeight: 600, color: C.inkText, margin: 0 }}>Propose a session</p>
-          <div style={{ display: "flex", gap: 8 }}>
-            <input type="date" value={proposedDate} onChange={(e) => setProposedDate(e.target.value)}
-              style={{ flex: 1, background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "9px 12px", fontSize: 13, color: C.inkText, outline: "none" }} />
-            <input type="time" value={proposedTime} onChange={(e) => setProposedTime(e.target.value)}
-              style={{ flex: 1, background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "9px 12px", fontSize: 13, color: C.inkText, outline: "none" }} />
-            <button onClick={proposeSession} disabled={!proposedDate || !proposedTime}
-              style={{ padding: "9px 16px", borderRadius: 10, background: C.brass, color: "#fff", fontSize: 13, fontWeight: 600, border: "none", cursor: !proposedDate || !proposedTime ? "not-allowed" : "pointer", opacity: !proposedDate || !proposedTime ? 0.5 : 1 }}>
-              Propose
-            </button>
-          </div>
-          {sessions.length === 0 && <p style={{ fontSize: 13, color: C.ivoryDim }}>No sessions scheduled yet.</p>}
-          <div className="flex flex-col gap-2">
-            {sessions.map((s) => (
-              <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: C.inkSoft, borderRadius: 10, border: `1px solid ${C.inkLine}` }}>
-                <Clock size={14} color={C.brass} />
-                <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: 13, fontWeight: 600, color: C.inkText, margin: 0 }}>{new Date(s.date + "T" + s.time).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })} at {s.time}</p>
+        <div className="p-5 flex flex-col gap-3">
+          <p style={{ fontSize: 12, color: C.ivoryDim, margin: 0 }}>
+            {teacher.name.split(" ")[0]} proposes session times. Approve or suggest a different time.
+          </p>
+          {sessions.length === 0 && (
+            <p style={{ fontSize: 13, color: C.ivoryDim }}>No sessions proposed yet. Ask {teacher.name.split(" ")[0]} in the Chat to schedule a time.</p>
+          )}
+          {sessions.map((s) => {
+            const locked = isLocked(s);
+            const sessionDt = new Date(s.date + "T" + s.time);
+            const dateStr = sessionDt.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
+            const timeStr = s.time;
+            const isConfirmed = s.status === "confirmed";
+            const isPending = s.status === "teacher_proposed";
+            const isCounter = showCounter[s.id];
+            return (
+              <div key={s.id} style={{ border: `1px solid ${isConfirmed ? "#A8D5B5" : C.inkLine}`, borderRadius: 12, padding: 16, background: isConfirmed ? "#F4FBF6" : "#fff" }}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                  <div style={{ marginTop: 2 }}><Clock size={15} color={isConfirmed ? "#1A9E6E" : C.brass} /></div>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontSize: 14, fontWeight: 700, color: C.inkText, margin: 0 }}>{dateStr}</p>
+                    <p style={{ fontSize: 13, color: C.ivoryDim, margin: "2px 0 0" }}>{timeStr}
+                      {s.proposedBy === "student" && <span style={{ marginLeft: 6, fontSize: 11, color: C.brass }}>(your counter-proposal)</span>}
+                    </p>
+                  </div>
+                  <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 20, fontWeight: 700, flexShrink: 0,
+                    background: isConfirmed ? "#DFF2E8" : "#FFF3E0",
+                    color: isConfirmed ? "#1A9E6E" : "#D4810A" }}>
+                    {isConfirmed ? "Confirmed" : "Awaiting you"}
+                  </span>
                 </div>
-                <span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 20, background: s.status === "confirmed" ? "#E6F4EA" : "#FFF3E0", color: s.status === "confirmed" ? "#1A9E6E" : "#E67E22", fontWeight: 600 }}>
-                  {s.status === "confirmed" ? "Confirmed" : "Proposed"}
-                </span>
+
+                {isPending && !isCounter && (
+                  <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                    <button onClick={() => approveSession(s.id)}
+                      style={{ flex: 1, padding: "9px 0", borderRadius: 9, background: "#1A9E6E", color: "#fff", fontSize: 13, fontWeight: 600, border: "none", cursor: "pointer" }}>
+                      ✓ Approve
+                    </button>
+                    <button onClick={() => setShowCounter((prev) => ({ ...prev, [s.id]: true }))}
+                      style={{ flex: 1, padding: "9px 0", borderRadius: 9, background: "none", border: `1px solid ${C.inkLine}`, color: C.inkText, fontSize: 13, cursor: "pointer" }}>
+                      Suggest another time
+                    </button>
+                  </div>
+                )}
+
+                {isPending && isCounter && (
+                  <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+                    <p style={{ fontSize: 12, color: C.ivoryDim, margin: 0 }}>Suggest a different time:</p>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <input type="date" value={counterDate[s.id] || ""} onChange={(e) => setCounterDate((p) => ({ ...p, [s.id]: e.target.value }))}
+                        style={{ flex: 1, background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 9, padding: "8px 10px", fontSize: 13, color: C.inkText, outline: "none" }} />
+                      <input type="time" value={counterTime[s.id] || ""} onChange={(e) => setCounterTime((p) => ({ ...p, [s.id]: e.target.value }))}
+                        style={{ flex: 1, background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 9, padding: "8px 10px", fontSize: 13, color: C.inkText, outline: "none" }} />
+                    </div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button onClick={() => submitCounter(s.id)} disabled={!counterDate[s.id] || !counterTime[s.id]}
+                        style={{ flex: 1, padding: "8px 0", borderRadius: 9, background: C.brass, color: "#fff", fontSize: 13, fontWeight: 600, border: "none", cursor: !counterDate[s.id] || !counterTime[s.id] ? "not-allowed" : "pointer", opacity: !counterDate[s.id] || !counterTime[s.id] ? 0.5 : 1 }}>
+                        Send proposal
+                      </button>
+                      <button onClick={() => setShowCounter((prev) => ({ ...prev, [s.id]: false }))}
+                        style={{ padding: "8px 14px", borderRadius: 9, background: "none", border: `1px solid ${C.inkLine}`, color: C.ivoryDim, fontSize: 13, cursor: "pointer" }}>
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {isConfirmed && locked && (
+                  <p style={{ fontSize: 11, color: C.ivoryDim, marginTop: 10, margin: "10px 0 0" }}>
+                    🔒 Session locked — within 36 hours, changes must go through {teacher.name.split(" ")[0]}.
+                  </p>
+                )}
+                {isConfirmed && !locked && (
+                  <button onClick={() => setSessions((prev) => prev.map((x) => x.id === s.id ? { ...x, status: "teacher_proposed", proposedBy: "teacher" } : x))}
+                    style={{ marginTop: 10, fontSize: 12, color: C.ivoryDim, background: "none", border: "none", cursor: "pointer", padding: 0, textDecoration: "underline" }}>
+                    Request reschedule
+                  </button>
+                )}
               </div>
-            ))}
-          </div>
+            );
+          })}
         </div>
       )}
 
