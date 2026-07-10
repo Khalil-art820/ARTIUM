@@ -2984,8 +2984,11 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
   const [appTab, setAppTab] = useState("map");
   const [selectedConsId, setSelectedConsId] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
+  const [activeLessonTeacherId, setActiveLessonTeacherId] = useState(null);
   const selected = teachers.find((t) => t.id === selectedId);
   const status = selectedId ? teachRequests[selectedId] : undefined;
+  const acceptedTeachers = teachers.filter((t) => teachRequests[t.id] === "accepted");
+  const activeLessonTeacher = teachers.find((t) => t.id === activeLessonTeacherId) || acceptedTeachers[0] || null;
 
   // profile editing state
   const [editName, setEditName] = useState(learner?.name || "");
@@ -3140,7 +3143,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
         </>
       )}
 
-      {(appTab === "map" || appTab === "lesson") && selectedId && selected && (() => {
+      {(appTab === "map" || (appTab === "lesson" && selectedId === activeLessonTeacher?.id)) && selectedId && selected && (() => {
         const selCons = CONSERVATORIES.find((c) => c.id === selected.conservatoryId);
         const linkMeta = videoLinkMeta(selected.videoLink);
         const teachingText = selected.teaching?.open
@@ -3241,24 +3244,36 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
       })()}
 
       {appTab === "lesson" && (() => {
-        const acceptedTeacher = teachers.find((t) => teachRequests[t.id] === "accepted");
-        if (!acceptedTeacher) return null;
-        if (selectedId === acceptedTeacher.id) return null; // profile view handled below
+        if (!activeLessonTeacher) return null;
+        if (selectedId === activeLessonTeacher.id) return null; // profile view handled below
         return (
           <div style={{ padding: "24px 0 24px 20px" }}>
+            {/* Teacher picker — shown when more than one accepted */}
+            {acceptedTeachers.length > 1 && (
+              <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 16, scrollbarWidth: "none" }}>
+                {acceptedTeachers.map((t) => (
+                  <button key={t.id} onClick={() => setActiveLessonTeacherId(t.id)}
+                    style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 8, padding: "8px 14px", borderRadius: 20, border: `1.5px solid ${t.id === activeLessonTeacher.id ? C.brass : C.inkLine}`, background: t.id === activeLessonTeacher.id ? C.brassDim : "#fff", cursor: "pointer" }}>
+                    <Avatar name={t.name} id={t.id} size={24} photoUrl={t.photoUrl} online={t.online} />
+                    <span style={{ fontSize: 13, fontWeight: 600, color: t.id === activeLessonTeacher.id ? C.brass : C.inkText }}>{t.name.split(" ")[0]}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+            {/* Teacher header — clickable to view profile */}
             <button
-              onClick={() => selectTeacher(acceptedTeacher.id)}
-              style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16, paddingRight: 20, background: "none", border: "none", cursor: "pointer", padding: "0 20px 16px 0", textAlign: "left" }}>
-              <Avatar name={acceptedTeacher.name} id={acceptedTeacher.id} size={44} photoUrl={acceptedTeacher.photoUrl} online={acceptedTeacher.online} />
+              onClick={() => selectTeacher(activeLessonTeacher.id)}
+              style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16, background: "none", border: "none", cursor: "pointer", padding: "0 20px 16px 0", textAlign: "left" }}>
+              <Avatar name={activeLessonTeacher.name} id={activeLessonTeacher.id} size={44} photoUrl={activeLessonTeacher.photoUrl} online={activeLessonTeacher.online} />
               <div>
-                <h2 style={{ fontSize: 18, fontWeight: 700, color: C.inkText, margin: 0 }}>{acceptedTeacher.name}</h2>
-                <p style={{ fontSize: 12, color: C.ivoryDim, margin: 0 }}>{acceptedTeacher.instrument} · {acceptedTeacher.year}</p>
+                <h2 style={{ fontSize: 18, fontWeight: 700, color: C.inkText, margin: 0 }}>{activeLessonTeacher.name}</h2>
+                <p style={{ fontSize: 12, color: C.ivoryDim, margin: 0 }}>{activeLessonTeacher.instrument} · {activeLessonTeacher.year}</p>
               </div>
               <ChevronRight size={16} color={C.ivoryDim} style={{ marginLeft: "auto" }} />
             </button>
             <LessonRoom
-              teacher={acceptedTeacher}
-              messages={conversations[acceptedTeacher.id] || []}
+              teacher={activeLessonTeacher}
+              messages={conversations[activeLessonTeacher.id] || []}
               onSend={onSend}
               onPayLesson={payForLesson}
               payLoading={payLoading}
