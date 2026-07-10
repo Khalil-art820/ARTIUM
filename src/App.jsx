@@ -3435,7 +3435,6 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
             <p style={{ fontSize: 13, color: C.ivoryDim }}>No sessions proposed yet. Ask {teacher.name.split(" ")[0]} in the Chat to schedule a time.</p>
           )}
           {sessions.map((s) => {
-            const locked = isLocked(s);
             const sessionDt = new Date(s.date + "T" + s.time);
             const dateStr = sessionDt.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
             const timeStr = s.time;
