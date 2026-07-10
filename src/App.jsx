@@ -2651,7 +2651,7 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
       <div className="flex-1 flex items-center justify-center px-6 py-16">
         <div className="w-full max-w-3xl">
           <p style={{ fontSize: 13, fontWeight: 500, color: C.brass, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 12 }}>Get started</p>
-          <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: "clamp(28px,4vw,44px)", fontWeight: 700, lineHeight: 1.1, color: C.ivory, letterSpacing: -0.5 }}>
+          <h1 style={{ fontFamily: "-apple-system, 'SF Pro Display', BlinkMacSystemFont, 'Inter', sans-serif", fontSize: "clamp(34px,5vw,52px)", fontWeight: 800, lineHeight: 1.05, color: C.ivory, letterSpacing: -1 }}>
             Your journey to classical music excellence.
           </h1>
           <p style={{ color: C.ivoryDim, fontSize: 16, lineHeight: 1.65, marginTop: 14 }}>
