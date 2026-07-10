@@ -3233,8 +3233,8 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
         const acceptedTeacher = teachers.find((t) => teachRequests[t.id] === "accepted");
         if (!acceptedTeacher) return null;
         return (
-          <div style={{ maxWidth: 640, margin: "0 auto", padding: "32px 24px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 4 }}>
+          <div style={{ padding: "24px 0 24px 20px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16, paddingRight: 20 }}>
               <Avatar name={acceptedTeacher.name} id={acceptedTeacher.id} size={44} photoUrl={acceptedTeacher.photoUrl} online={acceptedTeacher.online} />
               <div>
                 <h2 style={{ fontSize: 18, fontWeight: 700, color: C.inkText, margin: 0 }}>{acceptedTeacher.name}</h2>
@@ -3360,6 +3360,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
   const [counterTime, setCounterTime] = useState({});
   const [showCounter, setShowCounter] = useState({});
   const [confirmCancelId, setConfirmCancelId] = useState(null);
+  const [selectedSessionId, setSelectedSessionId] = useState(null);
   const [zoomLink, setZoomLink] = useState("");
   const [zoomSaved, setZoomSaved] = useState(false);
 
@@ -3391,7 +3392,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
   }
 
   return (
-    <div style={{ border: `1px solid ${C.inkLine}`, borderRadius: 16, overflow: "hidden", marginTop: 24 }}>
+    <div style={{ overflow: "hidden" }}>
       {/* Tab bar */}
       <div style={{ display: "flex", borderBottom: `1px solid ${C.inkLine}`, background: C.inkSoft }}>
         {tabs.map(({ id, label, Icon }) => (
@@ -3426,136 +3427,120 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
         </div>
       )}
 
-      {/* Schedule */}
-      {tab === "schedule" && (
-        <div className="p-5 flex flex-col gap-3">
-          <p style={{ fontSize: 12, color: C.ivoryDim, margin: 0 }}>
-            {teacher.name.split(" ")[0]} proposes session times. Approve or suggest a different time.
-          </p>
-          {sessions.length === 0 && (
-            <p style={{ fontSize: 13, color: C.ivoryDim }}>No sessions proposed yet. Ask {teacher.name.split(" ")[0]} in the Chat to schedule a time.</p>
-          )}
-          {sessions.map((s) => {
-            const sessionDt = new Date(s.date + "T" + s.time);
-            const dateStr = sessionDt.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
-            const timeStr = s.time;
-            const isConfirmed = s.status === "confirmed";
-            const isPending = s.status === "teacher_proposed";
-            const isCounter = showCounter[s.id];
-            return (
-              <div key={s.id} style={{ border: `1px solid ${isConfirmed ? "#A8D5B5" : C.inkLine}`, borderRadius: 12, padding: 16, background: isConfirmed ? "#F4FBF6" : "#fff" }}>
-                <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-                  <div style={{ marginTop: 2 }}><Clock size={15} color={isConfirmed ? "#1A9E6E" : C.brass} /></div>
-                  <div style={{ flex: 1 }}>
-                    <p style={{ fontSize: 14, fontWeight: 700, color: C.inkText, margin: 0 }}>{dateStr}</p>
-                    <p style={{ fontSize: 13, color: C.ivoryDim, margin: "2px 0 0" }}>{timeStr}
-                      {s.proposedBy === "student" && <span style={{ marginLeft: 6, fontSize: 11, color: C.brass }}>(your counter-proposal)</span>}
-                    </p>
-                  </div>
-                  <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 20, fontWeight: 700, flexShrink: 0,
-                    background: isConfirmed ? "#DFF2E8" : "#FFF3E0",
-                    color: isConfirmed ? "#1A9E6E" : "#D4810A" }}>
-                    {isConfirmed ? "Confirmed" : "Awaiting you"}
-                  </span>
-                </div>
-
-                {isPending && !isCounter && (
-                  <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-                    <button onClick={() => approveSession(s.id)}
-                      style={{ flex: 1, padding: "9px 0", borderRadius: 9, background: "#1A9E6E", color: "#fff", fontSize: 13, fontWeight: 600, border: "none", cursor: "pointer" }}>
-                      ✓ Approve
-                    </button>
-                    <button onClick={() => setShowCounter((prev) => ({ ...prev, [s.id]: true }))}
-                      style={{ flex: 1, padding: "9px 0", borderRadius: 9, background: "none", border: `1px solid ${C.inkLine}`, color: C.inkText, fontSize: 13, cursor: "pointer" }}>
-                      Suggest another time
-                    </button>
-                  </div>
-                )}
-
-                {isConfirmed && showCounter[s.id] && (
-                  <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
-                    <p style={{ fontSize: 12, color: C.ivoryDim, margin: 0 }}>Suggest a new time (requires teacher re-confirmation):</p>
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <input type="date" value={counterDate[s.id] || ""} onChange={(e) => setCounterDate((p) => ({ ...p, [s.id]: e.target.value }))}
-                        style={{ flex: 1, background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 9, padding: "8px 10px", fontSize: 13, color: C.inkText, outline: "none" }} />
-                      <input type="time" value={counterTime[s.id] || ""} onChange={(e) => setCounterTime((p) => ({ ...p, [s.id]: e.target.value }))}
-                        style={{ flex: 1, background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 9, padding: "8px 10px", fontSize: 13, color: C.inkText, outline: "none" }} />
+      {/* Schedule & Pay */}
+      {tab === "schedule" && (() => {
+        const sel = sessions.find((s) => s.id === selectedSessionId);
+        return (
+          <div>
+            {/* Horizontal scroll strip of square cards */}
+            <div style={{ display: "flex", gap: 10, overflowX: "auto", padding: "16px 0 12px", scrollbarWidth: "none" }}>
+              {sessions.length === 0 && (
+                <p style={{ fontSize: 13, color: C.ivoryDim, padding: "0 4px" }}>No sessions yet — ask {teacher.name.split(" ")[0]} in Chat to schedule one.</p>
+              )}
+              {sessions.map((s) => {
+                const dt = new Date(s.date + "T" + s.time);
+                const isConfirmed = s.status === "confirmed";
+                const isSelected = s.id === selectedSessionId;
+                return (
+                  <button key={s.id} onClick={() => setSelectedSessionId(isSelected ? null : s.id)}
+                    style={{ flexShrink: 0, width: 110, height: 110, borderRadius: 14, border: isSelected ? `2px solid ${C.brass}` : `1px solid ${isConfirmed ? "#A8D5B5" : C.inkLine}`, background: isConfirmed ? "#F4FBF6" : "#fff", display: "flex", flexDirection: "column", alignItems: "flex-start", justifyContent: "space-between", padding: 12, cursor: "pointer", boxShadow: isSelected ? `0 0 0 3px ${C.brassDim}` : "none", transition: "box-shadow 0.15s" }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: isConfirmed ? "#1A9E6E" : "#D4810A" }}>
+                      {isConfirmed ? "Confirmed" : "Awaiting"}
+                    </span>
+                    <div style={{ textAlign: "left" }}>
+                      <p style={{ fontSize: 18, fontWeight: 800, color: C.inkText, margin: 0, lineHeight: 1 }}>{dt.getDate()}</p>
+                      <p style={{ fontSize: 11, color: C.ivoryDim, margin: "2px 0 0" }}>{dt.toLocaleDateString("en-GB", { month: "short" })} · {s.time}</p>
                     </div>
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <button onClick={() => submitCounter(s.id)} disabled={!counterDate[s.id] || !counterTime[s.id]}
-                        style={{ flex: 1, padding: "8px 0", borderRadius: 9, background: C.brass, color: "#fff", fontSize: 13, fontWeight: 600, border: "none", cursor: !counterDate[s.id] || !counterTime[s.id] ? "not-allowed" : "pointer", opacity: !counterDate[s.id] || !counterTime[s.id] ? 0.5 : 1 }}>
-                        Send proposal
-                      </button>
-                      <button onClick={() => setShowCounter((prev) => ({ ...prev, [s.id]: false }))}
-                        style={{ padding: "8px 14px", borderRadius: 9, background: "none", border: `1px solid ${C.inkLine}`, color: C.ivoryDim, fontSize: 13, cursor: "pointer" }}>
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {isPending && isCounter && (
-                  <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
-                    <p style={{ fontSize: 12, color: C.ivoryDim, margin: 0 }}>Suggest a different time:</p>
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <input type="date" value={counterDate[s.id] || ""} onChange={(e) => setCounterDate((p) => ({ ...p, [s.id]: e.target.value }))}
-                        style={{ flex: 1, background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 9, padding: "8px 10px", fontSize: 13, color: C.inkText, outline: "none" }} />
-                      <input type="time" value={counterTime[s.id] || ""} onChange={(e) => setCounterTime((p) => ({ ...p, [s.id]: e.target.value }))}
-                        style={{ flex: 1, background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 9, padding: "8px 10px", fontSize: 13, color: C.inkText, outline: "none" }} />
-                    </div>
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <button onClick={() => submitCounter(s.id)} disabled={!counterDate[s.id] || !counterTime[s.id]}
-                        style={{ flex: 1, padding: "8px 0", borderRadius: 9, background: C.brass, color: "#fff", fontSize: 13, fontWeight: 600, border: "none", cursor: !counterDate[s.id] || !counterTime[s.id] ? "not-allowed" : "pointer", opacity: !counterDate[s.id] || !counterTime[s.id] ? 0.5 : 1 }}>
-                        Send proposal
-                      </button>
-                      <button onClick={() => setShowCounter((prev) => ({ ...prev, [s.id]: false }))}
-                        style={{ padding: "8px 14px", borderRadius: 9, background: "none", border: `1px solid ${C.inkLine}`, color: C.ivoryDim, fontSize: 13, cursor: "pointer" }}>
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {isConfirmed && teacher.teaching?.open && teacher.teaching?.price && (
-                  <button onClick={() => onPayLesson(teacher)} disabled={payLoading}
-                    style={{ marginTop: 12, width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "11px 0", borderRadius: 10, background: C.brass, color: "#fff", fontSize: 13, fontWeight: 700, border: "none", cursor: payLoading ? "not-allowed" : "pointer", opacity: payLoading ? 0.7 : 1 }}>
-                    <CreditCard size={15} />
-                    {payLoading ? "Redirecting to Stripe…" : `Pay €${teacher.teaching.price} for this session`}
                   </button>
-                )}
-                {isConfirmed && payError && <p style={{ fontSize: 12, color: "#E34234", marginTop: 4 }}>{payError}</p>}
+                );
+              })}
+            </div>
 
-                {isConfirmed && (
-                  <div style={{ marginTop: 8, display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    {/* Modify button */}
-                    {!modifyLocked(s) ? (
-                      <button onClick={() => setShowCounter((prev) => ({ ...prev, [s.id]: true }))}
-                        style={{ fontSize: 12, color: C.brass, background: "none", border: `1px solid ${C.brass}`, borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontWeight: 600 }}>
-                        Modify time
+            {/* Detail panel for selected session */}
+            {sel && (() => {
+              const dt = new Date(sel.date + "T" + sel.time);
+              const isConfirmed = sel.status === "confirmed";
+              const isPending = sel.status === "teacher_proposed";
+              const isCounter = showCounter[sel.id];
+              return (
+                <div style={{ borderTop: `1px solid ${C.inkLine}`, padding: "16px 4px 8px" }}>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: C.inkText, margin: "0 0 2px" }}>
+                    {dt.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })} at {sel.time}
+                  </p>
+                  {sel.proposedBy === "student" && <p style={{ fontSize: 11, color: C.brass, margin: "0 0 10px" }}>Your counter-proposal — awaiting teacher</p>}
+
+                  {isPending && !isCounter && (
+                    <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+                      <button onClick={() => approveSession(sel.id)}
+                        style={{ flex: 1, padding: "9px 0", borderRadius: 9, background: "#1A9E6E", color: "#fff", fontSize: 13, fontWeight: 600, border: "none", cursor: "pointer" }}>
+                        ✓ Approve
                       </button>
-                    ) : (
-                      <span style={{ fontSize: 11, color: C.ivoryDim, display: "flex", alignItems: "center", gap: 4 }}>
-                        🔒 Modify locked (48h)
-                      </span>
-                    )}
-                    {/* Cancel button */}
-                    {!cancelLocked(s) ? (
-                      <button onClick={() => setConfirmCancelId(s.id)}
-                        style={{ fontSize: 12, color: "#c0392b", background: "none", border: "1px solid #c0392b", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontWeight: 600 }}>
-                        Cancel session
+                      <button onClick={() => setShowCounter((prev) => ({ ...prev, [sel.id]: true }))}
+                        style={{ flex: 1, padding: "9px 0", borderRadius: 9, background: "none", border: `1px solid ${C.inkLine}`, color: C.inkText, fontSize: 13, cursor: "pointer" }}>
+                        Suggest another time
                       </button>
-                    ) : (
-                      <span style={{ fontSize: 11, color: C.ivoryDim, display: "flex", alignItems: "center", gap: 4 }}>
-                        🔒 Cancel locked (24h)
-                      </span>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
+                    </div>
+                  )}
+
+                  {(isPending && isCounter) || (isConfirmed && showCounter[sel.id]) ? (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
+                      <p style={{ fontSize: 12, color: C.ivoryDim, margin: 0 }}>
+                        {isConfirmed ? "Suggest a new time (requires teacher re-confirmation):" : "Suggest a different time:"}
+                      </p>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <input type="date" value={counterDate[sel.id] || ""} onChange={(e) => setCounterDate((p) => ({ ...p, [sel.id]: e.target.value }))}
+                          style={{ flex: 1, background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 9, padding: "8px 10px", fontSize: 13, color: C.inkText, outline: "none" }} />
+                        <input type="time" value={counterTime[sel.id] || ""} onChange={(e) => setCounterTime((p) => ({ ...p, [sel.id]: e.target.value }))}
+                          style={{ flex: 1, background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 9, padding: "8px 10px", fontSize: 13, color: C.inkText, outline: "none" }} />
+                      </div>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <button onClick={() => submitCounter(sel.id)} disabled={!counterDate[sel.id] || !counterTime[sel.id]}
+                          style={{ flex: 1, padding: "8px 0", borderRadius: 9, background: C.brass, color: "#fff", fontSize: 13, fontWeight: 600, border: "none", cursor: !counterDate[sel.id] || !counterTime[sel.id] ? "not-allowed" : "pointer", opacity: !counterDate[sel.id] || !counterTime[sel.id] ? 0.5 : 1 }}>
+                          Send proposal
+                        </button>
+                        <button onClick={() => setShowCounter((prev) => ({ ...prev, [sel.id]: false }))}
+                          style={{ padding: "8px 14px", borderRadius: 9, background: "none", border: `1px solid ${C.inkLine}`, color: C.ivoryDim, fontSize: 13, cursor: "pointer" }}>
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {isConfirmed && teacher.teaching?.open && teacher.teaching?.price && (
+                    <button onClick={() => onPayLesson(teacher)} disabled={payLoading}
+                      style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "11px 0", borderRadius: 10, background: C.brass, color: "#fff", fontSize: 13, fontWeight: 700, border: "none", cursor: payLoading ? "not-allowed" : "pointer", opacity: payLoading ? 0.7 : 1, marginBottom: 8 }}>
+                      <CreditCard size={15} />
+                      {payLoading ? "Redirecting to Stripe…" : `Pay €${teacher.teaching.price} for this session`}
+                    </button>
+                  )}
+                  {isConfirmed && payError && <p style={{ fontSize: 12, color: "#E34234", marginBottom: 6 }}>{payError}</p>}
+
+                  {isConfirmed && (
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                      {!modifyLocked(sel) ? (
+                        <button onClick={() => setShowCounter((prev) => ({ ...prev, [sel.id]: true }))}
+                          style={{ fontSize: 12, color: C.brass, background: "none", border: `1px solid ${C.brass}`, borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontWeight: 600 }}>
+                          Modify time
+                        </button>
+                      ) : (
+                        <span style={{ fontSize: 11, color: C.ivoryDim, display: "flex", alignItems: "center", gap: 4 }}>🔒 Modify locked (48h)</span>
+                      )}
+                      {!cancelLocked(sel) ? (
+                        <button onClick={() => setConfirmCancelId(sel.id)}
+                          style={{ fontSize: 12, color: "#c0392b", background: "none", border: "1px solid #c0392b", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontWeight: 600 }}>
+                          Cancel session
+                        </button>
+                      ) : (
+                        <span style={{ fontSize: 11, color: C.ivoryDim, display: "flex", alignItems: "center", gap: 4 }}>🔒 Cancel locked (24h)</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+          </div>
+        );
+      })()}
 
       {/* Cancel confirmation modal */}
       {confirmCancelId !== null && (
