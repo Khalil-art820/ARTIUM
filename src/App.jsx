@@ -2991,18 +2991,27 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
     const price = parseFloat(String(teacher.teaching?.price).replace(/[^0-9.]/g, "")) || 0;
     if (!price) { setPayError("This teacher hasn't set a lesson price yet."); setPayLoading(false); return; }
     try {
-      const { data, error } = await supabase.functions.invoke("stripe-checkout", {
-        body: {
-          teacherId: teacher.id,
-          teacherName: teacher.name,
-          amount: price,
-          currency: "eur",
-          stripeAccountId: teacher.stripeAccountId || null,
-          successUrl: window.location.href + "?payment=success",
-          cancelUrl: window.location.href + "?payment=cancel",
-        },
-      });
-      if (error || !data?.url) throw new Error(error?.message || "Could not start checkout");
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stripe-checkout`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({
+            teacherId: teacher.id,
+            teacherName: teacher.name,
+            amount: price,
+            currency: "eur",
+            stripeAccountId: teacher.stripeAccountId || null,
+            successUrl: window.location.origin + "?payment=success",
+            cancelUrl: window.location.origin + "?payment=cancel",
+          }),
+        }
+      );
+      const data = await res.json();
+      if (!res.ok || !data?.url) throw new Error(data?.error || "Could not start checkout");
       window.location.href = data.url;
     } catch (e) {
       setPayError(e.message);
