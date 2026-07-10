@@ -776,7 +776,7 @@ function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", inter
           Open to teaching ({totalTeachers})
         </span>
         <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "#425466", fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>
-          <span style={{ width: 9, height: 9, borderRadius: "50%", background: C.brass, border: `1.5px solid ${C.forest}`, display: "inline-block", flexShrink: 0 }} />
+          <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#1A9E6E", border: "1.5px solid #1E8449", display: "inline-block", flexShrink: 0 }} />
           Joined ({totalJoined})
         </span>
         <span style={{ marginLeft: 16, fontSize: 11, color: "#425466", fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>200+ conservatories</span>
