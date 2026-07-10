@@ -3052,10 +3052,13 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
       onBack={selectedId ? () => setSelectedId(null) : appTab !== "map" ? () => setAppTab("map") : onBack}
       hideTabs={!!selectedId}
     >
-      {/* Tab bar — only "Find a teacher"; profile accessed via avatar */}
+      {/* Tab bar */}
       <div className="px-6 flex gap-1" style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#fff" }}>
-        {[["map", "Find a teacher"]].map(([key, label]) => (
-          <button key={key} onClick={() => setAppTab(key)}
+        {[
+          ["map", "Find a teacher"],
+          ...(Object.values(teachRequests).some((s) => s === "accepted") ? [["lesson", "Lesson Room"]] : []),
+        ].map(([key, label]) => (
+          <button key={key} onClick={() => { setAppTab(key); if (key === "lesson") setSelectedId(null); }}
             className="px-4 py-2 text-sm"
             style={{ fontWeight: appTab === key ? 600 : 400, color: appTab === key ? C.brass : C.ivoryDim, borderBottom: appTab === key ? `2px solid ${C.brass}` : "2px solid transparent", background: "transparent" }}>
             {label}
@@ -3211,22 +3214,41 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
               <Row label="Teaching">{teachingText}</Row>
             </div>
 
-            {/* Lesson room (if accepted) */}
             {status === "accepted" && (
-              <LessonRoom
-                teacher={selected}
-                messages={conversations[selected.id] || []}
-                onSend={onSend}
-                onPayLesson={payForLesson}
-                payLoading={payLoading}
-                payError={payError}
-              />
+              <div className="mt-6 rounded-xl p-4 text-sm" style={{ background: C.inkSoft, border: `1px solid ${C.inkLine}`, color: C.ivoryDim, display: "flex", alignItems: "center", gap: 8 }}>
+                <Check size={13} color={C.brass} />
+                <span>{selected.name.split(" ")[0]} accepted — open <button onClick={() => setAppTab("lesson")} style={{ background: "none", border: "none", padding: 0, color: C.brass, fontWeight: 600, cursor: "pointer", fontSize: "inherit" }}>Lesson Room</button> to get started.</span>
+              </div>
             )}
             {status === "pending" && (
               <div className="mt-6 rounded-xl p-4 text-sm" style={{ background: C.inkSoft, border: `1px solid ${C.inkLine}`, color: C.ivoryDim }}>
                 <p className="lg-blink">Request sent — waiting for {selected.name.split(" ")[0]} to accept…</p>
               </div>
             )}
+          </div>
+        );
+      })()}
+
+      {appTab === "lesson" && (() => {
+        const acceptedTeacher = teachers.find((t) => teachRequests[t.id] === "accepted");
+        if (!acceptedTeacher) return null;
+        return (
+          <div style={{ maxWidth: 640, margin: "0 auto", padding: "32px 24px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 4 }}>
+              <Avatar name={acceptedTeacher.name} id={acceptedTeacher.id} size={44} photoUrl={acceptedTeacher.photoUrl} online={acceptedTeacher.online} />
+              <div>
+                <h2 style={{ fontSize: 18, fontWeight: 700, color: C.inkText, margin: 0 }}>{acceptedTeacher.name}</h2>
+                <p style={{ fontSize: 12, color: C.ivoryDim, margin: 0 }}>{acceptedTeacher.instrument} · {acceptedTeacher.year}</p>
+              </div>
+            </div>
+            <LessonRoom
+              teacher={acceptedTeacher}
+              messages={conversations[acceptedTeacher.id] || []}
+              onSend={onSend}
+              onPayLesson={payForLesson}
+              payLoading={payLoading}
+              payError={payError}
+            />
           </div>
         );
       })()}
