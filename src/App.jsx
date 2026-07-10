@@ -453,7 +453,7 @@ function Avatar({ name, id, size = 44, online, photoUrl }) {
       {online && (
         <span
           className="absolute -bottom-0.5 -right-0.5 rounded-full"
-          style={{ width: size * 0.28, height: size * 0.28, background: C.brass, border: `2px solid ${C.ink}` }}
+          style={{ width: size * 0.28, height: size * 0.28, background: "#1A9E6E", border: `2px solid ${C.ink}` }}
         />
       )}
     </div>
