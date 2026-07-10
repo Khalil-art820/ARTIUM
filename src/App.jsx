@@ -3357,6 +3357,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
   const [counterDate, setCounterDate] = useState({});
   const [counterTime, setCounterTime] = useState({});
   const [showCounter, setShowCounter] = useState({});
+  const [confirmCancelId, setConfirmCancelId] = useState(null);
   const [zoomLink, setZoomLink] = useState("");
   const [zoomSaved, setZoomSaved] = useState(false);
 
@@ -3494,7 +3495,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
                 )}
 
                 {isConfirmed && !locked && (
-                  <button onClick={() => { if (window.confirm("Are you sure you want to cancel this session?")) cancelSession(s.id); }}
+                  <button onClick={() => setConfirmCancelId(s.id)}
                     style={{ marginTop: 10, fontSize: 12, color: "#c0392b", background: "none", border: "none", cursor: "pointer", padding: 0, textDecoration: "underline" }}>
                     Cancel session
                   </button>
@@ -3528,6 +3529,28 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
           )}
           {payError && <p style={{ fontSize: 12, color: "#E34234" }}>{payError}</p>}
           <p style={{ fontSize: 11, color: C.ivoryDim }}>Secure payment via Stripe. 11% platform fee applies.</p>
+        </div>
+      )}
+
+      {/* Cancel confirmation modal */}
+      {confirmCancelId !== null && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(10,20,40,0.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999 }}
+          onClick={() => setConfirmCancelId(null)}>
+          <div style={{ background: "#fff", borderRadius: 16, padding: "28px 28px 24px", maxWidth: 320, width: "90%", boxShadow: "0 8px 32px rgba(0,0,0,0.18)", textAlign: "center" }}
+            onClick={(e) => e.stopPropagation()}>
+            <p style={{ fontSize: 16, fontWeight: 700, color: C.inkText, margin: "0 0 8px" }}>Cancel this session?</p>
+            <p style={{ fontSize: 13, color: C.ivoryDim, margin: "0 0 20px", lineHeight: 1.5 }}>Are you sure you want to remove this proposal? This cannot be undone.</p>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button onClick={() => setConfirmCancelId(null)}
+                style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: `1px solid ${C.inkLine}`, background: "none", color: C.inkText, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                Keep it
+              </button>
+              <button onClick={() => { cancelSession(confirmCancelId); setConfirmCancelId(null); }}
+                style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "none", background: "#c0392b", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                Yes, cancel
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
