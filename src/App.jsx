@@ -3442,8 +3442,8 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
     { id: 0, date: "2026-07-05", time: "10:00", status: "confirmed", proposedBy: "teacher", paid: true },
     // Teacher proposal awaiting student approval
     { id: 1, date: "2026-07-15", time: "16:00", status: "teacher_proposed", proposedBy: "teacher", paid: false },
-    // Between 24h and 48h → modify locked, cancel still open
-    { id: 2, date: "2026-07-12", time: "18:00", status: "confirmed", proposedBy: "teacher", paid: false },
+    // Between 24h and 48h → modify locked, cancel still open — paid
+    { id: 2, date: "2026-07-12", time: "18:00", status: "confirmed", proposedBy: "teacher", paid: true },
   ]);
   const [counterDate, setCounterDate] = useState({});
   const [counterTime, setCounterTime] = useState({});
