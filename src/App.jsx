@@ -3381,7 +3381,11 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
   function isLocked(s) {
     if (s.status !== "confirmed") return false;
     const sessionMs = new Date(s.date + "T" + s.time).getTime();
-    return sessionMs - Date.now() < 36 * 60 * 60 * 1000;
+    return sessionMs - Date.now() < 24 * 60 * 60 * 1000;
+  }
+
+  function cancelSession(id) {
+    setSessions((prev) => prev.filter((s) => s.id !== id));
   }
 
   return (
@@ -3489,16 +3493,16 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
                   </div>
                 )}
 
+                {isConfirmed && !locked && (
+                  <button onClick={() => cancelSession(s.id)}
+                    style={{ marginTop: 10, fontSize: 12, color: "#c0392b", background: "none", border: "none", cursor: "pointer", padding: 0, textDecoration: "underline" }}>
+                    Cancel session
+                  </button>
+                )}
                 {isConfirmed && locked && (
                   <p style={{ fontSize: 11, color: C.ivoryDim, marginTop: 10, margin: "10px 0 0" }}>
-                    🔒 Session locked — within 36 hours, changes must go through {teacher.name.split(" ")[0]}.
+                    🔒 Cancellation closed — less than 24 hours before the session.
                   </p>
-                )}
-                {isConfirmed && !locked && (
-                  <button onClick={() => setSessions((prev) => prev.map((x) => x.id === s.id ? { ...x, status: "teacher_proposed", proposedBy: "teacher" } : x))}
-                    style={{ marginTop: 10, fontSize: 12, color: C.ivoryDim, background: "none", border: "none", cursor: "pointer", padding: 0, textDecoration: "underline" }}>
-                    Request reschedule
-                  </button>
                 )}
               </div>
             );
