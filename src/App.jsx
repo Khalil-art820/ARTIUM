@@ -3064,8 +3064,8 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
       backLabel={selectedId && appTab === "lesson" ? "Lesson Room" : undefined}
       hideTabs={!!selectedId}
     >
-      {/* Tab bar — hidden when viewing a teacher profile */}
-      <div className="px-6 flex gap-1" style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#fff", display: selectedId ? "none" : "flex" }}>
+      {/* Tab bar */}
+      <div className="px-6 flex gap-1" style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#fff" }}>
         {[
           ["map", "Find a teacher"],
           ...(Object.values(teachRequests).some((s) => s === "accepted") ? [["lesson", "Lesson Room"]] : []),
