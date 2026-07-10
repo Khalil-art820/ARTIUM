@@ -3494,7 +3494,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
                 )}
 
                 {isConfirmed && !locked && (
-                  <button onClick={() => cancelSession(s.id)}
+                  <button onClick={() => { if (window.confirm("Are you sure you want to cancel this session?")) cancelSession(s.id); }}
                     style={{ marginTop: 10, fontSize: 12, color: "#c0392b", background: "none", border: "none", cursor: "pointer", padding: 0, textDecoration: "underline" }}>
                     Cancel session
                   </button>
