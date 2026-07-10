@@ -2650,7 +2650,6 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
       </div>
       <div className="flex-1 flex items-center justify-center px-6 py-16">
         <div className="w-full max-w-3xl">
-          <p style={{ fontSize: 13, fontWeight: 500, color: C.brass, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 12 }}>Get started</p>
           <h1 style={{ fontFamily: "-apple-system, 'SF Pro Display', BlinkMacSystemFont, 'Inter', sans-serif", fontSize: "clamp(22px,2.8vw,28px)", fontWeight: 800, lineHeight: 1.05, color: C.ivory, letterSpacing: -1 }}>
             The Path to Artistic Excellence.
           </h1>
