@@ -3061,13 +3061,12 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
       musicOn={musicOn} onMusicToggle={onMusicToggle} audioRef={audioRef}
       onlineCount={onlineCount}
       onBack={selectedId ? () => setSelectedId(null) : appTab !== "map" ? () => setAppTab("map") : onBack}
-      backLabel={selectedId && appTab === "lesson" ? "Lesson Room" : undefined}
       hideTabs={!!selectedId}
     >
-      {/* Tab bar */}
-      <div className="px-6 flex gap-1" style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#fff" }}>
+      {/* Tab bar — hidden when viewing teacher profile from Lesson Room */}
+      <div className="px-6 flex gap-1" style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#fff", display: selectedId && appTab === "lesson" ? "none" : "flex" }}>
         {[
-          ...(!(selectedId && appTab === "lesson") ? [["map", "Find a teacher"]] : []),
+          ["map", "Find a teacher"],
           ...(Object.values(teachRequests).some((s) => s === "accepted") ? [["lesson", "Lesson Room"]] : []),
         ].map(([key, label]) => (
           <button key={key} onClick={() => { setAppTab(key); if (key === "lesson") setSelectedId(null); }}
