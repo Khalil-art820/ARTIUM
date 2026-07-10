@@ -2628,9 +2628,9 @@ function StepTeaching({ draft, update }) {
 function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLoggedOut, studentLoggedIn, musicOn, onMusicToggle, audioRef, onlineCount }) {
   const singleCard = !!learnerProfile || learnerLoggedOut || studentLoggedIn;
   const cardStyle = {
-    textAlign: "left", background: "#FFFFFF", border: `1px solid ${C.inkLine}`,
+    textAlign: "left", background: "#FFFFFF", border: "none",
     borderRadius: 12, padding: 32,
-    boxShadow: "0 4px 24px rgba(10,37,64,0.07), 0 1px 4px rgba(10,37,64,0.04)",
+    boxShadow: `0 0 0 5px ${C.brass}, 0 4px 24px rgba(10,37,64,0.07)`,
     cursor: "pointer", transition: "box-shadow 0.2s, transform 0.15s",
   };
   return (
@@ -2658,7 +2658,7 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
           </p>
           <div className={`mt-10 grid gap-6 ${singleCard ? "" : "md:grid-cols-2"}`}>
             {!studentLoggedIn && (
-              <button onClick={onLearner} style={{ ...cardStyle, background: "none", border: "none", padding: 0, overflow: "hidden", position: "relative", minHeight: 260 }}>
+              <button onClick={onLearner} style={{ ...cardStyle, background: "none", padding: 0, overflow: "hidden", position: "relative", minHeight: 260 }}>
                 <div style={{ position: "absolute", inset: 0, backgroundImage: "url('/piano.png')", backgroundSize: "cover", backgroundPosition: "center", filter: "grayscale(100%) contrast(1.1) brightness(0.85)" }} />
                 <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.72) 60%, rgba(0,0,0,0.25) 100%)" }} />
                 <div style={{ position: "relative", padding: 28, textAlign: "left", display: "flex", flexDirection: "column", justifyContent: "flex-end", minHeight: 260 }}>
@@ -2673,7 +2673,7 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
               </button>
             )}
             {(!singleCard || studentLoggedIn) && (
-              <button onClick={onStudent} style={{ ...cardStyle, background: "none", border: "none", padding: 0, overflow: "hidden", position: "relative", minHeight: 260 }}>
+              <button onClick={onStudent} style={{ ...cardStyle, background: "none", padding: 0, overflow: "hidden", position: "relative", minHeight: 260 }}>
                 <div style={{ position: "absolute", inset: 0, backgroundImage: "url('/juilliard.png')", backgroundSize: "cover", backgroundPosition: "center top", filter: "grayscale(100%) contrast(1.1) brightness(0.85)" }} />
                 <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.72) 60%, rgba(0,0,0,0.25) 100%)" }} />
                 <div style={{ position: "relative", padding: 28, textAlign: "left", display: "flex", flexDirection: "column", justifyContent: "flex-end", minHeight: 260 }}>
