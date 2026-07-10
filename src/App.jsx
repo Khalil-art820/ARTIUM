@@ -28,10 +28,10 @@ const C = {
   ivoryDim: "#425466",
   inkText: "#0A2540",
   inkTextDim: "#425466",
-  brass: "#4aab8c",
-  brassDim: "rgba(46,134,193,0.10)",
+  brass: "#A8747B",
+  brassDim: "rgba(168,116,123,0.10)",
   burgundy: "#DF1B41",
-  forest: "#1A9E6E",
+  forest: "#8B5560",
 };
 
 const FONT_DISPLAY = "'Inter', sans-serif";
