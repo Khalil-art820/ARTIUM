@@ -3067,7 +3067,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
       {/* Tab bar */}
       <div className="px-6 flex gap-1" style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#fff" }}>
         {[
-          ["map", "Find a teacher"],
+          ...(!(selectedId && appTab === "lesson") ? [["map", "Find a teacher"]] : []),
           ...(Object.values(teachRequests).some((s) => s === "accepted") ? [["lesson", "Lesson Room"]] : []),
         ].map(([key, label]) => (
           <button key={key} onClick={() => { setAppTab(key); if (key === "lesson") setSelectedId(null); }}
