@@ -776,7 +776,7 @@ function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", inter
           Open to teaching ({totalTeachers})
         </span>
         <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "#425466", fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>
-          <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#27AE60", border: "1.5px solid #1E8449", display: "inline-block", flexShrink: 0 }} />
+          <span style={{ width: 9, height: 9, borderRadius: "50%", background: C.brass, border: `1.5px solid ${C.forest}`, display: "inline-block", flexShrink: 0 }} />
           Joined ({totalJoined})
         </span>
         <span style={{ marginLeft: 16, fontSize: 11, color: "#425466", fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>200+ conservatories</span>
@@ -852,7 +852,7 @@ function AccessGate({ onUnlock }) {
         {error && <p style={{ color: C.burgundy, fontSize: 13, marginBottom: 12 }}>Incorrect key — try again.</p>}
         <button
           onClick={attempt}
-          style={{ marginTop: 12, width: "100%", background: "#4aab8c", color: "#FFFFFF", border: "none", borderRadius: 10, padding: "12px 0", fontSize: 15, fontWeight: 700, cursor: "pointer" }}
+          style={{ marginTop: 12, width: "100%", background: C.brass, color: "#FFFFFF", border: "none", borderRadius: 10, padding: "12px 0", fontSize: 15, fontWeight: 700, cursor: "pointer" }}
         >Continue</button>
       </div>
     </div>
@@ -1363,7 +1363,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
             <MusicBtn playing={musicOn} onToggle={onMusicToggle} audioRef={audioRef} />
             {onlineCount != null && (
               <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 13, color: C.ivoryDim }}>
-                <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#1A9E6E", display: "inline-block" }} />
+                <span style={{ width: 7, height: 7, borderRadius: "50%", background: C.brass, display: "inline-block" }} />
                 <span style={{ color: C.ivory, fontWeight: 600 }}>{onlineCount}</span>
                 <span style={{ color: C.ivory, fontWeight: 600 }}>online</span>
               </span>
@@ -2062,7 +2062,7 @@ function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, mus
           <MusicBtn playing={musicOn} onToggle={onMusicToggle} audioRef={audioRef} />
           {onlineCount != null && (
             <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: C.ivoryDim, whiteSpace: "nowrap" }}>
-              <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#1A9E6E", display: "inline-block", flexShrink: 0 }} />
+              <span style={{ width: 7, height: 7, borderRadius: "50%", background: C.brass, display: "inline-block", flexShrink: 0 }} />
               <span style={{ color: C.ivory, fontWeight: 600 }}>{onlineCount}</span> online
             </span>
           )}
@@ -2641,7 +2641,7 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
           <MusicBtn playing={musicOn} onToggle={onMusicToggle} audioRef={audioRef} />
           {onlineCount != null && (
             <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 13, color: C.ivoryDim }}>
-              <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#1A9E6E", display: "inline-block" }} />
+              <span style={{ width: 7, height: 7, borderRadius: "50%", background: C.brass, display: "inline-block" }} />
               <span style={{ color: C.ivory, fontWeight: 600 }}>{onlineCount}</span>
               <span style={{ color: C.ivory, fontWeight: 600 }}>online</span>
             </span>
