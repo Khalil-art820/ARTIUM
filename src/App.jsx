@@ -2652,7 +2652,7 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
         <div className="w-full max-w-3xl">
           <p style={{ fontSize: 13, fontWeight: 500, color: C.brass, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 12 }}>Get started</p>
           <h1 style={{ fontFamily: "-apple-system, 'SF Pro Display', BlinkMacSystemFont, 'Inter', sans-serif", fontSize: "clamp(22px,2.8vw,28px)", fontWeight: 800, lineHeight: 1.05, color: C.ivory, letterSpacing: -1 }}>
-            Your journey to classical music excellence.
+            The Path to Artistic Excellence.
           </h1>
           <p style={{ color: C.ivoryDim, fontSize: 16, lineHeight: 1.65, marginTop: 14 }}>
             Join the global network of top conservatory students and amateur music enthusiasts.
