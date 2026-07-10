@@ -3365,8 +3365,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
 
   const tabs = [
     { id: "chat", label: "Chat", Icon: MessageCircle },
-    { id: "schedule", label: "Schedule", Icon: Calendar },
-    { id: "pay", label: "Pay", Icon: CreditCard },
+    { id: "schedule", label: "Schedule & Pay", Icon: Calendar },
     { id: "video", label: "Video", Icon: Video },
   ];
 
@@ -3517,8 +3516,17 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
                   </div>
                 )}
 
+                {isConfirmed && teacher.teaching?.open && teacher.teaching?.price && (
+                  <button onClick={() => onPayLesson(teacher)} disabled={payLoading}
+                    style={{ marginTop: 12, width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "11px 0", borderRadius: 10, background: C.brass, color: "#fff", fontSize: 13, fontWeight: 700, border: "none", cursor: payLoading ? "not-allowed" : "pointer", opacity: payLoading ? 0.7 : 1 }}>
+                    <CreditCard size={15} />
+                    {payLoading ? "Redirecting to Stripe…" : `Pay €${teacher.teaching.price} for this session`}
+                  </button>
+                )}
+                {isConfirmed && payError && <p style={{ fontSize: 12, color: "#E34234", marginTop: 4 }}>{payError}</p>}
+
                 {isConfirmed && (
-                  <div style={{ marginTop: 12, display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  <div style={{ marginTop: 8, display: "flex", gap: 8, flexWrap: "wrap" }}>
                     {/* Modify button */}
                     {!modifyLocked(s) ? (
                       <button onClick={() => setShowCounter((prev) => ({ ...prev, [s.id]: true }))}
@@ -3546,27 +3554,6 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
               </div>
             );
           })}
-        </div>
-      )}
-
-      {/* Pay */}
-      {tab === "pay" && (
-        <div className="p-5 flex flex-col gap-4">
-          <p style={{ fontSize: 13, color: C.ivoryDim, lineHeight: 1.6 }}>
-            Pay for a session with <strong style={{ color: C.inkText }}>{teacher.name.split(" ")[0]}</strong>
-            {teacher.teaching?.price ? ` — €${teacher.teaching.price}/session` : ""}.
-          </p>
-          {teacher.teaching?.open && teacher.teaching?.price ? (
-            <button onClick={() => onPayLesson(teacher)} disabled={payLoading}
-              style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "14px 20px", borderRadius: 12, background: C.brass, color: "#fff", fontSize: 15, fontWeight: 700, border: "none", cursor: payLoading ? "not-allowed" : "pointer", opacity: payLoading ? 0.7 : 1 }}>
-              <CreditCard size={17} />
-              {payLoading ? "Redirecting to Stripe…" : `Pay €${teacher.teaching.price} for a session`}
-            </button>
-          ) : (
-            <p style={{ fontSize: 13, color: C.ivoryDim }}>This teacher has not set up lesson payments yet.</p>
-          )}
-          {payError && <p style={{ fontSize: 12, color: "#E34234" }}>{payError}</p>}
-          <p style={{ fontSize: 11, color: C.ivoryDim }}>Secure payment via Stripe. 11% platform fee applies.</p>
         </div>
       )}
 
