@@ -3378,7 +3378,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
 
   const tabs = [
     { id: "chat", label: "Chat", Icon: MessageCircle },
-    { id: "schedule", label: "Schedule & Pay", Icon: Calendar },
+    { id: "schedule", label: "Schedule & Payments", Icon: Calendar },
     { id: "video", label: "Video", Icon: Video },
   ];
 
