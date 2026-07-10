@@ -3508,9 +3508,9 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
 
                   {isConfirmed && teacher.teaching?.open && teacher.teaching?.price && (
                     <button onClick={() => onPayLesson(teacher)} disabled={payLoading}
-                      style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "11px 0", borderRadius: 10, background: C.brass, color: "#fff", fontSize: 13, fontWeight: 700, border: "none", cursor: payLoading ? "not-allowed" : "pointer", opacity: payLoading ? 0.7 : 1, marginBottom: 8 }}>
-                      <CreditCard size={15} />
-                      {payLoading ? "Redirecting to Stripe…" : `Pay €${teacher.teaching.price} for this session`}
+                      style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, background: "none", border: `1px solid ${C.brass}`, color: C.brass, fontSize: 12, fontWeight: 600, cursor: payLoading ? "not-allowed" : "pointer", opacity: payLoading ? 0.6 : 1, marginBottom: 8 }}>
+                      <CreditCard size={13} />
+                      {payLoading ? "Redirecting…" : `Pay €${teacher.teaching.price}`}
                     </button>
                   )}
                   {isConfirmed && payError && <p style={{ fontSize: 12, color: "#E34234", marginBottom: 6 }}>{payError}</p>}
