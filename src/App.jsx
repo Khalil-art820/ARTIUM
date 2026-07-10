@@ -3356,6 +3356,83 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
   );
 }
 
+function VideoSessionTab({ sessions, teacher, zoomLink, setZoomLink, zoomSaved, setZoomSaved }) {
+  const now = Date.now();
+  const nextSession = sessions
+    .filter((s) => s.status === "confirmed" && s.paid && new Date(s.date + "T" + s.time).getTime() > now)
+    .sort((a, b) => new Date(a.date + "T" + a.time) - new Date(b.date + "T" + b.time))[0];
+
+  let nextBanner = null;
+  if (nextSession) {
+    const dt = new Date(nextSession.date + "T" + nextSession.time);
+    const dateStr = dt.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
+    const hoursUntil = Math.round((dt.getTime() - now) / (1000 * 60 * 60));
+    const countdown = hoursUntil < 24
+      ? `In ${hoursUntil} hour${hoursUntil !== 1 ? "s" : ""}`
+      : `In ${Math.round(hoursUntil / 24)} day${Math.round(hoursUntil / 24) !== 1 ? "s" : ""}`;
+    nextBanner = (
+      <div style={{ borderRadius: 12, padding: "14px 16px", background: "#DFF2E8", border: "1px solid #A8D5B5" }}>
+        <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#1A9E6E", margin: "0 0 4px" }}>Next session</p>
+        <p style={{ fontSize: 15, fontWeight: 700, color: C.inkText, margin: 0 }}>{dateStr} at {nextSession.time}</p>
+        <p style={{ fontSize: 12, color: "#1A9E6E", margin: "3px 0 0" }}>{countdown} · Paid ✓</p>
+      </div>
+    );
+  } else {
+    nextBanner = (
+      <div style={{ borderRadius: 12, padding: "14px 16px", background: C.inkSoft, border: `1px solid ${C.inkLine}` }}>
+        <p style={{ fontSize: 13, color: C.ivoryDim, margin: 0 }}>No upcoming paid session — confirm and pay a session in Schedule & Payments first.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-5 flex flex-col gap-4">
+      {nextBanner}
+
+      {/* Zoom card */}
+      <div style={{ border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: 16 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+          <div style={{ width: 32, height: 32, borderRadius: 8, background: "#2D8CFF", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Video size={16} color="#fff" />
+          </div>
+          <p style={{ fontSize: 14, fontWeight: 600, color: C.inkText, margin: 0 }}>Zoom</p>
+        </div>
+        <div style={{ display: "flex", gap: 8 }}>
+          <input value={zoomLink} onChange={(e) => { setZoomLink(e.target.value); setZoomSaved(false); }}
+            placeholder="Paste Zoom meeting link…"
+            style={{ flex: 1, background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 9, padding: "9px 12px", fontSize: 13, color: C.inkText, outline: "none" }} />
+          <button onClick={() => setZoomSaved(true)} disabled={!zoomLink.trim()}
+            style={{ padding: "9px 14px", borderRadius: 9, background: C.brass, color: "#fff", fontSize: 13, fontWeight: 600, border: "none", cursor: !zoomLink.trim() ? "not-allowed" : "pointer", opacity: !zoomLink.trim() ? 0.5 : 1 }}>
+            Save
+          </button>
+        </div>
+        {zoomSaved && zoomLink && (
+          <a href={zoomLink} target="_blank" rel="noreferrer"
+            style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 600, color: "#2D8CFF", textDecoration: "none" }}>
+            <Link2 size={13} /> Join Zoom meeting
+          </a>
+        )}
+      </div>
+
+      {/* LiveKit card */}
+      <div style={{ border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: 16, opacity: 0.7 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+          <div style={{ width: 32, height: 32, borderRadius: 8, background: C.brass, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Video size={16} color="#fff" />
+          </div>
+          <div>
+            <p style={{ fontSize: 14, fontWeight: 600, color: C.inkText, margin: 0 }}>LiveKit</p>
+            <span style={{ fontSize: 10, padding: "1px 7px", borderRadius: 20, background: C.brassDim, color: C.brass, fontWeight: 700 }}>COMING SOON</span>
+          </div>
+        </div>
+        <p style={{ fontSize: 12, color: C.ivoryDim, lineHeight: 1.6, margin: 0 }}>
+          In-app HD video sessions. Connect a LiveKit account to enable.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payError }) {
   const [tab, setTab] = useState("chat");
   // Sessions are teacher-proposed; student can approve or counter-propose
@@ -3379,7 +3456,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
   const tabs = [
     { id: "chat", label: "Chat", Icon: MessageCircle },
     { id: "schedule", label: "Schedule & Payments", Icon: Calendar },
-    { id: "video", label: "Video", Icon: Video },
+    { id: "video", label: "Video Session", Icon: Video },
   ];
 
   function approveSession(id) {
@@ -3586,50 +3663,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
       )}
 
       {/* Video */}
-      {tab === "video" && (
-        <div className="p-5 flex flex-col gap-4">
-          {/* Zoom card */}
-          <div style={{ border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: 16 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-              <div style={{ width: 32, height: 32, borderRadius: 8, background: "#2D8CFF", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Video size={16} color="#fff" />
-              </div>
-              <p style={{ fontSize: 14, fontWeight: 600, color: C.inkText, margin: 0 }}>Zoom</p>
-            </div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <input value={zoomLink} onChange={(e) => { setZoomLink(e.target.value); setZoomSaved(false); }}
-                placeholder="Paste Zoom meeting link…"
-                style={{ flex: 1, background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 9, padding: "9px 12px", fontSize: 13, color: C.inkText, outline: "none" }} />
-              <button onClick={() => setZoomSaved(true)} disabled={!zoomLink.trim()}
-                style={{ padding: "9px 14px", borderRadius: 9, background: C.brass, color: "#fff", fontSize: 13, fontWeight: 600, border: "none", cursor: !zoomLink.trim() ? "not-allowed" : "pointer", opacity: !zoomLink.trim() ? 0.5 : 1 }}>
-                Save
-              </button>
-            </div>
-            {zoomSaved && zoomLink && (
-              <a href={zoomLink} target="_blank" rel="noreferrer"
-                style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 600, color: "#2D8CFF", textDecoration: "none" }}>
-                <Link2 size={13} /> Join Zoom meeting
-              </a>
-            )}
-          </div>
-
-          {/* LiveKit card */}
-          <div style={{ border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: 16, opacity: 0.7 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-              <div style={{ width: 32, height: 32, borderRadius: 8, background: C.brass, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Video size={16} color="#fff" />
-              </div>
-              <div>
-                <p style={{ fontSize: 14, fontWeight: 600, color: C.inkText, margin: 0 }}>LiveKit</p>
-                <span style={{ fontSize: 10, padding: "1px 7px", borderRadius: 20, background: C.brassDim, color: C.brass, fontWeight: 700 }}>COMING SOON</span>
-              </div>
-            </div>
-            <p style={{ fontSize: 12, color: C.ivoryDim, lineHeight: 1.6, margin: 0 }}>
-              In-app HD video sessions. Connect a LiveKit account to enable.
-            </p>
-          </div>
-        </div>
-      )}
+      {tab === "video" && <VideoSessionTab sessions={sessions} teacher={teacher} zoomLink={zoomLink} setZoomLink={setZoomLink} zoomSaved={zoomSaved} setZoomSaved={setZoomSaved} />}
     </div>
   );
 }
