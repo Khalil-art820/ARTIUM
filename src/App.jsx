@@ -1363,7 +1363,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
             <MusicBtn playing={musicOn} onToggle={onMusicToggle} audioRef={audioRef} />
             {onlineCount != null && (
               <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 13, color: C.ivoryDim }}>
-                <span style={{ width: 7, height: 7, borderRadius: "50%", background: C.brass, display: "inline-block" }} />
+                <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#1A9E6E", display: "inline-block" }} />
                 <span style={{ color: C.ivory, fontWeight: 600 }}>{onlineCount}</span>
                 <span style={{ color: C.ivory, fontWeight: 600 }}>online</span>
               </span>
@@ -2062,7 +2062,7 @@ function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, mus
           <MusicBtn playing={musicOn} onToggle={onMusicToggle} audioRef={audioRef} />
           {onlineCount != null && (
             <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: C.ivoryDim, whiteSpace: "nowrap" }}>
-              <span style={{ width: 7, height: 7, borderRadius: "50%", background: C.brass, display: "inline-block", flexShrink: 0 }} />
+              <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#1A9E6E", display: "inline-block", flexShrink: 0 }} />
               <span style={{ color: C.ivory, fontWeight: 600 }}>{onlineCount}</span> online
             </span>
           )}
@@ -2641,7 +2641,7 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
           <MusicBtn playing={musicOn} onToggle={onMusicToggle} audioRef={audioRef} />
           {onlineCount != null && (
             <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 13, color: C.ivoryDim }}>
-              <span style={{ width: 7, height: 7, borderRadius: "50%", background: C.brass, display: "inline-block" }} />
+              <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#1A9E6E", display: "inline-block" }} />
               <span style={{ color: C.ivory, fontWeight: 600 }}>{onlineCount}</span>
               <span style={{ color: C.ivory, fontWeight: 600 }}>online</span>
             </span>
