@@ -2982,6 +2982,33 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
   const [editingProfile, setEditingProfile] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [payLoading, setPayLoading] = useState(false);
+  const [payError, setPayError] = useState("");
+
+  async function payForLesson(teacher) {
+    setPayLoading(true);
+    setPayError("");
+    const price = parseFloat(String(teacher.teaching?.price).replace(/[^0-9.]/g, "")) || 0;
+    if (!price) { setPayError("This teacher hasn't set a lesson price yet."); setPayLoading(false); return; }
+    try {
+      const { data, error } = await supabase.functions.invoke("stripe-checkout", {
+        body: {
+          teacherId: teacher.id,
+          teacherName: teacher.name,
+          amount: price,
+          currency: "eur",
+          stripeAccountId: teacher.stripeAccountId || null,
+          successUrl: window.location.href + "?payment=success",
+          cancelUrl: window.location.href + "?payment=cancel",
+        },
+      });
+      if (error || !data?.url) throw new Error(error?.message || "Could not start checkout");
+      window.location.href = data.url;
+    } catch (e) {
+      setPayError(e.message);
+      setPayLoading(false);
+    }
+  }
   const [deleteError, setDeleteError] = useState("");
 
   // Group teachers by conservatory for WorldMap
@@ -3117,7 +3144,19 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
               </div>
               <div style={{ flexShrink: 0 }}>
                 {status === "accepted" ? (
-                  <PrimaryBtn onClick={() => {}} icon={MessageCircle}>Message</PrimaryBtn>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end" }}>
+                    <PrimaryBtn onClick={() => {}} icon={MessageCircle}>Message</PrimaryBtn>
+                    {selected.teaching?.open && selected.teaching?.price && (
+                      <button
+                        onClick={() => payForLesson(selected)}
+                        disabled={payLoading}
+                        style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 700, color: "#fff", background: C.brass, border: "none", borderRadius: 8, padding: "8px 16px", cursor: payLoading ? "not-allowed" : "pointer", opacity: payLoading ? 0.7 : 1 }}
+                      >
+                        💳 {payLoading ? "Redirecting…" : `Pay €${selected.teaching.price} for a lesson`}
+                      </button>
+                    )}
+                    {payError && <p style={{ fontSize: 12, color: "#E34234", margin: 0 }}>{payError}</p>}
+                  </div>
                 ) : status === "pending" ? (
                   <span style={{ fontSize: 12, color: C.ivoryDim, fontStyle: "italic" }}>Request sent…</span>
                 ) : (
