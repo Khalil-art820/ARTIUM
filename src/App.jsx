@@ -3477,11 +3477,11 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
                   {isPending && !isCounter && (
                     <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
                       <button onClick={() => approveSession(sel.id)}
-                        style={{ flex: 1, padding: "9px 0", borderRadius: 9, background: "#1A9E6E", color: "#fff", fontSize: 13, fontWeight: 600, border: "none", cursor: "pointer" }}>
-                        ✓ Approve
+                        style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "6px 13px", borderRadius: 8, background: "#1A9E6E", color: "#fff", fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer" }}>
+                        <Check size={12} /> Approve
                       </button>
                       <button onClick={() => setShowCounter((prev) => ({ ...prev, [sel.id]: true }))}
-                        style={{ flex: 1, padding: "9px 0", borderRadius: 9, background: "none", border: `1px solid ${C.inkLine}`, color: C.inkText, fontSize: 13, cursor: "pointer" }}>
+                        style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "6px 13px", borderRadius: 8, background: "none", border: `1px solid ${C.inkLine}`, color: C.ivoryDim, fontSize: 12, cursor: "pointer" }}>
                         Suggest another time
                       </button>
                     </div>
