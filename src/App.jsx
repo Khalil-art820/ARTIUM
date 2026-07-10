@@ -2041,8 +2041,9 @@ function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, mus
       <div className="px-6 flex items-center gap-4" style={{ height: 60, background: "#FFFFFF", borderBottom: `1px solid ${C.inkLine}` }}>
         <div className="flex items-center gap-3">
           {(previewOnly || onBack) && (
-            <button onClick={previewOnly ? onHome : onBack} style={{ color: C.ivoryDim, background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", padding: 0 }}>
+            <button onClick={previewOnly ? onHome : onBack} style={{ color: C.ivoryDim, background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 2, padding: 0 }}>
               <ChevronLeft size={18} />
+              {backLabel && <span style={{ fontSize: 13, fontWeight: 500 }}>{backLabel}</span>}
             </button>
           )}
           <Logo size={20} />
@@ -3060,6 +3061,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
       musicOn={musicOn} onMusicToggle={onMusicToggle} audioRef={audioRef}
       onlineCount={onlineCount}
       onBack={selectedId ? () => setSelectedId(null) : appTab !== "map" ? () => setAppTab("map") : onBack}
+      backLabel={selectedId && appTab === "lesson" ? "Lesson Room" : undefined}
       hideTabs={!!selectedId}
     >
       {/* Tab bar */}
@@ -3139,7 +3141,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
         </>
       )}
 
-      {appTab === "map" && selectedId && selected && (() => {
+      {(appTab === "map" || appTab === "lesson") && selectedId && selected && (() => {
         const selCons = CONSERVATORIES.find((c) => c.id === selected.conservatoryId);
         const linkMeta = videoLinkMeta(selected.videoLink);
         const teachingText = selected.teaching?.open
@@ -3242,15 +3244,19 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
       {appTab === "lesson" && (() => {
         const acceptedTeacher = teachers.find((t) => teachRequests[t.id] === "accepted");
         if (!acceptedTeacher) return null;
+        if (selectedId === acceptedTeacher.id) return null; // profile view handled below
         return (
           <div style={{ padding: "24px 0 24px 20px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16, paddingRight: 20 }}>
+            <button
+              onClick={() => selectTeacher(acceptedTeacher.id)}
+              style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16, paddingRight: 20, background: "none", border: "none", cursor: "pointer", padding: "0 20px 16px 0", textAlign: "left" }}>
               <Avatar name={acceptedTeacher.name} id={acceptedTeacher.id} size={44} photoUrl={acceptedTeacher.photoUrl} online={acceptedTeacher.online} />
               <div>
                 <h2 style={{ fontSize: 18, fontWeight: 700, color: C.inkText, margin: 0 }}>{acceptedTeacher.name}</h2>
                 <p style={{ fontSize: 12, color: C.ivoryDim, margin: 0 }}>{acceptedTeacher.instrument} · {acceptedTeacher.year}</p>
               </div>
-            </div>
+              <ChevronRight size={16} color={C.ivoryDim} style={{ marginLeft: "auto" }} />
+            </button>
             <LessonRoom
               teacher={acceptedTeacher}
               messages={conversations[acceptedTeacher.id] || []}
