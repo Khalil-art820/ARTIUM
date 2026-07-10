@@ -3351,8 +3351,10 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
   // Sessions are teacher-proposed; student can approve or counter-propose
   // status: "teacher_proposed" | "confirmed" | "counter_proposed"
   const [sessions, setSessions] = useState([
-    { id: 1, date: "2026-07-18", time: "14:00", status: "teacher_proposed", proposedBy: "teacher" },
-    { id: 2, date: "2026-07-22", time: "10:30", status: "teacher_proposed", proposedBy: "teacher" },
+    // Within 24h → cancel AND modify both locked
+    { id: 1, date: "2026-07-11", time: "22:00", status: "confirmed", proposedBy: "teacher" },
+    // Between 24h and 48h → modify locked, cancel still open
+    { id: 2, date: "2026-07-12", time: "18:00", status: "confirmed", proposedBy: "teacher" },
   ]);
   const [counterDate, setCounterDate] = useState({});
   const [counterTime, setCounterTime] = useState({});
