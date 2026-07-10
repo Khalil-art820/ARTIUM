@@ -978,7 +978,9 @@ export default function App() {
   const [learnerGoogleName, setLearnerGoogleName] = useState("");
   // Read Google role eagerly on mount so it's available before auth state fires
   const pendingGoogleRoleRef = React.useRef(sessionStorage.getItem("artium_google_role") || "");
-  const [teachRequests, setTeachRequests] = useState({});
+  const [teachRequests, setTeachRequests] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("teachRequests") || "{}"); } catch { return {}; }
+  });
 
   const [draft, setDraft] = useState(emptyDraft());
   const [step, setStep] = useState(0);
@@ -1092,10 +1094,18 @@ export default function App() {
   }
   function backToEntry() { setLearnerGoogleName(""); setScreen("entry"); }
   function sendTeachRequest(teacherId) {
-    setTeachRequests((r) => ({ ...r, [teacherId]: "pending" }));
+    setTeachRequests((r) => {
+      const next = { ...r, [teacherId]: "pending" };
+      localStorage.setItem("teachRequests", JSON.stringify(next));
+      return next;
+    });
     // No backend yet: simulate the teacher receiving and accepting the request.
     setTimeout(() => {
-      setTeachRequests((r) => ({ ...r, [teacherId]: "accepted" }));
+      setTeachRequests((r) => {
+        const next = { ...r, [teacherId]: "accepted" };
+        localStorage.setItem("teachRequests", JSON.stringify(next));
+        return next;
+      });
       setConversations((c) => (c[teacherId] ? c : { ...c, [teacherId]: [
         { from: "them", text: "Hi! Thanks for reaching out — I'd be glad to teach you. When works for a first lesson?" },
       ] }));
