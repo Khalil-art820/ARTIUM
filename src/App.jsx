@@ -1314,6 +1314,11 @@ export default function App() {
               onBack={() => setAppTab("map")}
             />
           )}
+          {appTab === "lessons" && !selectedStudentId && myProfile && (
+            <div style={{ maxWidth: 560, margin: "0 auto", width: "100%" }}>
+              <TeacherLessonRoom />
+            </div>
+          )}
           {appTab === "profile" && !selectedStudentId && myProfile && (
             <MyProfile profile={myProfile} onEdit={editProfile} onLogout={handleLogout}
               onUpdateCoverPhoto={async (coverPhotoUrl) => {
@@ -2031,7 +2036,11 @@ function LoginScreen({ onSubmit, onBack, error }) {
 /* APP SHELL                                                          */
 /* ---------------------------------------------------------------- */
 function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, musicOn, onMusicToggle, audioRef, onBack, backLabel, onGuestTabClick, onlineCount, previewOnly, hideTabs }) {
-  const tabs = [];
+  const tabs = myProfile ? [
+    { id: "map", label: "Map", icon: Globe2 },
+    { id: "lessons", label: "Lesson Room", icon: Calendar },
+    { id: "messages", label: "Messages", icon: MessageCircle },
+  ] : [];
   return (
     <div className="min-h-full flex flex-col" style={{ background: C.inkSoft, color: C.ivory }}>
       <div className="px-6 flex items-center gap-4" style={{ height: 60, background: "#FFFFFF", borderBottom: `1px solid ${C.inkLine}` }}>
@@ -3683,6 +3692,373 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
 
       {/* Video */}
       {tab === "video" && <VideoSessionTab sessions={sessions} teacher={teacher} zoomLink={zoomLink} setZoomLink={setZoomLink} zoomSaved={zoomSaved} setZoomSaved={setZoomSaved} />}
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------- */
+/* TEACHER LESSON ROOM                                                */
+/* ---------------------------------------------------------------- */
+const MOCK_LESSON_LEARNERS = [
+  { id: "alex",   name: "Alex Martin",    instrument: "Piano",  level: "Intermediate" },
+  { id: "sophie", name: "Sophie Leclerc", instrument: "Violin", level: "Beginner" },
+];
+
+function TeacherLessonRoom() {
+  const [activeLearner, setActiveLearner] = useState(MOCK_LESSON_LEARNERS[0]);
+  const [tab, setTab] = useState("chat");
+  const [sessionsByLearner, setSessionsByLearner] = useState({
+    alex: [
+      { id: 0, date: "2026-07-05", time: "10:00", status: "confirmed", paid: true },
+      { id: 1, date: "2026-07-15", time: "16:00", status: "teacher_proposed", paid: false },
+      { id: 2, date: "2026-07-12", time: "18:00", status: "confirmed", paid: true },
+    ],
+    sophie: [
+      { id: 0, date: "2026-07-20", time: "14:00", status: "confirmed", paid: false },
+    ],
+  });
+  const [messagesByLearner, setMessagesByLearner] = useState({
+    alex:   [{ from: "them", text: "Hi! Looking forward to our next session." }, { from: "me", text: "Me too! I'll send you the sheet music." }],
+    sophie: [{ from: "them", text: "Can we reschedule Thursday?" }],
+  });
+  const [selectedSessionId, setSelectedSessionId] = useState(null);
+  const [showPropose, setShowPropose] = useState(false);
+  const [newDate, setNewDate] = useState("");
+  const [newTime, setNewTime] = useState("");
+  const [confirmCancelId, setConfirmCancelId] = useState(null);
+  const [showCounter, setShowCounter] = useState({});
+  const [counterDate, setCounterDate] = useState({});
+  const [counterTime, setCounterTime] = useState({});
+  const [zoomLink, setZoomLink] = useState("");
+  const [zoomSaved, setZoomSaved] = useState(false);
+
+  const sessions = sessionsByLearner[activeLearner.id] || [];
+  const msgs = messagesByLearner[activeLearner.id] || [];
+
+  function setSessions(fn) {
+    setSessionsByLearner((prev) => ({ ...prev, [activeLearner.id]: fn(prev[activeLearner.id] || []) }));
+  }
+
+  function proposeSession() {
+    if (!newDate || !newTime) return;
+    setSessions((prev) => [...prev, { id: Date.now(), date: newDate, time: newTime, status: "teacher_proposed", paid: false }]);
+    setNewDate(""); setNewTime(""); setShowPropose(false);
+  }
+
+  function approveCounter(id) {
+    setSessions((prev) => prev.map((s) => s.id === id ? { ...s, status: "confirmed" } : s));
+    setShowCounter((prev) => ({ ...prev, [id]: false }));
+  }
+
+  function proposeNewTime(id) {
+    const d = counterDate[id]; const t = counterTime[id];
+    if (!d || !t) return;
+    setSessions((prev) => prev.map((s) => s.id === id ? { ...s, date: d, time: t, status: "teacher_proposed" } : s));
+    setShowCounter((prev) => ({ ...prev, [id]: false }));
+  }
+
+  function cancelSession(id) { setSessions((prev) => prev.filter((s) => s.id !== id)); }
+
+  function timeUntil(s) { return new Date(s.date + "T" + s.time).getTime() - Date.now(); }
+  function cancelLocked(s) { return s.status === "confirmed" && timeUntil(s) < 24 * 60 * 60 * 1000; }
+  function modifyLocked(s) { return s.status === "confirmed" && timeUntil(s) < 48 * 60 * 60 * 1000; }
+
+  function sendMsg(text) {
+    setMessagesByLearner((prev) => ({ ...prev, [activeLearner.id]: [...(prev[activeLearner.id] || []), { from: "me", text }] }));
+  }
+
+  const tabs = [
+    { id: "chat", label: "Chat", Icon: MessageCircle },
+    { id: "schedule", label: "Schedule & Payments", Icon: Calendar },
+    { id: "video", label: "Video Session", Icon: Video },
+  ];
+
+  const upcomingSessions = sessions
+    .filter((s) => s.status === "confirmed" && s.paid && timeUntil(s) > 0)
+    .sort((a, b) => timeUntil(a) - timeUntil(b));
+  const nextSession = upcomingSessions[0];
+
+  return (
+    <div style={{ padding: "0 0 32px", fontFamily: FONT_BODY }}>
+      {/* Header */}
+      <div style={{ padding: "20px 20px 0" }}>
+        <h2 style={{ fontSize: 17, fontWeight: 700, color: C.ivory, margin: "0 0 4px" }}>Lesson Room</h2>
+        <p style={{ fontSize: 13, color: C.ivoryDim, margin: "0 0 16px" }}>{MOCK_LESSON_LEARNERS.length} active student{MOCK_LESSON_LEARNERS.length > 1 ? "s" : ""}</p>
+        {/* Learner pill picker */}
+        {MOCK_LESSON_LEARNERS.length > 1 && (
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
+            {MOCK_LESSON_LEARNERS.map((l) => (
+              <button key={l.id} onClick={() => { setActiveLearner(l); setSelectedSessionId(null); setTab("chat"); }}
+                style={{ padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: activeLearner.id === l.id ? 700 : 500, border: `1.5px solid ${activeLearner.id === l.id ? C.brass : C.inkLine}`, background: activeLearner.id === l.id ? C.brassDim : "transparent", color: activeLearner.id === l.id ? C.brass : C.ivoryDim, cursor: "pointer" }}>
+                {l.name.split(" ")[0]}
+              </button>
+            ))}
+          </div>
+        )}
+        {/* Active learner info */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", background: "#fff", borderRadius: 12, border: `1px solid ${C.inkLine}`, marginBottom: 16 }}>
+          <Avatar name={activeLearner.name} id={activeLearner.id} size={40} online />
+          <div>
+            <p style={{ fontSize: 14, fontWeight: 700, color: C.ivory, margin: 0 }}>{activeLearner.name}</p>
+            <p style={{ fontSize: 12, color: C.ivoryDim, margin: "2px 0 0" }}>{activeLearner.instrument} · {activeLearner.level}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Inner tab bar */}
+      <div style={{ display: "flex", borderBottom: `1px solid ${C.inkLine}`, borderTop: `1px solid ${C.inkLine}`, background: C.inkSoft }}>
+        {tabs.map(({ id, label, Icon }) => (
+          <button key={id} onClick={() => setTab(id)}
+            style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "10px 4px", fontSize: 11, fontWeight: tab === id ? 700 : 400, color: tab === id ? C.brass : C.ivoryDim, background: "none", border: "none", cursor: "pointer", borderBottom: tab === id ? `2px solid ${C.brass}` : "2px solid transparent" }}>
+            <Icon size={15} />
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Chat */}
+      {tab === "chat" && (
+        <div>
+          <div className="lg-scroll overflow-y-auto px-4 py-3 flex flex-col gap-2" style={{ maxHeight: 300 }}>
+            {msgs.length === 0 && <p style={{ fontSize: 13, color: C.ivoryDim, textAlign: "center", padding: "24px 0" }}>Start the conversation with {activeLearner.name.split(" ")[0]}</p>}
+            {msgs.map((m, i) => (
+              <div key={i} className="px-3.5 py-2 rounded-2xl text-sm" style={{ maxWidth: "80%", alignSelf: m.from === "me" ? "flex-end" : "flex-start", background: m.from === "me" ? C.brass : C.inkSoft, color: m.from === "me" ? "#fff" : C.inkText }}>
+                {m.text}
+              </div>
+            ))}
+          </div>
+          <div className="px-3 py-3 flex items-center gap-2" style={{ borderTop: `1px solid ${C.inkLine}` }}>
+            <input style={{ flex: 1, background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: "10px 14px", fontSize: 14, color: C.inkText, outline: "none" }}
+              placeholder={`Message ${activeLearner.name.split(" ")[0]}…`}
+              onKeyDown={(e) => { if (e.key === "Enter" && e.target.value.trim()) { sendMsg(e.target.value); e.target.value = ""; } }} />
+            <button onClick={(e) => { const inp = e.currentTarget.previousSibling; if (inp.value.trim()) { sendMsg(inp.value); inp.value = ""; } }}
+              className="rounded-full p-3" style={{ background: C.brass, flexShrink: 0 }}>
+              <Send size={15} color="#fff" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Schedule & Payments */}
+      {tab === "schedule" && (() => {
+        const sel = sessions.find((s) => s.id === selectedSessionId);
+        return (
+          <div style={{ padding: "0 0 8px" }}>
+            {/* Propose new session button */}
+            <div style={{ padding: "14px 20px 0" }}>
+              {!showPropose ? (
+                <button onClick={() => setShowPropose(true)}
+                  style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 10, background: C.brass, color: "#fff", fontSize: 13, fontWeight: 600, border: "none", cursor: "pointer", marginBottom: 12 }}>
+                  <Plus size={14} /> Propose a session
+                </button>
+              ) : (
+                <div style={{ background: "#fff", border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: 16, marginBottom: 14 }}>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: C.ivory, margin: "0 0 10px" }}>Propose a time for {activeLearner.name.split(" ")[0]}</p>
+                  <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+                    <input type="date" value={newDate} onChange={(e) => setNewDate(e.target.value)}
+                      style={{ flex: 1, background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 9, padding: "8px 10px", fontSize: 13, color: C.inkText, outline: "none" }} />
+                    <input type="time" value={newTime} onChange={(e) => setNewTime(e.target.value)}
+                      style={{ flex: 1, background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 9, padding: "8px 10px", fontSize: 13, color: C.inkText, outline: "none" }} />
+                  </div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button onClick={proposeSession} disabled={!newDate || !newTime}
+                      style={{ flex: 1, padding: "8px 0", borderRadius: 9, background: C.brass, color: "#fff", fontSize: 13, fontWeight: 600, border: "none", cursor: !newDate || !newTime ? "not-allowed" : "pointer", opacity: !newDate || !newTime ? 0.5 : 1 }}>
+                      Send proposal
+                    </button>
+                    <button onClick={() => setShowPropose(false)}
+                      style={{ padding: "8px 14px", borderRadius: 9, background: "none", border: `1px solid ${C.inkLine}`, color: C.ivoryDim, fontSize: 13, cursor: "pointer" }}>
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Session cards strip */}
+            <div style={{ display: "flex", gap: 10, overflowX: "auto", padding: "0 20px 12px", scrollbarWidth: "none" }}>
+              {sessions.length === 0 && (
+                <p style={{ fontSize: 13, color: C.ivoryDim }}>No sessions yet — propose one above.</p>
+              )}
+              {sessions.map((s) => {
+                const dt = new Date(s.date + "T" + s.time);
+                const isConfirmed = s.status === "confirmed";
+                const isSelected = s.id === selectedSessionId;
+                return (
+                  <button key={s.id} onClick={() => setSelectedSessionId(isSelected ? null : s.id)}
+                    style={{ flexShrink: 0, width: 110, height: 110, borderRadius: 14, border: isSelected ? `2px solid ${C.brass}` : `1px solid ${isConfirmed ? "#A8D5B5" : C.inkLine}`, background: isConfirmed ? "#F4FBF6" : "#fff", display: "flex", flexDirection: "column", alignItems: "flex-start", justifyContent: "space-between", padding: 12, cursor: "pointer", boxShadow: isSelected ? `0 0 0 3px ${C.brassDim}` : "none", transition: "box-shadow 0.15s" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", width: "100%", alignItems: "center" }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: isConfirmed ? "#1A9E6E" : "#D4810A" }}>
+                        {isConfirmed ? "Confirmed" : s.status === "student_counter" ? "Counter" : "Pending"}
+                      </span>
+                      {s.paid && <span style={{ fontSize: 9, fontWeight: 700, color: "#fff", background: "#1A9E6E", borderRadius: 20, padding: "2px 6px" }}>Paid</span>}
+                    </div>
+                    <div style={{ textAlign: "left" }}>
+                      <p style={{ fontSize: 18, fontWeight: 800, color: C.inkText, margin: 0, lineHeight: 1 }}>{dt.getDate()}</p>
+                      <p style={{ fontSize: 11, color: C.ivoryDim, margin: "2px 0 0" }}>{dt.toLocaleDateString("en-GB", { month: "short" })} · {s.time}</p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Session detail panel */}
+            {sel && (() => {
+              const dt = new Date(sel.date + "T" + sel.time);
+              const isConfirmed = sel.status === "confirmed";
+              const isCounter = sel.status === "student_counter";
+              const isPending = sel.status === "teacher_proposed";
+              const showingCounter = showCounter[sel.id];
+              return (
+                <div style={{ borderTop: `1px solid ${C.inkLine}`, padding: "16px 20px 8px" }}>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: C.inkText, margin: "0 0 2px" }}>
+                    {dt.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })} at {sel.time}
+                  </p>
+
+                  {/* Student counter-proposal: teacher can approve or re-propose */}
+                  {isCounter && !showingCounter && (
+                    <div style={{ marginBottom: 10 }}>
+                      <p style={{ fontSize: 11, color: C.brass, margin: "0 0 8px" }}>{activeLearner.name.split(" ")[0]} suggested this time — awaiting your response</p>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <button onClick={() => approveCounter(sel.id)}
+                          style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "6px 13px", borderRadius: 8, background: "#1A9E6E", color: "#fff", fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer" }}>
+                          <Check size={12} /> Accept
+                        </button>
+                        <button onClick={() => setShowCounter((p) => ({ ...p, [sel.id]: true }))}
+                          style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "6px 13px", borderRadius: 8, background: "none", border: `1px solid ${C.inkLine}`, color: C.ivoryDim, fontSize: 12, cursor: "pointer" }}>
+                          Suggest another time
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Pending (teacher proposed, awaiting student) */}
+                  {isPending && (
+                    <p style={{ fontSize: 11, color: C.ivoryDim, margin: "0 0 10px" }}>Waiting for {activeLearner.name.split(" ")[0]} to confirm</p>
+                  )}
+
+                  {/* Counter-propose form */}
+                  {showingCounter && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
+                      <p style={{ fontSize: 12, color: C.ivoryDim, margin: 0 }}>Suggest a new time:</p>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <input type="date" value={counterDate[sel.id] || ""} onChange={(e) => setCounterDate((p) => ({ ...p, [sel.id]: e.target.value }))}
+                          style={{ flex: 1, background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 9, padding: "8px 10px", fontSize: 13, color: C.inkText, outline: "none" }} />
+                        <input type="time" value={counterTime[sel.id] || ""} onChange={(e) => setCounterTime((p) => ({ ...p, [sel.id]: e.target.value }))}
+                          style={{ flex: 1, background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 9, padding: "8px 10px", fontSize: 13, color: C.inkText, outline: "none" }} />
+                      </div>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <button onClick={() => proposeNewTime(sel.id)} disabled={!counterDate[sel.id] || !counterTime[sel.id]}
+                          style={{ flex: 1, padding: "8px 0", borderRadius: 9, background: C.brass, color: "#fff", fontSize: 13, fontWeight: 600, border: "none", cursor: !counterDate[sel.id] || !counterTime[sel.id] ? "not-allowed" : "pointer", opacity: !counterDate[sel.id] || !counterTime[sel.id] ? 0.5 : 1 }}>
+                          Send
+                        </button>
+                        <button onClick={() => setShowCounter((p) => ({ ...p, [sel.id]: false }))}
+                          style={{ padding: "8px 14px", borderRadius: 9, background: "none", border: `1px solid ${C.inkLine}`, color: C.ivoryDim, fontSize: 13, cursor: "pointer" }}>
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Payment status (read-only for teacher) */}
+                  {isConfirmed && (
+                    <div style={{ marginBottom: 10 }}>
+                      {sel.paid ? (
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, background: "#DFF2E8", color: "#1A9E6E", fontSize: 12, fontWeight: 700 }}>
+                          <Check size={13} /> Payment received
+                        </span>
+                      ) : (
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, background: "#FFF4E5", color: "#D4810A", fontSize: 12, fontWeight: 600 }}>
+                          ⏳ Awaiting payment from {activeLearner.name.split(" ")[0]}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Modify / Cancel */}
+                  {(isConfirmed || isPending) && (
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                      {isConfirmed && (!modifyLocked(sel) ? (
+                        <button onClick={() => setShowCounter((p) => ({ ...p, [sel.id]: true }))}
+                          style={{ fontSize: 12, color: C.brass, background: "none", border: `1px solid ${C.brass}`, borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontWeight: 600 }}>
+                          Modify time
+                        </button>
+                      ) : (
+                        <span style={{ fontSize: 11, color: C.ivoryDim, display: "flex", alignItems: "center", gap: 4 }}>🔒 Modify locked (48h)</span>
+                      ))}
+                      {!cancelLocked(sel) ? (
+                        <button onClick={() => setConfirmCancelId(sel.id)}
+                          style={{ fontSize: 12, color: "#c0392b", background: "none", border: "1px solid #c0392b", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontWeight: 600 }}>
+                          Cancel session
+                        </button>
+                      ) : (
+                        <span style={{ fontSize: 11, color: C.ivoryDim, display: "flex", alignItems: "center", gap: 4 }}>🔒 Cancel locked (24h)</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+          </div>
+        );
+      })()}
+
+      {/* Video Session */}
+      {tab === "video" && (
+        <div style={{ padding: "20px" }}>
+          {nextSession ? (() => {
+            const dt = new Date(nextSession.date + "T" + nextSession.time);
+            return (
+              <div style={{ background: "#F4FBF6", border: "1px solid #A8D5B5", borderRadius: 12, padding: "16px 20px", marginBottom: 20 }}>
+                <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#1A9E6E", margin: "0 0 4px" }}>Next session with {activeLearner.name.split(" ")[0]}</p>
+                <p style={{ fontSize: 16, fontWeight: 700, color: C.ivory, margin: 0 }}>{dt.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })} at {nextSession.time}</p>
+              </div>
+            );
+          })() : (
+            <div style={{ background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: "16px 20px", marginBottom: 20 }}>
+              <p style={{ fontSize: 13, color: C.ivoryDim, margin: 0 }}>No upcoming confirmed & paid session with {activeLearner.name.split(" ")[0]}.</p>
+            </div>
+          )}
+          <div style={{ marginBottom: 16 }}>
+            <p style={{ fontSize: 13, fontWeight: 600, color: C.ivory, marginBottom: 8 }}>Zoom / Meet link</p>
+            <div style={{ display: "flex", gap: 8 }}>
+              <input value={zoomLink} onChange={(e) => { setZoomLink(e.target.value); setZoomSaved(false); }}
+                placeholder="Paste your Zoom or Meet link…"
+                style={{ flex: 1, background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "10px 14px", fontSize: 13, color: C.inkText, outline: "none" }} />
+              <button onClick={() => setZoomSaved(true)} disabled={!zoomLink.trim()}
+                style={{ padding: "10px 16px", borderRadius: 10, background: zoomSaved ? "#1A9E6E" : C.brass, color: "#fff", fontSize: 13, fontWeight: 600, border: "none", cursor: !zoomLink.trim() ? "not-allowed" : "pointer", opacity: !zoomLink.trim() ? 0.5 : 1 }}>
+                {zoomSaved ? "Saved ✓" : "Save"}
+              </button>
+            </div>
+            {zoomSaved && <p style={{ fontSize: 12, color: "#1A9E6E", marginTop: 6 }}>Link shared with {activeLearner.name.split(" ")[0]}</p>}
+          </div>
+          <div style={{ background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: "20px", textAlign: "center" }}>
+            <Video size={28} color={C.ivoryDim} style={{ marginBottom: 8 }} />
+            <p style={{ fontSize: 13, color: C.ivoryDim, margin: 0 }}>LiveKit video integration coming soon</p>
+          </div>
+        </div>
+      )}
+
+      {/* Cancel confirmation modal */}
+      {confirmCancelId !== null && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(10,20,40,0.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999 }}
+          onClick={() => setConfirmCancelId(null)}>
+          <div style={{ background: "#fff", borderRadius: 16, padding: "28px 28px 24px", maxWidth: 320, width: "90%", boxShadow: "0 8px 32px rgba(0,0,0,0.18)", textAlign: "center" }}
+            onClick={(e) => e.stopPropagation()}>
+            <p style={{ fontSize: 16, fontWeight: 700, color: C.inkText, margin: "0 0 8px" }}>Cancel this session?</p>
+            <p style={{ fontSize: 13, color: C.ivoryDim, margin: "0 0 20px", lineHeight: 1.5 }}>Are you sure you want to cancel? This cannot be undone.</p>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button onClick={() => setConfirmCancelId(null)}
+                style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: `1px solid ${C.inkLine}`, background: "none", color: C.inkText, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                Keep it
+              </button>
+              <button onClick={() => { cancelSession(confirmCancelId); setSelectedSessionId(null); setConfirmCancelId(null); }}
+                style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "none", background: "#c0392b", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                Yes, cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
