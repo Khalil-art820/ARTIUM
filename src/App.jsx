@@ -1314,11 +1314,6 @@ export default function App() {
               onBack={() => setAppTab("map")}
             />
           )}
-          {appTab === "lessons" && !selectedStudentId && myProfile && (
-            <div style={{ maxWidth: 560, margin: "0 auto", width: "100%" }}>
-              <TeacherLessonRoom />
-            </div>
-          )}
           {appTab === "profile" && !selectedStudentId && myProfile && (
             <MyProfile profile={myProfile} onEdit={editProfile} onLogout={handleLogout}
               onUpdateCoverPhoto={async (coverPhotoUrl) => {
@@ -2036,11 +2031,7 @@ function LoginScreen({ onSubmit, onBack, error }) {
 /* APP SHELL                                                          */
 /* ---------------------------------------------------------------- */
 function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, musicOn, onMusicToggle, audioRef, onBack, backLabel, onGuestTabClick, onlineCount, previewOnly, hideTabs }) {
-  const tabs = myProfile ? [
-    { id: "map", label: "Map", icon: Globe2 },
-    { id: "lessons", label: "Lesson Room", icon: Calendar },
-    { id: "messages", label: "Messages", icon: MessageCircle },
-  ] : [];
+  const tabs = [];
   return (
     <div className="min-h-full flex flex-col" style={{ background: C.inkSoft, color: C.ivory }}>
       <div className="px-6 flex items-center gap-4" style={{ height: 60, background: "#FFFFFF", borderBottom: `1px solid ${C.inkLine}` }}>
@@ -2315,6 +2306,7 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack, onUpdat
   const cons = CONSERVATORIES.find((c) => c.id === profile.conservatoryId);
   const [confirmDelete, setConfirmDelete] = React.useState(false);
   const [deleting, setDeleting] = React.useState(false);
+  const [profileTab, setProfileTab] = React.useState("profile");
   const teachingText = profile.teaching?.open
     ? `${profile.teaching.mode === "online" ? "Online" : profile.teaching.mode === "in-person" ? "In-person" : "Online & in-person"} · €${profile.teaching.price}/session`
     : "Not offering lessons";
@@ -2473,14 +2465,34 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack, onUpdat
       </div>
       </div>
 
-      {/* Right: cards */}
+      {/* Right: tabs + content */}
       <div style={{ flex: 1, overflowY: "auto", padding: "40px 32px" }}>
-        {cards}
-        {profile.coverPhotoUrl && (
-          <button onClick={() => onUpdateCoverPhoto && onUpdateCoverPhoto("")}
-            style={{ marginTop: 24, fontSize: 12, color: C.ivoryDim, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
-            Remove cover photo
-          </button>
+        {/* Tab switcher */}
+        <div style={{ display: "flex", gap: 8, marginBottom: 32 }}>
+          {["profile", "lessons"].map((t) => (
+            <button key={t} onClick={() => setProfileTab(t)} style={{
+              padding: "8px 20px", borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: "pointer", border: "none",
+              background: profileTab === t ? C.brass : C.inkSoft,
+              color: profileTab === t ? "#fff" : C.ivoryDim,
+              transition: "background 0.2s",
+            }}>
+              {t === "profile" ? "Profile" : "Lesson Room"}
+            </button>
+          ))}
+        </div>
+
+        {profileTab === "profile" ? (
+          <>
+            {cards}
+            {profile.coverPhotoUrl && (
+              <button onClick={() => onUpdateCoverPhoto && onUpdateCoverPhoto("")}
+                style={{ marginTop: 24, fontSize: 12, color: C.ivoryDim, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+                Remove cover photo
+              </button>
+            )}
+          </>
+        ) : (
+          <TeacherLessonRoom />
         )}
       </div>
     </div>
