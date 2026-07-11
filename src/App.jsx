@@ -1055,6 +1055,16 @@ export default function App() {
     if (learnerLoggedOut) { startLogin(); return; }
     setLearnerProfile(null); setAuthError(""); setScreen("learnerSignup");
   }
+  function enterDemoTeacher() {
+    const demo = { id: "demo-teacher", name: "Demo Teacher", instrument: "Piano", conservatoryId: "juilliard", year: "Final year", bio: "Demo account for testing teacher flows.", tastes: ["Chopin", "Debussy"], pieces: [{ title: "Ballade No. 1", composer: "Chopin" }], videoLink: "", top: "", flop: "", photoUrl: null, coverPhotoUrl: null, teaching: { open: true, mode: "online", price: "60" }, status: "approved", online: true };
+    setMyProfile(demo);
+    setStudents((arr) => arr.some((s) => s.id === "demo-teacher") ? arr : [...arr, demo]);
+    setScreen("app"); setAppTab("map");
+  }
+  function enterDemoLearner() {
+    setLearnerProfile({ name: "Demo Learner", location: "Paris", instrument: "Piano", bio: "Amateur pianist exploring lessons." });
+    setScreen("learnerMap");
+  }
   async function submitLearner({ name, location, email, password, instrument, motivation }) {
     setAuthError("");
     if (password === "__google__") {
@@ -1235,7 +1245,7 @@ export default function App() {
         />
       )}
 
-      {screen === "entry" && <EntryGate onLearner={chooseLearner} onStudent={chooseStudent} onLogin={startLogin} learnerProfile={learnerProfile} learnerLoggedOut={learnerLoggedOut} studentLoggedIn={!!myProfile} musicOn={musicOn} onMusicToggle={toggleMusic} audioRef={audioRef} onlineCount={onlineCount} />}
+      {screen === "entry" && <EntryGate onLearner={chooseLearner} onStudent={chooseStudent} onLogin={startLogin} learnerProfile={learnerProfile} learnerLoggedOut={learnerLoggedOut} studentLoggedIn={!!myProfile} musicOn={musicOn} onMusicToggle={toggleMusic} audioRef={audioRef} onlineCount={onlineCount} onDemoTeacher={enterDemoTeacher} onDemoLearner={enterDemoLearner} />}
       {screen === "learnerSignup" && <LearnerSignup onSubmit={submitLearner} onBack={backToEntry} onLogin={startLogin} error={authError} googleName={learnerGoogleName} />}
       {screen === "learnerMap" && (
         <LearnerScreen
@@ -2654,7 +2664,7 @@ function StepTeaching({ draft, update }) {
 }
 
 /* ---- First screen: pick your role ---- */
-function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLoggedOut, studentLoggedIn, musicOn, onMusicToggle, audioRef, onlineCount }) {
+function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLoggedOut, studentLoggedIn, musicOn, onMusicToggle, audioRef, onlineCount, onDemoTeacher, onDemoLearner }) {
   const singleCard = !!learnerProfile || learnerLoggedOut || studentLoggedIn;
   const cardStyle = {
     textAlign: "left", background: "#FFFFFF", border: "none",
@@ -2725,6 +2735,19 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
           <p style={{ textAlign: "center", marginTop: 32, fontSize: 13, color: C.ivoryDim }}>
             {studentLoggedIn ? "Logged in as a conservatory student" : <>Logged in as {learnerProfile.name}</>}
           </p>
+        )}
+        {!studentLoggedIn && !learnerProfile && (
+          <div style={{ marginTop: 48, textAlign: "center" }}>
+            <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: C.ivoryDim, marginBottom: 12 }}>Demo access</p>
+            <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+              <button onClick={onDemoTeacher} style={{ padding: "8px 18px", borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: "pointer", background: "transparent", border: `1.5px solid ${C.inkLine}`, color: C.ivoryDim }}>
+                Enter as teacher
+              </button>
+              <button onClick={onDemoLearner} style={{ padding: "8px 18px", borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: "pointer", background: "transparent", border: `1.5px solid ${C.inkLine}`, color: C.ivoryDim }}>
+                Enter as learner
+              </button>
+            </div>
+          </div>
         )}
       </div>
       <div style={{ position: "fixed", bottom: 12, left: 24, display: "flex", alignItems: "center", gap: 0 }}>
