@@ -1338,7 +1338,7 @@ export default function App() {
               student={students.find((s) => s.id === selectedStudentId)}
               conservatory={CONSERVATORIES.find((c) => c.id === students.find((s) => s.id === selectedStudentId)?.conservatoryId)}
               onBack={backFromProfile}
-              onMessage={() => openChat(selectedStudentId)}
+              onMessage={myProfile?.id === selectedStudentId ? null : () => openChat(selectedStudentId)}
               locked={previewOnly && !myProfile}
               onApply={startApply}
             />
@@ -2227,9 +2227,9 @@ function StudentProfile({ student, conservatory, onBack, onMessage, locked, onAp
         <div style={{ flexShrink: 0 }}>
           {locked ? (
             <PrimaryBtn onClick={onApply} icon={ArrowRight}>Sign up to message {student.name.split(" ")[0]}</PrimaryBtn>
-          ) : (
+          ) : onMessage ? (
             <PrimaryBtn onClick={onMessage} icon={MessageCircle}>Message</PrimaryBtn>
-          )}
+          ) : null}
         </div>
       </div>
 
