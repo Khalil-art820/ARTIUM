@@ -2601,6 +2601,7 @@ const TEACHING_SEED = {
   daniel: { open: true, mode: "physical", price: "38" },
   wei:    { open: true, mode: "online",   price: "32" },
   isla:   { open: true, mode: "both",     price: "50" },
+  "demo-teacher": { open: true, mode: "online", price: "60" },
 };
 function seedTeaching(arr) {
   return arr.map((s) => ({
