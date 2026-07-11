@@ -2694,7 +2694,7 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
               </div>
               <div style={{ textAlign: "center" }}>
                 <div style={{ fontSize: 15, fontWeight: 700, color: C.ivory, marginBottom: 4 }}>{studentLoggedIn ? "Continue" : "I'm a conservatory student"}</div>
-                <div style={{ fontSize: 12, color: C.ivoryDim, lineHeight: 1.5, maxWidth: 180 }}>Connect with conservatory students at the world's top conservatories. Share repertoire, culture, and musical ideas. Promote yourself. Earn while you teach.</div>
+                <div style={{ fontSize: 12, color: C.ivoryDim, lineHeight: 1.5, maxWidth: 180 }}>Connect with conservatory students at the world's top conservatories. Promote yourself. Earn while you teach.</div>
               </div>
             </button>
           )}
