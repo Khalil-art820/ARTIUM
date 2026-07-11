@@ -2668,7 +2668,7 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
                 onMouseEnter={e => e.currentTarget.style.transform = "scale(1.04)"}
                 onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
               >
-                <div style={{ position: "absolute", inset: 0, backgroundImage: "url('/1.png')", backgroundSize: "cover", backgroundPosition: "center", filter: "grayscale(100%) contrast(1.1) brightness(0.82)" }} />
+                <div style={{ position: "absolute", inset: 0, backgroundImage: "url('/2.png')", backgroundSize: "cover", backgroundPosition: "center", filter: "grayscale(100%) contrast(1.1) brightness(0.82)" }} />
                 <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.38)" }} />
                 <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <span style={{ fontSize: 52, color: "white", lineHeight: 1, userSelect: "none" }}>𝄢</span>
