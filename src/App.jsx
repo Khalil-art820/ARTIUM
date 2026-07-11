@@ -2658,7 +2658,7 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
       </div>
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
         <h1 style={{ fontFamily: "-apple-system, 'SF Pro Display', BlinkMacSystemFont, 'Inter', sans-serif", fontSize: "clamp(20px,2.5vw,26px)", fontWeight: 800, lineHeight: 1.05, color: C.ivory, letterSpacing: -0.8, textAlign: "center", marginBottom: 48 }}>
-          The Path to Artistic Excellence.
+          Your Path to Classical Music Excellence.
         </h1>
         <div style={{ display: "flex", gap: 40, justifyContent: "center", flexWrap: "wrap" }}>
           {!studentLoggedIn && (
