@@ -1,4 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="112" fill="#1A1A2E"/>
-  <text x="256" y="345" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="280" font-weight="800" fill="#FFFFFF" text-anchor="middle">A</text>
+  <rect width="512" height="512" rx="112" fill="#1D2027"/>
+  <!-- Left leg -->
+  <polygon points="56,460 256,58 148,460" fill="white"/>
+  <!-- Right leg -->
+  <polygon points="256,58 456,460 364,460" fill="white"/>
+  <!-- Crossbar -->
+  <polygon points="159,252 353,252 377,302 135,302" fill="white"/>
 </svg>
