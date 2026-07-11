@@ -19,16 +19,16 @@ import "leaflet/dist/leaflet.css";
 /* THEME                                                              */
 /* ---------------------------------------------------------------- */
 const C = {
-  ink: "#FFFFFF",
-  inkSoft: "#F6F9FC",
-  inkLine: "#E6EBF1",
-  parchment: "#FFFFFF",
-  parchmentDim: "#F6F9FC",
-  parchmentLine: "#E6EBF1",
-  ivory: "#0A2540",
-  ivoryDim: "#425466",
-  inkText: "#0A2540",
-  inkTextDim: "#425466",
+  ink: "#1D2027",
+  inkSoft: "#252833",
+  inkLine: "#2E3341",
+  parchment: "#1D2027",
+  parchmentDim: "#252833",
+  parchmentLine: "#2E3341",
+  ivory: "#FFFFFF",
+  ivoryDim: "#8B93A8",
+  inkText: "#FFFFFF",
+  inkTextDim: "#8B93A8",
   brass: "#A8747B",
   brassDim: "rgba(168,116,123,0.10)",
   burgundy: "#DF1B41",
@@ -493,7 +493,7 @@ function GhostBtn({ children, onClick, icon: Icon, tone = "light", disabled, sty
       style={{
         fontFamily: FONT_BODY, fontWeight: 500, fontSize: 15,
         color: C.ivory,
-        background: "#FFFFFF",
+        background: "#252833",
         border: `1px solid ${C.inkLine}`,
         borderRadius: 6,
         padding: "9px 18px",
@@ -572,7 +572,7 @@ function MusicBtn({ playing, onToggle, audioRef }) {
   const VolumeIcon = muted || volume === 0 ? VolumeX : volume < 0.4 ? Volume1 : Volume2;
 
   return (
-    <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(10,37,64,0.05)", borderRadius: 999, padding: "5px 10px 5px 8px", border: `1px solid ${C.inkLine}` }}>
+    <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.05)", borderRadius: 999, padding: "5px 10px 5px 8px", border: `1px solid ${C.inkLine}` }}>
       <button
         onClick={onToggle}
         title={playing ? "Pause" : "Play"}
@@ -766,21 +766,21 @@ function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", inter
       <div style={{
         position: "absolute", bottom: 0, left: 0, right: 0,
         zIndex: 1000, display: "flex", flexDirection: "row", alignItems: "center", gap: 14,
-        background: "rgba(255,255,255,0.92)", backdropFilter: "blur(8px)",
-        borderTop: "1px solid #E6EBF1",
+        background: "rgba(29,32,39,0.92)", backdropFilter: "blur(8px)",
+        borderTop: "1px solid #2E3341",
         padding: "7px 12px",
         pointerEvents: "none",
         flexWrap: "nowrap",
       }}>
-        <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "#425466", fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>
+        <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "#8B93A8", fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>
           <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#C0392B", border: "1.5px solid #8B1A1A", display: "inline-block", flexShrink: 0 }} />
           Open to teaching ({totalTeachers})
         </span>
-        <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "#425466", fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>
+        <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "#8B93A8", fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>
           <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#1A9E6E", border: "1.5px solid #1E8449", display: "inline-block", flexShrink: 0 }} />
           Joined ({totalJoined})
         </span>
-        <span style={{ marginLeft: 16, fontSize: 11, color: "#425466", fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>200+ conservatories</span>
+        <span style={{ marginLeft: 16, fontSize: 11, color: "#8B93A8", fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>200+ conservatories</span>
       </div>
       <MapContainer
         center={[24, 14]}
@@ -835,7 +835,7 @@ function AccessGate({ onUnlock }) {
   }
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: C.inkSoft, fontFamily: FONT_BODY, padding: 24 }}>
-      <div style={{ width: "100%", maxWidth: 400, background: "#FFFFFF", border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: 40, boxShadow: "0 4px 24px rgba(10,37,64,0.07)" }}>
+      <div style={{ width: "100%", maxWidth: 400, background: "#252833", border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: 40, boxShadow: "0 4px 24px rgba(0,0,0,0.3)" }}>
         <div style={{ marginBottom: 28 }}>
           <Logo size={22} />
           <p style={{ color: C.ivoryDim, fontSize: 14, marginTop: 12 }}>Private beta — enter access key to continue.</p>
@@ -1205,7 +1205,7 @@ export default function App() {
         .lg-blink { animation: lgblink 1.6s ease-in-out infinite; }
         @keyframes lgblink { 0%,100% { opacity:1;} 50% { opacity:0.25;} }
         .lg-scroll::-webkit-scrollbar { width: 4px; }
-        .lg-scroll::-webkit-scrollbar-thumb { background: #E6EBF1; border-radius: 2px; }
+        .lg-scroll::-webkit-scrollbar-thumb { background: #2E3341; border-radius: 2px; }
         .lg-split-map { display: grid; grid-template-columns: 1fr; }
         .lg-split-chat { display: grid; grid-template-columns: 1fr; }
         @media (min-width: 768px) {
@@ -1221,12 +1221,12 @@ export default function App() {
 
         .artium-map, .artium-map .leaflet-container { border-radius: inherit; }
         .artium-map .leaflet-tile-pane { filter: saturate(1.05) brightness(1.0) contrast(1.0); }
-        .artium-map .leaflet-control-zoom { border: 1px solid #E6EBF1 !important; box-shadow: 0 2px 8px rgba(10,37,64,0.08) !important; border-radius: 8px !important; overflow: hidden; }
-        .artium-map .leaflet-control-zoom a { background: #FFFFFF !important; color: #0A2540 !important; border-color: #E6EBF1 !important; font-weight: 600 !important; }
-        .artium-map .leaflet-control-zoom a:hover { background: #F6F9FC !important; }
+        .artium-map .leaflet-control-zoom { border: 1px solid #2E3341 !important; box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important; border-radius: 8px !important; overflow: hidden; }
+        .artium-map .leaflet-control-zoom a { background: #252833 !important; color: #FFFFFF !important; border-color: #2E3341 !important; font-weight: 600 !important; }
+        .artium-map .leaflet-control-zoom a:hover { background: #2E3341 !important; }
         .artium-map .leaflet-control-attribution { display: none !important; }
-        .artium-map .leaflet-tooltip { background: #FFFFFF !important; border: 1px solid #E6EBF1 !important; color: #0A2540 !important; border-radius: 10px !important; box-shadow: 0 4px 20px rgba(10,37,64,0.12) !important; padding: 8px 14px !important; font-family: Inter, sans-serif !important; font-size: 13px !important; }
-        .artium-map .leaflet-tooltip-top:before { border-top-color: #E6EBF1 !important; }
+        .artium-map .leaflet-tooltip { background: #252833 !important; border: 1px solid #2E3341 !important; color: #FFFFFF !important; border-radius: 10px !important; box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important; padding: 8px 14px !important; font-family: Inter, sans-serif !important; font-size: 13px !important; }
+        .artium-map .leaflet-tooltip-top:before { border-top-color: #2E3341 !important; }
         .artium-pin { background: transparent !important; border: none !important; }
       `}</style>
 
@@ -1358,9 +1358,9 @@ export default function App() {
 /* ---------------------------------------------------------------- */
 function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, studentLoggedOut, musicOn, onMusicToggle, audioRef, error, onlineCount }) {
   return (
-    <div style={{ background: "#FFFFFF", color: C.ivory, minHeight: "100vh" }}>
+    <div style={{ background: "#1D2027", color: C.ivory, minHeight: "100vh" }}>
       {/* Nav */}
-      <div style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#FFFFFF" }}>
+      <div style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#1D2027" }}>
         <div style={{ height: 64, display: "flex", alignItems: "center", padding: "0 32px" }}>
           <div className="flex items-center gap-3">
             {!myProfile && !studentLoggedOut && (
@@ -1408,7 +1408,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
             </div>
             {error && <p style={{ marginTop: 16, fontSize: 14, color: C.burgundy, lineHeight: 1.5 }}>{error}</p>}
           </div>
-          <div style={{ borderRadius: 12, overflow: "hidden", border: `1px solid ${C.inkLine}`, boxShadow: "0 8px 32px rgba(10,37,64,0.10)" }}>
+          <div style={{ borderRadius: 12, overflow: "hidden", border: `1px solid ${C.inkLine}`, boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}>
             <div style={{ padding: "14px 18px", background: "#2C3E50", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <button onClick={onPreview} style={{ fontSize: 14, fontWeight: 600, color: "#fff", background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: FONT_BODY, display: "inline-flex", alignItems: "center", gap: 6 }}>
                 <Globe2 size={15} /> Explore Artium's Network
@@ -1431,7 +1431,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
             { n: "4", t: "Earn while you teach", d: "Accept tutoring requests from music enthusiasts and set your own rate." },
             { n: "5", t: "Marketing and Advertising", d: "Claim your promotional video on aclassicaltone (may be subject to fees)." },
           ].map((s) => (
-            <div key={s.n} style={{ padding: "24px", background: "#FFFFFF", border: `1px solid ${C.inkLine}`, borderRadius: 10, boxShadow: "0 2px 8px rgba(10,37,64,0.05)", position: "relative" }}>
+            <div key={s.n} style={{ padding: "24px", background: "#252833", border: `1px solid ${C.inkLine}`, borderRadius: 10, boxShadow: "0 2px 8px rgba(0,0,0,0.3)", position: "relative" }}>
               <p style={{ position: "absolute", top: 16, right: 18, fontSize: 13, fontWeight: 700, color: C.brass, letterSpacing: 0.5, margin: 0 }}>{s.n}</p>
               <h3 style={{ fontSize: 16, fontWeight: 600, color: C.ivory, marginBottom: 8, marginTop: 4 }}>{s.t}</h3>
               <p style={{ fontSize: 14, color: C.ivoryDim, lineHeight: 1.65 }}>
@@ -1543,7 +1543,7 @@ function Field({ label, children }) {
     </label>
   );
 }
-const inputStyle = { width: "100%", background: "#FFFFFF", border: `1px solid ${C.inkLine}`, borderRadius: 6, padding: "10px 14px", color: C.ivory, fontFamily: FONT_BODY, fontSize: 15, outline: "none", boxShadow: "0 1px 2px rgba(10,37,64,0.04)" };
+const inputStyle = { width: "100%", background: "#252833", border: `1px solid ${C.inkLine}`, borderRadius: 6, padding: "10px 14px", color: C.ivory, fontFamily: FONT_BODY, fontSize: 15, outline: "none", boxShadow: "0 1px 2px rgba(0,0,0,0.3)" };
 
 function PasswordField({ value, onChange, placeholder, autoComplete }) {
   const [visible, setVisible] = useState(false);
@@ -1662,9 +1662,9 @@ function GoogleBtn({ label = "Continue with Google", role = "student" }) {
       disabled={loading}
       style={{
         width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
-        background: "#FFFFFF", color: C.ivory, border: `1px solid ${C.inkLine}`,
+        background: "#252833", color: C.ivory, border: `1px solid ${C.inkLine}`,
         borderRadius: 6, padding: "10px 16px", fontSize: 14, fontWeight: 500,
-        boxShadow: "0 1px 2px rgba(10,37,64,0.04)",
+        boxShadow: "0 1px 2px rgba(0,0,0,0.3)",
         cursor: loading ? "default" : "pointer", opacity: loading ? 0.7 : 1,
       }}
     >
@@ -1677,9 +1677,9 @@ function GoogleBtn({ label = "Continue with Google", role = "student" }) {
 function Divider() {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "18px 0" }}>
-      <div style={{ flex: 1, height: 1, background: "#E6EBF1" }} />
+      <div style={{ flex: 1, height: 1, background: "#2E3341" }} />
       <span style={{ fontSize: 11, fontFamily: FONT_MONO, color: "#8898AA" }}>OR</span>
-      <div style={{ flex: 1, height: 1, background: "#E6EBF1" }} />
+      <div style={{ flex: 1, height: 1, background: "#2E3341" }} />
     </div>
   );
 }
@@ -2003,14 +2003,14 @@ function LoginScreen({ onSubmit, onBack, error }) {
   }
   return (
     <div className="min-h-full flex flex-col" style={{ background: C.inkSoft, color: C.ivory }}>
-      <div style={{ background: "#FFFFFF", borderBottom: `1px solid ${C.inkLine}`, padding: "0 32px", height: 60, display: "flex", alignItems: "center" }}>
+      <div style={{ background: "#1D2027", borderBottom: `1px solid ${C.inkLine}`, padding: "0 32px", height: 60, display: "flex", alignItems: "center" }}>
         <button onClick={onBack} style={{ color: C.ivoryDim, background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", padding: 0, marginRight: 12 }}>
           <ChevronLeft size={18} />
         </button>
         <Logo size={20} />
       </div>
       <div className="flex-1 flex items-center justify-center px-6 py-12">
-        <div className="w-full max-w-md lg-fade" style={{ background: "#FFFFFF", border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: 40, boxShadow: "0 4px 24px rgba(10,37,64,0.07)" }}>
+        <div className="w-full max-w-md lg-fade" style={{ background: "#252833", border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: 40, boxShadow: "0 4px 24px rgba(0,0,0,0.3)" }}>
           <h2 style={{ fontSize: 24, fontWeight: 700, letterSpacing: -0.3, marginBottom: 4 }}>Welcome back</h2>
           <p style={{ color: C.ivoryDim, fontSize: 15, marginBottom: 24 }}>Log in to your Artium account.</p>
           <GoogleBtn />
@@ -2038,7 +2038,7 @@ function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, mus
   const tabs = [];
   return (
     <div className="min-h-full flex flex-col" style={{ background: C.inkSoft, color: C.ivory }}>
-      <div className="px-6 flex items-center gap-4" style={{ height: 60, background: "#FFFFFF", borderBottom: `1px solid ${C.inkLine}` }}>
+      <div className="px-6 flex items-center gap-4" style={{ height: 60, background: "#1D2027", borderBottom: `1px solid ${C.inkLine}` }}>
         <div className="flex items-center gap-3">
           {(previewOnly || onBack) && (
             <button onClick={previewOnly ? onHome : onBack} style={{ color: C.ivoryDim, background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 2, padding: 0 }}>
@@ -2640,14 +2640,14 @@ function StepTeaching({ draft, update }) {
 function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLoggedOut, studentLoggedIn, musicOn, onMusicToggle, audioRef, onlineCount }) {
   const singleCard = !!learnerProfile || learnerLoggedOut || studentLoggedIn;
   const cardStyle = {
-    textAlign: "left", background: "#FFFFFF", border: "none",
+    textAlign: "left", background: "#252833", border: "none",
     borderRadius: 12, padding: 32,
-    boxShadow: `0 0 0 5px ${C.brass}, 0 4px 24px rgba(10,37,64,0.07)`,
+    boxShadow: `0 0 0 5px ${C.brass}, 0 4px 24px rgba(0,0,0,0.3)`,
     cursor: "pointer", transition: "box-shadow 0.2s, transform 0.15s",
   };
   return (
     <div className="min-h-full flex flex-col" style={{ background: C.inkSoft, color: C.ivory }}>
-      <div className="max-w-5xl w-full mx-auto px-8" style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#FFFFFF", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div className="max-w-5xl w-full mx-auto px-8" style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#1D2027", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <Logo size={22} />
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <MusicBtn playing={musicOn} onToggle={onMusicToggle} audioRef={audioRef} />
