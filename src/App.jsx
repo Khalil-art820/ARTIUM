@@ -2661,7 +2661,7 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
         <h1 style={{ fontFamily: "-apple-system, 'SF Pro Display', BlinkMacSystemFont, 'Inter', sans-serif", fontSize: "clamp(22px,2.8vw,32px)", fontWeight: 800, lineHeight: 1.15, color: C.ivory, letterSpacing: -0.8, textAlign: "center", margin: 0 }}>
           Your Path<br />to Classical Music Excellence.
         </h1>
-        <div style={{ display: "flex", gap: 40, justifyContent: "center", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 40, alignItems: "center" }}>
           {!studentLoggedIn && (
             <button onClick={onLearner} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 18 }}>
               <div style={{ width: 180, height: 180, borderRadius: "50%", overflow: "hidden", position: "relative", boxShadow: `0 0 0 4px ${C.brass}, 0 8px 32px rgba(10,37,64,0.14)`, transition: "transform 0.18s", flexShrink: 0 }}
