@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   Search, Send,
   ChevronRight, Check, X, Instagram, Facebook, Youtube,
-  Music2, Users, MessageCircle, ArrowRight, ArrowLeft, Play, Pause, Globe2,
+  Music2, Music, GraduationCap, Users, MessageCircle, ArrowRight, ArrowLeft, Play, Pause, Globe2,
   Volume1, Volume2, VolumeX,
   Pencil, Plus, Trash2, Home, Upload, Eye, EyeOff, ChevronLeft,
   Calendar, CreditCard, Video, Link2, Clock,
@@ -2656,52 +2656,53 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
           )}
         </div>
       </div>
-      <div className="flex-1 flex items-center justify-center px-6 py-16">
-        <div className="w-full max-w-3xl">
-          <h1 style={{ fontFamily: "-apple-system, 'SF Pro Display', BlinkMacSystemFont, 'Inter', sans-serif", fontSize: "clamp(22px,2.8vw,28px)", fontWeight: 800, lineHeight: 1.05, color: C.ivory, letterSpacing: -1 }}>
-            The Path to Artistic Excellence.
-          </h1>
-          <p style={{ color: C.ivoryDim, fontSize: 16, lineHeight: 1.65, marginTop: 14 }}>
-            Join the global network of top conservatory students and amateur music enthusiasts.
-          </p>
-          <div className={`mt-10 grid gap-6 ${singleCard ? "" : "md:grid-cols-2"}`}>
-            {!studentLoggedIn && (
-              <button onClick={onLearner} style={{ ...cardStyle, background: "none", padding: 0, overflow: "hidden", position: "relative", minHeight: 260 }}>
-                <div style={{ position: "absolute", inset: 0, backgroundImage: "url('/piano.png')", backgroundSize: "cover", backgroundPosition: "center", filter: "grayscale(100%) contrast(1.1) brightness(0.85)" }} />
-                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.72) 60%, rgba(0,0,0,0.25) 100%)" }} />
-                <div style={{ position: "relative", padding: 28, textAlign: "left", display: "flex", flexDirection: "column", justifyContent: "flex-end", minHeight: 260 }}>
-                  <h3 style={{ fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 8 }}>Help me learn my favourite instrument</h3>
-                  <p style={{ color: "rgba(255,255,255,0.78)", fontSize: 13, lineHeight: 1.6, marginBottom: 20 }}>
-                    Learn from top conservatory musicians. Find a teacher who matches your level, instrument, and taste.
-                  </p>
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: "#fff", fontWeight: 600, borderBottom: "1px solid rgba(255,255,255,0.5)", paddingBottom: 2, width: "fit-content" }}>
-                    {learnerLoggedOut ? "Log in" : "Find a teacher"} <ArrowRight size={13} />
-                  </span>
+      <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
+        <h1 style={{ fontFamily: "-apple-system, 'SF Pro Display', BlinkMacSystemFont, 'Inter', sans-serif", fontSize: "clamp(20px,2.5vw,26px)", fontWeight: 800, lineHeight: 1.05, color: C.ivory, letterSpacing: -0.8, textAlign: "center", marginBottom: 48 }}>
+          The Path to Artistic Excellence.
+        </h1>
+        <div style={{ display: "flex", gap: 40, justifyContent: "center", flexWrap: "wrap" }}>
+          {!studentLoggedIn && (
+            <button onClick={onLearner} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 18 }}>
+              <div style={{ width: 180, height: 180, borderRadius: "50%", overflow: "hidden", position: "relative", boxShadow: `0 0 0 4px ${C.brass}, 0 8px 32px rgba(10,37,64,0.14)`, transition: "transform 0.18s", flexShrink: 0 }}
+                onMouseEnter={e => e.currentTarget.style.transform = "scale(1.04)"}
+                onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
+              >
+                <div style={{ position: "absolute", inset: 0, backgroundImage: "url('/piano.png')", backgroundSize: "cover", backgroundPosition: "center", filter: "grayscale(100%) contrast(1.1) brightness(0.82)" }} />
+                <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.38)" }} />
+                <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Music size={38} color="white" strokeWidth={1.5} />
                 </div>
-              </button>
-            )}
-            {(!singleCard || studentLoggedIn) && (
-              <button onClick={onStudent} style={{ ...cardStyle, background: "none", padding: 0, overflow: "hidden", position: "relative", minHeight: 260 }}>
-                <div style={{ position: "absolute", inset: 0, backgroundImage: "url('/juilliard.png')", backgroundSize: "cover", backgroundPosition: "center top", filter: "grayscale(100%) contrast(1.1) brightness(0.85)" }} />
-                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.72) 60%, rgba(0,0,0,0.25) 100%)" }} />
-                <div style={{ position: "relative", padding: 28, textAlign: "left", display: "flex", flexDirection: "column", justifyContent: "flex-end", minHeight: 260 }}>
-                  <h3 style={{ fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 8 }}>I am a conservatory student</h3>
-                  <p style={{ color: "rgba(255,255,255,0.78)", fontSize: 13, lineHeight: 1.6, marginBottom: 20 }}>
-                    Connect with conservatory students at the world's top conservatories. Share repertoire, culture, and musical ideas. Promote yourself. Earn while you teach.
-                  </p>
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: "#fff", fontWeight: 600, borderBottom: "1px solid rgba(255,255,255,0.5)", paddingBottom: 2, width: "fit-content" }}>
-                    {studentLoggedIn ? "Continue" : "Enter Artium"} <ArrowRight size={13} />
-                  </span>
+              </div>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: 15, fontWeight: 700, color: C.ivory, marginBottom: 4 }}>{learnerLoggedOut ? "Log in" : "Find a teacher"}</div>
+                <div style={{ fontSize: 12, color: C.ivoryDim, lineHeight: 1.5, maxWidth: 160 }}>Learn from top conservatory musicians</div>
+              </div>
+            </button>
+          )}
+          {(!singleCard || studentLoggedIn) && (
+            <button onClick={onStudent} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 18 }}>
+              <div style={{ width: 180, height: 180, borderRadius: "50%", overflow: "hidden", position: "relative", boxShadow: `0 0 0 4px ${C.brass}, 0 8px 32px rgba(10,37,64,0.14)`, transition: "transform 0.18s", flexShrink: 0 }}
+                onMouseEnter={e => e.currentTarget.style.transform = "scale(1.04)"}
+                onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
+              >
+                <div style={{ position: "absolute", inset: 0, backgroundImage: "url('/juilliard.png')", backgroundSize: "cover", backgroundPosition: "center top", filter: "grayscale(100%) contrast(1.1) brightness(0.82)" }} />
+                <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.38)" }} />
+                <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <GraduationCap size={38} color="white" strokeWidth={1.5} />
                 </div>
-              </button>
-            )}
-          </div>
-          {(studentLoggedIn || learnerProfile) && (
-            <p style={{ textAlign: "center", marginTop: 28, fontSize: 14, color: C.ivoryDim }}>
-              {studentLoggedIn ? "Logged in as a conservatory student" : <>Logged in as {learnerProfile.name}</>}
-            </p>
+              </div>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: 15, fontWeight: 700, color: C.ivory, marginBottom: 4 }}>{studentLoggedIn ? "Continue" : "I'm a conservatory student"}</div>
+                <div style={{ fontSize: 12, color: C.ivoryDim, lineHeight: 1.5, maxWidth: 160 }}>Connect, share repertoire & teach</div>
+              </div>
+            </button>
           )}
         </div>
+        {(studentLoggedIn || learnerProfile) && (
+          <p style={{ textAlign: "center", marginTop: 32, fontSize: 13, color: C.ivoryDim }}>
+            {studentLoggedIn ? "Logged in as a conservatory student" : <>Logged in as {learnerProfile.name}</>}
+          </p>
+        )}
       </div>
       <div style={{ position: "fixed", bottom: 12, left: 24, display: "flex", alignItems: "center", gap: 0 }}>
         <Logo size={20} />
