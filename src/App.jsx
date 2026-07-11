@@ -2671,7 +2671,7 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
                 <div style={{ position: "absolute", inset: 0, backgroundImage: "url('/piano.png')", backgroundSize: "cover", backgroundPosition: "center", filter: "grayscale(100%) contrast(1.1) brightness(0.82)" }} />
                 <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.38)" }} />
                 <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Music size={38} color="white" strokeWidth={1.5} />
+                  <span style={{ fontSize: 52, color: "white", lineHeight: 1, userSelect: "none" }}>𝄢</span>
                 </div>
               </div>
               <div style={{ textAlign: "center" }}>
