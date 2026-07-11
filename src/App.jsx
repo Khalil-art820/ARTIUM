@@ -1289,7 +1289,7 @@ export default function App() {
             () => setScreen("landing")
           }
           backLabel={
-            selectedStudentId ? "Back to conservatory" :
+            selectedStudentId ? "" :
             appTab === "messages" ? "Back to map" :
             appTab === "profile" ? "Back to map" :
             null
