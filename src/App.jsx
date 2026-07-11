@@ -2671,7 +2671,7 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
                 <div style={{ position: "absolute", inset: 0, backgroundImage: "url('/2.png')", backgroundSize: "cover", backgroundPosition: "center", filter: "grayscale(100%) contrast(1.1) brightness(0.82)" }} />
                 <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.38)" }} />
                 <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <span style={{ fontSize: 52, color: "white", lineHeight: 1, userSelect: "none", marginTop: 48 }}>𝄢</span>
+                  <span style={{ fontSize: 52, color: "white", lineHeight: 1, userSelect: "none" }}>𝄢</span>
                 </div>
               </div>
               <div style={{ textAlign: "center" }}>
@@ -2689,7 +2689,7 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
                 <div style={{ position: "absolute", inset: 0, backgroundImage: "url('/juilliard.png')", backgroundSize: "cover", backgroundPosition: "25% top", filter: "grayscale(100%) contrast(1.1) brightness(0.82)" }} />
                 <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.38)" }} />
                 <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <GraduationCap size={38} color="white" strokeWidth={1.5} style={{ marginTop: 48 }} />
+                  <GraduationCap size={38} color="white" strokeWidth={1.5} />
                 </div>
               </div>
               <div style={{ textAlign: "center" }}>
