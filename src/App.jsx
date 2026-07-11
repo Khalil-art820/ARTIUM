@@ -2671,7 +2671,7 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
                 <div style={{ position: "absolute", inset: 0, backgroundImage: "url('/2.png')", backgroundSize: "cover", backgroundPosition: "center", filter: "grayscale(100%) contrast(1.1) brightness(0.82)" }} />
                 <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.38)" }} />
                 <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <span style={{ fontSize: 52, color: "white", lineHeight: 1, userSelect: "none" }}>𝄢</span>
+                  <img src="/3.png" style={{ width: 52, height: 52, objectFit: "contain", filter: "invert(1)", mixBlendMode: "screen" }} />
                 </div>
               </div>
               <div style={{ textAlign: "center" }}>
