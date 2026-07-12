@@ -4029,24 +4029,21 @@ function TeacherLessonRoom({ teacherId }) {
     sophie: [{ from: "them", text: "Can we reschedule Thursday?" }],
   });
 
-  // Sync chat from localStorage for real learners (flip "me"/"them" — stored from learner POV)
+  // Sync active learner's chat from localStorage (runs whenever active learner changes)
   React.useEffect(() => {
+    if (MOCK_IDS.includes(activeLearner.id)) return;
     function sync() {
-      acceptedLearners.forEach((r) => {
-        const saved = loadMsgs(r.learnerId);
-        if (saved) {
-          // Messages written by learner have from:"me"; flip to "them" for teacher view,
-          // messages written by teacher have from:"teacher"; keep as "me"
-          const flipped = saved.map((m) => m.from === "teacher" ? { ...m, from: "me" } : { ...m, from: "them" });
-          setMessagesByLearner((prev) => ({ ...prev, [r.learnerId]: flipped }));
-        }
-      });
+      const saved = loadMsgs(activeLearner.id);
+      if (saved) {
+        const flipped = saved.map((m) => m.from === "teacher" ? { ...m, from: "me" } : { ...m, from: "them" });
+        setMessagesByLearner((prev) => ({ ...prev, [activeLearner.id]: flipped }));
+      }
     }
     sync();
     const id = setInterval(sync, 1500);
     window.addEventListener("storage", sync);
     return () => { clearInterval(id); window.removeEventListener("storage", sync); };
-  }, [incoming]);
+  }, [activeLearner.id]);
   const [selectedSessionId, setSelectedSessionId] = useState(null);
   const [showPropose, setShowPropose] = useState(false);
   const [newDate, setNewDate] = useState("");
