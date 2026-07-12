@@ -4265,7 +4265,7 @@ function TeacherLessonRoom({ teacherId }) {
             {sel && (() => {
               const dt = new Date(sel.date + "T" + sel.time);
               const isConfirmed = sel.status === "confirmed";
-              const isCounter = sel.status === "student_counter";
+              const isCounter = sel.status === "student_counter" || sel.status === "student_proposed";
               const isPending = sel.status === "teacher_proposed";
               const showingCounter = showCounter[sel.id];
               return (
