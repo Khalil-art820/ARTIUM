@@ -979,6 +979,28 @@ export default function App() {
     try { return JSON.parse(localStorage.getItem("teachRequests") || "{}"); } catch { return {}; }
   });
 
+  // Cross-tab sync: when teacher accepts/declines in their tab, update learner's state live
+  React.useEffect(() => {
+    function onStorage(e) {
+      if (e.key === "teachRequests") {
+        try {
+          const updated = JSON.parse(e.newValue || "{}");
+          setTeachRequests(updated);
+          // If teacher just accepted, open a welcome message from them
+          Object.entries(updated).forEach(([tid, status]) => {
+            if (status === "accepted") {
+              setConversations((c) => c[tid] ? c : { ...c, [tid]: [
+                { from: "them", text: "Hi! I accepted your request — looking forward to teaching you. When works for a first session?" },
+              ]});
+            }
+          });
+        } catch {}
+      }
+    }
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
   const [draft, setDraft] = useState(emptyDraft());
   const [step, setStep] = useState(0);
 
@@ -1106,17 +1128,16 @@ export default function App() {
       localStorage.setItem("teachRequests", JSON.stringify(next));
       return next;
     });
-    // No backend yet: simulate the teacher receiving and accepting the request.
-    setTimeout(() => {
-      setTeachRequests((r) => {
-        const next = { ...r, [teacherId]: "accepted" };
-        localStorage.setItem("teachRequests", JSON.stringify(next));
-        return next;
-      });
-      setConversations((c) => (c[teacherId] ? c : { ...c, [teacherId]: [
-        { from: "them", text: "Hi! Thanks for reaching out — I'd be glad to teach you. When works for a first lesson?" },
-      ] }));
-    }, 1600);
+    // Also write learner profile so the teacher's tab can see who's requesting
+    const lp = learnerProfile;
+    if (lp) {
+      const existing = JSON.parse(localStorage.getItem("incomingRequests") || "{}");
+      existing[teacherId] = existing[teacherId] || [];
+      if (!existing[teacherId].find((r) => r.learnerId === "demo-learner")) {
+        existing[teacherId].push({ learnerId: "demo-learner", name: lp.name, instrument: lp.instrument, bio: lp.bio, status: "pending" });
+      }
+      localStorage.setItem("incomingRequests", JSON.stringify(existing));
+    }
   }
   function goToProfile() {
     if (!myProfile) return;
@@ -2503,7 +2524,7 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack, onUpdat
             )}
           </>
         ) : (
-          <TeacherLessonRoom />
+          <TeacherLessonRoom teacherId={profile.id} />
         )}
       </div>
     </div>
@@ -3741,8 +3762,50 @@ const MOCK_LESSON_LEARNERS = [
   { id: "sophie", name: "Sophie Leclerc", instrument: "Violin", level: "Beginner" },
 ];
 
-function TeacherLessonRoom() {
-  const [activeLearner, setActiveLearner] = useState(MOCK_LESSON_LEARNERS[0]);
+function TeacherLessonRoom({ teacherId }) {
+  const tid = teacherId || "demo-teacher";
+
+  // Real incoming requests from localStorage (cross-tab)
+  const [incoming, setIncoming] = useState(() => {
+    try { return (JSON.parse(localStorage.getItem("incomingRequests") || "{}"))[tid] || []; } catch { return []; }
+  });
+  React.useEffect(() => {
+    function onStorage(e) {
+      if (e.key === "incomingRequests") {
+        try { setIncoming((JSON.parse(e.newValue || "{}"))[tid] || []); } catch {}
+      }
+    }
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, [tid]);
+
+  function acceptRequest(learnerId) {
+    // Update incomingRequests
+    const all = JSON.parse(localStorage.getItem("incomingRequests") || "{}");
+    if (all[tid]) all[tid] = all[tid].map((r) => r.learnerId === learnerId ? { ...r, status: "accepted" } : r);
+    localStorage.setItem("incomingRequests", JSON.stringify(all));
+    setIncoming(all[tid] || []);
+    // Update teachRequests so learner's tab reacts
+    const tr = JSON.parse(localStorage.getItem("teachRequests") || "{}");
+    tr[tid] = "accepted";
+    localStorage.setItem("teachRequests", JSON.stringify(tr));
+  }
+
+  function declineRequest(learnerId) {
+    const all = JSON.parse(localStorage.getItem("incomingRequests") || "{}");
+    if (all[tid]) all[tid] = all[tid].map((r) => r.learnerId === learnerId ? { ...r, status: "declined" } : r);
+    localStorage.setItem("incomingRequests", JSON.stringify(all));
+    setIncoming(all[tid] || []);
+    const tr = JSON.parse(localStorage.getItem("teachRequests") || "{}");
+    tr[tid] = "declined";
+    localStorage.setItem("teachRequests", JSON.stringify(tr));
+  }
+
+  const pendingRequests = incoming.filter((r) => r.status === "pending");
+  const acceptedLearners = incoming.filter((r) => r.status === "accepted");
+  const allLearners = [...MOCK_LESSON_LEARNERS, ...acceptedLearners.map((r) => ({ id: r.learnerId, name: r.name, instrument: r.instrument, level: "Student" }))];
+
+  const [activeLearner, setActiveLearner] = useState(allLearners[0]);
   const [tab, setTab] = useState("chat");
   const [sessionsByLearner, setSessionsByLearner] = useState({
     alex: [
@@ -3817,14 +3880,31 @@ function TeacherLessonRoom() {
 
   return (
     <div style={{ padding: "0 0 32px", fontFamily: FONT_BODY }}>
+      {/* Pending requests banner */}
+      {pendingRequests.length > 0 && (
+        <div style={{ margin: "16px 20px 0", background: "#FFF8E7", border: `1.5px solid ${C.brass}`, borderRadius: 12, padding: "14px 16px" }}>
+          <p style={{ fontSize: 13, fontWeight: 700, color: C.brass, margin: "0 0 10px" }}>New lesson request{pendingRequests.length > 1 ? "s" : ""}</p>
+          {pendingRequests.map((r) => (
+            <div key={r.learnerId} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+              <Avatar name={r.name} id={r.learnerId} size={34} />
+              <div style={{ flex: 1 }}>
+                <p style={{ fontSize: 13, fontWeight: 600, color: C.ivory, margin: 0 }}>{r.name}</p>
+                <p style={{ fontSize: 11, color: C.ivoryDim, margin: 0 }}>{r.instrument}</p>
+              </div>
+              <button onClick={() => acceptRequest(r.learnerId)} style={{ padding: "5px 12px", borderRadius: 8, fontSize: 12, fontWeight: 700, background: C.brass, color: "#fff", border: "none", cursor: "pointer" }}>Accept</button>
+              <button onClick={() => declineRequest(r.learnerId)} style={{ padding: "5px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600, background: "transparent", color: C.ivoryDim, border: `1px solid ${C.inkLine}`, cursor: "pointer" }}>Decline</button>
+            </div>
+          ))}
+        </div>
+      )}
       {/* Header */}
       <div style={{ padding: "20px 20px 0" }}>
         <h2 style={{ fontSize: 17, fontWeight: 700, color: C.ivory, margin: "0 0 4px" }}>Lesson Room</h2>
-        <p style={{ fontSize: 13, color: C.ivoryDim, margin: "0 0 16px" }}>{MOCK_LESSON_LEARNERS.length} active student{MOCK_LESSON_LEARNERS.length > 1 ? "s" : ""}</p>
+        <p style={{ fontSize: 13, color: C.ivoryDim, margin: "0 0 16px" }}>{allLearners.length} active student{allLearners.length !== 1 ? "s" : ""}</p>
         {/* Learner pill picker */}
-        {MOCK_LESSON_LEARNERS.length > 1 && (
+        {allLearners.length > 1 && (
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
-            {MOCK_LESSON_LEARNERS.map((l) => (
+            {allLearners.map((l) => (
               <button key={l.id} onClick={() => { setActiveLearner(l); setSelectedSessionId(null); setTab("chat"); }}
                 style={{ padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: activeLearner.id === l.id ? 700 : 500, border: `1.5px solid ${activeLearner.id === l.id ? C.brass : C.inkLine}`, background: activeLearner.id === l.id ? C.brassDim : "transparent", color: activeLearner.id === l.id ? C.brass : C.ivoryDim, cursor: "pointer" }}>
                 {l.name.split(" ")[0]}
