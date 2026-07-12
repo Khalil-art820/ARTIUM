@@ -3635,16 +3635,37 @@ function VideoSessionTab({ sessions, teacher, zoomLink, setZoomLink, zoomSaved, 
 
 function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payError }) {
   const [tab, setTab] = useState("chat");
-  // Sessions are teacher-proposed; student can approve or counter-propose
-  // status: "teacher_proposed" | "confirmed" | "counter_proposed"
-  const [sessions, setSessions] = useState([
-    // Past session, already paid
-    { id: 0, date: "2026-07-05", time: "10:00", status: "confirmed", proposedBy: "teacher", paid: true },
-    // Teacher proposal awaiting student approval
-    { id: 1, date: "2026-07-15", time: "16:00", status: "teacher_proposed", proposedBy: "teacher", paid: false },
-    // Between 24h and 48h → modify locked, cancel still open — paid
-    { id: 2, date: "2026-07-12", time: "18:00", status: "confirmed", proposedBy: "teacher", paid: true },
-  ]);
+  const lsKey = teacher ? `artium_sessions_${teacher.id}_demo-learner` : null;
+
+  const [sessions, setSessions] = useState(() => {
+    if (lsKey) {
+      try { const s = JSON.parse(localStorage.getItem(lsKey) || "null"); if (s) return s; } catch {}
+    }
+    return [
+      { id: 0, date: "2026-07-05", time: "10:00", status: "confirmed", proposedBy: "teacher", paid: true },
+      { id: 1, date: "2026-07-15", time: "16:00", status: "teacher_proposed", proposedBy: "teacher", paid: false },
+      { id: 2, date: "2026-07-12", time: "18:00", status: "confirmed", proposedBy: "teacher", paid: true },
+    ];
+  });
+
+  // Live sync: teacher writes sessions → learner tab reacts
+  React.useEffect(() => {
+    if (!lsKey) return;
+    function sync() {
+      try {
+        const s = JSON.parse(localStorage.getItem(lsKey) || "null");
+        if (s) setSessions(s);
+      } catch {}
+    }
+    const id = setInterval(sync, 2000);
+    window.addEventListener("storage", sync);
+    return () => { clearInterval(id); window.removeEventListener("storage", sync); };
+  }, [lsKey]);
+
+  function persistSessions(next) {
+    if (lsKey) localStorage.setItem(lsKey, JSON.stringify(next));
+    setSessions(next);
+  }
   const [counterDate, setCounterDate] = useState({});
   const [counterTime, setCounterTime] = useState({});
   const [showCounter, setShowCounter] = useState({});
@@ -3660,13 +3681,15 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
   ];
 
   function approveSession(id) {
-    setSessions((prev) => prev.map((s) => s.id === id ? { ...s, status: "confirmed" } : s));
+    const next = sessions.map((s) => s.id === id ? { ...s, status: "confirmed" } : s);
+    persistSessions(next);
   }
 
   function submitCounter(id) {
     const d = counterDate[id]; const t = counterTime[id];
     if (!d || !t) return;
-    setSessions((prev) => prev.map((s) => s.id === id ? { ...s, date: d, time: t, status: "teacher_proposed", proposedBy: "student" } : s));
+    const next = sessions.map((s) => s.id === id ? { ...s, date: d, time: t, status: "student_proposed", proposedBy: "student" } : s);
+    persistSessions(next);
     setShowCounter((prev) => ({ ...prev, [id]: false }));
   }
 
@@ -3677,7 +3700,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
   function modifyLocked(s) { return s.status === "confirmed" && timeUntil(s) < 48 * 60 * 60 * 1000; }
 
   function cancelSession(id) {
-    setSessions((prev) => prev.filter((s) => s.id !== id));
+    persistSessions(sessions.filter((s) => s.id !== id));
   }
 
   return (
@@ -3922,6 +3945,14 @@ function TeacherLessonRoom({ teacherId }) {
   const [viewingLearner, setViewingLearner] = useState(null);
   const [activeLearner, setActiveLearner] = useState(allLearners[0]);
   const [tab, setTab] = useState("chat");
+  function sessionsKey(learnerId) { return `artium_sessions_${tid}_${learnerId}`; }
+  function loadSessions(learnerId) {
+    try { return JSON.parse(localStorage.getItem(sessionsKey(learnerId)) || "null") || []; } catch { return []; }
+  }
+  function saveSessions(learnerId, arr) {
+    localStorage.setItem(sessionsKey(learnerId), JSON.stringify(arr));
+  }
+
   const [sessionsByLearner, setSessionsByLearner] = useState({
     alex: [
       { id: 0, date: "2026-07-05", time: "10:00", status: "confirmed", paid: true },
@@ -3932,6 +3963,22 @@ function TeacherLessonRoom({ teacherId }) {
       { id: 0, date: "2026-07-20", time: "14:00", status: "confirmed", paid: false },
     ],
   });
+
+  // Sync real learner sessions from localStorage (cross-tab)
+  React.useEffect(() => {
+    function sync() {
+      acceptedLearners.forEach((r) => {
+        const saved = loadSessions(r.learnerId);
+        if (saved.length > 0) {
+          setSessionsByLearner((prev) => ({ ...prev, [r.learnerId]: saved }));
+        }
+      });
+    }
+    sync();
+    const id = setInterval(sync, 2000);
+    window.addEventListener("storage", sync);
+    return () => { clearInterval(id); window.removeEventListener("storage", sync); };
+  }, [incoming]);
   const [messagesByLearner, setMessagesByLearner] = useState({
     alex:   [{ from: "them", text: "Hi! Looking forward to our next session." }, { from: "me", text: "Me too! I'll send you the sheet music." }],
     sophie: [{ from: "them", text: "Can we reschedule Thursday?" }],
@@ -3950,8 +3997,14 @@ function TeacherLessonRoom({ teacherId }) {
   const sessions = sessionsByLearner[activeLearner.id] || [];
   const msgs = messagesByLearner[activeLearner.id] || [];
 
+  const MOCK_IDS = MOCK_LESSON_LEARNERS.map((l) => l.id);
   function setSessions(fn) {
-    setSessionsByLearner((prev) => ({ ...prev, [activeLearner.id]: fn(prev[activeLearner.id] || []) }));
+    setSessionsByLearner((prev) => {
+      const next = fn(prev[activeLearner.id] || []);
+      // Persist to localStorage for real (non-mock) learners
+      if (!MOCK_IDS.includes(activeLearner.id)) saveSessions(activeLearner.id, next);
+      return { ...prev, [activeLearner.id]: next };
+    });
   }
 
   function proposeSession() {
