@@ -4061,6 +4061,33 @@ function TeacherLessonRoom({ teacherId }) {
   const [counterTime, setCounterTime] = useState({});
   const [zoomLink, setZoomLink] = useState("");
   const [zoomSaved, setZoomSaved] = useState(false);
+  const [roomView, setRoomView] = useState("students");
+  const [cancelLockH, setCancelLockH] = useState(24);
+  const [modifyLockH, setModifyLockH] = useState(48);
+  const [cancelFeesPct, setCancelFeesPct] = useState(50);
+
+  const MOCK_PLANNING = [
+    { id:"p1",  name:"Élise Marchand",   instrument:"Piano",   sessions:[{date:"2026-07-22",time:"10:00",status:"confirmed",paid:true},{date:"2026-08-05",time:"10:00",status:"teacher_proposed",paid:false}] },
+    { id:"p2",  name:"Théo Lambert",     instrument:"Piano",   sessions:[{date:"2026-07-25",time:"14:00",status:"confirmed",paid:false}] },
+    { id:"p3",  name:"Lukas Brunner",    instrument:"Piano",   sessions:[{date:"2026-07-28",time:"09:00",status:"confirmed",paid:true}] },
+    { id:"p4",  name:"Polina Sokolova",  instrument:"Piano",   sessions:[{date:"2026-08-01",time:"11:00",status:"teacher_proposed",paid:false}] },
+    { id:"p5",  name:"Maya Chen",        instrument:"Piano",   sessions:[{date:"2026-08-03",time:"16:00",status:"confirmed",paid:true}] },
+    { id:"p6",  name:"Daniel Osei",      instrument:"Piano",   sessions:[{date:"2026-08-07",time:"15:00",status:"confirmed",paid:false}] },
+    { id:"p7",  name:"Freya Whitlock",   instrument:"Piano",   sessions:[{date:"2026-08-09",time:"10:00",status:"student_proposed",paid:false}] },
+    { id:"p8",  name:"Wei Zhang",        instrument:"Piano",   sessions:[{date:"2026-08-12",time:"17:00",status:"confirmed",paid:true}] },
+    { id:"p9",  name:"Haruto Sato",      instrument:"Piano",   sessions:[{date:"2026-08-14",time:"09:00",status:"confirmed",paid:true}] },
+    { id:"p10", name:"Ji-woo Kang",      instrument:"Piano",   sessions:[{date:"2026-08-15",time:"13:00",status:"teacher_proposed",paid:false}] },
+    { id:"p11", name:"Anneliese Voss",   instrument:"Piano",   sessions:[{date:"2026-08-18",time:"10:00",status:"confirmed",paid:true}] },
+    { id:"p12", name:"Nathan Boucher",   instrument:"Piano",   sessions:[{date:"2026-08-20",time:"14:00",status:"confirmed",paid:false}] },
+    { id:"p13", name:"Isla Cooper",      instrument:"Piano",   sessions:[{date:"2026-08-22",time:"11:00",status:"confirmed",paid:true}] },
+    { id:"p14", name:"Sofia Reyes",      instrument:"Violin",  sessions:[{date:"2026-08-24",time:"09:00",status:"student_proposed",paid:false}] },
+    { id:"p15", name:"Léon Dupont",      instrument:"Cello",   sessions:[{date:"2026-08-26",time:"16:00",status:"confirmed",paid:true}] },
+    { id:"p16", name:"Amara Diallo",     instrument:"Voice",   sessions:[{date:"2026-08-28",time:"10:00",status:"teacher_proposed",paid:false}] },
+    { id:"p17", name:"Ryo Nakamura",     instrument:"Guitar",  sessions:[{date:"2026-09-01",time:"13:00",status:"confirmed",paid:false}] },
+    { id:"p18", name:"Ingrid Larsson",   instrument:"Flute",   sessions:[{date:"2026-09-03",time:"15:00",status:"confirmed",paid:true}] },
+    { id:"p19", name:"Carlos Mendez",    instrument:"Trumpet", sessions:[{date:"2026-09-05",time:"09:00",status:"confirmed",paid:true}] },
+    { id:"p20", name:"Yuna Park",        instrument:"Harp",    sessions:[{date:"2026-09-08",time:"11:00",status:"teacher_proposed",paid:false}] },
+  ];
 
   const sessions = sessionsByLearner[activeLearner.id] || [];
   const msgs = messagesByLearner[activeLearner.id] || [];
@@ -4149,8 +4176,19 @@ function TeacherLessonRoom({ teacherId }) {
       )}
       {/* Header */}
       <div style={{ padding: "20px 20px 0" }}>
-        <h2 style={{ fontSize: 17, fontWeight: 700, color: C.ivory, margin: "0 0 4px" }}>Lesson Room</h2>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 4 }}>
+          <h2 style={{ fontSize: 17, fontWeight: 700, color: C.ivory, margin: 0 }}>Lesson Room</h2>
+          <div style={{ display: "flex", gap: 6 }}>
+            {[["preferences", "Teaching Preferences"], ["planning", "My Planning"]].map(([v, label]) => (
+              <button key={v} onClick={() => setRoomView(roomView === v ? "students" : v)}
+                style={{ padding: "5px 12px", borderRadius: 20, fontSize: 11, fontWeight: 600, cursor: "pointer", border: `1.5px solid ${roomView === v ? C.brass : C.inkLine}`, background: roomView === v ? C.brassDim : "transparent", color: roomView === v ? C.brass : C.ivoryDim }}>
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
         <p style={{ fontSize: 13, color: C.ivoryDim, margin: "0 0 16px" }}>{allLearners.length} active student{allLearners.length !== 1 ? "s" : ""}</p>
+        {roomView === "students" && (<>
         {/* Learner pill picker */}
         {allLearners.length > 1 && (
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
@@ -4170,9 +4208,89 @@ function TeacherLessonRoom({ teacherId }) {
             <p style={{ fontSize: 12, color: C.ivoryDim, margin: "2px 0 0" }}>{activeLearner.instrument} · {activeLearner.level}</p>
           </div>
         </div>
+        </>)}
       </div>
 
-      {/* Inner tab bar */}
+      {/* ── Teaching Preferences ── */}
+      {roomView === "preferences" && (
+        <div style={{ padding: "24px 20px" }}>
+          {[
+            { label: "Cancellation lock", sublabel: "Students cannot cancel within this window", value: cancelLockH, set: setCancelLockH, min: 1, max: 72, unit: "h" },
+            { label: "Modification lock", sublabel: "Students cannot reschedule within this window", value: modifyLockH, set: setModifyLockH, min: 1, max: 96, unit: "h" },
+            { label: "Cancellation fee", sublabel: "Charged when student cancels inside the lock window", value: cancelFeesPct, set: setCancelFeesPct, min: 0, max: 100, unit: "%" },
+          ].map(({ label, sublabel, value, set, min, max, unit }) => (
+            <div key={label} style={{ marginBottom: 28 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4 }}>
+                <p style={{ fontSize: 14, fontWeight: 700, color: C.ivory, margin: 0 }}>{label}</p>
+                <span style={{ fontSize: 18, fontWeight: 700, color: C.brass }}>{value}{unit}</span>
+              </div>
+              <p style={{ fontSize: 12, color: C.ivoryDim, margin: "0 0 10px" }}>{sublabel}</p>
+              <input type="range" min={min} max={max} value={value} onChange={e => set(Number(e.target.value))}
+                style={{ width: "100%", accentColor: C.brass, height: 4, cursor: "pointer" }} />
+              <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
+                <span style={{ fontSize: 10, color: C.ivoryDim }}>{min}{unit}</span>
+                <span style={{ fontSize: 10, color: C.ivoryDim }}>{max}{unit}</span>
+              </div>
+            </div>
+          ))}
+          <div style={{ padding: "14px 16px", background: "#FFF8E7", borderRadius: 12, border: `1px solid ${C.brass}`, fontSize: 12, color: C.ivory, lineHeight: 1.6 }}>
+            <strong>Summary:</strong> Students must cancel ≥{cancelLockH}h before the session, modify ≥{modifyLockH}h before. Late cancellations are charged {cancelFeesPct}% of the lesson price.
+          </div>
+        </div>
+      )}
+
+      {/* ── My Planning ── */}
+      {roomView === "planning" && (
+        <div style={{ padding: "20px 20px 32px", overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+            <thead>
+              <tr style={{ background: C.inkSoft }}>
+                {["Student", "Upcoming session · Status", "Payment"].map(h => (
+                  <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: 11, fontWeight: 700, color: C.brass, textTransform: "uppercase", letterSpacing: "0.07em", borderBottom: `2px solid ${C.inkLine}` }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {MOCK_PLANNING.map((s, i) => {
+                const next = s.sessions.sort((a, b) => a.date.localeCompare(b.date))[0];
+                const dt = next ? new Date(next.date + "T" + next.time) : null;
+                const statusLabel = { confirmed: "Confirmed", teacher_proposed: "Awaiting student", student_proposed: "Counter-proposal", cancelled: "Cancelled" }[next?.status] || next?.status;
+                const statusColor = { confirmed: "#1A9E6E", teacher_proposed: C.brass, student_proposed: "#E07B00", cancelled: "#c0392b" }[next?.status] || C.ivoryDim;
+                return (
+                  <tr key={s.id} style={{ borderBottom: `1px solid ${C.inkLine}`, background: i % 2 === 0 ? "#fff" : C.inkSoft }}>
+                    <td style={{ padding: "11px 14px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <Avatar name={s.name} id={s.id} size={30} />
+                        <div>
+                          <p style={{ margin: 0, fontWeight: 600, color: C.ivory }}>{s.name}</p>
+                          <p style={{ margin: 0, fontSize: 11, color: C.ivoryDim }}>{s.instrument}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td style={{ padding: "11px 14px" }}>
+                      {dt ? (
+                        <>
+                          <p style={{ margin: 0, fontWeight: 600, color: C.ivory }}>{dt.toLocaleDateString("en-GB", { day: "numeric", month: "short" })} · {next.time}</p>
+                          <span style={{ fontSize: 11, fontWeight: 600, color: statusColor }}>{statusLabel}</span>
+                        </>
+                      ) : <span style={{ color: C.ivoryDim }}>—</span>}
+                    </td>
+                    <td style={{ padding: "11px 14px" }}>
+                      {next?.paid
+                        ? <span style={{ display:"inline-flex", alignItems:"center", gap:4, fontSize:12, fontWeight:700, color:"#1A9E6E" }}><Check size={12}/> Paid</span>
+                        : <span style={{ fontSize:12, fontWeight:600, color:"#E07B00" }}>Pending</span>}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Inner tab bar — students view only */}
+      {roomView === "students" && (
+        <React.Fragment> {/* Inner tab bar */}
       <div style={{ display: "flex", borderBottom: `1px solid ${C.inkLine}`, borderTop: `1px solid ${C.inkLine}`, background: C.inkSoft }}>
         {tabs.map(({ id, label, Icon }) => (
           <button key={id} onClick={() => setTab(id)}
@@ -4404,6 +4522,7 @@ function TeacherLessonRoom({ teacherId }) {
           </div>
         </div>
       )}
+      </React.Fragment> )}
 
       {/* Cancel confirmation modal */}
       {confirmCancelId !== null && (
