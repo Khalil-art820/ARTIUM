@@ -863,7 +863,6 @@ export default function App() {
   const { user: authUser, profile: authProfile, loading: authLoading } = useAuth();
   const [screen, setScreen] = useState("entry");
   const [appTab, setAppTab] = useState("map");
-  const [profileTab, setProfileTab] = useState("profile");
   const [editingProfile, setEditingProfile] = useState(false);
   const [previewOnly, setPreviewOnly] = useState(false);
   const [authError, setAuthError] = useState("");
@@ -1315,19 +1314,15 @@ export default function App() {
           onApply={startApply} onHome={goHome} musicOn={musicOn} onMusicToggle={toggleMusic} audioRef={audioRef}
           onGuestTabClick={() => setShowGuestPrompt(true)} onlineCount={onlineCount} previewOnly={previewOnly}
           hideTabs={!!selectedStudentId}
-          onGoToLessonRoom={() => { setSelectedStudentId(null); setAppTab("profile"); setProfileTab("lessons"); }}
+          onGoToLessonRoom={() => { setSelectedStudentId(null); setAppTab("lessons"); }}
           onBack={
             selectedStudentId ? backFromProfile :
             appTab === "messages" ? () => setAppTab("map") :
             appTab === "profile" ? () => setAppTab("map") :
+            appTab === "lessons" ? () => setAppTab("map") :
             () => setScreen("landing")
           }
-          backLabel={
-            selectedStudentId ? "" :
-            appTab === "messages" ? "Back to map" :
-            appTab === "profile" ? "Back to map" :
-            null
-          }
+          backLabel={null}
         >
           {appTab === "map" && !selectedStudentId && (
             <MapScreen
@@ -1349,7 +1344,7 @@ export default function App() {
             />
           )}
           {appTab === "profile" && !selectedStudentId && myProfile && (
-            <MyProfile profile={myProfile} onEdit={editProfile} onLogout={handleLogout} profileTab={profileTab} setProfileTab={setProfileTab}
+            <MyProfile profile={myProfile} onEdit={editProfile} onLogout={handleLogout}
               onUpdateCoverPhoto={async (coverPhotoUrl) => {
                 await supabase.from("profiles").update({ cover_photo_url: coverPhotoUrl || null }).eq("id", myProfile.id);
                 const updated = { ...myProfile, coverPhotoUrl };
@@ -1366,6 +1361,9 @@ export default function App() {
               setScreen("landing");
               setAppTab("map");
             }} onBack={() => setAppTab("map")} />
+          )}
+          {appTab === "lessons" && !selectedStudentId && myProfile && (
+            <TeacherLessonRoom teacherId={myProfile.id} />
           )}
           {selectedStudentId && myProfile && (
             <StudentProfile
@@ -2176,7 +2174,13 @@ function NotificationBell({ myProfile, onGoToLessonRoom }) {
 }
 
 function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, musicOn, onMusicToggle, audioRef, onBack, backLabel, onGuestTabClick, onlineCount, previewOnly, hideTabs, onGoToLessonRoom }) {
-  const tabs = [];
+  const TeachIcon = ({ size }) => (
+    <img src="/3.png" style={{ width: size || 16, height: size || 16, objectFit: "contain", filter: "invert(1)", opacity: 0.75, mixBlendMode: "multiply" }} />
+  );
+  const tabs = myProfile && !previewOnly && !hideTabs ? [
+    { id: "map", label: "Map", icon: Globe2 },
+    { id: "lessons", label: "", icon: TeachIcon },
+  ] : [];
   return (
     <div className="min-h-full flex flex-col" style={{ background: C.inkSoft, color: C.ivory }}>
       <div className="px-6 flex items-center gap-4" style={{ height: 60, background: "#FFFFFF", borderBottom: `1px solid ${C.inkLine}` }}>
@@ -2448,11 +2452,10 @@ function StudentProfile({ student, conservatory, onBack, onMessage, locked, onAp
 /* ---------------------------------------------------------------- */
 /* MY PROFILE                                                         */
 /* ---------------------------------------------------------------- */
-function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack, onUpdateCoverPhoto, profileTab, setProfileTab }) {
+function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack, onUpdateCoverPhoto }) {
   const cons = CONSERVATORIES.find((c) => c.id === profile.conservatoryId);
   const [confirmDelete, setConfirmDelete] = React.useState(false);
   const [deleting, setDeleting] = React.useState(false);
-  if (!profileTab) profileTab = "profile";
   const teachingText = profile.teaching?.open
     ? `${profile.teaching.mode === "online" ? "Online" : profile.teaching.mode === "in-person" ? "In-person" : "Online & in-person"} · €${profile.teaching.price}/session`
     : "Not offering lessons";
@@ -2611,34 +2614,14 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack, onUpdat
       </div>
       </div>
 
-      {/* Right: tabs + content */}
+      {/* Right: cards */}
       <div style={{ flex: 1, overflowY: "auto", padding: "40px 32px" }}>
-        {/* Tab switcher */}
-        <div style={{ display: "flex", gap: 8, marginBottom: 32 }}>
-          {["profile", "lessons"].map((t) => (
-            <button key={t} onClick={() => setProfileTab(t)} style={{
-              padding: "8px 20px", borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: "pointer", border: "none",
-              background: profileTab === t ? C.brass : C.inkSoft,
-              color: profileTab === t ? "#fff" : C.ivoryDim,
-              transition: "background 0.2s",
-            }}>
-              {t === "profile" ? "Profile" : "Lesson Room"}
-            </button>
-          ))}
-        </div>
-
-        {profileTab === "profile" ? (
-          <>
-            {cards}
-            {profile.coverPhotoUrl && (
-              <button onClick={() => onUpdateCoverPhoto && onUpdateCoverPhoto("")}
-                style={{ marginTop: 24, fontSize: 12, color: C.ivoryDim, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
-                Remove cover photo
-              </button>
-            )}
-          </>
-        ) : (
-          <TeacherLessonRoom teacherId={profile.id} />
+        {cards}
+        {profile.coverPhotoUrl && (
+          <button onClick={() => onUpdateCoverPhoto && onUpdateCoverPhoto("")}
+            style={{ marginTop: 24, fontSize: 12, color: C.ivoryDim, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+            Remove cover photo
+          </button>
         )}
       </div>
     </div>
