@@ -4214,22 +4214,29 @@ function TeacherLessonRoom({ teacherId }) {
 
       {/* ── Teaching Preferences ── */}
       {roomView === "preferences" && (
-        <div style={{ padding: "20px 20px 28px" }}>
+        <div style={{ padding: "24px 20px" }}>
           {[
-            { label: "Cancel lock", value: cancelLockH, set: setCancelLockH, min: 1, max: 72, unit: "h" },
-            { label: "Modify lock", value: modifyLockH, set: setModifyLockH, min: 1, max: 96, unit: "h" },
-            { label: "Cancel fee", value: cancelFeesPct, set: setCancelFeesPct, min: 0, max: 100, unit: "%" },
-          ].map(({ label, value, set, min, max, unit }) => (
-            <div key={label} style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
-              <span style={{ fontSize: 12, color: C.ivoryDim, width: 80, flexShrink: 0 }}>{label}</span>
+            { label: "Cancellation lock", sublabel: "Students cannot cancel within this window", value: cancelLockH, set: setCancelLockH, min: 1, max: 72, unit: "h" },
+            { label: "Modification lock", sublabel: "Students cannot reschedule within this window", value: modifyLockH, set: setModifyLockH, min: 1, max: 96, unit: "h" },
+            { label: "Cancellation fee", sublabel: "Charged when student cancels inside the lock window", value: cancelFeesPct, set: setCancelFeesPct, min: 0, max: 100, unit: "%" },
+          ].map(({ label, sublabel, value, set, min, max, unit }) => (
+            <div key={label} style={{ marginBottom: 28 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4 }}>
+                <p style={{ fontSize: 14, fontWeight: 700, color: C.ivory, margin: 0 }}>{label}</p>
+                <span style={{ fontSize: 18, fontWeight: 700, color: C.brass }}>{value}{unit}</span>
+              </div>
+              <p style={{ fontSize: 12, color: C.ivoryDim, margin: "0 0 10px" }}>{sublabel}</p>
               <input type="range" min={min} max={max} value={value} onChange={e => set(Number(e.target.value))}
-                style={{ flex: 1, accentColor: C.brass, height: 3, cursor: "pointer" }} />
-              <span style={{ fontSize: 12, fontWeight: 700, color: C.brass, width: 44, textAlign: "right", flexShrink: 0 }}>{value}{unit}</span>
+                style={{ width: "60%", accentColor: C.brass, height: 4, cursor: "pointer" }} />
+              <div style={{ display: "flex", justifyContent: "space-between", width: "60%", marginTop: 4 }}>
+                <span style={{ fontSize: 10, color: C.ivoryDim }}>{min}{unit}</span>
+                <span style={{ fontSize: 10, color: C.ivoryDim }}>{max}{unit}</span>
+              </div>
             </div>
           ))}
-          <p style={{ fontSize: 11, color: C.ivoryDim, margin: "10px 0 0", lineHeight: 1.6 }}>
-            Cancel ≥{cancelLockH}h · modify ≥{modifyLockH}h · late fee {cancelFeesPct}%
-          </p>
+          <div style={{ padding: "14px 16px", background: "#FFF8E7", borderRadius: 12, border: `1px solid ${C.brass}`, fontSize: 12, color: C.ivory, lineHeight: 1.6 }}>
+            <strong>Summary:</strong> Students must cancel ≥{cancelLockH}h before the session, modify ≥{modifyLockH}h before. Late cancellations are charged {cancelFeesPct}% of the lesson price.
+          </div>
         </div>
       )}
 
