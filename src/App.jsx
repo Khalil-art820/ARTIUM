@@ -3636,6 +3636,45 @@ function VideoSessionTab({ sessions, teacher, zoomLink, setZoomLink, zoomSaved, 
 function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payError }) {
   const [tab, setTab] = useState("chat");
   const lsKey = teacher ? `artium_sessions_${teacher.id}_demo-learner` : null;
+  const chatLsKey = teacher ? `artium_chat_${teacher.id}_demo-learner` : null;
+
+  // Live chat sync from localStorage
+  const [localMsgs, setLocalMsgs] = useState(() => {
+    if (chatLsKey) {
+      try {
+        const s = JSON.parse(localStorage.getItem(chatLsKey) || "null");
+        if (s) return s.map((m) => m.from === "learner" ? { ...m, from: "me" } : m.from === "teacher" ? { ...m, from: "them" } : m);
+      } catch {}
+    }
+    return null;
+  });
+  React.useEffect(() => {
+    if (!chatLsKey) return;
+    function sync() {
+      try {
+        const s = JSON.parse(localStorage.getItem(chatLsKey) || "null");
+        if (s) setLocalMsgs(s.map((m) => m.from === "learner" ? { ...m, from: "me" } : m.from === "teacher" ? { ...m, from: "them" } : m));
+      } catch {}
+    }
+    const id = setInterval(sync, 1500);
+    window.addEventListener("storage", sync);
+    return () => { clearInterval(id); window.removeEventListener("storage", sync); };
+  }, [chatLsKey]);
+
+  function sendLearnerMsg(text) {
+    if (!text.trim()) return;
+    // Store with "learner" tag so teacher can flip perspective; display as "me"
+    const stored = JSON.parse(localStorage.getItem(chatLsKey) || "null") || [];
+    const nextStored = [...stored, { from: "learner", text }];
+    if (chatLsKey) localStorage.setItem(chatLsKey, JSON.stringify(nextStored));
+    // Display: "me" for learner view
+    setLocalMsgs((prev) => [...(prev || []), { from: "me", text }]);
+  }
+
+  // Map stored messages to learner display perspective
+  const activeMessages = (localMsgs || messages || []).map((m) =>
+    m.from === "learner" ? { ...m, from: "me" } : m.from === "teacher" ? { ...m, from: "them" } : m
+  );
 
   const [sessions, setSessions] = useState(() => {
     if (lsKey) {
@@ -3720,8 +3759,8 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
       {tab === "chat" && (
         <div>
           <div className="lg-scroll overflow-y-auto px-4 py-3 flex flex-col gap-2" style={{ maxHeight: 280 }}>
-            {messages.length === 0 && <p style={{ fontSize: 13, color: C.ivoryDim, textAlign: "center", padding: "24px 0" }}>Start the conversation with {teacher.name.split(" ")[0]}</p>}
-            {messages.map((m, i) => (
+            {activeMessages.length === 0 && <p style={{ fontSize: 13, color: C.ivoryDim, textAlign: "center", padding: "24px 0" }}>Start the conversation with {teacher.name.split(" ")[0]}</p>}
+            {activeMessages.map((m, i) => (
               <div key={i} className="px-3.5 py-2 rounded-2xl text-sm" style={{ maxWidth: "80%", alignSelf: m.from === "me" ? "flex-end" : "flex-start", background: m.from === "me" ? C.brass : C.inkSoft, color: m.from === "me" ? "#fff" : C.inkText }}>
                 {m.text}
               </div>
@@ -3730,8 +3769,8 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
           <div className="px-3 py-3 flex items-center gap-2" style={{ borderTop: `1px solid ${C.inkLine}` }}>
             <input style={{ flex: 1, background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: "10px 14px", fontSize: 14, color: C.inkText, outline: "none" }}
               placeholder={`Message ${teacher.name.split(" ")[0]}…`}
-              onKeyDown={(e) => { if (e.key === "Enter" && e.target.value.trim()) { onSend(e.target.value); e.target.value = ""; } }} />
-            <button onClick={(e) => { const inp = e.currentTarget.previousSibling; if (inp.value.trim()) { onSend(inp.value); inp.value = ""; } }}
+              onKeyDown={(e) => { if (e.key === "Enter" && e.target.value.trim()) { sendLearnerMsg(e.target.value); e.target.value = ""; } }} />
+            <button onClick={(e) => { const inp = e.currentTarget.previousSibling; if (inp.value.trim()) { sendLearnerMsg(inp.value); inp.value = ""; } }}
               className="rounded-full p-3" style={{ background: C.brass, flexShrink: 0 }}>
               <Send size={15} color="#fff" />
             </button>
@@ -3979,10 +4018,35 @@ function TeacherLessonRoom({ teacherId }) {
     window.addEventListener("storage", sync);
     return () => { clearInterval(id); window.removeEventListener("storage", sync); };
   }, [incoming]);
+  function chatKey(learnerId) { return `artium_chat_${tid}_${learnerId}`; }
+  function loadMsgs(learnerId) {
+    try { return JSON.parse(localStorage.getItem(chatKey(learnerId)) || "null") || null; } catch { return null; }
+  }
+  function saveMsgs(learnerId, arr) { localStorage.setItem(chatKey(learnerId), JSON.stringify(arr)); }
+
   const [messagesByLearner, setMessagesByLearner] = useState({
     alex:   [{ from: "them", text: "Hi! Looking forward to our next session." }, { from: "me", text: "Me too! I'll send you the sheet music." }],
     sophie: [{ from: "them", text: "Can we reschedule Thursday?" }],
   });
+
+  // Sync chat from localStorage for real learners (flip "me"/"them" — stored from learner POV)
+  React.useEffect(() => {
+    function sync() {
+      acceptedLearners.forEach((r) => {
+        const saved = loadMsgs(r.learnerId);
+        if (saved) {
+          // Messages written by learner have from:"me"; flip to "them" for teacher view,
+          // messages written by teacher have from:"teacher"; keep as "me"
+          const flipped = saved.map((m) => m.from === "teacher" ? { ...m, from: "me" } : { ...m, from: "them" });
+          setMessagesByLearner((prev) => ({ ...prev, [r.learnerId]: flipped }));
+        }
+      });
+    }
+    sync();
+    const id = setInterval(sync, 1500);
+    window.addEventListener("storage", sync);
+    return () => { clearInterval(id); window.removeEventListener("storage", sync); };
+  }, [incoming]);
   const [selectedSessionId, setSelectedSessionId] = useState(null);
   const [showPropose, setShowPropose] = useState(false);
   const [newDate, setNewDate] = useState("");
@@ -4032,7 +4096,15 @@ function TeacherLessonRoom({ teacherId }) {
   function modifyLocked(s) { return s.status === "confirmed" && timeUntil(s) < 48 * 60 * 60 * 1000; }
 
   function sendMsg(text) {
-    setMessagesByLearner((prev) => ({ ...prev, [activeLearner.id]: [...(prev[activeLearner.id] || []), { from: "me", text }] }));
+    setMessagesByLearner((prev) => {
+      const displayNext = [...(prev[activeLearner.id] || []), { from: "me", text }];
+      if (!MOCK_IDS.includes(activeLearner.id)) {
+        // Persist with "teacher" tag so learner can flip perspective
+        const stored = loadMsgs(activeLearner.id) || [];
+        saveMsgs(activeLearner.id, [...stored, { from: "teacher", text }]);
+      }
+      return { ...prev, [activeLearner.id]: displayNext };
+    });
   }
 
   const tabs = [
