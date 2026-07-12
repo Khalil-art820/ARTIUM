@@ -5,7 +5,7 @@ import {
   Music2, Music, GraduationCap, Users, MessageCircle, ArrowRight, ArrowLeft, Play, Pause, Globe2,
   Volume1, Volume2, VolumeX,
   Pencil, Plus, Trash2, Home, Upload, Eye, EyeOff, ChevronLeft,
-  Calendar, CreditCard, Video, Link2, Clock,
+  Calendar, CreditCard, Video, Link2, Clock, Bell,
 } from "lucide-react";
 import AMBIENT_AUDIO_SRC from "./assets/ambient.mp3";
 import { useAuth } from "./contexts/AuthContext";
@@ -1314,6 +1314,7 @@ export default function App() {
           onApply={startApply} onHome={goHome} musicOn={musicOn} onMusicToggle={toggleMusic} audioRef={audioRef}
           onGuestTabClick={() => setShowGuestPrompt(true)} onlineCount={onlineCount} previewOnly={previewOnly}
           hideTabs={!!selectedStudentId}
+          onGoToLessonRoom={() => { setSelectedStudentId(null); setAppTab("profile"); }}
           onBack={
             selectedStudentId ? backFromProfile :
             appTab === "messages" ? () => setAppTab("map") :
@@ -2062,7 +2063,84 @@ function LoginScreen({ onSubmit, onBack, error }) {
 /* ---------------------------------------------------------------- */
 /* APP SHELL                                                          */
 /* ---------------------------------------------------------------- */
-function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, musicOn, onMusicToggle, audioRef, onBack, backLabel, onGuestTabClick, onlineCount, previewOnly, hideTabs }) {
+function NotificationBell({ myProfile, onGoToLessonRoom }) {
+  const [open, setOpen] = React.useState(false);
+  const [pending, setPending] = React.useState(() => {
+    try {
+      const all = JSON.parse(localStorage.getItem("incomingRequests") || "{}");
+      return (all[myProfile?.id] || []).filter((r) => r.status === "pending");
+    } catch { return []; }
+  });
+  const ref = React.useRef(null);
+
+  React.useEffect(() => {
+    function onStorage(e) {
+      if (e.key === "incomingRequests") {
+        try {
+          const all = JSON.parse(e.newValue || "{}");
+          setPending((all[myProfile?.id] || []).filter((r) => r.status === "pending"));
+        } catch {}
+      }
+    }
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, [myProfile?.id]);
+
+  // Also poll localStorage every 2s (same-tab updates don't fire storage event)
+  React.useEffect(() => {
+    const id = setInterval(() => {
+      try {
+        const all = JSON.parse(localStorage.getItem("incomingRequests") || "{}");
+        setPending((all[myProfile?.id] || []).filter((r) => r.status === "pending"));
+      } catch {}
+    }, 2000);
+    return () => clearInterval(id);
+  }, [myProfile?.id]);
+
+  React.useEffect(() => {
+    function onClick(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, []);
+
+  if (!myProfile) return null;
+
+  return (
+    <div ref={ref} style={{ position: "relative" }}>
+      <button onClick={() => setOpen((o) => !o)} style={{ position: "relative", background: "none", border: "none", cursor: "pointer", padding: 4, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <Bell size={20} color={pending.length > 0 ? C.brass : C.ivoryDim} />
+        {pending.length > 0 && (
+          <span style={{ position: "absolute", top: 0, right: 0, width: 16, height: 16, borderRadius: "50%", background: "#E53E3E", color: "#fff", fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>
+            {pending.length}
+          </span>
+        )}
+      </button>
+      {open && (
+        <div style={{ position: "absolute", right: 0, top: "calc(100% + 8px)", width: 300, background: "#fff", borderRadius: 12, boxShadow: "0 8px 32px rgba(0,0,0,0.14)", border: `1px solid ${C.inkLine}`, zIndex: 200, overflow: "hidden" }}>
+          <div style={{ padding: "12px 16px", borderBottom: `1px solid ${C.inkLine}` }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: C.ivory, margin: 0 }}>Notifications</p>
+          </div>
+          {pending.length === 0 ? (
+            <p style={{ fontSize: 13, color: C.ivoryDim, padding: "16px", margin: 0 }}>No new notifications</p>
+          ) : (
+            pending.map((r) => (
+              <button key={r.learnerId} onClick={() => { setOpen(false); onGoToLessonRoom(); }}
+                style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", background: "#FFF8E7", border: "none", cursor: "pointer", textAlign: "left" }}>
+                <Avatar name={r.name} id={r.learnerId} size={38} />
+                <div>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: C.ivory, margin: "0 0 2px" }}>{r.name} wants lessons</p>
+                  <p style={{ fontSize: 12, color: C.ivoryDim, margin: 0 }}>{r.instrument} · Tap to accept or decline</p>
+                </div>
+              </button>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, musicOn, onMusicToggle, audioRef, onBack, backLabel, onGuestTabClick, onlineCount, previewOnly, hideTabs, onGoToLessonRoom }) {
   const tabs = [];
   return (
     <div className="min-h-full flex flex-col" style={{ background: C.inkSoft, color: C.ivory }}>
@@ -2106,6 +2184,7 @@ function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, mus
               <span style={{ color: C.ivory, fontWeight: 600 }}>{onlineCount}</span> online
             </span>
           )}
+          {myProfile && <NotificationBell myProfile={myProfile} onGoToLessonRoom={onGoToLessonRoom} />}
           {!myProfile ? (
             !previewOnly && <PrimaryBtn onClick={onApply}>Sign up</PrimaryBtn>
           ) : (
