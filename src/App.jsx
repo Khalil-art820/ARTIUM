@@ -1324,15 +1324,45 @@ export default function App() {
           }
           backLabel={null}
         >
+          {/* Teacher sub-tab bar (hidden when viewing a student profile) */}
+          {myProfile && !selectedStudentId && (
+            <div className="px-6 flex gap-1" style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#fff" }}>
+              {[
+                { key: "map", label: "Map" },
+                { key: "lessons", label: "Lesson Room" },
+              ].map(({ key, label }) => (
+                <button key={key} onClick={() => setAppTab(key)}
+                  className="px-4 py-2 text-sm"
+                  style={{ fontWeight: appTab === key ? 600 : 400, color: appTab === key ? C.brass : C.ivoryDim, borderBottom: appTab === key ? `2px solid ${C.brass}` : "2px solid transparent", background: "transparent", border: "none", cursor: "pointer" }}>
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
           {appTab === "map" && !selectedStudentId && (
-            <MapScreen
-              students={students} studentsByCons={studentsByCons}
-              selectedConsId={selectedConsId} setSelectedConsId={setSelectedConsId}
-              onOpenStudent={(id) => openStudent(id, "map")}
-              isGuest={!myProfile}
-              onGuestClick={() => setShowGuestPrompt(true)}
-              onBack={goHome}
-            />
+            <>
+              {myProfile && (
+                <div className="px-6 pt-6 pb-2">
+                  <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600, color: C.inkText }}>
+                    Welcome, {myProfile.name.split(" ")[0]}
+                  </h2>
+                  <p className="mt-1 text-sm" style={{ color: C.ivoryDim }}>
+                    {myProfile.conservatoryId
+                      ? `${CONSERVATORIES.find(c => c.id === myProfile.conservatoryId)?.name || "Conservatory"} · ${myProfile.year || "student"}`
+                      : "Conservatory student"}
+                    {myProfile.teaching?.open ? ` · Open to teaching at €${myProfile.teaching.price}/session` : ""}
+                  </p>
+                </div>
+              )}
+              <MapScreen
+                students={students} studentsByCons={studentsByCons}
+                selectedConsId={selectedConsId} setSelectedConsId={setSelectedConsId}
+                onOpenStudent={(id) => openStudent(id, "map")}
+                isGuest={!myProfile}
+                onGuestClick={() => setShowGuestPrompt(true)}
+                onBack={goHome}
+              />
+            </>
           )}
           {appTab === "messages" && !selectedStudentId && (
             <Messages
@@ -2174,13 +2204,7 @@ function NotificationBell({ myProfile, onGoToLessonRoom }) {
 }
 
 function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, musicOn, onMusicToggle, audioRef, onBack, backLabel, onGuestTabClick, onlineCount, previewOnly, hideTabs, onGoToLessonRoom }) {
-  const TeachIcon = ({ size }) => (
-    <img src="/3.png" style={{ width: size || 16, height: size || 16, objectFit: "contain", filter: "invert(1)", opacity: 0.75, mixBlendMode: "multiply" }} />
-  );
-  const tabs = myProfile && !previewOnly && !hideTabs ? [
-    { id: "map", label: "Map", icon: Globe2 },
-    { id: "lessons", label: "", icon: TeachIcon },
-  ] : [];
+  const tabs = [];
   return (
     <div className="min-h-full flex flex-col" style={{ background: C.inkSoft, color: C.ivory }}>
       <div className="px-6 flex items-center gap-4" style={{ height: 60, background: "#FFFFFF", borderBottom: `1px solid ${C.inkLine}` }}>
