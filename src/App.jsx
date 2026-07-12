@@ -4066,27 +4066,28 @@ function TeacherLessonRoom({ teacherId }) {
   const [modifyLockH, setModifyLockH] = useState(48);
   const [cancelFeesPct, setCancelFeesPct] = useState(50);
 
+  const [openMonths, setOpenMonths] = useState({ "2026-07": true, "2026-08": false, "2026-09": false });
   const MOCK_PLANNING = [
-    { id:"p1",  name:"Élise Marchand",   instrument:"Piano",   sessions:[{date:"2026-07-22",time:"10:00",status:"confirmed",paid:true},{date:"2026-08-05",time:"10:00",status:"teacher_proposed",paid:false}] },
-    { id:"p2",  name:"Théo Lambert",     instrument:"Piano",   sessions:[{date:"2026-07-25",time:"14:00",status:"confirmed",paid:false}] },
-    { id:"p3",  name:"Lukas Brunner",    instrument:"Piano",   sessions:[{date:"2026-07-28",time:"09:00",status:"confirmed",paid:true}] },
-    { id:"p4",  name:"Polina Sokolova",  instrument:"Piano",   sessions:[{date:"2026-08-01",time:"11:00",status:"teacher_proposed",paid:false}] },
-    { id:"p5",  name:"Maya Chen",        instrument:"Piano",   sessions:[{date:"2026-08-03",time:"16:00",status:"confirmed",paid:true}] },
-    { id:"p6",  name:"Daniel Osei",      instrument:"Piano",   sessions:[{date:"2026-08-07",time:"15:00",status:"confirmed",paid:false}] },
-    { id:"p7",  name:"Freya Whitlock",   instrument:"Piano",   sessions:[{date:"2026-08-09",time:"10:00",status:"student_proposed",paid:false}] },
-    { id:"p8",  name:"Wei Zhang",        instrument:"Piano",   sessions:[{date:"2026-08-12",time:"17:00",status:"confirmed",paid:true}] },
-    { id:"p9",  name:"Haruto Sato",      instrument:"Piano",   sessions:[{date:"2026-08-14",time:"09:00",status:"confirmed",paid:true}] },
-    { id:"p10", name:"Ji-woo Kang",      instrument:"Piano",   sessions:[{date:"2026-08-15",time:"13:00",status:"teacher_proposed",paid:false}] },
-    { id:"p11", name:"Anneliese Voss",   instrument:"Piano",   sessions:[{date:"2026-08-18",time:"10:00",status:"confirmed",paid:true}] },
-    { id:"p12", name:"Nathan Boucher",   instrument:"Piano",   sessions:[{date:"2026-08-20",time:"14:00",status:"confirmed",paid:false}] },
-    { id:"p13", name:"Isla Cooper",      instrument:"Piano",   sessions:[{date:"2026-08-22",time:"11:00",status:"confirmed",paid:true}] },
-    { id:"p14", name:"Sofia Reyes",      instrument:"Violin",  sessions:[{date:"2026-08-24",time:"09:00",status:"student_proposed",paid:false}] },
-    { id:"p15", name:"Léon Dupont",      instrument:"Cello",   sessions:[{date:"2026-08-26",time:"16:00",status:"confirmed",paid:true}] },
-    { id:"p16", name:"Amara Diallo",     instrument:"Voice",   sessions:[{date:"2026-08-28",time:"10:00",status:"teacher_proposed",paid:false}] },
-    { id:"p17", name:"Ryo Nakamura",     instrument:"Guitar",  sessions:[{date:"2026-09-01",time:"13:00",status:"confirmed",paid:false}] },
-    { id:"p18", name:"Ingrid Larsson",   instrument:"Flute",   sessions:[{date:"2026-09-03",time:"15:00",status:"confirmed",paid:true}] },
-    { id:"p19", name:"Carlos Mendez",    instrument:"Trumpet", sessions:[{date:"2026-09-05",time:"09:00",status:"confirmed",paid:true}] },
-    { id:"p20", name:"Yuna Park",        instrument:"Harp",    sessions:[{date:"2026-09-08",time:"11:00",status:"teacher_proposed",paid:false}] },
+    { id:"p1",  name:"Élise Marchand",   instrument:"Piano",   price:55, sessions:[{date:"2026-07-22",time:"10:00",status:"confirmed",paid:true},{date:"2026-08-05",time:"10:00",status:"teacher_proposed",paid:false}] },
+    { id:"p2",  name:"Théo Lambert",     instrument:"Piano",   price:45, sessions:[{date:"2026-07-25",time:"14:00",status:"confirmed",paid:false}] },
+    { id:"p3",  name:"Lukas Brunner",    instrument:"Piano",   price:60, sessions:[{date:"2026-07-28",time:"09:00",status:"confirmed",paid:true},{date:"2026-08-18",time:"10:00",status:"confirmed",paid:true}] },
+    { id:"p4",  name:"Polina Sokolova",  instrument:"Piano",   price:70, sessions:[{date:"2026-08-01",time:"11:00",status:"teacher_proposed",paid:false}] },
+    { id:"p5",  name:"Maya Chen",        instrument:"Piano",   price:65, sessions:[{date:"2026-08-03",time:"16:00",status:"confirmed",paid:true}] },
+    { id:"p6",  name:"Daniel Osei",      instrument:"Piano",   price:50, sessions:[{date:"2026-08-07",time:"15:00",status:"confirmed",paid:false}] },
+    { id:"p7",  name:"Freya Whitlock",   instrument:"Piano",   price:48, sessions:[{date:"2026-08-09",time:"10:00",status:"student_proposed",paid:false}] },
+    { id:"p8",  name:"Wei Zhang",        instrument:"Piano",   price:55, sessions:[{date:"2026-08-12",time:"17:00",status:"confirmed",paid:true}] },
+    { id:"p9",  name:"Haruto Sato",      instrument:"Piano",   price:60, sessions:[{date:"2026-08-14",time:"09:00",status:"confirmed",paid:true}] },
+    { id:"p10", name:"Ji-woo Kang",      instrument:"Piano",   price:45, sessions:[{date:"2026-08-15",time:"13:00",status:"teacher_proposed",paid:false}] },
+    { id:"p11", name:"Anneliese Voss",   instrument:"Piano",   price:60, sessions:[{date:"2026-08-20",time:"14:00",status:"confirmed",paid:false}] },
+    { id:"p12", name:"Nathan Boucher",   instrument:"Piano",   price:40, sessions:[{date:"2026-08-22",time:"11:00",status:"confirmed",paid:true}] },
+    { id:"p13", name:"Isla Cooper",      instrument:"Piano",   price:52, sessions:[{date:"2026-08-24",time:"09:00",status:"student_proposed",paid:false}] },
+    { id:"p14", name:"Sofia Reyes",      instrument:"Violin",  price:58, sessions:[{date:"2026-08-26",time:"16:00",status:"confirmed",paid:true}] },
+    { id:"p15", name:"Léon Dupont",      instrument:"Cello",   price:55, sessions:[{date:"2026-08-28",time:"10:00",status:"confirmed",paid:true}] },
+    { id:"p16", name:"Amara Diallo",     instrument:"Voice",   price:50, sessions:[{date:"2026-09-01",time:"13:00",status:"confirmed",paid:false}] },
+    { id:"p17", name:"Ryo Nakamura",     instrument:"Guitar",  price:45, sessions:[{date:"2026-09-03",time:"15:00",status:"confirmed",paid:true}] },
+    { id:"p18", name:"Ingrid Larsson",   instrument:"Flute",   price:48, sessions:[{date:"2026-09-05",time:"09:00",status:"confirmed",paid:true}] },
+    { id:"p19", name:"Carlos Mendez",    instrument:"Trumpet", price:52, sessions:[{date:"2026-09-08",time:"11:00",status:"teacher_proposed",paid:false}] },
+    { id:"p20", name:"Yuna Park",        instrument:"Harp",    price:60, sessions:[{date:"2026-09-12",time:"14:00",status:"confirmed",paid:true}] },
   ];
 
   const sessions = sessionsByLearner[activeLearner.id] || [];
@@ -4213,80 +4214,103 @@ function TeacherLessonRoom({ teacherId }) {
 
       {/* ── Teaching Preferences ── */}
       {roomView === "preferences" && (
-        <div style={{ padding: "24px 20px" }}>
+        <div style={{ padding: "20px 20px 28px" }}>
           {[
-            { label: "Cancellation lock", sublabel: "Students cannot cancel within this window", value: cancelLockH, set: setCancelLockH, min: 1, max: 72, unit: "h" },
-            { label: "Modification lock", sublabel: "Students cannot reschedule within this window", value: modifyLockH, set: setModifyLockH, min: 1, max: 96, unit: "h" },
-            { label: "Cancellation fee", sublabel: "Charged when student cancels inside the lock window", value: cancelFeesPct, set: setCancelFeesPct, min: 0, max: 100, unit: "%" },
-          ].map(({ label, sublabel, value, set, min, max, unit }) => (
-            <div key={label} style={{ marginBottom: 28 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4 }}>
-                <p style={{ fontSize: 14, fontWeight: 700, color: C.ivory, margin: 0 }}>{label}</p>
-                <span style={{ fontSize: 18, fontWeight: 700, color: C.brass }}>{value}{unit}</span>
-              </div>
-              <p style={{ fontSize: 12, color: C.ivoryDim, margin: "0 0 10px" }}>{sublabel}</p>
+            { label: "Cancel lock", value: cancelLockH, set: setCancelLockH, min: 1, max: 72, unit: "h" },
+            { label: "Modify lock", value: modifyLockH, set: setModifyLockH, min: 1, max: 96, unit: "h" },
+            { label: "Cancel fee", value: cancelFeesPct, set: setCancelFeesPct, min: 0, max: 100, unit: "%" },
+          ].map(({ label, value, set, min, max, unit }) => (
+            <div key={label} style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
+              <span style={{ fontSize: 12, color: C.ivoryDim, width: 80, flexShrink: 0 }}>{label}</span>
               <input type="range" min={min} max={max} value={value} onChange={e => set(Number(e.target.value))}
-                style={{ width: "100%", accentColor: C.brass, height: 4, cursor: "pointer" }} />
-              <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
-                <span style={{ fontSize: 10, color: C.ivoryDim }}>{min}{unit}</span>
-                <span style={{ fontSize: 10, color: C.ivoryDim }}>{max}{unit}</span>
-              </div>
+                style={{ flex: 1, accentColor: C.brass, height: 3, cursor: "pointer" }} />
+              <span style={{ fontSize: 12, fontWeight: 700, color: C.brass, width: 44, textAlign: "right", flexShrink: 0 }}>{value}{unit}</span>
             </div>
           ))}
-          <div style={{ padding: "14px 16px", background: "#FFF8E7", borderRadius: 12, border: `1px solid ${C.brass}`, fontSize: 12, color: C.ivory, lineHeight: 1.6 }}>
-            <strong>Summary:</strong> Students must cancel ≥{cancelLockH}h before the session, modify ≥{modifyLockH}h before. Late cancellations are charged {cancelFeesPct}% of the lesson price.
-          </div>
+          <p style={{ fontSize: 11, color: C.ivoryDim, margin: "10px 0 0", lineHeight: 1.6 }}>
+            Cancel ≥{cancelLockH}h · modify ≥{modifyLockH}h · late fee {cancelFeesPct}%
+          </p>
         </div>
       )}
 
       {/* ── My Planning ── */}
-      {roomView === "planning" && (
-        <div style={{ padding: "20px 20px 32px", overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-            <thead>
-              <tr style={{ background: C.inkSoft }}>
-                {["Student", "Upcoming session · Status", "Payment"].map(h => (
-                  <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: 11, fontWeight: 700, color: C.brass, textTransform: "uppercase", letterSpacing: "0.07em", borderBottom: `2px solid ${C.inkLine}` }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {MOCK_PLANNING.map((s, i) => {
-                const next = s.sessions.sort((a, b) => a.date.localeCompare(b.date))[0];
-                const dt = next ? new Date(next.date + "T" + next.time) : null;
-                const statusLabel = { confirmed: "Confirmed", teacher_proposed: "Awaiting student", student_proposed: "Counter-proposal", cancelled: "Cancelled" }[next?.status] || next?.status;
-                const statusColor = { confirmed: "#1A9E6E", teacher_proposed: C.brass, student_proposed: "#E07B00", cancelled: "#c0392b" }[next?.status] || C.ivoryDim;
-                return (
-                  <tr key={s.id} style={{ borderBottom: `1px solid ${C.inkLine}`, background: i % 2 === 0 ? "#fff" : C.inkSoft }}>
-                    <td style={{ padding: "11px 14px" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <Avatar name={s.name} id={s.id} size={30} />
-                        <div>
-                          <p style={{ margin: 0, fontWeight: 600, color: C.ivory }}>{s.name}</p>
-                          <p style={{ margin: 0, fontSize: 11, color: C.ivoryDim }}>{s.instrument}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td style={{ padding: "11px 14px" }}>
-                      {dt ? (
-                        <>
-                          <p style={{ margin: 0, fontWeight: 600, color: C.ivory }}>{dt.toLocaleDateString("en-GB", { day: "numeric", month: "short" })} · {next.time}</p>
-                          <span style={{ fontSize: 11, fontWeight: 600, color: statusColor }}>{statusLabel}</span>
-                        </>
-                      ) : <span style={{ color: C.ivoryDim }}>—</span>}
-                    </td>
-                    <td style={{ padding: "11px 14px" }}>
-                      {next?.paid
-                        ? <span style={{ display:"inline-flex", alignItems:"center", gap:4, fontSize:12, fontWeight:700, color:"#1A9E6E" }}><Check size={12}/> Paid</span>
-                        : <span style={{ fontSize:12, fontWeight:600, color:"#E07B00" }}>Pending</span>}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
+      {roomView === "planning" && (() => {
+        const allSessions = MOCK_PLANNING.flatMap(s =>
+          s.sessions.map(sess => ({ ...sess, student: s }))
+        ).sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+        const byMonth = {};
+        allSessions.forEach(sess => {
+          const key = sess.date.slice(0, 7);
+          if (!byMonth[key]) byMonth[key] = [];
+          byMonth[key].push(sess);
+        });
+        const STATUS_LABEL = { confirmed: "Confirmed", teacher_proposed: "Awaiting student", student_proposed: "Counter-proposal", cancelled: "Cancelled" };
+        const STATUS_COLOR = { confirmed: "#1A9E6E", teacher_proposed: C.brass, student_proposed: "#E07B00", cancelled: "#c0392b" };
+        return (
+          <div style={{ padding: "16px 20px 32px" }}>
+            {Object.entries(byMonth).map(([monthKey, sessions]) => {
+              const earned = sessions.filter(s => s.status === "confirmed" && s.paid).reduce((sum, s) => sum + s.student.price, 0);
+              const [y, m] = monthKey.split("-");
+              const monthLabel = new Date(Number(y), Number(m) - 1, 1).toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+              const isOpen = !!openMonths[monthKey];
+              return (
+                <div key={monthKey} style={{ marginBottom: 12, border: `1px solid ${C.inkLine}`, borderRadius: 10, overflow: "hidden" }}>
+                  <button onClick={() => setOpenMonths(prev => ({ ...prev, [monthKey]: !prev[monthKey] }))}
+                    style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "11px 16px", background: C.inkSoft, border: "none", cursor: "pointer" }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: C.ivory }}>{monthLabel}</span>
+                    <span style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      {earned > 0 && <span style={{ fontSize: 12, fontWeight: 700, color: "#1A9E6E" }}>€{earned} earned</span>}
+                      <span style={{ fontSize: 11, color: C.ivoryDim }}>{sessions.length} session{sessions.length !== 1 ? "s" : ""}</span>
+                      <span style={{ fontSize: 14, color: C.ivoryDim }}>{isOpen ? "▲" : "▼"}</span>
+                    </span>
+                  </button>
+                  {isOpen && (
+                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                      <thead>
+                        <tr style={{ background: "#FAFAFA" }}>
+                          {["Student", "Date · Time", "Status", "Amount"].map(h => (
+                            <th key={h} style={{ padding: "8px 12px", textAlign: "left", fontSize: 10, fontWeight: 700, color: C.brass, textTransform: "uppercase", letterSpacing: "0.06em", borderBottom: `1px solid ${C.inkLine}` }}>{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {sessions.map((sess, i) => {
+                          const dt = new Date(sess.date + "T" + sess.time);
+                          const amount = (sess.status === "confirmed" && sess.paid) ? `€${sess.student.price}` : "—";
+                          return (
+                            <tr key={i} style={{ borderBottom: `1px solid ${C.inkLine}`, background: i % 2 === 0 ? "#fff" : C.inkSoft }}>
+                              <td style={{ padding: "9px 12px" }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                  <Avatar name={sess.student.name} id={sess.student.id} size={26} />
+                                  <div>
+                                    <p style={{ margin: 0, fontWeight: 600, color: C.ivory, fontSize: 12 }}>{sess.student.name}</p>
+                                    <p style={{ margin: 0, fontSize: 10, color: C.ivoryDim }}>{sess.student.instrument}</p>
+                                  </div>
+                                </div>
+                              </td>
+                              <td style={{ padding: "9px 12px", color: C.ivory }}>
+                                {dt.toLocaleDateString("en-GB", { day: "numeric", month: "short" })} · {sess.time}
+                              </td>
+                              <td style={{ padding: "9px 12px" }}>
+                                <span style={{ fontSize: 11, fontWeight: 600, color: STATUS_COLOR[sess.status] || C.ivoryDim }}>
+                                  {STATUS_LABEL[sess.status] || sess.status}
+                                </span>
+                              </td>
+                              <td style={{ padding: "9px 12px", fontWeight: 700, color: amount === "—" ? C.ivoryDim : "#1A9E6E" }}>
+                                {amount}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        );
+      })()}
 
       {/* Inner tab bar — students view only */}
       {roomView === "students" && (
