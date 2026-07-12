@@ -863,6 +863,7 @@ export default function App() {
   const { user: authUser, profile: authProfile, loading: authLoading } = useAuth();
   const [screen, setScreen] = useState("entry");
   const [appTab, setAppTab] = useState("map");
+  const [profileTab, setProfileTab] = useState("profile");
   const [editingProfile, setEditingProfile] = useState(false);
   const [previewOnly, setPreviewOnly] = useState(false);
   const [authError, setAuthError] = useState("");
@@ -1314,7 +1315,7 @@ export default function App() {
           onApply={startApply} onHome={goHome} musicOn={musicOn} onMusicToggle={toggleMusic} audioRef={audioRef}
           onGuestTabClick={() => setShowGuestPrompt(true)} onlineCount={onlineCount} previewOnly={previewOnly}
           hideTabs={!!selectedStudentId}
-          onGoToLessonRoom={() => { setSelectedStudentId(null); setAppTab("profile"); }}
+          onGoToLessonRoom={() => { setSelectedStudentId(null); setAppTab("profile"); setProfileTab("lessons"); }}
           onBack={
             selectedStudentId ? backFromProfile :
             appTab === "messages" ? () => setAppTab("map") :
@@ -1348,7 +1349,7 @@ export default function App() {
             />
           )}
           {appTab === "profile" && !selectedStudentId && myProfile && (
-            <MyProfile profile={myProfile} onEdit={editProfile} onLogout={handleLogout}
+            <MyProfile profile={myProfile} onEdit={editProfile} onLogout={handleLogout} profileTab={profileTab} setProfileTab={setProfileTab}
               onUpdateCoverPhoto={async (coverPhotoUrl) => {
                 await supabase.from("profiles").update({ cover_photo_url: coverPhotoUrl || null }).eq("id", myProfile.id);
                 const updated = { ...myProfile, coverPhotoUrl };
@@ -2413,11 +2414,11 @@ function StudentProfile({ student, conservatory, onBack, onMessage, locked, onAp
 /* ---------------------------------------------------------------- */
 /* MY PROFILE                                                         */
 /* ---------------------------------------------------------------- */
-function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack, onUpdateCoverPhoto }) {
+function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack, onUpdateCoverPhoto, profileTab, setProfileTab }) {
   const cons = CONSERVATORIES.find((c) => c.id === profile.conservatoryId);
   const [confirmDelete, setConfirmDelete] = React.useState(false);
   const [deleting, setDeleting] = React.useState(false);
-  const [profileTab, setProfileTab] = React.useState("profile");
+  if (!profileTab) profileTab = "profile";
   const teachingText = profile.teaching?.open
     ? `${profile.teaching.mode === "online" ? "Online" : profile.teaching.mode === "in-person" ? "In-person" : "Online & in-person"} · €${profile.teaching.price}/session`
     : "Not offering lessons";
