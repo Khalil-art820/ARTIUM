@@ -2064,8 +2064,30 @@ function LoginScreen({ onSubmit, onBack, error }) {
 /* ---------------------------------------------------------------- */
 /* APP SHELL                                                          */
 /* ---------------------------------------------------------------- */
+function LearnerProfileModal({ learner, onClose }) {
+  if (!learner) return null;
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={onClose}>
+      <div style={{ background: "#fff", borderRadius: 16, padding: 32, width: 340, maxWidth: "90vw", boxShadow: "0 16px 48px rgba(0,0,0,0.18)" }} onClick={(e) => e.stopPropagation()}>
+        <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20 }}>
+          <Avatar name={learner.name} id={learner.learnerId} size={56} />
+          <div>
+            <p style={{ fontSize: 16, fontWeight: 700, color: C.ivory, margin: 0 }}>{learner.name}</p>
+            <p style={{ fontSize: 13, color: C.ivoryDim, margin: "3px 0 0" }}>{learner.instrument}</p>
+          </div>
+        </div>
+        {learner.bio && (
+          <p style={{ fontSize: 13, color: C.ivory, lineHeight: 1.6, margin: "0 0 20px", padding: "12px 14px", background: C.inkSoft, borderRadius: 10 }}>{learner.bio}</p>
+        )}
+        <button onClick={onClose} style={{ width: "100%", padding: "10px", borderRadius: 10, fontSize: 13, fontWeight: 600, background: C.inkSoft, border: "none", color: C.ivoryDim, cursor: "pointer" }}>Close</button>
+      </div>
+    </div>
+  );
+}
+
 function NotificationBell({ myProfile, onGoToLessonRoom }) {
   const [open, setOpen] = React.useState(false);
+  const [viewingLearner, setViewingLearner] = React.useState(null);
   const [pending, setPending] = React.useState(() => {
     try {
       const all = JSON.parse(localStorage.getItem("incomingRequests") || "{}");
@@ -2108,6 +2130,7 @@ function NotificationBell({ myProfile, onGoToLessonRoom }) {
 
   return (
     <div ref={ref} style={{ position: "relative" }}>
+      <LearnerProfileModal learner={viewingLearner} onClose={() => setViewingLearner(null)} />
       <button onClick={() => setOpen((o) => !o)} style={{ position: "relative", background: "none", border: "none", cursor: "pointer", padding: 4, display: "flex", alignItems: "center", justifyContent: "center" }}>
         <Bell size={20} color={pending.length > 0 ? C.brass : C.ivoryDim} />
         {pending.length > 0 && (
@@ -2117,7 +2140,7 @@ function NotificationBell({ myProfile, onGoToLessonRoom }) {
         )}
       </button>
       {open && (
-        <div style={{ position: "absolute", right: 0, top: "calc(100% + 8px)", width: 300, background: "#fff", borderRadius: 12, boxShadow: "0 8px 32px rgba(0,0,0,0.14)", border: `1px solid ${C.inkLine}`, zIndex: 200, overflow: "hidden" }}>
+        <div style={{ position: "absolute", right: 0, top: "calc(100% + 8px)", width: 320, background: "#fff", borderRadius: 12, boxShadow: "0 8px 32px rgba(0,0,0,0.14)", border: `1px solid ${C.inkLine}`, zIndex: 200, overflow: "hidden" }}>
           <div style={{ padding: "12px 16px", borderBottom: `1px solid ${C.inkLine}` }}>
             <p style={{ fontSize: 13, fontWeight: 700, color: C.ivory, margin: 0 }}>Notifications</p>
           </div>
@@ -2125,14 +2148,25 @@ function NotificationBell({ myProfile, onGoToLessonRoom }) {
             <p style={{ fontSize: 13, color: C.ivoryDim, padding: "16px", margin: 0 }}>No new notifications</p>
           ) : (
             pending.map((r) => (
-              <button key={r.learnerId} onClick={() => { setOpen(false); onGoToLessonRoom(); }}
-                style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", background: "#FFF8E7", border: "none", cursor: "pointer", textAlign: "left" }}>
-                <Avatar name={r.name} id={r.learnerId} size={38} />
-                <div>
-                  <p style={{ fontSize: 13, fontWeight: 700, color: C.ivory, margin: "0 0 2px" }}>{r.name} wants lessons</p>
-                  <p style={{ fontSize: 12, color: C.ivoryDim, margin: 0 }}>{r.instrument} · Tap to accept or decline</p>
+              <div key={r.learnerId} style={{ padding: "12px 16px", background: "#FFF8E7", borderBottom: `1px solid ${C.inkLine}` }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
+                  <Avatar name={r.name} id={r.learnerId} size={38} />
+                  <div>
+                    <p style={{ fontSize: 13, fontWeight: 700, color: C.ivory, margin: "0 0 2px" }}>{r.name} wants lessons</p>
+                    <p style={{ fontSize: 12, color: C.ivoryDim, margin: 0 }}>{r.instrument}</p>
+                  </div>
                 </div>
-              </button>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button onClick={() => { setOpen(false); setViewingLearner(r); }}
+                    style={{ flex: 1, padding: "7px 0", borderRadius: 8, fontSize: 12, fontWeight: 600, background: "transparent", border: `1.5px solid ${C.inkLine}`, color: C.ivoryDim, cursor: "pointer" }}>
+                    View profile
+                  </button>
+                  <button onClick={() => { setOpen(false); onGoToLessonRoom(); }}
+                    style={{ flex: 1, padding: "7px 0", borderRadius: 8, fontSize: 12, fontWeight: 700, background: C.brass, border: "none", color: "#fff", cursor: "pointer" }}>
+                    Accept / Decline
+                  </button>
+                </div>
+              </div>
             ))
           )}
         </div>
@@ -3885,6 +3919,7 @@ function TeacherLessonRoom({ teacherId }) {
   const acceptedLearners = incoming.filter((r) => r.status === "accepted");
   const allLearners = [...MOCK_LESSON_LEARNERS, ...acceptedLearners.map((r) => ({ id: r.learnerId, name: r.name, instrument: r.instrument, level: "Student" }))];
 
+  const [viewingLearner, setViewingLearner] = useState(null);
   const [activeLearner, setActiveLearner] = useState(allLearners[0]);
   const [tab, setTab] = useState("chat");
   const [sessionsByLearner, setSessionsByLearner] = useState({
@@ -3961,18 +3996,24 @@ function TeacherLessonRoom({ teacherId }) {
   return (
     <div style={{ padding: "0 0 32px", fontFamily: FONT_BODY }}>
       {/* Pending requests banner */}
+      <LearnerProfileModal learner={viewingLearner} onClose={() => setViewingLearner(null)} />
       {pendingRequests.length > 0 && (
         <div style={{ margin: "16px 20px 0", background: "#FFF8E7", border: `1.5px solid ${C.brass}`, borderRadius: 12, padding: "14px 16px" }}>
           <p style={{ fontSize: 13, fontWeight: 700, color: C.brass, margin: "0 0 10px" }}>New lesson request{pendingRequests.length > 1 ? "s" : ""}</p>
           {pendingRequests.map((r) => (
-            <div key={r.learnerId} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-              <Avatar name={r.name} id={r.learnerId} size={34} />
-              <div style={{ flex: 1 }}>
-                <p style={{ fontSize: 13, fontWeight: 600, color: C.ivory, margin: 0 }}>{r.name}</p>
-                <p style={{ fontSize: 11, color: C.ivoryDim, margin: 0 }}>{r.instrument}</p>
+            <div key={r.learnerId} style={{ marginBottom: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                <Avatar name={r.name} id={r.learnerId} size={34} />
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: C.ivory, margin: 0 }}>{r.name}</p>
+                  <p style={{ fontSize: 11, color: C.ivoryDim, margin: 0 }}>{r.instrument}</p>
+                </div>
               </div>
-              <button onClick={() => acceptRequest(r.learnerId)} style={{ padding: "5px 12px", borderRadius: 8, fontSize: 12, fontWeight: 700, background: C.brass, color: "#fff", border: "none", cursor: "pointer" }}>Accept</button>
-              <button onClick={() => declineRequest(r.learnerId)} style={{ padding: "5px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600, background: "transparent", color: C.ivoryDim, border: `1px solid ${C.inkLine}`, cursor: "pointer" }}>Decline</button>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button onClick={() => setViewingLearner(r)} style={{ flex: 1, padding: "6px 0", borderRadius: 8, fontSize: 12, fontWeight: 600, background: "transparent", border: `1.5px solid ${C.inkLine}`, color: C.ivoryDim, cursor: "pointer" }}>View profile</button>
+                <button onClick={() => acceptRequest(r.learnerId)} style={{ flex: 1, padding: "6px 0", borderRadius: 8, fontSize: 12, fontWeight: 700, background: C.brass, color: "#fff", border: "none", cursor: "pointer" }}>Accept</button>
+                <button onClick={() => declineRequest(r.learnerId)} style={{ flex: 1, padding: "6px 0", borderRadius: 8, fontSize: 12, fontWeight: 600, background: "transparent", color: C.ivoryDim, border: `1px solid ${C.inkLine}`, cursor: "pointer" }}>Decline</button>
+              </div>
             </div>
           ))}
         </div>
