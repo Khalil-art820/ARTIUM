@@ -4215,6 +4215,9 @@ function TeacherLessonRoom({ teacherId }) {
       {/* ── Teaching Preferences ── */}
       {roomView === "preferences" && (
         <div style={{ padding: "24px 20px" }}>
+          <button onClick={() => setRoomView("students")} style={{ display:"flex", alignItems:"center", gap:6, marginBottom:20, background:"none", border:"none", cursor:"pointer", color:C.ivoryDim, fontSize:13, padding:0 }}>
+            ← Back to Lesson Room
+          </button>
           {[
             { label: "Cancellation lock", sublabel: "Students cannot cancel within this window", value: cancelLockH, set: setCancelLockH, min: 1, max: 72, unit: "h" },
             { label: "Modification lock", sublabel: "Students cannot reschedule within this window", value: modifyLockH, set: setModifyLockH, min: 1, max: 96, unit: "h" },
@@ -4227,8 +4230,8 @@ function TeacherLessonRoom({ teacherId }) {
               </div>
               <p style={{ fontSize: 12, color: C.ivoryDim, margin: "0 0 10px" }}>{sublabel}</p>
               <input type="range" min={min} max={max} value={value} onChange={e => set(Number(e.target.value))}
-                style={{ width: "60%", accentColor: C.brass, height: 4, cursor: "pointer" }} />
-              <div style={{ display: "flex", justifyContent: "space-between", width: "60%", marginTop: 4 }}>
+                style={{ width: "30%", accentColor: C.brass, height: 4, cursor: "pointer" }} />
+              <div style={{ display: "flex", justifyContent: "space-between", width: "30%", marginTop: 4 }}>
                 <span style={{ fontSize: 10, color: C.ivoryDim }}>{min}{unit}</span>
                 <span style={{ fontSize: 10, color: C.ivoryDim }}>{max}{unit}</span>
               </div>
@@ -4255,6 +4258,9 @@ function TeacherLessonRoom({ teacherId }) {
         const STATUS_COLOR = { confirmed: "#1A9E6E", teacher_proposed: C.brass, student_proposed: "#E07B00", cancelled: "#c0392b" };
         return (
           <div style={{ padding: "16px 20px 32px" }}>
+            <button onClick={() => setRoomView("students")} style={{ display:"flex", alignItems:"center", gap:6, marginBottom:16, background:"none", border:"none", cursor:"pointer", color:C.ivoryDim, fontSize:13, padding:0 }}>
+              ← Back to Lesson Room
+            </button>
             {Object.entries(byMonth).map(([monthKey, sessions]) => {
               const earned = sessions.filter(s => s.status === "confirmed" && s.paid).reduce((sum, s) => sum + s.student.price, 0);
               const [y, m] = monthKey.split("-");
@@ -4287,10 +4293,11 @@ function TeacherLessonRoom({ teacherId }) {
                           return (
                             <tr key={i} style={{ borderBottom: `1px solid ${C.inkLine}`, background: i % 2 === 0 ? "#fff" : C.inkSoft }}>
                               <td style={{ padding: "9px 12px" }}>
-                                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                <div onClick={() => { setActiveLearner(allLearners.find(l => l.id === sess.student.id) || allLearners[0]); setRoomView("students"); setSelectedSessionId(null); setTab("chat"); }}
+                                  style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
                                   <Avatar name={sess.student.name} id={sess.student.id} size={26} />
                                   <div>
-                                    <p style={{ margin: 0, fontWeight: 600, color: C.ivory, fontSize: 12 }}>{sess.student.name}</p>
+                                    <p style={{ margin: 0, fontWeight: 600, color: C.brass, fontSize: 12, textDecoration: "underline" }}>{sess.student.name}</p>
                                     <p style={{ margin: 0, fontSize: 10, color: C.ivoryDim }}>{sess.student.instrument}</p>
                                   </div>
                                 </div>
