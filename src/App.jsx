@@ -4473,10 +4473,16 @@ function TeacherLessonRoom({ teacherId }) {
             {/* Propose new session button */}
             <div style={{ padding: "14px 20px 0" }}>
               {!showPropose ? (
-                <button onClick={() => setShowPropose(true)}
-                  style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 10, background: C.brass, color: "#fff", fontSize: 13, fontWeight: 600, border: "none", cursor: "pointer", marginBottom: 12 }}>
-                  <Plus size={14} /> Propose a session
-                </button>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
+                  <button onClick={() => { setRecurring("none"); setShowPropose(true); }}
+                    style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 10, background: C.brass, color: "#fff", fontSize: 13, fontWeight: 600, border: "none", cursor: "pointer" }}>
+                    <Plus size={14} /> Propose a session
+                  </button>
+                  <button onClick={() => { setRecurring("weekly"); setShowPropose(true); }}
+                    style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 10, background: "transparent", color: C.brass, fontSize: 13, fontWeight: 600, border: `1.5px solid ${C.brass}`, cursor: "pointer" }}>
+                    <Plus size={14} /> Propose recurring sessions
+                  </button>
+                </div>
               ) : (
                 <div style={{ background: "#fff", border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: 16, marginBottom: 14 }}>
                   <p style={{ fontSize: 13, fontWeight: 600, color: C.ivory, margin: "0 0 10px" }}>Propose a time for {activeLearner.name.split(" ")[0]}</p>
