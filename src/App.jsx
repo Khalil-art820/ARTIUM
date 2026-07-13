@@ -4159,6 +4159,7 @@ function TeacherLessonRoom({ teacherId }) {
   const [roomView, setRoomView] = useState("students");
   const [agendaBySession, setAgendaBySession] = useState({});
   const [sessionDetailTab, setSessionDetailTab] = useState({});
+  const [agendaDraft, setAgendaDraft] = useState({});
   function agendaKey(learnerId, sessionId) { return `artium_agenda_${tid}_${learnerId}_${sessionId}`; }
   function saveAgenda(learnerId, sessionId, text) {
     const key = agendaKey(learnerId, sessionId);
@@ -4702,19 +4703,20 @@ function TeacherLessonRoom({ teacherId }) {
                           ))}
                         </div>
                         {detailTab === "agenda" && (() => {
-                          const [draft, setDraft] = React.useState(agendaText);
+                          const draftKey = `${activeLearner.id}_${sel.id}`;
                           const submitted = agendaText;
+                          const draft = agendaDraft[draftKey] ?? submitted;
                           const isDirty = draft !== submitted;
                           return (
                             <div>
                               <textarea
                                 value={draft}
-                                onChange={e => setDraft(e.target.value)}
+                                onChange={e => setAgendaDraft(prev => ({ ...prev, [draftKey]: e.target.value }))}
                                 placeholder={`Write the agenda for this session with ${activeLearner.name.split(" ")[0]}…`}
                                 style={{ width: "100%", minHeight: 120, background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "10px 12px", fontSize: 13, color: C.inkText, resize: "vertical", outline: "none", fontFamily: FONT_BODY, lineHeight: 1.6, boxSizing: "border-box" }}
                               />
                               <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>
-                                <button onClick={() => saveAgenda(activeLearner.id, sel.id, draft)} disabled={!draft.trim() || !isDirty}
+                                <button onClick={() => { saveAgenda(activeLearner.id, sel.id, draft); setAgendaDraft(prev => ({ ...prev, [draftKey]: draft })); }} disabled={!draft.trim() || !isDirty}
                                   style={{ padding: "7px 18px", borderRadius: 9, background: C.brass, color: "#fff", fontSize: 13, fontWeight: 600, border: "none", cursor: !draft.trim() || !isDirty ? "not-allowed" : "pointer", opacity: !draft.trim() || !isDirty ? 0.5 : 1 }}>
                                   {submitted ? "Update agenda" : "Send agenda"}
                                 </button>
