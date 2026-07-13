@@ -3779,7 +3779,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
             <div style={{ position: "relative", display: "inline-flex" }}>
               <Icon size={15} />
               {id === "chat" && unreadCount > 0 && (
-                <span style={{ position: "absolute", top: -6, left: -6, minWidth: 14, height: 14, borderRadius: 7, background: C.brass, color: "#fff", fontSize: 9, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 3px" }}>{unreadCount}</span>
+                <span style={{ position: "absolute", top: -6, right: -6, minWidth: 14, height: 14, borderRadius: 7, background: C.brass, color: "#fff", fontSize: 9, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 3px" }}>{unreadCount}</span>
               )}
             </div>
             {label}
@@ -4423,7 +4423,7 @@ function TeacherLessonRoom({ teacherId }) {
             <div style={{ position: "relative", display: "inline-flex" }}>
               <Icon size={15} />
               {id === "chat" && teacherUnread > 0 && (
-                <span style={{ position: "absolute", top: -6, left: -6, minWidth: 14, height: 14, borderRadius: 7, background: C.brass, color: "#fff", fontSize: 9, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 3px" }}>{teacherUnread}</span>
+                <span style={{ position: "absolute", top: -6, right: -6, minWidth: 14, height: 14, borderRadius: 7, background: C.brass, color: "#fff", fontSize: 9, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 3px" }}>{teacherUnread}</span>
               )}
             </div>
             {label}
