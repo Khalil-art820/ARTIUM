@@ -3563,7 +3563,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
   );
 }
 
-function VideoSessionTab({ sessions, teacher, zoomLink, setZoomLink, zoomSaved, setZoomSaved }) {
+function VideoSessionTab({ sessions, teacher, zoomLink, meetLink }) {
   const now = Date.now();
   const nextSession = sessions
     .filter((s) => s.status === "confirmed" && s.paid && new Date(s.date + "T" + s.time).getTime() > now)
@@ -3612,6 +3612,26 @@ function VideoSessionTab({ sessions, teacher, zoomLink, setZoomLink, zoomSaved, 
         ) : (
           <p style={{ fontSize: 13, color: C.ivoryDim, margin: 0, fontStyle: "italic" }}>
             Awaiting your teacher's Zoom link…
+          </p>
+        )}
+      </div>
+
+      {/* Google Meet card */}
+      <div style={{ border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: 16 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+          <div style={{ width: 32, height: 32, borderRadius: 8, background: "#34A853", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Video size={16} color="#fff" />
+          </div>
+          <p style={{ fontSize: 14, fontWeight: 600, color: C.inkText, margin: 0 }}>Google Meet</p>
+        </div>
+        {meetLink ? (
+          <a href={meetLink} target="_blank" rel="noreferrer"
+            style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 600, color: "#34A853", textDecoration: "none" }}>
+            <Link2 size={13} /> Join Google Meet
+          </a>
+        ) : (
+          <p style={{ fontSize: 13, color: C.ivoryDim, margin: 0, fontStyle: "italic" }}>
+            Awaiting your teacher's Google Meet link…
           </p>
         )}
       </div>
@@ -3713,6 +3733,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
   const [confirmCancelId, setConfirmCancelId] = useState(null);
   const [selectedSessionId, setSelectedSessionId] = useState(null);
   const [zoomLink, setZoomLink] = useState("");
+  const [meetLink, setMeetLink] = useState("");
   const [zoomSaved, setZoomSaved] = useState(false);
 
   const tabs = [
@@ -3927,7 +3948,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
       )}
 
       {/* Video */}
-      {tab === "video" && <VideoSessionTab sessions={sessions} teacher={teacher} zoomLink={zoomLink} setZoomLink={setZoomLink} zoomSaved={zoomSaved} setZoomSaved={setZoomSaved} />}
+      {tab === "video" && <VideoSessionTab sessions={sessions} teacher={teacher} zoomLink={zoomLink} meetLink={meetLink} />}
     </div>
   );
 }
