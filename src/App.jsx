@@ -4258,13 +4258,13 @@ function TeacherLessonRoom({ teacherId }) {
         {allLearners.length > 1 && (
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
             {allLearners.map((l) => (
-              <div key={l.id} style={{ display: "flex", alignItems: "center", borderRadius: 20, border: `1.5px solid ${activeLearner.id === l.id ? C.brass : C.inkLine}`, background: activeLearner.id === l.id ? C.brassDim : "transparent", overflow: "hidden" }}>
+              <div key={l.id} style={{ position: "relative", display: "inline-flex" }}>
                 <button onClick={() => { setActiveLearner(l); setSelectedSessionId(null); setTab("chat"); }}
-                  style={{ padding: "6px 10px 6px 14px", fontSize: 13, fontWeight: activeLearner.id === l.id ? 700 : 500, color: activeLearner.id === l.id ? C.brass : C.ivoryDim, background: "none", border: "none", cursor: "pointer" }}>
+                  style={{ padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: activeLearner.id === l.id ? 700 : 500, border: `1.5px solid ${activeLearner.id === l.id ? C.brass : C.inkLine}`, background: activeLearner.id === l.id ? C.brassDim : "transparent", color: activeLearner.id === l.id ? C.brass : C.ivoryDim, cursor: "pointer" }}>
                   {l.name.split(" ")[0]}
                 </button>
                 <button onClick={(e) => { e.stopPropagation(); setConfirmRemoveId(l.id); }}
-                  style={{ padding: "4px 8px 4px 2px", background: "none", border: "none", cursor: "pointer", color: activeLearner.id === l.id ? C.brass : C.ivoryDim, fontSize: 13, lineHeight: 1, display: "flex", alignItems: "center" }}
+                  style={{ position: "absolute", top: -7, right: -7, width: 18, height: 18, borderRadius: "50%", background: "#c0392b", color: "#fff", border: "2px solid #fff", fontSize: 11, fontWeight: 700, lineHeight: 1, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}
                   title="Remove student">
                   ×
                 </button>
