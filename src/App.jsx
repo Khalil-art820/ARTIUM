@@ -4020,7 +4020,7 @@ function TeacherLessonRoom({ teacherId }) {
 
   const pendingRequests = incoming.filter((r) => r.status === "pending");
   const acceptedLearners = incoming.filter((r) => r.status === "accepted");
-  const allLearners = [...MOCK_LESSON_LEARNERS, ...acceptedLearners.map((r) => ({ id: r.learnerId, name: r.name, instrument: r.instrument, level: "Student" }))];
+  const allLearners = [...MOCK_LESSON_LEARNERS, ...acceptedLearners.map((r) => ({ id: r.learnerId, name: r.name, instrument: r.instrument, level: "Student" }))].filter(l => !removedStudentIds.has(l.id));
 
   const [viewingLearner, setViewingLearner] = useState(null);
   const [activeLearner, setActiveLearner] = useState(allLearners[0]);
@@ -4096,6 +4096,8 @@ function TeacherLessonRoom({ teacherId }) {
   const [zoomLink, setZoomLink] = useState("");
   const [zoomSaved, setZoomSaved] = useState(false);
   const [roomView, setRoomView] = useState("students");
+  const [removedStudentIds, setRemovedStudentIds] = useState(new Set());
+  const [confirmRemoveId, setConfirmRemoveId] = useState(null);
   const [cancelLockH, setCancelLockH] = useState(24);
   const [modifyLockH, setModifyLockH] = useState(48);
   const [cancelFeesPct, setCancelFeesPct] = useState(50);
@@ -4188,6 +4190,34 @@ function TeacherLessonRoom({ teacherId }) {
     <div style={{ padding: "0 0 32px", fontFamily: FONT_BODY }}>
       {/* Pending requests banner */}
       <LearnerProfileModal learner={viewingLearner} onClose={() => setViewingLearner(null)} />
+
+      {/* Remove student confirmation */}
+      {confirmRemoveId && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 600, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}
+          onClick={() => setConfirmRemoveId(null)}>
+          <div style={{ background: "#fff", borderRadius: 16, padding: 24, maxWidth: 340, width: "100%" }} onClick={e => e.stopPropagation()}>
+            <p style={{ fontSize: 15, fontWeight: 700, color: C.ivory, margin: "0 0 10px" }}>Remove student?</p>
+            <p style={{ fontSize: 13, color: C.ivoryDim, lineHeight: 1.6, margin: "0 0 20px" }}>
+              Are you sure you want to remove this student? They will need to send you a new teaching request in order to connect again.
+            </p>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button onClick={() => setConfirmRemoveId(null)}
+                style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: `1px solid ${C.inkLine}`, background: "none", color: C.inkText, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                Cancel
+              </button>
+              <button onClick={() => {
+                const remaining = allLearners.filter(l => l.id !== confirmRemoveId);
+                setRemovedStudentIds(prev => new Set([...prev, confirmRemoveId]));
+                if (activeLearner.id === confirmRemoveId && remaining.length > 0) setActiveLearner(remaining[0]);
+                setConfirmRemoveId(null);
+              }}
+                style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "none", background: "#c0392b", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                Remove
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {pendingRequests.length > 0 && (
         <div style={{ margin: "16px 20px 0", background: "#FFF8E7", border: `1.5px solid ${C.brass}`, borderRadius: 12, padding: "14px 16px" }}>
           <p style={{ fontSize: 13, fontWeight: 700, color: C.brass, margin: "0 0 10px" }}>New lesson request{pendingRequests.length > 1 ? "s" : ""}</p>
@@ -4228,10 +4258,17 @@ function TeacherLessonRoom({ teacherId }) {
         {allLearners.length > 1 && (
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
             {allLearners.map((l) => (
-              <button key={l.id} onClick={() => { setActiveLearner(l); setSelectedSessionId(null); setTab("chat"); }}
-                style={{ padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: activeLearner.id === l.id ? 700 : 500, border: `1.5px solid ${activeLearner.id === l.id ? C.brass : C.inkLine}`, background: activeLearner.id === l.id ? C.brassDim : "transparent", color: activeLearner.id === l.id ? C.brass : C.ivoryDim, cursor: "pointer" }}>
-                {l.name.split(" ")[0]}
-              </button>
+              <div key={l.id} style={{ display: "flex", alignItems: "center", borderRadius: 20, border: `1.5px solid ${activeLearner.id === l.id ? C.brass : C.inkLine}`, background: activeLearner.id === l.id ? C.brassDim : "transparent", overflow: "hidden" }}>
+                <button onClick={() => { setActiveLearner(l); setSelectedSessionId(null); setTab("chat"); }}
+                  style={{ padding: "6px 10px 6px 14px", fontSize: 13, fontWeight: activeLearner.id === l.id ? 700 : 500, color: activeLearner.id === l.id ? C.brass : C.ivoryDim, background: "none", border: "none", cursor: "pointer" }}>
+                  {l.name.split(" ")[0]}
+                </button>
+                <button onClick={(e) => { e.stopPropagation(); setConfirmRemoveId(l.id); }}
+                  style={{ padding: "4px 8px 4px 2px", background: "none", border: "none", cursor: "pointer", color: activeLearner.id === l.id ? C.brass : C.ivoryDim, fontSize: 13, lineHeight: 1, display: "flex", alignItems: "center" }}
+                  title="Remove student">
+                  ×
+                </button>
+              </div>
             ))}
           </div>
         )}
