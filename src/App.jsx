@@ -3941,8 +3941,26 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
 /* TEACHER LESSON ROOM                                                */
 /* ---------------------------------------------------------------- */
 const MOCK_LESSON_LEARNERS = [
-  { id: "alex",   name: "Alex Martin",    instrument: "Piano",  level: "Intermediate" },
-  { id: "sophie", name: "Sophie Leclerc", instrument: "Violin", level: "Beginner" },
+  { id: "p1",  name: "Élise Marchand",   instrument: "Piano",   level: "Intermediate" },
+  { id: "p2",  name: "Théo Lambert",     instrument: "Piano",   level: "Beginner" },
+  { id: "p3",  name: "Lukas Brunner",    instrument: "Piano",   level: "Advanced" },
+  { id: "p4",  name: "Polina Sokolova",  instrument: "Piano",   level: "Intermediate" },
+  { id: "p5",  name: "Maya Chen",        instrument: "Piano",   level: "Advanced" },
+  { id: "p6",  name: "Daniel Osei",      instrument: "Piano",   level: "Beginner" },
+  { id: "p7",  name: "Freya Whitlock",   instrument: "Piano",   level: "Intermediate" },
+  { id: "p8",  name: "Wei Zhang",        instrument: "Piano",   level: "Advanced" },
+  { id: "p9",  name: "Haruto Sato",      instrument: "Piano",   level: "Intermediate" },
+  { id: "p10", name: "Ji-woo Kang",      instrument: "Piano",   level: "Beginner" },
+  { id: "p11", name: "Anneliese Voss",   instrument: "Piano",   level: "Intermediate" },
+  { id: "p12", name: "Nathan Boucher",   instrument: "Piano",   level: "Beginner" },
+  { id: "p13", name: "Isla Cooper",      instrument: "Piano",   level: "Intermediate" },
+  { id: "p14", name: "Sofia Reyes",      instrument: "Violin",  level: "Intermediate" },
+  { id: "p15", name: "Léon Dupont",      instrument: "Cello",   level: "Advanced" },
+  { id: "p16", name: "Amara Diallo",     instrument: "Voice",   level: "Beginner" },
+  { id: "p17", name: "Ryo Nakamura",     instrument: "Guitar",  level: "Intermediate" },
+  { id: "p18", name: "Ingrid Larsson",   instrument: "Flute",   level: "Advanced" },
+  { id: "p19", name: "Carlos Mendez",    instrument: "Trumpet", level: "Intermediate" },
+  { id: "p20", name: "Yuna Park",        instrument: "Harp",    level: "Advanced" },
 ];
 
 function TeacherLessonRoom({ teacherId }) {
