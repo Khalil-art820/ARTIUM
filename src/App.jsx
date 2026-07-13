@@ -4101,6 +4101,8 @@ function TeacherLessonRoom({ teacherId }) {
   const [showPropose, setShowPropose] = useState(false);
   const [newDate, setNewDate] = useState("");
   const [newTime, setNewTime] = useState("");
+  const [recurring, setRecurring] = useState("none");
+  const [recurringCount, setRecurringCount] = useState(4);
   const [confirmCancelId, setConfirmCancelId] = useState(null);
   const [showCounter, setShowCounter] = useState({});
   const [counterDate, setCounterDate] = useState({});
@@ -4157,8 +4159,17 @@ function TeacherLessonRoom({ teacherId }) {
 
   function proposeSession() {
     if (!newDate || !newTime) return;
-    setSessions((prev) => [...prev, { id: Date.now(), date: newDate, time: newTime, status: "teacher_proposed", paid: false }]);
-    setNewDate(""); setNewTime(""); setShowPropose(false);
+    const intervalDays = { none: 0, weekly: 7, biweekly: 14, monthly: 30 }[recurring];
+    const count = recurring === "none" ? 1 : recurringCount;
+    const newSessions = [];
+    for (let i = 0; i < count; i++) {
+      const d = new Date(newDate + "T12:00:00");
+      d.setDate(d.getDate() + i * intervalDays);
+      const dateStr = d.toISOString().slice(0, 10);
+      newSessions.push({ id: Date.now() + i, date: dateStr, time: newTime, status: "teacher_proposed", paid: false, recurring: recurring !== "none" ? recurring : undefined });
+    }
+    setSessions((prev) => [...prev, ...newSessions]);
+    setNewDate(""); setNewTime(""); setRecurring("none"); setRecurringCount(4); setShowPropose(false);
   }
 
   function approveCounter(id) {
@@ -4475,12 +4486,32 @@ function TeacherLessonRoom({ teacherId }) {
                     <input type="time" value={newTime} onChange={(e) => setNewTime(e.target.value)}
                       style={{ flex: 1, background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 9, padding: "8px 10px", fontSize: 13, color: C.inkText, outline: "none" }} />
                   </div>
+                  {/* Recurring options */}
+                  <p style={{ fontSize: 11, fontWeight: 600, color: C.ivoryDim, margin: "0 0 6px", textTransform: "uppercase", letterSpacing: "0.06em" }}>Recurrence</p>
+                  <div style={{ display: "flex", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
+                    {[["none","One-time"], ["weekly","Weekly"], ["biweekly","Every 2 weeks"], ["monthly","Monthly"]].map(([val, label]) => (
+                      <button key={val} onClick={() => setRecurring(val)}
+                        style={{ padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: "pointer", border: `1.5px solid ${recurring === val ? C.brass : C.inkLine}`, background: recurring === val ? C.brassDim : "transparent", color: recurring === val ? C.brass : C.ivoryDim }}>
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                  {recurring !== "none" && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                      <span style={{ fontSize: 12, color: C.ivoryDim, flexShrink: 0 }}>Number of sessions</span>
+                      <input type="number" min={2} max={52} value={recurringCount} onChange={(e) => setRecurringCount(Math.max(2, Math.min(52, Number(e.target.value))))}
+                        style={{ width: 60, background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 9, padding: "6px 10px", fontSize: 13, color: C.inkText, outline: "none" }} />
+                      <span style={{ fontSize: 11, color: C.ivoryDim }}>
+                        {recurring === "weekly" ? `(${recurringCount} weeks)` : recurring === "biweekly" ? `(${recurringCount * 2} weeks)` : `(${recurringCount} months)`}
+                      </span>
+                    </div>
+                  )}
                   <div style={{ display: "flex", gap: 8 }}>
                     <button onClick={proposeSession} disabled={!newDate || !newTime}
                       style={{ flex: 1, padding: "8px 0", borderRadius: 9, background: C.brass, color: "#fff", fontSize: 13, fontWeight: 600, border: "none", cursor: !newDate || !newTime ? "not-allowed" : "pointer", opacity: !newDate || !newTime ? 0.5 : 1 }}>
-                      Send proposal
+                      {recurring === "none" ? "Send proposal" : `Propose ${recurringCount} sessions`}
                     </button>
-                    <button onClick={() => setShowPropose(false)}
+                    <button onClick={() => { setShowPropose(false); setRecurring("none"); setRecurringCount(4); }}
                       style={{ padding: "8px 14px", borderRadius: 9, background: "none", border: `1px solid ${C.inkLine}`, color: C.ivoryDim, fontSize: 13, cursor: "pointer" }}>
                       Cancel
                     </button>
