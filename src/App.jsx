@@ -4264,7 +4264,7 @@ function TeacherLessonRoom({ teacherId }) {
                   {l.name.split(" ")[0]}
                 </button>
                 <button onClick={(e) => { e.stopPropagation(); setConfirmRemoveId(l.id); }}
-                  style={{ position: "absolute", top: -7, right: -7, width: 18, height: 18, borderRadius: "50%", background: "#c0392b", color: "#fff", border: "2px solid #fff", fontSize: 11, fontWeight: 700, lineHeight: 1, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}
+                  style={{ position: "absolute", top: -7, right: -7, width: 18, height: 18, borderRadius: "50%", background: C.inkSoft, color: C.ivoryDim, border: `1.5px solid ${C.inkLine}`, fontSize: 11, fontWeight: 700, lineHeight: 1, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}
                   title="Remove student">
                   ×
                 </button>
