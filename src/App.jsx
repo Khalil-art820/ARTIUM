@@ -3604,20 +3604,15 @@ function VideoSessionTab({ sessions, teacher, zoomLink, setZoomLink, zoomSaved, 
           </div>
           <p style={{ fontSize: 14, fontWeight: 600, color: C.inkText, margin: 0 }}>Zoom</p>
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          <input value={zoomLink} onChange={(e) => { setZoomLink(e.target.value); setZoomSaved(false); }}
-            placeholder="Paste Zoom meeting link…"
-            style={{ flex: 1, background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 9, padding: "9px 12px", fontSize: 13, color: C.inkText, outline: "none" }} />
-          <button onClick={() => setZoomSaved(true)} disabled={!zoomLink.trim()}
-            style={{ padding: "9px 14px", borderRadius: 9, background: C.brass, color: "#fff", fontSize: 13, fontWeight: 600, border: "none", cursor: !zoomLink.trim() ? "not-allowed" : "pointer", opacity: !zoomLink.trim() ? 0.5 : 1 }}>
-            Save
-          </button>
-        </div>
-        {zoomSaved && zoomLink && (
+        {zoomLink ? (
           <a href={zoomLink} target="_blank" rel="noreferrer"
-            style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 600, color: "#2D8CFF", textDecoration: "none" }}>
+            style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 600, color: "#2D8CFF", textDecoration: "none" }}>
             <Link2 size={13} /> Join Zoom meeting
           </a>
+        ) : (
+          <p style={{ fontSize: 13, color: C.ivoryDim, margin: 0, fontStyle: "italic" }}>
+            Awaiting your teacher's Zoom link…
+          </p>
         )}
       </div>
 
