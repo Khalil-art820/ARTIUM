@@ -3657,10 +3657,8 @@ function VideoSessionTab({ sessions, teacher, zoomLink, meetLink }) {
 
 function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payError }) {
   const [tab, setTab] = useState("chat");
-  const tabRef = React.useRef("chat");
   const lsKey = teacher ? `artium_sessions_${teacher.id}_demo-learner` : null;
   const chatLsKey = teacher ? `artium_chat_${teacher.id}_demo-learner` : null;
-  const [unreadCount, setUnreadCount] = useState(0);
 
   // Live chat sync from localStorage
   const [localMsgs, setLocalMsgs] = useState(() => {
@@ -3672,21 +3670,12 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
     }
     return null;
   });
-  const prevMsgCountRef = React.useRef(null);
   React.useEffect(() => {
     if (!chatLsKey) return;
     function sync() {
       try {
         const s = JSON.parse(localStorage.getItem(chatLsKey) || "null");
-        if (s) {
-          const mapped = s.map((m) => m.from === "learner" ? { ...m, from: "me" } : m.from === "teacher" ? { ...m, from: "them" } : m);
-          setLocalMsgs(mapped);
-          const teacherMsgs = s.filter(m => m.from === "teacher").length;
-          if (prevMsgCountRef.current !== null && teacherMsgs > prevMsgCountRef.current && tabRef.current !== "chat") {
-            setUnreadCount(c => c + (teacherMsgs - prevMsgCountRef.current));
-          }
-          prevMsgCountRef.current = teacherMsgs;
-        }
+        if (s) setLocalMsgs(s.map((m) => m.from === "learner" ? { ...m, from: "me" } : m.from === "teacher" ? { ...m, from: "them" } : m));
       } catch {}
     }
     const id = setInterval(sync, 1500);
@@ -3708,6 +3697,10 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
   const activeMessages = (localMsgs || messages || []).map((m) =>
     m.from === "learner" ? { ...m, from: "me" } : m.from === "teacher" ? { ...m, from: "them" } : m
   );
+  const themMsgCount = activeMessages.filter(m => m.from === "them").length;
+  const [lastSeenCount, setLastSeenCount] = useState(themMsgCount);
+  const unreadCount = Math.max(0, themMsgCount - lastSeenCount);
+  React.useEffect(() => { if (tab === "chat") setLastSeenCount(themMsgCount); }, [tab, themMsgCount]);
 
   const [sessions, setSessions] = useState(() => {
     if (lsKey) {
@@ -3781,7 +3774,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
       {/* Tab bar */}
       <div style={{ display: "flex", borderBottom: `1px solid ${C.inkLine}`, background: C.inkSoft }}>
         {tabs.map(({ id, label, Icon }) => (
-          <button key={id} onClick={() => { tabRef.current = id; setTab(id); if (id === "chat") setUnreadCount(0); }}
+          <button key={id} onClick={() => setTab(id)}
             style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "10px 4px", fontSize: 11, fontWeight: tab === id ? 700 : 400, color: tab === id ? C.brass : C.ivoryDim, background: "none", border: "none", cursor: "pointer", borderBottom: tab === id ? `2px solid ${C.brass}` : "2px solid transparent" }}>
             <div style={{ position: "relative", display: "inline-flex" }}>
               <Icon size={15} />
@@ -4087,9 +4080,7 @@ function TeacherLessonRoom({ teacherId }) {
     sophie: [{ from: "them", text: "Can we reschedule Thursday?" }],
   });
 
-  const [unreadByLearner, setUnreadByLearner] = useState({});
-  const prevMsgCountsRef = React.useRef({});
-  const teacherTabRef = React.useRef("chat");
+  const [lastSeenByLearner, setLastSeenByLearner] = useState({});
 
   // Sync active learner's chat from localStorage (runs whenever active learner changes)
   React.useEffect(() => {
@@ -4099,12 +4090,6 @@ function TeacherLessonRoom({ teacherId }) {
       if (saved) {
         const flipped = saved.map((m) => m.from === "teacher" ? { ...m, from: "me" } : { ...m, from: "them" });
         setMessagesByLearner((prev) => ({ ...prev, [activeLearner.id]: flipped }));
-        const learnerMsgs = saved.filter(m => m.from === "learner").length;
-        const prevCount = prevMsgCountsRef.current[activeLearner.id];
-        if (prevCount !== undefined && learnerMsgs > prevCount && teacherTabRef.current !== "chat") {
-          setUnreadByLearner(u => ({ ...u, [activeLearner.id]: (u[activeLearner.id] || 0) + (learnerMsgs - prevCount) }));
-        }
-        prevMsgCountsRef.current[activeLearner.id] = learnerMsgs;
       }
     }
     sync();
@@ -4154,6 +4139,11 @@ function TeacherLessonRoom({ teacherId }) {
 
   const sessions = sessionsByLearner[activeLearner.id] || [];
   const msgs = messagesByLearner[activeLearner.id] || [];
+  const teacherThemCount = msgs.filter(m => m.from === "them").length;
+  const teacherUnread = Math.max(0, teacherThemCount - (lastSeenByLearner[activeLearner.id] || 0));
+  React.useEffect(() => {
+    if (tab === "chat") setLastSeenByLearner(prev => ({ ...prev, [activeLearner.id]: teacherThemCount }));
+  }, [tab, activeLearner.id, teacherThemCount]);
 
   const MOCK_IDS = MOCK_LESSON_LEARNERS.map((l) => l.id);
   function setSessions(fn) {
@@ -4428,12 +4418,12 @@ function TeacherLessonRoom({ teacherId }) {
         <React.Fragment> {/* Inner tab bar */}
       <div style={{ display: "flex", borderBottom: `1px solid ${C.inkLine}`, borderTop: `1px solid ${C.inkLine}`, background: C.inkSoft }}>
         {tabs.map(({ id, label, Icon }) => (
-          <button key={id} onClick={() => { teacherTabRef.current = id; setTab(id); if (id === "chat") setUnreadByLearner(u => ({ ...u, [activeLearner.id]: 0 })); }}
+          <button key={id} onClick={() => setTab(id)}
             style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "10px 4px", fontSize: 11, fontWeight: tab === id ? 700 : 400, color: tab === id ? C.brass : C.ivoryDim, background: "none", border: "none", cursor: "pointer", borderBottom: tab === id ? `2px solid ${C.brass}` : "2px solid transparent" }}>
             <div style={{ position: "relative", display: "inline-flex" }}>
               <Icon size={15} />
-              {id === "chat" && (unreadByLearner[activeLearner.id] || 0) > 0 && (
-                <span style={{ position: "absolute", top: -6, left: -6, minWidth: 14, height: 14, borderRadius: 7, background: C.brass, color: "#fff", fontSize: 9, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 3px" }}>{unreadByLearner[activeLearner.id]}</span>
+              {id === "chat" && teacherUnread > 0 && (
+                <span style={{ position: "absolute", top: -6, left: -6, minWidth: 14, height: 14, borderRadius: 7, background: C.brass, color: "#fff", fontSize: 9, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 3px" }}>{teacherUnread}</span>
               )}
             </div>
             {label}
