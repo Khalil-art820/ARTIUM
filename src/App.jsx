@@ -4701,17 +4701,30 @@ function TeacherLessonRoom({ teacherId }) {
                             </button>
                           ))}
                         </div>
-                        {detailTab === "agenda" && (
-                          <div>
-                            <textarea
-                              value={agendaText}
-                              onChange={e => saveAgenda(activeLearner.id, sel.id, e.target.value)}
-                              placeholder={`Write the agenda for this session with ${activeLearner.name.split(" ")[0]}…`}
-                              style={{ width: "100%", minHeight: 120, background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "10px 12px", fontSize: 13, color: C.inkText, resize: "vertical", outline: "none", fontFamily: FONT_BODY, lineHeight: 1.6, boxSizing: "border-box" }}
-                            />
-                            <p style={{ fontSize: 11, color: C.ivoryDim, margin: "4px 0 0" }}>Visible to {activeLearner.name.split(" ")[0]} as read-only</p>
-                          </div>
-                        )}
+                        {detailTab === "agenda" && (() => {
+                          const [draft, setDraft] = React.useState(agendaText);
+                          const submitted = agendaText;
+                          const isDirty = draft !== submitted;
+                          return (
+                            <div>
+                              <textarea
+                                value={draft}
+                                onChange={e => setDraft(e.target.value)}
+                                placeholder={`Write the agenda for this session with ${activeLearner.name.split(" ")[0]}…`}
+                                style={{ width: "100%", minHeight: 120, background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "10px 12px", fontSize: 13, color: C.inkText, resize: "vertical", outline: "none", fontFamily: FONT_BODY, lineHeight: 1.6, boxSizing: "border-box" }}
+                              />
+                              <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>
+                                <button onClick={() => saveAgenda(activeLearner.id, sel.id, draft)} disabled={!draft.trim() || !isDirty}
+                                  style={{ padding: "7px 18px", borderRadius: 9, background: C.brass, color: "#fff", fontSize: 13, fontWeight: 600, border: "none", cursor: !draft.trim() || !isDirty ? "not-allowed" : "pointer", opacity: !draft.trim() || !isDirty ? 0.5 : 1 }}>
+                                  {submitted ? "Update agenda" : "Send agenda"}
+                                </button>
+                                {submitted && !isDirty && (
+                                  <span style={{ fontSize: 11, color: "#1A9E6E" }}>✓ Sent to {activeLearner.name.split(" ")[0]}</span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </div>
                     );
                   })()}
