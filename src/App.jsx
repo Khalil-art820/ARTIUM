@@ -3739,6 +3739,24 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
   const [zoomLink, setZoomLink] = useState("");
   const [meetLink, setMeetLink] = useState("");
   const [zoomSaved, setZoomSaved] = useState(false);
+  const [learnerSessionDetailTab, setLearnerSessionDetailTab] = useState({});
+  const [learnerAgenda, setLearnerAgenda] = useState({});
+  React.useEffect(() => {
+    if (!teacher) return;
+    function syncAgenda() {
+      const updated = {};
+      sessions.forEach(s => {
+        const key = `artium_agenda_${teacher.id}_demo-learner_${s.id}`;
+        const val = localStorage.getItem(key);
+        if (val !== null) updated[s.id] = val;
+      });
+      setLearnerAgenda(updated);
+    }
+    syncAgenda();
+    const id = setInterval(syncAgenda, 2000);
+    window.addEventListener("storage", syncAgenda);
+    return () => { clearInterval(id); window.removeEventListener("storage", syncAgenda); };
+  }, [teacher, sessions.length]);
 
   const tabs = [
     { id: "chat", label: "Chat", Icon: MessageCircle },
@@ -3891,6 +3909,35 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
                       </div>
                     </div>
                   ) : null}
+
+                  {/* Agenda tab — confirmed sessions only (read-only for learner) */}
+                  {isConfirmed && (() => {
+                    const detailTab = learnerSessionDetailTab[sel.id] || "details";
+                    const agenda = learnerAgenda[sel.id] || "";
+                    return (
+                      <div style={{ marginBottom: 12 }}>
+                        <div style={{ display: "flex", gap: 0, borderBottom: `1px solid ${C.inkLine}`, marginBottom: 10 }}>
+                          {[["details","Details"],["agenda","Agenda"]].map(([t, label]) => (
+                            <button key={t} onClick={() => setLearnerSessionDetailTab(prev => ({ ...prev, [sel.id]: t }))}
+                              style={{ padding: "6px 16px", fontSize: 12, fontWeight: detailTab === t ? 700 : 500, color: detailTab === t ? C.brass : C.ivoryDim, background: "none", border: "none", cursor: "pointer", borderBottom: detailTab === t ? `2px solid ${C.brass}` : "2px solid transparent", marginBottom: -1 }}>
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                        {detailTab === "agenda" && (
+                          agenda ? (
+                            <div style={{ background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "10px 12px", fontSize: 13, color: C.inkText, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
+                              {agenda}
+                            </div>
+                          ) : (
+                            <p style={{ fontSize: 13, color: C.ivoryDim, fontStyle: "italic", margin: 0 }}>
+                              Your teacher hasn't written an agenda for this session yet.
+                            </p>
+                          )
+                        )}
+                      </div>
+                    );
+                  })()}
 
                   {isConfirmed && teacher.teaching?.open && teacher.teaching?.price && (
                     sel.paid ? (
@@ -4110,6 +4157,17 @@ function TeacherLessonRoom({ teacherId }) {
   const [zoomLink, setZoomLink] = useState("");
   const [zoomSaved, setZoomSaved] = useState(false);
   const [roomView, setRoomView] = useState("students");
+  const [agendaBySession, setAgendaBySession] = useState({});
+  const [sessionDetailTab, setSessionDetailTab] = useState({});
+  function agendaKey(learnerId, sessionId) { return `artium_agenda_${tid}_${learnerId}_${sessionId}`; }
+  function saveAgenda(learnerId, sessionId, text) {
+    const key = agendaKey(learnerId, sessionId);
+    localStorage.setItem(key, text);
+    setAgendaBySession(prev => ({ ...prev, [`${learnerId}_${sessionId}`]: text }));
+  }
+  function loadAgenda(learnerId, sessionId) {
+    return localStorage.getItem(agendaKey(learnerId, sessionId)) || "";
+  }
   const [confirmRemoveId, setConfirmRemoveId] = useState(null);
   const [cancelLockH, setCancelLockH] = useState(24);
   const [modifyLockH, setModifyLockH] = useState(48);
@@ -4628,6 +4686,35 @@ function TeacherLessonRoom({ teacherId }) {
                       )}
                     </div>
                   )}
+
+                  {/* Agenda tab — confirmed sessions only */}
+                  {isConfirmed && (() => {
+                    const detailTab = sessionDetailTab[sel.id] || "details";
+                    const agendaText = agendaBySession[`${activeLearner.id}_${sel.id}`] ?? loadAgenda(activeLearner.id, sel.id);
+                    return (
+                      <div style={{ marginBottom: 12 }}>
+                        <div style={{ display: "flex", gap: 0, borderBottom: `1px solid ${C.inkLine}`, marginBottom: 10 }}>
+                          {[["details","Details"],["agenda","Agenda"]].map(([t, label]) => (
+                            <button key={t} onClick={() => setSessionDetailTab(prev => ({ ...prev, [sel.id]: t }))}
+                              style={{ padding: "6px 16px", fontSize: 12, fontWeight: detailTab === t ? 700 : 500, color: detailTab === t ? C.brass : C.ivoryDim, background: "none", border: "none", cursor: "pointer", borderBottom: detailTab === t ? `2px solid ${C.brass}` : "2px solid transparent", marginBottom: -1 }}>
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                        {detailTab === "agenda" && (
+                          <div>
+                            <textarea
+                              value={agendaText}
+                              onChange={e => saveAgenda(activeLearner.id, sel.id, e.target.value)}
+                              placeholder={`Write the agenda for this session with ${activeLearner.name.split(" ")[0]}…`}
+                              style={{ width: "100%", minHeight: 120, background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "10px 12px", fontSize: 13, color: C.inkText, resize: "vertical", outline: "none", fontFamily: FONT_BODY, lineHeight: 1.6, boxSizing: "border-box" }}
+                            />
+                            <p style={{ fontSize: 11, color: C.ivoryDim, margin: "4px 0 0" }}>Visible to {activeLearner.name.split(" ")[0]} as read-only</p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
 
                   {/* Modify / Cancel */}
                   {(isConfirmed || isPending) && (
