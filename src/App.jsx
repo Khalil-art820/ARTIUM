@@ -3657,6 +3657,7 @@ function VideoSessionTab({ sessions, teacher, zoomLink, meetLink }) {
 
 function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payError }) {
   const [tab, setTab] = useState("chat");
+  const tabRef = React.useRef("chat");
   const lsKey = teacher ? `artium_sessions_${teacher.id}_demo-learner` : null;
   const chatLsKey = teacher ? `artium_chat_${teacher.id}_demo-learner` : null;
   const [unreadCount, setUnreadCount] = useState(0);
@@ -3681,8 +3682,8 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
           const mapped = s.map((m) => m.from === "learner" ? { ...m, from: "me" } : m.from === "teacher" ? { ...m, from: "them" } : m);
           setLocalMsgs(mapped);
           const teacherMsgs = s.filter(m => m.from === "teacher").length;
-          if (prevMsgCountRef.current !== null && teacherMsgs > prevMsgCountRef.current) {
-            setTab(prev => { if (prev !== "chat") setUnreadCount(c => c + (teacherMsgs - prevMsgCountRef.current)); return prev; });
+          if (prevMsgCountRef.current !== null && teacherMsgs > prevMsgCountRef.current && tabRef.current !== "chat") {
+            setUnreadCount(c => c + (teacherMsgs - prevMsgCountRef.current));
           }
           prevMsgCountRef.current = teacherMsgs;
         }
@@ -3780,7 +3781,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
       {/* Tab bar */}
       <div style={{ display: "flex", borderBottom: `1px solid ${C.inkLine}`, background: C.inkSoft }}>
         {tabs.map(({ id, label, Icon }) => (
-          <button key={id} onClick={() => { setTab(id); if (id === "chat") setUnreadCount(0); }}
+          <button key={id} onClick={() => { tabRef.current = id; setTab(id); if (id === "chat") setUnreadCount(0); }}
             style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "10px 4px", fontSize: 11, fontWeight: tab === id ? 700 : 400, color: tab === id ? C.brass : C.ivoryDim, background: "none", border: "none", cursor: "pointer", borderBottom: tab === id ? `2px solid ${C.brass}` : "2px solid transparent" }}>
             <div style={{ position: "relative", display: "inline-flex" }}>
               <Icon size={15} />
@@ -4088,6 +4089,7 @@ function TeacherLessonRoom({ teacherId }) {
 
   const [unreadByLearner, setUnreadByLearner] = useState({});
   const prevMsgCountsRef = React.useRef({});
+  const teacherTabRef = React.useRef("chat");
 
   // Sync active learner's chat from localStorage (runs whenever active learner changes)
   React.useEffect(() => {
@@ -4098,12 +4100,9 @@ function TeacherLessonRoom({ teacherId }) {
         const flipped = saved.map((m) => m.from === "teacher" ? { ...m, from: "me" } : { ...m, from: "them" });
         setMessagesByLearner((prev) => ({ ...prev, [activeLearner.id]: flipped }));
         const learnerMsgs = saved.filter(m => m.from === "learner").length;
-        const prev = prevMsgCountsRef.current[activeLearner.id] ?? learnerMsgs;
-        if (learnerMsgs > prev) {
-          setTab(currentTab => {
-            if (currentTab !== "chat") setUnreadByLearner(u => ({ ...u, [activeLearner.id]: (u[activeLearner.id] || 0) + (learnerMsgs - prev) }));
-            return currentTab;
-          });
+        const prevCount = prevMsgCountsRef.current[activeLearner.id];
+        if (prevCount !== undefined && learnerMsgs > prevCount && teacherTabRef.current !== "chat") {
+          setUnreadByLearner(u => ({ ...u, [activeLearner.id]: (u[activeLearner.id] || 0) + (learnerMsgs - prevCount) }));
         }
         prevMsgCountsRef.current[activeLearner.id] = learnerMsgs;
       }
@@ -4429,7 +4428,7 @@ function TeacherLessonRoom({ teacherId }) {
         <React.Fragment> {/* Inner tab bar */}
       <div style={{ display: "flex", borderBottom: `1px solid ${C.inkLine}`, borderTop: `1px solid ${C.inkLine}`, background: C.inkSoft }}>
         {tabs.map(({ id, label, Icon }) => (
-          <button key={id} onClick={() => { setTab(id); if (id === "chat") setUnreadByLearner(u => ({ ...u, [activeLearner.id]: 0 })); }}
+          <button key={id} onClick={() => { teacherTabRef.current = id; setTab(id); if (id === "chat") setUnreadByLearner(u => ({ ...u, [activeLearner.id]: 0 })); }}
             style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "10px 4px", fontSize: 11, fontWeight: tab === id ? 700 : 400, color: tab === id ? C.brass : C.ivoryDim, background: "none", border: "none", cursor: "pointer", borderBottom: tab === id ? `2px solid ${C.brass}` : "2px solid transparent" }}>
             <div style={{ position: "relative", display: "inline-flex" }}>
               <Icon size={15} />
