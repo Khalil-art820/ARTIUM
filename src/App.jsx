@@ -4343,9 +4343,18 @@ function TeacherLessonRoom({ teacherId }) {
 
       {/* ── My Planning ── */}
       {roomView === "planning" && (() => {
-        const allSessions = MOCK_PLANNING.flatMap(s =>
+        // Merge MOCK_PLANNING with real sessions from sessionsByLearner (non-mock learners)
+        const mockSessions = MOCK_PLANNING.flatMap(s =>
           s.sessions.map(sess => ({ ...sess, student: s }))
-        ).sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+        );
+        const realSessions = Object.entries(sessionsByLearner).flatMap(([learnerId, sessList]) => {
+          const learner = allLearners.find(l => l.id === learnerId);
+          if (!learner) return [];
+          const student = { id: learnerId, name: learner.name, instrument: learner.instrument, price: 60 };
+          return (sessList || []).map(sess => ({ ...sess, student }));
+        });
+        const allSessions = [...mockSessions, ...realSessions]
+          .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
         const byMonth = {};
         allSessions.forEach(sess => {
           const key = sess.date.slice(0, 7);
