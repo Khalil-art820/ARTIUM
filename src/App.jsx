@@ -4020,6 +4020,7 @@ function TeacherLessonRoom({ teacherId }) {
 
   const pendingRequests = incoming.filter((r) => r.status === "pending");
   const acceptedLearners = incoming.filter((r) => r.status === "accepted");
+  const [removedStudentIds, setRemovedStudentIds] = useState(new Set());
   const allLearners = [...MOCK_LESSON_LEARNERS, ...acceptedLearners.map((r) => ({ id: r.learnerId, name: r.name, instrument: r.instrument, level: "Student" }))].filter(l => !removedStudentIds.has(l.id));
 
   const [viewingLearner, setViewingLearner] = useState(null);
@@ -4096,7 +4097,6 @@ function TeacherLessonRoom({ teacherId }) {
   const [zoomLink, setZoomLink] = useState("");
   const [zoomSaved, setZoomSaved] = useState(false);
   const [roomView, setRoomView] = useState("students");
-  const [removedStudentIds, setRemovedStudentIds] = useState(new Set());
   const [confirmRemoveId, setConfirmRemoveId] = useState(null);
   const [cancelLockH, setCancelLockH] = useState(24);
   const [modifyLockH, setModifyLockH] = useState(48);
