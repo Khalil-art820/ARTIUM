@@ -972,9 +972,16 @@ export default function App() {
       } else if (demo === "learner") {
         setLearnerProfile({ name: "Demo Learner", location: "Paris", instrument: "Piano", bio: "Amateur pianist exploring lessons." });
         const demoTeacher = { id: "demo-teacher", name: "Demo Teacher", instrument: "Piano", conservatoryId: "juilliard", year: "Final year", bio: "Demo account for testing teacher flows.", tastes: ["Chopin", "Debussy"], pieces: [{ title: "Ballade No. 1", composer: "Chopin" }], videoLink: "", top: "", flop: "", photoUrl: null, coverPhotoUrl: null, teaching: { open: true, mode: "online", price: "60" }, status: "approved", online: true };
-        setStudents((arr) => arr.some((s) => s.id === "demo-teacher") ? arr : [...arr, demoTeacher]);
+        const demoTeacher2 = { id: "demo-teacher-2", name: "Sophie Renard", instrument: "Violin", conservatoryId: "paris", year: "3rd year", bio: "Violin teacher based in Paris.", tastes: ["Bach", "Mozart"], pieces: [{ title: "Sonata No. 1", composer: "Bach" }], videoLink: "", top: "", flop: "", photoUrl: null, coverPhotoUrl: null, teaching: { open: true, mode: "online", price: "55" }, status: "approved", online: false };
+        setStudents((arr) => {
+          let next = arr.some((s) => s.id === "demo-teacher") ? arr : [...arr, demoTeacher];
+          next = next.some((s) => s.id === "demo-teacher-2") ? next : [...next, demoTeacher2];
+          return next;
+        });
         const tr = JSON.parse(localStorage.getItem("teachRequests") || "{}");
-        if (!tr["demo-teacher"]) { tr["demo-teacher"] = "accepted"; localStorage.setItem("teachRequests", JSON.stringify(tr)); }
+        if (!tr["demo-teacher"]) tr["demo-teacher"] = "accepted";
+        if (!tr["demo-teacher-2"]) tr["demo-teacher-2"] = "accepted";
+        localStorage.setItem("teachRequests", JSON.stringify(tr));
         setScreen("learnerMap");
       }
     }
