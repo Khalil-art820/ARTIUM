@@ -971,6 +971,10 @@ export default function App() {
         setScreen("app"); setAppTab(savedTab);
       } else if (demo === "learner") {
         setLearnerProfile({ name: "Demo Learner", location: "Paris", instrument: "Piano", bio: "Amateur pianist exploring lessons." });
+        const demoTeacher = { id: "demo-teacher", name: "Demo Teacher", instrument: "Piano", conservatoryId: "juilliard", year: "Final year", bio: "Demo account for testing teacher flows.", tastes: ["Chopin", "Debussy"], pieces: [{ title: "Ballade No. 1", composer: "Chopin" }], videoLink: "", top: "", flop: "", photoUrl: null, coverPhotoUrl: null, teaching: { open: true, mode: "online", price: "60" }, status: "approved", online: true };
+        setStudents((arr) => arr.some((s) => s.id === "demo-teacher") ? arr : [...arr, demoTeacher]);
+        const tr = JSON.parse(localStorage.getItem("teachRequests") || "{}");
+        if (!tr["demo-teacher"]) { tr["demo-teacher"] = "accepted"; localStorage.setItem("teachRequests", JSON.stringify(tr)); }
         setScreen("learnerMap");
       }
     }
@@ -1118,6 +1122,12 @@ export default function App() {
   function enterDemoLearner() {
     const lp = { name: "Demo Learner", location: "Paris", instrument: "Piano", bio: "Amateur pianist exploring lessons." };
     setLearnerProfile(lp);
+    // Ensure demo-teacher exists in students so acceptedTeachers finds it
+    const demoTeacher = { id: "demo-teacher", name: "Demo Teacher", instrument: "Piano", conservatoryId: "juilliard", year: "Final year", bio: "Demo account for testing teacher flows.", tastes: ["Chopin", "Debussy"], pieces: [{ title: "Ballade No. 1", composer: "Chopin" }], videoLink: "", top: "", flop: "", photoUrl: null, coverPhotoUrl: null, teaching: { open: true, mode: "online", price: "60" }, status: "approved", online: true };
+    setStudents((arr) => arr.some((s) => s.id === "demo-teacher") ? arr : [...arr, demoTeacher]);
+    // Pre-seed accepted request so Lesson Room tab appears immediately
+    const tr = JSON.parse(localStorage.getItem("teachRequests") || "{}");
+    if (!tr["demo-teacher"]) { tr["demo-teacher"] = "accepted"; localStorage.setItem("teachRequests", JSON.stringify(tr)); setTeachRequests(tr); }
     localStorage.setItem("artium_demo_session", "learner");
     setScreen("learnerMap");
   }
@@ -3287,18 +3297,20 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
       hideTabs={!!selectedId}
     >
       {/* Tab bar — hidden when viewing teacher profile from Lesson Room */}
-      <div className="px-6 flex gap-1" style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#fff", display: selectedId && appTab === "lesson" ? "none" : "flex" }}>
-        {[
-          ["map", "Find a teacher"],
-          ...(Object.values(teachRequests).some((s) => s === "accepted") ? [["lesson", "Lesson Room"]] : []),
-        ].map(([key, label]) => (
-          <button key={key} onClick={() => { setAppTabPersist(key); if (key === "lesson") setSelectedId(null); }}
-            className="px-4 py-2 text-sm"
-            style={{ fontWeight: appTab === key ? 600 : 400, color: appTab === key ? C.ivory : C.ivoryDim, borderBottom: appTab === key ? `2px solid ${C.brass}` : "2px solid transparent", background: "transparent" }}>
-            {label}
-          </button>
-        ))}
-      </div>
+      {!(selectedId && appTab === "lesson") && (
+        <div className="flex" style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#fff" }}>
+          {[
+            { key: "map", label: "Find a teacher", Icon: Map },
+            ...(Object.values(teachRequests).some((s) => s === "accepted") ? [{ key: "lesson", label: "Lesson Room", Icon: BookOpen }] : []),
+          ].map(({ key, label, Icon }) => (
+            <button key={key} onClick={() => { setAppTabPersist(key); if (key === "lesson") setSelectedId(null); }}
+              style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2, padding: "8px 4px 6px", fontWeight: appTab === key ? 600 : 400, fontSize: 12, color: appTab === key ? C.ivory : C.ivoryDim, borderBottom: appTab === key ? `2px solid ${C.brass}` : "2px solid transparent", background: "transparent", border: "none", cursor: "pointer" }}>
+              <Icon size={16} />
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {appTab === "map" && !selectedId && (
         <>
@@ -3465,40 +3477,50 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
 
       {appTab === "lesson" && (() => {
         if (!activeLessonTeacher) return null;
-        if (selectedId === activeLessonTeacher.id) return null; // profile view handled below
+        if (selectedId === activeLessonTeacher.id) return null;
+        const [teacherPillPage, setTeacherPillPage] = [0, () => {}]; // single teacher for now; hook-safe static
+        const TPILLS = 30;
+        const totalTPages = Math.ceil(acceptedTeachers.length / TPILLS);
         return (
-          <div style={{ padding: "24px 0 24px 20px" }}>
-            {/* Teacher picker — shown when more than one accepted */}
-            {acceptedTeachers.length > 1 && (
-              <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 16, scrollbarWidth: "none" }}>
-                {acceptedTeachers.map((t) => (
-                  <button key={t.id} onClick={() => setActiveLessonTeacherId(t.id)}
-                    style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 8, padding: "8px 14px", borderRadius: 20, border: `1.5px solid ${t.id === activeLessonTeacher.id ? C.brass : C.inkLine}`, background: t.id === activeLessonTeacher.id ? C.brassDim : "#fff", cursor: "pointer" }}>
-                    <Avatar name={t.name} id={t.id} size={24} photoUrl={t.photoUrl} online={t.online} />
-                    <span style={{ fontSize: 13, fontWeight: 600, color: t.id === activeLessonTeacher.id ? C.brass : C.inkText }}>{t.name.split(" ")[0]}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-            {/* Teacher header — clickable to view profile */}
-            <button
-              onClick={() => selectTeacher(activeLessonTeacher.id)}
-              style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16, background: "none", border: "none", cursor: "pointer", padding: "0 20px 16px 0", textAlign: "left" }}>
-              <Avatar name={activeLessonTeacher.name} id={activeLessonTeacher.id} size={44} photoUrl={activeLessonTeacher.photoUrl} online={activeLessonTeacher.online} />
-              <div>
-                <h2 style={{ fontSize: 18, fontWeight: 700, color: C.inkText, margin: 0 }}>{activeLessonTeacher.name}</h2>
-                <p style={{ fontSize: 12, color: C.ivoryDim, margin: 0 }}>{activeLessonTeacher.instrument} · {activeLessonTeacher.year}</p>
-              </div>
-              <ChevronRight size={16} color={C.ivoryDim} style={{ marginLeft: "auto" }} />
-            </button>
-            <LessonRoom
-              teacher={activeLessonTeacher}
-              messages={conversations[activeLessonTeacher.id] || []}
-              onSend={onSend}
-              onPayLesson={payForLesson}
-              payLoading={payLoading}
-              payError={payError}
-            />
+          <div style={{ padding: "0 0 32px", background: "#fff", minHeight: "100%" }}>
+            {/* Header */}
+            <div style={{ padding: "20px 20px 0", background: "#fff" }}>
+              <p style={{ fontSize: 13, color: C.ivoryDim, margin: "0 0 16px", textAlign: "center" }}>
+                {acceptedTeachers.length} active teacher{acceptedTeachers.length !== 1 ? "s" : ""}
+              </p>
+              {/* Teacher pills */}
+              {acceptedTeachers.length > 1 && (
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", padding: "12px 0 40px" }}>
+                  {acceptedTeachers.map((t) => (
+                    <button key={t.id} onClick={() => setActiveLessonTeacherId(t.id)}
+                      style={{ padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: t.id === activeLessonTeacher.id ? 700 : 500, border: t.id === activeLessonTeacher.id ? `2px solid ${C.brass}` : "none", background: "#fff", color: t.id === activeLessonTeacher.id ? C.ivory : C.ivoryDim, cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.06)" }}>
+                      {t.name.split(" ")[0]}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {/* Active teacher info card */}
+              <button onClick={() => selectTeacher(activeLessonTeacher.id)}
+                style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", background: "#fff", borderRadius: 12, border: "none", boxShadow: "0 1px 6px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04)", marginBottom: 16, width: "100%", cursor: "pointer", textAlign: "left" }}>
+                <Avatar name={activeLessonTeacher.name} id={activeLessonTeacher.id} size={40} photoUrl={activeLessonTeacher.photoUrl} online={activeLessonTeacher.online} />
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontSize: 14, fontWeight: 700, color: C.ivory, margin: 0 }}>{activeLessonTeacher.name}</p>
+                  <p style={{ fontSize: 12, color: C.ivoryDim, margin: "2px 0 0" }}>{activeLessonTeacher.instrument} · {activeLessonTeacher.year}</p>
+                </div>
+                <ChevronRight size={16} color={C.ivoryDim} />
+              </button>
+            </div>
+            {/* Chat/Schedule/Video card */}
+            <div style={{ margin: "0 20px 20px", background: "#fff", borderRadius: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06)", overflow: "hidden", minHeight: 320 }}>
+              <LessonRoom
+                teacher={activeLessonTeacher}
+                messages={conversations[activeLessonTeacher.id] || []}
+                onSend={onSend}
+                onPayLesson={payForLesson}
+                payLoading={payLoading}
+                payError={payError}
+              />
+            </div>
           </div>
         );
       })()}
@@ -3821,9 +3843,9 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
   }
 
   return (
-    <div style={{ overflow: "hidden" }}>
+    <div style={{ overflow: "hidden", background: "#fff" }}>
       {/* Tab bar */}
-      <div style={{ display: "flex", borderBottom: `1px solid ${C.inkLine}`, background: C.inkSoft }}>
+      <div style={{ display: "flex", borderBottom: `1px solid ${C.inkLine}`, background: "#fff" }}>
         {tabs.map(({ id, label, Icon }) => (
           <button key={id} onClick={() => setTab(id)}
             style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "10px 4px", fontSize: 11, fontWeight: tab === id ? 700 : 400, color: tab === id ? C.ivory : C.ivoryDim, background: "none", border: "none", cursor: "pointer", borderBottom: tab === id ? `2px solid ${C.brass}` : "2px solid transparent" }}>
