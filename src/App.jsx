@@ -4066,6 +4066,18 @@ const MOCK_LESSON_LEARNERS = [
   { id: "p18", name: "Ingrid Larsson",   instrument: "Flute",   level: "Advanced" },
   { id: "p19", name: "Carlos Mendez",    instrument: "Trumpet", level: "Intermediate" },
   { id: "p20", name: "Yuna Park",        instrument: "Harp",    level: "Advanced" },
+  { id: "p21", name: "Lucas Ferreira",   instrument: "Guitar",  level: "Intermediate" },
+  { id: "p22", name: "Chloe Dubois",     instrument: "Violin",  level: "Beginner" },
+  { id: "p23", name: "Mateo García",     instrument: "Cello",   level: "Advanced" },
+  { id: "p24", name: "Aiko Tanaka",      instrument: "Piano",   level: "Intermediate" },
+  { id: "p25", name: "Finn O'Brien",     instrument: "Flute",   level: "Beginner" },
+  { id: "p26", name: "Zara Ahmed",       instrument: "Violin",  level: "Advanced" },
+  { id: "p27", name: "Hugo Laurent",     instrument: "Trumpet", level: "Intermediate" },
+  { id: "p28", name: "Nina Kovač",       instrument: "Piano",   level: "Beginner" },
+  { id: "p29", name: "Emil Svensson",    instrument: "Cello",   level: "Advanced" },
+  { id: "p30", name: "Priya Nair",       instrument: "Sitar",   level: "Intermediate" },
+  { id: "p31", name: "Oscar Müller",     instrument: "Oboe",    level: "Beginner" },
+  { id: "p32", name: "Lena Fischer",     instrument: "Harp",    level: "Advanced" },
 ];
 
 function TeacherLessonRoom({ teacherId }) {
