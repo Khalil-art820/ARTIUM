@@ -957,6 +957,19 @@ export default function App() {
         }
       }
     }
+    // Restore demo session on refresh (demo users have no Supabase session)
+    if (!authProfile && !authUser) {
+      const demo = localStorage.getItem("artium_demo_session");
+      if (demo === "teacher") {
+        const demoProfile = { id: "demo-teacher", name: "Demo Teacher", instrument: "Piano", conservatoryId: "juilliard", year: "Final year", bio: "Demo account for testing teacher flows.", tastes: ["Chopin", "Debussy"], pieces: [{ title: "Ballade No. 1", composer: "Chopin" }], videoLink: "", top: "", flop: "", photoUrl: null, coverPhotoUrl: null, teaching: { open: true, mode: "online", price: "60" }, status: "approved", online: true };
+        setMyProfile(demoProfile);
+        setStudents((arr) => arr.some((s) => s.id === "demo-teacher") ? arr : [...arr, demoProfile]);
+        setScreen("app"); setAppTab("map");
+      } else if (demo === "learner") {
+        setLearnerProfile({ name: "Demo Learner", location: "Paris", instrument: "Piano", bio: "Amateur pianist exploring lessons." });
+        setScreen("learnerMap");
+      }
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, authProfile, authUser]);
 
@@ -1055,6 +1068,7 @@ export default function App() {
   }
   async function handleLogout() {
     await supabase.auth.signOut();
+    localStorage.removeItem("artium_demo_session");
     setMyProfile(null);
     setStudents((arr) => arr.filter((s) => s.id !== myProfile?.id));
     setStudentLoggedOut(true);
@@ -1084,10 +1098,13 @@ export default function App() {
     const demo = { id: "demo-teacher", name: "Demo Teacher", instrument: "Piano", conservatoryId: "juilliard", year: "Final year", bio: "Demo account for testing teacher flows.", tastes: ["Chopin", "Debussy"], pieces: [{ title: "Ballade No. 1", composer: "Chopin" }], videoLink: "", top: "", flop: "", photoUrl: null, coverPhotoUrl: null, teaching: { open: true, mode: "online", price: "60" }, status: "approved", online: true };
     setMyProfile(demo);
     setStudents((arr) => arr.some((s) => s.id === "demo-teacher") ? arr : [...arr, demo]);
+    localStorage.setItem("artium_demo_session", "teacher");
     setScreen("app"); setAppTab("map");
   }
   function enterDemoLearner() {
-    setLearnerProfile({ name: "Demo Learner", location: "Paris", instrument: "Piano", bio: "Amateur pianist exploring lessons." });
+    const lp = { name: "Demo Learner", location: "Paris", instrument: "Piano", bio: "Amateur pianist exploring lessons." };
+    setLearnerProfile(lp);
+    localStorage.setItem("artium_demo_session", "learner");
     setScreen("learnerMap");
   }
   async function submitLearner({ name, location, email, password, instrument, motivation }) {
@@ -1283,7 +1300,7 @@ export default function App() {
           onSend={sendMessage}
           onBack={backToEntry}
           onUpdateProfile={(updates) => setLearnerProfile((p) => ({ ...p, ...updates }))}
-          onLogout={async () => { await supabase.auth.signOut(); setLearnerProfile(null); setLearnerLoggedOut(true); setScreen("entry"); }}
+          onLogout={async () => { await supabase.auth.signOut(); localStorage.removeItem("artium_demo_session"); setLearnerProfile(null); setLearnerLoggedOut(true); setScreen("entry"); }}
           onDeleteAccount={async () => {
             await supabase.rpc("delete_own_account");
             await supabase.auth.signOut();
