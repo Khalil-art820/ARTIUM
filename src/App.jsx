@@ -6,6 +6,7 @@ import {
   Volume1, Volume2, VolumeX,
   Pencil, Plus, Trash2, Home, Upload, Eye, EyeOff, ChevronLeft,
   Calendar, CreditCard, Video, Link2, Clock, Bell,
+  Map, BookOpen, ListChecks, LayoutList,
 } from "lucide-react";
 import AMBIENT_AUDIO_SRC from "./assets/ambient.mp3";
 import { useAuth } from "./contexts/AuthContext";
@@ -445,7 +446,7 @@ function Avatar({ name, id, size = 44, online, photoUrl }) {
       ) : (
         <div
           className="w-full h-full rounded-full flex items-center justify-center"
-          style={{ background: colorFor(id || name), color: C.ivory, fontFamily: FONT_DISPLAY, fontSize: size * 0.36 }}
+          style={{ background: C.brass, color: C.brassText, fontFamily: FONT_DISPLAY, fontSize: size * 0.36 }}
         >
           {initials(name)}
         </div>
@@ -1358,14 +1359,14 @@ export default function App() {
         >
           {/* Teacher sub-tab bar (hidden when viewing a student profile) */}
           {myProfile && !selectedStudentId && (
-            <div className="px-6 flex gap-1" style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#fff" }}>
+            <div className="flex" style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#fff" }}>
               {[
-                { key: "map", label: "Map" },
-                { key: "lessons", label: "Lesson Room" },
-              ].map(({ key, label }) => (
+                { key: "map", label: "Map", Icon: Map },
+                { key: "lessons", label: "Lesson Room", Icon: BookOpen },
+              ].map(({ key, label, Icon }) => (
                 <button key={key} onClick={() => setAppTabPersist(key)}
-                  className="px-4 py-2 text-sm"
-                  style={{ fontWeight: appTab === key ? 600 : 400, color: appTab === key ? C.ivory : C.ivoryDim, borderBottom: appTab === key ? `2px solid ${C.brass}` : "2px solid transparent", background: "transparent", border: "none", cursor: "pointer" }}>
+                  style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2, padding: "8px 4px 6px", fontWeight: appTab === key ? 600 : 400, fontSize: 12, color: appTab === key ? C.ivory : C.ivoryDim, borderBottom: appTab === key ? `2px solid ${C.brass}` : "2px solid transparent", background: "transparent", border: "none", cursor: "pointer" }}>
+                  <Icon size={16} />
                   {label}
                 </button>
               ))}
@@ -2271,12 +2272,12 @@ function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, mus
             ))}
           </div>
         )}
-        <div className="flex items-center gap-3 ml-auto">
+        <div className="flex items-center gap-2 ml-auto">
           <MusicBtn playing={musicOn} onToggle={onMusicToggle} audioRef={audioRef} />
           {onlineCount != null && (
-            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: C.ivoryDim, whiteSpace: "nowrap" }}>
+            <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: C.ivoryDim, whiteSpace: "nowrap" }}>
               <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#1A9E6E", display: "inline-block", flexShrink: 0 }} />
-              <span style={{ color: C.ivory, fontWeight: 600 }}>{onlineCount}</span> online
+              <span style={{ color: C.ivory, fontWeight: 600 }}>{onlineCount}</span>
             </span>
           )}
           {myProfile && <NotificationBell myProfile={myProfile} onGoToLessonRoom={onGoToLessonRoom} />}
@@ -4359,18 +4360,7 @@ function TeacherLessonRoom({ teacherId }) {
       )}
       {/* Header */}
       <div style={{ padding: "20px 20px 0", background: "#fff" }}>
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 4 }}>
-          <h2 style={{ fontSize: 17, fontWeight: 700, color: C.ivory, margin: 0 }}>Lesson Room</h2>
-          <div style={{ display: "flex", gap: 6 }}>
-            {[["preferences", "Teaching Preferences"], ["planning", "My Planning"]].map(([v, label]) => (
-              <button key={v} onClick={() => setRoomView(roomView === v ? "students" : v)}
-                style={{ padding: "5px 12px", borderRadius: 20, fontSize: 11, fontWeight: 600, cursor: "pointer", border: `1.5px solid ${roomView === v ? C.brass : C.inkLine}`, background: roomView === v ? C.brassDim : "transparent", color: roomView === v ? C.brass : C.ivoryDim }}>
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-        <p style={{ fontSize: 13, color: C.ivoryDim, margin: "0 0 16px" }}>{allLearners.length} active student{allLearners.length !== 1 ? "s" : ""}</p>
+        <p style={{ fontSize: 13, color: C.ivoryDim, margin: "0 0 16px", textAlign: "center" }}>{allLearners.length} active student{allLearners.length !== 1 ? "s" : ""}</p>
         {roomView === "students" && (<>
         {/* Learner pill picker */}
         {allLearners.length > 1 && (
@@ -4829,6 +4819,28 @@ function TeacherLessonRoom({ teacherId }) {
       )}
       </div>{/* end card */}
       </React.Fragment> )}
+
+      {/* Bottom nav — My Rules & My Planning */}
+      {roomView === "students" && (
+        <div style={{ display: "flex", justifyContent: "center", gap: 40, padding: "20px 20px 12px", background: "#fff", borderTop: `1px solid ${C.inkLine}` }}>
+          {[
+            { v: "preferences", Icon: ListChecks, label: "My Rules" },
+            { v: "planning",    Icon: LayoutList, label: "My Planning" },
+          ].map(({ v, Icon, label }) => (
+            <button key={v} onClick={() => setRoomView(v)}
+              style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5, background: "none", border: "none", cursor: "pointer",
+                color: roomView === v ? C.brassLabel : C.ivoryDim }}>
+              <div style={{ width: 52, height: 52, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
+                background: roomView === v ? C.brassDim : "#F5F5F5",
+                border: roomView === v ? `2px solid ${C.brass}` : "2px solid transparent",
+                boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
+                <Icon size={22} color={roomView === v ? C.brassLabel : C.ivoryDim} />
+              </div>
+              <span style={{ fontSize: 11, fontWeight: 600 }}>{label}</span>
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Cancel confirmation modal */}
       {confirmCancelId !== null && (
