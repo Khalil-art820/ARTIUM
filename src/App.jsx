@@ -2265,7 +2265,7 @@ function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, mus
             {tabs.map((t) => (
               <button
                 key={t.id}
-                onClick={() => t.locked ? onGuestTabClick() : setAppTabPersist(t.id)}
+                onClick={() => t.locked ? onGuestTabClick() : setAppTab(t.id)}
                 className="inline-flex items-center gap-1.5"
                 style={{
                   fontFamily: FONT_BODY, fontWeight: 500, fontSize: 14,
@@ -2294,7 +2294,7 @@ function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, mus
           {!myProfile ? (
             !previewOnly && <PrimaryBtn onClick={onApply}>Sign up</PrimaryBtn>
           ) : (
-            <button onClick={hideTabs ? undefined : () => setAppTabPersist("profile")} title={hideTabs ? undefined : "My profile"}
+            <button onClick={hideTabs ? undefined : () => setAppTab("profile")} title={hideTabs ? undefined : "My profile"}
               style={{ background: "none", border: "none", padding: 0, cursor: hideTabs ? "default" : "pointer" }}>
               <Avatar name={myProfile.name} id="me" size={32} photoUrl={myProfile.photoUrl} online />
             </button>
@@ -3303,7 +3303,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
             { key: "map", label: "Find a teacher", Icon: Map },
             ...(Object.values(teachRequests).some((s) => s === "accepted") ? [{ key: "lesson", label: "Lesson Room", Icon: BookOpen }] : []),
           ].map(({ key, label, Icon }) => (
-            <button key={key} onClick={() => { setAppTabPersist(key); if (key === "lesson") setSelectedId(null); }}
+            <button key={key} onClick={() => { setAppTab(key); if (key === "lesson") setSelectedId(null); }}
               style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2, padding: "8px 4px 6px", fontWeight: appTab === key ? 600 : 400, fontSize: 12, color: appTab === key ? C.ivory : C.ivoryDim, borderBottom: appTab === key ? `2px solid ${C.brass}` : "2px solid transparent", background: "transparent", border: "none", cursor: "pointer" }}>
               <Icon size={16} />
               {label}
