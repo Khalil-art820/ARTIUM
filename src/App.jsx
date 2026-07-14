@@ -4348,7 +4348,7 @@ function TeacherLessonRoom({ teacherId }) {
             {allLearners.map((l) => (
               <div key={l.id} style={{ position: "relative", display: "inline-flex" }}>
                 <button onClick={() => { setActiveLearner(l); setSelectedSessionId(null); setTab("chat"); }}
-                  style={{ padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: activeLearner.id === l.id ? 700 : 500, border: activeLearner.id === l.id ? `2px solid ${C.brass}` : "none", background: "#fff", color: activeLearner.id === l.id ? C.ivory : C.ivoryDim, cursor: "pointer", boxShadow: activeLearner.id === l.id ? `0 0 0 0px transparent` : "0 1px 4px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.04)" }}>
+                  style={{ padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: activeLearner.id === l.id ? 700 : 500, border: activeLearner.id === l.id ? `2px solid ${C.brass}` : "none", background: "#fff", color: activeLearner.id === l.id ? C.ivory : C.ivoryDim, cursor: "pointer", boxShadow: activeLearner.id === l.id ? `0 2px 8px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.06)` : "0 2px 8px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.06)" }}>
                   {l.name.split(" ")[0]}
                 </button>
                 <button onClick={(e) => { e.stopPropagation(); setConfirmRemoveId(l.id); }}
@@ -4497,7 +4497,8 @@ function TeacherLessonRoom({ teacherId }) {
       {/* Inner tab bar — students view only */}
       {roomView === "students" && (
         <React.Fragment> {/* Inner tab bar */}
-      <div style={{ display: "flex", borderBottom: `1px solid ${C.inkLine}`, borderTop: `1px solid ${C.inkLine}`, background: C.inkSoft }}>
+      <div style={{ margin: "0 20px 20px", background: "#fff", borderRadius: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06)", overflow: "hidden" }}>
+      <div style={{ display: "flex", borderBottom: `1px solid ${C.inkLine}`, background: "#fff" }}>
         {tabs.map(({ id, label, Icon }) => (
           <button key={id} onClick={() => setTab(id)}
             style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "10px 4px", fontSize: 11, fontWeight: tab === id ? 700 : 400, color: tab === id ? C.ivory : C.ivoryDim, background: "none", border: "none", cursor: "pointer", borderBottom: tab === id ? `2px solid ${C.brass}` : "2px solid transparent" }}>
@@ -4524,7 +4525,7 @@ function TeacherLessonRoom({ teacherId }) {
             ))}
           </div>
           <div className="px-3 py-3 flex items-center gap-2" style={{ borderTop: `1px solid ${C.inkLine}` }}>
-            <input style={{ flex: 1, background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: "10px 14px", fontSize: 14, color: C.inkText, outline: "none" }}
+            <input style={{ flex: 1, background: "#F5F5F5", border: "none", borderRadius: 12, padding: "10px 14px", fontSize: 14, color: C.inkText, outline: "none" }}
               placeholder={`Message ${activeLearner.name.split(" ")[0]}…`}
               onKeyDown={(e) => { if (e.key === "Enter" && e.target.value.trim()) { sendMsg(e.target.value); e.target.value = ""; } }} />
             <button onClick={(e) => { const inp = e.currentTarget.previousSibling; if (inp.value.trim()) { sendMsg(inp.value); inp.value = ""; } }}
@@ -4796,6 +4797,7 @@ function TeacherLessonRoom({ teacherId }) {
           </div>
         </div>
       )}
+      </div>{/* end card */}
       </React.Fragment> )}
 
       {/* Cancel confirmation modal */}
