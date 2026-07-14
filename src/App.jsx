@@ -3293,7 +3293,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
       myProfile={learnerProfile}
       musicOn={musicOn} onMusicToggle={onMusicToggle} audioRef={audioRef}
       onlineCount={onlineCount}
-      onBack={selectedId ? () => setSelectedId(null) : appTab !== "map" ? () => setAppTabPersist("map") : onBack}
+      onBack={selectedId ? () => setSelectedId(null) : appTab !== "map" ? () => setAppTab("map") : onBack}
       hideTabs={!!selectedId}
     >
       {/* Tab bar — hidden when viewing teacher profile from Lesson Room */}
@@ -3463,7 +3463,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
             {status === "accepted" && (
               <div className="mt-6 rounded-xl p-4 text-sm" style={{ background: C.inkSoft, border: `1px solid ${C.inkLine}`, color: C.ivoryDim, display: "flex", alignItems: "center", gap: 8 }}>
                 <Check size={13} color={C.brass} />
-                <span>{selected.name.split(" ")[0]} accepted — open <button onClick={() => setAppTabPersist("lesson")} style={{ background: "none", border: "none", padding: 0, color: C.brassLabel, fontWeight: 600, cursor: "pointer", fontSize: "inherit" }}>Lesson Room</button> to get started.</span>
+                <span>{selected.name.split(" ")[0]} accepted — open <button onClick={() => setAppTab("lesson")} style={{ background: "none", border: "none", padding: 0, color: C.brassLabel, fontWeight: 600, cursor: "pointer", fontSize: "inherit" }}>Lesson Room</button> to get started.</span>
               </div>
             )}
             {status === "pending" && (
