@@ -29,8 +29,9 @@ const C = {
   ivoryDim: "#425466",
   inkText: "#0A2540",
   inkTextDim: "#425466",
-  brass: "#A8747B",
-  brassDim: "rgba(168,116,123,0.10)",
+  brass: "#FFC629",
+  brassText: "#1A1200",
+  brassDim: "rgba(255,198,41,0.12)",
   burgundy: "#DF1B41",
   forest: "#8B5560",
 };
@@ -467,7 +468,7 @@ function PrimaryBtn({ children, onClick, disabled, full, icon: Icon }) {
       style={{
         fontFamily: FONT_BODY, fontWeight: 500, fontSize: 15,
         background: disabled ? "rgba(46,134,193,0.20)" : C.brass,
-        color: "#FFFFFF",
+        color: disabled ? "#FFFFFF" : C.brassText,
         border: "none",
         borderRadius: 6,
         padding: "10px 20px",
@@ -2190,7 +2191,7 @@ function NotificationBell({ myProfile, onGoToLessonRoom }) {
                     View profile
                   </button>
                   <button onClick={() => { setOpen(false); onGoToLessonRoom(); }}
-                    style={{ flex: 1, padding: "7px 0", borderRadius: 8, fontSize: 12, fontWeight: 700, background: C.brass, border: "none", color: "#fff", cursor: "pointer" }}>
+                    style={{ flex: 1, padding: "7px 0", borderRadius: 8, fontSize: 12, fontWeight: 700, background: C.brass, border: "none", color: C.brassText, cursor: "pointer" }}>
                     Accept / Decline
                   </button>
                 </div>
@@ -3797,7 +3798,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
             <div style={{ position: "relative", display: "inline-flex" }}>
               <Icon size={15} />
               {id === "chat" && unreadCount > 0 && (
-                <span style={{ position: "absolute", top: -6, right: -6, minWidth: 14, height: 14, borderRadius: 7, background: C.brass, color: "#fff", fontSize: 9, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 3px" }}>{unreadCount}</span>
+                <span style={{ position: "absolute", top: -6, right: -6, minWidth: 14, height: 14, borderRadius: 7, background: C.brass, color: C.brassText, fontSize: 9, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 3px" }}>{unreadCount}</span>
               )}
             </div>
             {label}
@@ -3811,7 +3812,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
           <div className="lg-scroll overflow-y-auto px-4 py-3 flex flex-col gap-2" style={{ maxHeight: 280 }}>
             {activeMessages.length === 0 && <p style={{ fontSize: 13, color: C.ivoryDim, textAlign: "center", padding: "24px 0" }}>Start the conversation with {teacher.name.split(" ")[0]}</p>}
             {activeMessages.map((m, i) => (
-              <div key={i} className="px-3.5 py-2 rounded-2xl text-sm" style={{ maxWidth: "80%", alignSelf: m.from === "me" ? "flex-end" : "flex-start", background: m.from === "me" ? C.brass : C.inkSoft, color: m.from === "me" ? "#fff" : C.inkText }}>
+              <div key={i} className="px-3.5 py-2 rounded-2xl text-sm" style={{ maxWidth: "80%", alignSelf: m.from === "me" ? "flex-end" : "flex-start", background: m.from === "me" ? C.brass : C.inkSoft, color: m.from === "me" ? C.brassText : C.inkText }}>
                 {m.text}
               </div>
             ))}
@@ -3822,7 +3823,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
               onKeyDown={(e) => { if (e.key === "Enter" && e.target.value.trim()) { sendLearnerMsg(e.target.value); e.target.value = ""; } }} />
             <button onClick={(e) => { const inp = e.currentTarget.previousSibling; if (inp.value.trim()) { sendLearnerMsg(inp.value); inp.value = ""; } }}
               className="rounded-full p-3" style={{ background: C.brass, flexShrink: 0 }}>
-              <Send size={15} color="#fff" />
+              <Send size={15} color={C.brassText} />
             </button>
           </div>
         </div>
@@ -3899,7 +3900,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
                       </div>
                       <div style={{ display: "flex", gap: 8 }}>
                         <button onClick={() => submitCounter(sel.id)} disabled={!counterDate[sel.id] || !counterTime[sel.id]}
-                          style={{ flex: 1, padding: "8px 0", borderRadius: 9, background: C.brass, color: "#fff", fontSize: 13, fontWeight: 600, border: "none", cursor: !counterDate[sel.id] || !counterTime[sel.id] ? "not-allowed" : "pointer", opacity: !counterDate[sel.id] || !counterTime[sel.id] ? 0.5 : 1 }}>
+                          style={{ flex: 1, padding: "8px 0", borderRadius: 9, background: C.brass, color: C.brassText, fontSize: 13, fontWeight: 600, border: "none", cursor: !counterDate[sel.id] || !counterTime[sel.id] ? "not-allowed" : "pointer", opacity: !counterDate[sel.id] || !counterTime[sel.id] ? 0.5 : 1 }}>
                           Send proposal
                         </button>
                         <button onClick={() => setShowCounter((prev) => ({ ...prev, [sel.id]: false }))}
@@ -4318,7 +4319,7 @@ function TeacherLessonRoom({ teacherId }) {
               </div>
               <div style={{ display: "flex", gap: 8 }}>
                 <button onClick={() => setViewingLearner(r)} style={{ flex: 1, padding: "6px 0", borderRadius: 8, fontSize: 12, fontWeight: 600, background: "transparent", border: `1.5px solid ${C.inkLine}`, color: C.ivoryDim, cursor: "pointer" }}>View profile</button>
-                <button onClick={() => acceptRequest(r.learnerId)} style={{ flex: 1, padding: "6px 0", borderRadius: 8, fontSize: 12, fontWeight: 700, background: C.brass, color: "#fff", border: "none", cursor: "pointer" }}>Accept</button>
+                <button onClick={() => acceptRequest(r.learnerId)} style={{ flex: 1, padding: "6px 0", borderRadius: 8, fontSize: 12, fontWeight: 700, background: C.brass, color: C.brassText, border: "none", cursor: "pointer" }}>Accept</button>
                 <button onClick={() => declineRequest(r.learnerId)} style={{ flex: 1, padding: "6px 0", borderRadius: 8, fontSize: 12, fontWeight: 600, background: "transparent", color: C.ivoryDim, border: `1px solid ${C.inkLine}`, cursor: "pointer" }}>Decline</button>
               </div>
             </div>
@@ -4502,7 +4503,7 @@ function TeacherLessonRoom({ teacherId }) {
             <div style={{ position: "relative", display: "inline-flex" }}>
               <Icon size={15} />
               {id === "chat" && teacherUnread > 0 && (
-                <span style={{ position: "absolute", top: -6, right: -6, minWidth: 14, height: 14, borderRadius: 7, background: C.brass, color: "#fff", fontSize: 9, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 3px" }}>{teacherUnread}</span>
+                <span style={{ position: "absolute", top: -6, right: -6, minWidth: 14, height: 14, borderRadius: 7, background: C.brass, color: C.brassText, fontSize: 9, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 3px" }}>{teacherUnread}</span>
               )}
             </div>
             {label}
@@ -4516,7 +4517,7 @@ function TeacherLessonRoom({ teacherId }) {
           <div className="lg-scroll overflow-y-auto px-4 py-3 flex flex-col gap-2" style={{ maxHeight: 300 }}>
             {msgs.length === 0 && <p style={{ fontSize: 13, color: C.ivoryDim, textAlign: "center", padding: "24px 0" }}>Start the conversation with {activeLearner.name.split(" ")[0]}</p>}
             {msgs.map((m, i) => (
-              <div key={i} className="px-3.5 py-2 rounded-2xl text-sm" style={{ maxWidth: "80%", alignSelf: m.from === "me" ? "flex-end" : "flex-start", background: m.from === "me" ? C.brass : C.inkSoft, color: m.from === "me" ? "#fff" : C.inkText }}>
+              <div key={i} className="px-3.5 py-2 rounded-2xl text-sm" style={{ maxWidth: "80%", alignSelf: m.from === "me" ? "flex-end" : "flex-start", background: m.from === "me" ? C.brass : C.inkSoft, color: m.from === "me" ? C.brassText : C.inkText }}>
                 {m.text}
               </div>
             ))}
@@ -4527,7 +4528,7 @@ function TeacherLessonRoom({ teacherId }) {
               onKeyDown={(e) => { if (e.key === "Enter" && e.target.value.trim()) { sendMsg(e.target.value); e.target.value = ""; } }} />
             <button onClick={(e) => { const inp = e.currentTarget.previousSibling; if (inp.value.trim()) { sendMsg(inp.value); inp.value = ""; } }}
               className="rounded-full p-3" style={{ background: C.brass, flexShrink: 0 }}>
-              <Send size={15} color="#fff" />
+              <Send size={15} color={C.brassText} />
             </button>
           </div>
         </div>
@@ -4542,7 +4543,7 @@ function TeacherLessonRoom({ teacherId }) {
             <div style={{ padding: "14px 20px 0" }}>
               {!showPropose ? (
                 <button onClick={() => { setRecurring("none"); setShowPropose(true); }}
-                  style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 10, background: C.brass, color: "#fff", fontSize: 13, fontWeight: 600, border: "none", cursor: "pointer", marginBottom: 12 }}>
+                  style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 10, background: C.brass, color: C.brassText, fontSize: 13, fontWeight: 600, border: "none", cursor: "pointer", marginBottom: 12 }}>
                   <Plus size={14} /> Propose a session
                 </button>
               ) : (
@@ -4576,7 +4577,7 @@ function TeacherLessonRoom({ teacherId }) {
                   )}
                   <div style={{ display: "flex", gap: 8 }}>
                     <button onClick={proposeSession} disabled={!newDate || !newTime}
-                      style={{ flex: 1, padding: "8px 0", borderRadius: 9, background: C.brass, color: "#fff", fontSize: 13, fontWeight: 600, border: "none", cursor: !newDate || !newTime ? "not-allowed" : "pointer", opacity: !newDate || !newTime ? 0.5 : 1 }}>
+                      style={{ flex: 1, padding: "8px 0", borderRadius: 9, background: C.brass, color: C.brassText, fontSize: 13, fontWeight: 600, border: "none", cursor: !newDate || !newTime ? "not-allowed" : "pointer", opacity: !newDate || !newTime ? 0.5 : 1 }}>
                       {recurring === "none" ? "Send proposal" : `Propose ${recurringCount} sessions`}
                     </button>
                     <button onClick={() => { setShowPropose(false); setRecurring("none"); setRecurringCount(4); }}
@@ -4662,7 +4663,7 @@ function TeacherLessonRoom({ teacherId }) {
                       </div>
                       <div style={{ display: "flex", gap: 8 }}>
                         <button onClick={() => proposeNewTime(sel.id)} disabled={!counterDate[sel.id] || !counterTime[sel.id]}
-                          style={{ flex: 1, padding: "8px 0", borderRadius: 9, background: C.brass, color: "#fff", fontSize: 13, fontWeight: 600, border: "none", cursor: !counterDate[sel.id] || !counterTime[sel.id] ? "not-allowed" : "pointer", opacity: !counterDate[sel.id] || !counterTime[sel.id] ? 0.5 : 1 }}>
+                          style={{ flex: 1, padding: "8px 0", borderRadius: 9, background: C.brass, color: C.brassText, fontSize: 13, fontWeight: 600, border: "none", cursor: !counterDate[sel.id] || !counterTime[sel.id] ? "not-allowed" : "pointer", opacity: !counterDate[sel.id] || !counterTime[sel.id] ? 0.5 : 1 }}>
                           Send
                         </button>
                         <button onClick={() => setShowCounter((p) => ({ ...p, [sel.id]: false }))}
@@ -4717,7 +4718,7 @@ function TeacherLessonRoom({ teacherId }) {
                               />
                               <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>
                                 <button onClick={() => { saveAgenda(activeLearner.id, sel.id, draft); setAgendaDraft(prev => ({ ...prev, [draftKey]: draft })); }} disabled={!draft.trim() || !isDirty}
-                                  style={{ padding: "7px 18px", borderRadius: 9, background: C.brass, color: "#fff", fontSize: 13, fontWeight: 600, border: "none", cursor: !draft.trim() || !isDirty ? "not-allowed" : "pointer", opacity: !draft.trim() || !isDirty ? 0.5 : 1 }}>
+                                  style={{ padding: "7px 18px", borderRadius: 9, background: C.brass, color: C.brassText, fontSize: 13, fontWeight: 600, border: "none", cursor: !draft.trim() || !isDirty ? "not-allowed" : "pointer", opacity: !draft.trim() || !isDirty ? 0.5 : 1 }}>
                                   {submitted ? "Update agenda" : "Send agenda"}
                                 </button>
                                 {submitted && !isDirty && (
@@ -4782,7 +4783,7 @@ function TeacherLessonRoom({ teacherId }) {
                 placeholder="Paste your Zoom or Meet link…"
                 style={{ flex: 1, background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "10px 14px", fontSize: 13, color: C.inkText, outline: "none" }} />
               <button onClick={() => setZoomSaved(true)} disabled={!zoomLink.trim()}
-                style={{ padding: "10px 16px", borderRadius: 10, background: zoomSaved ? "#1A9E6E" : C.brass, color: "#fff", fontSize: 13, fontWeight: 600, border: "none", cursor: !zoomLink.trim() ? "not-allowed" : "pointer", opacity: !zoomLink.trim() ? 0.5 : 1 }}>
+                style={{ padding: "10px 16px", borderRadius: 10, background: zoomSaved ? "#1A9E6E" : C.brass, color: zoomSaved ? "#fff" : C.brassText, fontSize: 13, fontWeight: 600, border: "none", cursor: !zoomLink.trim() ? "not-allowed" : "pointer", opacity: !zoomLink.trim() ? 0.5 : 1 }}>
                 {zoomSaved ? "Saved ✓" : "Save"}
               </button>
             </div>
