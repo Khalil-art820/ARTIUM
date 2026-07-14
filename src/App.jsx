@@ -1335,7 +1335,7 @@ export default function App() {
               ].map(({ key, label }) => (
                 <button key={key} onClick={() => setAppTab(key)}
                   className="px-4 py-2 text-sm"
-                  style={{ fontWeight: appTab === key ? 600 : 400, color: appTab === key ? C.brass : C.ivoryDim, borderBottom: appTab === key ? `2px solid ${C.brass}` : "2px solid transparent", background: "transparent", border: "none", cursor: "pointer" }}>
+                  style={{ fontWeight: appTab === key ? 600 : 400, color: appTab === key ? C.ivory : C.ivoryDim, borderBottom: appTab === key ? `2px solid ${C.brass}` : "2px solid transparent", background: "transparent", border: "none", cursor: "pointer" }}>
                   {label}
                 </button>
               ))}
@@ -3263,7 +3263,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
         ].map(([key, label]) => (
           <button key={key} onClick={() => { setAppTab(key); if (key === "lesson") setSelectedId(null); }}
             className="px-4 py-2 text-sm"
-            style={{ fontWeight: appTab === key ? 600 : 400, color: appTab === key ? C.brass : C.ivoryDim, borderBottom: appTab === key ? `2px solid ${C.brass}` : "2px solid transparent", background: "transparent" }}>
+            style={{ fontWeight: appTab === key ? 600 : 400, color: appTab === key ? C.ivory : C.ivoryDim, borderBottom: appTab === key ? `2px solid ${C.brass}` : "2px solid transparent", background: "transparent" }}>
             {label}
           </button>
         ))}
@@ -3795,7 +3795,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
       <div style={{ display: "flex", borderBottom: `1px solid ${C.inkLine}`, background: C.inkSoft }}>
         {tabs.map(({ id, label, Icon }) => (
           <button key={id} onClick={() => setTab(id)}
-            style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "10px 4px", fontSize: 11, fontWeight: tab === id ? 700 : 400, color: tab === id ? C.brass : C.ivoryDim, background: "none", border: "none", cursor: "pointer", borderBottom: tab === id ? `2px solid ${C.brass}` : "2px solid transparent" }}>
+            style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "10px 4px", fontSize: 11, fontWeight: tab === id ? 700 : 400, color: tab === id ? C.ivory : C.ivoryDim, background: "none", border: "none", cursor: "pointer", borderBottom: tab === id ? `2px solid ${C.brass}` : "2px solid transparent" }}>
             <div style={{ position: "relative", display: "inline-flex" }}>
               <Icon size={15} />
               {id === "chat" && unreadCount > 0 && (
@@ -4348,7 +4348,7 @@ function TeacherLessonRoom({ teacherId }) {
             {allLearners.map((l) => (
               <div key={l.id} style={{ position: "relative", display: "inline-flex" }}>
                 <button onClick={() => { setActiveLearner(l); setSelectedSessionId(null); setTab("chat"); }}
-                  style={{ padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: activeLearner.id === l.id ? 700 : 500, border: `1.5px solid ${activeLearner.id === l.id ? C.brass : C.inkLine}`, background: activeLearner.id === l.id ? C.brassDim : "transparent", color: activeLearner.id === l.id ? C.brass : C.ivoryDim, cursor: "pointer" }}>
+                  style={{ padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: activeLearner.id === l.id ? 700 : 500, border: `1.5px solid ${activeLearner.id === l.id ? C.brass : C.inkLine}`, background: "transparent", color: activeLearner.id === l.id ? C.ivory : C.ivoryDim, cursor: "pointer" }}>
                   {l.name.split(" ")[0]}
                 </button>
                 <button onClick={(e) => { e.stopPropagation(); setConfirmRemoveId(l.id); }}
@@ -4500,7 +4500,7 @@ function TeacherLessonRoom({ teacherId }) {
       <div style={{ display: "flex", borderBottom: `1px solid ${C.inkLine}`, borderTop: `1px solid ${C.inkLine}`, background: C.inkSoft }}>
         {tabs.map(({ id, label, Icon }) => (
           <button key={id} onClick={() => setTab(id)}
-            style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "10px 4px", fontSize: 11, fontWeight: tab === id ? 700 : 400, color: tab === id ? C.brass : C.ivoryDim, background: "none", border: "none", cursor: "pointer", borderBottom: tab === id ? `2px solid ${C.brass}` : "2px solid transparent" }}>
+            style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "10px 4px", fontSize: 11, fontWeight: tab === id ? 700 : 400, color: tab === id ? C.ivory : C.ivoryDim, background: "none", border: "none", cursor: "pointer", borderBottom: tab === id ? `2px solid ${C.brass}` : "2px solid transparent" }}>
             <div style={{ position: "relative", display: "inline-flex" }}>
               <Icon size={15} />
               {id === "chat" && teacherUnread > 0 && (
