@@ -864,7 +864,8 @@ export default function App() {
   const [onlineCount, setOnlineCount] = useState(1);
   const { user: authUser, profile: authProfile, loading: authLoading } = useAuth();
   const [screen, setScreen] = useState("entry");
-  const [appTab, setAppTab] = useState("map");
+  const [appTab, setAppTab] = useState(() => localStorage.getItem("artium_app_tab") || "map");
+  const setAppTabPersist = (tab) => { localStorage.setItem("artium_app_tab", tab); setAppTab(tab); };
   const [editingProfile, setEditingProfile] = useState(false);
   const [previewOnly, setPreviewOnly] = useState(false);
   const [authError, setAuthError] = useState("");
@@ -911,7 +912,7 @@ export default function App() {
       if (screen === "entry" || screen === "landing" || screen === "login" || screen === "confirmEmail") {
         setSelectedConsId(me.conservatoryId);
         setScreen("app");
-        setAppTab("map");
+        setAppTabPersist("map");
       }
       return;
     }
@@ -927,7 +928,7 @@ export default function App() {
           setStudents((arr) => [...arr.filter((s) => s.id !== me.id), me]);
           setSelectedConsId(me.conservatoryId);
           setScreen("app");
-          setAppTab("map");
+          setAppTabPersist("map");
         });
       } else if (pendingLearner) {
         supabase.from("profiles").insert({ id: authUser.id, role: "learner", name: pendingLearner.name, location: pendingLearner.location, instrument: pendingLearner.instrument, bio: pendingLearner.motivation, approved: true }).then(({ error }) => {
@@ -964,7 +965,9 @@ export default function App() {
         const demoProfile = { id: "demo-teacher", name: "Demo Teacher", instrument: "Piano", conservatoryId: "juilliard", year: "Final year", bio: "Demo account for testing teacher flows.", tastes: ["Chopin", "Debussy"], pieces: [{ title: "Ballade No. 1", composer: "Chopin" }], videoLink: "", top: "", flop: "", photoUrl: null, coverPhotoUrl: null, teaching: { open: true, mode: "online", price: "60" }, status: "approved", online: true };
         setMyProfile(demoProfile);
         setStudents((arr) => arr.some((s) => s.id === "demo-teacher") ? arr : [...arr, demoProfile]);
-        setScreen("app"); setAppTab("map");
+        seedDemoLearner("demo-teacher");
+        const savedTab = localStorage.getItem("artium_app_tab") || "map";
+        setScreen("app"); setAppTab(savedTab);
       } else if (demo === "learner") {
         setLearnerProfile({ name: "Demo Learner", location: "Paris", instrument: "Piano", bio: "Amateur pianist exploring lessons." });
         setScreen("learnerMap");
@@ -1069,24 +1072,25 @@ export default function App() {
   async function handleLogout() {
     await supabase.auth.signOut();
     localStorage.removeItem("artium_demo_session");
+    localStorage.removeItem("artium_app_tab");
     setMyProfile(null);
     setStudents((arr) => arr.filter((s) => s.id !== myProfile?.id));
     setStudentLoggedOut(true);
     setScreen("landing");
-    setAppTab("map");
+    setAppTabPersist("map");
   }
   function startPreview() {
     setPreviewOnly(true);
     setScreen("app");
-    setAppTab("map");
+    setAppTabPersist("map");
   }
   function goHome() {
     setScreen("landing");
     setSelectedStudentId(null);
-    setAppTab("map");
+    setAppTabPersist("map");
   }
   function chooseStudent() {
-    if (myProfile) { setScreen("app"); setAppTab("map"); return; }
+    if (myProfile) { setScreen("app"); setAppTabPersist("map"); return; }
     setScreen("landing");
   }
   function chooseLearner() {
@@ -1094,12 +1098,21 @@ export default function App() {
     if (learnerLoggedOut) { startLogin(); return; }
     setLearnerProfile(null); setAuthError(""); setScreen("learnerSignup");
   }
+  function seedDemoLearner(teacherId) {
+    const existing = JSON.parse(localStorage.getItem("incomingRequests") || "{}");
+    existing[teacherId] = existing[teacherId] || [];
+    if (!existing[teacherId].find((r) => r.learnerId === "demo-learner")) {
+      existing[teacherId].push({ learnerId: "demo-learner", name: "Demo Learner", instrument: "Piano", bio: "Amateur pianist exploring lessons.", status: "accepted" });
+      localStorage.setItem("incomingRequests", JSON.stringify(existing));
+    }
+  }
   function enterDemoTeacher() {
     const demo = { id: "demo-teacher", name: "Demo Teacher", instrument: "Piano", conservatoryId: "juilliard", year: "Final year", bio: "Demo account for testing teacher flows.", tastes: ["Chopin", "Debussy"], pieces: [{ title: "Ballade No. 1", composer: "Chopin" }], videoLink: "", top: "", flop: "", photoUrl: null, coverPhotoUrl: null, teaching: { open: true, mode: "online", price: "60" }, status: "approved", online: true };
     setMyProfile(demo);
     setStudents((arr) => arr.some((s) => s.id === "demo-teacher") ? arr : [...arr, demo]);
+    seedDemoLearner("demo-teacher");
     localStorage.setItem("artium_demo_session", "teacher");
-    setScreen("app"); setAppTab("map");
+    setScreen("app"); setAppTabPersist("map");
   }
   function enterDemoLearner() {
     const lp = { name: "Demo Learner", location: "Paris", instrument: "Piano", bio: "Amateur pianist exploring lessons." };
@@ -1161,7 +1174,7 @@ export default function App() {
   function goToProfile() {
     if (!myProfile) return;
     setScreen("app");
-    setAppTab("profile");
+    setAppTabPersist("profile");
     setSelectedStudentId(null);
   }
   function update(partial) { setDraft((d) => ({ ...d, ...partial })); }
@@ -1176,7 +1189,7 @@ export default function App() {
       const updated = { ...myProfile, ...draft };
       setMyProfile(updated);
       setStudents((arr) => arr.map((s) => (s.id === myProfile.id ? updated : s)));
-      setScreen("app"); setAppTab("profile");
+      setScreen("app"); setAppTabPersist("profile");
     } else if (authUser && draft.password === "__google__") {
       // Google OAuth user completing profile for the first time
       const { error: insertError } = await supabase.from("profiles").insert(toDbProfile(draft, authUser.id));
@@ -1211,17 +1224,17 @@ export default function App() {
     setStudents((arr) => [...arr.filter((s) => s.id !== me.id), me]);
     setPreviewOnly(false);
     setSelectedConsId(me.conservatoryId);
-    setScreen("app"); setAppTab("map");
+    setScreen("app"); setAppTabPersist("map");
   }
   function editProfile() {
     setDraft({ ...emptyDraft(), ...myProfile, years: myProfile.year || "", pieces: myProfile.pieces || [], tastes: myProfile.tastes || [], composerDay: myProfile.composerDay || "" });
     setStep(0); setEditingProfile(true); setScreen("signup");
   }
   function openStudent(id, from) { setSelectedStudentId(id); setProfileBack(from); }
-  function backFromProfile() { setSelectedStudentId(null); setAppTab(profileBack === "chat" ? "messages" : "map"); }
+  function backFromProfile() { setSelectedStudentId(null); setAppTabPersist(profileBack === "chat" ? "messages" : "map"); }
   function openChat(id) {
     setConversations((c) => (c[id] ? c : { ...c, [id]: [] }));
-    setActiveChatId(id); setSelectedStudentId(null); setAppTab("messages");
+    setActiveChatId(id); setSelectedStudentId(null); setAppTabPersist("messages");
   }
   function sendMessage(text) {
     if (!text.trim() || !activeChatId) return;
@@ -1333,12 +1346,12 @@ export default function App() {
           onApply={startApply} onHome={goHome} musicOn={musicOn} onMusicToggle={toggleMusic} audioRef={audioRef}
           onGuestTabClick={() => setShowGuestPrompt(true)} onlineCount={onlineCount} previewOnly={previewOnly}
           hideTabs={!!selectedStudentId}
-          onGoToLessonRoom={() => { setSelectedStudentId(null); setAppTab("lessons"); }}
+          onGoToLessonRoom={() => { setSelectedStudentId(null); setAppTabPersist("lessons"); }}
           onBack={
             selectedStudentId ? backFromProfile :
-            appTab === "messages" ? () => setAppTab("map") :
-            appTab === "profile" ? () => setAppTab("map") :
-            appTab === "lessons" ? () => setAppTab("map") :
+            appTab === "messages" ? () => setAppTabPersist("map") :
+            appTab === "profile" ? () => setAppTabPersist("map") :
+            appTab === "lessons" ? () => setAppTabPersist("map") :
             () => setScreen("landing")
           }
           backLabel={null}
@@ -1350,7 +1363,7 @@ export default function App() {
                 { key: "map", label: "Map" },
                 { key: "lessons", label: "Lesson Room" },
               ].map(({ key, label }) => (
-                <button key={key} onClick={() => setAppTab(key)}
+                <button key={key} onClick={() => setAppTabPersist(key)}
                   className="px-4 py-2 text-sm"
                   style={{ fontWeight: appTab === key ? 600 : 400, color: appTab === key ? C.ivory : C.ivoryDim, borderBottom: appTab === key ? `2px solid ${C.brass}` : "2px solid transparent", background: "transparent", border: "none", cursor: "pointer" }}>
                   {label}
@@ -1389,7 +1402,7 @@ export default function App() {
               setActiveChatId={setActiveChatId} onSend={sendMessage}
               onOpenProfile={(id) => openStudent(id, "chat")}
               myProfile={myProfile}
-              onBack={() => setAppTab("map")}
+              onBack={() => setAppTabPersist("map")}
             />
           )}
           {appTab === "profile" && !selectedStudentId && myProfile && (
@@ -1408,8 +1421,8 @@ export default function App() {
               setLearnerLoggedOut(false);
               setStudentLoggedOut(false);
               setScreen("landing");
-              setAppTab("map");
-            }} onBack={() => setAppTab("map")} />
+              setAppTabPersist("map");
+            }} onBack={() => setAppTabPersist("map")} />
           )}
           {appTab === "lessons" && !selectedStudentId && myProfile && (
             <TeacherLessonRoom teacherId={myProfile.id} />
@@ -2241,7 +2254,7 @@ function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, mus
             {tabs.map((t) => (
               <button
                 key={t.id}
-                onClick={() => t.locked ? onGuestTabClick() : setAppTab(t.id)}
+                onClick={() => t.locked ? onGuestTabClick() : setAppTabPersist(t.id)}
                 className="inline-flex items-center gap-1.5"
                 style={{
                   fontFamily: FONT_BODY, fontWeight: 500, fontSize: 14,
@@ -2270,7 +2283,7 @@ function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, mus
           {!myProfile ? (
             !previewOnly && <PrimaryBtn onClick={onApply}>Sign up</PrimaryBtn>
           ) : (
-            <button onClick={hideTabs ? undefined : () => setAppTab("profile")} title={hideTabs ? undefined : "My profile"}
+            <button onClick={hideTabs ? undefined : () => setAppTabPersist("profile")} title={hideTabs ? undefined : "My profile"}
               style={{ background: "none", border: "none", padding: 0, cursor: hideTabs ? "default" : "pointer" }}>
               <Avatar name={myProfile.name} id="me" size={32} photoUrl={myProfile.photoUrl} online />
             </button>
@@ -3269,7 +3282,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
       myProfile={learnerProfile}
       musicOn={musicOn} onMusicToggle={onMusicToggle} audioRef={audioRef}
       onlineCount={onlineCount}
-      onBack={selectedId ? () => setSelectedId(null) : appTab !== "map" ? () => setAppTab("map") : onBack}
+      onBack={selectedId ? () => setSelectedId(null) : appTab !== "map" ? () => setAppTabPersist("map") : onBack}
       hideTabs={!!selectedId}
     >
       {/* Tab bar — hidden when viewing teacher profile from Lesson Room */}
@@ -3278,7 +3291,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
           ["map", "Find a teacher"],
           ...(Object.values(teachRequests).some((s) => s === "accepted") ? [["lesson", "Lesson Room"]] : []),
         ].map(([key, label]) => (
-          <button key={key} onClick={() => { setAppTab(key); if (key === "lesson") setSelectedId(null); }}
+          <button key={key} onClick={() => { setAppTabPersist(key); if (key === "lesson") setSelectedId(null); }}
             className="px-4 py-2 text-sm"
             style={{ fontWeight: appTab === key ? 600 : 400, color: appTab === key ? C.ivory : C.ivoryDim, borderBottom: appTab === key ? `2px solid ${C.brass}` : "2px solid transparent", background: "transparent" }}>
             {label}
@@ -3437,7 +3450,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
             {status === "accepted" && (
               <div className="mt-6 rounded-xl p-4 text-sm" style={{ background: C.inkSoft, border: `1px solid ${C.inkLine}`, color: C.ivoryDim, display: "flex", alignItems: "center", gap: 8 }}>
                 <Check size={13} color={C.brass} />
-                <span>{selected.name.split(" ")[0]} accepted — open <button onClick={() => setAppTab("lesson")} style={{ background: "none", border: "none", padding: 0, color: C.brassLabel, fontWeight: 600, cursor: "pointer", fontSize: "inherit" }}>Lesson Room</button> to get started.</span>
+                <span>{selected.name.split(" ")[0]} accepted — open <button onClick={() => setAppTabPersist("lesson")} style={{ background: "none", border: "none", padding: 0, color: C.brassLabel, fontWeight: 600, cursor: "pointer", fontSize: "inherit" }}>Lesson Room</button> to get started.</span>
               </div>
             )}
             {status === "pending" && (
