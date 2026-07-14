@@ -3488,17 +3488,15 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
               <p style={{ fontSize: 13, color: C.ivoryDim, margin: "0 0 16px", textAlign: "center" }}>
                 {acceptedTeachers.length} active teacher{acceptedTeachers.length !== 1 ? "s" : ""}
               </p>
-              {/* Teacher pills */}
-              {acceptedTeachers.length > 1 && (
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", padding: "12px 0 40px" }}>
-                  {acceptedTeachers.map((t) => (
-                    <button key={t.id} onClick={() => setActiveLessonTeacherId(t.id)}
-                      style={{ padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: t.id === activeLessonTeacher.id ? 700 : 500, border: t.id === activeLessonTeacher.id ? `2px solid ${C.brass}` : "none", background: "#fff", color: t.id === activeLessonTeacher.id ? C.ivory : C.ivoryDim, cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.06)" }}>
-                      {t.name.split(" ")[0]}
-                    </button>
-                  ))}
-                </div>
-              )}
+              {/* Teacher pills — always shown */}
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", padding: "12px 0 16px" }}>
+                {acceptedTeachers.map((t) => (
+                  <button key={t.id} onClick={() => setActiveLessonTeacherId(t.id)}
+                    style={{ padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: t.id === activeLessonTeacher.id ? 700 : 500, border: t.id === activeLessonTeacher.id ? `2px solid ${C.brass}` : "none", background: "#fff", color: t.id === activeLessonTeacher.id ? C.ivory : C.ivoryDim, cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.06)" }}>
+                    {t.name.split(" ")[0]}
+                  </button>
+                ))}
+              </div>
               {/* Active teacher info card */}
               <button onClick={() => selectTeacher(activeLessonTeacher.id)}
                 style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", background: "#fff", borderRadius: 12, border: "none", boxShadow: "0 1px 6px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04)", marginBottom: 16, width: "100%", cursor: "pointer", textAlign: "left" }}>
