@@ -1122,12 +1122,18 @@ export default function App() {
   function enterDemoLearner() {
     const lp = { name: "Demo Learner", location: "Paris", instrument: "Piano", bio: "Amateur pianist exploring lessons." };
     setLearnerProfile(lp);
-    // Ensure demo-teacher exists in students so acceptedTeachers finds it
     const demoTeacher = { id: "demo-teacher", name: "Demo Teacher", instrument: "Piano", conservatoryId: "juilliard", year: "Final year", bio: "Demo account for testing teacher flows.", tastes: ["Chopin", "Debussy"], pieces: [{ title: "Ballade No. 1", composer: "Chopin" }], videoLink: "", top: "", flop: "", photoUrl: null, coverPhotoUrl: null, teaching: { open: true, mode: "online", price: "60" }, status: "approved", online: true };
-    setStudents((arr) => arr.some((s) => s.id === "demo-teacher") ? arr : [...arr, demoTeacher]);
-    // Pre-seed accepted request so Lesson Room tab appears immediately
+    const demoTeacher2 = { id: "demo-teacher-2", name: "Sophie Renard", instrument: "Violin", conservatoryId: "paris", year: "3rd year", bio: "Violin teacher based in Paris.", tastes: ["Bach", "Mozart"], pieces: [{ title: "Sonata No. 1", composer: "Bach" }], videoLink: "", top: "", flop: "", photoUrl: null, coverPhotoUrl: null, teaching: { open: true, mode: "online", price: "55" }, status: "approved", online: false };
+    setStudents((arr) => {
+      let next = arr.some((s) => s.id === "demo-teacher") ? arr : [...arr, demoTeacher];
+      next = next.some((s) => s.id === "demo-teacher-2") ? next : [...next, demoTeacher2];
+      return next;
+    });
     const tr = JSON.parse(localStorage.getItem("teachRequests") || "{}");
-    if (!tr["demo-teacher"]) { tr["demo-teacher"] = "accepted"; localStorage.setItem("teachRequests", JSON.stringify(tr)); setTeachRequests(tr); }
+    if (!tr["demo-teacher"]) tr["demo-teacher"] = "accepted";
+    if (!tr["demo-teacher-2"]) tr["demo-teacher-2"] = "accepted";
+    localStorage.setItem("teachRequests", JSON.stringify(tr));
+    setTeachRequests(tr);
     localStorage.setItem("artium_demo_session", "learner");
     setScreen("learnerMap");
   }
@@ -3215,6 +3221,8 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
   const [selectedConsId, setSelectedConsId] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
   const [activeLessonTeacherId, setActiveLessonTeacherId] = useState(null);
+  const [learnerRoomView, setLearnerRoomView] = useState("teachers"); // "teachers" | "planning"
+  const [learnerOpenMonths, setLearnerOpenMonths] = useState({});
   const selected = teachers.find((t) => t.id === selectedId);
   const status = selectedId ? teachRequests[selectedId] : undefined;
   const acceptedTeachers = teachers.filter((t) => teachRequests[t.id] === "accepted");
@@ -3478,17 +3486,94 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
       {appTab === "lesson" && (() => {
         if (!activeLessonTeacher) return null;
         if (selectedId === activeLessonTeacher.id) return null;
-        const [teacherPillPage, setTeacherPillPage] = [0, () => {}]; // single teacher for now; hook-safe static
-        const TPILLS = 30;
-        const totalTPages = Math.ceil(acceptedTeachers.length / TPILLS);
+
+        // ── My Planning view ──
+        if (learnerRoomView === "planning") {
+          const MOCK_LEARNER_PLANNING = acceptedTeachers.map((t) => ({
+            teacher: { id: t.id, name: t.name, instrument: t.instrument, price: parseFloat(String(t.teaching?.price).replace(/[^0-9.]/g, "")) || 60 },
+            sessions: [
+              { id: `s1-${t.id}`, date: "2026-07-20", time: "10:00", status: "confirmed", paid: true },
+              { id: `s2-${t.id}`, date: "2026-08-05", time: "14:00", status: "teacher_proposed", paid: false },
+              { id: `s3-${t.id}`, date: "2026-08-18", time: "11:00", status: "confirmed", paid: false },
+            ],
+          }));
+          const allSessions = MOCK_LEARNER_PLANNING.flatMap(({ teacher, sessions }) =>
+            sessions.map((s) => ({ ...s, teacher }))
+          ).sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+          const byMonth = {};
+          allSessions.forEach((s) => { const k = s.date.slice(0, 7); (byMonth[k] = byMonth[k] || []).push(s); });
+          const STATUS_LABEL = { confirmed: "Confirmed", teacher_proposed: "Awaiting confirm", student_proposed: "Pending", cancelled: "Cancelled" };
+          const STATUS_COLOR = { confirmed: "#1A9E6E", teacher_proposed: C.brass, student_proposed: "#E07B00", cancelled: "#c0392b" };
+          return (
+            <div style={{ padding: "16px 20px 32px", background: "#fff", minHeight: "100%" }}>
+              <button onClick={() => setLearnerRoomView("teachers")} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 16, background: "none", border: "none", cursor: "pointer", color: C.ivoryDim, fontSize: 13, padding: 0 }}>
+                ← Back to Lesson Room
+              </button>
+              {Object.entries(byMonth).map(([monthKey, sessions]) => {
+                const spent = sessions.filter((s) => s.status === "confirmed" && s.paid).reduce((sum, s) => sum + s.teacher.price, 0);
+                const [y, m] = monthKey.split("-");
+                const monthLabel = new Date(Number(y), Number(m) - 1, 1).toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+                const isOpen = !!learnerOpenMonths[monthKey];
+                return (
+                  <div key={monthKey} style={{ marginBottom: 12, border: `1px solid ${C.inkLine}`, borderRadius: 10, overflow: "hidden" }}>
+                    <button onClick={() => setLearnerOpenMonths((p) => ({ ...p, [monthKey]: !p[monthKey] }))}
+                      style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "11px 16px", background: C.inkSoft, border: "none", cursor: "pointer" }}>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: C.ivory }}>{monthLabel}</span>
+                      <span style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                        {spent > 0 && <span style={{ fontSize: 12, fontWeight: 700, color: "#1A9E6E" }}>€{spent} spent</span>}
+                        <span style={{ fontSize: 11, color: C.ivoryDim }}>{sessions.length} session{sessions.length !== 1 ? "s" : ""}</span>
+                        <span style={{ fontSize: 14, color: C.ivoryDim }}>{isOpen ? "▲" : "▼"}</span>
+                      </span>
+                    </button>
+                    {isOpen && (
+                      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                        <thead>
+                          <tr style={{ background: "#FAFAFA" }}>
+                            {["Teacher", "Date · Time", "Status", "Amount"].map((h) => (
+                              <th key={h} style={{ padding: "8px 12px", textAlign: "left", fontSize: 10, fontWeight: 700, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.06em", borderBottom: `1px solid ${C.inkLine}` }}>{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {sessions.map((s, i) => {
+                            const dt = new Date(s.date + "T" + s.time);
+                            const amount = s.status === "confirmed" && s.paid ? `€${s.teacher.price}` : "—";
+                            return (
+                              <tr key={i} style={{ borderBottom: `1px solid ${C.inkLine}`, background: i % 2 === 0 ? "#fff" : C.inkSoft }}>
+                                <td style={{ padding: "9px 12px" }}>
+                                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                    <Avatar name={s.teacher.name} id={s.teacher.id} size={26} />
+                                    <div>
+                                      <p style={{ margin: 0, fontWeight: 600, color: C.brassLabel, fontSize: 12 }}>{s.teacher.name}</p>
+                                      <p style={{ margin: 0, fontSize: 10, color: C.ivoryDim }}>{s.teacher.instrument}</p>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td style={{ padding: "9px 12px", color: C.ivory }}>{dt.toLocaleDateString("en-GB", { day: "numeric", month: "short" })} · {s.time}</td>
+                                <td style={{ padding: "9px 12px" }}>
+                                  <span style={{ fontSize: 11, fontWeight: 600, color: STATUS_COLOR[s.status] || C.ivoryDim }}>{STATUS_LABEL[s.status] || s.status}</span>
+                                </td>
+                                <td style={{ padding: "9px 12px", fontWeight: 700, color: amount === "—" ? C.ivoryDim : "#1A9E6E" }}>{amount}</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          );
+        }
+
+        // ── Teachers view (default) ──
         return (
           <div style={{ padding: "0 0 32px", background: "#fff", minHeight: "100%" }}>
-            {/* Header */}
             <div style={{ padding: "20px 20px 0", background: "#fff" }}>
               <p style={{ fontSize: 13, color: C.ivoryDim, margin: "0 0 16px", textAlign: "center" }}>
                 {acceptedTeachers.length} active teacher{acceptedTeachers.length !== 1 ? "s" : ""}
               </p>
-              {/* Teacher pills — always shown */}
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap", padding: "12px 0 16px" }}>
                 {acceptedTeachers.map((t) => (
                   <button key={t.id} onClick={() => setActiveLessonTeacherId(t.id)}
@@ -3497,7 +3582,6 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
                   </button>
                 ))}
               </div>
-              {/* Active teacher info card */}
               <button onClick={() => selectTeacher(activeLessonTeacher.id)}
                 style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", background: "#fff", borderRadius: 12, border: "none", boxShadow: "0 1px 6px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04)", marginBottom: 16, width: "100%", cursor: "pointer", textAlign: "left" }}>
                 <Avatar name={activeLessonTeacher.name} id={activeLessonTeacher.id} size={40} photoUrl={activeLessonTeacher.photoUrl} online={activeLessonTeacher.online} />
@@ -3508,7 +3592,6 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
                 <ChevronRight size={16} color={C.ivoryDim} />
               </button>
             </div>
-            {/* Chat/Schedule/Video card */}
             <div style={{ margin: "0 20px 20px", background: "#fff", borderRadius: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06)", overflow: "hidden", minHeight: 320 }}>
               <LessonRoom
                 teacher={activeLessonTeacher}
@@ -3518,6 +3601,18 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
                 payLoading={payLoading}
                 payError={payError}
               />
+            </div>
+            {/* Bottom nav — My Planning */}
+            <div style={{ display: "flex", justifyContent: "center", gap: 40, padding: "20px 20px 12px", background: "#fff", borderTop: `1px solid ${C.inkLine}` }}>
+              {[{ v: "planning", Icon: LayoutList, label: "My Planning" }].map(({ v, Icon, label }) => (
+                <button key={v} onClick={() => setLearnerRoomView(v)}
+                  style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5, background: "none", border: "none", cursor: "pointer", color: C.ivoryDim }}>
+                  <div style={{ width: 52, height: 52, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: "#F5F5F5", border: "2px solid transparent", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
+                    <Icon size={22} color={C.ivoryDim} />
+                  </div>
+                  <span style={{ fontSize: 11, fontWeight: 600 }}>{label}</span>
+                </button>
+              ))}
             </div>
           </div>
         );
