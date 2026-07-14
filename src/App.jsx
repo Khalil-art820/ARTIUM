@@ -867,6 +867,7 @@ export default function App() {
   const [screen, setScreen] = useState("entry");
   const [appTab, setAppTab] = useState(() => localStorage.getItem("artium_app_tab") || "map");
   const setAppTabPersist = (tab) => { localStorage.setItem("artium_app_tab", tab); setAppTab(tab); };
+  const [teacherRoomView, setTeacherRoomView] = useState("students");
   const [editingProfile, setEditingProfile] = useState(false);
   const [previewOnly, setPreviewOnly] = useState(false);
   const [authError, setAuthError] = useState("");
@@ -1375,6 +1376,7 @@ export default function App() {
             selectedStudentId ? backFromProfile :
             appTab === "messages" ? () => setAppTabPersist("map") :
             appTab === "profile" ? () => setAppTabPersist("map") :
+            appTab === "lessons" && teacherRoomView !== "students" ? () => setTeacherRoomView("students") :
             appTab === "lessons" ? () => setAppTabPersist("map") :
             () => setScreen("landing")
           }
@@ -1449,7 +1451,7 @@ export default function App() {
             }} onBack={() => setAppTabPersist("map")} />
           )}
           {appTab === "lessons" && !selectedStudentId && myProfile && (
-            <TeacherLessonRoom teacherId={myProfile.id} />
+            <TeacherLessonRoom teacherId={myProfile.id} roomView={teacherRoomView} setRoomView={setTeacherRoomView} />
           )}
           {selectedStudentId && myProfile && (
             <StudentProfile
@@ -3308,7 +3310,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
       myProfile={learnerProfile}
       musicOn={musicOn} onMusicToggle={onMusicToggle} audioRef={audioRef}
       onlineCount={onlineCount}
-      onBack={selectedId ? () => setSelectedId(null) : appTab !== "map" ? () => setAppTab("map") : onBack}
+      onBack={selectedId ? () => setSelectedId(null) : appTab === "lesson" && learnerRoomView !== "teachers" ? () => setLearnerRoomView("teachers") : appTab !== "map" ? () => setAppTab("map") : onBack}
       hideTabs={!!selectedId}
     >
       {/* Tab bar — hidden when viewing teacher profile from Lesson Room */}
@@ -3513,9 +3515,6 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
           const STATUS_COLOR = { confirmed: "#1A9E6E", teacher_proposed: C.brass, student_proposed: "#E07B00", cancelled: "#c0392b" };
           return (
             <div style={{ padding: "16px 20px 32px", background: "#fff", minHeight: "100%" }}>
-              <button onClick={() => setLearnerRoomView("teachers")} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 16, background: "none", border: "none", cursor: "pointer", color: C.ivoryDim, fontSize: 13, padding: 0 }}>
-                ← Back to Lesson Room
-              </button>
               {Object.entries(byMonth).map(([monthKey, sessions]) => {
                 const spent = sessions.filter((s) => s.status === "confirmed" && s.paid).reduce((sum, s) => sum + s.teacher.price, 0);
                 const [y, m] = monthKey.split("-");
@@ -4232,7 +4231,7 @@ const MOCK_LESSON_LEARNERS = [
   { id: "p62", name: "Adrien Leroy",     instrument: "Trumpet", level: "Advanced" },
 ];
 
-function TeacherLessonRoom({ teacherId }) {
+function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
   const tid = teacherId || "demo-teacher";
 
   // Real incoming requests from localStorage (cross-tab)
@@ -4355,7 +4354,6 @@ function TeacherLessonRoom({ teacherId }) {
   const PILLS_PER_PAGE = 30;
   const [zoomLink, setZoomLink] = useState("");
   const [zoomSaved, setZoomSaved] = useState(false);
-  const [roomView, setRoomView] = useState("students");
   const [agendaBySession, setAgendaBySession] = useState({});
   const [sessionDetailTab, setSessionDetailTab] = useState({});
   const [agendaDraft, setAgendaDraft] = useState({});
@@ -4580,9 +4578,6 @@ function TeacherLessonRoom({ teacherId }) {
       {/* ── Teaching Preferences ── */}
       {roomView === "preferences" && (
         <div style={{ padding: "24px 20px" }}>
-          <button onClick={() => setRoomView("students")} style={{ display:"flex", alignItems:"center", gap:6, marginBottom:20, background:"none", border:"none", cursor:"pointer", color:C.ivoryDim, fontSize:13, padding:0 }}>
-            ← Back to Lesson Room
-          </button>
           {[
             { label: "Cancellation lock", sublabel: "Students cannot cancel within this window", value: cancelLockH, set: setCancelLockH, min: 1, max: 72, unit: "h" },
             { label: "Modification lock", sublabel: "Students cannot reschedule within this window", value: modifyLockH, set: setModifyLockH, min: 1, max: 96, unit: "h" },
@@ -4632,9 +4627,6 @@ function TeacherLessonRoom({ teacherId }) {
         const STATUS_COLOR = { confirmed: "#1A9E6E", teacher_proposed: C.brass, student_proposed: "#E07B00", cancelled: "#c0392b" };
         return (
           <div style={{ padding: "16px 20px 32px" }}>
-            <button onClick={() => setRoomView("students")} style={{ display:"flex", alignItems:"center", gap:6, marginBottom:16, background:"none", border:"none", cursor:"pointer", color:C.ivoryDim, fontSize:13, padding:0 }}>
-              ← Back to Lesson Room
-            </button>
             {Object.entries(byMonth).map(([monthKey, sessions]) => {
               const earned = sessions.filter(s => s.status === "confirmed" && s.paid).reduce((sum, s) => sum + s.student.price, 0);
               const [y, m] = monthKey.split("-");
