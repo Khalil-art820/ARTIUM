@@ -4187,6 +4187,8 @@ function TeacherLessonRoom({ teacherId }) {
   const [showCounter, setShowCounter] = useState({});
   const [counterDate, setCounterDate] = useState({});
   const [counterTime, setCounterTime] = useState({});
+  const [pillPage, setPillPage] = useState(0);
+  const PILLS_PER_PAGE = 30;
   const [zoomLink, setZoomLink] = useState("");
   const [zoomSaved, setZoomSaved] = useState(false);
   const [roomView, setRoomView] = useState("students");
@@ -4363,23 +4365,43 @@ function TeacherLessonRoom({ teacherId }) {
         <p style={{ fontSize: 13, color: C.ivoryDim, margin: "0 0 16px", textAlign: "center" }}>{allLearners.length} active student{allLearners.length !== 1 ? "s" : ""}</p>
         {roomView === "students" && (<>
         {/* Learner pill picker */}
-        {allLearners.length > 1 && (
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 0, background: "#fff", padding: "12px 0 40px" }}>
-            {allLearners.map((l) => (
-              <div key={l.id} style={{ position: "relative", display: "inline-flex" }}>
-                <button onClick={() => { setActiveLearner(l); setSelectedSessionId(null); setTab("chat"); }}
-                  style={{ padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: activeLearner.id === l.id ? 700 : 500, border: activeLearner.id === l.id ? `2px solid ${C.brass}` : "none", background: "#fff", color: activeLearner.id === l.id ? C.ivory : C.ivoryDim, cursor: "pointer", boxShadow: activeLearner.id === l.id ? `0 2px 8px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.06)` : "0 2px 8px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.06)" }}>
-                  {l.name.split(" ")[0]}
-                </button>
-                <button onClick={(e) => { e.stopPropagation(); setConfirmRemoveId(l.id); }}
-                  style={{ position: "absolute", top: -7, right: -7, width: 18, height: 18, borderRadius: "50%", background: C.inkSoft, color: C.ivoryDim, border: `1.5px solid ${C.inkLine}`, fontSize: 11, fontWeight: 700, lineHeight: 1, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}
-                  title="Remove student">
-                  ×
-                </button>
+        {allLearners.length > 1 && (() => {
+          const totalPages = Math.ceil(allLearners.length / PILLS_PER_PAGE);
+          const safePage = Math.min(pillPage, totalPages - 1);
+          const pageLearners = allLearners.slice(safePage * PILLS_PER_PAGE, (safePage + 1) * PILLS_PER_PAGE);
+          return (
+            <>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 0, background: "#fff", padding: "12px 0 16px" }}>
+                {pageLearners.map((l) => (
+                  <div key={l.id} style={{ position: "relative", display: "inline-flex" }}>
+                    <button onClick={() => { setActiveLearner(l); setSelectedSessionId(null); setTab("chat"); }}
+                      style={{ padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: activeLearner.id === l.id ? 700 : 500, border: activeLearner.id === l.id ? `2px solid ${C.brass}` : "none", background: "#fff", color: activeLearner.id === l.id ? C.ivory : C.ivoryDim, cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.06)" }}>
+                      {l.name.split(" ")[0]}
+                    </button>
+                    <button onClick={(e) => { e.stopPropagation(); setConfirmRemoveId(l.id); }}
+                      style={{ position: "absolute", top: -7, right: -7, width: 18, height: 18, borderRadius: "50%", background: C.inkSoft, color: C.ivoryDim, border: `1.5px solid ${C.inkLine}`, fontSize: 11, fontWeight: 700, lineHeight: 1, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}
+                      title="Remove student">
+                      ×
+                    </button>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        )}
+              {totalPages > 1 && (
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, paddingBottom: 20 }}>
+                  <button onClick={() => setPillPage(p => Math.max(0, p - 1))} disabled={safePage === 0}
+                    style={{ width: 28, height: 28, borderRadius: "50%", border: `1px solid ${C.inkLine}`, background: "none", cursor: safePage === 0 ? "default" : "pointer", color: safePage === 0 ? C.inkLine : C.ivoryDim, fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    ‹
+                  </button>
+                  <span style={{ fontSize: 12, color: C.ivoryDim, fontWeight: 500 }}>{safePage + 1} of {totalPages}</span>
+                  <button onClick={() => setPillPage(p => Math.min(totalPages - 1, p + 1))} disabled={safePage === totalPages - 1}
+                    style={{ width: 28, height: 28, borderRadius: "50%", border: `1px solid ${C.inkLine}`, background: "none", cursor: safePage === totalPages - 1 ? "default" : "pointer", color: safePage === totalPages - 1 ? C.inkLine : C.ivoryDim, fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    ›
+                  </button>
+                </div>
+              )}
+            </>
+          );
+        })()}
         {/* Active learner info */}
         <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", background: "#fff", borderRadius: 12, border: "none", boxShadow: "0 1px 6px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04)", marginBottom: 16, marginTop: 0 }}>
           <Avatar name={activeLearner.name} id={activeLearner.id} size={40} online />
