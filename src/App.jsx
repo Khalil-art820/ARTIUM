@@ -4275,7 +4275,7 @@ function TeacherLessonRoom({ teacherId }) {
   const nextSession = upcomingSessions[0];
 
   return (
-    <div style={{ padding: "0 0 32px", fontFamily: FONT_BODY, background: "#F5F5F5", minHeight: "100%" }}>
+    <div style={{ padding: "0 0 32px", fontFamily: FONT_BODY, background: "#fff", minHeight: "100%" }}>
       {/* Pending requests banner */}
       <LearnerProfileModal learner={viewingLearner} onClose={() => setViewingLearner(null)} />
 
@@ -4344,7 +4344,7 @@ function TeacherLessonRoom({ teacherId }) {
         {roomView === "students" && (<>
         {/* Learner pill picker */}
         {allLearners.length > 1 && (
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 0, background: "#fff", padding: "12px 0 24px" }}>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 0, background: "#fff", padding: "12px 0 40px" }}>
             {allLearners.map((l) => (
               <div key={l.id} style={{ position: "relative", display: "inline-flex" }}>
                 <button onClick={() => { setActiveLearner(l); setSelectedSessionId(null); setTab("chat"); }}
@@ -4361,7 +4361,7 @@ function TeacherLessonRoom({ teacherId }) {
           </div>
         )}
         {/* Active learner info */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", background: "#fff", borderRadius: 12, border: "none", boxShadow: "0 1px 6px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04)", marginBottom: 16, marginTop: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", background: "#fff", borderRadius: 12, border: "none", boxShadow: "0 1px 6px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04)", marginBottom: 16, marginTop: 0 }}>
           <Avatar name={activeLearner.name} id={activeLearner.id} size={40} online />
           <div>
             <p style={{ fontSize: 14, fontWeight: 700, color: C.ivory, margin: 0 }}>{activeLearner.name}</p>
