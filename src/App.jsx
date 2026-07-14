@@ -31,6 +31,7 @@ const C = {
   inkTextDim: "#425466",
   brass: "#FFC629",
   brassText: "#1A1200",
+  brassLabel: "#7A5800",
   brassDim: "rgba(255,198,41,0.12)",
   burgundy: "#DF1B41",
   forest: "#8B5560",
@@ -1451,7 +1452,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
       <div style={{ background: C.inkSoft, borderBottom: `1px solid ${C.inkLine}` }}>
         <div className="max-w-6xl mx-auto px-8 py-20 grid md:grid-cols-2 gap-16 items-center">
           <div>
-            <p style={{ fontSize: 12.3, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.brass, borderLeft: `3px solid ${C.brass}`, paddingLeft: 10, marginBottom: 24, lineHeight: 1 }}>For conservatory students only</p>
+            <p style={{ fontSize: 12.3, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.brassLabel, borderLeft: `3px solid ${C.brass}`, paddingLeft: 10, marginBottom: 24, lineHeight: 1 }}>For conservatory students only</p>
             <h1 style={{ fontSize: "clamp(28px,3.5vw,48px)", fontWeight: 700, lineHeight: 1.08, letterSpacing: 0, color: C.ivory, margin: 0, fontFamily: "'DM Serif Display', serif" }}>
               Every Conservatory.<br />One Network.
             </h1>
@@ -1480,7 +1481,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
 
       {/* How it works */}
       <div className="max-w-6xl mx-auto px-8 py-20">
-        <p style={{ fontSize: 12.3, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.brass, borderLeft: `3px solid ${C.brass}`, paddingLeft: 10, marginBottom: 24, lineHeight: 1 }}>How it works</p>
+        <p style={{ fontSize: 12.3, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.brassLabel, borderLeft: `3px solid ${C.brass}`, paddingLeft: 10, marginBottom: 24, lineHeight: 1 }}>How it works</p>
         <h2 style={{ fontSize: "clamp(28px,3.5vw,48px)", fontWeight: 700, lineHeight: 1.08, letterSpacing: 0, color: C.ivory, margin: 0, marginBottom: 48, fontFamily: "'DM Serif Display', serif" }}>Simple, from day one.</h2>
         <div className="grid sm:grid-cols-4 gap-8">
           {[
@@ -1491,11 +1492,11 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
             { n: "5", t: "Marketing and Advertising", d: "Claim your promotional video on aclassicaltone (may be subject to fees)." },
           ].map((s) => (
             <div key={s.n} style={{ padding: "24px", background: "#FFFFFF", border: `1px solid ${C.inkLine}`, borderRadius: 10, boxShadow: "0 2px 8px rgba(10,37,64,0.05)", position: "relative" }}>
-              <p style={{ position: "absolute", top: 16, right: 18, fontSize: 13, fontWeight: 700, color: C.brass, letterSpacing: 0.5, margin: 0 }}>{s.n}</p>
+              <p style={{ position: "absolute", top: 16, right: 18, fontSize: 13, fontWeight: 700, color: C.brassLabel, letterSpacing: 0.5, margin: 0 }}>{s.n}</p>
               <h3 style={{ fontSize: 16, fontWeight: 600, color: C.ivory, marginBottom: 8, marginTop: 4 }}>{s.t}</h3>
               <p style={{ fontSize: 14, color: C.ivoryDim, lineHeight: 1.65 }}>
                 {s.n === "5"
-                  ? <>Claim your promotional video on <a href="https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==" target="_blank" rel="noreferrer" style={{ color: C.brass, fontWeight: 600, textDecoration: "none" }}>aclassicaltone</a> (may be subject to fees, as per our partnership agreement).</>
+                  ? <>Claim your promotional video on <a href="https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==" target="_blank" rel="noreferrer" style={{ color: C.brassLabel, fontWeight: 600, textDecoration: "none" }}>aclassicaltone</a> (may be subject to fees, as per our partnership agreement).</>
                   : s.d}
               </p>
             </div>
@@ -1554,7 +1555,7 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
           )}
         </div>
         <div className="mt-8 flex items-center gap-4">
-          <span style={{ fontFamily: FONT_MONO, color: C.brass, fontSize: 13 }}>Step {ROMAN[step]} of {ROMAN[lastStep]}</span>
+          <span style={{ fontFamily: FONT_MONO, color: C.brassLabel, fontSize: 13 }}>Step {ROMAN[step]} of {ROMAN[lastStep]}</span>
           <div className="flex-1 flex gap-1">
             {labels.map((_, i) => (
               <div key={i} className="flex-1 rounded-full" style={{ height: 3, background: i <= step ? C.brass : C.inkLine }} />
@@ -1896,7 +1897,7 @@ function StepPieces({ draft, update }) {
         {draft.pieces.map((p, i) => (
           <div key={i} className="flex items-center justify-between rounded-xl px-4 py-3" style={{ border: `1px solid ${C.inkLine}` }}>
             <div>
-              <span style={{ fontFamily: FONT_MONO, color: C.brass, fontSize: 11 }}>No. {i + 1}</span>
+              <span style={{ fontFamily: FONT_MONO, color: C.brassLabel, fontSize: 11 }}>No. {i + 1}</span>
               <p style={{ fontWeight: 600, fontSize: 14 }}>{p.title}</p>
               <p style={{ fontSize: 12, color: C.ivoryDim }}>{p.composer}</p>
             </div>
@@ -1956,7 +1957,7 @@ function StepReview({ draft }) {
 
   const Card = ({ label, children }) => (
     <div style={{ background: "#fff", border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "14px 18px", display: "flex", flexDirection: "column", gap: 6 }}>
-      <span style={{ fontSize: 11, fontWeight: 600, color: C.brass, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
+      <span style={{ fontSize: 11, fontWeight: 600, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
       <div style={{ fontSize: 14, color: C.ivory, lineHeight: 1.6 }}>{children}</div>
     </div>
   );
@@ -2043,7 +2044,7 @@ function ConfirmEmail({ email, onLogin, onHome }) {
             We sent a confirmation link to <strong style={{ color: C.ivory }}>{email}</strong>. Click it to activate your account — your profile will be created automatically as soon as you do.
           </p>
           <p className="mt-6 text-sm" style={{ color: C.ivoryDim }}>
-            Already confirmed? <button onClick={onLogin} style={{ color: C.brass, fontWeight: 600 }}>Log in</button>
+            Already confirmed? <button onClick={onLogin} style={{ color: C.brassLabel, fontWeight: 600 }}>Log in</button>
           </p>
         </div>
       </div>
@@ -2316,7 +2317,7 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
                     <p style={{ fontSize: 13, fontWeight: 600 }}>{c.name}</p>
                     <p style={{ fontSize: 11, color: C.ivoryDim }}>{c.city}, {c.country}</p>
                   </div>
-                  <span style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brass }}>{(studentsByCons[c.id] || []).length}</span>
+                  <span style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brassLabel }}>{(studentsByCons[c.id] || []).length}</span>
                 </button>
               ))}
             </div>
@@ -2324,7 +2325,7 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
         ) : (
           <div className="p-6">
             <button onClick={() => setSelectedConsId(null)} className="text-xs flex items-center gap-1 mb-4" style={{ color: C.ivoryDim }}><ArrowLeft size={13} /> All conservatories</button>
-            <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brass }}>{cons.city.toUpperCase()}, {cons.country.toUpperCase()} · EST. {cons.founded}</p>
+            <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brassLabel }}>{cons.city.toUpperCase()}, {cons.country.toUpperCase()} · EST. {cons.founded}</p>
             <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600, marginTop: 4 }}>{cons.name}</h3>
             <p className="mt-1 text-xs" style={{ color: C.ivoryDim }}>{roster.length} pianist{roster.length === 1 ? "" : "s"} on Artium</p>
             <div className="mt-5 flex flex-col gap-2">
@@ -2341,7 +2342,7 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
                   </div>
                   <div className="min-w-0">
                     <p style={{ fontSize: 13, fontWeight: 600, filter: isGuest && s.id !== "me" ? "blur(5px)" : "none", userSelect: "none" }}>
-                      {s.name} {s.id === "me" && <span style={{ color: C.brass }}>(you)</span>}
+                      {s.name} {s.id === "me" && <span style={{ color: C.brassLabel }}>(you)</span>}
                     </p>
                     <p style={{ fontSize: 11, color: C.ivoryDim, filter: isGuest && s.id !== "me" ? "blur(4px)" : "none", userSelect: "none" }}>
                       {s.year} · {s.tastes.slice(0, 2).join(", ")}
@@ -2380,7 +2381,7 @@ function StudentProfile({ student, conservatory, onBack, onMessage, locked, onAp
 
   const Row = ({ label, children }) => (
     <div style={{ background: "#fff", border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
-      <span style={{ fontSize: 11, fontWeight: 600, color: C.brass, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
+      <span style={{ fontSize: 11, fontWeight: 600, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
       <div style={{ fontSize: 15, color: C.ivory, lineHeight: 1.6 }}>{children}</div>
     </div>
   );
@@ -2487,7 +2488,7 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack, onUpdat
 
   const Row = ({ label, children }) => (
     <div style={{ background: "#fff", border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
-      <span style={{ fontSize: 11, fontWeight: 600, color: C.brass, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
+      <span style={{ fontSize: 11, fontWeight: 600, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
       <div style={{ fontSize: 15, color: C.ivory, lineHeight: 1.6 }}>{children}</div>
     </div>
   );
@@ -2900,7 +2901,7 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
         <span style={{ fontSize: 13, color: C.ivoryDim, fontStyle: "italic", marginLeft: 10 }}>
           — In partnership with{" "}
           <a href="https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==" target="_blank" rel="noreferrer"
-            style={{ color: C.brass, textDecoration: "none", fontStyle: "italic" }}>
+            style={{ color: C.brassLabel, textDecoration: "none", fontStyle: "italic" }}>
             aclassicaltone
           </a>
         </span>
@@ -3051,7 +3052,7 @@ function LearnerSignup({ onSubmit, onBack, onLogin, error, googleName = "" }) {
             </div>
             <p style={{ textAlign: "center", marginTop: 20, fontSize: 14, color: C.ivoryDim }}>
               Already have an account?{" "}
-              <button onClick={onLogin} style={{ color: C.brass, fontWeight: 600, background: "none", border: "none", cursor: "pointer", fontSize: 14 }}>Log in</button>
+              <button onClick={onLogin} style={{ color: C.brassLabel, fontWeight: 600, background: "none", border: "none", cursor: "pointer", fontSize: 14 }}>Log in</button>
             </p>
           </>
         ) : isForOther ? (
@@ -3309,7 +3310,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
               ) : (
                 <div className="p-6">
                   <button onClick={() => setSelectedConsId(null)} className="text-xs flex items-center gap-1 mb-4" style={{ color: C.ivoryDim }}><ArrowLeft size={13} /> All teachers</button>
-                  <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brass }}>{cons.city.toUpperCase()}, {cons.country.toUpperCase()} · EST. {cons.founded}</p>
+                  <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brassLabel }}>{cons.city.toUpperCase()}, {cons.country.toUpperCase()} · EST. {cons.founded}</p>
                   <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600, marginTop: 4, color: C.inkText }}>{cons.name}</h3>
                   <p className="mt-1 text-xs" style={{ color: C.ivoryDim }}>{consRoster.length} teacher{consRoster.length === 1 ? "" : "s"} on Artium</p>
                   <div className="mt-5 flex flex-col gap-2">
@@ -3339,7 +3340,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
           : "Not offering lessons";
         const Row = ({ label, children }) => (
           <div style={{ background: "#fff", border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
-            <span style={{ fontSize: 11, fontWeight: 600, color: C.brass, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
+            <span style={{ fontSize: 11, fontWeight: 600, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
             <div style={{ fontSize: 15, color: C.inkText, lineHeight: 1.6 }}>{children}</div>
           </div>
         );
@@ -3359,7 +3360,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
               </div>
               <div style={{ flexShrink: 0 }}>
                 {status === "accepted" ? (
-                  <span style={{ fontSize: 12, color: C.brass, fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}><Check size={13} /> Accepted</span>
+                  <span style={{ fontSize: 12, color: C.brassLabel, fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}><Check size={13} /> Accepted</span>
                 ) : status === "pending" ? (
                   <span style={{ fontSize: 12, color: C.ivoryDim, fontStyle: "italic" }}>Request sent…</span>
                 ) : (
@@ -3419,7 +3420,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
             {status === "accepted" && (
               <div className="mt-6 rounded-xl p-4 text-sm" style={{ background: C.inkSoft, border: `1px solid ${C.inkLine}`, color: C.ivoryDim, display: "flex", alignItems: "center", gap: 8 }}>
                 <Check size={13} color={C.brass} />
-                <span>{selected.name.split(" ")[0]} accepted — open <button onClick={() => setAppTab("lesson")} style={{ background: "none", border: "none", padding: 0, color: C.brass, fontWeight: 600, cursor: "pointer", fontSize: "inherit" }}>Lesson Room</button> to get started.</span>
+                <span>{selected.name.split(" ")[0]} accepted — open <button onClick={() => setAppTab("lesson")} style={{ background: "none", border: "none", padding: 0, color: C.brassLabel, fontWeight: 600, cursor: "pointer", fontSize: "inherit" }}>Lesson Room</button> to get started.</span>
               </div>
             )}
             {status === "pending" && (
@@ -3474,7 +3475,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
       {appTab === "profile" && (() => {
         const Row = ({ label, children }) => (
           <div style={{ background: "#fff", border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
-            <span style={{ fontSize: 11, fontWeight: 600, color: C.brass, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
+            <span style={{ fontSize: 11, fontWeight: 600, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
             <div style={{ fontSize: 15, color: C.inkText, lineHeight: 1.6 }}>{children}</div>
           </div>
         );
@@ -3645,7 +3646,7 @@ function VideoSessionTab({ sessions, teacher, zoomLink, meetLink }) {
           </div>
           <div>
             <p style={{ fontSize: 14, fontWeight: 600, color: C.inkText, margin: 0 }}>LiveKit</p>
-            <span style={{ fontSize: 10, padding: "1px 7px", borderRadius: 20, background: C.brassDim, color: C.brass, fontWeight: 700 }}>COMING SOON</span>
+            <span style={{ fontSize: 10, padding: "1px 7px", borderRadius: 20, background: C.brassDim, color: C.brassLabel, fontWeight: 700 }}>COMING SOON</span>
           </div>
         </div>
         <p style={{ fontSize: 12, color: C.ivoryDim, lineHeight: 1.6, margin: 0 }}>
@@ -3872,7 +3873,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
                   <p style={{ fontSize: 13, fontWeight: 700, color: C.inkText, margin: "0 0 2px" }}>
                     {dt.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })} at {sel.time}
                   </p>
-                  {sel.proposedBy === "student" && <p style={{ fontSize: 11, color: C.brass, margin: "0 0 10px" }}>Your counter-proposal — awaiting teacher</p>}
+                  {sel.proposedBy === "student" && <p style={{ fontSize: 11, color: C.brassLabel, margin: "0 0 10px" }}>Your counter-proposal — awaiting teacher</p>}
 
                   {isPending && !isCounter && (
                     <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
@@ -3947,7 +3948,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
                       </span>
                     ) : (
                       <button onClick={() => { onPayLesson(teacher); setSessions((prev) => prev.map((x) => x.id === sel.id ? { ...x, paid: true } : x)); }} disabled={payLoading}
-                        style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, background: "none", border: `1px solid ${C.brass}`, color: C.brass, fontSize: 12, fontWeight: 600, cursor: payLoading ? "not-allowed" : "pointer", opacity: payLoading ? 0.6 : 1, marginBottom: 8 }}>
+                        style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, background: "none", border: `1px solid ${C.brass}`, color: C.brassLabel, fontSize: 12, fontWeight: 600, cursor: payLoading ? "not-allowed" : "pointer", opacity: payLoading ? 0.6 : 1, marginBottom: 8 }}>
                         <CreditCard size={13} />
                         {payLoading ? "Redirecting…" : `Pay €${teacher.teaching.price}`}
                       </button>
@@ -3959,7 +3960,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
                     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                       {!modifyLocked(sel) ? (
                         <button onClick={() => setShowCounter((prev) => ({ ...prev, [sel.id]: true }))}
-                          style={{ fontSize: 12, color: C.brass, background: "none", border: `1px solid ${C.brass}`, borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontWeight: 600 }}>
+                          style={{ fontSize: 12, color: C.brassLabel, background: "none", border: `1px solid ${C.brass}`, borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontWeight: 600 }}>
                           Modify time
                         </button>
                       ) : (
@@ -4307,7 +4308,7 @@ function TeacherLessonRoom({ teacherId }) {
       )}
       {pendingRequests.length > 0 && (
         <div style={{ margin: "16px 20px 0", background: "#FFF8E7", border: `1.5px solid ${C.brass}`, borderRadius: 12, padding: "14px 16px" }}>
-          <p style={{ fontSize: 13, fontWeight: 700, color: C.brass, margin: "0 0 10px" }}>New lesson request{pendingRequests.length > 1 ? "s" : ""}</p>
+          <p style={{ fontSize: 13, fontWeight: 700, color: C.brassLabel, margin: "0 0 10px" }}>New lesson request{pendingRequests.length > 1 ? "s" : ""}</p>
           {pendingRequests.map((r) => (
             <div key={r.learnerId} style={{ marginBottom: 12 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
@@ -4384,7 +4385,7 @@ function TeacherLessonRoom({ teacherId }) {
             <div key={label} style={{ marginBottom: 28 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4 }}>
                 <p style={{ fontSize: 14, fontWeight: 700, color: C.ivory, margin: 0 }}>{label}</p>
-                <span style={{ fontSize: 18, fontWeight: 700, color: C.brass }}>{value}{unit}</span>
+                <span style={{ fontSize: 18, fontWeight: 700, color: C.brassLabel }}>{value}{unit}</span>
               </div>
               <p style={{ fontSize: 12, color: C.ivoryDim, margin: "0 0 10px" }}>{sublabel}</p>
               <input type="range" min={min} max={max} value={value} onChange={e => set(Number(e.target.value))}
@@ -4449,7 +4450,7 @@ function TeacherLessonRoom({ teacherId }) {
                       <thead>
                         <tr style={{ background: "#FAFAFA" }}>
                           {["Student", "Date · Time", "Status", "Amount"].map(h => (
-                            <th key={h} style={{ padding: "8px 12px", textAlign: "left", fontSize: 10, fontWeight: 700, color: C.brass, textTransform: "uppercase", letterSpacing: "0.06em", borderBottom: `1px solid ${C.inkLine}` }}>{h}</th>
+                            <th key={h} style={{ padding: "8px 12px", textAlign: "left", fontSize: 10, fontWeight: 700, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.06em", borderBottom: `1px solid ${C.inkLine}` }}>{h}</th>
                           ))}
                         </tr>
                       </thead>
@@ -4464,7 +4465,7 @@ function TeacherLessonRoom({ teacherId }) {
                                   style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
                                   <Avatar name={sess.student.name} id={sess.student.id} size={26} />
                                   <div>
-                                    <p style={{ margin: 0, fontWeight: 600, color: C.brass, fontSize: 12, textDecoration: "underline" }}>{sess.student.name}</p>
+                                    <p style={{ margin: 0, fontWeight: 600, color: C.brassLabel, fontSize: 12, textDecoration: "underline" }}>{sess.student.name}</p>
                                     <p style={{ margin: 0, fontSize: 10, color: C.ivoryDim }}>{sess.student.instrument}</p>
                                   </div>
                                 </div>
@@ -4632,7 +4633,7 @@ function TeacherLessonRoom({ teacherId }) {
                   {/* Student counter-proposal: teacher can approve or re-propose */}
                   {isCounter && !showingCounter && (
                     <div style={{ marginBottom: 10 }}>
-                      <p style={{ fontSize: 11, color: C.brass, margin: "0 0 8px" }}>{activeLearner.name.split(" ")[0]} suggested this time — awaiting your response</p>
+                      <p style={{ fontSize: 11, color: C.brassLabel, margin: "0 0 8px" }}>{activeLearner.name.split(" ")[0]} suggested this time — awaiting your response</p>
                       <div style={{ display: "flex", gap: 8 }}>
                         <button onClick={() => approveCounter(sel.id)}
                           style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "6px 13px", borderRadius: 8, background: "#1A9E6E", color: "#fff", fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer" }}>
@@ -4737,7 +4738,7 @@ function TeacherLessonRoom({ teacherId }) {
                     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                       {isConfirmed && (!modifyLocked(sel) ? (
                         <button onClick={() => setShowCounter((p) => ({ ...p, [sel.id]: true }))}
-                          style={{ fontSize: 12, color: C.brass, background: "none", border: `1px solid ${C.brass}`, borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontWeight: 600 }}>
+                          style={{ fontSize: 12, color: C.brassLabel, background: "none", border: `1px solid ${C.brass}`, borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontWeight: 600 }}>
                           Modify time
                         </button>
                       ) : (
@@ -4829,7 +4830,7 @@ function LearnerChat({ teacher, messages, onSend }) {
   function submit() { if (!text.trim()) return; onSend(text); setText(""); }
   return (
     <div className="mt-6 rounded-xl overflow-hidden" style={{ border: `1px solid ${C.inkLine}` }}>
-      <div className="px-4 py-2.5 text-xs flex items-center gap-2" style={{ background: C.inkSoft, color: C.brass, borderBottom: `1px solid ${C.inkLine}` }}>
+      <div className="px-4 py-2.5 text-xs flex items-center gap-2" style={{ background: C.inkSoft, color: C.brassLabel, borderBottom: `1px solid ${C.inkLine}` }}>
         <Check size={13} /> {teacher.name.split(" ")[0]} accepted — you can message now
       </div>
       <div className="lg-scroll overflow-y-auto px-4 py-3 flex flex-col gap-2" style={{ maxHeight: 240 }}>
