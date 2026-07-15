@@ -1506,9 +1506,8 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
 
       {/* Hero */}
       <div style={{ background: "#fff", borderBottom: `1px solid ${C.inkLine}` }}>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "28px 24px 24px", gap: 16 }}>
-          {/* Badge pill */}
-          <span style={{ fontSize: 13, color: C.ivoryDim, background: "#fff", borderRadius: 999, padding: "7px 20px", boxShadow: "0 4px 20px rgba(0,0,0,0.13), 0 0 0 1px rgba(0,0,0,0.08)", fontWeight: 500, letterSpacing: 0.1, whiteSpace: "nowrap" }}>For conservatory students only</span>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "12px 24px 24px", gap: 16 }}>
+          <span style={{ fontSize: 13, color: C.ivoryDim, fontStyle: "italic", fontWeight: 500, letterSpacing: 0.1, whiteSpace: "nowrap" }}>For conservatory students only</span>
           {/* Content pill */}
           <div style={{ background: "#fff", borderRadius: 20, padding: "24px 28px", boxShadow: "0 4px 20px rgba(0,0,0,0.13), 0 0 0 1px rgba(0,0,0,0.08)", width: "100%", maxWidth: 520, textAlign: "center" }}>
             <h1 style={{ fontSize: "clamp(20px, 5vw, 32px)", fontWeight: 700, lineHeight: 1.1, color: C.ivory, margin: "0 0 14px", fontFamily: "'DM Serif Display', serif", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
