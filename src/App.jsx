@@ -402,9 +402,9 @@ function Logo({ tone = "light", size = 20, slogan = false }) {
       <svg width={size} height={size} viewBox="0 0 512 512" style={{ flexShrink: 0 }}>
         <circle cx="256" cy="256" r="256" fill="#2C3E50" />
         <g transform="translate(256 256) scale(0.78) translate(-256 -256)">
-          <polygon points="56,460 256,58 148,460" fill="#FFC629" />
-          <polygon points="256,58 456,460 364,460" fill="#FFC629" />
-          <polygon points="159,252 353,252 377,302 135,302" fill="#FFC629" />
+          <polygon points="56,460 256,58 148,460" fill="white" />
+          <polygon points="256,58 456,460 364,460" fill="white" />
+          <polygon points="159,252 353,252 377,302 135,302" fill="white" />
         </g>
       </svg>
       <span style={{ fontFamily: "'Fraunces', serif", color: col, fontSize: size * 0.9, fontWeight: 500, letterSpacing: 0 }}>Artium</span>
