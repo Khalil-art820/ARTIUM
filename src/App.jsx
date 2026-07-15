@@ -1506,34 +1506,35 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
 
       {/* Hero */}
       <div style={{ background: "#fff", borderBottom: `1px solid ${C.inkLine}` }}>
-        {/* Top center pill */}
-        <div style={{ display: "flex", justifyContent: "center", paddingTop: 28, paddingBottom: 4 }}>
-          <span style={{ fontSize: 13, color: C.ivoryDim, background: "#fff", borderRadius: 999, padding: "7px 20px", boxShadow: "0 4px 20px rgba(0,0,0,0.13), 0 0 0 1px rgba(0,0,0,0.08)", fontWeight: 500, letterSpacing: 0.1 }}>For conservatory students only</span>
-        </div>
-        <div className="max-w-6xl mx-auto px-8 py-16 grid md:grid-cols-2 gap-16 items-center">
-          <div>
-            <h1 style={{ fontSize: "clamp(28px,3.5vw,48px)", fontWeight: 700, lineHeight: 1.08, letterSpacing: 0, color: C.ivory, margin: 0, fontFamily: "'DM Serif Display', serif" }}>
-              Every Conservatory.<br />One Network.
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "28px 24px 24px", gap: 16 }}>
+          {/* Badge pill */}
+          <span style={{ fontSize: 13, color: C.ivoryDim, background: "#fff", borderRadius: 999, padding: "7px 20px", boxShadow: "0 4px 20px rgba(0,0,0,0.13), 0 0 0 1px rgba(0,0,0,0.08)", fontWeight: 500, letterSpacing: 0.1, whiteSpace: "nowrap" }}>For conservatory students only</span>
+          {/* Content pill */}
+          <div style={{ background: "#fff", borderRadius: 20, padding: "24px 28px", boxShadow: "0 4px 20px rgba(0,0,0,0.13), 0 0 0 1px rgba(0,0,0,0.08)", width: "100%", maxWidth: 520, textAlign: "center" }}>
+            <h1 style={{ fontSize: "clamp(20px, 5vw, 32px)", fontWeight: 700, lineHeight: 1.1, color: C.ivory, margin: "0 0 14px", fontFamily: "'DM Serif Display', serif", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              Every Conservatory. One Network.
             </h1>
-            <p style={{ color: C.ivoryDim, fontSize: 18, lineHeight: 1.65, marginTop: 20, maxWidth: 460 }}>
+            <p style={{ color: C.ivoryDim, fontSize: 15, lineHeight: 1.65, margin: 0 }}>
               Artium connects students across the world's top conservatories — share repertoire, message peers and earn while you teach.
             </p>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 32, flexWrap: "wrap" }}>
-              {!myProfile && (studentLoggedOut
-                ? <PrimaryBtn onClick={onLogin} icon={ArrowRight}>Log in</PrimaryBtn>
-                : <PrimaryBtn onClick={onApply} icon={ArrowRight}>Get started free</PrimaryBtn>
-              )}
-              <span style={{ fontSize: 13, color: C.ivoryDim }}>{myProfile ? "You're signed in." : "No credit card required."}</span>
-            </div>
-            {error && <p style={{ marginTop: 16, fontSize: 14, color: C.burgundy, lineHeight: 1.5 }}>{error}</p>}
+            {!myProfile && (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginTop: 20, flexWrap: "wrap" }}>
+                {studentLoggedOut
+                  ? <PrimaryBtn onClick={onLogin} icon={ArrowRight}>Log in</PrimaryBtn>
+                  : <PrimaryBtn onClick={onApply} icon={ArrowRight}>Get started free</PrimaryBtn>}
+                <span style={{ fontSize: 13, color: C.ivoryDim }}>No credit card required.</span>
+              </div>
+            )}
+            {error && <p style={{ marginTop: 12, fontSize: 14, color: C.burgundy, lineHeight: 1.5 }}>{error}</p>}
           </div>
-          <div style={{ borderRadius: 12, overflow: "hidden", border: `1px solid ${C.inkLine}`, boxShadow: "0 8px 32px rgba(10,37,64,0.10)" }}>
+          {/* Map preview */}
+          <div style={{ borderRadius: 12, overflow: "hidden", border: `1px solid ${C.inkLine}`, boxShadow: "0 8px 32px rgba(10,37,64,0.10)", width: "100%", maxWidth: 520 }}>
             <div style={{ padding: "14px 18px", background: "#2C3E50", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <button onClick={onPreview} style={{ fontSize: 14, fontWeight: 600, color: "#fff", background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: FONT_BODY, display: "inline-flex", alignItems: "center", gap: 6 }}>
                 <Globe2 size={15} /> Explore Artium's Network
               </button>
             </div>
-            <WorldMap selectedId={null} onSelect={() => {}} studentsByCons={SAMPLE_STUDENTS.reduce((a, s) => { (a[s.conservatoryId] = a[s.conservatoryId] || []).push(s); return a; }, {})} height={280} />
+            <WorldMap selectedId={null} onSelect={() => {}} studentsByCons={SAMPLE_STUDENTS.reduce((a, s) => { (a[s.conservatoryId] = a[s.conservatoryId] || []).push(s); return a; }, {})} height={240} />
           </div>
         </div>
       </div>
