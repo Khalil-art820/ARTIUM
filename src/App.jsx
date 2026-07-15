@@ -731,8 +731,6 @@ function MapTitle() {
 }
 
 const TILE_URL = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
-// English place-name labels rendered on top of the satellite imagery
-const TILE_LABELS_URL = "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}";
 const TILE_ATTRIBUTION = 'Imagery &copy; <a href="https://www.esri.com/" target="_blank" rel="noreferrer">Esri</a>';
 
 function consPinIcon({ active, hasStudents, hasTeacher }) {
@@ -796,7 +794,6 @@ function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", inter
         style={{ width: "100%", height: "100%", background: C.ink }}
       >
         <TileLayer url={TILE_URL} attribution="" />
-        <TileLayer url={TILE_LABELS_URL} attribution="" />
         {CONSERVATORIES.map((cons) => {
           const n = (studentsByCons[cons.id] || []).length;
           if (n === 0) return null;
