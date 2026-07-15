@@ -1515,7 +1515,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
               Every Conservatory. One Network.
             </h1>
             <p style={{ color: C.ivoryDim, fontSize: 15, lineHeight: 1.65, margin: 0 }}>
-              Artium connects students across the world's top conservatories — share repertoire, message peers and earn while you teach.
+              Artium connects students across the world's top conservatories — share repertoire, message peers, earn while you teach and promote your work.
             </p>
             {!myProfile && (
               <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginTop: 20, flexWrap: "wrap" }}>
