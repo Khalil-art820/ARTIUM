@@ -400,7 +400,7 @@ function Logo({ tone = "light", size = 20, slogan = false }) {
   return (
     <div className="flex items-center gap-2.5">
       <svg width={size} height={size} viewBox="0 0 512 512" style={{ flexShrink: 0 }}>
-        <rect width="512" height="512" rx={512 * 0.22} fill="#1D2027" />
+        <rect width="512" height="512" rx={512 * 0.22} fill="#2C3E50" />
         <polygon points="56,460 256,58 148,460" fill="white" />
         <polygon points="256,58 456,460 364,460" fill="white" />
         <polygon points="159,252 353,252 377,302 135,302" fill="white" />
