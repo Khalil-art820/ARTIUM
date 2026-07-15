@@ -405,7 +405,7 @@ function Logo({ tone = "light", size = 20, slogan = false }) {
         <polygon points="256,58 456,460 364,460" fill="white" />
         <polygon points="159,252 353,252 377,302 135,302" fill="white" />
       </svg>
-      <span style={{ fontFamily: FONT_DISPLAY, color: col, fontSize: size * 0.9, fontWeight: 600, letterSpacing: -0.3 }}>Artium</span>
+      <span style={{ fontFamily: "'DM Serif Display', serif", color: col, fontSize: size * 0.9, fontWeight: 700, letterSpacing: 0 }}>Artium</span>
       {slogan && (
         <span style={{ fontSize: 13, color: C.ivoryDim, fontStyle: "italic", fontWeight: 500, letterSpacing: 0.1, whiteSpace: "nowrap" }}>
           — A World Connected by Music
