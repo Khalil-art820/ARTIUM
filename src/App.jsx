@@ -784,9 +784,9 @@ function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", inter
       </div>
       <MapContainer
         center={[24, 14]}
-        zoom={2}
+        zoom={1}
         zoomSnap={0.5}
-        minZoom={2}
+        minZoom={1}
         maxZoom={9}
         maxBounds={[[-85, -200], [85, 200]]}
         maxBoundsViscosity={1}
