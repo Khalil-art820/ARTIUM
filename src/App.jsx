@@ -405,7 +405,7 @@ function Logo({ tone = "light", size = 20, slogan = false }) {
         <polygon points="256,58 456,460 364,460" fill="white" />
         <polygon points="159,252 353,252 377,302 135,302" fill="white" />
       </svg>
-      <span style={{ fontFamily: "'DM Serif Display', serif", color: col, fontSize: size * 0.9, fontWeight: 700, letterSpacing: 0 }}>Artium</span>
+      <span style={{ fontFamily: "'Fraunces', serif", color: col, fontSize: size * 0.9, fontWeight: 500, letterSpacing: 0 }}>Artium</span>
       {slogan && (
         <span style={{ fontSize: 13, color: C.ivoryDim, fontStyle: "italic", fontWeight: 500, letterSpacing: 0.1, whiteSpace: "nowrap" }}>
           — A World Connected by Music
@@ -1281,7 +1281,7 @@ export default function App() {
   return (
     <div style={{ fontFamily: FONT_BODY, background: C.ink, minHeight: "100%", width: "100%" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Serif+Display&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Serif+Display&family=Fraunces:opsz,wght@9..144,500&display=swap');
         * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
         .lg-pulse { animation: lgpulse 2.2s ease-out infinite; transform-origin: center; }
         @keyframes lgpulse { 0% { opacity:0.9; transform:scale(0.6);} 100% { opacity:0; transform:scale(2.4);} }
