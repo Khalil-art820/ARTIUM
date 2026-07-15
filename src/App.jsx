@@ -407,7 +407,7 @@ function Logo({ tone = "light", size = 20, slogan = false }) {
       </svg>
       <span style={{ fontFamily: FONT_DISPLAY, color: col, fontSize: size * 0.9, fontWeight: 600, letterSpacing: -0.3 }}>Artium</span>
       {slogan && (
-        <span style={{ fontFamily: FONT_DISPLAY, color: dim, fontSize: size * 0.6, fontWeight: 400, opacity: 0.6 }}>
+        <span style={{ fontSize: 13, color: C.ivoryDim, fontStyle: "italic", fontWeight: 500, letterSpacing: 0.1, whiteSpace: "nowrap" }}>
           — A World Connected by Music
         </span>
       )}
