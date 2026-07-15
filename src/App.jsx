@@ -1475,32 +1475,29 @@ export default function App() {
 function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, studentLoggedOut, musicOn, onMusicToggle, audioRef, error, onlineCount }) {
   return (
     <div style={{ background: "#FFFFFF", color: C.ivory, minHeight: "100vh" }}>
-      {/* Nav */}
-      <div style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#FFFFFF" }}>
-        <div style={{ height: 64, display: "flex", alignItems: "center", padding: "0 32px" }}>
-          <div className="flex items-center gap-3">
-            {!myProfile && !studentLoggedOut && (
-              <button onClick={onBack} style={{ color: C.ivoryDim, background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", padding: 0 }}>
-                <ChevronLeft size={18} />
-              </button>
-            )}
-            <Logo size={22} />
-          </div>
-          <div className="flex items-center gap-3" style={{ marginLeft: "auto" }}>
-            <MusicBtn playing={musicOn} onToggle={onMusicToggle} audioRef={audioRef} />
-            {onlineCount != null && (
-              <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 13, color: C.ivoryDim }}>
-                <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#1A9E6E", display: "inline-block" }} />
-                <span style={{ color: C.ivory, fontWeight: 600 }}>{onlineCount}</span>
-                <span style={{ color: C.ivory, fontWeight: 600 }}>online</span>
-              </span>
-            )}
-            {myProfile && (
-              <button onClick={onProfile} title="My profile" style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}>
-                <Avatar name={myProfile.name} id="me" size={36} photoUrl={myProfile.photoUrl} online />
-              </button>
-            )}
-          </div>
+      {/* Nav — matches AppShell header */}
+      <div className="px-6 flex items-center gap-4" style={{ height: 60, background: "#FFFFFF", borderBottom: `1px solid ${C.inkLine}` }}>
+        <div className="flex items-center gap-3">
+          {!myProfile && !studentLoggedOut && (
+            <button onClick={onBack} style={{ color: C.ivoryDim, background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 2, padding: 0 }}>
+              <ChevronLeft size={18} />
+            </button>
+          )}
+          <Logo size={20} />
+        </div>
+        <div className="flex items-center gap-2 ml-auto">
+          <MusicBtn playing={musicOn} onToggle={onMusicToggle} audioRef={audioRef} />
+          {onlineCount != null && (
+            <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: C.ivoryDim, whiteSpace: "nowrap" }}>
+              <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#1A9E6E", display: "inline-block", flexShrink: 0 }} />
+              <span style={{ color: C.ivory, fontWeight: 600 }}>{onlineCount}</span>
+            </span>
+          )}
+          {myProfile && (
+            <button onClick={onProfile} title="My profile" style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}>
+              <Avatar name={myProfile.name} id="me" size={32} photoUrl={myProfile.photoUrl} online />
+            </button>
+          )}
         </div>
       </div>
 
