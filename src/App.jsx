@@ -1505,10 +1505,13 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
       </div>
 
       {/* Hero */}
-      <div style={{ background: C.inkSoft, borderBottom: `1px solid ${C.inkLine}` }}>
-        <div className="max-w-6xl mx-auto px-8 py-20 grid md:grid-cols-2 gap-16 items-center">
+      <div style={{ background: "#fff", borderBottom: `1px solid ${C.inkLine}` }}>
+        {/* Top center pill */}
+        <div style={{ display: "flex", justifyContent: "center", paddingTop: 28, paddingBottom: 4 }}>
+          <span style={{ fontSize: 13, color: C.ivoryDim, background: "#fff", borderRadius: 999, padding: "7px 20px", boxShadow: "0 4px 20px rgba(0,0,0,0.13), 0 0 0 1px rgba(0,0,0,0.08)", fontWeight: 500, letterSpacing: 0.1 }}>For conservatory students only</span>
+        </div>
+        <div className="max-w-6xl mx-auto px-8 py-16 grid md:grid-cols-2 gap-16 items-center">
           <div>
-            <p style={{ fontSize: 12.3, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.brassLabel, borderLeft: `3px solid ${C.brass}`, paddingLeft: 10, marginBottom: 24, lineHeight: 1 }}>For conservatory students only</p>
             <h1 style={{ fontSize: "clamp(28px,3.5vw,48px)", fontWeight: 700, lineHeight: 1.08, letterSpacing: 0, color: C.ivory, margin: 0, fontFamily: "'DM Serif Display', serif" }}>
               Every Conservatory.<br />One Network.
             </h1>
