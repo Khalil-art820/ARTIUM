@@ -791,9 +791,9 @@ function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", inter
         maxBounds={[[-85, -200], [85, 200]]}
         maxBoundsViscosity={1}
         scrollWheelZoom={interactive}
-        style={{ width: "100%", height: "100%", background: C.ink }}
+        style={{ width: "100%", height: "100%", background: "#10395C" }}
       >
-        <TileLayer url={TILE_URL} attribution="" />
+        <TileLayer url={TILE_URL} attribution="" keepBuffer={6} updateWhenIdle={false} updateWhenZooming={false} />
         {CONSERVATORIES.map((cons) => {
           const n = (studentsByCons[cons.id] || []).length;
           if (n === 0) return null;
