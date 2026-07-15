@@ -1,11 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <circle cx="256" cy="256" r="256" fill="#2C3E50"/>
-  <g transform="translate(256 256) scale(0.78) translate(-256 -256)">
-    <!-- Left leg -->
-    <polygon points="56,460 256,58 148,460" fill="white"/>
-    <!-- Right leg -->
-    <polygon points="256,58 456,460 364,460" fill="white"/>
-    <!-- Crossbar -->
-    <polygon points="159,252 353,252 377,302 135,302" fill="white"/>
-  </g>
+  <rect width="512" height="512" rx="112" fill="#2C3E50"/>
+  <!-- Left leg -->
+  <polygon points="56,460 256,58 148,460" fill="white"/>
+  <!-- Right leg -->
+  <polygon points="256,58 456,460 364,460" fill="white"/>
+  <!-- Crossbar -->
+  <polygon points="159,252 353,252 377,302 135,302" fill="white"/>
 </svg>
