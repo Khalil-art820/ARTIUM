@@ -1353,7 +1353,7 @@ export default function App() {
         />
       )}
 
-      {screen === "landing" && <Landing onApply={startApply} onBack={backToEntry} onPreview={startPreview} onProfile={goToProfile} onLogin={startLogin} myProfile={myProfile} studentLoggedOut={studentLoggedOut} musicOn={musicOn} onMusicToggle={toggleMusic} audioRef={audioRef} error={authError} onlineCount={onlineCount} />}
+      {screen === "landing" && <Landing onApply={startApply} onBack={backToEntry} onPreview={startPreview} onProfile={goToProfile} onLogin={startLogin} myProfile={myProfile} studentLoggedOut={studentLoggedOut} musicOn={musicOn} onMusicToggle={toggleMusic} audioRef={audioRef} error={authError} onlineCount={onlineCount} onGoToLessonRoom={() => { setScreen("app"); setAppTabPersist("lessons"); }} />}
       {screen === "login" && <LoginScreen onSubmit={handleLogin} onBack={goHome} error={authError} />}
       {screen === "signup" && (
         <SignupFlow
@@ -1472,7 +1472,7 @@ export default function App() {
 /* ---------------------------------------------------------------- */
 /* LANDING                                                             */
 /* ---------------------------------------------------------------- */
-function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, studentLoggedOut, musicOn, onMusicToggle, audioRef, error, onlineCount }) {
+function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, studentLoggedOut, musicOn, onMusicToggle, audioRef, error, onlineCount, onGoToLessonRoom }) {
   return (
     <div style={{ background: "#FFFFFF", color: C.ivory, minHeight: "100vh" }}>
       {/* Nav — matches AppShell header */}
@@ -1493,6 +1493,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
               <span style={{ color: C.ivory, fontWeight: 600 }}>{onlineCount}</span>
             </span>
           )}
+          {myProfile && <NotificationBell myProfile={myProfile} onGoToLessonRoom={onGoToLessonRoom} />}
           {myProfile && (
             <button onClick={onProfile} title="My profile" style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}>
               <Avatar name={myProfile.name} id="me" size={32} photoUrl={myProfile.photoUrl} online />
