@@ -791,7 +791,7 @@ function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", inter
             <path d="M12 0C5.4 0 0 5 0 11.4 0 19.6 12 30 12 30s12-10.4 12-18.6C24 5 18.6 0 12 0z" fill="#C0392B" stroke="#8B1A1A" strokeWidth="1.5" />
             <circle cx="12" cy="11.5" r="4" fill="white" opacity="0.9" />
           </svg>
-          Conservatory with students open to teaching ({totalTeachers})
+          include students open to teaching ({totalTeachers})
         </span>
         <span style={{ marginLeft: "auto", fontSize: 11, color: "#425466", fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>Total conservatory students: {totalJoined}</span>
       </div>
