@@ -1538,7 +1538,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
             {error && <p style={{ marginTop: 12, fontSize: 14, color: C.burgundy, lineHeight: 1.5 }}>{error}</p>}
           </div>
           {/* Map preview */}
-          <div style={{ borderRadius: 12, overflow: "hidden", boxShadow: "0 8px 32px rgba(10,37,64,0.10), 0 0 0 1px rgba(10,37,64,0.08)", width: "100%", maxWidth: 520, transform: "translateZ(0)", WebkitMaskImage: "-webkit-radial-gradient(white, black)" }}>
+          <div style={{ borderRadius: 12, overflow: "hidden", border: `1px solid ${C.inkLine}`, boxShadow: "0 8px 32px rgba(10,37,64,0.10)", width: "100%", maxWidth: 520, transform: "translateZ(0)" }}>
             <div style={{ padding: "14px 18px", background: "#fff", borderBottom: `1px solid ${C.inkLine}`, display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
               <button onClick={onPreview} style={{ fontSize: 14, fontWeight: 600, color: C.ivory, background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: FONT_BODY, display: "inline-flex", alignItems: "center", gap: 6 }}>
                 <Compass size={16} /> Explore Artium's Network
