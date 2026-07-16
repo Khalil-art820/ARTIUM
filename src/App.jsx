@@ -774,15 +774,14 @@ function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", inter
         pointerEvents: "none",
         flexWrap: "nowrap",
       }}>
+        <span style={{ fontSize: 11, color: "#425466", fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>
+          {totalJoined} conservatory student{totalJoined !== 1 ? "s" : ""} joined
+        </span>
         <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "#425466", fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>
           <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#C0392B", border: "1.5px solid #8B1A1A", display: "inline-block", flexShrink: 0 }} />
           Open to teaching ({totalTeachers})
         </span>
-        <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "#425466", fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>
-          <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#1A9E6E", border: "1.5px solid #1E8449", display: "inline-block", flexShrink: 0 }} />
-          Joined ({totalJoined})
-        </span>
-        <span style={{ marginLeft: 16, fontSize: 11, color: "#425466", fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>200+ conservatories</span>
+        <span style={{ fontSize: 11, color: "#425466", fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>{CONSERVATORIES.length} conservatories</span>
       </div>
       <MapContainer
         center={[24, 14]}
