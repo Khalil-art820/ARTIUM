@@ -1318,7 +1318,7 @@ export default function App() {
         input[type=range].artium-slider::-moz-range-thumb { width: 7px !important; height: 7px !important; border-radius: 50% !important; background: #000 !important; border: none !important; cursor: pointer !important; }
 
         .artium-map, .artium-map .leaflet-container { border-radius: inherit; }
-        .artium-map .leaflet-tile-pane { filter: saturate(1.05) brightness(1.0) contrast(1.0); }
+        .artium-map .leaflet-tile-pane { filter: saturate(0.5) brightness(1.08); }
         .artium-map .leaflet-control-zoom { border: 1px solid #E6EBF1 !important; box-shadow: 0 2px 8px rgba(10,37,64,0.08) !important; border-radius: 8px !important; overflow: hidden; }
         .artium-map .leaflet-control-zoom a { background: #FFFFFF !important; color: #0A2540 !important; border-color: #E6EBF1 !important; font-weight: 600 !important; }
         .artium-map .leaflet-control-zoom a:hover { background: #F6F9FC !important; }
