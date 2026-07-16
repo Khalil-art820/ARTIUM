@@ -793,7 +793,7 @@ function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", inter
             <path d="M12 0C5.4 0 0 5 0 11.4 0 19.6 12 30 12 30s12-10.4 12-18.6C24 5 18.6 0 12 0z" fill="#C0392B" stroke="#8B1A1A" strokeWidth="1.5" />
             <circle cx="12" cy="11.5" r="4" fill="white" opacity="0.9" />
           </svg>
-          includes ({totalTeachers}) students open to teaching
+          includes ({totalTeachers}) student{totalTeachers !== 1 ? "s" : ""} open to teaching
         </span>
       </div>
       <MapContainer
