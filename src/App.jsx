@@ -774,11 +774,22 @@ function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", inter
         pointerEvents: "none",
         flexWrap: "nowrap",
       }}>
-        <span style={{ fontSize: 11, color: "#425466", fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>
+        <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "#425466", fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>
+          <svg width="10" height="13" viewBox="0 0 24 30" style={{ flexShrink: 0 }}>
+            <path d="M12 0C5.4 0 0 5 0 11.4 0 19.6 12 30 12 30s12-10.4 12-18.6C24 5 18.6 0 12 0z" fill="#27AE60" stroke="#1E8449" strokeWidth="1.5" />
+            <circle cx="12" cy="11.5" r="4" fill="white" opacity="0.9" />
+          </svg>
+          <svg width="10" height="13" viewBox="0 0 24 30" style={{ flexShrink: 0, marginLeft: -2 }}>
+            <path d="M12 0C5.4 0 0 5 0 11.4 0 19.6 12 30 12 30s12-10.4 12-18.6C24 5 18.6 0 12 0z" fill="#C0392B" stroke="#8B1A1A" strokeWidth="1.5" />
+            <circle cx="12" cy="11.5" r="4" fill="white" opacity="0.9" />
+          </svg>
           {totalJoined} conservatory student{totalJoined !== 1 ? "s" : ""} joined
         </span>
         <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "#425466", fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>
-          <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#C0392B", border: "1.5px solid #8B1A1A", display: "inline-block", flexShrink: 0 }} />
+          <svg width="10" height="13" viewBox="0 0 24 30" style={{ flexShrink: 0 }}>
+            <path d="M12 0C5.4 0 0 5 0 11.4 0 19.6 12 30 12 30s12-10.4 12-18.6C24 5 18.6 0 12 0z" fill="#C0392B" stroke="#8B1A1A" strokeWidth="1.5" />
+            <circle cx="12" cy="11.5" r="4" fill="white" opacity="0.9" />
+          </svg>
           Open to teaching ({totalTeachers})
         </span>
         <span style={{ fontSize: 11, color: "#425466", fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>{CONSERVATORIES.length} conservatories</span>
