@@ -1547,7 +1547,9 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
                 <Users size={14} /> {SAMPLE_STUDENTS.length}
               </span>
             </div>
-            <WorldMap selectedId={null} onSelect={() => {}} studentsByCons={SAMPLE_STUDENTS.reduce((a, s) => { (a[s.conservatoryId] = a[s.conservatoryId] || []).push(s); return a; }, {})} height={240} flatTop />
+            <div style={{ padding: "0 7px", background: "#fff" }}>
+              <WorldMap selectedId={null} onSelect={() => {}} studentsByCons={SAMPLE_STUDENTS.reduce((a, s) => { (a[s.conservatoryId] = a[s.conservatoryId] || []).push(s); return a; }, {})} height={240} flatTop />
+            </div>
           </div>
         </div>
       </div>
