@@ -732,9 +732,9 @@ function MapTitle() {
   );
 }
 
-const TILE_URL = "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
-const TILE_SUBDOMAINS = ["a", "b", "c", "d"];
-const TILE_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> &copy; <a href="https://carto.com/" target="_blank" rel="noreferrer">CARTO</a>';
+const TILE_URL = "https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}";
+const TILE_SUBDOMAINS = ["0", "1", "2", "3"];
+const TILE_ATTRIBUTION = '&copy; <a href="https://www.google.com/maps" target="_blank" rel="noreferrer">Google</a>';
 
 function consPinIcon({ active, hasStudents, hasTeacher }) {
   const w = active ? 18 : 14;
