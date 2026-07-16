@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   Search, Send,
   ChevronRight, Check, X, Instagram, Facebook, Youtube,
-  Music2, Music, GraduationCap, Users, MessageCircle, ArrowRight, ArrowLeft, Play, Pause, Globe2,
+  Music2, Music, GraduationCap, Users, MessageCircle, ArrowRight, ArrowLeft, Play, Pause, Globe2, Compass,
   Volume1, Volume2, VolumeX,
   Pencil, Plus, Trash2, Home, Upload, Eye, EyeOff, ChevronLeft,
   Calendar, CreditCard, Video, Link2, Clock, Bell,
@@ -759,12 +759,12 @@ function consPinIcon({ active, hasStudents, hasTeacher }) {
   });
 }
 
-function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", interactive = false }) {
+function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", interactive = false, flatTop = false }) {
   const allStudents = Object.values(studentsByCons).flat();
   const totalJoined = allStudents.length;
   const totalTeachers = allStudents.filter(s => s.teaching && s.teaching.open).length;
   return (
-    <div className="artium-map" style={{ width: "100%", height, position: "relative" }}>
+    <div className="artium-map" style={{ width: "100%", height, position: "relative", ...(flatTop ? { borderRadius: 0 } : {}) }}>
       <div style={{
         position: "absolute", bottom: 0, left: 0, right: 0,
         zIndex: 1000, display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8,
@@ -1540,13 +1540,13 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
           <div style={{ borderRadius: 12, overflow: "hidden", border: `1px solid ${C.inkLine}`, boxShadow: "0 8px 32px rgba(10,37,64,0.10)", width: "100%", maxWidth: 520 }}>
             <div style={{ padding: "14px 18px", background: "#fff", borderBottom: `1px solid ${C.inkLine}`, display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
               <button onClick={onPreview} style={{ fontSize: 14, fontWeight: 600, color: C.ivory, background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: FONT_BODY, display: "inline-flex", alignItems: "center", gap: 6 }}>
-                <Globe2 size={15} /> Explore Artium's Network
+                <Compass size={16} /> Explore Artium's Network
               </button>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 13, color: C.ivoryDim, fontFamily: FONT_BODY }}>
                 <Users size={14} /> {SAMPLE_STUDENTS.length}
               </span>
             </div>
-            <WorldMap selectedId={null} onSelect={() => {}} studentsByCons={SAMPLE_STUDENTS.reduce((a, s) => { (a[s.conservatoryId] = a[s.conservatoryId] || []).push(s); return a; }, {})} height={240} />
+            <WorldMap selectedId={null} onSelect={() => {}} studentsByCons={SAMPLE_STUDENTS.reduce((a, s) => { (a[s.conservatoryId] = a[s.conservatoryId] || []).push(s); return a; }, {})} height={240} flatTop />
           </div>
         </div>
       </div>
