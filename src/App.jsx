@@ -732,8 +732,9 @@ function MapTitle() {
   );
 }
 
-const TILE_URL = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
-const TILE_ATTRIBUTION = 'Imagery &copy; <a href="https://www.esri.com/" target="_blank" rel="noreferrer">Esri</a>';
+const TILE_URL = "https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}";
+const TILE_SUBDOMAINS = ["0", "1", "2", "3"];
+const TILE_ATTRIBUTION = '&copy; <a href="https://www.google.com/maps" target="_blank" rel="noreferrer">Google</a>';
 
 function consPinIcon({ active, hasStudents, hasTeacher }) {
   const w = active ? 18 : 14;
@@ -768,7 +769,7 @@ function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", inter
       <div style={{
         position: "absolute", bottom: 0, left: 0, right: 0,
         zIndex: 1000, display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8,
-        background: "rgba(255,255,255,0.92)", backdropFilter: "blur(8px)",
+        background: "#fff",
         borderTop: "1px solid #E6EBF1",
         padding: "7px 12px",
         pointerEvents: "none",
@@ -803,9 +804,9 @@ function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", inter
         maxBounds={[[-85, -200], [85, 200]]}
         maxBoundsViscosity={1}
         scrollWheelZoom={interactive}
-        style={{ width: "100%", height: "100%", background: "#10395C" }}
+        style={{ width: "100%", height: "100%", background: "#e8eaed" }}
       >
-        <TileLayer url={TILE_URL} attribution="" keepBuffer={6} updateWhenIdle={false} updateWhenZooming={false} />
+        <TileLayer url={TILE_URL} subdomains={TILE_SUBDOMAINS} attribution="" keepBuffer={6} updateWhenIdle={false} updateWhenZooming={false} />
         {CONSERVATORIES.map((cons) => {
           const n = (studentsByCons[cons.id] || []).length;
           if (n === 0) return null;
@@ -1537,7 +1538,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
             {error && <p style={{ marginTop: 12, fontSize: 14, color: C.burgundy, lineHeight: 1.5 }}>{error}</p>}
           </div>
           {/* Map preview */}
-          <div style={{ borderRadius: 12, overflow: "hidden", border: `1px solid ${C.inkLine}`, boxShadow: "0 8px 32px rgba(10,37,64,0.10)", width: "100%", maxWidth: 520 }}>
+          <div style={{ borderRadius: 12, overflow: "hidden", boxShadow: "0 8px 32px rgba(10,37,64,0.10), 0 0 0 1px rgba(10,37,64,0.08)", width: "100%", maxWidth: 520, transform: "translateZ(0)", WebkitMaskImage: "-webkit-radial-gradient(white, black)" }}>
             <div style={{ padding: "14px 18px", background: "#fff", borderBottom: `1px solid ${C.inkLine}`, display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
               <button onClick={onPreview} style={{ fontSize: 14, fontWeight: 600, color: C.ivory, background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: FONT_BODY, display: "inline-flex", alignItems: "center", gap: 6 }}>
                 <Compass size={16} /> Explore Artium's Network
