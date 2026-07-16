@@ -1540,8 +1540,8 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
 
       {/* How it works */}
       <div className="max-w-6xl mx-auto px-8 py-20">
-        <p style={{ fontSize: 12.3, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: C.brassLabel, borderLeft: `3px solid ${C.brass}`, paddingLeft: 10, marginBottom: 24, lineHeight: 1 }}>How it works</p>
-        <h2 style={{ fontSize: "clamp(28px,3.5vw,48px)", fontWeight: 700, lineHeight: 1.08, letterSpacing: 0, color: C.ivory, margin: 0, marginBottom: 48, fontFamily: "'DM Serif Display', serif" }}>Simple, from day one.</h2>
+        <p style={{ fontSize: "clamp(28px,3.5vw,48px)", fontWeight: 700, lineHeight: 1.08, letterSpacing: 0, color: C.ivory, margin: 0, marginBottom: 12, fontFamily: "'DM Serif Display', serif", textAlign: "center" }}>How it works</p>
+        <h2 style={{ fontSize: "clamp(28px,3.5vw,48px)", fontWeight: 700, lineHeight: 1.08, letterSpacing: 0, color: C.ivory, margin: 0, marginBottom: 48, fontFamily: "'DM Serif Display', serif", textAlign: "center" }}>Simple, from day one.</h2>
         <div className="grid sm:grid-cols-4 gap-8">
           {[
             { n: "1", t: "Build your profile", d: "Add your conservatory, repertoire, and a performance video to stand out." },
