@@ -764,6 +764,7 @@ function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", inter
   const allStudents = Object.values(studentsByCons).flat();
   const totalJoined = allStudents.length;
   const totalTeachers = allStudents.filter(s => s.teaching && s.teaching.open).length;
+  const pinnedCons = CONSERVATORIES.filter(c => (studentsByCons[c.id] || []).length > 0).length;
   return (
     <div className="artium-map" style={{ width: "100%", height, position: "relative", ...(flatTop ? { borderRadius: 0 } : {}) }}>
       <div style={{
@@ -785,14 +786,14 @@ function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", inter
             <path d="M12 0C5.4 0 0 5 0 11.4 0 19.6 12 30 12 30s12-10.4 12-18.6C24 5 18.6 0 12 0z" fill="#C0392B" stroke="#8B1A1A" strokeWidth="1.5" />
             <circle cx="12" cy="11.5" r="4" fill="white" opacity="0.9" />
           </svg>
-          {CONSERVATORIES.length} conservatories
+          {pinnedCons} conservatories
         </span>
         <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "#425466", fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>
           <svg width="10" height="13" viewBox="0 0 24 30" style={{ flexShrink: 0 }}>
             <path d="M12 0C5.4 0 0 5 0 11.4 0 19.6 12 30 12 30s12-10.4 12-18.6C24 5 18.6 0 12 0z" fill="#C0392B" stroke="#8B1A1A" strokeWidth="1.5" />
             <circle cx="12" cy="11.5" r="4" fill="white" opacity="0.9" />
           </svg>
-          includes students open to teaching ({totalTeachers})
+          includes students ({totalTeachers}) open to teaching
         </span>
       </div>
       <MapContainer
