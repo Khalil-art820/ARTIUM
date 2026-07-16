@@ -793,7 +793,6 @@ function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", inter
           </svg>
           includes students open to teaching ({totalTeachers})
         </span>
-        <span style={{ fontSize: 11, color: "#425466", fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>Total students: {totalJoined}</span>
       </div>
       <MapContainer
         center={[24, 14]}
@@ -1539,10 +1538,13 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
           </div>
           {/* Map preview */}
           <div style={{ borderRadius: 12, overflow: "hidden", border: `1px solid ${C.inkLine}`, boxShadow: "0 8px 32px rgba(10,37,64,0.10)", width: "100%", maxWidth: 520 }}>
-            <div style={{ padding: "14px 18px", background: "#2C3E50", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <button onClick={onPreview} style={{ fontSize: 14, fontWeight: 600, color: "#fff", background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: FONT_BODY, display: "inline-flex", alignItems: "center", gap: 6 }}>
+            <div style={{ padding: "14px 18px", background: "#fff", borderBottom: `1px solid ${C.inkLine}`, display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+              <button onClick={onPreview} style={{ fontSize: 14, fontWeight: 600, color: C.ivory, background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: FONT_BODY, display: "inline-flex", alignItems: "center", gap: 6 }}>
                 <Globe2 size={15} /> Explore Artium's Network
               </button>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 13, color: C.ivoryDim, fontFamily: FONT_BODY }}>
+                <Users size={14} /> {SAMPLE_STUDENTS.length}
+              </span>
             </div>
             <WorldMap selectedId={null} onSelect={() => {}} studentsByCons={SAMPLE_STUDENTS.reduce((a, s) => { (a[s.conservatoryId] = a[s.conservatoryId] || []).push(s); return a; }, {})} height={240} />
           </div>
