@@ -1519,13 +1519,13 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
       <div style={{ background: "#fff", borderBottom: `1px solid ${C.inkLine}` }}>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "12px 24px 24px", gap: 16 }}>
           <span style={{ fontSize: 13, color: "#9AA6B2", fontStyle: "italic", fontWeight: 400, letterSpacing: 0.1, whiteSpace: "nowrap" }}>For conservatory students only</span>
+          <h1 style={{ fontSize: "clamp(20px, 5vw, 32px)", fontWeight: 700, lineHeight: 1.1, color: C.ivory, margin: 0, fontFamily: "'DM Serif Display', serif", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", textAlign: "center", maxWidth: "100%" }}>
+            Every Conservatory. One Network.
+          </h1>
           {/* Content pill */}
           <div style={{ background: "#fff", borderRadius: 20, padding: "24px 28px", boxShadow: "0 4px 20px rgba(0,0,0,0.13), 0 0 0 1px rgba(0,0,0,0.08)", width: "100%", maxWidth: 520, textAlign: "center" }}>
-            <h1 style={{ fontSize: "clamp(20px, 5vw, 32px)", fontWeight: 700, lineHeight: 1.1, color: C.ivory, margin: "0 0 14px", fontFamily: "'DM Serif Display', serif", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-              Every Conservatory. One Network.
-            </h1>
             <p style={{ color: C.ivoryDim, fontSize: 15, lineHeight: 1.65, margin: 0 }}>
-              Artium connects conservatory students across the world's top conservatories — message peers, promote yourself and earn while teaching classical music enthusiasts.
+              Artium connects conservatory students across the world's top conservatories — message peers, promote yourself and earn while giving lessons to classical music enthusiasts.
             </p>
             {!myProfile && (
               <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginTop: 20, flexWrap: "wrap" }}>
