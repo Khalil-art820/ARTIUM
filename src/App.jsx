@@ -1520,7 +1520,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
       <div style={{ background: "#fff", borderBottom: `1px solid ${C.inkLine}` }}>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "12px 24px 24px", gap: 16 }}>
           <span style={{ fontSize: 13, color: "#9AA6B2", fontStyle: "italic", fontWeight: 400, letterSpacing: 0.1, whiteSpace: "nowrap" }}>For conservatory students only</span>
-          <h1 style={{ fontSize: "clamp(20px, 5vw, 32px)", fontWeight: 700, lineHeight: 1.1, color: C.ivory, margin: 0, fontFamily: "'DM Serif Display', serif", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", textAlign: "center", maxWidth: "100%" }}>
+          <h1 style={{ fontSize: "clamp(24px,3vw,40px)", fontWeight: 700, lineHeight: 1.08, letterSpacing: 0, color: C.ivory, margin: 0, fontFamily: "'DM Serif Display', serif", textAlign: "center" }}>
             Every Conservatory. One Network.
           </h1>
           {/* Content pill */}
@@ -1559,8 +1559,8 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
 
       {/* How it works */}
       <div className="max-w-6xl mx-auto px-8 py-20">
-        <p style={{ fontSize: "clamp(28px,3.5vw,48px)", fontWeight: 700, lineHeight: 1.08, letterSpacing: 0, color: C.ivory, margin: 0, marginBottom: 12, fontFamily: "'DM Serif Display', serif", textAlign: "center" }}>How it works..</p>
-        <h2 style={{ fontSize: "clamp(28px,3.5vw,48px)", fontWeight: 700, lineHeight: 1.08, letterSpacing: 0, color: C.ivory, margin: 0, marginBottom: 48, fontFamily: "'DM Serif Display', serif", textAlign: "center" }}>Simple, from day one.</h2>
+        <p style={{ fontSize: "clamp(24px,3vw,40px)", fontWeight: 700, lineHeight: 1.08, letterSpacing: 0, color: C.ivory, margin: 0, marginBottom: 12, fontFamily: "'DM Serif Display', serif", textAlign: "center" }}>How it works..</p>
+        <h2 style={{ fontSize: "clamp(24px,3vw,40px)", fontWeight: 700, lineHeight: 1.08, letterSpacing: 0, color: C.ivory, margin: 0, marginBottom: 48, fontFamily: "'DM Serif Display', serif", textAlign: "center" }}>Simple, from day one.</h2>
         <div style={{ maxWidth: 560, margin: "0 auto", display: "flex", flexDirection: "column", gap: 14 }}>
           {[
             { n: "1", t: "Build your profile", d: "Add your conservatory, repertoire, and a performance video to stand out." },
