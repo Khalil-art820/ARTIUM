@@ -1569,8 +1569,8 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
             { n: "4", t: "Earn while you teach", d: "Accept tutoring requests from music enthusiasts and set your own rate." },
             { n: "5", t: "Marketing and Advertising", d: "Claim your promotional video on aclassicaltone (may be subject to fees)." },
           ].map((s) => (
-            <div key={s.n} style={{ display: "flex", alignItems: "center", gap: 16, padding: "20px 24px", background: "#fff", borderRadius: 20, boxShadow: "0 4px 20px rgba(0,0,0,0.08)" }}>
-              <div style={{ flexShrink: 0, width: 34, height: 34, borderRadius: "50%", background: "#2C3E50", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, fontWeight: 700, fontFamily: FONT_BODY }}>{s.n}</div>
+            <div key={s.n} style={{ display: "flex", alignItems: "flex-start", gap: 16, padding: "20px 24px", background: "#fff", borderRadius: 20, boxShadow: "0 4px 20px rgba(0,0,0,0.08)" }}>
+              <div style={{ flexShrink: 0, width: 34, height: 34, marginTop: -5, borderRadius: "50%", background: "#2C3E50", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, fontWeight: 700, fontFamily: FONT_BODY }}>{s.n}</div>
               <div style={{ flex: 1 }}>
                 <h3 style={{ fontSize: 18, fontWeight: 700, color: "#1A1A1A", margin: 0, lineHeight: 1.3 }}>{s.t}</h3>
                 <p style={{ fontSize: 15, color: "#6B6B6B", margin: "4px 0 0", lineHeight: 1.45 }}>
