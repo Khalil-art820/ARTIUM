@@ -1414,6 +1414,8 @@ export default function App() {
           onApply={startApply} onHome={goHome} musicOn={musicOn} onMusicToggle={toggleMusic} audioRef={audioRef}
           onGuestTabClick={() => setShowGuestPrompt(true)} onlineCount={onlineCount} previewOnly={previewOnly}
           hideTabs={!!selectedStudentId}
+          authUser={authUser}
+          onGoToPromote={() => { setSelectedStudentId(null); setAppTabPersist("promote"); }}
           onGoToLessonRoom={() => { setSelectedStudentId(null); setAppTabPersist("lessons"); }}
           onBack={
             selectedStudentId ? backFromProfile :
@@ -2229,7 +2231,7 @@ function LearnerProfileModal({ learner, onClose }) {
   );
 }
 
-function NotificationBell({ myProfile, onGoToLessonRoom }) {
+function NotificationBell({ myProfile, onGoToLessonRoom, authUser, onGoToPromote }) {
   const [open, setOpen] = React.useState(false);
   const [viewingLearner, setViewingLearner] = React.useState(null);
   const [pending, setPending] = React.useState(() => {
@@ -2238,7 +2240,26 @@ function NotificationBell({ myProfile, onGoToLessonRoom }) {
       return (all[myProfile?.id] || []).filter((r) => r.status === "pending");
     } catch { return []; }
   });
+  const isOwner = !!authUser?.email && authUser.email.toLowerCase() === OWNER_EMAIL;
+  const [promoPending, setPromoPending] = React.useState([]);
   const ref = React.useRef(null);
+
+  // Owner-only: pending promotion submissions (Supabase for real, localStorage for demo)
+  React.useEffect(() => {
+    if (!isOwner) { setPromoPending([]); return; }
+    let alive = true;
+    async function load() {
+      if (authUser?.id) {
+        const { data } = await supabase.from("promotions").select("*").eq("status", "pending").order("created_at", { ascending: true });
+        if (alive) setPromoPending(data || []);
+      } else {
+        try { setPromoPending(JSON.parse(localStorage.getItem("artium_promotions") || "[]").filter((p) => p.status === "pending")); } catch {}
+      }
+    }
+    load();
+    const id = setInterval(load, 4000);
+    return () => { alive = false; clearInterval(id); };
+  }, [isOwner, authUser?.id]);
 
   React.useEffect(() => {
     function onStorage(e) {
@@ -2272,23 +2293,41 @@ function NotificationBell({ myProfile, onGoToLessonRoom }) {
 
   if (!myProfile) return null;
 
+  const totalCount = pending.length + promoPending.length;
+
   return (
     <div ref={ref} style={{ position: "relative" }}>
       <LearnerProfileModal learner={viewingLearner} onClose={() => setViewingLearner(null)} />
       <button onClick={() => setOpen((o) => !o)} style={{ position: "relative", background: "none", border: "none", cursor: "pointer", padding: 4, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <Bell size={20} color={pending.length > 0 ? C.brass : C.ivoryDim} />
-        {pending.length > 0 && (
+        <Bell size={20} color={totalCount > 0 ? C.brass : C.ivoryDim} />
+        {totalCount > 0 && (
           <span style={{ position: "absolute", top: 0, right: 0, width: 16, height: 16, borderRadius: "50%", background: "#E53E3E", color: "#fff", fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>
-            {pending.length}
+            {totalCount}
           </span>
         )}
       </button>
       {open && (
-        <div style={{ position: "absolute", right: 0, top: "calc(100% + 8px)", width: 320, background: "#fff", borderRadius: 12, boxShadow: "0 8px 32px rgba(0,0,0,0.14)", border: `1px solid ${C.inkLine}`, zIndex: 200, overflow: "hidden" }}>
+        <div style={{ position: "absolute", right: 0, top: "calc(100% + 8px)", width: 320, background: "#fff", borderRadius: 12, boxShadow: "0 8px 32px rgba(0,0,0,0.14)", border: `1px solid ${C.inkLine}`, zIndex: 200, overflow: "hidden", maxHeight: 420, overflowY: "auto" }}>
           <div style={{ padding: "12px 16px", borderBottom: `1px solid ${C.inkLine}` }}>
             <p style={{ fontSize: 13, fontWeight: 700, color: C.ivory, margin: 0 }}>Notifications</p>
           </div>
-          {pending.length === 0 ? (
+          {/* Owner-only: promotion approval requests */}
+          {promoPending.map((p) => (
+            <div key={p.id} style={{ padding: "12px 16px", background: "#EEF4FF", borderBottom: `1px solid ${C.inkLine}` }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
+                <div style={{ width: 38, height: 38, borderRadius: "50%", background: "#2C3E50", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Megaphone size={18} /></div>
+                <div>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: C.ivory, margin: "0 0 2px" }}>{p.name} submitted a promo video</p>
+                  <p style={{ fontSize: 12, color: C.ivoryDim, margin: 0 }}>{p.provider} · awaiting your approval</p>
+                </div>
+              </div>
+              <button onClick={() => { setOpen(false); onGoToPromote && onGoToPromote(); }}
+                style={{ width: "100%", padding: "7px 0", borderRadius: 8, fontSize: 12, fontWeight: 700, background: C.brass, border: "none", color: C.brassText, cursor: "pointer" }}>
+                Review &amp; approve
+              </button>
+            </div>
+          ))}
+          {totalCount === 0 ? (
             <p style={{ fontSize: 13, color: C.ivoryDim, padding: "16px", margin: 0 }}>No new notifications</p>
           ) : (
             pending.map((r) => (
@@ -2319,7 +2358,7 @@ function NotificationBell({ myProfile, onGoToLessonRoom }) {
   );
 }
 
-function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, musicOn, onMusicToggle, audioRef, onBack, backLabel, onGuestTabClick, onlineCount, previewOnly, hideTabs, onGoToLessonRoom }) {
+function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, musicOn, onMusicToggle, audioRef, onBack, backLabel, onGuestTabClick, onlineCount, previewOnly, hideTabs, onGoToLessonRoom, authUser, onGoToPromote }) {
   const tabs = [];
   return (
     <div className="min-h-full flex flex-col" style={{ background: C.inkSoft, color: C.ivory }}>
@@ -2363,7 +2402,7 @@ function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, mus
               <span style={{ color: C.ivory, fontWeight: 600 }}>{onlineCount}</span>
             </span>
           )}
-          {myProfile && <NotificationBell myProfile={myProfile} onGoToLessonRoom={onGoToLessonRoom} />}
+          {myProfile && <NotificationBell myProfile={myProfile} onGoToLessonRoom={onGoToLessonRoom} authUser={authUser} onGoToPromote={onGoToPromote} />}
           {!myProfile ? (
             !previewOnly && <PrimaryBtn onClick={onApply}>Sign up</PrimaryBtn>
           ) : (
@@ -4361,14 +4400,6 @@ function PromoteMe({ myProfile, authUser }) {
     } else {
       const arr = readLocal(); arr.push({ id: "promo-" + Date.now(), ...row }); writeLocal(arr);
     }
-    // Notify the Artium owner by email (fire-and-forget; never blocks submission)
-    try {
-      fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/notify-promo`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}` },
-        body: JSON.stringify({ name: row.name, videoLink: row.video_link, provider: row.provider, proposedDate: row.proposed_date, proposedTime: row.proposed_time, caption: row.caption }),
-      }).catch(() => {});
-    } catch { /* ignore */ }
     setSubmitting(false);
     setVideoLink("");
     loadMine();
