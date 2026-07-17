@@ -6,7 +6,7 @@ import {
   Volume1, Volume2, VolumeX,
   Pencil, Plus, Trash2, Home, Upload, Eye, EyeOff, ChevronLeft,
   Calendar, CreditCard, Video, Link2, Clock, Bell,
-  Map, BookOpen, ListChecks, LayoutList,
+  Map, BookOpen, ListChecks, LayoutList, Megaphone, Check as CheckIcon,
 } from "lucide-react";
 import AMBIENT_AUDIO_SRC from "./assets/ambient.mp3";
 import { useAuth } from "./contexts/AuthContext";
@@ -41,6 +41,35 @@ const C = {
 const FONT_DISPLAY = "'Inter', sans-serif";
 const FONT_BODY = "'Inter', sans-serif";
 const FONT_MONO = "'ui-monospace', monospace";
+
+/* ---- Promote Me (aclassicaltone) ---- */
+const OWNER_EMAIL = (import.meta.env.VITE_OWNER_EMAIL || "ktannous0@gmail.com").toLowerCase();
+const PROMO_PROVIDERS = [
+  { name: "Google Drive", hosts: ["drive.google.com", "docs.google.com"] },
+  { name: "Dropbox", hosts: ["dropbox.com", "db.tt"] },
+  { name: "OneDrive", hosts: ["onedrive.live.com", "1drv.ms", "sharepoint.com"] },
+  { name: "YouTube", hosts: ["youtube.com", "youtu.be", "m.youtube.com"] },
+  { name: "WeTransfer", hosts: ["wetransfer.com", "we.tl"] },
+];
+function detectPromoProvider(url) {
+  let host;
+  try { host = new URL(url.trim()).hostname.toLowerCase().replace(/^www\./, ""); }
+  catch { return null; }
+  for (const p of PROMO_PROVIDERS) {
+    if (p.hosts.some((h) => host === h || host.endsWith("." + h))) return p.name;
+  }
+  return null;
+}
+const PROMO_OFFER = [
+  "Post + story on Instagram (with collaboration)",
+  "Post + story on Facebook",
+  "Your video kept in a special highlights folder under your name",
+  "A dedicated caption — your bio or anything you choose",
+  "Post on Threads",
+];
+const PROMO_BONUS = "A second free post";
+const PROMO_RATE = 13;
+const PROMO_TOTAL = PROMO_RATE * 5;
 
 const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII"];
 
@@ -1392,6 +1421,7 @@ export default function App() {
             appTab === "profile" ? () => setAppTabPersist("map") :
             appTab === "lessons" && teacherRoomView !== "students" ? () => setTeacherRoomView("students") :
             appTab === "lessons" ? () => setAppTabPersist("map") :
+            appTab === "promote" ? () => setAppTabPersist("map") :
             () => setScreen("landing")
           }
           backLabel={null}
@@ -1401,6 +1431,7 @@ export default function App() {
             <div className="flex" style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#fff" }}>
               {[
                 { key: "map", label: "Map", Icon: Map },
+                { key: "promote", label: "Promote Me", Icon: Megaphone },
                 { key: "lessons", label: "Lesson Room", Icon: BookOpen },
               ].map(({ key, label, Icon }) => (
                 <button key={key} onClick={() => setAppTabPersist(key)}
@@ -1463,6 +1494,9 @@ export default function App() {
               setScreen("landing");
               setAppTabPersist("map");
             }} onBack={() => setAppTabPersist("map")} />
+          )}
+          {appTab === "promote" && !selectedStudentId && myProfile && (
+            <PromoteMe myProfile={myProfile} authUser={authUser} />
           )}
           {appTab === "lessons" && !selectedStudentId && myProfile && (
             <TeacherLessonRoom teacherId={myProfile.id} roomView={teacherRoomView} setRoomView={setTeacherRoomView} />
@@ -4254,6 +4288,271 @@ const MOCK_LESSON_LEARNERS = [
   { id: "p61", name: "Sara Lindqvist",   instrument: "Piano",   level: "Beginner" },
   { id: "p62", name: "Adrien Leroy",     instrument: "Trumpet", level: "Advanced" },
 ];
+
+/* ---------------------------------------------------------------- */
+/* PROMOTE ME — aclassicaltone promotion offer + approval flow        */
+/* ---------------------------------------------------------------- */
+function PromoteMe({ myProfile, authUser }) {
+  const isOwner = !!authUser?.email && authUser.email.toLowerCase() === OWNER_EMAIL;
+  const isRealUser = !!authUser?.id;
+  const lsKey = "artium_promotions";
+
+  const [videoLink, setVideoLink] = useState("");
+  const [captionPref, setCaptionPref] = useState("bio");
+  const [captionCustom, setCaptionCustom] = useState("");
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [mine, setMine] = useState(null);       // my latest submission
+  const [pending, setPending] = useState([]);    // owner: all pending
+  const [payLoading, setPayLoading] = useState(false);
+  const [payError, setPayError] = useState("");
+
+  const provider = detectPromoProvider(videoLink);
+  const linkValid = !!provider;
+
+  // ---- storage helpers (Supabase for real users, localStorage for demo) ----
+  function readLocal() { try { return JSON.parse(localStorage.getItem(lsKey) || "[]"); } catch { return []; } }
+  function writeLocal(arr) { localStorage.setItem(lsKey, JSON.stringify(arr)); }
+
+  async function loadMine() {
+    if (isRealUser) {
+      const { data } = await supabase.from("promotions").select("*").eq("user_id", authUser.id).order("created_at", { ascending: false }).limit(1);
+      setMine(data && data[0] ? data[0] : null);
+    } else {
+      const arr = readLocal();
+      const uid = myProfile?.id || "demo-teacher";
+      const mineArr = arr.filter((p) => p.user_id === uid).sort((a, b) => b.created_at.localeCompare(a.created_at));
+      setMine(mineArr[0] || null);
+    }
+  }
+  async function loadPending() {
+    if (!isOwner) return;
+    if (isRealUser) {
+      const { data } = await supabase.from("promotions").select("*").eq("status", "pending").order("created_at", { ascending: true });
+      setPending(data || []);
+    } else {
+      setPending(readLocal().filter((p) => p.status === "pending"));
+    }
+  }
+  React.useEffect(() => { loadMine(); loadPending(); const id = setInterval(() => { loadMine(); loadPending(); }, 4000); return () => clearInterval(id); /* eslint-disable-next-line */ }, []);
+
+  async function submit() {
+    setError("");
+    if (!linkValid) { setError("Please use a link from Google Drive, Dropbox, OneDrive, YouTube or WeTransfer only."); return; }
+    if (!date) { setError("Please propose a date for your post."); return; }
+    setSubmitting(true);
+    const caption = captionPref === "bio" ? "Use my bio" : captionCustom.trim() || "Custom (to be provided)";
+    const row = {
+      user_id: isRealUser ? authUser.id : (myProfile?.id || "demo-teacher"),
+      name: myProfile?.name || "Student",
+      video_link: videoLink.trim(),
+      provider,
+      caption,
+      proposed_date: date,
+      proposed_time: time || null,
+      status: "pending",
+      created_at: new Date().toISOString(),
+    };
+    if (isRealUser) {
+      const { error: e } = await supabase.from("promotions").insert(row);
+      if (e) { setError(e.message); setSubmitting(false); return; }
+    } else {
+      const arr = readLocal(); arr.push({ id: "promo-" + Date.now(), ...row }); writeLocal(arr);
+    }
+    setSubmitting(false);
+    setVideoLink("");
+    loadMine();
+  }
+
+  async function setStatus(promo, status) {
+    if (isRealUser) {
+      await supabase.from("promotions").update({ status }).eq("id", promo.id);
+    } else {
+      const arr = readLocal().map((p) => (p.id === promo.id ? { ...p, status } : p));
+      writeLocal(arr);
+    }
+    loadPending(); loadMine();
+  }
+
+  async function payForPromo() {
+    setPayLoading(true); setPayError("");
+    try {
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stripe-checkout`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}` },
+        body: JSON.stringify({
+          teacherId: myProfile?.id || "promo",
+          teacherName: `aclassicaltone promotion — ${myProfile?.name || "Student"}`,
+          amount: PROMO_TOTAL,
+          currency: "eur",
+          successUrl: window.location.origin + "?promo=success",
+          cancelUrl: window.location.origin + "?promo=cancel",
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data?.url) throw new Error(data?.error || "Could not start checkout");
+      window.location.href = data.url;
+    } catch (e) { setPayError(e.message); setPayLoading(false); }
+  }
+
+  const approved = mine?.status === "approved";
+  const awaiting = mine?.status === "pending";
+  const rejected = mine?.status === "rejected";
+
+  const label = (t) => <span style={{ fontSize: 11, fontWeight: 700, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em" }}>{t}</span>;
+  const card = { background: "#fff", borderRadius: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06)", padding: "18px 18px" };
+
+  return (
+    <div style={{ padding: "20px 16px 40px", background: "#fff", minHeight: "100%", fontFamily: FONT_BODY }}>
+      <div style={{ maxWidth: 560, margin: "0 auto", display: "flex", flexDirection: "column", gap: 16 }}>
+
+        {/* Header */}
+        <div style={{ textAlign: "center" }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+            <Megaphone size={20} color={C.brassLabel} />
+            <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 700, color: C.ivory, margin: 0 }}>Promote Me</h2>
+          </div>
+          <p style={{ fontSize: 13, color: C.ivoryDim, margin: 0, lineHeight: 1.5 }}>
+            Claim your promotional video on <a href="https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==" target="_blank" rel="noreferrer" style={{ color: C.brassLabel, fontWeight: 600, textDecoration: "none" }}>aclassicaltone</a> and reach classical music enthusiasts.
+          </p>
+        </div>
+
+        {/* Offer */}
+        <div style={card}>
+          {label("What you get")}
+          <ul style={{ margin: "12px 0 0", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 9 }}>
+            {PROMO_OFFER.map((o, i) => (
+              <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 9, fontSize: 14, color: C.ivory, lineHeight: 1.4 }}>
+                <CheckIcon size={16} color="#1A9E6E" style={{ flexShrink: 0, marginTop: 2 }} /> {o}
+              </li>
+            ))}
+            <li style={{ display: "flex", alignItems: "flex-start", gap: 9, fontSize: 14, color: "#1A9E6E", fontWeight: 600, lineHeight: 1.4 }}>
+              <Plus size={16} color="#1A9E6E" style={{ flexShrink: 0, marginTop: 2 }} /> {PROMO_BONUS} <span style={{ color: C.ivoryDim, fontWeight: 500 }}>(free bonus)</span>
+            </li>
+          </ul>
+          <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${C.inkLine}`, display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+            <span style={{ fontSize: 13, color: C.ivoryDim }}>€{PROMO_RATE} / service · 5 services</span>
+            <span style={{ fontSize: 20, fontWeight: 800, color: C.ivory }}>€{PROMO_TOTAL}</span>
+          </div>
+        </div>
+
+        {/* Submission form (hidden once submitted, unless rejected) */}
+        {(!mine || rejected) && (
+          <div style={card}>
+            {label("Your promotional video")}
+            <p style={{ fontSize: 12, color: C.ivoryDim, margin: "8px 0 10px", lineHeight: 1.5 }}>
+              Paste a link from <b>Google Drive, Dropbox, OneDrive, YouTube</b> or <b>WeTransfer</b> only.
+            </p>
+            <input
+              value={videoLink}
+              onChange={(e) => setVideoLink(e.target.value)}
+              placeholder="https://drive.google.com/..."
+              style={{ width: "100%", padding: "11px 12px", borderRadius: 10, border: `1.5px solid ${videoLink && !linkValid ? C.burgundy : C.inkLine}`, fontSize: 14, fontFamily: FONT_BODY, boxSizing: "border-box", outline: "none" }}
+            />
+            {videoLink && (
+              <p style={{ fontSize: 12, margin: "6px 2px 0", color: linkValid ? "#1A9E6E" : C.burgundy }}>
+                {linkValid ? `✓ ${provider} link accepted` : "✕ Only Google Drive, Dropbox, OneDrive, YouTube or WeTransfer links are accepted"}
+              </p>
+            )}
+
+            <div style={{ marginTop: 16 }}>{label("Dedicated caption")}</div>
+            <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
+              {[{ v: "bio", t: "Use my bio" }, { v: "custom", t: "Custom text" }].map(({ v, t }) => (
+                <button key={v} onClick={() => setCaptionPref(v)}
+                  style={{ padding: "7px 14px", borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: "pointer", background: "#fff", color: captionPref === v ? C.ivory : C.ivoryDim, border: captionPref === v ? `2px solid ${C.brass}` : `1px solid ${C.inkLine}` }}>{t}</button>
+              ))}
+            </div>
+            {captionPref === "custom" && (
+              <textarea value={captionCustom} onChange={(e) => setCaptionCustom(e.target.value)} placeholder="Write the caption you'd like…" rows={3}
+                style={{ width: "100%", marginTop: 8, padding: "10px 12px", borderRadius: 10, border: `1.5px solid ${C.inkLine}`, fontSize: 14, fontFamily: FONT_BODY, boxSizing: "border-box", outline: "none", resize: "vertical" }} />
+            )}
+
+            <div style={{ marginTop: 16 }}>{label("Propose a date & time")}</div>
+            <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+              <input type="date" value={date} onChange={(e) => setDate(e.target.value)} style={{ flex: 1, padding: "10px 12px", borderRadius: 10, border: `1.5px solid ${C.inkLine}`, fontSize: 14, fontFamily: FONT_BODY, boxSizing: "border-box", outline: "none" }} />
+              <input type="time" value={time} onChange={(e) => setTime(e.target.value)} style={{ flex: 1, padding: "10px 12px", borderRadius: 10, border: `1.5px solid ${C.inkLine}`, fontSize: 14, fontFamily: FONT_BODY, boxSizing: "border-box", outline: "none" }} />
+            </div>
+            <p style={{ fontSize: 12, color: C.brassLabel, margin: "8px 2px 0", display: "flex", alignItems: "center", gap: 5 }}>
+              <Clock size={13} /> Tip: posts get better reach on weekends.
+            </p>
+
+            {error && <p style={{ fontSize: 13, color: C.burgundy, margin: "12px 0 0" }}>{error}</p>}
+            <button onClick={submit} disabled={submitting}
+              style={{ marginTop: 16, width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: C.brass, color: C.brassText, fontSize: 15, fontWeight: 700, cursor: submitting ? "default" : "pointer", opacity: submitting ? 0.7 : 1 }}>
+              {submitting ? "Submitting…" : "Submit for approval"}
+            </button>
+          </div>
+        )}
+
+        {/* Status + payment */}
+        {mine && !rejected && (
+          <div style={card}>
+            {label("Status")}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "10px 0 4px" }}>
+              <span style={{ width: 9, height: 9, borderRadius: "50%", background: approved ? "#1A9E6E" : C.brass, display: "inline-block" }} />
+              <span style={{ fontSize: 15, fontWeight: 700, color: approved ? "#1A9E6E" : C.brassLabel }}>
+                {approved ? "Approved" : "Awaiting approval"}
+              </span>
+            </div>
+            <p style={{ fontSize: 13, color: C.ivoryDim, margin: "0 0 4px", lineHeight: 1.5 }}>
+              {approved
+                ? "Your video was approved. You can now complete your payment to book your promotion."
+                : "Your video link was received and is awaiting approval by the Artium team. You'll be able to pay once it's approved."}
+            </p>
+            <p style={{ fontSize: 12, color: C.ivoryDim, margin: "8px 0 0", wordBreak: "break-all" }}>
+              <b>{mine.provider}</b> · {mine.video_link}
+            </p>
+
+            <div style={{ marginTop: 16, position: "relative" }}>
+              <button onClick={approved ? payForPromo : undefined} disabled={!approved || payLoading}
+                title={approved ? "" : "Available after approval"}
+                style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: "#635BFF", color: "#fff", fontSize: 15, fontWeight: 700, cursor: approved ? (payLoading ? "default" : "pointer") : "not-allowed", opacity: approved ? 1 : 0.4, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                <CreditCard size={17} /> {payLoading ? "Redirecting…" : `Pay €${PROMO_TOTAL} with Stripe`}
+              </button>
+              {!approved && <p style={{ fontSize: 11, color: C.ivoryDim, textAlign: "center", margin: "8px 0 0" }}>🔒 Unlocks once your video is approved</p>}
+              {payError && <p style={{ fontSize: 13, color: C.burgundy, textAlign: "center", margin: "8px 0 0" }}>{payError}</p>}
+            </div>
+          </div>
+        )}
+
+        {rejected && (
+          <div style={{ ...card, background: "#FDECEC" }}>
+            <p style={{ fontSize: 14, color: C.burgundy, fontWeight: 600, margin: 0 }}>Your previous link wasn't approved. Please submit a new video link above.</p>
+          </div>
+        )}
+
+        {/* Owner-only approval panel */}
+        {isOwner && (
+          <div style={{ ...card, border: `2px solid ${C.brass}`, boxShadow: "0 2px 12px rgba(0,0,0,0.08)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em" }}>Owner · pending approvals ({pending.length})</span>
+            </div>
+            {pending.length === 0 ? (
+              <p style={{ fontSize: 13, color: C.ivoryDim, margin: "8px 0 0" }}>No submissions awaiting approval.</p>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 10 }}>
+                {pending.map((p) => (
+                  <div key={p.id} style={{ border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: "12px 14px" }}>
+                    <p style={{ fontSize: 14, fontWeight: 700, color: C.ivory, margin: "0 0 2px" }}>{p.name}</p>
+                    <p style={{ fontSize: 12, color: C.ivoryDim, margin: "0 0 2px" }}>{p.provider} · {p.proposed_date}{p.proposed_time ? ` · ${p.proposed_time}` : ""}</p>
+                    <a href={p.video_link} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: C.brassLabel, wordBreak: "break-all" }}>{p.video_link}</a>
+                    <p style={{ fontSize: 12, color: C.ivoryDim, margin: "6px 0 10px" }}>Caption: {p.caption}</p>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button onClick={() => setStatus(p, "approved")} style={{ flex: 1, padding: "9px 0", borderRadius: 9, border: "none", background: "#1A9E6E", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Approve</button>
+                      <button onClick={() => setStatus(p, "rejected")} style={{ flex: 1, padding: "9px 0", borderRadius: 9, border: `1px solid ${C.inkLine}`, background: "#fff", color: C.burgundy, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Reject</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
   const tid = teacherId || "demo-teacher";
