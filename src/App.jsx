@@ -1542,7 +1542,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
           <div style={{ borderRadius: 12, overflow: "hidden", border: `1px solid ${C.inkLine}`, boxShadow: "0 8px 32px rgba(10,37,64,0.10)", width: "100%", maxWidth: 520, transform: "translateZ(0)" }}>
             <div style={{ padding: "10px 18px", background: "#fff", display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
               <button onClick={onPreview} style={{ fontSize: 14, fontWeight: 600, color: C.ivory, background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: FONT_BODY, display: "inline-flex", alignItems: "center", gap: 6 }}>
-                <Compass size={16} /> Explore Artium's Network <ChevronRight size={15} color="#9A9A9A" />
+                <Compass size={16} /> Explore Artium's Network <ChevronRight size={15} color={C.ivory} style={{ marginTop: 2 }} />
               </button>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 13, color: C.ivoryDim, fontFamily: FONT_BODY }}>
                 <Users size={14} /> {Object.values(studentsByCons).flat().length}
