@@ -4361,6 +4361,14 @@ function PromoteMe({ myProfile, authUser }) {
     } else {
       const arr = readLocal(); arr.push({ id: "promo-" + Date.now(), ...row }); writeLocal(arr);
     }
+    // Notify the Artium owner by email (fire-and-forget; never blocks submission)
+    try {
+      fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/notify-promo`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}` },
+        body: JSON.stringify({ name: row.name, videoLink: row.video_link, provider: row.provider, proposedDate: row.proposed_date, proposedTime: row.proposed_time, caption: row.caption }),
+      }).catch(() => {});
+    } catch { /* ignore */ }
     setSubmitting(false);
     setVideoLink("");
     loadMine();
