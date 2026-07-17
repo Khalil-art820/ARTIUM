@@ -1367,7 +1367,7 @@ export default function App() {
         />
       )}
 
-      {screen === "landing" && <Landing onApply={startApply} onBack={backToEntry} onPreview={startPreview} onProfile={goToProfile} onLogin={startLogin} myProfile={myProfile} studentLoggedOut={studentLoggedOut} musicOn={musicOn} onMusicToggle={toggleMusic} audioRef={audioRef} error={authError} onlineCount={onlineCount} onGoToLessonRoom={() => { setScreen("app"); setAppTabPersist("lessons"); }} />}
+      {screen === "landing" && <Landing onApply={startApply} onBack={backToEntry} onPreview={startPreview} onProfile={goToProfile} onLogin={startLogin} myProfile={myProfile} studentLoggedOut={studentLoggedOut} musicOn={musicOn} onMusicToggle={toggleMusic} audioRef={audioRef} error={authError} onlineCount={onlineCount} onGoToLessonRoom={() => { setScreen("app"); setAppTabPersist("lessons"); }} studentsByCons={studentsByCons} />}
       {screen === "login" && <LoginScreen onSubmit={handleLogin} onBack={goHome} error={authError} />}
       {screen === "signup" && (
         <SignupFlow
@@ -1486,7 +1486,7 @@ export default function App() {
 /* ---------------------------------------------------------------- */
 /* LANDING                                                             */
 /* ---------------------------------------------------------------- */
-function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, studentLoggedOut, musicOn, onMusicToggle, audioRef, error, onlineCount, onGoToLessonRoom }) {
+function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, studentLoggedOut, musicOn, onMusicToggle, audioRef, error, onlineCount, onGoToLessonRoom, studentsByCons }) {
   return (
     <div style={{ background: "#FFFFFF", color: C.ivory, minHeight: "100vh" }}>
       {/* Nav — matches AppShell header */}
@@ -1545,12 +1545,12 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
                 <Compass size={16} /> Explore Artium's Network
               </button>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 13, color: C.ivoryDim, fontFamily: FONT_BODY }}>
-                <Users size={14} /> {SAMPLE_STUDENTS.length}
+                <Users size={14} /> {Object.values(studentsByCons).flat().length}
               </span>
             </div>
             <div style={{ padding: "0 7px", background: "#fff" }}>
               <div style={{ borderTop: `1px solid ${C.inkLine}` }}>
-                <WorldMap selectedId={null} onSelect={() => {}} studentsByCons={SAMPLE_STUDENTS.reduce((a, s) => { (a[s.conservatoryId] = a[s.conservatoryId] || []).push(s); return a; }, {})} height={240} flatTop />
+                <WorldMap selectedId={null} onSelect={() => {}} studentsByCons={studentsByCons} height={240} flatTop />
               </div>
             </div>
           </div>
