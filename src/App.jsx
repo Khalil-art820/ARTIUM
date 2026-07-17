@@ -1559,7 +1559,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
 
       {/* How it works */}
       <div className="max-w-6xl mx-auto px-8 py-20">
-        <p style={{ fontSize: "clamp(28px,3.5vw,48px)", fontWeight: 700, lineHeight: 1.08, letterSpacing: 0, color: C.ivory, margin: 0, marginBottom: 12, fontFamily: "'DM Serif Display', serif", textAlign: "center" }}>How it works</p>
+        <p style={{ fontSize: "clamp(28px,3.5vw,48px)", fontWeight: 700, lineHeight: 1.08, letterSpacing: 0, color: C.ivory, margin: 0, marginBottom: 12, fontFamily: "'DM Serif Display', serif", textAlign: "center" }}>How it works...</p>
         <h2 style={{ fontSize: "clamp(28px,3.5vw,48px)", fontWeight: 700, lineHeight: 1.08, letterSpacing: 0, color: C.ivory, margin: 0, marginBottom: 48, fontFamily: "'DM Serif Display', serif", textAlign: "center" }}>Simple, from day one.</h2>
         <div className="grid sm:grid-cols-4 gap-8">
           {[
@@ -1569,9 +1569,8 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
             { n: "4", t: "Earn while you teach", d: "Accept tutoring requests from music enthusiasts and set your own rate." },
             { n: "5", t: "Marketing and Advertising", d: "Claim your promotional video on aclassicaltone (may be subject to fees)." },
           ].map((s) => (
-            <div key={s.n} style={{ padding: "24px", background: "#FFFFFF", border: `1px solid ${C.inkLine}`, borderRadius: 10, boxShadow: "0 2px 8px rgba(10,37,64,0.05)", position: "relative" }}>
-              <p style={{ position: "absolute", top: 16, right: 18, fontSize: 13, fontWeight: 700, color: C.brassLabel, letterSpacing: 0.5, margin: 0 }}>{s.n}</p>
-              <h3 style={{ fontSize: 16, fontWeight: 600, color: C.ivory, marginBottom: 8, marginTop: 4 }}>{s.t}</h3>
+            <div key={s.n} style={{ padding: "16px 18px", background: "#FFFFFF", border: `1px solid ${C.inkLine}`, borderRadius: 10, boxShadow: "0 2px 8px rgba(10,37,64,0.05)" }}>
+              <h3 style={{ fontSize: 16, fontWeight: 600, color: C.ivory, marginBottom: 6, marginTop: 0 }}>{s.t}</h3>
               <p style={{ fontSize: 14, color: C.ivoryDim, lineHeight: 1.65 }}>
                 {s.n === "5"
                   ? <>Claim your promotional video on <a href="https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==" target="_blank" rel="noreferrer" style={{ color: C.brassLabel, fontWeight: 600, textDecoration: "none" }}>aclassicaltone</a> (may be subject to fees, as per our partnership agreement).</>
