@@ -6,7 +6,7 @@ import {
   Volume1, Volume2, VolumeX,
   Pencil, Plus, Trash2, Home, Upload, Eye, EyeOff, ChevronLeft,
   Calendar, CreditCard, Video, Link2, Clock, Bell,
-  Map, BookOpen, ListChecks, LayoutList, Megaphone, Check as CheckIcon,
+  Map, BookOpen, ListChecks, LayoutList, Megaphone, Check as CheckIcon, ShieldCheck,
 } from "lucide-react";
 import AMBIENT_AUDIO_SRC from "./assets/ambient.mp3";
 import { useAuth } from "./contexts/AuthContext";
@@ -43,7 +43,6 @@ const FONT_BODY = "'Inter', sans-serif";
 const FONT_MONO = "'ui-monospace', monospace";
 
 /* ---- Promote Me (aclassicaltone) ---- */
-const OWNER_EMAIL = (import.meta.env.VITE_OWNER_EMAIL || "ktannous0@gmail.com").toLowerCase();
 const PROMO_PROVIDERS = [
   { name: "Google Drive", hosts: ["drive.google.com", "docs.google.com"] },
   { name: "Dropbox", hosts: ["dropbox.com", "db.tt"] },
@@ -1105,6 +1104,10 @@ export default function App() {
     return acc;
   }, {});
 
+  // Owner/admin: real users via profiles.is_admin; the local demo teacher is
+  // treated as admin so the approval flow is fully previewable offline.
+  const isAdmin = authProfile?.is_admin === true || myProfile?.id === "demo-teacher";
+
   function startApply() {
     if (authUser && authProfile?.role === "learner") {
       setAuthError("You're already registered as a piano enthusiast with this account. You can't also sign up as a conservatory student — log out first if you want to create a separate account with a different email.");
@@ -1415,7 +1418,8 @@ export default function App() {
           onGuestTabClick={() => setShowGuestPrompt(true)} onlineCount={onlineCount} previewOnly={previewOnly}
           hideTabs={!!selectedStudentId}
           authUser={authUser}
-          onGoToPromote={() => { setSelectedStudentId(null); setAppTabPersist("promote"); }}
+          isAdmin={isAdmin}
+          onGoToAdmin={() => { setSelectedStudentId(null); setAppTabPersist("admin"); }}
           onGoToLessonRoom={() => { setSelectedStudentId(null); setAppTabPersist("lessons"); }}
           onBack={
             selectedStudentId ? backFromProfile :
@@ -1424,6 +1428,7 @@ export default function App() {
             appTab === "lessons" && teacherRoomView !== "students" ? () => setTeacherRoomView("students") :
             appTab === "lessons" ? () => setAppTabPersist("map") :
             appTab === "promote" ? () => setAppTabPersist("map") :
+            appTab === "admin" ? () => setAppTabPersist("map") :
             () => setScreen("landing")
           }
           backLabel={null}
@@ -1435,6 +1440,7 @@ export default function App() {
                 { key: "map", label: "Map", Icon: Map },
                 { key: "promote", label: "Promote Me", Icon: Megaphone },
                 { key: "lessons", label: "Lesson Room", Icon: BookOpen },
+                ...(isAdmin ? [{ key: "admin", label: "Admin", Icon: ShieldCheck }] : []),
               ].map(({ key, label, Icon }) => (
                 <button key={key} onClick={() => setAppTabPersist(key)}
                   style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2, padding: "8px 4px 6px", fontWeight: appTab === key ? 600 : 400, fontSize: 12, color: appTab === key ? C.ivory : C.ivoryDim, borderBottom: appTab === key ? `2px solid ${C.brass}` : "2px solid transparent", background: "transparent", border: "none", cursor: "pointer" }}>
@@ -1499,6 +1505,9 @@ export default function App() {
           )}
           {appTab === "promote" && !selectedStudentId && myProfile && (
             <PromoteMe myProfile={myProfile} authUser={authUser} />
+          )}
+          {appTab === "admin" && !selectedStudentId && isAdmin && (
+            <AdminScreen authUser={authUser} />
           )}
           {appTab === "lessons" && !selectedStudentId && myProfile && (
             <TeacherLessonRoom teacherId={myProfile.id} roomView={teacherRoomView} setRoomView={setTeacherRoomView} />
@@ -2231,7 +2240,7 @@ function LearnerProfileModal({ learner, onClose }) {
   );
 }
 
-function NotificationBell({ myProfile, onGoToLessonRoom, authUser, onGoToPromote }) {
+function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGoToAdmin }) {
   const [open, setOpen] = React.useState(false);
   const [viewingLearner, setViewingLearner] = React.useState(null);
   const [pending, setPending] = React.useState(() => {
@@ -2240,13 +2249,12 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, onGoToPromote
       return (all[myProfile?.id] || []).filter((r) => r.status === "pending");
     } catch { return []; }
   });
-  const isOwner = !!authUser?.email && authUser.email.toLowerCase() === OWNER_EMAIL;
   const [promoPending, setPromoPending] = React.useState([]);
   const ref = React.useRef(null);
 
-  // Owner-only: pending promotion submissions (Supabase for real, localStorage for demo)
+  // Admin-only: pending promotion submissions (Supabase for real, localStorage for demo)
   React.useEffect(() => {
-    if (!isOwner) { setPromoPending([]); return; }
+    if (!isAdmin) { setPromoPending([]); return; }
     let alive = true;
     async function load() {
       if (authUser?.id) {
@@ -2259,7 +2267,7 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, onGoToPromote
     load();
     const id = setInterval(load, 4000);
     return () => { alive = false; clearInterval(id); };
-  }, [isOwner, authUser?.id]);
+  }, [isAdmin, authUser?.id]);
 
   React.useEffect(() => {
     function onStorage(e) {
@@ -2321,7 +2329,7 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, onGoToPromote
                   <p style={{ fontSize: 12, color: C.ivoryDim, margin: 0 }}>{p.provider} · awaiting your approval</p>
                 </div>
               </div>
-              <button onClick={() => { setOpen(false); onGoToPromote && onGoToPromote(); }}
+              <button onClick={() => { setOpen(false); onGoToAdmin && onGoToAdmin(); }}
                 style={{ width: "100%", padding: "7px 0", borderRadius: 8, fontSize: 12, fontWeight: 700, background: C.brass, border: "none", color: C.brassText, cursor: "pointer" }}>
                 Review &amp; approve
               </button>
@@ -2358,7 +2366,7 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, onGoToPromote
   );
 }
 
-function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, musicOn, onMusicToggle, audioRef, onBack, backLabel, onGuestTabClick, onlineCount, previewOnly, hideTabs, onGoToLessonRoom, authUser, onGoToPromote }) {
+function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, musicOn, onMusicToggle, audioRef, onBack, backLabel, onGuestTabClick, onlineCount, previewOnly, hideTabs, onGoToLessonRoom, authUser, isAdmin, onGoToAdmin }) {
   const tabs = [];
   return (
     <div className="min-h-full flex flex-col" style={{ background: C.inkSoft, color: C.ivory }}>
@@ -2402,7 +2410,7 @@ function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, mus
               <span style={{ color: C.ivory, fontWeight: 600 }}>{onlineCount}</span>
             </span>
           )}
-          {myProfile && <NotificationBell myProfile={myProfile} onGoToLessonRoom={onGoToLessonRoom} authUser={authUser} onGoToPromote={onGoToPromote} />}
+          {myProfile && <NotificationBell myProfile={myProfile} onGoToLessonRoom={onGoToLessonRoom} authUser={authUser} isAdmin={isAdmin} onGoToAdmin={onGoToAdmin} />}
           {!myProfile ? (
             !previewOnly && <PrimaryBtn onClick={onApply}>Sign up</PrimaryBtn>
           ) : (
@@ -4332,7 +4340,6 @@ const MOCK_LESSON_LEARNERS = [
 /* PROMOTE ME — aclassicaltone promotion offer + approval flow        */
 /* ---------------------------------------------------------------- */
 function PromoteMe({ myProfile, authUser }) {
-  const isOwner = !!authUser?.email && authUser.email.toLowerCase() === OWNER_EMAIL;
   const isRealUser = !!authUser?.id;
   const lsKey = "artium_promotions";
 
@@ -4344,7 +4351,6 @@ function PromoteMe({ myProfile, authUser }) {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [mine, setMine] = useState(null);       // my latest submission
-  const [pending, setPending] = useState([]);    // owner: all pending
   const [payLoading, setPayLoading] = useState(false);
   const [payError, setPayError] = useState("");
 
@@ -4366,16 +4372,7 @@ function PromoteMe({ myProfile, authUser }) {
       setMine(mineArr[0] || null);
     }
   }
-  async function loadPending() {
-    if (!isOwner) return;
-    if (isRealUser) {
-      const { data } = await supabase.from("promotions").select("*").eq("status", "pending").order("created_at", { ascending: true });
-      setPending(data || []);
-    } else {
-      setPending(readLocal().filter((p) => p.status === "pending"));
-    }
-  }
-  React.useEffect(() => { loadMine(); loadPending(); const id = setInterval(() => { loadMine(); loadPending(); }, 4000); return () => clearInterval(id); /* eslint-disable-next-line */ }, []);
+  React.useEffect(() => { loadMine(); const id = setInterval(loadMine, 4000); return () => clearInterval(id); /* eslint-disable-next-line */ }, []);
 
   async function submit() {
     setError("");
@@ -4403,16 +4400,6 @@ function PromoteMe({ myProfile, authUser }) {
     setSubmitting(false);
     setVideoLink("");
     loadMine();
-  }
-
-  async function setStatus(promo, status) {
-    if (isRealUser) {
-      await supabase.from("promotions").update({ status }).eq("id", promo.id);
-    } else {
-      const arr = readLocal().map((p) => (p.id === promo.id ? { ...p, status } : p));
-      writeLocal(arr);
-    }
-    loadPending(); loadMine();
   }
 
   async function payForPromo() {
@@ -4562,32 +4549,92 @@ function PromoteMe({ myProfile, authUser }) {
           </div>
         )}
 
-        {/* Owner-only approval panel */}
-        {isOwner && (
-          <div style={{ ...card, border: `2px solid ${C.brass}`, boxShadow: "0 2px 12px rgba(0,0,0,0.08)" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em" }}>Owner · pending approvals ({pending.length})</span>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------- */
+/* ADMIN — owner-only promotion approvals                             */
+/* ---------------------------------------------------------------- */
+function AdminScreen({ authUser }) {
+  const isRealUser = !!authUser?.id;
+  const lsKey = "artium_promotions";
+  const [tab, setTab] = useState("pending");
+  const [rows, setRows] = useState([]);
+
+  function readLocal() { try { return JSON.parse(localStorage.getItem(lsKey) || "[]"); } catch { return []; } }
+  function writeLocal(arr) { localStorage.setItem(lsKey, JSON.stringify(arr)); }
+
+  async function load() {
+    if (isRealUser) {
+      const { data } = await supabase.from("promotions").select("*").order("created_at", { ascending: false });
+      setRows(data || []);
+    } else {
+      setRows(readLocal().sort((a, b) => (b.created_at || "").localeCompare(a.created_at || "")));
+    }
+  }
+  React.useEffect(() => { load(); const id = setInterval(load, 4000); return () => clearInterval(id); /* eslint-disable-next-line */ }, []);
+
+  async function setStatus(promo, status) {
+    if (isRealUser) {
+      await supabase.from("promotions").update({ status }).eq("id", promo.id);
+    } else {
+      writeLocal(readLocal().map((p) => (p.id === promo.id ? { ...p, status } : p)));
+    }
+    load();
+  }
+
+  const pending = rows.filter((r) => r.status === "pending");
+  const decided = rows.filter((r) => r.status !== "pending");
+  const shown = tab === "pending" ? pending : decided;
+  const card = { background: "#fff", borderRadius: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06)", padding: "16px 16px" };
+  const STATUS_COLOR = { approved: "#1A9E6E", rejected: C.burgundy, pending: C.brassLabel };
+
+  return (
+    <div style={{ padding: "20px 16px 40px", background: "#fff", minHeight: "100%", fontFamily: FONT_BODY }}>
+      <div style={{ maxWidth: 560, margin: "0 auto", display: "flex", flexDirection: "column", gap: 14 }}>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+            <ShieldCheck size={20} color={C.brassLabel} />
+            <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 700, color: C.ivory, margin: 0 }}>Admin</h2>
+          </div>
+          <p style={{ fontSize: 13, color: C.ivoryDim, margin: 0 }}>Review promotional video submissions.</p>
+        </div>
+
+        <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+          {[{ v: "pending", t: `Pending (${pending.length})` }, { v: "history", t: `History (${decided.length})` }].map(({ v, t }) => (
+            <button key={v} onClick={() => setTab(v)}
+              style={{ padding: "8px 16px", borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: "pointer", background: "#fff", color: tab === v ? C.ivory : C.ivoryDim, border: tab === v ? `2px solid ${C.brass}` : `1px solid ${C.inkLine}` }}>{t}</button>
+          ))}
+        </div>
+
+        {shown.length === 0 ? (
+          <div style={{ ...card, textAlign: "center" }}>
+            <p style={{ fontSize: 14, color: C.ivoryDim, margin: 0 }}>{tab === "pending" ? "No submissions awaiting approval." : "No reviewed submissions yet."}</p>
+          </div>
+        ) : shown.map((p) => (
+          <div key={p.id} style={card}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 8 }}>
+              <p style={{ fontSize: 15, fontWeight: 700, color: C.ivory, margin: 0 }}>{p.name}</p>
+              <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: STATUS_COLOR[p.status] || C.ivoryDim }}>{p.status}</span>
             </div>
-            {pending.length === 0 ? (
-              <p style={{ fontSize: 13, color: C.ivoryDim, margin: "8px 0 0" }}>No submissions awaiting approval.</p>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 10 }}>
-                {pending.map((p) => (
-                  <div key={p.id} style={{ border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: "12px 14px" }}>
-                    <p style={{ fontSize: 14, fontWeight: 700, color: C.ivory, margin: "0 0 2px" }}>{p.name}</p>
-                    <p style={{ fontSize: 12, color: C.ivoryDim, margin: "0 0 2px" }}>{p.provider} · {p.proposed_date}{p.proposed_time ? ` · ${p.proposed_time}` : ""}</p>
-                    <a href={p.video_link} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: C.brassLabel, wordBreak: "break-all" }}>{p.video_link}</a>
-                    <p style={{ fontSize: 12, color: C.ivoryDim, margin: "6px 0 10px" }}>Caption: {p.caption}</p>
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <button onClick={() => setStatus(p, "approved")} style={{ flex: 1, padding: "9px 0", borderRadius: 9, border: "none", background: "#1A9E6E", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Approve</button>
-                      <button onClick={() => setStatus(p, "rejected")} style={{ flex: 1, padding: "9px 0", borderRadius: 9, border: `1px solid ${C.inkLine}`, background: "#fff", color: C.burgundy, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Reject</button>
-                    </div>
-                  </div>
-                ))}
+            <p style={{ fontSize: 12, color: C.ivoryDim, margin: "0 0 4px" }}>
+              <b>{p.provider}</b> · post {p.proposed_date}{p.proposed_time ? ` · ${p.proposed_time}` : ""}
+            </p>
+            <a href={p.video_link} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: C.brassLabel, wordBreak: "break-all" }}>{p.video_link}</a>
+            <p style={{ fontSize: 12, color: C.ivoryDim, margin: "6px 0 0" }}>Caption: {p.caption}</p>
+            {p.status === "pending" && (
+              <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                <button onClick={() => setStatus(p, "approved")} style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "none", background: "#1A9E6E", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Approve</button>
+                <button onClick={() => setStatus(p, "rejected")} style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: `1px solid ${C.inkLine}`, background: "#fff", color: C.burgundy, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Reject</button>
               </div>
             )}
+            {p.status !== "pending" && (
+              <button onClick={() => setStatus(p, "pending")} style={{ marginTop: 12, padding: "7px 14px", borderRadius: 9, border: `1px solid ${C.inkLine}`, background: "#fff", color: C.ivoryDim, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Reset to pending</button>
+            )}
           </div>
-        )}
+        ))}
       </div>
     </div>
   );

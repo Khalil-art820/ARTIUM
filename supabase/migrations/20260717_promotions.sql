@@ -1,8 +1,13 @@
 -- Promote Me (aclassicaltone) submissions + owner-only approval
 -- Run this in the Supabase SQL editor.
--- The owner is identified by the email in the JWT. Change the address below
--- if the Artium owner account uses a different email.
+--
+-- Admin/owner is identified by profiles.is_admin (a role flag), NOT by email.
+-- Grant yourself admin once (see the UPDATE at the bottom).
 
+-- 1. Role flag on profiles
+alter table profiles add column if not exists is_admin boolean not null default false;
+
+-- 2. Submissions table
 create table if not exists promotions (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users(id) on delete cascade,
@@ -18,21 +23,27 @@ create table if not exists promotions (
 
 alter table promotions enable row level security;
 
+-- 3. Row-level security (the real access control — a hidden UI is not enough)
+
 -- A user can create their own submission.
 create policy "promotions insert own" on promotions
   for insert with check (user_id = auth.uid());
 
--- A user can read their own submissions; the owner can read every submission.
--- Because only the owner's JWT satisfies the email check, pending submissions
--- are invisible to everyone except the owner.
-create policy "promotions read own or owner" on promotions
+-- A user can read their own submissions; an admin can read every submission.
+-- Because only admin rows satisfy the is_admin check, pending submissions are
+-- invisible to everyone except admins.
+create policy "promotions read own or admin" on promotions
   for select using (
     user_id = auth.uid()
-    or lower(auth.jwt() ->> 'email') = 'ktannous0@gmail.com'
+    or exists (select 1 from profiles p where p.id = auth.uid() and p.is_admin)
   );
 
--- Only the owner can approve / reject.
-create policy "promotions owner update" on promotions
+-- Only an admin can approve / reject / reset.
+create policy "promotions admin update" on promotions
   for update using (
-    lower(auth.jwt() ->> 'email') = 'ktannous0@gmail.com'
+    exists (select 1 from profiles p where p.id = auth.uid() and p.is_admin)
   );
+
+-- 4. Make yourself the admin (run once; replace the email if needed).
+update profiles set is_admin = true
+  where id = (select id from auth.users where lower(email) = 'ktannous0@gmail.com');
