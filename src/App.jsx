@@ -1561,7 +1561,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
       <div className="max-w-6xl mx-auto px-8 py-20">
         <p style={{ fontSize: "clamp(24px,3vw,40px)", fontWeight: 700, lineHeight: 1.08, letterSpacing: 0, color: C.ivory, margin: 0, marginBottom: 12, fontFamily: "'DM Serif Display', serif", textAlign: "center" }}>How it works..</p>
         <h2 style={{ fontSize: "clamp(24px,3vw,40px)", fontWeight: 700, lineHeight: 1.08, letterSpacing: 0, color: C.ivory, margin: 0, marginBottom: 48, fontFamily: "'DM Serif Display', serif", textAlign: "center" }}>Simple, from day one.</h2>
-        <div style={{ maxWidth: 560, margin: "0 auto", display: "flex", flexDirection: "column", gap: 24 }}>
+        <div style={{ maxWidth: 560, margin: "0 auto", display: "flex", flexDirection: "column", gap: 14 }}>
           {[
             { n: "1", t: "Build your profile", d: "Add your conservatory, repertoire, and a performance video to stand out." },
             { n: "2", t: "Join the map", d: "Your pin appears on the global map under your conservatory alongside current students." },
@@ -1569,8 +1569,8 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
             { n: "4", t: "Earn while you teach", d: "Accept tutoring requests from music enthusiasts and set your own rate." },
             { n: "5", t: "Marketing and Advertising", d: "Claim your promotional video on aclassicaltone (may be subject to fees)." },
           ].map((s) => (
-            <div key={s.n} style={{ position: "relative", display: "flex", alignItems: "center", gap: 16, padding: "20px 24px", background: "#fff", borderRadius: 20, boxShadow: "0 4px 20px rgba(0,0,0,0.08)" }}>
-              <div style={{ position: "absolute", top: -16, left: 22, width: 32, height: 32, borderRadius: "50%", background: "#2C3E50", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, fontWeight: 700, fontFamily: FONT_BODY, border: "2px solid #fff", boxShadow: "0 2px 6px rgba(0,0,0,0.18)" }}>{s.n}</div>
+            <div key={s.n} style={{ display: "flex", alignItems: "center", gap: 16, padding: "20px 24px", background: "#fff", borderRadius: 20, boxShadow: "0 4px 20px rgba(0,0,0,0.08)" }}>
+              <div style={{ flexShrink: 0, width: 34, height: 34, borderRadius: "50%", background: "#2C3E50", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, fontWeight: 700, fontFamily: FONT_BODY }}>{s.n}</div>
               <div style={{ flex: 1 }}>
                 <h3 style={{ fontSize: 18, fontWeight: 700, color: "#1A1A1A", margin: 0, lineHeight: 1.3 }}>{s.t}</h3>
                 <p style={{ fontSize: 15, color: "#6B6B6B", margin: "4px 0 0", lineHeight: 1.45 }}>
@@ -1579,7 +1579,6 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
                     : s.d}
                 </p>
               </div>
-              <ChevronRight size={22} color="#9A9A9A" style={{ flexShrink: 0 }} />
             </div>
           ))}
         </div>
