@@ -258,7 +258,7 @@ const emptyDraft = () => ({
   id: null,
   email: "", password: "", confirmPassword: "",
   name: "", years: "", instrument: "",
-  conservatoryId: null, conservatoryVerified: false,
+  conservatoryId: null, conservatoryEmail: "", conservatoryVerified: false,
   tastes: [],
   pieces: [],
   videoLink: "",
@@ -1130,17 +1130,6 @@ export default function App() {
       if (insertError) { setAuthError(insertError.message); return; }
       setDraft((d) => ({ ...d, id: authUser.id }));
       setScreen("pending");
-    } else if (authUser) {
-      // Conservatory email already verified via 6-digit code → the account exists
-      // and is signed in. Set the chosen password, then insert the profile.
-      if (draft.password && draft.password.length >= 6) {
-        const { error: pwErr } = await supabase.auth.updateUser({ password: draft.password });
-        if (pwErr) { setAuthError(pwErr.message); return; }
-      }
-      const { error: insertError } = await supabase.from("profiles").insert(toDbProfile(draft, authUser.id));
-      if (insertError) { setAuthError(insertError.message); return; }
-      setDraft((d) => ({ ...d, id: authUser.id }));
-      setScreen("pending");
     } else {
       const { data, error } = await supabase.auth.signUp({
         email: draft.email,
@@ -1523,7 +1512,7 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
   const lastStep = labels.length - 1;
   const idx = editing ? step : step - 1;
   const canNext = [
-    !editing ? draft.password.length >= 6 && draft.password === draft.confirmPassword : null,
+    !editing ? draft.email.trim().length > 3 && draft.password.length >= 6 && draft.password === draft.confirmPassword : null,
     draft.name.trim().length > 1 && !!draft.instrument,
     !!draft.conservatoryId && (editing || draft.password === "__google__" || draft.conservatoryVerified),
     draft.tastes.length >= 3,
@@ -1747,9 +1736,12 @@ function StepAccount({ draft, update, error }) {
   const mismatch = draft.confirmPassword.length > 0 && draft.password !== draft.confirmPassword;
   return (
     <div>
-      <p className="text-sm mb-6" style={{ color: C.ivoryDim }}>Choose a password for your account. You'll verify your conservatory email in a later step — that becomes your login.</p>
+      <p className="text-sm mb-6" style={{ color: C.ivoryDim }}>Use a personal email you'll always have access to — this is your login, so it works even after you graduate. You'll verify your conservatory email separately, as a one-time student check.</p>
       <GoogleBtn label="Sign up with Google" />
       <Divider />
+      <Field label="Personal email">
+        <input style={inputStyle} type="email" value={draft.email} onChange={(e) => update({ email: e.target.value })} placeholder="you@gmail.com" autoComplete="off" />
+      </Field>
       <Field label="Password">
         <PasswordField value={draft.password} onChange={(e) => update({ password: e.target.value })} placeholder="At least 6 characters" autoComplete="new-password" />
       </Field>
@@ -1816,7 +1808,7 @@ function emailMatchesConservatory(email, cons) {
 
 function StepConservatory({ draft, update, editing }) {
   const [q, setQ] = useState("");
-  const [email, setEmail] = useState(draft.email && draft.password !== "__google__" ? draft.email : "");
+  const [email, setEmail] = useState(draft.conservatoryEmail || "");
   const [codeSent, setCodeSent] = useState(false);
   const [code, setCode] = useState("");
   const [sending, setSending] = useState(false);
@@ -1845,9 +1837,12 @@ function StepConservatory({ draft, update, editing }) {
   async function verifyCode() {
     setErr(""); setVerifying(true);
     const { error } = await supabase.auth.verifyOtp({ email: email.trim(), token: code.trim(), type: "email" });
+    if (error) { setVerifying(false); setErr("That code didn't match. Please check and try again."); return; }
+    // The OTP proves they own the conservatory email. It is NOT their login —
+    // discard this throwaway session so the account stays on their personal email.
+    await supabase.auth.signOut();
     setVerifying(false);
-    if (error) { setErr("That code didn't match. Please check and try again."); return; }
-    update({ email: email.trim(), conservatoryVerified: true });
+    update({ conservatoryEmail: email.trim(), conservatoryVerified: true });
   }
 
   return (
@@ -1876,7 +1871,7 @@ function StepConservatory({ draft, update, editing }) {
           {verified ? (
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <CheckIcon size={18} color="#1A9E6E" />
-              <p style={{ fontSize: 14, color: "#1A9E6E", fontWeight: 600, margin: 0 }}>{draft.email} verified</p>
+              <p style={{ fontSize: 14, color: "#1A9E6E", fontWeight: 600, margin: 0 }}>{draft.conservatoryEmail} verified</p>
             </div>
           ) : (
             <>

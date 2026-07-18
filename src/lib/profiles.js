@@ -15,6 +15,8 @@ export function toDbProfile(draft, id) {
     composer_day: draft.composerDay,
     photo_url: draft.photoUrl,
     cover_photo_url: draft.coverPhotoUrl || null,
+    conservatory_email: draft.conservatoryEmail || null,
+    conservatory_verified: !!draft.conservatoryVerified,
     is_online: true,
     approved: true,
     teaching_open: draft.teaching.open,
@@ -39,6 +41,8 @@ export function fromDbProfile(row) {
     composerDay: row.composer_day,
     photoUrl: row.photo_url,
     coverPhotoUrl: row.cover_photo_url || "",
+    conservatoryEmail: row.conservatory_email || "",
+    conservatoryVerified: !!row.conservatory_verified,
     teaching: { open: !!row.teaching_open, mode: row.teaching_mode || "", price: row.teaching_price || "" },
     online: row.is_online ?? true,
   };
