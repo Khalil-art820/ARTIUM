@@ -1836,7 +1836,12 @@ function StepConservatory({ draft, update, editing }) {
 
   async function verifyCode() {
     setErr(""); setVerifying(true);
-    const { error } = await supabase.auth.verifyOtp({ email: email.trim(), token: code.trim(), type: "email" });
+    // New emails arrive via the "Confirm signup" OTP (type "signup"); already-known
+    // emails via "Magic Link" (type "email"). Try both so either works.
+    let { error } = await supabase.auth.verifyOtp({ email: email.trim(), token: code.trim(), type: "email" });
+    if (error) {
+      ({ error } = await supabase.auth.verifyOtp({ email: email.trim(), token: code.trim(), type: "signup" }));
+    }
     if (error) { setVerifying(false); setErr("That code didn't match. Please check and try again."); return; }
     // The OTP proves they own the conservatory email. It is NOT their login —
     // discard this throwaway session so the account stays on their personal email.
