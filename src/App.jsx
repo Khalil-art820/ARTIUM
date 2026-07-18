@@ -258,7 +258,7 @@ const emptyDraft = () => ({
   id: null,
   email: "", password: "", confirmPassword: "",
   name: "", years: "", instrument: "",
-  conservatoryId: null,
+  conservatoryId: null, conservatoryVerified: false,
   tastes: [],
   pieces: [],
   videoLink: "",
@@ -1130,6 +1130,17 @@ export default function App() {
       if (insertError) { setAuthError(insertError.message); return; }
       setDraft((d) => ({ ...d, id: authUser.id }));
       setScreen("pending");
+    } else if (authUser) {
+      // Conservatory email already verified via 6-digit code → the account exists
+      // and is signed in. Set the chosen password, then insert the profile.
+      if (draft.password && draft.password.length >= 6) {
+        const { error: pwErr } = await supabase.auth.updateUser({ password: draft.password });
+        if (pwErr) { setAuthError(pwErr.message); return; }
+      }
+      const { error: insertError } = await supabase.from("profiles").insert(toDbProfile(draft, authUser.id));
+      if (insertError) { setAuthError(insertError.message); return; }
+      setDraft((d) => ({ ...d, id: authUser.id }));
+      setScreen("pending");
     } else {
       const { data, error } = await supabase.auth.signUp({
         email: draft.email,
@@ -1512,9 +1523,9 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
   const lastStep = labels.length - 1;
   const idx = editing ? step : step - 1;
   const canNext = [
-    !editing ? draft.email.trim().length > 3 && draft.password.length >= 6 && draft.password === draft.confirmPassword : null,
+    !editing ? draft.password.length >= 6 && draft.password === draft.confirmPassword : null,
     draft.name.trim().length > 1 && !!draft.instrument,
-    !!draft.conservatoryId,
+    !!draft.conservatoryId && (editing || draft.password === "__google__" || draft.conservatoryVerified),
     draft.tastes.length >= 3,
     draft.pieces.length >= 1,
     true,
@@ -1556,7 +1567,7 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
       <div className="max-w-3xl mx-auto px-6 py-10 lg-fade" key={step}>
         {!editing && step === 0 && <StepAccount draft={draft} update={update} error={authError} />}
         {idx === 0 && <StepIntro draft={draft} update={update} />}
-        {idx === 1 && <StepConservatory draft={draft} update={update} />}
+        {idx === 1 && <StepConservatory draft={draft} update={update} editing={editing} />}
         {idx === 2 && <StepTastes draft={draft} toggleTaste={toggleTaste} />}
         {idx === 3 && <StepPieces draft={draft} update={update} />}
         {idx === 4 && <StepTopFlop draft={draft} update={update} />}
@@ -1736,12 +1747,9 @@ function StepAccount({ draft, update, error }) {
   const mismatch = draft.confirmPassword.length > 0 && draft.password !== draft.confirmPassword;
   return (
     <div>
-      <p className="text-sm mb-6" style={{ color: C.ivoryDim }}>Create the login you'll use to come back and manage your profile.</p>
+      <p className="text-sm mb-6" style={{ color: C.ivoryDim }}>Choose a password for your account. You'll verify your conservatory email in a later step — that becomes your login.</p>
       <GoogleBtn label="Sign up with Google" />
       <Divider />
-      <Field label="Email">
-        <input style={inputStyle} type="email" value={draft.email} onChange={(e) => update({ email: e.target.value })} placeholder="you@example.com" autoComplete="off" />
-      </Field>
       <Field label="Password">
         <PasswordField value={draft.password} onChange={(e) => update({ password: e.target.value })} placeholder="At least 6 characters" autoComplete="new-password" />
       </Field>
@@ -1798,14 +1806,55 @@ function StepIntro({ draft, update }) {
   );
 }
 
-function StepConservatory({ draft, update }) {
+function emailMatchesConservatory(email, cons) {
+  if (!cons) return false;
+  const m = String(email).trim().toLowerCase().match(/@(.+)$/);
+  if (!m) return false;
+  const host = m[1];
+  return cons.domains.some((d) => host === d.toLowerCase() || host.endsWith("." + d.toLowerCase()));
+}
+
+function StepConservatory({ draft, update, editing }) {
   const [q, setQ] = useState("");
+  const [email, setEmail] = useState(draft.email && draft.password !== "__google__" ? draft.email : "");
+  const [codeSent, setCodeSent] = useState(false);
+  const [code, setCode] = useState("");
+  const [sending, setSending] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [err, setErr] = useState("");
+
+  const isGoogle = draft.password === "__google__";
+  const selectedCons = CONSERVATORIES.find((c) => c.id === draft.conservatoryId);
   const results = CONSERVATORIES.filter((c) => (c.name + c.city + c.country).toLowerCase().includes(q.toLowerCase()));
+  const domainOk = selectedCons && emailMatchesConservatory(email, selectedCons);
+  const verified = draft.conservatoryVerified;
+
+  function pickConservatory(id) {
+    update({ conservatoryId: id, conservatoryVerified: false });
+    setCodeSent(false); setCode(""); setErr("");
+  }
+
+  async function sendCode() {
+    setErr(""); setSending(true);
+    const { error } = await supabase.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: true } });
+    setSending(false);
+    if (error) { setErr(error.message); return; }
+    setCodeSent(true);
+  }
+
+  async function verifyCode() {
+    setErr(""); setVerifying(true);
+    const { error } = await supabase.auth.verifyOtp({ email: email.trim(), token: code.trim(), type: "email" });
+    setVerifying(false);
+    if (error) { setErr("That code didn't match. Please check and try again."); return; }
+    update({ email: email.trim(), conservatoryVerified: true });
+  }
+
   return (
     <div>
       <div className="rounded-2xl overflow-hidden mb-5" style={{ border: `1px solid ${C.inkLine}`, background: C.inkSoft }}>
         <MapTitle />
-        <WorldMap selectedId={draft.conservatoryId} onSelect={(id) => update({ conservatoryId: id })} studentsByCons={{}} height={260} />
+        <WorldMap selectedId={draft.conservatoryId} onSelect={pickConservatory} studentsByCons={{}} height={260} />
       </div>
       <div className="relative mb-3">
         <Search size={15} style={{ position: "absolute", left: 14, top: 14, color: C.ivoryDim }} />
@@ -1813,12 +1862,63 @@ function StepConservatory({ draft, update }) {
       </div>
       <div className="grid sm:grid-cols-2 gap-2 max-h-64 overflow-y-auto lg-scroll pr-1">
         {results.map((c) => (
-          <button key={c.id} onClick={() => update({ conservatoryId: c.id })} className="text-left rounded-xl px-4 py-3" style={{ border: `1px solid ${draft.conservatoryId === c.id ? C.brass : C.inkLine}`, background: draft.conservatoryId === c.id ? "rgba(201,162,75,0.1)" : "transparent" }}>
+          <button key={c.id} onClick={() => pickConservatory(c.id)} className="text-left rounded-xl px-4 py-3" style={{ border: `1px solid ${draft.conservatoryId === c.id ? C.brass : C.inkLine}`, background: draft.conservatoryId === c.id ? "rgba(201,162,75,0.1)" : "transparent" }}>
             <p style={{ fontFamily: FONT_BODY, fontWeight: 600, fontSize: 14 }}>{c.name}</p>
             <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.ivoryDim, marginTop: 2 }}>{c.city}, {c.country} · @{c.domains[0]}</p>
           </button>
         ))}
       </div>
+
+      {/* Conservatory email verification */}
+      {selectedCons && !isGoogle && !editing && (
+        <div className="mt-5 rounded-2xl" style={{ border: `1px solid ${verified ? "#1A9E6E" : C.brass}`, background: C.inkSoft, padding: "18px 18px" }}>
+          <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brassLabel, letterSpacing: 0.5, marginBottom: 8 }}>VERIFY YOUR {selectedCons.short.toUpperCase()} STUDENT EMAIL</p>
+          {verified ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <CheckIcon size={18} color="#1A9E6E" />
+              <p style={{ fontSize: 14, color: "#1A9E6E", fontWeight: 600, margin: 0 }}>{draft.email} verified</p>
+            </div>
+          ) : (
+            <>
+              <p className="text-sm" style={{ color: C.ivoryDim, marginBottom: 10 }}>
+                Enter your <b>@{selectedCons.domains[0]}</b> address. We'll email you a 6-digit code to confirm you study there.
+              </p>
+              <input style={inputStyle} type="email" value={email} disabled={codeSent}
+                onChange={(e) => { setEmail(e.target.value); setErr(""); }}
+                placeholder={`you@${selectedCons.domains[0]}`} autoComplete="off" />
+              {email && !domainOk && (
+                <p className="text-sm" style={{ color: C.burgundy, marginTop: 6 }}>
+                  This must be a {selectedCons.name} address ({selectedCons.domains.map((d) => "@" + d).join(" or ")}).
+                </p>
+              )}
+
+              {!codeSent ? (
+                <div style={{ marginTop: 12 }}>
+                  <PrimaryBtn disabled={!domainOk || sending} onClick={sendCode}>{sending ? "Sending…" : "Send verification code"}</PrimaryBtn>
+                </div>
+              ) : (
+                <div style={{ marginTop: 12 }}>
+                  <p className="text-sm" style={{ color: C.ivoryDim, marginBottom: 8 }}>Enter the 6-digit code sent to <b>{email}</b>.</p>
+                  <input style={{ ...inputStyle, letterSpacing: 6, fontFamily: FONT_MONO, textAlign: "center", maxWidth: 180 }} value={code}
+                    onChange={(e) => { setCode(e.target.value.replace(/\D/g, "").slice(0, 6)); setErr(""); }}
+                    placeholder="000000" inputMode="numeric" />
+                  <div className="flex items-center gap-3" style={{ marginTop: 12 }}>
+                    <PrimaryBtn disabled={code.length !== 6 || verifying} onClick={verifyCode}>{verifying ? "Verifying…" : "Verify & continue"}</PrimaryBtn>
+                    <button onClick={sendCode} disabled={sending} style={{ fontSize: 13, color: C.brassLabel, background: "none", border: "none", cursor: "pointer" }}>Resend code</button>
+                  </div>
+                </div>
+              )}
+              {err && <p className="text-sm" style={{ color: C.burgundy, marginTop: 10 }}>{err}</p>}
+            </>
+          )}
+        </div>
+      )}
+      {selectedCons && isGoogle && !editing && (
+        <div className="mt-5 rounded-2xl" style={{ border: `1px solid #1A9E6E`, background: C.inkSoft, padding: "14px 18px", display: "flex", alignItems: "center", gap: 8 }}>
+          <CheckIcon size={18} color="#1A9E6E" />
+          <p style={{ fontSize: 14, color: "#1A9E6E", fontWeight: 600, margin: 0 }}>Verified via Google ({draft.email})</p>
+        </div>
+      )}
     </div>
   );
 }
