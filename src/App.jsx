@@ -1034,7 +1034,7 @@ export default function App() {
   // Pull in any real conservatory-student signups so they show up on the map
   // alongside the sample data (learner accounts aren't conservatory students).
   useEffect(() => {
-    supabase.from("profiles").select("*").eq("approved", true).eq("role", "student").then(({ data, error }) => {
+    supabase.from("profiles").select("*").eq("approved", true).eq("role", "student").neq("is_admin", true).then(({ data, error }) => {
       if (error || !data) return;
       const real = data.map(fromDbProfile);
       const realIds = new Set(real.map((r) => r.id));
