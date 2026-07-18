@@ -80,7 +80,7 @@ const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII"];
 /* DATA                                                                */
 /* ---------------------------------------------------------------- */
 const CONSERVATORIES = [
-  { id: "juilliard", name: "The Juilliard School", short: "Juilliard", city: "New York", country: "USA", lat: 40.7736, lng: -73.9827, domains: ["juilliard.edu"] },
+  { id: "juilliard", name: "The Juilliard School", short: "Juilliard", city: "New York", country: "USA", lat: 40.7736, lng: -73.9827, domains: ["juilliard.edu", "gmail.com"] }, /* TEMP: gmail.com for testing — remove */
   { id: "curtis", name: "Curtis Institute of Music", short: "Curtis", city: "Philadelphia", country: "USA", lat: 39.9496, lng: -75.1717, domains: ["curtis.edu"] },
   { id: "nec", name: "New England Conservatory", short: "NEC", city: "Boston", country: "USA", lat: 42.3428, lng: -71.0857, domains: ["necmusic.edu"] },
   { id: "sfcm", name: "San Francisco Conservatory of Music", short: "SFCM", city: "San Francisco", country: "USA", lat: 37.7776, lng: -122.4196, domains: ["sfcm.edu"] },
