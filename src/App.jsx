@@ -1899,9 +1899,11 @@ function StepConservatory({ draft, update, editing }) {
               ) : (
                 <div style={{ marginTop: 12 }}>
                   <p className="text-sm" style={{ color: C.ivoryDim, marginBottom: 8 }}>Enter the code sent to <b>{email}</b>.</p>
-                  <input style={{ ...inputStyle, letterSpacing: 5, fontFamily: FONT_MONO, textAlign: "center", maxWidth: 220 }} value={code}
+                  <input
+                    style={{ width: "100%", maxWidth: 260, padding: "12px 16px", borderRadius: 10, border: `1.5px solid ${C.inkLine}`, background: "#fff", color: C.ivory, fontFamily: FONT_MONO, fontSize: 22, fontWeight: 600, letterSpacing: 8, textAlign: "center", outline: "none", boxSizing: "border-box" }}
+                    value={code}
                     onChange={(e) => { setCode(e.target.value.replace(/\D/g, "").slice(0, 10)); setErr(""); }}
-                    placeholder="••••••" inputMode="numeric" />
+                    placeholder="" inputMode="numeric" autoFocus />
                   <div className="flex items-center gap-3" style={{ marginTop: 12 }}>
                     <PrimaryBtn disabled={code.length < 6 || verifying} onClick={verifyCode}>{verifying ? "Verifying…" : "Verify & continue"}</PrimaryBtn>
                     <button onClick={sendCode} disabled={sending} style={{ fontSize: 13, color: C.brassLabel, background: "none", border: "none", cursor: "pointer" }}>Resend code</button>
