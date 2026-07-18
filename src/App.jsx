@@ -1881,7 +1881,7 @@ function StepConservatory({ draft, update, editing }) {
           ) : (
             <>
               <p className="text-sm" style={{ color: C.ivoryDim, marginBottom: 10 }}>
-                Enter your <b>@{selectedCons.domains[0]}</b> address. We'll email you a 6-digit code to confirm you study there.
+                Enter your <b>@{selectedCons.domains[0]}</b> address. We'll email you a code to confirm you study there.
               </p>
               <input style={inputStyle} type="email" value={email} disabled={codeSent}
                 onChange={(e) => { setEmail(e.target.value); setErr(""); }}
@@ -1898,12 +1898,12 @@ function StepConservatory({ draft, update, editing }) {
                 </div>
               ) : (
                 <div style={{ marginTop: 12 }}>
-                  <p className="text-sm" style={{ color: C.ivoryDim, marginBottom: 8 }}>Enter the 6-digit code sent to <b>{email}</b>.</p>
-                  <input style={{ ...inputStyle, letterSpacing: 6, fontFamily: FONT_MONO, textAlign: "center", maxWidth: 180 }} value={code}
-                    onChange={(e) => { setCode(e.target.value.replace(/\D/g, "").slice(0, 6)); setErr(""); }}
-                    placeholder="000000" inputMode="numeric" />
+                  <p className="text-sm" style={{ color: C.ivoryDim, marginBottom: 8 }}>Enter the code sent to <b>{email}</b>.</p>
+                  <input style={{ ...inputStyle, letterSpacing: 5, fontFamily: FONT_MONO, textAlign: "center", maxWidth: 220 }} value={code}
+                    onChange={(e) => { setCode(e.target.value.replace(/\D/g, "").slice(0, 10)); setErr(""); }}
+                    placeholder="••••••" inputMode="numeric" />
                   <div className="flex items-center gap-3" style={{ marginTop: 12 }}>
-                    <PrimaryBtn disabled={code.length !== 6 || verifying} onClick={verifyCode}>{verifying ? "Verifying…" : "Verify & continue"}</PrimaryBtn>
+                    <PrimaryBtn disabled={code.length < 6 || verifying} onClick={verifyCode}>{verifying ? "Verifying…" : "Verify & continue"}</PrimaryBtn>
                     <button onClick={sendCode} disabled={sending} style={{ fontSize: 13, color: C.brassLabel, background: "none", border: "none", cursor: "pointer" }}>Resend code</button>
                   </div>
                 </div>
