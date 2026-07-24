@@ -18,7 +18,9 @@ export function toDbProfile(draft, id) {
     conservatory_email: draft.conservatoryEmail || null,
     conservatory_verified: !!draft.conservatoryVerified,
     is_online: true,
-    approved: true,
+    // Document-proof signups stay unapproved (hidden from the map) until an
+    // admin manually reviews the uploaded proof.
+    approved: draft.verifyMethod === "document" ? false : true,
     teaching_open: draft.teaching.open,
     teaching_mode: draft.teaching.mode,
     teaching_price: draft.teaching.price,

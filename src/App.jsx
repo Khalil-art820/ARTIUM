@@ -6,7 +6,7 @@ import {
   Volume1, Volume2, VolumeX,
   Pencil, Plus, Trash2, Home, Upload, Eye, EyeOff, ChevronLeft,
   Calendar, CreditCard, Video, Link2, Clock, Bell,
-  Map, BookOpen, ListChecks, LayoutList, Megaphone, Check as CheckIcon, ShieldCheck,
+  Map, BookOpen, ListChecks, LayoutList, Megaphone, Check as CheckIcon, ShieldCheck, FileText,
 } from "lucide-react";
 import AMBIENT_AUDIO_SRC from "./assets/ambient.mp3";
 import { useAuth } from "./contexts/AuthContext";
@@ -259,6 +259,7 @@ const emptyDraft = () => ({
   email: "", password: "", confirmPassword: "",
   name: "", years: "", instrument: "",
   conservatoryId: null, conservatoryEmail: "", conservatoryVerified: false,
+  verifyMethod: "otp", proofDocUrl: "", proofDocName: "",
   tastes: [],
   pieces: [],
   videoLink: "",
@@ -816,7 +817,10 @@ export default function App() {
       setMyProfile(me);
       setPreviewOnly(false);
       setStudents((arr) => [...arr.filter((s) => s.id !== me.id), me]);
-      if (screen === "entry" || screen === "landing" || screen === "login" || screen === "confirmEmail") {
+      if (authProfile.approved === false) {
+        // Document-proof student still awaiting manual review.
+        if (["entry", "landing", "login", "confirmEmail"].includes(screen)) setScreen("pendingReview");
+      } else if (screen === "entry" || screen === "landing" || screen === "login" || screen === "confirmEmail") {
         setSelectedConsId(me.conservatoryId);
         setScreen("app");
         setAppTabPersist("map");
@@ -827,11 +831,14 @@ export default function App() {
       const pendingStudent = authUser.user_metadata?.pendingProfile;
       const pendingLearner = authUser.user_metadata?.pendingLearner;
       if (pendingStudent) {
-        supabase.from("profiles").insert(toDbProfile(pendingStudent, authUser.id)).then(({ error }) => {
+        supabase.from("profiles").insert(toDbProfile(pendingStudent, authUser.id)).then(async ({ error }) => {
           if (error) { setAuthError(error.message); return; }
           supabase.auth.updateUser({ data: { pendingProfile: null } });
+          const isDoc = pendingStudent.verifyMethod === "document";
+          if (isDoc) { await insertVerificationRequest(authUser.id, pendingStudent); }
           const me = { id: authUser.id, name: pendingStudent.name, instrument: pendingStudent.instrument, conservatoryId: pendingStudent.conservatoryId, year: pendingStudent.years, bio: pendingStudent.bio, tastes: pendingStudent.tastes, pieces: pendingStudent.pieces, videoLink: pendingStudent.videoLink, top: pendingStudent.top, flop: pendingStudent.flop, photoUrl: pendingStudent.photoUrl, teaching: pendingStudent.teaching, online: true };
           setMyProfile(me);
+          if (isDoc) { setScreen("pendingReview"); return; }
           setStudents((arr) => [...arr.filter((s) => s.id !== me.id), me]);
           setSelectedConsId(me.conservatoryId);
           setScreen("app");
@@ -971,12 +978,12 @@ export default function App() {
   // treated as admin so the approval flow is fully previewable offline.
   const isAdmin = authProfile?.is_admin === true || myProfile?.id === "demo-teacher";
 
-  function startApply() {
+  function startApply(verifyMethod = "otp") {
     if (authUser && authProfile?.role === "learner") {
       setAuthError("You're already registered as a piano enthusiast with this account. You can't also sign up as a conservatory student — log out first if you want to create a separate account with a different email.");
       return;
     }
-    setDraft(emptyDraft());
+    setDraft({ ...emptyDraft(), verifyMethod });
     setStep(0);
     setEditingProfile(false);
     setAuthError("");
@@ -1115,6 +1122,20 @@ export default function App() {
   function toggleTaste(t) {
     setDraft((d) => ({ ...d, tastes: d.tastes.includes(t) ? d.tastes.filter((x) => x !== t) : [...d.tastes, t] }));
   }
+  async function insertVerificationRequest(userId, d) {
+    const cons = CONSERVATORIES.find((c) => c.id === d.conservatoryId);
+    await supabase.from("student_verifications").insert({
+      user_id: userId,
+      name: d.name,
+      personal_email: d.email,
+      document_url: d.proofDocUrl,
+      document_name: d.proofDocName,
+      conservatory_id: d.conservatoryId,
+      conservatory_name: cons?.name || "",
+      conservatory_address: cons ? `${cons.city}, ${cons.country}` : "",
+      status: "pending",
+    });
+  }
   async function submitApplication() {
     setAuthError("");
     if (editingProfile) {
@@ -1128,8 +1149,9 @@ export default function App() {
       // Google OAuth user completing profile for the first time
       const { error: insertError } = await supabase.from("profiles").insert(toDbProfile(draft, authUser.id));
       if (insertError) { setAuthError(insertError.message); return; }
+      if (draft.verifyMethod === "document") { await insertVerificationRequest(authUser.id, draft); }
       setDraft((d) => ({ ...d, id: authUser.id }));
-      setScreen("pending");
+      setScreen(draft.verifyMethod === "document" ? "pendingReview" : "pending");
     } else {
       const { data, error } = await supabase.auth.signUp({
         email: draft.email,
@@ -1142,8 +1164,9 @@ export default function App() {
         const { error: insertError } = await supabase.from("profiles").insert(toDbProfile(draft, data.user.id));
         if (insertError) { setAuthError(insertError.message); return; }
         await supabase.auth.updateUser({ data: { pendingProfile: null } });
+        if (draft.verifyMethod === "document") { await insertVerificationRequest(data.user.id, draft); }
         setDraft((d) => ({ ...d, id: data.user.id }));
-        setScreen("pending");
+        setScreen(draft.verifyMethod === "document" ? "pendingReview" : "pending");
       } else {
         // Email confirmation required — the draft is stored server-side in the
         // user's auth metadata, so it's picked up after confirming on any device.
@@ -1233,7 +1256,7 @@ export default function App() {
         />
       )}
 
-      {screen === "entry" && <EntryGate onLearner={chooseLearner} onStudent={chooseStudent} onLogin={startLogin} learnerProfile={learnerProfile} learnerLoggedOut={learnerLoggedOut} studentLoggedIn={!!myProfile} musicOn={musicOn} onMusicToggle={toggleMusic} audioRef={audioRef} onlineCount={onlineCount} onDemoTeacher={enterDemoTeacher} onDemoLearner={enterDemoLearner} />}
+      {screen === "entry" && <EntryGate onLearner={chooseLearner} onStudent={chooseStudent} onStudentNoEmail={() => startApply("document")} onLogin={startLogin} learnerProfile={learnerProfile} learnerLoggedOut={learnerLoggedOut} studentLoggedIn={!!myProfile} musicOn={musicOn} onMusicToggle={toggleMusic} audioRef={audioRef} onlineCount={onlineCount} onDemoTeacher={enterDemoTeacher} onDemoLearner={enterDemoLearner} />}
       {screen === "learnerSignup" && <LearnerSignup onSubmit={submitLearner} onBack={backToEntry} onLogin={startLogin} error={authError} googleName={learnerGoogleName} />}
       {screen === "learnerMap" && (
         <LearnerScreen
@@ -1274,6 +1297,7 @@ export default function App() {
       )}
       {screen === "confirmEmail" && <ConfirmEmail email={pendingEmail} onLogin={startLogin} onHome={goHome} />}
       {screen === "pending" && <Pending name={draft.name} onApprove={simulateApproval} onHome={goHome} />}
+      {screen === "pendingReview" && <PendingReview onHome={goHome} onLogout={handleLogout} />}
       {screen === "app" && (
         <AppShell
           appTab={appTab} setAppTab={setAppTab} myProfile={myProfile}
@@ -1514,7 +1538,7 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
   const canNext = [
     !editing ? draft.email.trim().length > 3 && draft.password.length >= 6 && draft.password === draft.confirmPassword : null,
     draft.name.trim().length > 1 && !!draft.instrument,
-    !!draft.conservatoryId && (editing || draft.password === "__google__" || draft.conservatoryVerified),
+    !!draft.conservatoryId && (editing || draft.password === "__google__" || (draft.verifyMethod === "document" ? !!draft.proofDocUrl : draft.conservatoryVerified)),
     draft.tastes.length >= 3,
     draft.pieces.length >= 1,
     true,
@@ -1815,7 +1839,9 @@ function StepConservatory({ draft, update, editing }) {
   const [verifying, setVerifying] = useState(false);
   const [err, setErr] = useState("");
 
+  const [uploading, setUploading] = useState(false);
   const isGoogle = draft.password === "__google__";
+  const isDoc = draft.verifyMethod === "document";
   const selectedCons = CONSERVATORIES.find((c) => c.id === draft.conservatoryId);
   const results = CONSERVATORIES.filter((c) => (c.name + c.city + c.country).toLowerCase().includes(q.toLowerCase()));
   const domainOk = selectedCons && emailMatchesConservatory(email, selectedCons);
@@ -1824,6 +1850,18 @@ function StepConservatory({ draft, update, editing }) {
   function pickConservatory(id) {
     update({ conservatoryId: id, conservatoryVerified: false });
     setCodeSent(false); setCode(""); setErr("");
+  }
+
+  async function uploadProof(file) {
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) { setErr("File too large (max 10 MB)."); return; }
+    setErr(""); setUploading(true);
+    const ext = (file.name.split(".").pop() || "dat").toLowerCase();
+    const path = `proofs/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const { error } = await supabase.storage.from("student-proofs").upload(path, file, { upsert: false, contentType: file.type || undefined });
+    setUploading(false);
+    if (error) { setErr("Upload failed: " + error.message); return; }
+    update({ proofDocUrl: path, proofDocName: file.name });
   }
 
   async function sendCode() {
@@ -1869,8 +1907,35 @@ function StepConservatory({ draft, update, editing }) {
         ))}
       </div>
 
-      {/* Conservatory email verification */}
-      {selectedCons && !isGoogle && !editing && (
+      {/* Document proof upload (no institutional email path) */}
+      {selectedCons && !isGoogle && !editing && isDoc && (
+        <div className="mt-5 rounded-2xl" style={{ border: `1px solid ${draft.proofDocUrl ? "#1A9E6E" : C.brass}`, background: C.inkSoft, padding: "18px 18px" }}>
+          <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brassLabel, letterSpacing: 0.5, marginBottom: 8 }}>UPLOAD PROOF OF ENROLLMENT</p>
+          <p className="text-sm" style={{ color: C.ivoryDim, marginBottom: 12 }}>
+            Upload a <b>student ID card</b>, <b>enrollment certificate</b>, or <b>tuition receipt</b> from {selectedCons.name}. Our team reviews it manually before granting student status.
+          </p>
+          {draft.proofDocUrl ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+              <CheckIcon size={18} color="#1A9E6E" />
+              <span style={{ fontSize: 14, color: "#1A9E6E", fontWeight: 600 }}>{draft.proofDocName || "Document uploaded"}</span>
+              <label style={{ fontSize: 13, color: C.brassLabel, cursor: "pointer" }}>
+                Replace
+                <input type="file" accept="image/*,application/pdf" style={{ display: "none" }} onChange={(e) => uploadProof(e.target.files?.[0])} />
+              </label>
+            </div>
+          ) : (
+            <label style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "11px 18px", borderRadius: 10, border: `1.5px dashed ${C.inkLine}`, background: "#fff", cursor: uploading ? "default" : "pointer", color: C.ivory, fontWeight: 600, fontSize: 14 }}>
+              <Upload size={16} /> {uploading ? "Uploading…" : "Choose a file"}
+              <input type="file" accept="image/*,application/pdf" style={{ display: "none" }} disabled={uploading} onChange={(e) => uploadProof(e.target.files?.[0])} />
+            </label>
+          )}
+          <p className="text-xs" style={{ color: C.ivoryDim, marginTop: 10, fontFamily: FONT_MONO }}>Image or PDF · max 10 MB · kept private, seen only by our review team.</p>
+          {err && <p className="text-sm" style={{ color: C.burgundy, marginTop: 10 }}>{err}</p>}
+        </div>
+      )}
+
+      {/* Conservatory email verification (OTP path) */}
+      {selectedCons && !isGoogle && !editing && !isDoc && (
         <div className="mt-5 rounded-2xl" style={{ border: `1px solid ${verified ? "#1A9E6E" : C.brass}`, background: C.inkSoft, padding: "18px 18px" }}>
           <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brassLabel, letterSpacing: 0.5, marginBottom: 8 }}>VERIFY YOUR {selectedCons.short.toUpperCase()} STUDENT EMAIL</p>
           {verified ? (
@@ -2112,6 +2177,31 @@ function Pending({ name, onApprove, onHome }) {
           <PrimaryBtn onClick={onApprove} icon={ArrowRight}>Simulate acceptance</PrimaryBtn>
         </div>
       </div>
+      </div>
+    </div>
+  );
+}
+
+function PendingReview({ onHome, onLogout }) {
+  return (
+    <div className="min-h-full flex flex-col" style={{ background: C.ink, color: C.ivory }}>
+      <div className="px-6 py-4 flex items-center gap-5">
+        <Logo size={18} />
+        <HomeBtn onClick={onHome} />
+      </div>
+      <div className="flex-1 flex items-center justify-center px-6">
+        <div className="max-w-md text-center lg-fade">
+          <div className="mx-auto mb-6 rounded-full flex items-center justify-center" style={{ width: 64, height: 64, border: `1px solid ${C.brass}` }}>
+            <FileText color={C.brass} size={26} />
+          </div>
+          <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600 }}>Your documents are under review</h2>
+          <p className="mt-3 text-sm" style={{ color: C.ivoryDim, lineHeight: 1.6 }}>
+            Thanks! Our team is reviewing the proof you uploaded to confirm your conservatory enrolment. Once approved, your student profile goes live and you'll get full access. This usually takes 1–2 days.
+          </p>
+          <div className="mt-8">
+            <button onClick={onLogout} style={{ fontSize: 13, fontWeight: 600, color: C.ivoryDim, background: "none", border: `1px solid ${C.inkLine}`, borderRadius: 8, padding: "8px 18px", cursor: "pointer" }}>Log out</button>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -2936,7 +3026,7 @@ function StepTeaching({ draft, update }) {
 }
 
 /* ---- First screen: pick your role ---- */
-function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLoggedOut, studentLoggedIn, musicOn, onMusicToggle, audioRef, onlineCount, onDemoTeacher, onDemoLearner }) {
+function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerProfile, learnerLoggedOut, studentLoggedIn, musicOn, onMusicToggle, audioRef, onlineCount, onDemoTeacher, onDemoLearner }) {
   const singleCard = !!learnerProfile || learnerLoggedOut || studentLoggedIn;
   const cardStyle = {
     textAlign: "left", background: "#FFFFFF", border: "none",
@@ -2997,7 +3087,27 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
               </div>
               <div style={{ textAlign: "center" }}>
                 <div style={{ fontSize: 15, fontWeight: 700, color: C.ivory, marginBottom: 4 }}>{studentLoggedIn ? "Continue" : "I'm a conservatory student"}</div>
+                {!studentLoggedIn && <div style={{ fontSize: 12, fontWeight: 600, color: C.brassLabel, marginBottom: 4 }}>with an institutional student email</div>}
                 <div style={{ fontSize: 12, color: C.ivoryDim, lineHeight: 1.5, maxWidth: 180 }}>Connect with conservatory students at the world's top conservatories. Promote yourself. Earn while you teach.</div>
+              </div>
+            </button>
+          )}
+          {!singleCard && !studentLoggedIn && (
+            <button onClick={onStudentNoEmail} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 18 }}>
+              <div style={{ width: 180, height: 180, borderRadius: "50%", overflow: "hidden", position: "relative", boxShadow: `0 0 0 4px ${C.brass}, 0 8px 32px rgba(10,37,64,0.14)`, transition: "transform 0.18s", flexShrink: 0 }}
+                onMouseEnter={e => e.currentTarget.style.transform = "scale(1.04)"}
+                onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
+              >
+                <div style={{ position: "absolute", inset: 0, backgroundImage: "url('/1.png')", backgroundSize: "cover", backgroundPosition: "center", filter: "grayscale(100%) contrast(1.1) brightness(0.82)" }} />
+                <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.42)" }} />
+                <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <FileText size={46} color="#fff" strokeWidth={1.6} />
+                </div>
+              </div>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: 15, fontWeight: 700, color: C.ivory, marginBottom: 4 }}>I'm a conservatory student</div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: C.brassLabel, marginBottom: 4 }}>without an institutional student email</div>
+                <div style={{ fontSize: 12, color: C.ivoryDim, lineHeight: 1.5, maxWidth: 190 }}>Verify with a student ID, enrollment certificate or tuition receipt — reviewed by our team.</div>
               </div>
             </button>
           )}
@@ -4525,6 +4635,7 @@ function PromoteMe({ myProfile, authUser }) {
 function AdminScreen({ authUser }) {
   const isRealUser = !!authUser?.id;
   const lsKey = "artium_promotions";
+  const [section, setSection] = useState("verifications");
   const [tab, setTab] = useState("pending");
   const [rows, setRows] = useState([]);
 
@@ -4564,9 +4675,20 @@ function AdminScreen({ authUser }) {
             <ShieldCheck size={20} color={C.brassLabel} />
             <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 700, color: C.ivory, margin: 0 }}>Admin</h2>
           </div>
-          <p style={{ fontSize: 13, color: C.ivoryDim, margin: 0 }}>Review promotional video submissions.</p>
+          <p style={{ fontSize: 13, color: C.ivoryDim, margin: 0 }}>Review student verifications and promotions.</p>
         </div>
 
+        {/* Section toggle */}
+        <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+          {[{ v: "verifications", t: "Student verifications" }, { v: "promotions", t: "Promotions" }].map(({ v, t }) => (
+            <button key={v} onClick={() => setSection(v)}
+              style={{ padding: "9px 18px", borderRadius: 20, fontSize: 13, fontWeight: 700, cursor: "pointer", background: section === v ? C.ivory : "#fff", color: section === v ? "#fff" : C.ivoryDim, border: section === v ? "none" : `1px solid ${C.inkLine}` }}>{t}</button>
+          ))}
+        </div>
+
+        {section === "verifications" && <AdminVerifications authUser={authUser} card={card} STATUS_COLOR={STATUS_COLOR} />}
+
+        {section === "promotions" && <>
         <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
           {[{ v: "pending", t: `Pending (${pending.length})` }, { v: "history", t: `History (${decided.length})` }].map(({ v, t }) => (
             <button key={v} onClick={() => setTab(v)}
@@ -4600,8 +4722,127 @@ function AdminScreen({ authUser }) {
             )}
           </div>
         ))}
+        </>}
       </div>
     </div>
+  );
+}
+
+/* Admin — student document-verification review (4-column table) */
+function AdminVerifications({ card, STATUS_COLOR }) {
+  const [rows, setRows] = useState([]);
+  const [edits, setEdits] = useState({}); // id -> { conservatory_name, conservatory_address }
+  const [busy, setBusy] = useState("");
+
+  async function load() {
+    const { data } = await supabase.from("student_verifications").select("*").order("created_at", { ascending: false });
+    setRows(data || []);
+  }
+  React.useEffect(() => { load(); const id = setInterval(load, 5000); return () => clearInterval(id); /* eslint-disable-next-line */ }, []);
+
+  function fieldVal(r, key) {
+    return edits[r.id]?.[key] !== undefined ? edits[r.id][key] : (r[key] || "");
+  }
+  function setField(r, key, val) {
+    setEdits((e) => ({ ...e, [r.id]: { ...e[r.id], [key]: val } }));
+  }
+
+  async function viewDoc(path) {
+    if (!path) return;
+    const { data, error } = await supabase.storage.from("student-proofs").createSignedUrl(path, 300);
+    if (error || !data?.signedUrl) { alert("Could not open document: " + (error?.message || "unknown")); return; }
+    window.open(data.signedUrl, "_blank", "noopener");
+  }
+
+  async function decide(r, status) {
+    setBusy(r.id);
+    const name = fieldVal(r, "conservatory_name");
+    const address = fieldVal(r, "conservatory_address");
+    await supabase.from("student_verifications").update({ status, conservatory_name: name, conservatory_address: address }).eq("id", r.id);
+    if (status === "approved") {
+      await supabase.from("profiles").update({ approved: true, conservatory_verified: true }).eq("id", r.user_id);
+    } else {
+      await supabase.from("profiles").update({ approved: false, conservatory_verified: false }).eq("id", r.user_id);
+    }
+    setBusy(""); load();
+  }
+
+  const pending = rows.filter((r) => r.status === "pending");
+  const decided = rows.filter((r) => r.status !== "pending");
+
+  const th = { textAlign: "left", fontSize: 10, fontWeight: 700, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.06em", padding: "8px 8px", borderBottom: `1px solid ${C.inkLine}` };
+  const td = { padding: "10px 8px", fontSize: 12, color: C.ivory, verticalAlign: "top", borderBottom: `1px solid ${C.inkLine}` };
+  const inp = { width: "100%", padding: "7px 9px", borderRadius: 8, border: `1px solid ${C.inkLine}`, fontSize: 12, fontFamily: FONT_BODY, boxSizing: "border-box", outline: "none", marginBottom: 6 };
+
+  function Table({ list, editable }) {
+    if (list.length === 0) return <div style={{ ...card, textAlign: "center" }}><p style={{ fontSize: 14, color: C.ivoryDim, margin: 0 }}>{editable ? "No pending student verifications." : "No reviewed verifications yet."}</p></div>;
+    return (
+      <div style={{ ...card, overflowX: "auto", padding: "8px 8px" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 620 }}>
+          <thead>
+            <tr>
+              <th style={th}>Student</th>
+              <th style={th}>Documents</th>
+              <th style={th}>Conservatory name &amp; address</th>
+              <th style={th}>{editable ? "Decision" : "Status"}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {list.map((r) => (
+              <tr key={r.id}>
+                <td style={td}>
+                  <p style={{ margin: 0, fontWeight: 700 }}>{r.name}</p>
+                  <p style={{ margin: "2px 0 0", color: C.ivoryDim, wordBreak: "break-all" }}>{r.personal_email}</p>
+                </td>
+                <td style={td}>
+                  <button onClick={() => viewDoc(r.document_url)} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "none", border: `1px solid ${C.inkLine}`, borderRadius: 8, padding: "6px 10px", cursor: "pointer", color: C.brassLabel, fontSize: 12, fontWeight: 600 }}>
+                    <FileText size={13} /> View
+                  </button>
+                  <p style={{ margin: "4px 0 0", color: C.ivoryDim, fontSize: 11, wordBreak: "break-all" }}>{r.document_name}</p>
+                </td>
+                <td style={td}>
+                  {editable ? (
+                    <>
+                      <input style={inp} value={fieldVal(r, "conservatory_name")} onChange={(e) => setField(r, "conservatory_name", e.target.value)} placeholder="Conservatory name" />
+                      <input style={inp} value={fieldVal(r, "conservatory_address")} onChange={(e) => setField(r, "conservatory_address", e.target.value)} placeholder="Address" />
+                    </>
+                  ) : (
+                    <>
+                      <p style={{ margin: 0, fontWeight: 600 }}>{r.conservatory_name}</p>
+                      <p style={{ margin: "2px 0 0", color: C.ivoryDim }}>{r.conservatory_address}</p>
+                    </>
+                  )}
+                </td>
+                <td style={td}>
+                  {editable ? (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                      <button disabled={busy === r.id} onClick={() => decide(r, "approved")} style={{ padding: "8px 10px", borderRadius: 8, border: "none", background: "#1A9E6E", color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Approve</button>
+                      <button disabled={busy === r.id} onClick={() => decide(r, "rejected")} style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "#fff", color: C.burgundy, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Reject</button>
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                      <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: STATUS_COLOR[r.status] || C.ivoryDim }}>{r.status}</span>
+                      <button onClick={() => decide(r, "pending")} style={{ padding: "6px 8px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "#fff", color: C.ivoryDim, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Reset</button>
+                    </div>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <p style={{ fontSize: 12, fontWeight: 700, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.06em", margin: "4px 0 0" }}>Pending ({pending.length})</p>
+      <Table list={pending} editable />
+      {decided.length > 0 && <>
+        <p style={{ fontSize: 12, fontWeight: 700, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.06em", margin: "8px 0 0" }}>History ({decided.length})</p>
+        <Table list={decided} editable={false} />
+      </>}
+    </>
   );
 }
 
