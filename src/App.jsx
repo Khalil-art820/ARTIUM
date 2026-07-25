@@ -489,18 +489,21 @@ function HomeBtn({ onClick }) {
   );
 }
 
-function MusicBtn({ playing, onToggle }) {
+// showLabel={false} drops the "playlist" caption for a bare icon. The title
+// attribute carries the accessible name either way.
+function MusicBtn({ playing, onToggle, showLabel = true }) {
   if (!SPOTIFY_PLAYLIST_ID) return null;
   return (
-    <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(10,37,64,0.05)", borderRadius: 999, padding: "5px 10px 5px 8px", border: `1px solid ${C.inkLine}` }}>
+    <div style={{ display: "inline-flex", alignItems: "center", gap: showLabel ? 8 : 0, background: "rgba(10,37,64,0.05)", borderRadius: 999, padding: showLabel ? "5px 10px 5px 8px" : 5, border: `1px solid ${C.inkLine}` }}>
       <button
         onClick={onToggle}
         title={playing ? "Pause" : "Play"}
+        aria-label={playing ? "Pause playlist" : "Play playlist"}
         style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 24, height: 24, borderRadius: "50%", background: playing ? C.brass : "transparent", border: "none", cursor: "pointer", flexShrink: 0, transition: "background 0.15s" }}
       >
         {playing ? <Pause size={10} color="#fff" /> : <Play size={10} color={C.ivory} />}
       </button>
-      <span style={{ fontSize: 13, color: C.ivoryDim }}>playlist</span>
+      {showLabel && <span style={{ fontSize: 13, color: C.ivoryDim }}>playlist</span>}
     </div>
   );
 }
@@ -3345,7 +3348,7 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
       <div className="max-w-5xl w-full mx-auto px-8" style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#FFFFFF", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <Logo size={22} />
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <MusicBtn playing={musicOn} onToggle={onMusicToggle} />
+          <MusicBtn playing={musicOn} onToggle={onMusicToggle} showLabel={false} />
           {onlineCount != null && (
             <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 13, color: C.ivoryDim }}>
               <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#1A9E6E", display: "inline-block" }} />
