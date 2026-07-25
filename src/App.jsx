@@ -5,13 +5,13 @@ import {
   Music2, Music, GraduationCap, Users, MessageCircle, ArrowRight, ArrowLeft, Play, Pause, Globe2, Compass,
   Pencil, Plus, Trash2, Home, Upload, Eye, EyeOff, ChevronLeft,
   Calendar, CreditCard, Video, Link2, Clock, Bell,
-  Map, BookOpen, ListChecks, LayoutList, Megaphone, Check as CheckIcon, ShieldCheck, FileText,
+  Map, BookOpen, ListChecks, LayoutList, Megaphone, Check as CheckIcon, ShieldCheck, FileText, Lock,
 } from "lucide-react";
 import { useAuth } from "./contexts/AuthContext";
 import { supabase } from "./lib/supabase";
 import { toDbProfile, fromDbProfile } from "./lib/profiles";
 import L from "leaflet";
-import { MapContainer, TileLayer, Marker, Tooltip } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Tooltip, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
 /* ---------------------------------------------------------------- */
@@ -708,7 +708,7 @@ function consPinIcon({ active, hasStudents, hasTeacher }) {
   });
 }
 
-function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", interactive = false, flatTop = false }) {
+function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", interactive = false, flatTop = false, onOpenStudent, canViewRoster = false, onLockedClick }) {
   const allStudents = Object.values(studentsByCons).flat();
   const totalJoined = allStudents.length;
   const totalTeachers = allStudents.filter(s => s.teaching && s.teaching.open).length;
@@ -760,6 +760,7 @@ function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", inter
           const n = (studentsByCons[cons.id] || []).length;
           if (n === 0) return null;
           const active = selectedId === cons.id;
+          const roster = studentsByCons[cons.id] || [];
           return (
             <Marker
               key={cons.id}
@@ -774,6 +775,69 @@ function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", inter
                   {cons.city}, {cons.country} · {n} student{n === 1 ? "" : "s"}
                 </span>
               </Tooltip>
+              {onOpenStudent && (
+                <Popup maxWidth={300} minWidth={260} closeButton autoPan>
+                  {!canViewRoster ? (
+                    <div style={{ fontFamily: FONT_BODY, minHeight: 100, display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 8, padding: "2px 0" }}>
+                      <Lock size={16} color={C.ivoryDim} />
+                      <p style={{ fontSize: 12, color: C.ivoryDim, margin: 0 }}>Sign up to see who studies here</p>
+                      <button
+                        onClick={() => onLockedClick && onLockedClick()}
+                        style={{ fontSize: 12, fontWeight: 700, color: C.brassText, background: C.brass, border: "none", borderRadius: 8, padding: "6px 12px", cursor: "pointer" }}
+                      >
+                        Create an account
+                      </button>
+                    </div>
+                  ) : (
+                    <div style={{ fontFamily: FONT_BODY, minWidth: 230 }}>
+                      <div style={{ borderBottom: `1px solid ${C.inkLine}`, paddingBottom: 8, marginBottom: 8 }}>
+                        <p style={{ fontSize: 13, fontWeight: 600, color: C.ivory, margin: 0 }}>{cons.short}</p>
+                        <p style={{ fontSize: 11, color: C.ivoryDim, margin: "2px 0 0" }}>{roster.length} student{roster.length === 1 ? "" : "s"}</p>
+                      </div>
+                      {roster.length === 0 ? (
+                        <p style={{ fontSize: 12, color: C.ivoryDim, margin: 0 }}>No students yet.</p>
+                      ) : (
+                        <div className="lg-scroll" style={{ maxHeight: 220, overflowY: "auto" }}>
+                          {[...roster]
+                            .sort((a, b) => Number(!!b.teaching?.open) - Number(!!a.teaching?.open))
+                            .map((s) => (
+                              <button
+                                key={s.id}
+                                onClick={() => onOpenStudent(s.id)}
+                                style={{
+                                  width: "100%", textAlign: "left", display: "flex", alignItems: "center", gap: 10,
+                                  padding: "7px 4px", background: "transparent", border: "none", cursor: "pointer", borderRadius: 8,
+                                }}
+                                onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(10,37,64,0.04)")}
+                                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                              >
+                                <Avatar name={s.name} id={s.id} size={32} photoUrl={s.photoUrl} online={s.online} />
+                                <div className="min-w-0">
+                                  <p style={{ fontSize: 13, fontWeight: 600, color: C.ivory, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                    {s.name}
+                                  </p>
+                                  {s.teaching?.open ? (
+                                    <p style={{ margin: 0, display: "flex", alignItems: "center", gap: 6 }}>
+                                      <span style={{ fontSize: 12, fontWeight: 700, color: C.brassLabel }}>{s.instrument}</span>
+                                      <span style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase", background: C.brass, color: C.brassText, padding: "1px 6px", borderRadius: 999 }}>
+                                        teaches
+                                      </span>
+                                      {s.teaching.price != null && (
+                                        <span style={{ fontSize: 11, color: C.ivoryDim }}>· €{s.teaching.price}</span>
+                                      )}
+                                    </p>
+                                  ) : (
+                                    <p style={{ fontSize: 11, color: C.ivoryDim, fontWeight: 400, margin: 0 }}>{s.instrument}</p>
+                                  )}
+                                </div>
+                              </button>
+                            ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </Popup>
+              )}
             </Marker>
           );
         })}
@@ -1305,6 +1369,13 @@ export default function App() {
         .artium-map .leaflet-control-attribution { display: none !important; }
         .artium-map .leaflet-tooltip { background: #FFFFFF !important; border: 1px solid #E6EBF1 !important; color: #0A2540 !important; border-radius: 10px !important; box-shadow: 0 4px 20px rgba(10,37,64,0.12) !important; padding: 8px 14px !important; font-family: Inter, sans-serif !important; font-size: 13px !important; }
         .artium-map .leaflet-tooltip-top:before { border-top-color: #E6EBF1 !important; }
+        .artium-map .leaflet-popup-content-wrapper { background: #FFFFFF !important; border: 1px solid #E6EBF1 !important; border-radius: 12px !important; box-shadow: 0 4px 20px rgba(10,37,64,0.12) !important; padding: 0 !important; }
+        /* width:auto overrides the inline width Leaflet computes, which also
+           defeats its minWidth prop — so the floor has to be set here too, or
+           the short locked-state card collapses to a narrow column. */
+        .artium-map .leaflet-popup-content { margin: 10px 12px !important; width: auto !important; min-width: 232px !important; font-family: Inter, sans-serif !important; }
+        .artium-map .leaflet-popup-tip { background: #FFFFFF !important; border: 1px solid #E6EBF1 !important; }
+        .artium-map .leaflet-popup-close-button { color: #425466 !important; }
         .artium-pin { background: transparent !important; border: none !important; }
 
         .artium-tri { position: relative; width: 760px; height: 680px; }
@@ -1457,6 +1528,11 @@ export default function App() {
                 isGuest={!myProfile}
                 onGuestClick={() => setShowGuestPrompt(true)}
                 onBack={goHome}
+                // Unapproved students are routed to the pendingReview screen and
+                // never reach the map at all, so the approved check here is
+                // belt-and-braces — the popup's locked state shouldn't normally
+                // be reachable by a signed-in student.
+                canViewRoster={!!myProfile && authProfile?.approved !== false}
               />
             </>
           )}
@@ -2610,14 +2686,17 @@ function SignupPromptModal({ onClose, onSignup }) {
   );
 }
 
-function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId, onOpenStudent, isGuest, onGuestClick, onBack }) {
+function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId, onOpenStudent, isGuest, onGuestClick, onBack, canViewRoster }) {
   const cons = CONSERVATORIES.find((c) => c.id === selectedConsId);
   const roster = selectedConsId ? studentsByCons[selectedConsId] || [] : [];
   return (
     <div className="lg-split-map h-full">
       <div style={{ background: C.inkSoft }}>
         <MapTitle />
-        <WorldMap selectedId={selectedConsId} onSelect={setSelectedConsId} studentsByCons={studentsByCons} height={520} interactive />
+        <WorldMap
+          selectedId={selectedConsId} onSelect={setSelectedConsId} studentsByCons={studentsByCons} height={520} interactive
+          onOpenStudent={onOpenStudent} canViewRoster={canViewRoster} onLockedClick={onGuestClick}
+        />
       </div>
       <div className="lg-scroll overflow-y-auto" style={{ borderLeft: `1px solid ${C.inkLine}`, maxHeight: 600 }}>
         {!cons ? (
