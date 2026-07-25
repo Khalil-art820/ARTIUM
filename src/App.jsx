@@ -1246,25 +1246,25 @@ export default function App() {
         .artium-map .leaflet-tooltip-top:before { border-top-color: #E6EBF1 !important; }
         .artium-pin { background: transparent !important; border: none !important; }
 
-        .artium-tri { position: relative; width: 760px; height: 630px; }
+        .artium-tri { position: relative; width: 760px; height: 680px; }
         .artium-tri > .artium-tri-top { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 260px; }
-        .artium-tri > .artium-tri-left { position: absolute; top: 320px; left: 0; width: 230px; }
-        .artium-tri > .artium-tri-right { position: absolute; top: 320px; right: 0; width: 230px; }
+        .artium-tri > .artium-tri-left { position: absolute; top: 345px; left: 0; width: 230px; }
+        .artium-tri > .artium-tri-right { position: absolute; top: 345px; right: 0; width: 230px; }
         .artium-tri > .artium-tri-arrows { position: absolute; inset: 0; pointer-events: none; }
 
-        .artium-gate-circle { width: 180px; height: 180px; }
+        .artium-gate-circle { width: 202px; height: 202px; }
         .artium-gate-title { font-size: 15px; }
         .artium-gate-sub { font-size: 12px; }
         .artium-gate-desc { font-size: 12px; }
 
         @media (max-width: 820px) {
-          .artium-tri { width: 320px; height: 500px; }
+          .artium-tri { width: 320px; height: 530px; }
           .artium-tri > .artium-tri-top { width: 130px; }
-          .artium-tri > .artium-tri-left { top: 255px; width: 140px; }
-          .artium-tri > .artium-tri-right { top: 255px; width: 140px; }
-          .artium-tri .artium-gate-circle { width: 96px; height: 96px; box-shadow: 0 0 0 3px #C9A24B, 0 6px 20px rgba(10,37,64,0.14); }
-          .artium-tri .artium-gate-icon > img { width: 29px !important; height: 29px !important; }
-          .artium-tri .artium-gate-icon > svg { width: 26px; height: 26px; }
+          .artium-tri > .artium-tri-left { top: 272px; width: 140px; }
+          .artium-tri > .artium-tri-right { top: 272px; width: 140px; }
+          .artium-tri .artium-gate-circle { width: 108px; height: 108px; box-shadow: 0 0 0 3px #C9A24B, 0 6px 20px rgba(10,37,64,0.14); }
+          .artium-tri .artium-gate-icon > img { width: 32px !important; height: 32px !important; }
+          .artium-tri .artium-gate-icon > svg { width: 29px; height: 29px; }
           .artium-tri .artium-gate-title { font-size: 11.5px; }
           .artium-tri .artium-gate-sub { font-size: 9.5px; }
           .artium-tri .artium-gate-desc { font-size: 9.5px; }
@@ -3152,25 +3152,33 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
         {triangle ? (
           <div className="artium-tri">
             <div className="artium-tri-top">{studentCard}</div>
-            <svg className="artium-tri-arrows artium-tri-arrows-wide" viewBox="0 0 760 630" width="100%" height="100%" fill="none" aria-hidden="true">
+            {/* Every arrow is two-way: `auto-start-reverse` lets one marker serve
+                both ends, so markerStart points back down the path. */}
+            <svg className="artium-tri-arrows artium-tri-arrows-wide" viewBox="0 0 760 680" width="100%" height="100%" fill="none" aria-hidden="true">
               <defs>
-                <marker id="artium-tri-arrowhead-wide" viewBox="0 0 10 10" refX="8" refY="5" markerWidth={6} markerHeight={6} orient="auto">
+                <marker id="artium-tri-arrowhead-wide" viewBox="0 0 10 10" refX="8" refY="5" markerWidth={6} markerHeight={6} orient="auto-start-reverse">
                   <path d="M 0 0 L 10 5 L 0 10 z" fill={C.brass} />
                 </marker>
               </defs>
-              {/* Bowed outward so each curve stays clear of the top card's text block (x 250–510). */}
-              <path d="M 185 340 Q 172 190 308 162" stroke={C.brass} strokeWidth={2} strokeLinecap="round" opacity={0.6} markerEnd="url(#artium-tri-arrowhead-wide)" />
-              <path d="M 575 340 Q 588 190 452 162" stroke={C.brass} strokeWidth={2} strokeLinecap="round" opacity={0.6} markerEnd="url(#artium-tri-arrowhead-wide)" />
+              {/* Circle centres: top (380,101), left (115,446), right (645,446), outer
+                  radius 110. The two rising curves bow outward to stay clear of the top
+                  card's text block (x 250–510, from y≈220 down). */}
+              <path d="M 193 368 Q 175 225 302 179" stroke={C.brass} strokeWidth={2} strokeLinecap="round" opacity={0.6} markerStart="url(#artium-tri-arrowhead-wide)" markerEnd="url(#artium-tri-arrowhead-wide)" />
+              <path d="M 567 368 Q 585 225 458 179" stroke={C.brass} strokeWidth={2} strokeLinecap="round" opacity={0.6} markerStart="url(#artium-tri-arrowhead-wide)" markerEnd="url(#artium-tri-arrowhead-wide)" />
+              <path d="M 225 450 Q 380 480 535 450" stroke={C.brass} strokeWidth={2} strokeLinecap="round" opacity={0.6} markerStart="url(#artium-tri-arrowhead-wide)" markerEnd="url(#artium-tri-arrowhead-wide)" />
             </svg>
-            <svg className="artium-tri-arrows artium-tri-arrows-narrow" viewBox="0 0 320 500" width="100%" height="100%" fill="none" aria-hidden="true">
+            <svg className="artium-tri-arrows artium-tri-arrows-narrow" viewBox="0 0 320 530" width="100%" height="100%" fill="none" aria-hidden="true">
               <defs>
-                <marker id="artium-tri-arrowhead-narrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth={5} markerHeight={5} orient="auto">
+                <marker id="artium-tri-arrowhead-narrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth={5} markerHeight={5} orient="auto-start-reverse">
                   <path d="M 0 0 L 10 5 L 0 10 z" fill={C.brass} />
                 </marker>
               </defs>
-              {/* Bowed outward so each curve routes around the outside of the top card's text block (x 95–225 from y≈106 downward). */}
-              <path d="M 30 263 Q 26 150 120 88" stroke={C.brass} strokeWidth={1.6} strokeLinecap="round" opacity={0.6} markerEnd="url(#artium-tri-arrowhead-narrow)" />
-              <path d="M 290 263 Q 294 150 200 88" stroke={C.brass} strokeWidth={1.6} strokeLinecap="round" opacity={0.6} markerEnd="url(#artium-tri-arrowhead-narrow)" />
+              {/* Circle centres: top (160,54), left (70,326), right (250,326), outer
+                  radius 61. The rising curves route around the outside of the top card's
+                  text block (x 95–225, from y≈118 down). */}
+              <path d="M 27 283 Q 24 172 117 97" stroke={C.brass} strokeWidth={1.6} strokeLinecap="round" opacity={0.6} markerStart="url(#artium-tri-arrowhead-narrow)" markerEnd="url(#artium-tri-arrowhead-narrow)" />
+              <path d="M 293 283 Q 296 172 203 97" stroke={C.brass} strokeWidth={1.6} strokeLinecap="round" opacity={0.6} markerStart="url(#artium-tri-arrowhead-narrow)" markerEnd="url(#artium-tri-arrowhead-narrow)" />
+              <path d="M 131 330 Q 160 344 189 330" stroke={C.brass} strokeWidth={1.6} strokeLinecap="round" opacity={0.6} markerStart="url(#artium-tri-arrowhead-narrow)" markerEnd="url(#artium-tri-arrowhead-narrow)" />
             </svg>
             <div className="artium-tri-left">{learnerCard}</div>
             <div className="artium-tri-right">{studentNoEmailCard}</div>
