@@ -264,6 +264,17 @@ const CURTIS_MOCK_STUDENTS = [
   { id: "curtis-hanne", name: "Hanne Voss", instrument: "Percussion", conservatoryId: "curtis", year: "3rd year", bio: "Timpani principally, marimba when nobody is looking.", tastes: ["Beethoven", "Brahms", "Classical Era"], pieces: [{ title: "Symphony No. 9, timpani excerpts", composer: "Beethoven" }], videoLink: "", top: "My tuning between movements is quick and accurate now.", flop: "Still over-playing in the loud tutti passages.", online: true, teaching: { open: true, mode: "physical", price: "37" } },
 ];
 
+/* ---------------------------------------------------------------- */
+/* DEMO PERSONAS — one per signup route, so each can be walked from  */
+/* the entry gate. Both students are approved with full access; the  */
+/* only difference between them is how they proved enrolment.        */
+/* ---------------------------------------------------------------- */
+// Keeps the id "demo-teacher": SAMPLE_CONVERSATIONS, TEACHING_SEED and the
+// seeded learner requests all key off it.
+const DEMO_STUDENT_EMAIL = { id: "demo-teacher", name: "Demo Teacher", instrument: "Piano", conservatoryId: "juilliard", year: "Final year", bio: "Demo account for testing teacher flows.", tastes: ["Chopin", "Debussy"], pieces: [{ title: "Ballade No. 1", composer: "Chopin" }], videoLink: "", top: "", flop: "", photoUrl: null, coverPhotoUrl: null, conservatoryEmail: "demo@juilliard.edu", conservatoryVerified: true, teaching: { open: true, mode: "online", price: "60" }, status: "approved", online: true };
+const DEMO_STUDENT_DOC = { id: "demo-student-doc", name: "Demo Student (no email)", instrument: "Cello", conservatoryId: "curtis", year: "3rd year", bio: "Demo account for the document-verified signup route.", tastes: ["Bach", "Brahms"], pieces: [{ title: "Cello Suite No. 3, BWV 1009", composer: "Bach" }], videoLink: "", top: "", flop: "", photoUrl: null, coverPhotoUrl: null, conservatoryEmail: "", conservatoryVerified: false, teaching: { open: true, mode: "both", price: "45" }, status: "approved", online: true };
+const DEMO_TEACHER_2 = { id: "demo-teacher-2", name: "Sophie Renard", instrument: "Violin", conservatoryId: "paris", year: "3rd year", bio: "Violin teacher based in Paris.", tastes: ["Bach", "Mozart"], pieces: [{ title: "Sonata No. 1", composer: "Bach" }], videoLink: "", top: "", flop: "", photoUrl: null, coverPhotoUrl: null, teaching: { open: true, mode: "online", price: "55" }, status: "approved", online: false };
+
 const SAMPLE_CONVERSATIONS = {
   daniel: [
     { from: "them", text: "Hey! Caught the clip of your Ballade No. 1 on your profile — that coda is brutal." },
@@ -1048,20 +1059,20 @@ export default function App() {
     // Restore demo session on refresh (demo users have no Supabase session)
     if (!authProfile && !authUser) {
       const demo = localStorage.getItem("artium_demo_session");
-      if (demo === "teacher") {
-        const demoProfile = { id: "demo-teacher", name: "Demo Teacher", instrument: "Piano", conservatoryId: "juilliard", year: "Final year", bio: "Demo account for testing teacher flows.", tastes: ["Chopin", "Debussy"], pieces: [{ title: "Ballade No. 1", composer: "Chopin" }], videoLink: "", top: "", flop: "", photoUrl: null, coverPhotoUrl: null, teaching: { open: true, mode: "online", price: "60" }, status: "approved", online: true };
-        setMyProfile(demoProfile);
-        setStudents((arr) => arr.some((s) => s.id === "demo-teacher") ? arr : [...arr, demoProfile]);
-        seedDemoLearner("demo-teacher");
+      // "teacher" is the value this key held before there were three personas;
+      // sessions stored under it are still out there, so it stays accepted.
+      if (demo === "teacher" || demo === "student-email" || demo === "student-doc") {
+        const profile = demo === "student-doc" ? DEMO_STUDENT_DOC : DEMO_STUDENT_EMAIL;
+        setMyProfile(profile);
+        setStudents((arr) => arr.some((s) => s.id === profile.id) ? arr : [...arr, profile]);
+        seedDemoLearner(profile.id);
         const savedTab = localStorage.getItem("artium_app_tab") || "map";
         setScreen("app"); setAppTab(savedTab);
       } else if (demo === "learner") {
         setLearnerProfile({ name: "Demo Learner", location: "Paris", instrument: "Piano", bio: "Amateur pianist exploring lessons." });
-        const demoTeacher = { id: "demo-teacher", name: "Demo Teacher", instrument: "Piano", conservatoryId: "juilliard", year: "Final year", bio: "Demo account for testing teacher flows.", tastes: ["Chopin", "Debussy"], pieces: [{ title: "Ballade No. 1", composer: "Chopin" }], videoLink: "", top: "", flop: "", photoUrl: null, coverPhotoUrl: null, teaching: { open: true, mode: "online", price: "60" }, status: "approved", online: true };
-        const demoTeacher2 = { id: "demo-teacher-2", name: "Sophie Renard", instrument: "Violin", conservatoryId: "paris", year: "3rd year", bio: "Violin teacher based in Paris.", tastes: ["Bach", "Mozart"], pieces: [{ title: "Sonata No. 1", composer: "Bach" }], videoLink: "", top: "", flop: "", photoUrl: null, coverPhotoUrl: null, teaching: { open: true, mode: "online", price: "55" }, status: "approved", online: false };
         setStudents((arr) => {
-          let next = arr.some((s) => s.id === "demo-teacher") ? arr : [...arr, demoTeacher];
-          next = next.some((s) => s.id === "demo-teacher-2") ? next : [...next, demoTeacher2];
+          let next = arr.some((s) => s.id === "demo-teacher") ? arr : [...arr, DEMO_STUDENT_EMAIL];
+          next = next.some((s) => s.id === "demo-teacher-2") ? next : [...next, DEMO_TEACHER_2];
           return next;
         });
         const tr = JSON.parse(localStorage.getItem("teachRequests") || "{}");
@@ -1209,19 +1220,24 @@ export default function App() {
       localStorage.setItem("incomingRequests", JSON.stringify(existing));
     }
   }
-  function enterDemoTeacher() {
-    const demo = { id: "demo-teacher", name: "Demo Teacher", instrument: "Piano", conservatoryId: "juilliard", year: "Final year", bio: "Demo account for testing teacher flows.", tastes: ["Chopin", "Debussy"], pieces: [{ title: "Ballade No. 1", composer: "Chopin" }], videoLink: "", top: "", flop: "", photoUrl: null, coverPhotoUrl: null, teaching: { open: true, mode: "online", price: "60" }, status: "approved", online: true };
-    setMyProfile(demo);
-    setStudents((arr) => arr.some((s) => s.id === "demo-teacher") ? arr : [...arr, demo]);
-    seedDemoLearner("demo-teacher");
-    localStorage.setItem("artium_demo_session", "teacher");
+  // Both student demos land in the app fully approved. What separates them is
+  // only how enrolment was proved: an institutional email vs an uploaded
+  // document. Session key is "student-email"/"student-doc"; see the restore
+  // block for why the legacy "teacher" value is still honoured.
+  function enterDemoStudent(profile, sessionKey) {
+    setMyProfile(profile);
+    setStudents((arr) => arr.some((s) => s.id === profile.id) ? arr : [...arr, profile]);
+    seedDemoLearner(profile.id);
+    localStorage.setItem("artium_demo_session", sessionKey);
     setScreen("app"); setAppTabPersist("map");
   }
+  function enterDemoStudentEmail() { enterDemoStudent(DEMO_STUDENT_EMAIL, "student-email"); }
+  function enterDemoStudentDoc() { enterDemoStudent(DEMO_STUDENT_DOC, "student-doc"); }
   function enterDemoLearner() {
     const lp = { name: "Demo Learner", location: "Paris", instrument: "Piano", bio: "Amateur pianist exploring lessons." };
     setLearnerProfile(lp);
-    const demoTeacher = { id: "demo-teacher", name: "Demo Teacher", instrument: "Piano", conservatoryId: "juilliard", year: "Final year", bio: "Demo account for testing teacher flows.", tastes: ["Chopin", "Debussy"], pieces: [{ title: "Ballade No. 1", composer: "Chopin" }], videoLink: "", top: "", flop: "", photoUrl: null, coverPhotoUrl: null, teaching: { open: true, mode: "online", price: "60" }, status: "approved", online: true };
-    const demoTeacher2 = { id: "demo-teacher-2", name: "Sophie Renard", instrument: "Violin", conservatoryId: "paris", year: "3rd year", bio: "Violin teacher based in Paris.", tastes: ["Bach", "Mozart"], pieces: [{ title: "Sonata No. 1", composer: "Bach" }], videoLink: "", top: "", flop: "", photoUrl: null, coverPhotoUrl: null, teaching: { open: true, mode: "online", price: "55" }, status: "approved", online: false };
+    const demoTeacher = DEMO_STUDENT_EMAIL;
+    const demoTeacher2 = DEMO_TEACHER_2;
     setStudents((arr) => {
       let next = arr.some((s) => s.id === "demo-teacher") ? arr : [...arr, demoTeacher];
       next = next.some((s) => s.id === "demo-teacher-2") ? next : [...next, demoTeacher2];
@@ -1475,7 +1491,7 @@ export default function App() {
         />
       )}
 
-      {screen === "entry" && <EntryGate onLearner={chooseLearner} onStudent={() => chooseStudent("otp")} onStudentNoEmail={() => chooseStudent("document")} onLogin={startLogin} learnerProfile={learnerProfile} learnerLoggedOut={learnerLoggedOut} studentLoggedIn={!!myProfile} musicOn={musicPlaying} onMusicToggle={toggleMusic} onlineCount={onlineCount} onDemoTeacher={enterDemoTeacher} onDemoLearner={enterDemoLearner} />}
+      {screen === "entry" && <EntryGate onLearner={chooseLearner} onStudent={() => chooseStudent("otp")} onStudentNoEmail={() => chooseStudent("document")} onLogin={startLogin} learnerProfile={learnerProfile} learnerLoggedOut={learnerLoggedOut} studentLoggedIn={!!myProfile} musicOn={musicPlaying} onMusicToggle={toggleMusic} onlineCount={onlineCount} onDemoStudentEmail={enterDemoStudentEmail} onDemoStudentDoc={enterDemoStudentDoc} onDemoLearner={enterDemoLearner} />}
       {screen === "learnerSignup" && <LearnerSignup onSubmit={submitLearner} onBack={backToEntry} onLogin={startLogin} error={authError} googleName={learnerGoogleName} />}
       {screen === "learnerMap" && (
         <LearnerScreen
@@ -3279,7 +3295,7 @@ function GateCard({ onClick, bg, bgPos, overlay, icon, title, sub, desc, descWid
   );
 }
 
-function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerProfile, learnerLoggedOut, studentLoggedIn, musicOn, onMusicToggle, onlineCount, onDemoTeacher, onDemoLearner }) {
+function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerProfile, learnerLoggedOut, studentLoggedIn, musicOn, onMusicToggle, onlineCount, onDemoStudentEmail, onDemoStudentDoc, onDemoLearner }) {
   const singleCard = !!learnerProfile || learnerLoggedOut || studentLoggedIn;
   const showLearner = !studentLoggedIn;
   const showStudent = !singleCard || studentLoggedIn;
@@ -3396,12 +3412,16 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
         {!studentLoggedIn && !learnerProfile && (
           <div style={{ marginTop: 48, textAlign: "center" }}>
             <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: C.ivoryDim, marginBottom: 12 }}>Demo access</p>
-            <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
-              <button onClick={onDemoTeacher} style={{ padding: "8px 18px", borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: "pointer", background: "transparent", border: `1.5px solid ${C.inkLine}`, color: C.ivoryDim }}>
-                Enter as teacher
-              </button>
+            {/* One per signup route, in the same order as the circles above. */}
+            <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap", rowGap: 8 }}>
               <button onClick={onDemoLearner} style={{ padding: "8px 18px", borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: "pointer", background: "transparent", border: `1.5px solid ${C.inkLine}`, color: C.ivoryDim }}>
-                Enter as learner
+                Learner
+              </button>
+              <button onClick={onDemoStudentEmail} style={{ padding: "8px 18px", borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: "pointer", background: "transparent", border: `1.5px solid ${C.inkLine}`, color: C.ivoryDim }}>
+                Student · with email
+              </button>
+              <button onClick={onDemoStudentDoc} style={{ padding: "8px 18px", borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: "pointer", background: "transparent", border: `1.5px solid ${C.inkLine}`, color: C.ivoryDim }}>
+                Student · no email
               </button>
             </div>
           </div>
