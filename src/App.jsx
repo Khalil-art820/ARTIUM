@@ -746,6 +746,11 @@ function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", inter
   const totalJoined = allStudents.length;
   const totalTeachers = allStudents.filter(s => s.teaching && s.teaching.open).length;
   const pinnedCons = CONSERVATORIES.filter(c => (studentsByCons[c.id] || []).length > 0).length;
+  // At zoom z the world is 256 * 2^z px tall, so a container taller than that
+  // shows bare background above and below it. Derive the floor from the height
+  // actually asked for instead of hardcoding zoom 1, which only ever suited a
+  // map around 512px tall.
+  const fitZoom = typeof height === "number" ? Math.max(1, Math.log2((height + 2) / 256)) : 1;
   return (
     <div className="artium-map" style={{ width: "100%", height, position: "relative", ...(flatTop ? { borderRadius: 0 } : {}) }}>
       <div style={{
@@ -779,9 +784,9 @@ function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", inter
       </div>
       <MapContainer
         center={[24, 14]}
-        zoom={1}
+        zoom={fitZoom}
         zoomSnap={0.5}
-        minZoom={1}
+        minZoom={fitZoom}
         maxZoom={9}
         maxBounds={[[-85, -200], [85, 200]]}
         maxBoundsViscosity={1}
@@ -841,7 +846,7 @@ function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", inter
                       {roster.length === 0 ? (
                         <p style={{ fontSize: 12, color: C.ivoryDim, margin: 0 }}>No students yet.</p>
                       ) : (
-                        <div className="lg-scroll" style={{ maxHeight: 110, overflowY: "auto" }}>
+                        <div className="lg-scroll" style={{ maxHeight: 165, overflowY: "auto" }}>
                           {[...roster]
                             .sort((a, b) => Number(!!b.teaching?.open) - Number(!!a.teaching?.open))
                             .map((s) => (
@@ -2738,11 +2743,11 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
       <div style={{ background: C.inkSoft }}>
         <MapTitle />
         <WorldMap
-          selectedId={selectedConsId} onSelect={setSelectedConsId} studentsByCons={studentsByCons} height={520} interactive
+          selectedId={selectedConsId} onSelect={setSelectedConsId} studentsByCons={studentsByCons} height={640} interactive
           onOpenStudent={onOpenStudent} canViewRoster={canViewRoster} onLockedClick={onGuestClick}
         />
       </div>
-      <div className="lg-scroll overflow-y-auto" style={{ borderLeft: `1px solid ${C.inkLine}`, maxHeight: 600 }}>
+      <div className="lg-scroll overflow-y-auto" style={{ borderLeft: `1px solid ${C.inkLine}`, maxHeight: 720 }}>
         {!cons ? (
           <div className="p-6">
             <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.ivoryDim }}>{CONSERVATORIES.length} CONSERVATORIES</p>
