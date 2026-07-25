@@ -231,6 +231,39 @@ const SAMPLE_STUDENTS = [
   { id: "isla", name: "Isla Cooper", instrument: "Piano", conservatoryId: "sydney", year: "2nd year", bio: "Trying to find the line between precision and feel.", tastes: ["Ravel", "Debussy", "Prokofiev", "20th Century"], pieces: [{ title: "Sonatine", composer: "Ravel" }], videoLink: "https://instagram.com/isla.c.piano", top: "Finished my end-of-year recital and the Sonatine went better than I'd hoped.", flop: "Still chasing the right touch for the second movement's habanera rhythm.", online: true },
 ];
 
+/* ---------------------------------------------------------------- */
+/* MOCK COHORT — a full 25-student roster at Curtis, purely to see   */
+/* how the map pin popup and the sidebar behave at volume. Delete    */
+/* this array and its spread in the students useState to remove.     */
+/* ---------------------------------------------------------------- */
+const CURTIS_MOCK_STUDENTS = [
+  { id: "curtis-amara", name: "Amara Okafor", instrument: "Violin", conservatoryId: "curtis", year: "3rd year", bio: "Chasing a bigger sound without losing the sweetness up high.", tastes: ["Brahms", "Bach", "Romantic Era"], pieces: [{ title: "Violin Concerto in D, Op. 77", composer: "Brahms" }], videoLink: "", top: "The double stops in the first movement finally ring instead of scratch.", flop: "Intonation in the cadenza still drifts when I get nervous.", online: true, teaching: { open: true, mode: "both", price: "42" } },
+  { id: "curtis-sebastian", name: "Sebastián Ruiz", instrument: "Cello", conservatoryId: "curtis", year: "Masters, 1st year", bio: "Bach suites every morning, everything else after.", tastes: ["Bach", "Baroque", "Schumann"], pieces: [{ title: "Cello Suite No. 5, BWV 1011", composer: "Bach" }], videoLink: "", top: "Played the Sarabande from memory in class and nobody breathed.", flop: "The gigue keeps running away from me.", online: false, teaching: { open: true, mode: "online", price: "48" } },
+  { id: "curtis-nora", name: "Nora Lindqvist", instrument: "Viola", conservatoryId: "curtis", year: "2nd year", bio: "Viola jokes welcome, I have better ones.", tastes: ["Brahms", "Schubert", "Romantic Era"], pieces: [{ title: "Sonata in F minor, Op. 120 No. 1", composer: "Brahms" }], videoLink: "", top: "Found a bow that finally suits my instrument.", flop: "Shifting into the top register still feels like guesswork.", online: true },
+  { id: "curtis-kwame", name: "Kwame Boateng", instrument: "Double Bass", conservatoryId: "curtis", year: "4th year", bio: "Orchestral excerpts by day, jazz basement by night.", tastes: ["Beethoven", "Prokofiev", "20th Century"], pieces: [{ title: "Symphony No. 5, bass excerpts", composer: "Beethoven" }], videoLink: "", top: "Nailed the trio section from the Scherzo at audition tempo.", flop: "My thumb position work is still inconsistent.", online: true, teaching: { open: true, mode: "physical", price: "35" } },
+  { id: "curtis-yuki", name: "Yuki Tanaka", instrument: "Flute", conservatoryId: "curtis", year: "1st year", bio: "Long tones are the whole personality, apparently.", tastes: ["Debussy", "Ravel", "Impressionism"], pieces: [{ title: "Syrinx", composer: "Debussy" }], videoLink: "", top: "Syrinx felt genuinely free for the first time this week.", flop: "Running out of air in the long phrases.", online: false, teaching: { open: true, mode: "online", price: "40" } },
+  { id: "curtis-marta", name: "Marta Kowalczyk", instrument: "Clarinet", conservatoryId: "curtis", year: "3rd year", bio: "Reed hoarder. Ask me about cane, at your peril.", tastes: ["Mozart", "Brahms", "Classical Era"], pieces: [{ title: "Clarinet Concerto, K. 622", composer: "Mozart" }], videoLink: "", top: "Finally have a reed that survives more than one rehearsal.", flop: "The Adagio still sounds careful rather than simple.", online: true },
+  { id: "curtis-idris", name: "Idris Rahman", instrument: "Oboe", conservatoryId: "curtis", year: "2nd year", bio: "Half my practice time is making reeds. The other half is regret.", tastes: ["Bach", "Baroque", "Mozart"], pieces: [{ title: "Oboe Concerto in D minor", composer: "Marcello" }], videoLink: "", top: "The Adagio finally sings instead of just sounding.", flop: "Reed making. Always the reed making.", online: false },
+  { id: "curtis-chiara", name: "Chiara Bellini", instrument: "Bassoon", conservatoryId: "curtis", year: "Masters, 2nd year", bio: "The bassoon is a tenor, not a punchline.", tastes: ["Mozart", "Prokofiev", "20th Century"], pieces: [{ title: "Bassoon Concerto, K. 191", composer: "Mozart" }], videoLink: "", top: "Got through the whole concerto without a single cracked note.", flop: "Low register response is sluggish in a cold hall.", online: true, teaching: { open: true, mode: "both", price: "36" } },
+  { id: "curtis-tomas", name: "Tomás Silva", instrument: "Trumpet", conservatoryId: "curtis", year: "1st year", bio: "Working on playing quietly, which nobody warned me was the hard part.", tastes: ["Bach", "20th Century"], pieces: [{ title: "Brandenburg Concerto No. 2", composer: "Bach" }], videoLink: "", top: "Hit the high register cleanly three days running.", flop: "Endurance drops off badly in the last movement.", online: true },
+  { id: "curtis-annika", name: "Annika Hoffmann", instrument: "Horn", conservatoryId: "curtis", year: "4th year", bio: "Chasing a warm sound that still carries over an orchestra.", tastes: ["Brahms", "Schumann", "Romantic Era"], pieces: [{ title: "Horn Trio, Op. 40", composer: "Brahms" }], videoLink: "", top: "The Adagio mesto came together in rehearsal last night.", flop: "Still cracking the exposed entrance in the finale.", online: false, teaching: { open: true, mode: "physical", price: "44" } },
+  { id: "curtis-diego", name: "Diego Fernández", instrument: "Trombone", conservatoryId: "curtis", year: "3rd year", bio: "Legato on a slide instrument is a lifelong argument.", tastes: ["Mozart", "20th Century"], pieces: [{ title: "Tuba mirum, from Requiem", composer: "Mozart" }], videoLink: "", top: "My slide legato is finally starting to sound like a wind player.", flop: "Soft high entrances are still a coin flip.", online: true },
+  { id: "curtis-leila", name: "Leila Haddad", instrument: "Harp", conservatoryId: "curtis", year: "2nd year", bio: "Yes, I have to carry it. No, it does not fit in an elevator.", tastes: ["Debussy", "Ravel", "Impressionism"], pieces: [{ title: "Danses sacrée et profane", composer: "Debussy" }], videoLink: "", top: "Pedal changes in the Danse profane are finally automatic.", flop: "Buzzing strings in the low register are driving me mad.", online: true, teaching: { open: true, mode: "both", price: "55" } },
+  { id: "curtis-ruth", name: "Ruth Adeyemi", instrument: "Percussion", conservatoryId: "curtis", year: "1st year", bio: "Four mallets, endless patience, one very tired practice room.", tastes: ["Messiaen", "20th Century"], pieces: [{ title: "Rebonds B", composer: "Xenakis" }], videoLink: "", top: "Memorised the whole of Rebonds B this month.", flop: "My roll is still uneven on the softest dynamics.", online: false },
+  { id: "curtis-jonas", name: "Jonas Berg", instrument: "Organ", conservatoryId: "curtis", year: "Masters, 1st year", bio: "Registration is composition. I will not be taking questions.", tastes: ["Bach", "Messiaen", "Baroque"], pieces: [{ title: "Passacaglia in C minor, BWV 582", composer: "Bach" }], videoLink: "", top: "Found a registration for the Passacaglia that finally builds properly.", flop: "Pedal accuracy falls apart in the final variations.", online: true },
+  { id: "curtis-sofia", name: "Sofia Papadopoulos", instrument: "Voice", conservatoryId: "curtis", year: "3rd year", bio: "Lieder over opera, quietly and unfashionably.", tastes: ["Schubert", "Schumann", "Romantic Era"], pieces: [{ title: "Frauenliebe und -leben", composer: "Schumann" }], videoLink: "", top: "The last song finally sits in the voice without pushing.", flop: "German diction still slows my line down.", online: true, teaching: { open: true, mode: "online", price: "50" } },
+  { id: "curtis-hector", name: "Héctor Álvarez", instrument: "Guitar", conservatoryId: "curtis", year: "2nd year", bio: "Transcribing lute music until somebody stops me.", tastes: ["Bach", "Baroque"], pieces: [{ title: "Lute Suite No. 4, BWV 1006a", composer: "Bach" }], videoLink: "", top: "The Prelude is up to tempo and still clean.", flop: "Nail shape is a constant, tedious science experiment.", online: false, teaching: { open: true, mode: "both", price: "33" } },
+  { id: "curtis-mei", name: "Mei Lin", instrument: "Piano", conservatoryId: "curtis", year: "4th year", bio: "Accompanying half the school, which is the best ear training there is.", tastes: ["Schubert", "Brahms", "Romantic Era"], pieces: [{ title: "Four Impromptus, D. 899", composer: "Schubert" }], videoLink: "", top: "Sight-read an entire song recital and survived.", flop: "The third Impromptu still sounds rushed under pressure.", online: true, teaching: { open: true, mode: "both", price: "46" } },
+  { id: "curtis-oscar", name: "Oscar Dubois", instrument: "Violin", conservatoryId: "curtis", year: "1st year", bio: "Scales, then Ysaÿe, then more scales.", tastes: ["Bach", "20th Century"], pieces: [{ title: "Sonata No. 3 'Ballade'", composer: "Ysaÿe" }], videoLink: "", top: "The Ballade's opening recitative finally has shape.", flop: "My left hand tenses up the moment anyone listens.", online: false },
+  { id: "curtis-priya", name: "Priya Nair", instrument: "Cello", conservatoryId: "curtis", year: "2nd year", bio: "Chamber music is the reason I practise at all.", tastes: ["Schubert", "Brahms", "Romantic Era"], pieces: [{ title: "String Quintet in C, D. 956", composer: "Schubert" }], videoLink: "", top: "Our quartet got through the Adagio without anyone rushing.", flop: "Vibrato still narrows when the writing gets high.", online: true },
+  { id: "curtis-finn", name: "Finn O'Sullivan", instrument: "Viola", conservatoryId: "curtis", year: "3rd year", bio: "Inner voices are where the harmony actually happens.", tastes: ["Bach", "Brahms", "Baroque"], pieces: [{ title: "Cello Suite No. 1 (viola transcription)", composer: "Bach" }], videoLink: "", top: "Transcribed the whole first suite and it suits the viola better.", flop: "String crossings in the Courante are still uneven.", online: true, teaching: { open: true, mode: "physical", price: "38" } },
+  { id: "curtis-zara", name: "Zara Mahmood", instrument: "Flute", conservatoryId: "curtis", year: "Masters, 2nd year", bio: "Contemporary repertoire and extended techniques, mostly.", tastes: ["Messiaen", "20th Century", "Debussy"], pieces: [{ title: "Le merle noir", composer: "Messiaen" }], videoLink: "", top: "Multiphonics are finally reliable rather than lucky.", flop: "The fast final section is still a blur.", online: false },
+  { id: "curtis-nikolai", name: "Nikolai Petrov", instrument: "Clarinet", conservatoryId: "curtis", year: "4th year", bio: "Orchestral auditions are the whole year, apparently.", tastes: ["Prokofiev", "Beethoven", "20th Century"], pieces: [{ title: "Symphony No. 5, clarinet excerpts", composer: "Prokofiev" }], videoLink: "", top: "Got a trial week with a regional orchestra.", flop: "My tone thins out at the very top of the register.", online: true, teaching: { open: true, mode: "online", price: "41" } },
+  { id: "curtis-elena", name: "Elena Rossi", instrument: "Voice", conservatoryId: "curtis", year: "1st year", bio: "Learning that singing quietly is far harder than singing loudly.", tastes: ["Mozart", "Classical Era"], pieces: [{ title: "Le nozze di Figaro, 'Porgi amor'", composer: "Mozart" }], videoLink: "", top: "Held the opening phrase in one breath at last.", flop: "The passaggio is still an obvious seam.", online: true },
+  { id: "curtis-samuel", name: "Samuel Adeleke", instrument: "Trumpet", conservatoryId: "curtis", year: "2nd year", bio: "Piccolo trumpet enthusiast, to everyone else's dismay.", tastes: ["Bach", "Baroque"], pieces: [{ title: "Cantata BWV 51", composer: "Bach" }], videoLink: "", top: "Made it through the whole cantata without splitting a note.", flop: "Piccolo intonation is unforgiving when I'm tired.", online: false },
+  { id: "curtis-hanne", name: "Hanne Voss", instrument: "Percussion", conservatoryId: "curtis", year: "3rd year", bio: "Timpani principally, marimba when nobody is looking.", tastes: ["Beethoven", "Brahms", "Classical Era"], pieces: [{ title: "Symphony No. 9, timpani excerpts", composer: "Beethoven" }], videoLink: "", top: "My tuning between movements is quick and accurate now.", flop: "Still over-playing in the loud tutti passages.", online: true, teaching: { open: true, mode: "physical", price: "37" } },
+];
+
 const SAMPLE_CONVERSATIONS = {
   daniel: [
     { from: "them", text: "Hey! Caught the clip of your Ballade No. 1 on your profile — that coda is brutal." },
@@ -766,7 +799,14 @@ function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", inter
               key={cons.id}
               position={[cons.lat, cons.lng]}
               icon={consPinIcon({ active, hasStudents: true, hasTeacher: (studentsByCons[cons.id] || []).some(s => s.teaching && s.teaching.open) })}
-              eventHandlers={{ click: () => onSelect(cons.id) }}
+              eventHandlers={{
+                click: () => onSelect(cons.id),
+                // Leaflet sizes the popup and decides how far to pan the map at
+                // open time, before React has rendered the roster into it — so a
+                // long list gets clipped off the top of the map. Re-measuring on
+                // the next tick, once the children are committed, re-pans it.
+                popupopen: (e) => setTimeout(() => e.popup.update(), 0),
+              }}
             >
               <Tooltip direction="top" offset={[0, -28]}>
                 <span style={{ fontFamily: FONT_BODY, fontWeight: 600 }}>{cons.short}</span>
@@ -794,10 +834,14 @@ function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", inter
                         <p style={{ fontSize: 13, fontWeight: 600, color: C.ivory, margin: 0 }}>{cons.short}</p>
                         <p style={{ fontSize: 11, color: C.ivoryDim, margin: "2px 0 0" }}>{roster.length} student{roster.length === 1 ? "" : "s"}</p>
                       </div>
+                      {/* The map's maxBounds stop it panning far enough to reveal
+                          a tall popup, so the list is capped at what fits above a
+                          pin rather than at a comfortable reading height. The
+                          sidebar carries the full roster. */}
                       {roster.length === 0 ? (
                         <p style={{ fontSize: 12, color: C.ivoryDim, margin: 0 }}>No students yet.</p>
                       ) : (
-                        <div className="lg-scroll" style={{ maxHeight: 220, overflowY: "auto" }}>
+                        <div className="lg-scroll" style={{ maxHeight: 110, overflowY: "auto" }}>
                           {[...roster]
                             .sort((a, b) => Number(!!b.teaching?.open) - Number(!!a.teaching?.open))
                             .map((s) => (
@@ -903,7 +947,7 @@ export default function App() {
   // the landing page first, so the choice has to outlive that detour.
   const [verifyMethod, setVerifyMethod] = useState("otp");
 
-  const [students, setStudents] = useState(() => seedTeaching(SAMPLE_STUDENTS));
+  const [students, setStudents] = useState(() => seedTeaching([...SAMPLE_STUDENTS, ...CURTIS_MOCK_STUDENTS]));
   const [myProfile, setMyProfile] = useState(null);
 
   // Returning signed-in user: load their profile and skip straight to the app
@@ -2720,7 +2764,7 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
             <button onClick={() => setSelectedConsId(null)} className="text-xs flex items-center gap-1 mb-4" style={{ color: C.ivoryDim }}><ArrowLeft size={13} /> All conservatories</button>
             <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brassLabel }}>{cons.city.toUpperCase()}, {cons.country.toUpperCase()} · @{cons.domains?.[0]}</p>
             <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600, marginTop: 4 }}>{cons.name}</h3>
-            <p className="mt-1 text-xs" style={{ color: C.ivoryDim }}>{roster.length} pianist{roster.length === 1 ? "" : "s"} on Artium</p>
+            <p className="mt-1 text-xs" style={{ color: C.ivoryDim }}>{roster.length} student{roster.length === 1 ? "" : "s"} on Artium</p>
             <div className="mt-5 flex flex-col gap-2">
               {roster.length === 0 && <p className="text-sm" style={{ color: C.ivoryDim }}>No students yet from this conservatory.</p>}
               {roster.map((s) => (
@@ -3143,7 +3187,9 @@ const TEACHING_SEED = {
 function seedTeaching(arr) {
   return arr.map((s) => ({
     ...s,
-    teaching: TEACHING_SEED[s.id] || { open: false, mode: "", price: "" },
+    // TEACHING_SEED wins, then any teaching declared on the student itself, so
+    // fixtures can carry their own rates without a second lookup table.
+    teaching: TEACHING_SEED[s.id] || s.teaching || { open: false, mode: "", price: "" },
   }));
 }
 
