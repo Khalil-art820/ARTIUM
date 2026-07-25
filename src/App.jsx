@@ -3,12 +3,10 @@ import {
   Search, Send,
   ChevronRight, Check, X, Instagram, Facebook, Youtube,
   Music2, Music, GraduationCap, Users, MessageCircle, ArrowRight, ArrowLeft, Play, Pause, Globe2, Compass,
-  Volume1, Volume2, VolumeX,
   Pencil, Plus, Trash2, Home, Upload, Eye, EyeOff, ChevronLeft,
   Calendar, CreditCard, Video, Link2, Clock, Bell,
   Map, BookOpen, ListChecks, LayoutList, Megaphone, Check as CheckIcon, ShieldCheck, FileText,
 } from "lucide-react";
-import AMBIENT_AUDIO_SRC from "./assets/ambient.mp3";
 import { useAuth } from "./contexts/AuthContext";
 import { supabase } from "./lib/supabase";
 import { toDbProfile, fromDbProfile } from "./lib/profiles";
@@ -41,6 +39,17 @@ const C = {
 const FONT_DISPLAY = "'Inter', sans-serif";
 const FONT_BODY = "'Inter', sans-serif";
 const FONT_MONO = "'ui-monospace', monospace";
+
+// Spotify playlist behind the music toggle. PLACEHOLDER: this is one of
+// Spotify's own editorial playlists, here only so the control works out of the
+// box — swap it for ours. The id is the middle part of a playlist share link,
+// https://open.spotify.com/playlist/<ID>?si=... An empty string hides the
+// music button everywhere.
+//
+// Note what the embed can and cannot do: there is no volume API, and listeners
+// who are not signed in to Spotify in the same browser get 30-second previews
+// behind a "Get Spotify" prompt rather than full tracks.
+const SPOTIFY_PLAYLIST_ID = "37i9dQZF1DX4sWSpwq3LiO";
 
 /* ---- Promote Me (aclassicaltone) ---- */
 const PROMO_PROVIDERS = [
@@ -437,60 +446,8 @@ function HomeBtn({ onClick }) {
   );
 }
 
-function MusicBtn({ playing, onToggle, audioRef }) {
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(1);
-  const [muted, setMuted] = useState(false);
-  const prevVolume = useRef(1);
-
-  useEffect(() => {
-    const el = audioRef && audioRef.current;
-    if (!el) return;
-    const onTime = () => setCurrentTime(el.currentTime);
-    const onLoaded = () => setDuration(el.duration || 0);
-    el.addEventListener("timeupdate", onTime);
-    el.addEventListener("loadedmetadata", onLoaded);
-    if (el.duration) setDuration(el.duration);
-    return () => {
-      el.removeEventListener("timeupdate", onTime);
-      el.removeEventListener("loadedmetadata", onLoaded);
-    };
-  }, [audioRef]);
-
-  function seek(e) {
-    const el = audioRef && audioRef.current;
-    if (!el || !duration) return;
-    el.currentTime = parseFloat(e.target.value);
-    setCurrentTime(parseFloat(e.target.value));
-  }
-
-  function changeVolume(e) {
-    const v = parseFloat(e.target.value);
-    setVolume(v);
-    setMuted(v === 0);
-    prevVolume.current = v > 0 ? v : prevVolume.current;
-    const el = audioRef && audioRef.current;
-    if (el) el.volume = v;
-  }
-
-  function toggleMute() {
-    const el = audioRef && audioRef.current;
-    if (muted) {
-      const restore = prevVolume.current > 0 ? prevVolume.current : 0.7;
-      setVolume(restore);
-      setMuted(false);
-      if (el) el.volume = restore;
-    } else {
-      prevVolume.current = volume > 0 ? volume : 0.7;
-      setVolume(0);
-      setMuted(true);
-      if (el) el.volume = 0;
-    }
-  }
-
-  const VolumeIcon = muted || volume === 0 ? VolumeX : volume < 0.4 ? Volume1 : Volume2;
-
+function MusicBtn({ playing, onToggle }) {
+  if (!SPOTIFY_PLAYLIST_ID) return null;
   return (
     <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(10,37,64,0.05)", borderRadius: 999, padding: "5px 10px 5px 8px", border: `1px solid ${C.inkLine}` }}>
       <button
@@ -500,16 +457,90 @@ function MusicBtn({ playing, onToggle, audioRef }) {
       >
         {playing ? <Pause size={10} color="#fff" /> : <Play size={10} color={C.ivory} />}
       </button>
-      <button onClick={toggleMute} title={muted ? "Unmute" : "Mute"} style={{ background: "none", border: "none", cursor: "pointer", color: C.ivoryDim, display: "flex", alignItems: "center", padding: 0, lineHeight: 0 }}>
-        <VolumeIcon size={13} />
+      <span style={{ fontSize: 13, color: C.ivoryDim }}>playlist</span>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------- */
+/* SPOTIFY PLAYER (Iframe API)                                       */
+/* ---------------------------------------------------------------- */
+const SPOTIFY_IFRAME_API_SRC = "https://open.spotify.com/embed/iframe-api/v1";
+
+function SpotifyPlayer({ open, controllerRef, onPlayingChange, onClose }) {
+  const mountRef = useRef(null);
+
+  useEffect(() => {
+    if (!SPOTIFY_PLAYLIST_ID) return;
+
+    let cancelled = false;
+
+    function boot(IFrameAPI) {
+      if (cancelled || !mountRef.current) return;
+      IFrameAPI.createController(
+        mountRef.current,
+        { uri: `spotify:playlist:${SPOTIFY_PLAYLIST_ID}`, width: "100%", height: 152 },
+        (controller) => {
+          if (cancelled) return;
+          controllerRef.current = controller;
+          controller.addListener("playback_update", (e) => {
+            onPlayingChange(!e.data.isPaused);
+          });
+        }
+      );
+    }
+
+    if (window.Spotify && window.Spotify.Iframe) {
+      // Already loaded by a previous mount (e.g. StrictMode double-invoke).
+      boot(window.Spotify.Iframe);
+    } else {
+      const prevReady = window.onSpotifyIframeApiReady;
+      window.onSpotifyIframeApiReady = (IFrameAPI) => {
+        boot(IFrameAPI);
+        if (typeof prevReady === "function") prevReady(IFrameAPI);
+      };
+      if (!document.querySelector(`script[src="${SPOTIFY_IFRAME_API_SRC}"]`)) {
+        const script = document.createElement("script");
+        script.src = SPOTIFY_IFRAME_API_SRC;
+        script.async = true;
+        document.body.appendChild(script);
+      }
+    }
+
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (!SPOTIFY_PLAYLIST_ID) return null;
+
+  return (
+    <div
+      style={{
+        // Anchored under the header pill that opens it, rather than floating in
+        // a corner: every bottom corner collides with the entry gate's triangle.
+        position: "fixed", top: 72, right: 16, width: 320, zIndex: 60,
+        background: "#FFFFFF", border: `1px solid ${C.inkLine}`, borderRadius: 12,
+        boxShadow: "0 8px 32px rgba(10,37,64,0.14)", padding: 8,
+        opacity: open ? 1 : 0,
+        visibility: open ? "visible" : "hidden",
+        transform: open ? "translateY(0)" : "translateY(8px)",
+        pointerEvents: open ? "auto" : "none",
+        transition: "opacity 0.15s ease, transform 0.15s ease",
+      }}
+    >
+      <button
+        onClick={onClose}
+        title="Close"
+        style={{
+          position: "absolute", top: 6, right: 6, width: 22, height: 22,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          background: "rgba(10,37,64,0.05)", border: "none", borderRadius: "50%",
+          cursor: "pointer", color: C.ivoryDim, zIndex: 1,
+        }}
+      >
+        <X size={13} />
       </button>
-      <input
-        type="range" min="0" max="1" step="0.02" value={volume}
-        onChange={changeVolume}
-        className="artium-slider"
-        style={{ width: 52, accentColor: "#888", cursor: "pointer" }}
-        title="Volume"
-      />
+      <div ref={mountRef} />
     </div>
   );
 }
@@ -986,16 +1017,14 @@ export default function App() {
   const [showGuestPrompt, setShowGuestPrompt] = useState(false);
 
   const [musicOn, setMusicOn] = useState(false);
-  const audioRef = useRef(null);
+  const [musicPlaying, setMusicPlaying] = useState(false);
+  const spotifyRef = useRef(null);
   function toggleMusic() {
-    const el = audioRef.current;
-    if (!el) return;
-    if (musicOn) {
-      el.pause();
-      setMusicOn(false);
-    } else {
-      el.play().catch(() => {});
-      setMusicOn(true);
+    if (!musicOn) setMusicOn(true);
+    try {
+      spotifyRef.current?.togglePlay();
+    } catch {
+      // Controller may not be ready yet on the very first click.
     }
   }
 
@@ -1313,7 +1342,12 @@ export default function App() {
         }
       `}</style>
 
-      <audio ref={audioRef} src={AMBIENT_AUDIO_SRC} loop preload="none" />
+      <SpotifyPlayer
+        open={musicOn}
+        controllerRef={spotifyRef}
+        onPlayingChange={setMusicPlaying}
+        onClose={() => setMusicOn(false)}
+      />
 
       {showGuestPrompt && (
         <SignupPromptModal
@@ -1322,7 +1356,7 @@ export default function App() {
         />
       )}
 
-      {screen === "entry" && <EntryGate onLearner={chooseLearner} onStudent={() => chooseStudent("otp")} onStudentNoEmail={() => chooseStudent("document")} onLogin={startLogin} learnerProfile={learnerProfile} learnerLoggedOut={learnerLoggedOut} studentLoggedIn={!!myProfile} musicOn={musicOn} onMusicToggle={toggleMusic} audioRef={audioRef} onlineCount={onlineCount} onDemoTeacher={enterDemoTeacher} onDemoLearner={enterDemoLearner} />}
+      {screen === "entry" && <EntryGate onLearner={chooseLearner} onStudent={() => chooseStudent("otp")} onStudentNoEmail={() => chooseStudent("document")} onLogin={startLogin} learnerProfile={learnerProfile} learnerLoggedOut={learnerLoggedOut} studentLoggedIn={!!myProfile} musicOn={musicPlaying} onMusicToggle={toggleMusic} onlineCount={onlineCount} onDemoTeacher={enterDemoTeacher} onDemoLearner={enterDemoLearner} />}
       {screen === "learnerSignup" && <LearnerSignup onSubmit={submitLearner} onBack={backToEntry} onLogin={startLogin} error={authError} googleName={learnerGoogleName} />}
       {screen === "learnerMap" && (
         <LearnerScreen
@@ -1345,13 +1379,12 @@ export default function App() {
             setScreen("entry");
           }}
           onlineCount={onlineCount}
-          musicOn={musicOn}
+          musicOn={musicPlaying}
           onMusicToggle={toggleMusic}
-          audioRef={audioRef}
         />
       )}
 
-      {screen === "landing" && <Landing onApply={startApply} onBack={backToEntry} onPreview={startPreview} onProfile={goToProfile} onLogin={startLogin} myProfile={myProfile} studentLoggedOut={studentLoggedOut} musicOn={musicOn} onMusicToggle={toggleMusic} audioRef={audioRef} error={authError} onlineCount={onlineCount} onGoToLessonRoom={() => { setScreen("app"); setAppTabPersist("lessons"); }} studentsByCons={studentsByCons} />}
+      {screen === "landing" && <Landing onApply={startApply} onBack={backToEntry} onPreview={startPreview} onProfile={goToProfile} onLogin={startLogin} myProfile={myProfile} studentLoggedOut={studentLoggedOut} musicOn={musicPlaying} onMusicToggle={toggleMusic} error={authError} onlineCount={onlineCount} onGoToLessonRoom={() => { setScreen("app"); setAppTabPersist("lessons"); }} studentsByCons={studentsByCons} />}
       {screen === "login" && <LoginScreen onSubmit={handleLogin} onBack={goHome} error={authError} />}
       {screen === "signup" && (
         <SignupFlow
@@ -1367,7 +1400,7 @@ export default function App() {
       {screen === "app" && (
         <AppShell
           appTab={appTab} setAppTab={setAppTab} myProfile={myProfile}
-          onApply={startApply} onHome={goHome} musicOn={musicOn} onMusicToggle={toggleMusic} audioRef={audioRef}
+          onApply={startApply} onHome={goHome} musicOn={musicPlaying} onMusicToggle={toggleMusic}
           onGuestTabClick={() => setShowGuestPrompt(true)} onlineCount={onlineCount} previewOnly={previewOnly}
           hideTabs={!!selectedStudentId}
           authUser={authUser}
@@ -1484,7 +1517,7 @@ export default function App() {
 /* ---------------------------------------------------------------- */
 /* LANDING                                                             */
 /* ---------------------------------------------------------------- */
-function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, studentLoggedOut, musicOn, onMusicToggle, audioRef, error, onlineCount, onGoToLessonRoom, studentsByCons }) {
+function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, studentLoggedOut, musicOn, onMusicToggle, error, onlineCount, onGoToLessonRoom, studentsByCons }) {
   return (
     <div style={{ background: "#FFFFFF", color: C.ivory, minHeight: "100vh" }}>
       {/* Nav — matches AppShell header */}
@@ -1498,7 +1531,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
           <Logo size={20} />
         </div>
         <div className="flex items-center gap-2 ml-auto">
-          <MusicBtn playing={musicOn} onToggle={onMusicToggle} audioRef={audioRef} />
+          <MusicBtn playing={musicOn} onToggle={onMusicToggle} />
           {onlineCount != null && (
             <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: C.ivoryDim, whiteSpace: "nowrap" }}>
               <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#1A9E6E", display: "inline-block", flexShrink: 0 }} />
@@ -2487,7 +2520,7 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
   );
 }
 
-function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, musicOn, onMusicToggle, audioRef, onBack, backLabel, onGuestTabClick, onlineCount, previewOnly, hideTabs, onGoToLessonRoom, authUser, isAdmin, onGoToAdmin }) {
+function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, musicOn, onMusicToggle, onBack, backLabel, onGuestTabClick, onlineCount, previewOnly, hideTabs, onGoToLessonRoom, authUser, isAdmin, onGoToAdmin }) {
   const tabs = [];
   return (
     <div className="min-h-full flex flex-col" style={{ background: C.inkSoft, color: C.ivory }}>
@@ -2524,7 +2557,7 @@ function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, mus
           </div>
         )}
         <div className="flex items-center gap-2 ml-auto">
-          <MusicBtn playing={musicOn} onToggle={onMusicToggle} audioRef={audioRef} />
+          <MusicBtn playing={musicOn} onToggle={onMusicToggle} />
           {onlineCount != null && (
             <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: C.ivoryDim, whiteSpace: "nowrap" }}>
               <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#1A9E6E", display: "inline-block", flexShrink: 0 }} />
@@ -3117,7 +3150,7 @@ function GateCard({ onClick, bg, bgPos, overlay, icon, title, sub, desc, descWid
   );
 }
 
-function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerProfile, learnerLoggedOut, studentLoggedIn, musicOn, onMusicToggle, audioRef, onlineCount, onDemoTeacher, onDemoLearner }) {
+function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerProfile, learnerLoggedOut, studentLoggedIn, musicOn, onMusicToggle, onlineCount, onDemoTeacher, onDemoLearner }) {
   const singleCard = !!learnerProfile || learnerLoggedOut || studentLoggedIn;
   const showLearner = !studentLoggedIn;
   const showStudent = !singleCard || studentLoggedIn;
@@ -3167,7 +3200,7 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
       <div className="max-w-5xl w-full mx-auto px-8" style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#FFFFFF", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <Logo size={22} />
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <MusicBtn playing={musicOn} onToggle={onMusicToggle} audioRef={audioRef} />
+          <MusicBtn playing={musicOn} onToggle={onMusicToggle} />
           {onlineCount != null && (
             <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 13, color: C.ivoryDim }}>
               <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#1A9E6E", display: "inline-block" }} />
@@ -3518,7 +3551,7 @@ function TeacherMap({ teachers, selectedId, onSelect, height = 520 }) {
 }
 
 /* ---- Learner home: map + request + chat ---- */
-function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conversations, activeChatId, setActiveChatId, onSend, onBack, onUpdateProfile, onLogout, onDeleteAccount, onlineCount, musicOn, onMusicToggle, audioRef }) {
+function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conversations, activeChatId, setActiveChatId, onSend, onBack, onUpdateProfile, onLogout, onDeleteAccount, onlineCount, musicOn, onMusicToggle }) {
   const [appTab, setAppTab] = useState("map");
   const [selectedConsId, setSelectedConsId] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
@@ -3601,7 +3634,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
     <AppShell
       appTab={appTab} setAppTab={setAppTab}
       myProfile={learnerProfile}
-      musicOn={musicOn} onMusicToggle={onMusicToggle} audioRef={audioRef}
+      musicOn={musicOn} onMusicToggle={onMusicToggle}
       onlineCount={onlineCount}
       onBack={selectedId ? () => setSelectedId(null) : appTab === "lesson" && learnerRoomView !== "teachers" ? () => setLearnerRoomView("teachers") : appTab !== "map" ? () => setAppTab("map") : onBack}
       hideTabs={!!selectedId}
