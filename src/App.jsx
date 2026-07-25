@@ -3165,7 +3165,8 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
                   card's text block (x 250–510, from y≈220 down). */}
               <path d="M 193 368 Q 175 225 302 179" stroke={C.brass} strokeWidth={2} strokeLinecap="round" opacity={0.6} markerStart="url(#artium-tri-arrowhead-wide)" markerEnd="url(#artium-tri-arrowhead-wide)" />
               <path d="M 567 368 Q 585 225 458 179" stroke={C.brass} strokeWidth={2} strokeLinecap="round" opacity={0.6} markerStart="url(#artium-tri-arrowhead-wide)" markerEnd="url(#artium-tri-arrowhead-wide)" />
-              <path d="M 225 450 Q 380 480 535 450" stroke={C.brass} strokeWidth={2} strokeLinecap="round" opacity={0.6} markerStart="url(#artium-tri-arrowhead-wide)" markerEnd="url(#artium-tri-arrowhead-wide)" />
+              {/* Base sits below the circle centres, so its ends pull in to stay in the gap. */}
+              <path d="M 224 490 Q 380 516 536 490" stroke={C.brass} strokeWidth={2} strokeLinecap="round" opacity={0.6} markerStart="url(#artium-tri-arrowhead-wide)" markerEnd="url(#artium-tri-arrowhead-wide)" />
             </svg>
             <svg className="artium-tri-arrows artium-tri-arrows-narrow" viewBox="0 0 320 530" width="100%" height="100%" fill="none" aria-hidden="true">
               <defs>
@@ -3178,7 +3179,8 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
                   text block (x 95–225, from y≈118 down). */}
               <path d="M 27 283 Q 24 172 117 97" stroke={C.brass} strokeWidth={1.6} strokeLinecap="round" opacity={0.6} markerStart="url(#artium-tri-arrowhead-narrow)" markerEnd="url(#artium-tri-arrowhead-narrow)" />
               <path d="M 293 283 Q 296 172 203 97" stroke={C.brass} strokeWidth={1.6} strokeLinecap="round" opacity={0.6} markerStart="url(#artium-tri-arrowhead-narrow)" markerEnd="url(#artium-tri-arrowhead-narrow)" />
-              <path d="M 131 330 Q 160 344 189 330" stroke={C.brass} strokeWidth={1.6} strokeLinecap="round" opacity={0.6} markerStart="url(#artium-tri-arrowhead-narrow)" markerEnd="url(#artium-tri-arrowhead-narrow)" />
+              {/* Base sits below the circle centres, so its ends pull in to stay in the gap. */}
+              <path d="M 133 348 Q 160 360 187 348" stroke={C.brass} strokeWidth={1.6} strokeLinecap="round" opacity={0.6} markerStart="url(#artium-tri-arrowhead-narrow)" markerEnd="url(#artium-tri-arrowhead-narrow)" />
             </svg>
             <div className="artium-tri-left">{learnerCard}</div>
             <div className="artium-tri-right">{studentNoEmailCard}</div>
