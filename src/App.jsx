@@ -1245,6 +1245,17 @@ export default function App() {
         .artium-map .leaflet-tooltip { background: #FFFFFF !important; border: 1px solid #E6EBF1 !important; color: #0A2540 !important; border-radius: 10px !important; box-shadow: 0 4px 20px rgba(10,37,64,0.12) !important; padding: 8px 14px !important; font-family: Inter, sans-serif !important; font-size: 13px !important; }
         .artium-map .leaflet-tooltip-top:before { border-top-color: #E6EBF1 !important; }
         .artium-pin { background: transparent !important; border: none !important; }
+
+        .artium-tri { position: relative; width: 760px; height: 630px; }
+        .artium-tri > .artium-tri-top { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 260px; }
+        .artium-tri > .artium-tri-left { position: absolute; top: 320px; left: 0; width: 230px; }
+        .artium-tri > .artium-tri-right { position: absolute; top: 320px; right: 0; width: 230px; }
+        .artium-tri > .artium-tri-arrows { position: absolute; inset: 0; pointer-events: none; }
+        @media (max-width: 820px) {
+          .artium-tri { width: auto; height: auto; display: flex; flex-direction: column; align-items: center; gap: 40px; }
+          .artium-tri > .artium-tri-top, .artium-tri > .artium-tri-left, .artium-tri > .artium-tri-right { position: static; transform: none; width: auto; }
+          .artium-tri > .artium-tri-arrows { display: none; }
+        }
       `}</style>
 
       <audio ref={audioRef} src={AMBIENT_AUDIO_SRC} loop preload="none" />
@@ -3026,14 +3037,73 @@ function StepTeaching({ draft, update }) {
 }
 
 /* ---- First screen: pick your role ---- */
+function GateCard({ onClick, bg, bgPos, overlay, icon, title, sub, desc, descWidth }) {
+  return (
+    <button onClick={onClick} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 18 }}>
+      <div style={{ width: 180, height: 180, borderRadius: "50%", overflow: "hidden", position: "relative", boxShadow: `0 0 0 4px ${C.brass}, 0 8px 32px rgba(10,37,64,0.14)`, transition: "transform 0.18s", flexShrink: 0 }}
+        onMouseEnter={e => e.currentTarget.style.transform = "scale(1.04)"}
+        onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
+      >
+        <div style={{ position: "absolute", inset: 0, backgroundImage: `url('${bg}')`, backgroundSize: "cover", backgroundPosition: bgPos, filter: "grayscale(100%) contrast(1.1) brightness(0.82)" }} />
+        <div style={{ position: "absolute", inset: 0, background: overlay }} />
+        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          {icon}
+        </div>
+      </div>
+      <div style={{ textAlign: "center" }}>
+        <div style={{ fontSize: 15, fontWeight: 700, color: C.ivory, marginBottom: 4 }}>{title}</div>
+        {sub && <div style={{ fontSize: 12, fontWeight: 600, color: C.brassLabel, marginBottom: 4 }}>{sub}</div>}
+        <div style={{ fontSize: 12, color: C.ivoryDim, lineHeight: 1.5, maxWidth: descWidth }}>{desc}</div>
+      </div>
+    </button>
+  );
+}
+
 function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerProfile, learnerLoggedOut, studentLoggedIn, musicOn, onMusicToggle, audioRef, onlineCount, onDemoTeacher, onDemoLearner }) {
   const singleCard = !!learnerProfile || learnerLoggedOut || studentLoggedIn;
-  const cardStyle = {
-    textAlign: "left", background: "#FFFFFF", border: "none",
-    borderRadius: 12, padding: 32,
-    boxShadow: `0 0 0 5px ${C.brass}, 0 4px 24px rgba(10,37,64,0.07)`,
-    cursor: "pointer", transition: "box-shadow 0.2s, transform 0.15s",
-  };
+  const showLearner = !studentLoggedIn;
+  const showStudent = !singleCard || studentLoggedIn;
+  const showStudentNoEmail = !singleCard && !studentLoggedIn;
+  const triangle = showLearner && showStudent && showStudentNoEmail;
+
+  const learnerCard = (
+    <GateCard
+      onClick={onLearner}
+      bg="/2.png" bgPos="center"
+      overlay="rgba(0,0,0,0.38)"
+      icon={<img src="/3.png" style={{ width: 52, height: 52, objectFit: "contain", filter: "invert(1)", mixBlendMode: "screen" }} />}
+      title={learnerLoggedOut ? "Log in" : "Find a teacher"}
+      desc="Learn from top conservatory musicians"
+      descWidth={160}
+    />
+  );
+
+  const studentCard = (
+    <GateCard
+      onClick={onStudent}
+      bg="/juilliard.png" bgPos="25% top"
+      overlay="rgba(0,0,0,0.38)"
+      icon={<img src="/4.png" style={{ width: 52, height: 52, objectFit: "contain", mixBlendMode: "screen" }} />}
+      title={studentLoggedIn ? "Continue" : "I'm a conservatory student"}
+      sub={!studentLoggedIn ? "with an institutional student email" : null}
+      desc="Connect with conservatory students at the world's top conservatories. Promote yourself. Earn while you teach."
+      descWidth={180}
+    />
+  );
+
+  const studentNoEmailCard = (
+    <GateCard
+      onClick={onStudentNoEmail}
+      bg="/1.png" bgPos="center"
+      overlay="rgba(0,0,0,0.42)"
+      icon={<FileText size={46} color="#fff" strokeWidth={1.6} />}
+      title="I'm a conservatory student"
+      sub="without an institutional student email"
+      desc="Verify with a student ID, enrollment certificate or tuition receipt — reviewed by our team."
+      descWidth={190}
+    />
+  );
+
   return (
     <div className="min-h-full flex flex-col" style={{ background: C.inkSoft, color: C.ivory }}>
       <div className="max-w-5xl w-full mx-auto px-8" style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#FFFFFF", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -3054,64 +3124,29 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
         <h1 style={{ fontFamily: "-apple-system, 'SF Pro Display', BlinkMacSystemFont, 'Inter', sans-serif", fontSize: "clamp(22px,2.8vw,32px)", fontWeight: 800, lineHeight: 1.15, color: C.ivory, letterSpacing: -0.8, textAlign: "center", margin: 0 }}>
           Your Path<br />to Classical Music Excellence.
         </h1>
-        <div style={{ display: "flex", flexDirection: "column", gap: 40, alignItems: "center" }}>
-          {!studentLoggedIn && (
-            <button onClick={onLearner} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 18 }}>
-              <div style={{ width: 180, height: 180, borderRadius: "50%", overflow: "hidden", position: "relative", boxShadow: `0 0 0 4px ${C.brass}, 0 8px 32px rgba(10,37,64,0.14)`, transition: "transform 0.18s", flexShrink: 0 }}
-                onMouseEnter={e => e.currentTarget.style.transform = "scale(1.04)"}
-                onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
-              >
-                <div style={{ position: "absolute", inset: 0, backgroundImage: "url('/2.png')", backgroundSize: "cover", backgroundPosition: "center", filter: "grayscale(100%) contrast(1.1) brightness(0.82)" }} />
-                <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.38)" }} />
-                <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <img src="/3.png" style={{ width: 52, height: 52, objectFit: "contain", filter: "invert(1)", mixBlendMode: "screen" }} />
-                </div>
-              </div>
-              <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: 15, fontWeight: 700, color: C.ivory, marginBottom: 4 }}>{learnerLoggedOut ? "Log in" : "Find a teacher"}</div>
-                <div style={{ fontSize: 12, color: C.ivoryDim, lineHeight: 1.5, maxWidth: 160 }}>Learn from top conservatory musicians</div>
-              </div>
-            </button>
-          )}
-          {(!singleCard || studentLoggedIn) && (
-            <button onClick={onStudent} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 18 }}>
-              <div style={{ width: 180, height: 180, borderRadius: "50%", overflow: "hidden", position: "relative", boxShadow: `0 0 0 4px ${C.brass}, 0 8px 32px rgba(10,37,64,0.14)`, transition: "transform 0.18s", flexShrink: 0 }}
-                onMouseEnter={e => e.currentTarget.style.transform = "scale(1.04)"}
-                onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
-              >
-                <div style={{ position: "absolute", inset: 0, backgroundImage: "url('/juilliard.png')", backgroundSize: "cover", backgroundPosition: "25% top", filter: "grayscale(100%) contrast(1.1) brightness(0.82)" }} />
-                <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.38)" }} />
-                <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <img src="/4.png" style={{ width: 52, height: 52, objectFit: "contain", mixBlendMode: "screen" }} />
-                </div>
-              </div>
-              <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: 15, fontWeight: 700, color: C.ivory, marginBottom: 4 }}>{studentLoggedIn ? "Continue" : "I'm a conservatory student"}</div>
-                {!studentLoggedIn && <div style={{ fontSize: 12, fontWeight: 600, color: C.brassLabel, marginBottom: 4 }}>with an institutional student email</div>}
-                <div style={{ fontSize: 12, color: C.ivoryDim, lineHeight: 1.5, maxWidth: 180 }}>Connect with conservatory students at the world's top conservatories. Promote yourself. Earn while you teach.</div>
-              </div>
-            </button>
-          )}
-          {!singleCard && !studentLoggedIn && (
-            <button onClick={onStudentNoEmail} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 18 }}>
-              <div style={{ width: 180, height: 180, borderRadius: "50%", overflow: "hidden", position: "relative", boxShadow: `0 0 0 4px ${C.brass}, 0 8px 32px rgba(10,37,64,0.14)`, transition: "transform 0.18s", flexShrink: 0 }}
-                onMouseEnter={e => e.currentTarget.style.transform = "scale(1.04)"}
-                onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
-              >
-                <div style={{ position: "absolute", inset: 0, backgroundImage: "url('/1.png')", backgroundSize: "cover", backgroundPosition: "center", filter: "grayscale(100%) contrast(1.1) brightness(0.82)" }} />
-                <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.42)" }} />
-                <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <FileText size={46} color="#fff" strokeWidth={1.6} />
-                </div>
-              </div>
-              <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: 15, fontWeight: 700, color: C.ivory, marginBottom: 4 }}>I'm a conservatory student</div>
-                <div style={{ fontSize: 12, fontWeight: 600, color: C.brassLabel, marginBottom: 4 }}>without an institutional student email</div>
-                <div style={{ fontSize: 12, color: C.ivoryDim, lineHeight: 1.5, maxWidth: 190 }}>Verify with a student ID, enrollment certificate or tuition receipt — reviewed by our team.</div>
-              </div>
-            </button>
-          )}
-        </div>
+        {triangle ? (
+          <div className="artium-tri">
+            <div className="artium-tri-top">{studentCard}</div>
+            <svg className="artium-tri-arrows" viewBox="0 0 760 630" width="100%" height="100%" fill="none" aria-hidden="true">
+              <defs>
+                <marker id="artium-tri-arrowhead" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                  <path d="M 0 0 L 10 5 L 0 10 z" fill={C.brass} />
+                </marker>
+              </defs>
+              {/* Bowed outward so each curve stays clear of the top card's text block (x 250–510). */}
+              <path d="M 185 340 Q 172 190 308 162" stroke={C.brass} strokeWidth={2} strokeLinecap="round" opacity={0.6} markerEnd="url(#artium-tri-arrowhead)" />
+              <path d="M 575 340 Q 588 190 452 162" stroke={C.brass} strokeWidth={2} strokeLinecap="round" opacity={0.6} markerEnd="url(#artium-tri-arrowhead)" />
+            </svg>
+            <div className="artium-tri-left">{learnerCard}</div>
+            <div className="artium-tri-right">{studentNoEmailCard}</div>
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 40, alignItems: "center" }}>
+            {showLearner && learnerCard}
+            {showStudent && studentCard}
+            {showStudentNoEmail && studentNoEmailCard}
+          </div>
+        )}
         </div>
         {(studentLoggedIn || learnerProfile) && (
           <p style={{ textAlign: "center", marginTop: 32, fontSize: 13, color: C.ivoryDim }}>
