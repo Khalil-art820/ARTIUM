@@ -1251,10 +1251,32 @@ export default function App() {
         .artium-tri > .artium-tri-left { position: absolute; top: 320px; left: 0; width: 230px; }
         .artium-tri > .artium-tri-right { position: absolute; top: 320px; right: 0; width: 230px; }
         .artium-tri > .artium-tri-arrows { position: absolute; inset: 0; pointer-events: none; }
+
+        .artium-gate-circle { width: 180px; height: 180px; }
+        .artium-gate-title { font-size: 15px; }
+        .artium-gate-sub { font-size: 12px; }
+        .artium-gate-desc { font-size: 12px; }
+
         @media (max-width: 820px) {
-          .artium-tri { width: auto; height: auto; display: flex; flex-direction: column; align-items: center; gap: 40px; }
-          .artium-tri > .artium-tri-top, .artium-tri > .artium-tri-left, .artium-tri > .artium-tri-right { position: static; transform: none; width: auto; }
-          .artium-tri > .artium-tri-arrows { display: none; }
+          .artium-tri { width: 320px; height: 500px; }
+          .artium-tri > .artium-tri-top { width: 130px; }
+          .artium-tri > .artium-tri-left { top: 255px; width: 140px; }
+          .artium-tri > .artium-tri-right { top: 255px; width: 140px; }
+          .artium-tri .artium-gate-circle { width: 96px; height: 96px; box-shadow: 0 0 0 3px #C9A24B, 0 6px 20px rgba(10,37,64,0.14); }
+          .artium-tri .artium-gate-icon > img { width: 29px !important; height: 29px !important; }
+          .artium-tri .artium-gate-icon > svg { width: 26px; height: 26px; }
+          .artium-tri .artium-gate-title { font-size: 11.5px; }
+          .artium-tri .artium-gate-sub { font-size: 9.5px; }
+          .artium-tri .artium-gate-desc { font-size: 9.5px; }
+          .artium-tri .artium-gate-desc { max-width: none !important; }
+          .artium-tri button { gap: 10px !important; }
+          .artium-tri-arrows-wide { display: none; }
+        }
+        @media (min-width: 821px) {
+          .artium-tri-arrows-narrow { display: none; }
+        }
+        @media (max-width: 370px) {
+          .artium-tri { transform: scale(0.9); transform-origin: top center; }
         }
       `}</style>
 
@@ -3040,20 +3062,23 @@ function StepTeaching({ draft, update }) {
 function GateCard({ onClick, bg, bgPos, overlay, icon, title, sub, desc, descWidth }) {
   return (
     <button onClick={onClick} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 18 }}>
-      <div style={{ width: 180, height: 180, borderRadius: "50%", overflow: "hidden", position: "relative", boxShadow: `0 0 0 4px ${C.brass}, 0 8px 32px rgba(10,37,64,0.14)`, transition: "transform 0.18s", flexShrink: 0 }}
+      <div className="artium-gate-circle" style={{ borderRadius: "50%", overflow: "hidden", position: "relative", boxShadow: `0 0 0 4px ${C.brass}, 0 8px 32px rgba(10,37,64,0.14)`, transition: "transform 0.18s", flexShrink: 0 }}
         onMouseEnter={e => e.currentTarget.style.transform = "scale(1.04)"}
         onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
       >
         <div style={{ position: "absolute", inset: 0, backgroundImage: `url('${bg}')`, backgroundSize: "cover", backgroundPosition: bgPos, filter: "grayscale(100%) contrast(1.1) brightness(0.82)" }} />
         <div style={{ position: "absolute", inset: 0, background: overlay }} />
-        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        {/* No wrapper element here: a transform on the icon would create a stacking
+            context and break the `mixBlendMode: screen` on the icon images. The
+            compact triangle resizes these icons by selector instead. */}
+        <div className="artium-gate-icon" style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
           {icon}
         </div>
       </div>
       <div style={{ textAlign: "center" }}>
-        <div style={{ fontSize: 15, fontWeight: 700, color: C.ivory, marginBottom: 4 }}>{title}</div>
-        {sub && <div style={{ fontSize: 12, fontWeight: 600, color: C.brassLabel, marginBottom: 4 }}>{sub}</div>}
-        <div style={{ fontSize: 12, color: C.ivoryDim, lineHeight: 1.5, maxWidth: descWidth }}>{desc}</div>
+        <div className="artium-gate-title" style={{ fontWeight: 700, color: C.ivory, marginBottom: 4 }}>{title}</div>
+        {sub && <div className="artium-gate-sub" style={{ fontWeight: 600, color: C.brassLabel, marginBottom: 4 }}>{sub}</div>}
+        <div className="artium-gate-desc" style={{ color: C.ivoryDim, lineHeight: 1.5, maxWidth: descWidth }}>{desc}</div>
       </div>
     </button>
   );
@@ -3127,15 +3152,25 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
         {triangle ? (
           <div className="artium-tri">
             <div className="artium-tri-top">{studentCard}</div>
-            <svg className="artium-tri-arrows" viewBox="0 0 760 630" width="100%" height="100%" fill="none" aria-hidden="true">
+            <svg className="artium-tri-arrows artium-tri-arrows-wide" viewBox="0 0 760 630" width="100%" height="100%" fill="none" aria-hidden="true">
               <defs>
-                <marker id="artium-tri-arrowhead" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                <marker id="artium-tri-arrowhead-wide" viewBox="0 0 10 10" refX="8" refY="5" markerWidth={6} markerHeight={6} orient="auto">
                   <path d="M 0 0 L 10 5 L 0 10 z" fill={C.brass} />
                 </marker>
               </defs>
               {/* Bowed outward so each curve stays clear of the top card's text block (x 250–510). */}
-              <path d="M 185 340 Q 172 190 308 162" stroke={C.brass} strokeWidth={2} strokeLinecap="round" opacity={0.6} markerEnd="url(#artium-tri-arrowhead)" />
-              <path d="M 575 340 Q 588 190 452 162" stroke={C.brass} strokeWidth={2} strokeLinecap="round" opacity={0.6} markerEnd="url(#artium-tri-arrowhead)" />
+              <path d="M 185 340 Q 172 190 308 162" stroke={C.brass} strokeWidth={2} strokeLinecap="round" opacity={0.6} markerEnd="url(#artium-tri-arrowhead-wide)" />
+              <path d="M 575 340 Q 588 190 452 162" stroke={C.brass} strokeWidth={2} strokeLinecap="round" opacity={0.6} markerEnd="url(#artium-tri-arrowhead-wide)" />
+            </svg>
+            <svg className="artium-tri-arrows artium-tri-arrows-narrow" viewBox="0 0 320 500" width="100%" height="100%" fill="none" aria-hidden="true">
+              <defs>
+                <marker id="artium-tri-arrowhead-narrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth={5} markerHeight={5} orient="auto">
+                  <path d="M 0 0 L 10 5 L 0 10 z" fill={C.brass} />
+                </marker>
+              </defs>
+              {/* Bowed outward so each curve routes around the outside of the top card's text block (x 95–225 from y≈106 downward). */}
+              <path d="M 30 263 Q 26 150 120 88" stroke={C.brass} strokeWidth={1.6} strokeLinecap="round" opacity={0.6} markerEnd="url(#artium-tri-arrowhead-narrow)" />
+              <path d="M 290 263 Q 294 150 200 88" stroke={C.brass} strokeWidth={1.6} strokeLinecap="round" opacity={0.6} markerEnd="url(#artium-tri-arrowhead-narrow)" />
             </svg>
             <div className="artium-tri-left">{learnerCard}</div>
             <div className="artium-tri-right">{studentNoEmailCard}</div>
