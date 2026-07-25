@@ -283,12 +283,19 @@ function Staff({ tone = "dark", gap = 3 }) {
   );
 }
 
+// The wordmark's crescendo hairpin. Deliberately not C.brass: that yellow sits
+// at roughly 1.6:1 against white, which a 1px hairline cannot survive — it needs
+// 3:1 to read as a graphic. This is the same hue darkened until it holds.
+const HAIRPIN = "#C9920A";
+
 function Logo({ tone = "light", size = 20, slogan = false }) {
   const col = tone === "light" ? C.ivory : C.inkText;
-  const dim = tone === "light" ? C.ivoryDim : C.inkTextDim;
-  const r = size / 2;
-  const fontSize = size * 0.62;
-  const textY = r + fontSize * 0.38;
+  const fontSize = size * 0.9;
+  // Hairpin geometry all derives from the type size, so the mark stays in
+  // proportion at every size it is used at (18, 20 and 22 today).
+  const hairpinHeight = Math.max(4, fontSize * 0.26);
+  const hairpinOffset = Math.max(1, fontSize * 0.06);
+  const hairpinStroke = Math.max(1, fontSize * 0.05);
   return (
     <div className="flex items-center gap-2.5">
       <svg width={size} height={size} viewBox="0 0 512 512" style={{ flexShrink: 0 }}>
@@ -299,7 +306,26 @@ function Logo({ tone = "light", size = 20, slogan = false }) {
           <polygon points="159,252 353,252 377,302 135,302" fill="white" />
         </g>
       </svg>
-      <span style={{ fontFamily: "'Fraunces', serif", color: col, fontSize: size * 0.9, fontWeight: 500, letterSpacing: 0 }}>Artium</span>
+      <span style={{ fontFamily: "'Fraunces', serif", color: col, fontSize, fontWeight: 500, letterSpacing: 0, lineHeight: 1 }}>
+        <span style={{ position: "relative", display: "inline-block" }}>
+          art
+          {/* preserveAspectRatio="none" stretches the hairpin to the width of
+              "art"; non-scaling-stroke keeps the line an even weight despite it. */}
+          <svg
+            width="100%"
+            height={hairpinHeight}
+            viewBox="0 0 100 10"
+            preserveAspectRatio="none"
+            aria-hidden="true"
+            style={{ position: "absolute", left: 0, top: "100%", marginTop: hairpinOffset, display: "block", overflow: "visible" }}
+          >
+            {/* Apex on the left, opening rightward: a crescendo. Reversing the
+                two x values would make it a diminuendo. */}
+            <path d="M 0 5 L 100 0.6 M 0 5 L 100 9.4" stroke={HAIRPIN} strokeWidth={hairpinStroke} fill="none" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+          </svg>
+        </span>
+        ium
+      </span>
       {slogan && (
         <span style={{ fontSize: 13, color: C.ivoryDim, fontWeight: 500, letterSpacing: 0.1, whiteSpace: "nowrap" }}>
           — A World Connected by Music
