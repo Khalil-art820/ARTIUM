@@ -778,6 +778,10 @@ export default function App() {
   const [previewOnly, setPreviewOnly] = useState(false);
   const [authError, setAuthError] = useState("");
   const [pendingEmail, setPendingEmail] = useState("");
+  // Which student route the entry gate chose: "otp" verifies an institutional
+  // email, "document" uploads proof for manual review. Both options now go via
+  // the landing page first, so the choice has to outlive that detour.
+  const [verifyMethod, setVerifyMethod] = useState("otp");
 
   const [students, setStudents] = useState(() => seedTeaching(SAMPLE_STUDENTS));
   const [myProfile, setMyProfile] = useState(null);
@@ -978,7 +982,9 @@ export default function App() {
   // treated as admin so the approval flow is fully previewable offline.
   const isAdmin = authProfile?.is_admin === true || myProfile?.id === "demo-teacher";
 
-  function startApply(verifyMethod = "otp") {
+  // Takes no argument on purpose: it is wired straight to onClick handlers in
+  // several places, so a positional verifyMethod would receive a click event.
+  function startApply() {
     if (authUser && authProfile?.role === "learner") {
       setAuthError("You're already registered as a piano enthusiast with this account. You can't also sign up as a conservatory student — log out first if you want to create a separate account with a different email.");
       return;
@@ -1018,8 +1024,9 @@ export default function App() {
     setSelectedStudentId(null);
     setAppTabPersist("map");
   }
-  function chooseStudent() {
+  function chooseStudent(method) {
     if (myProfile) { setScreen("app"); setAppTabPersist("map"); return; }
+    setVerifyMethod(method);
     setScreen("landing");
   }
   function chooseLearner() {
@@ -1289,7 +1296,7 @@ export default function App() {
         />
       )}
 
-      {screen === "entry" && <EntryGate onLearner={chooseLearner} onStudent={chooseStudent} onStudentNoEmail={() => startApply("document")} onLogin={startLogin} learnerProfile={learnerProfile} learnerLoggedOut={learnerLoggedOut} studentLoggedIn={!!myProfile} musicOn={musicOn} onMusicToggle={toggleMusic} audioRef={audioRef} onlineCount={onlineCount} onDemoTeacher={enterDemoTeacher} onDemoLearner={enterDemoLearner} />}
+      {screen === "entry" && <EntryGate onLearner={chooseLearner} onStudent={() => chooseStudent("otp")} onStudentNoEmail={() => chooseStudent("document")} onLogin={startLogin} learnerProfile={learnerProfile} learnerLoggedOut={learnerLoggedOut} studentLoggedIn={!!myProfile} musicOn={musicOn} onMusicToggle={toggleMusic} audioRef={audioRef} onlineCount={onlineCount} onDemoTeacher={enterDemoTeacher} onDemoLearner={enterDemoLearner} />}
       {screen === "learnerSignup" && <LearnerSignup onSubmit={submitLearner} onBack={backToEntry} onLogin={startLogin} error={authError} googleName={learnerGoogleName} />}
       {screen === "learnerMap" && (
         <LearnerScreen
