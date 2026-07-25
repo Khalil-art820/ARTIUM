@@ -40,16 +40,15 @@ const FONT_DISPLAY = "'Inter', sans-serif";
 const FONT_BODY = "'Inter', sans-serif";
 const FONT_MONO = "'ui-monospace', monospace";
 
-// Spotify playlist behind the music toggle. PLACEHOLDER: this is one of
-// Spotify's own editorial playlists, here only so the control works out of the
-// box — swap it for ours. The id is the middle part of a playlist share link,
-// https://open.spotify.com/playlist/<ID>?si=... An empty string hides the
-// music button everywhere.
+// Spotify playlist behind the music toggle. To change it, take just the id from
+// a playlist share link — https://open.spotify.com/playlist/<ID>?si=... — and
+// drop the si/pi query params, which identify the share session rather than the
+// playlist. An empty string hides the music button everywhere.
 //
 // Note what the embed can and cannot do: there is no volume API, and listeners
 // who are not signed in to Spotify in the same browser get 30-second previews
 // behind a "Get Spotify" prompt rather than full tracks.
-const SPOTIFY_PLAYLIST_ID = "37i9dQZF1DX4sWSpwq3LiO";
+const SPOTIFY_PLAYLIST_ID = "3ydc8YZVqfFW1Dj681FMMe";
 
 /* ---- Promote Me (aclassicaltone) ---- */
 const PROMO_PROVIDERS = [
