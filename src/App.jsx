@@ -924,9 +924,24 @@ function useMeasured() {
   return [ref, size];
 }
 
+// Rough centroids, purely for orientation — without them the globe is a
+// featureless sphere the moment you spin away from a coastline you recognise.
+const GLOBE_CONTINENTS = [
+  { label: "NORTH AMERICA", lat: 46, lng: -100 },
+  { label: "SOUTH AMERICA", lat: -14, lng: -59 },
+  { label: "EUROPE", lat: 52, lng: 17 },
+  { label: "AFRICA", lat: 3, lng: 21 },
+  { label: "ASIA", lat: 46, lng: 89 },
+  { label: "OCEANIA", lat: -25, lng: 134 },
+];
+
 function GlobeMap({ selectedId, onSelect, studentsByCons, height = 640, onOpenStudent, canViewRoster = false, onLockedClick }) {
   const [wrapRef, { w, h }] = useMeasured();
   const globeRef = useRef(null);
+  // A phone frame is narrow and short: keeping the desktop height and camera
+  // distance pushed the globe well past the viewport.
+  const compact = w > 0 && w < 700;
+  const frameHeight = compact ? 380 : height;
 
   const allStudents = Object.values(studentsByCons).flat();
   const totalTeachers = allStudents.filter((s) => s.teaching && s.teaching.open).length;
@@ -934,46 +949,37 @@ function GlobeMap({ selectedId, onSelect, studentsByCons, height = 640, onOpenSt
   const cons = CONSERVATORIES.find((c) => c.id === selectedId);
   const roster = selectedId ? studentsByCons[selectedId] || [] : [];
 
-  // Spin on its own, but hold still while a roster is open so it can be read.
-  // controls() is not available on the first effect pass — the globe builds its
-  // three.js scene asynchronously — so retry until it exists rather than
-  // silently giving up and leaving a stationary globe.
-  useEffect(() => {
-    let raf;
-    const apply = () => {
-      const g = globeRef.current;
-      const controls = g && g.controls && g.controls();
-      if (!controls) { raf = requestAnimationFrame(apply); return; }
-      controls.autoRotate = !selectedId;
-      controls.autoRotateSpeed = 0.9;
-      controls.enableZoom = true;
-      controls.minDistance = 130;
-      controls.maxDistance = 500;
-    };
-    apply();
-    return () => cancelAnimationFrame(raf);
-  }, [selectedId, w, h]);
+  // onGlobeReady is the only reliable signal that the three.js scene exists.
+  // Calling pointOfView or controls() before it lands is silently dropped,
+  // which is why the phone kept ending up at the desktop camera distance on
+  // some loads and not others.
+  const [ready, setReady] = useState(false);
 
-  // Fill more of the frame than the default camera distance does.
-  const framed = useRef(false);
   useEffect(() => {
-    if (framed.current || !w || !h) return;
-    let raf;
-    const apply = () => {
-      const g = globeRef.current;
-      if (!g || !g.pointOfView) { raf = requestAnimationFrame(apply); return; }
-      g.pointOfView({ lat: 20, lng: 10, altitude: 1.6 }, 0);
-      framed.current = true;
-    };
-    apply();
-    return () => cancelAnimationFrame(raf);
-  }, [w, h]);
+    if (!ready) return;
+    const controls = globeRef.current.controls();
+    controls.autoRotate = !selectedId;
+    controls.autoRotateSpeed = 0.9;
+    controls.enableZoom = true;
+    // The texture is 4096x2048. Closer than ~165 and you are magnifying pixels,
+    // so the floor sits where detail actually runs out rather than letting the
+    // user zoom into blur.
+    controls.minDistance = 165;
+    controls.maxDistance = 520;
+  }, [ready, selectedId]);
+
+  // A narrow phone viewport needs the camera further back or the sphere
+  // overflows its frame.
+  useEffect(() => {
+    if (!ready) return;
+    globeRef.current.pointOfView({ lat: 20, lng: 10, altitude: compact ? 2.7 : 1.6 }, 0);
+  }, [ready, compact]);
 
   // Bring the picked conservatory round to face the camera.
   useEffect(() => {
-    if (!cons || !globeRef.current) return;
-    globeRef.current.pointOfView({ lat: cons.lat, lng: cons.lng, altitude: 1.7 }, 900);
-  }, [cons]);
+    if (!ready || !cons) return;
+    globeRef.current.pointOfView({ lat: cons.lat, lng: cons.lng, altitude: compact ? 2.4 : 1.7 }, 900);
+  }, [ready, cons, compact]);
 
   const markers = pinned.map((c) => ({
     ...c,
@@ -981,7 +987,7 @@ function GlobeMap({ selectedId, onSelect, studentsByCons, height = 640, onOpenSt
   }));
 
   return (
-    <div ref={wrapRef} className="artium-globe" style={{ width: "100%", height, position: "relative", background: C.inkSoft, overflow: "hidden" }}>
+    <div ref={wrapRef} className="artium-globe" style={{ width: "100%", height: frameHeight, position: "relative", background: C.inkSoft, overflow: "hidden" }}>
       {w > 0 && h > 0 && (
         <Suspense fallback={
           <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FONT_BODY, fontSize: 12, color: C.ivoryDim }}>
@@ -992,10 +998,21 @@ function GlobeMap({ selectedId, onSelect, studentsByCons, height = 640, onOpenSt
           ref={globeRef}
           width={w}
           height={h}
-          globeImageUrl="/earth-day.jpg"
+          onGlobeReady={() => setReady(true)}
+          globeImageUrl="/earth-blue-marble.jpg"
           backgroundColor="rgba(0,0,0,0)"
           atmosphereColor={C.brass}
           atmosphereAltitude={0.18}
+          showGraticules
+          labelsData={GLOBE_CONTINENTS}
+          labelLat="lat"
+          labelLng="lng"
+          labelText="label"
+          labelSize={compact ? 1.5 : 1.1}
+          labelDotRadius={0}
+          labelColor={() => "rgba(255,255,255,0.75)"}
+          labelResolution={2}
+          labelAltitude={0.008}
           htmlElementsData={markers}
           htmlLat="lat"
           htmlLng="lng"
@@ -1042,7 +1059,7 @@ function GlobeMap({ selectedId, onSelect, studentsByCons, height = 640, onOpenSt
           <ConsRosterCard
             cons={cons} roster={roster} canViewRoster={canViewRoster}
             onOpenStudent={onOpenStudent} onLockedClick={onLockedClick}
-            maxListHeight={Math.max(160, height - 220)}
+            maxListHeight={Math.max(140, frameHeight - 220)}
           />
         </div>
       )}
@@ -1052,11 +1069,29 @@ function GlobeMap({ selectedId, onSelect, studentsByCons, height = 640, onOpenSt
         display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
         background: "#fff", borderTop: `1px solid ${C.inkLine}`, padding: "7px 12px", pointerEvents: "none",
       }}>
-        <span style={{ fontSize: 11, color: "#425466", fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>
-          ({pinned.length}) conservator{pinned.length !== 1 ? "ies" : "y"} · drag to spin
+        {/* Same two pin marks the flat map's legend used — without them the
+            colours on the globe have nothing to key against. */}
+        <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "#425466", fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>
+          <svg width="10" height="13" viewBox="0 0 24 30" style={{ flexShrink: 0 }}>
+            <path d="M12 0C5.4 0 0 5 0 11.4 0 19.6 12 30 12 30s12-10.4 12-18.6C24 5 18.6 0 12 0z" fill="#2E7D50" stroke="#ffffff" strokeWidth="1.5" />
+            <circle cx="12" cy="11.5" r="4" fill="white" opacity="0.9" />
+          </svg>
+          <svg width="10" height="13" viewBox="0 0 24 30" style={{ flexShrink: 0 }}>
+            <path d="M12 0C5.4 0 0 5 0 11.4 0 19.6 12 30 12 30s12-10.4 12-18.6C24 5 18.6 0 12 0z" fill="#C0392B" stroke="#ffffff" strokeWidth="1.5" />
+            <circle cx="12" cy="11.5" r="4" fill="white" opacity="0.9" />
+          </svg>
+          {compact
+            ? `(${pinned.length}) conservatories`
+            : `(${pinned.length}) conservator${pinned.length !== 1 ? "ies" : "y"} · drag to spin`}
         </span>
-        <span style={{ fontSize: 11, color: "#425466", fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>
-          includes ({totalTeachers}) student{totalTeachers !== 1 ? "s" : ""} open to teaching
+        <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "#425466", fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>
+          <svg width="10" height="13" viewBox="0 0 24 30" style={{ flexShrink: 0 }}>
+            <path d="M12 0C5.4 0 0 5 0 11.4 0 19.6 12 30 12 30s12-10.4 12-18.6C24 5 18.6 0 12 0z" fill="#C0392B" stroke="#ffffff" strokeWidth="1.5" />
+            <circle cx="12" cy="11.5" r="4" fill="white" opacity="0.9" />
+          </svg>
+          {compact
+            ? `(${totalTeachers}) teaching`
+            : `includes (${totalTeachers}) student${totalTeachers !== 1 ? "s" : ""} open to teaching`}
         </span>
       </div>
     </div>
