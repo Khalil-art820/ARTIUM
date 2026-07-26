@@ -1776,6 +1776,23 @@ export default function App() {
         .artium-map .leaflet-popup-close-button { color: #425466 !important; }
         .artium-pin { background: transparent !important; border: none !important; }
 
+        /* Affordance for the "Explore Artium's Network" panel. Several weak
+           signals rather than one: the card lifts, the pin grows and rises, the
+           chevron nudges, and the pin bobs gently at rest to catch the eye. */
+        .artium-explore { transition: box-shadow .2s ease, transform .2s ease, border-color .2s ease; box-shadow: 0 8px 32px rgba(10,37,64,0.10); }
+        .artium-explore:hover { transform: translateY(-3px); box-shadow: 0 16px 44px rgba(10,37,64,0.17); border-color: #FFC629; }
+        .artium-explore:active { transform: translateY(-1px); }
+        .artium-explore:focus-visible { outline: 2px solid #FFC629; outline-offset: 3px; }
+        .artium-explore-chevron, .artium-explore-pin { transition: transform .2s ease; }
+        .artium-explore:hover .artium-explore-chevron { transform: translateX(4px); }
+        .artium-explore-pin { animation: artiumBob 3.2s ease-in-out infinite; }
+        .artium-explore:hover .artium-explore-pin { animation: none; transform: translateY(-6px) scale(1.05); }
+        @keyframes artiumBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+        @media (prefers-reduced-motion: reduce) {
+          .artium-explore-pin { animation: none; }
+          .artium-explore:hover { transform: none; }
+        }
+
         .artium-tri { position: relative; width: 760px; height: 680px; }
         .artium-tri > .artium-tri-top { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 260px; }
         .artium-tri > .artium-tri-left { position: absolute; top: 345px; left: 0; width: 230px; }
@@ -2042,20 +2059,33 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
             )}
             {error && <p style={{ marginTop: 12, fontSize: 14, color: C.burgundy, lineHeight: 1.5 }}>{error}</p>}
           </div>
-          {/* Map preview */}
-          <div style={{ borderRadius: 12, overflow: "hidden", border: `1px solid ${C.inkLine}`, boxShadow: "0 8px 32px rgba(10,37,64,0.10)", width: "100%", maxWidth: 520, transform: "translateZ(0)" }}>
-            <div style={{ padding: "10px 18px", background: "#fff", display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
-              <button onClick={onPreview} style={{ fontSize: 14, fontWeight: 600, color: C.ivory, background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: FONT_BODY, display: "inline-flex", alignItems: "center", gap: 6 }}>
-                <Compass size={16} /> Explore Artium's Network <ChevronRight size={15} color={C.ivory} style={{ marginTop: 2 }} />
-              </button>
+          {/* The whole panel is one button, not just the heading: the pin is the
+              biggest thing on it and was the obvious thing to click, yet did
+              nothing. Buttons cannot nest, so the heading is now a span. */}
+          <button
+            type="button"
+            onClick={onPreview}
+            className="artium-explore"
+            aria-label="Explore Artium's network"
+            style={{
+              display: "block", width: "100%", maxWidth: 520, padding: 0, textAlign: "inherit",
+              borderRadius: 12, overflow: "hidden", border: `1px solid ${C.inkLine}`,
+              background: "#fff", cursor: "pointer", font: "inherit",
+            }}
+          >
+            <span style={{ padding: "10px 18px", background: "#fff", display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
+              <span style={{ fontSize: 14, fontWeight: 600, color: C.ivory, fontFamily: FONT_BODY, display: "inline-flex", alignItems: "center", gap: 6 }}>
+                <Compass size={16} /> Explore Artium's Network
+                <ChevronRight size={15} color={C.ivory} className="artium-explore-chevron" style={{ marginTop: 2 }} />
+              </span>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 13, color: C.ivoryDim, fontFamily: FONT_BODY }}>
                 <Users size={14} /> {Object.values(studentsByCons).flat().length}
               </span>
-            </div>
+            </span>
             {/* A symbol, not a map: this panel is a doorway to the network, and
                 a live Leaflet map here was doing interactive work nobody could
                 use at 240px. */}
-            <div style={{ padding: "26px 7px 34px", background: "#fff", borderTop: `1px solid ${C.inkLine}`, display: "flex", justifyContent: "center" }}>
+            <span style={{ padding: "22px 7px 16px", background: "#fff", borderTop: `1px solid ${C.inkLine}`, display: "flex", justifyContent: "center" }}>
               {/* Taller than it is wide (0.669), so it is sized by height —
                   giving it a square box would letterbox it. */}
               <img
@@ -2063,10 +2093,14 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
                 alt=""
                 width={560}
                 height={837}
+                className="artium-explore-pin"
                 style={{ display: "block", height: "min(280px, 42vw)", width: "auto" }}
               />
-            </div>
-          </div>
+            </span>
+            <span style={{ display: "block", background: "#fff", padding: "0 12px 18px", fontSize: 12, color: C.ivoryDim, fontFamily: FONT_BODY, textAlign: "center" }}>
+              Tap the pin to open the globe
+            </span>
+          </button>
         </div>
       </div>
 
