@@ -50,8 +50,8 @@ def tinted(fig_mask, colour):
     return out
 
 
-def place_figure(img, S, colour):
-    fh = int(S * FIG_H)
+def place_figure(img, S, colour, fig_h=FIG_H):
+    fh = int(S * fig_h)
     fw = int(mask.width * (fh / mask.height))
     fig = tinted(mask.resize((fw, fh), Image.LANCZOS), colour)
     img.alpha_composite(fig, (int((S - fw) / 2), int((S - fh) / 2)))
@@ -72,11 +72,22 @@ def build(size, square_bg=None, supersample=4):
 
 
 def build_maskable(size, supersample=4):
-    """Full-bleed, no ring. Android crops maskable icons to its own shape, so a
-    ring drawn at the edge would simply be sliced off."""
+    """Full-bleed, ring drawn INSIDE the safe zone.
+
+    A ring at the canvas edge gets cropped away here, which is why the first
+    attempt at this file came out as a plain brass circle on the home screen.
+    Instead the whole canvas is the ring colour and the disc is pulled in to
+    r=0.38, inside the inner-80% safe zone. Platforms crop maskable icons
+    somewhere between r=0.40 and r=0.50, so whatever shape is applied, white
+    survives between the disc and the cut — a thin ring in the worst case, a
+    thick one on the circular masks most launchers actually use.
+    """
     S = size * supersample
-    img = Image.new("RGBA", (S, S), DISC)
-    place_figure(img, S, RING)
+    img = Image.new("RGBA", (S, S), RING)
+    r = S * 0.38
+    c = S / 2
+    ImageDraw.Draw(img).ellipse([c - r, c - r, c + r, c + r], fill=DISC)
+    place_figure(img, S, RING, fig_h=0.34)
     return img.resize((size, size), Image.LANCZOS)
 
 
