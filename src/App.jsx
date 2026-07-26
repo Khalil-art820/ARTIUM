@@ -954,11 +954,14 @@ function GlobeMap({ selectedId, onSelect, studentsByCons, height = 640, onOpenSt
   // which is why the phone kept ending up at the desktop camera distance on
   // some loads and not others.
   const [ready, setReady] = useState(false);
+  // Pins drift under the cursor while the globe spins, so aiming at one is a
+  // moving-target problem. Holding still on hover makes them clickable.
+  const [hovered, setHovered] = useState(false);
 
   useEffect(() => {
     if (!ready) return;
     const controls = globeRef.current.controls();
-    controls.autoRotate = !selectedId;
+    controls.autoRotate = !selectedId && !hovered;
     controls.autoRotateSpeed = 0.9;
     controls.enableZoom = true;
     // The texture is 4096x2048. Closer than ~165 and you are magnifying pixels,
@@ -966,7 +969,7 @@ function GlobeMap({ selectedId, onSelect, studentsByCons, height = 640, onOpenSt
     // user zoom into blur.
     controls.minDistance = 165;
     controls.maxDistance = 520;
-  }, [ready, selectedId]);
+  }, [ready, selectedId, hovered]);
 
   // A narrow phone viewport needs the camera further back or the sphere
   // overflows its frame.
@@ -987,7 +990,13 @@ function GlobeMap({ selectedId, onSelect, studentsByCons, height = 640, onOpenSt
   }));
 
   return (
-    <div ref={wrapRef} className="artium-globe" style={{ width: "100%", height: frameHeight, position: "relative", background: C.inkSoft, overflow: "hidden" }}>
+    <div
+      ref={wrapRef}
+      className="artium-globe"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{ width: "100%", height: frameHeight, position: "relative", background: C.inkSoft, overflow: "hidden" }}
+    >
       {w > 0 && h > 0 && (
         <Suspense fallback={
           <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FONT_BODY, fontSize: 12, color: C.ivoryDim }}>
