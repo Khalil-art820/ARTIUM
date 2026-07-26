@@ -30,7 +30,7 @@ DISC = WHITE if SWAPPED else BRASS      # the filled circle
 RING = BRASS if SWAPPED else WHITE      # outer edge, and the figure
 
 RING_W = 0.07   # ring thickness as a fraction of the canvas
-FIG_H = 0.40    # figure height as a fraction of the canvas
+FIG_H = 0.46    # figure height as a fraction of the canvas
 
 # --- 1. luminance -> alpha mask, trimmed to the figure's own bounds ---------
 src = Image.open(os.path.join(PUB, "3.png")).convert("RGBA")
@@ -87,7 +87,9 @@ def build_maskable(size, supersample=4):
     r = S * 0.38
     c = S / 2
     ImageDraw.Draw(img).ellipse([c - r, c - r, c + r, c + r], fill=DISC)
-    place_figure(img, S, RING, fig_h=0.34)
+    # Slightly under FIG_H only because this disc is pulled in to r=0.38; the
+    # figure still fills more of its disc than it does on the ringed icons.
+    place_figure(img, S, RING, fig_h=0.44)
     return img.resize((size, size), Image.LANCZOS)
 
 
