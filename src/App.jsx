@@ -2057,11 +2057,11 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
                 use at 240px. */}
             <div style={{ padding: "26px 7px 34px", background: "#fff", borderTop: `1px solid ${C.inkLine}`, display: "flex", justifyContent: "center" }}>
               <img
-                src="/globe-symbol.svg"
+                src="/globe3d.svg"
                 alt=""
-                width={240}
-                height={240}
-                style={{ display: "block", width: "min(240px, 60%)", height: "auto" }}
+                width={260}
+                height={260}
+                style={{ display: "block", width: "min(260px, 64%)", height: "auto" }}
               />
             </div>
           </div>
