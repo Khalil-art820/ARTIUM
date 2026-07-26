@@ -2056,12 +2056,14 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
                 a live Leaflet map here was doing interactive work nobody could
                 use at 240px. */}
             <div style={{ padding: "26px 7px 34px", background: "#fff", borderTop: `1px solid ${C.inkLine}`, display: "flex", justifyContent: "center" }}>
+              {/* Taller than it is wide (0.669), so it is sized by height —
+                  giving it a square box would letterbox it. */}
               <img
-                src="/globe3d.svg"
+                src="/glo-pin.png"
                 alt=""
-                width={260}
-                height={260}
-                style={{ display: "block", width: "min(260px, 64%)", height: "auto" }}
+                width={560}
+                height={837}
+                style={{ display: "block", height: "min(280px, 42vw)", width: "auto" }}
               />
             </div>
           </div>
