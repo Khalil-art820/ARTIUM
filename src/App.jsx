@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, lazy, Suspense } from "react";
 import {
   Search, Send,
   ChevronRight, Check, X, Instagram, Facebook, Youtube,
@@ -12,6 +12,10 @@ import { supabase } from "./lib/supabase";
 import { toDbProfile, fromDbProfile } from "./lib/profiles";
 import L from "leaflet";
 import { MapContainer, TileLayer, Marker, Tooltip, Popup, useMap } from "react-leaflet";
+// three.js is ~1.9MB of the bundle. Loading it lazily keeps it out of the
+// initial download and out of the entry chunk, which otherwise blew past the
+// service worker's 2MiB precache ceiling and failed the build.
+const Globe = lazy(() => import("react-globe.gl"));
 import "leaflet/dist/leaflet.css";
 
 /* ---------------------------------------------------------------- */
@@ -794,6 +798,73 @@ function consPinIcon({ active, hasStudents, hasTeacher }) {
   });
 }
 
+// The roster shown when a conservatory is picked. Shared by the flat map's
+// Leaflet popup and the globe's overlay panel so the two cannot drift apart.
+function ConsRosterCard({ cons, roster, canViewRoster, onOpenStudent, onLockedClick, maxListHeight = 165 }) {
+  if (!canViewRoster) {
+    return (
+      <div style={{ fontFamily: FONT_BODY, minHeight: 100, display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 8, padding: "2px 0" }}>
+        <Lock size={16} color={C.ivoryDim} />
+        <p style={{ fontSize: 12, color: C.ivoryDim, margin: 0 }}>Sign up to see who studies here</p>
+        <button
+          onClick={() => onLockedClick && onLockedClick()}
+          style={{ fontSize: 12, fontWeight: 700, color: C.brassText, background: C.brass, border: "none", borderRadius: 8, padding: "6px 12px", cursor: "pointer" }}
+        >
+          Create an account
+        </button>
+      </div>
+    );
+  }
+  return (
+    <div style={{ fontFamily: FONT_BODY, minWidth: 230 }}>
+      <div style={{ borderBottom: `1px solid ${C.inkLine}`, paddingBottom: 8, marginBottom: 8 }}>
+        <p style={{ fontSize: 13, fontWeight: 600, color: C.ivory, margin: 0 }}>{cons.short}</p>
+        <p style={{ fontSize: 11, color: C.ivoryDim, margin: "2px 0 0" }}>{roster.length} student{roster.length === 1 ? "" : "s"}</p>
+      </div>
+      {roster.length === 0 ? (
+        <p style={{ fontSize: 12, color: C.ivoryDim, margin: 0 }}>No students yet.</p>
+      ) : (
+        <div className="lg-scroll" style={{ maxHeight: maxListHeight, overflowY: "auto" }}>
+          {[...roster]
+            .sort((a, b) => Number(!!b.teaching?.open) - Number(!!a.teaching?.open))
+            .map((s) => (
+              <button
+                key={s.id}
+                onClick={() => onOpenStudent(s.id)}
+                style={{
+                  width: "100%", textAlign: "left", display: "flex", alignItems: "center", gap: 10,
+                  padding: "7px 4px", background: "transparent", border: "none", cursor: "pointer", borderRadius: 8,
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(10,37,64,0.04)")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+              >
+                <Avatar name={s.name} id={s.id} size={32} photoUrl={s.photoUrl} online={s.online} />
+                <div className="min-w-0">
+                  <p style={{ fontSize: 13, fontWeight: 600, color: C.ivory, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {s.name}
+                  </p>
+                  {s.teaching?.open ? (
+                    <p style={{ margin: 0, display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: C.brassLabel }}>{s.instrument}</span>
+                      <span style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase", background: C.brass, color: C.brassText, padding: "1px 6px", borderRadius: 999 }}>
+                        teaches
+                      </span>
+                      {s.teaching.price != null && (
+                        <span style={{ fontSize: 11, color: C.ivoryDim }}>· €{s.teaching.price}</span>
+                      )}
+                    </p>
+                  ) : (
+                    <p style={{ fontSize: 11, color: C.ivoryDim, fontWeight: 400, margin: 0 }}>{s.instrument}</p>
+                  )}
+                </div>
+              </button>
+            ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // The Mercator world is square — 256 * 2^z px on both axes — but these map
 // frames are much wider than they are tall. Fit the world to the container's
 // WIDTH so all 360° of longitude shows exactly once: fitting the height
@@ -829,6 +900,167 @@ function FitWorldToWidth() {
     return () => { ro.disconnect(); clearTimeout(queued); map.off("resize", apply); };
   }, [map]);
   return null;
+}
+
+/* ---------------------------------------------------------------- */
+/* GLOBE                                                            */
+/* ---------------------------------------------------------------- */
+// react-globe.gl needs explicit pixel dimensions — it will not derive them
+// from a percentage-sized parent — so the wrapper is measured and the numbers
+// are handed down.
+function useMeasured() {
+  const ref = useRef(null);
+  const [size, setSize] = useState({ w: 0, h: 0 });
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => {
+      setSize({ w: el.clientWidth, h: el.clientHeight });
+    });
+    ro.observe(el);
+    setSize({ w: el.clientWidth, h: el.clientHeight });
+    return () => ro.disconnect();
+  }, []);
+  return [ref, size];
+}
+
+function GlobeMap({ selectedId, onSelect, studentsByCons, height = 640, onOpenStudent, canViewRoster = false, onLockedClick }) {
+  const [wrapRef, { w, h }] = useMeasured();
+  const globeRef = useRef(null);
+
+  const allStudents = Object.values(studentsByCons).flat();
+  const totalTeachers = allStudents.filter((s) => s.teaching && s.teaching.open).length;
+  const pinned = CONSERVATORIES.filter((c) => (studentsByCons[c.id] || []).length > 0);
+  const cons = CONSERVATORIES.find((c) => c.id === selectedId);
+  const roster = selectedId ? studentsByCons[selectedId] || [] : [];
+
+  // Spin on its own, but hold still while a roster is open so it can be read.
+  // controls() is not available on the first effect pass — the globe builds its
+  // three.js scene asynchronously — so retry until it exists rather than
+  // silently giving up and leaving a stationary globe.
+  useEffect(() => {
+    let raf;
+    const apply = () => {
+      const g = globeRef.current;
+      const controls = g && g.controls && g.controls();
+      if (!controls) { raf = requestAnimationFrame(apply); return; }
+      controls.autoRotate = !selectedId;
+      controls.autoRotateSpeed = 0.9;
+      controls.enableZoom = true;
+      controls.minDistance = 130;
+      controls.maxDistance = 500;
+    };
+    apply();
+    return () => cancelAnimationFrame(raf);
+  }, [selectedId, w, h]);
+
+  // Fill more of the frame than the default camera distance does.
+  const framed = useRef(false);
+  useEffect(() => {
+    if (framed.current || !w || !h) return;
+    let raf;
+    const apply = () => {
+      const g = globeRef.current;
+      if (!g || !g.pointOfView) { raf = requestAnimationFrame(apply); return; }
+      g.pointOfView({ lat: 20, lng: 10, altitude: 1.6 }, 0);
+      framed.current = true;
+    };
+    apply();
+    return () => cancelAnimationFrame(raf);
+  }, [w, h]);
+
+  // Bring the picked conservatory round to face the camera.
+  useEffect(() => {
+    if (!cons || !globeRef.current) return;
+    globeRef.current.pointOfView({ lat: cons.lat, lng: cons.lng, altitude: 1.7 }, 900);
+  }, [cons]);
+
+  const markers = pinned.map((c) => ({
+    ...c,
+    hasTeacher: (studentsByCons[c.id] || []).some((s) => s.teaching && s.teaching.open),
+  }));
+
+  return (
+    <div ref={wrapRef} className="artium-globe" style={{ width: "100%", height, position: "relative", background: C.inkSoft, overflow: "hidden" }}>
+      {w > 0 && h > 0 && (
+        <Suspense fallback={
+          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FONT_BODY, fontSize: 12, color: C.ivoryDim }}>
+            Loading globe…
+          </div>
+        }>
+        <Globe
+          ref={globeRef}
+          width={w}
+          height={h}
+          globeImageUrl="/earth-day.jpg"
+          backgroundColor="rgba(0,0,0,0)"
+          atmosphereColor={C.brass}
+          atmosphereAltitude={0.18}
+          htmlElementsData={markers}
+          htmlLat="lat"
+          htmlLng="lng"
+          htmlAltitude={0.01}
+          htmlTransitionDuration={0}
+          htmlElement={(d) => {
+            const el = document.createElement("div");
+            el.style.cssText = "cursor:pointer; pointer-events:auto; transform:translate(-50%,-100%);";
+            el.title = `${d.name} — ${(studentsByCons[d.id] || []).length} student(s)`;
+            const fill = d.hasTeacher ? "#C0392B" : "#2E7D50";
+            const active = d.id === selectedId;
+            el.innerHTML = `
+              <svg width="${active ? 26 : 20}" height="${active ? 33 : 25}" viewBox="0 0 24 30">
+                <path d="M12 0C5.4 0 0 5 0 11.4 0 19.6 12 30 12 30s12-10.4 12-18.6C24 5 18.6 0 12 0z"
+                  fill="${fill}" stroke="${active ? C.brass : "#ffffff"}" stroke-width="${active ? 2.5 : 1.5}" />
+                <circle cx="12" cy="11.5" r="4" fill="white" opacity="0.9" />
+              </svg>`;
+            el.onclick = () => onSelect(d.id);
+            return el;
+          }}
+        />
+        </Suspense>
+      )}
+
+      {cons && (
+        <div
+          style={{
+            position: "absolute", top: 12, left: 12, width: 268, zIndex: 5,
+            background: "#FFFFFF", border: `1px solid ${C.inkLine}`, borderRadius: 12,
+            boxShadow: "0 8px 32px rgba(10,37,64,0.18)", padding: "10px 12px",
+          }}
+        >
+          <button
+            onClick={() => onSelect(null)}
+            title="Close"
+            style={{
+              position: "absolute", top: 6, right: 6, width: 22, height: 22, display: "flex",
+              alignItems: "center", justifyContent: "center", background: "rgba(10,37,64,0.05)",
+              border: "none", borderRadius: "50%", cursor: "pointer", color: C.ivoryDim,
+            }}
+          >
+            <X size={13} />
+          </button>
+          <ConsRosterCard
+            cons={cons} roster={roster} canViewRoster={canViewRoster}
+            onOpenStudent={onOpenStudent} onLockedClick={onLockedClick}
+            maxListHeight={Math.max(160, height - 220)}
+          />
+        </div>
+      )}
+
+      <div style={{
+        position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 4,
+        display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
+        background: "#fff", borderTop: `1px solid ${C.inkLine}`, padding: "7px 12px", pointerEvents: "none",
+      }}>
+        <span style={{ fontSize: 11, color: "#425466", fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>
+          ({pinned.length}) conservator{pinned.length !== 1 ? "ies" : "y"} · drag to spin
+        </span>
+        <span style={{ fontSize: 11, color: "#425466", fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>
+          includes ({totalTeachers}) student{totalTeachers !== 1 ? "s" : ""} open to teaching
+        </span>
+      </div>
+    </div>
+  );
 }
 
 function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", interactive = false, flatTop = false, onOpenStudent, canViewRoster = false, onLockedClick }) {
@@ -920,69 +1152,14 @@ function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", inter
               </Tooltip>
               {onOpenStudent && (
                 <Popup maxWidth={300} minWidth={260} closeButton autoPan>
-                  {!canViewRoster ? (
-                    <div style={{ fontFamily: FONT_BODY, minHeight: 100, display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 8, padding: "2px 0" }}>
-                      <Lock size={16} color={C.ivoryDim} />
-                      <p style={{ fontSize: 12, color: C.ivoryDim, margin: 0 }}>Sign up to see who studies here</p>
-                      <button
-                        onClick={() => onLockedClick && onLockedClick()}
-                        style={{ fontSize: 12, fontWeight: 700, color: C.brassText, background: C.brass, border: "none", borderRadius: 8, padding: "6px 12px", cursor: "pointer" }}
-                      >
-                        Create an account
-                      </button>
-                    </div>
-                  ) : (
-                    <div style={{ fontFamily: FONT_BODY, minWidth: 230 }}>
-                      <div style={{ borderBottom: `1px solid ${C.inkLine}`, paddingBottom: 8, marginBottom: 8 }}>
-                        <p style={{ fontSize: 13, fontWeight: 600, color: C.ivory, margin: 0 }}>{cons.short}</p>
-                        <p style={{ fontSize: 11, color: C.ivoryDim, margin: "2px 0 0" }}>{roster.length} student{roster.length === 1 ? "" : "s"}</p>
-                      </div>
-                      {/* The map's maxBounds stop it panning far enough to reveal
-                          a tall popup, so the list is capped at what fits above a
-                          pin rather than at a comfortable reading height. The
-                          sidebar carries the full roster. */}
-                      {roster.length === 0 ? (
-                        <p style={{ fontSize: 12, color: C.ivoryDim, margin: 0 }}>No students yet.</p>
-                      ) : (
-                        <div className="lg-scroll" style={{ maxHeight: 165, overflowY: "auto" }}>
-                          {[...roster]
-                            .sort((a, b) => Number(!!b.teaching?.open) - Number(!!a.teaching?.open))
-                            .map((s) => (
-                              <button
-                                key={s.id}
-                                onClick={() => onOpenStudent(s.id)}
-                                style={{
-                                  width: "100%", textAlign: "left", display: "flex", alignItems: "center", gap: 10,
-                                  padding: "7px 4px", background: "transparent", border: "none", cursor: "pointer", borderRadius: 8,
-                                }}
-                                onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(10,37,64,0.04)")}
-                                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-                              >
-                                <Avatar name={s.name} id={s.id} size={32} photoUrl={s.photoUrl} online={s.online} />
-                                <div className="min-w-0">
-                                  <p style={{ fontSize: 13, fontWeight: 600, color: C.ivory, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                    {s.name}
-                                  </p>
-                                  {s.teaching?.open ? (
-                                    <p style={{ margin: 0, display: "flex", alignItems: "center", gap: 6 }}>
-                                      <span style={{ fontSize: 12, fontWeight: 700, color: C.brassLabel }}>{s.instrument}</span>
-                                      <span style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase", background: C.brass, color: C.brassText, padding: "1px 6px", borderRadius: 999 }}>
-                                        teaches
-                                      </span>
-                                      {s.teaching.price != null && (
-                                        <span style={{ fontSize: 11, color: C.ivoryDim }}>· €{s.teaching.price}</span>
-                                      )}
-                                    </p>
-                                  ) : (
-                                    <p style={{ fontSize: 11, color: C.ivoryDim, fontWeight: 400, margin: 0 }}>{s.instrument}</p>
-                                  )}
-                                </div>
-                              </button>
-                            ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
+                  {/* 165px because the flat map's maxBounds stop it panning far
+                      enough to reveal a taller popup above a pin. The globe has
+                      no such constraint and passes a larger cap. */}
+                  <ConsRosterCard
+                    cons={cons} roster={roster} canViewRoster={canViewRoster}
+                    onOpenStudent={onOpenStudent} onLockedClick={onLockedClick}
+                    maxListHeight={165}
+                  />
                 </Popup>
               )}
             </Marker>
@@ -2845,8 +3022,8 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
     <div className="lg-split-map h-full">
       <div style={{ background: C.inkSoft }}>
         <MapTitle />
-        <WorldMap
-          selectedId={selectedConsId} onSelect={setSelectedConsId} studentsByCons={studentsByCons} height={640} interactive
+        <GlobeMap
+          selectedId={selectedConsId} onSelect={setSelectedConsId} studentsByCons={studentsByCons} height={640}
           onOpenStudent={onOpenStudent} canViewRoster={canViewRoster} onLockedClick={onGuestClick}
         />
       </div>
@@ -2854,7 +3031,7 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
         {!cons ? (
           <div className="p-6">
             <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.ivoryDim }}>{CONSERVATORIES.length} CONSERVATORIES</p>
-            <p className="mt-2 text-sm" style={{ color: C.ivoryDim }}>Select a pin on the map to see who's studying there.</p>
+            <p className="mt-2 text-sm" style={{ color: C.ivoryDim }}>Spin the globe and pick a pin to see who's studying there.</p>
             <div className="mt-5 flex flex-col gap-1">
               {CONSERVATORIES.map((c) => (
                 <button key={c.id} onClick={() => setSelectedConsId(c.id)} className="text-left px-3 py-2.5 rounded-lg flex items-center justify-between" style={{ border: `1px solid ${C.inkLine}` }}>
