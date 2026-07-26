@@ -926,6 +926,10 @@ function useMeasured() {
 
 // Rough centroids, purely for orientation — without them the globe is a
 // featureless sphere the moment you spin away from a coastline you recognise.
+// OrbitControls does 60/speed seconds per revolution, so these two are a pair:
+// one full turn, then still.
+const GLOBE_SPIN_MS = 20000;   // one full revolution on arrival, then still
+
 const GLOBE_CONTINENTS = [
   { label: "NORTH AMERICA", lat: 46, lng: -100 },
   { label: "SOUTH AMERICA", lat: -14, lng: -59 },
@@ -954,22 +958,45 @@ function GlobeMap({ selectedId, onSelect, studentsByCons, height = 640, onOpenSt
   // which is why the phone kept ending up at the desktop camera distance on
   // some loads and not others.
   const [ready, setReady] = useState(false);
-  // Pins drift under the cursor while the globe spins, so aiming at one is a
-  // moving-target problem. Holding still on hover makes them clickable.
-  const [hovered, setHovered] = useState(false);
+  // Read inside the timeout below without restarting the intro.
+  const selectedRef = useRef(null);
+  selectedRef.current = selectedId;
 
   useEffect(() => {
     if (!ready) return;
     const controls = globeRef.current.controls();
-    controls.autoRotate = !selectedId && !hovered;
-    controls.autoRotateSpeed = 0.9;
     controls.enableZoom = true;
     // The texture is 4096x2048. Closer than ~165 and you are magnifying pixels,
     // so the floor sits where detail actually runs out rather than letting the
     // user zoom into blur.
     controls.minDistance = 165;
     controls.maxDistance = 520;
-  }, [ready, selectedId, hovered]);
+  }, [ready]);
+
+  // One full revolution on arrival to show the globe is live and draggable,
+  // then it holds still.
+  //
+  // Done with two animated pointOfView calls rather than the obvious routes,
+  // both of which were tried and neither of which moves this scene:
+  // OrbitControls.autoRotate does nothing (forcing it true leaves
+  // getAzimuthalAngle() pinned at 0, since nothing calls controls.update() per
+  // frame), and per-frame pointOfView writes with duration 0 get overridden.
+  // The animated form is the path that demonstrably works — it is what swings
+  // the globe round to a pin. Two halves because a single +360 request has the
+  // same bearing as standing still.
+  useEffect(() => {
+    if (!ready) return;
+    const g = globeRef.current;
+    const { lat, lng, altitude } = g.pointOfView();
+    const half = GLOBE_SPIN_MS / 2;
+    g.pointOfView({ lat, lng: lng + 180, altitude }, half);
+    const t = setTimeout(() => {
+      // Skip the second half if a pin was picked meanwhile; that has its own
+      // camera move and should not be fought.
+      if (!selectedRef.current) g.pointOfView({ lat, lng: lng + 360, altitude }, half);
+    }, half);
+    return () => clearTimeout(t);
+  }, [ready]);
 
   // A narrow phone viewport needs the camera further back or the sphere
   // overflows its frame.
@@ -993,8 +1020,6 @@ function GlobeMap({ selectedId, onSelect, studentsByCons, height = 640, onOpenSt
     <div
       ref={wrapRef}
       className="artium-globe"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
       style={{ width: "100%", height: frameHeight, position: "relative", background: C.inkSoft, overflow: "hidden" }}
     >
       {w > 0 && h > 0 && (
@@ -2027,10 +2052,17 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
                 <Users size={14} /> {Object.values(studentsByCons).flat().length}
               </span>
             </div>
-            <div style={{ padding: "0 7px", background: "#fff" }}>
-              <div style={{ borderTop: `1px solid ${C.inkLine}` }}>
-                <WorldMap selectedId={null} onSelect={() => {}} studentsByCons={studentsByCons} height={240} flatTop />
-              </div>
+            {/* A symbol, not a map: this panel is a doorway to the network, and
+                a live Leaflet map here was doing interactive work nobody could
+                use at 240px. */}
+            <div style={{ padding: "26px 7px 34px", background: "#fff", borderTop: `1px solid ${C.inkLine}`, display: "flex", justifyContent: "center" }}>
+              <img
+                src="/globe-symbol.svg"
+                alt=""
+                width={240}
+                height={240}
+                style={{ display: "block", width: "min(240px, 60%)", height: "auto" }}
+              />
             </div>
           </div>
         </div>
