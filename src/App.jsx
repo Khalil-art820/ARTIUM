@@ -335,10 +335,11 @@ function Staff({ tone = "dark", gap = 3 }) {
   );
 }
 
-// The wordmark's crescendo hairpin. Deliberately not C.brass: that yellow sits
-// at roughly 1.6:1 against white, which a 1px hairline cannot survive — it needs
-// 3:1 to read as a graphic. This is the same hue darkened until it holds.
-const HAIRPIN = "#C9920A";
+// The wordmark's crescendo hairpin, in the brand brass. Worth knowing: this
+// yellow sits at roughly 1.6:1 against white, well under the 3:1 a graphic
+// needs to read reliably, so the hairpin is deliberately faint on pale
+// surfaces. Chosen for brand consistency over contrast.
+const HAIRPIN = C.brass;
 
 // The app mark: a brass disc, a thin white ring inset from its edge, and the
 // teaching figure from the entry gate's "Find a teacher" circle. Flip this to
@@ -364,22 +365,25 @@ function Logo({ tone = "light", size = 20, slogan = false }) {
     <div className="flex items-center gap-2.5">
       <div
         style={{
-          width: size, height: size, borderRadius: "50%", background: LOGO_BG,
+          width: size, height: size, borderRadius: "50%", background: LOGO_FG,
           flexShrink: 0, position: "relative", display: "flex",
           alignItems: "center", justifyContent: "center",
         }}
       >
-        {/* Ring inset from the edge. The stroke floors at 1px so it survives
-            the 18–22px sizes the mark is actually used at. */}
+        {/* The ring IS the outer edge, with the disc inside it — the disc is
+            drawn inset rather than the ring being a stroke floating within a
+            brass field. Floors at 1px so it survives the 18–22px sizes used. */}
         <span
           style={{
-            position: "absolute", inset: size * 0.1, borderRadius: "50%",
-            border: `${Math.max(1, size * 0.045)}px solid ${LOGO_FG}`,
+            position: "absolute", inset: Math.max(1, size * 0.07),
+            borderRadius: "50%", background: LOGO_BG,
           }}
         />
         <span
           style={{
-            width: size * 0.44, height: size * 0.52, backgroundColor: LOGO_FG,
+            // Positioned so it paints above the absolutely-positioned disc.
+            position: "relative",
+            width: size * 0.4, height: size * 0.47, backgroundColor: LOGO_FG,
             WebkitMaskImage: `url('${TEACHER_MARK}')`, maskImage: `url('${TEACHER_MARK}')`,
             WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat",
             WebkitMaskSize: "contain", maskSize: "contain",
@@ -518,12 +522,12 @@ function HomeBtn({ onClick }) {
   );
 }
 
-// showLabel={false} drops the "playlist" caption for a bare icon. The title
-// attribute carries the accessible name either way.
-function MusicBtn({ playing, onToggle, showLabel = true }) {
+// Icon only, everywhere. aria-label carries the accessible name in place of
+// the caption this used to show.
+function MusicBtn({ playing, onToggle }) {
   if (!SPOTIFY_PLAYLIST_ID) return null;
   return (
-    <div style={{ display: "inline-flex", alignItems: "center", gap: showLabel ? 8 : 0, background: "rgba(10,37,64,0.05)", borderRadius: 999, padding: showLabel ? "5px 10px 5px 8px" : 5, border: `1px solid ${C.inkLine}` }}>
+    <div style={{ display: "inline-flex", alignItems: "center", background: "rgba(10,37,64,0.05)", borderRadius: 999, padding: 5, border: `1px solid ${C.inkLine}` }}>
       <button
         onClick={onToggle}
         title={playing ? "Pause" : "Play"}
@@ -532,7 +536,6 @@ function MusicBtn({ playing, onToggle, showLabel = true }) {
       >
         {playing ? <Pause size={10} color="#fff" /> : <Play size={10} color={C.ivory} />}
       </button>
-      {showLabel && <span style={{ fontSize: 13, color: C.ivoryDim }}>playlist</span>}
     </div>
   );
 }
@@ -3377,7 +3380,7 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
       <div className="max-w-5xl w-full mx-auto px-8" style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#FFFFFF", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <Logo size={22} />
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <MusicBtn playing={musicOn} onToggle={onMusicToggle} showLabel={false} />
+          <MusicBtn playing={musicOn} onToggle={onMusicToggle} />
           {onlineCount != null && (
             <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 13, color: C.ivoryDim }}>
               <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#1A9E6E", display: "inline-block" }} />

@@ -7,7 +7,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["icon-512.png", "icon-192.png", "apple-touch-icon.png"],
+      includeAssets: ["icon-512.png", "icon-192.png", "icon-512-maskable.png", "apple-touch-icon.png"],
       manifest: {
         name: "Artium — A World Connected by Music",
         short_name: "Artium",
@@ -29,7 +29,16 @@ export default defineConfig({
             src: "icon-512.png",
             sizes: "512x512",
             type: "image/png",
-            purpose: "any maskable",
+            purpose: "any",
+          },
+          // Separate file on purpose: the ringed icon puts white at the very
+          // edge, and Android crops maskable icons to its own shape, which
+          // would slice the ring off. This one is full-bleed with no ring.
+          {
+            src: "icon-512-maskable.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "maskable",
           },
         ],
       },
