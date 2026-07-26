@@ -11,7 +11,7 @@ import { useAuth } from "./contexts/AuthContext";
 import { supabase } from "./lib/supabase";
 import { toDbProfile, fromDbProfile } from "./lib/profiles";
 import L from "leaflet";
-import { MapContainer, TileLayer, Marker, Tooltip, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Tooltip, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
 /* ---------------------------------------------------------------- */
@@ -794,16 +794,48 @@ function consPinIcon({ active, hasStudents, hasTeacher }) {
   });
 }
 
+// The Mercator world is square — 256 * 2^z px on both axes — but these map
+// frames are much wider than they are tall. Fit the world to the container's
+// WIDTH so all 360° of longitude shows exactly once: fitting the height
+// instead leaves the world narrower than the frame, and Leaflet fills the
+// leftover space by repeating the map. The frame then crops top and bottom,
+// which is the half of a Mercator projection worth losing anyway.
+function FitWorldToWidth() {
+  const map = useMap();
+  useEffect(() => {
+    const apply = () => {
+      const w = map.getSize().x;
+      if (!w) return;
+      const z = Math.log2(w / 256);
+      if (!Number.isFinite(z)) return;
+      map.setMinZoom(z);
+      if (map.getZoom() < z - 1e-6) map.setZoom(z, { animate: false });
+    };
+    // A single measurement on mount is unreliable — the container frequently
+    // has no width yet at that point, leaving the map at zoom 1 with the world
+    // narrower than the frame. Observing the element covers both the initial
+    // layout and later resizes.
+    // Deferred by a tick: Leaflet does its own work in response to
+    // invalidateSize, and re-fitting inside that same turn gets overwritten.
+    let queued = 0;
+    const ro = new ResizeObserver(() => {
+      map.invalidateSize();
+      clearTimeout(queued);
+      queued = setTimeout(apply, 0);
+    });
+    ro.observe(map.getContainer());
+    map.on("resize", apply);
+    apply();
+    return () => { ro.disconnect(); clearTimeout(queued); map.off("resize", apply); };
+  }, [map]);
+  return null;
+}
+
 function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", interactive = false, flatTop = false, onOpenStudent, canViewRoster = false, onLockedClick }) {
   const allStudents = Object.values(studentsByCons).flat();
   const totalJoined = allStudents.length;
   const totalTeachers = allStudents.filter(s => s.teaching && s.teaching.open).length;
   const pinnedCons = CONSERVATORIES.filter(c => (studentsByCons[c.id] || []).length > 0).length;
-  // At zoom z the world is 256 * 2^z px tall, so a container taller than that
-  // shows bare background above and below it. Derive the floor from the height
-  // actually asked for instead of hardcoding zoom 1, which only ever suited a
-  // map around 512px tall.
-  const fitZoom = typeof height === "number" ? Math.max(1, Math.log2((height + 2) / 256)) : 1;
   return (
     <div className="artium-map" style={{ width: "100%", height, position: "relative", ...(flatTop ? { borderRadius: 0 } : {}) }}>
       <div style={{
@@ -836,16 +868,29 @@ function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", inter
         </span>
       </div>
       <MapContainer
-        center={[24, 14]}
-        zoom={fitZoom}
-        zoomSnap={0.5}
-        minZoom={fitZoom}
+        center={[22, 0]}
+        zoom={1}
+        // zoomSnap 0 so FitWorldToWidth's fractional zoom is honoured exactly;
+        // anything coarser rounds down and the world stops filling the frame.
+        zoomSnap={0}
+        zoomDelta={0.5}
+        // Leaflet fades tiles in by animating inline opacity, and that fade
+        // stalls at 0 when the zoom is fractional — tiles load, get their
+        // loaded class, and stay invisible. Nothing here needs the fade.
+        fadeAnimation={false}
+        minZoom={1}
         maxZoom={9}
-        maxBounds={[[-85, -200], [85, 200]]}
+        // Longitude gets slack so a popup on an edge pin (Sydney) can auto-pan
+        // into view. Tiles wrap, so panning past 180° shows the next copy of
+        // the world rather than bare background — the repetition that looked
+        // wrong before came from the world being narrower than the frame, not
+        // from wrapping itself.
+        maxBounds={[[-85, -260], [85, 260]]}
         maxBoundsViscosity={1}
         scrollWheelZoom={interactive}
         style={{ width: "100%", height: "100%", background: "#e8eaed" }}
       >
+        <FitWorldToWidth />
         <TileLayer url={TILE_URL} subdomains={TILE_SUBDOMAINS} attribution="" keepBuffer={6} updateWhenIdle={false} updateWhenZooming={false} />
         {CONSERVATORIES.map((cons) => {
           const n = (studentsByCons[cons.id] || []).length;
