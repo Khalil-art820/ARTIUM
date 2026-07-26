@@ -340,6 +340,18 @@ function Staff({ tone = "dark", gap = 3 }) {
 // 3:1 to read as a graphic. This is the same hue darkened until it holds.
 const HAIRPIN = "#C9920A";
 
+// The app mark: a brass disc, a thin white ring inset from its edge, and the
+// teaching figure from the entry gate's "Find a teacher" circle. Flip this to
+// swap the two colours — the PWA icons in public/ are generated to match, so
+// they have to be regenerated alongside it.
+const LOGO_SWAPPED = false;
+const LOGO_BG = LOGO_SWAPPED ? "#FFFFFF" : C.brass;
+const LOGO_FG = LOGO_SWAPPED ? C.brass : "#FFFFFF";
+
+// 3.png is an opaque plate, so it cannot be recoloured directly. teacher-mark.png
+// is the same figure reduced to an alpha silhouette, which CSS can mask and tint.
+const TEACHER_MARK = "/teacher-mark.png";
+
 function Logo({ tone = "light", size = 20, slogan = false }) {
   const col = tone === "light" ? C.ivory : C.inkText;
   const fontSize = size * 0.9;
@@ -350,14 +362,31 @@ function Logo({ tone = "light", size = 20, slogan = false }) {
   const hairpinStroke = Math.max(1, fontSize * 0.05);
   return (
     <div className="flex items-center gap-2.5">
-      <svg width={size} height={size} viewBox="0 0 512 512" style={{ flexShrink: 0 }}>
-        <circle cx="256" cy="256" r="256" fill="#2C3E50" />
-        <g transform="translate(256 256) scale(0.78) translate(-256 -256)">
-          <polygon points="56,460 256,58 148,460" fill="white" />
-          <polygon points="256,58 456,460 364,460" fill="white" />
-          <polygon points="159,252 353,252 377,302 135,302" fill="white" />
-        </g>
-      </svg>
+      <div
+        style={{
+          width: size, height: size, borderRadius: "50%", background: LOGO_BG,
+          flexShrink: 0, position: "relative", display: "flex",
+          alignItems: "center", justifyContent: "center",
+        }}
+      >
+        {/* Ring inset from the edge. The stroke floors at 1px so it survives
+            the 18–22px sizes the mark is actually used at. */}
+        <span
+          style={{
+            position: "absolute", inset: size * 0.1, borderRadius: "50%",
+            border: `${Math.max(1, size * 0.045)}px solid ${LOGO_FG}`,
+          }}
+        />
+        <span
+          style={{
+            width: size * 0.44, height: size * 0.52, backgroundColor: LOGO_FG,
+            WebkitMaskImage: `url('${TEACHER_MARK}')`, maskImage: `url('${TEACHER_MARK}')`,
+            WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat",
+            WebkitMaskSize: "contain", maskSize: "contain",
+            WebkitMaskPosition: "center", maskPosition: "center",
+          }}
+        />
+      </div>
       <span style={{ fontFamily: "'Fraunces', serif", color: col, fontSize, fontWeight: 500, letterSpacing: 0, lineHeight: 1 }}>
         <span style={{ position: "relative", display: "inline-block" }}>
           art
