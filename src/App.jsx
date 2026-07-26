@@ -365,17 +365,24 @@ function Logo({ tone = "light", size = 20, slogan = false }) {
     <div className="flex items-center gap-2.5">
       <div
         style={{
-          width: size, height: size, borderRadius: "50%", background: LOGO_FG,
+          width: size, height: size, borderRadius: "50%", background: LOGO_BG,
           flexShrink: 0, position: "relative", display: "flex",
           alignItems: "center", justifyContent: "center",
         }}
       >
-        {/* The ring IS the outer edge, with the disc inside it — the disc is
-            drawn inset rather than the ring being a stroke floating within a
-            brass field. Floors at 1px so it survives the 18–22px sizes used. */}
+        {/* The app icon puts the white ring hard against the outer edge, where
+            the phone's wallpaper supplies the contrast. Here the surface behind
+            the mark is white, so an edge ring would be invisible — a thin brass
+            rim outside it is what makes the white circle read at all. */}
         <span
           style={{
-            position: "absolute", inset: Math.max(1, size * 0.07),
+            position: "absolute", inset: Math.max(1, size * 0.06),
+            borderRadius: "50%", background: LOGO_FG,
+          }}
+        />
+        <span
+          style={{
+            position: "absolute", inset: Math.max(1, size * 0.06) + Math.max(1.5, size * 0.12),
             borderRadius: "50%", background: LOGO_BG,
           }}
         />
