@@ -5545,18 +5545,44 @@ function AdminVerifications({ authUser, card, STATUS_COLOR }) {
     setBusy(r.id);
     const name = fieldVal(r, "conservatory_name");
     const address = fieldVal(r, "conservatory_address");
-    await supabase.from("student_verifications").update({ status, conservatory_name: name, conservatory_address: address }).eq("id", r.id);
-    if (status === "approved") {
-      await supabase.from("profiles").update({ approved: true, conservatory_verified: true }).eq("id", r.user_id);
+    const approving = status === "approved";
+
+    // Every write here used to be fire-and-forget, so an RLS refusal or a
+    // missing user_id looked exactly like success: the row flipped to
+    // "approved" while the student's profile stayed unapproved and they kept
+    // seeing "your documents are under review". Check each one, and say which
+    // step failed rather than reporting an approval that didn't happen.
+    const { error: rowError } = await supabase.from("student_verifications")
+      .update({ status, conservatory_name: name, conservatory_address: address }).eq("id", r.id);
+    if (rowError) { setBusy(""); alert(`Could not update the request: ${rowError.message}`); return; }
+
+    if (!r.user_id) {
+      setBusy(""); load();
+      alert("This request has no account attached, so there is no profile to approve. The document was recorded, but the student cannot be given access from here.");
+      return;
+    }
+
+    // .select() so the response carries the affected rows: RLS can refuse an
+    // update by matching zero rows without raising an error at all.
+    const { data: touched, error: profileError } = await supabase.from("profiles")
+      .update({ approved: approving, conservatory_verified: approving })
+      .eq("id", r.user_id)
+      .select("id, approved");
+    if (profileError) { setBusy(""); alert(`Request updated, but the student's profile was not: ${profileError.message}`); return; }
+    if (!touched || touched.length === 0) {
+      setBusy(""); load();
+      alert("Request updated, but no profile row was changed — the student's account may not have a profile, or row-level security blocked the write. They will still see \"under review\".");
+      return;
+    }
+
+    if (approving && name.trim()) {
       // Approving a proof is also what adds the school to the document
       // route's list, so the next student from there can just pick it.
-      if (name.trim()) {
-        await supabase.from("approved_conservatories")
-          .upsert({ name: name.trim(), address: address.trim() }, { onConflict: "name" });
-      }
-    } else {
-      await supabase.from("profiles").update({ approved: false, conservatory_verified: false }).eq("id", r.user_id);
+      const { error: consError } = await supabase.from("approved_conservatories")
+        .upsert({ name: name.trim(), address: address.trim() }, { onConflict: "name" });
+      if (consError) alert(`Student approved, but "${name.trim()}" was not added to the conservatory list: ${consError.message}`);
     }
+
     setBusy(""); load();
   }
 
