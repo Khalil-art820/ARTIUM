@@ -1,8 +1,8 @@
-node_modules/
-.DS_Store
-dist/
-.env.local
-.claude/settings.local.json
 
 # Supabase CLI local state
+.DS_Store
+.claude/settings.local.json
+.env.local
+dist/
+node_modules/
 supabase/.temp/
