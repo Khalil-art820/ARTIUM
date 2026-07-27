@@ -16,9 +16,13 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import Anthropic from "npm:@anthropic-ai/sdk@0.115.0";
 
+// supabase-js `functions.invoke` sends apikey and x-client-info alongside the
+// Authorization header. Omitting them here fails the browser's preflight, and
+// the request is blocked before it is ever sent — which surfaces in the UI as
+// the misleading "Failed to send a request to the Edge Function".
 const CORS = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, content-type",
+  "Access-Control-Allow-Headers": "authorization, content-type, apikey, x-client-info, x-supabase-api-version",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
