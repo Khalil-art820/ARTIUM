@@ -1347,7 +1347,13 @@ export default function App() {
       } else if (screen === "entry" || screen === "landing" || screen === "login" || screen === "confirmEmail") {
         setSelectedConsId(me.conservatoryId);
         setScreen("app");
-        setAppTabPersist("map");
+        // Come back to the tab they were on. appTab already initialises from
+        // localStorage, so pinning "map" here didn't just ignore the saved
+        // tab — it overwrote it, which is why Admin could never survive a
+        // refresh. The demo path has always restored it correctly.
+        const savedTab = localStorage.getItem("artium_app_tab") || "map";
+        const stillAdmin = authProfile.is_admin === true;
+        setAppTabPersist(savedTab === "admin" && !stillAdmin ? "map" : savedTab);
       }
       return;
     }
