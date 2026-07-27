@@ -1647,7 +1647,15 @@ export default function App() {
     setDraft((d) => ({ ...d, tastes: d.tastes.includes(t) ? d.tastes.filter((x) => x !== t) : [...d.tastes, t] }));
   }
   async function insertVerificationRequest(userId, d) {
-    const cons = CONSERVATORIES.find((c) => c.id === d.conservatoryId);
+    // The id may come from either roster: the built-in list (if they reached
+    // this route with one already picked) or the admin-approved one. Blank is
+    // the normal case now — the document establishes the school.
+    let cons = CONSERVATORIES.find((c) => c.id === d.conservatoryId);
+    if (!cons && d.conservatoryId) {
+      const { data } = await supabase.from("approved_conservatories")
+        .select("name, address").eq("id", d.conservatoryId).maybeSingle();
+      if (data) cons = { name: data.name, city: "", country: "", address: data.address };
+    }
     await supabase.from("student_verifications").insert({
       user_id: userId,
       name: d.name,
@@ -1656,7 +1664,7 @@ export default function App() {
       document_name: d.proofDocName,
       conservatory_id: d.conservatoryId,
       conservatory_name: cons?.name || "",
-      conservatory_address: cons ? `${cons.city}, ${cons.country}` : "",
+      conservatory_address: cons ? (cons.address ?? `${cons.city}, ${cons.country}`) : "",
       status: "pending",
     });
   }
@@ -2165,7 +2173,11 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
   const canNext = [
     !editing ? draft.email.trim().length > 3 && draft.password.length >= 6 && draft.password === draft.confirmPassword : null,
     draft.name.trim().length > 1 && !!draft.instrument,
-    !!draft.conservatoryId && (editing || draft.password === "__google__" || (draft.verifyMethod === "document" ? !!draft.proofDocUrl : draft.conservatoryVerified)),
+    // On the document route the upload is what gates the step — a conservatory
+    // may not be selectable yet, since the approved list starts empty.
+    draft.verifyMethod === "document"
+      ? (editing || draft.password === "__google__" || !!draft.proofDocUrl)
+      : !!draft.conservatoryId && (editing || draft.password === "__google__" || draft.conservatoryVerified),
     draft.tastes.length >= 3,
     draft.pieces.length >= 1,
     true,
@@ -2469,8 +2481,25 @@ function StepConservatory({ draft, update, editing }) {
   const [uploading, setUploading] = useState(false);
   const isGoogle = draft.password === "__google__";
   const isDoc = draft.verifyMethod === "document";
-  const selectedCons = CONSERVATORIES.find((c) => c.id === draft.conservatoryId);
-  const results = CONSERVATORIES.filter((c) => (c.name + c.city + c.country).toLowerCase().includes(q.toLowerCase()));
+
+  // The document route gets its own roster. The built-in CONSERVATORIES list
+  // exists because each entry has an email domain we can send a code to —
+  // which proves nothing on a route where there is no institutional email.
+  // Here the list is only what an admin has already vouched for, so it starts
+  // empty and the document itself establishes the school.
+  const [approvedCons, setApprovedCons] = useState([]);
+  React.useEffect(() => {
+    if (!isDoc) return;
+    let live = true;
+    supabase.from("approved_conservatories").select("id, name, address").order("name")
+      .then(({ data }) => { if (live) setApprovedCons(data || []); });
+    return () => { live = false; };
+  }, [isDoc]);
+
+  const pool = isDoc ? approvedCons : CONSERVATORIES;
+  const selectedCons = pool.find((c) => c.id === draft.conservatoryId);
+  const results = pool.filter((c) => (isDoc ? `${c.name} ${c.address || ""}` : `${c.name}${c.city}${c.country}`)
+    .toLowerCase().includes(q.toLowerCase()));
   const domainOk = selectedCons && emailMatchesConservatory(email, selectedCons);
   const verified = draft.conservatoryVerified;
 
@@ -2519,27 +2548,46 @@ function StepConservatory({ draft, update, editing }) {
     <div>
       <div className="rounded-2xl overflow-hidden mb-5" style={{ border: `1px solid ${C.inkLine}`, background: C.inkSoft }}>
         <MapTitle />
-        <WorldMap selectedId={draft.conservatoryId} onSelect={pickConservatory} studentsByCons={{}} height={260} />
+        {/* Every conservatory still shows on the map — it just isn't
+            selectable on the document route, where picking one off the map
+            would sidestep the approved list entirely. */}
+        <WorldMap selectedId={draft.conservatoryId} onSelect={isDoc ? () => {} : pickConservatory} studentsByCons={{}} height={260} />
       </div>
       <div className="relative mb-3">
         <Search size={15} style={{ position: "absolute", left: 14, top: 14, color: C.ivoryDim }} />
         <input style={{ ...inputStyle, paddingLeft: 38 }} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by school, city, or country" />
       </div>
-      <div className="grid sm:grid-cols-2 gap-2 max-h-64 overflow-y-auto lg-scroll pr-1">
-        {results.map((c) => (
-          <button key={c.id} onClick={() => pickConservatory(c.id)} className="text-left rounded-xl px-4 py-3" style={{ border: `1px solid ${draft.conservatoryId === c.id ? C.brass : C.inkLine}`, background: draft.conservatoryId === c.id ? "rgba(201,162,75,0.1)" : "transparent" }}>
-            <p style={{ fontFamily: FONT_BODY, fontWeight: 600, fontSize: 14 }}>{c.name}</p>
-            <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.ivoryDim, marginTop: 2 }}>{c.city}, {c.country} · @{c.domains[0]}</p>
-          </button>
-        ))}
-      </div>
+      {isDoc && results.length === 0 ? (
+        <div className="rounded-xl" style={{ border: `1px dashed ${C.inkLine}`, padding: "16px 18px", textAlign: "center" }}>
+          <p className="text-sm" style={{ color: C.ivoryDim, margin: 0 }}>
+            {approvedCons.length === 0
+              ? "No conservatories have been approved yet. Upload your proof of enrolment below and we'll confirm your school from the document."
+              : "No approved conservatory matches that search. Upload your proof below and we'll confirm your school from the document."}
+          </p>
+        </div>
+      ) : (
+        <div className="grid sm:grid-cols-2 gap-2 max-h-64 overflow-y-auto lg-scroll pr-1">
+          {results.map((c) => (
+            <button key={c.id} onClick={() => pickConservatory(c.id)} className="text-left rounded-xl px-4 py-3" style={{ border: `1px solid ${draft.conservatoryId === c.id ? C.brass : C.inkLine}`, background: draft.conservatoryId === c.id ? "rgba(201,162,75,0.1)" : "transparent" }}>
+              <p style={{ fontFamily: FONT_BODY, fontWeight: 600, fontSize: 14 }}>{c.name}</p>
+              <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.ivoryDim, marginTop: 2 }}>
+                {isDoc ? (c.address || "Approved conservatory") : `${c.city}, ${c.country} · @${c.domains[0]}`}
+              </p>
+            </button>
+          ))}
+        </div>
+      )}
 
-      {/* Document proof upload (no institutional email path) */}
-      {selectedCons && !isGoogle && !editing && isDoc && (
+      {/* Document proof upload (no institutional email path). Deliberately not
+          gated on a selection: with an empty approved list there would be
+          nothing to select, and the document is what establishes the school. */}
+      {!isGoogle && !editing && isDoc && (
         <div className="mt-5 rounded-2xl" style={{ border: `1px solid ${draft.proofDocUrl ? "#1A9E6E" : C.brass}`, background: C.inkSoft, padding: "18px 18px" }}>
           <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brassLabel, letterSpacing: 0.5, marginBottom: 8 }}>UPLOAD PROOF OF ENROLLMENT</p>
           <p className="text-sm" style={{ color: C.ivoryDim, marginBottom: 12 }}>
-            Upload a <b>student ID card</b>, <b>enrollment certificate</b>, or <b>tuition receipt</b> from {selectedCons.name}. Our team reviews it manually before granting student status.
+            Upload a <b>student ID card</b>, <b>enrollment certificate</b>, or <b>tuition receipt</b>
+            {selectedCons ? ` from ${selectedCons.name}` : " from your conservatory"}. Our team reviews it manually before granting student status
+            {selectedCons ? "" : ", and confirms your conservatory from the document"}.
           </p>
           {draft.proofDocUrl ? (
             <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
@@ -5459,6 +5507,12 @@ function AdminVerifications({ card, STATUS_COLOR }) {
     await supabase.from("student_verifications").update({ status, conservatory_name: name, conservatory_address: address }).eq("id", r.id);
     if (status === "approved") {
       await supabase.from("profiles").update({ approved: true, conservatory_verified: true }).eq("id", r.user_id);
+      // Approving a proof is also what adds the school to the document
+      // route's list, so the next student from there can just pick it.
+      if (name.trim()) {
+        await supabase.from("approved_conservatories")
+          .upsert({ name: name.trim(), address: address.trim() }, { onConflict: "name" });
+      }
     } else {
       await supabase.from("profiles").update({ approved: false, conservatory_verified: false }).eq("id", r.user_id);
     }
