@@ -2101,10 +2101,15 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
               width={560}
               height={837}
               className="artium-explore-pin"
-              style={{ display: "block", height: "min(200px, 34vw)", width: "auto", marginTop: 2 }}
+              // The extra top margin is what lifts the label and count: the
+              // column is centre-justified, so adding height below them pushes
+              // the whole block up by half of it.
+              style={{ display: "block", height: "min(230px, 39vw)", width: "auto", marginTop: 14 }}
             />
             <span style={{ fontSize: 12, color: C.ivoryDim, fontFamily: FONT_BODY, fontStyle: "italic", lineHeight: 1.4 }}>
-              Tap the pin to explore your network before signing up
+              {/* Explicit break so it always splits here, rather than wherever
+                  the circle's width happens to put it. */}
+              Tap the pin to explore your network<br />before signing up
             </span>
           </button>
         </div>
