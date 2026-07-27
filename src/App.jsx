@@ -5481,13 +5481,19 @@ function AdminScreen({ authUser }) {
 }
 
 /* Admin — student document-verification review (4-column table) */
-function AdminVerifications({ card, STATUS_COLOR }) {
+function AdminVerifications({ authUser, card, STATUS_COLOR }) {
+  // The demo teacher is flagged as an admin locally so the tab is reachable,
+  // but it has no Supabase session — so every query here runs as anon, RLS
+  // refuses it, and an empty result reads as "the documents are gone" rather
+  // than "you aren't allowed to see them". Say which it is.
+  const isRealUser = !!authUser?.id;
   const [rows, setRows] = useState([]);
   const [edits, setEdits] = useState({}); // id -> { conservatory_name, conservatory_address }
   const [busy, setBusy] = useState("");
   const [reading, setReading] = useState("");
 
   async function load() {
+    if (!isRealUser) { setRows([]); return; }
     const { data } = await supabase.from("student_verifications").select("*").order("created_at", { ascending: false });
     setRows(data || []);
   }
@@ -5614,6 +5620,14 @@ function AdminVerifications({ card, STATUS_COLOR }) {
   }
 
   function Table({ list, editable }) {
+    if (!isRealUser) return (
+      <div style={{ ...card, textAlign: "center", border: `1px solid ${C.brass}` }}>
+        <p style={{ fontSize: 14, color: C.ivory, margin: 0, fontWeight: 600 }}>Demo session — verification data is hidden</p>
+        <p style={{ fontSize: 13, color: C.ivoryDim, margin: "6px 0 0" }}>
+          Enrolment proofs are private, so they load only for a signed-in admin account. Nothing has been deleted — log in with your own account to review them.
+        </p>
+      </div>
+    );
     if (list.length === 0) return <div style={{ ...card, textAlign: "center" }}><p style={{ fontSize: 14, color: C.ivoryDim, margin: 0 }}>{editable ? "No pending student verifications." : "No reviewed verifications yet."}</p></div>;
     return (
       <div style={{ ...card, overflowX: "auto", padding: "8px 8px" }}>
