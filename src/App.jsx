@@ -1295,7 +1295,13 @@ export default function App() {
   // Which student route the entry gate chose: "otp" verifies an institutional
   // email, "document" uploads proof for manual review. Both options now go via
   // the landing page first, so the choice has to outlive that detour.
-  const [verifyMethod, setVerifyMethod] = useState("otp");
+  // Signing in with Google leaves the page entirely and comes back, which
+  // wipes React state — so which entry-gate circle they picked has to survive
+  // in sessionStorage, the same way the Google role already does. Without
+  // this, every Google signup silently landed on the institutional-email
+  // route regardless of which circle they came from.
+  const [verifyMethod, setVerifyMethod] = useState(() => sessionStorage.getItem("artium_verify_method") || "otp");
+  React.useEffect(() => { sessionStorage.setItem("artium_verify_method", verifyMethod); }, [verifyMethod]);
 
   const [students, setStudents] = useState(() => seedTeaching([...SAMPLE_STUDENTS, ...CURTIS_MOCK_STUDENTS]));
   const [myProfile, setMyProfile] = useState(null);
@@ -1382,7 +1388,12 @@ export default function App() {
             setLearnerGoogleName(googleName);
             setScreen("learnerSignup");
           } else {
-            setDraft((d) => ({ ...d, name: googleName, email: authUser.email || "", password: "__google__", confirmPassword: "__google__" }));
+            // Restore the route they picked before the OAuth round-trip. The
+            // draft still carries emptyDraft()'s "otp", so this has to be set
+            // explicitly rather than left to the spread.
+            const savedMethod = sessionStorage.getItem("artium_verify_method") || "otp";
+            setVerifyMethod(savedMethod);
+            setDraft((d) => ({ ...d, verifyMethod: savedMethod, name: googleName, email: authUser.email || "", password: "__google__", confirmPassword: "__google__" }));
             setEditingProfile(false);
             setStep(1);
             setScreen("signup");
@@ -2175,8 +2186,10 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
     draft.name.trim().length > 1 && !!draft.instrument,
     // On the document route the upload is what gates the step — a conservatory
     // may not be selectable yet, since the approved list starts empty.
+    // No Google bypass on the document route: signing in with Google says
+    // nothing about whether they study anywhere.
     draft.verifyMethod === "document"
-      ? (editing || draft.password === "__google__" || !!draft.proofDocUrl)
+      ? (editing || !!draft.proofDocUrl)
       : !!draft.conservatoryId && (editing || draft.password === "__google__" || draft.conservatoryVerified),
     draft.tastes.length >= 3,
     draft.pieces.length >= 1,
@@ -2580,8 +2593,10 @@ function StepConservatory({ draft, update, editing }) {
 
       {/* Document proof upload (no institutional email path). Deliberately not
           gated on a selection: with an empty approved list there would be
-          nothing to select, and the document is what establishes the school. */}
-      {!isGoogle && !editing && isDoc && (
+          nothing to select, and the document is what establishes the school.
+          Nor on !isGoogle — a Google account proves an email address, not
+          enrolment, so the Google shortcut that skips OTP doesn't apply. */}
+      {!editing && isDoc && (
         <div className="mt-5 rounded-2xl" style={{ border: `1px solid ${draft.proofDocUrl ? "#1A9E6E" : C.brass}`, background: C.inkSoft, padding: "18px 18px" }}>
           <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brassLabel, letterSpacing: 0.5, marginBottom: 8 }}>UPLOAD PROOF OF ENROLLMENT</p>
           <p className="text-sm" style={{ color: C.ivoryDim, marginBottom: 12 }}>
