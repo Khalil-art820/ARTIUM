@@ -6,6 +6,7 @@ import {
   Pencil, Plus, Trash2, Home, Upload, Eye, EyeOff, ChevronLeft,
   Calendar, CreditCard, Video, Link2, Clock, Bell,
   Map, BookOpen, ListChecks, LayoutList, Megaphone, Check as CheckIcon, ShieldCheck, FileText, Lock,
+  ScanLine,
 } from "lucide-react";
 import { useAuth } from "./contexts/AuthContext";
 import { supabase } from "./lib/supabase";
@@ -5415,6 +5416,7 @@ function AdminVerifications({ card, STATUS_COLOR }) {
   const [rows, setRows] = useState([]);
   const [edits, setEdits] = useState({}); // id -> { conservatory_name, conservatory_address }
   const [busy, setBusy] = useState("");
+  const [reading, setReading] = useState("");
 
   async function load() {
     const { data } = await supabase.from("student_verifications").select("*").order("created_at", { ascending: false });
@@ -5436,6 +5438,20 @@ function AdminVerifications({ card, STATUS_COLOR }) {
     window.open(data.signedUrl, "_blank", "noopener");
   }
 
+  // Asks the verify-document function what the uploaded proof says. It only
+  // ever writes to the extraction columns, so this cannot approve anyone —
+  // it fills in evidence for the decision you make below.
+  async function readDoc(r) {
+    setReading(r.id);
+    const { error } = await supabase.functions.invoke("verify-document", { body: { verification_id: r.id } });
+    setReading("");
+    await load();
+    if (error) {
+      const detail = await error.context?.json?.().catch(() => null);
+      alert(detail?.error || error.message || "Could not read the document.");
+    }
+  }
+
   async function decide(r, status) {
     setBusy(r.id);
     const name = fieldVal(r, "conservatory_name");
@@ -5455,6 +5471,72 @@ function AdminVerifications({ card, STATUS_COLOR }) {
   const th = { textAlign: "left", fontSize: 10, fontWeight: 700, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.06em", padding: "8px 8px", borderBottom: `1px solid ${C.inkLine}` };
   const td = { padding: "10px 8px", fontSize: 12, color: C.ivory, verticalAlign: "top", borderBottom: `1px solid ${C.inkLine}` };
   const inp = { width: "100%", padding: "7px 9px", borderRadius: 8, border: `1px solid ${C.inkLine}`, fontSize: 12, fontFamily: FONT_BODY, boxSizing: "border-box", outline: "none", marginBottom: 6 };
+
+  const readBtn = { display: "inline-flex", alignItems: "center", gap: 5, background: "none", border: `1px solid ${C.inkLine}`, borderRadius: 8, padding: "6px 10px", cursor: "pointer", color: C.brassLabel, fontSize: 11, fontWeight: 700, marginBottom: 8 };
+
+  // What the document says, next to what the student claimed. Evidence for
+  // the reviewer — never a verdict: a forged certificate reads as cleanly as
+  // a real one, so the mismatch flags are what actually carry signal here.
+  function Extraction({ r }) {
+    if (reading === r.id || r.extraction_status === "running")
+      return <p style={{ margin: "0 0 8px", fontSize: 11, color: C.ivoryDim, fontStyle: "italic" }}>Reading the document…</p>;
+
+    if (r.extraction_status === "failed")
+      return (
+        <div style={{ marginBottom: 8 }}>
+          <p style={{ margin: "0 0 5px", fontSize: 11, color: C.burgundy }}>Couldn't read it: {r.extraction_error}</p>
+          <button onClick={() => readDoc(r)} style={readBtn}>Try again</button>
+        </div>
+      );
+
+    const x = r.extracted;
+    if (!x?.document)
+      return <button onClick={() => readDoc(r)} style={readBtn}><ScanLine size={12} /> Read document</button>;
+
+    const d = x.document;
+    const c = x.checks || {};
+    const agrees = c.conservatory_matches_claim;
+    const tone = agrees === false ? C.burgundy : agrees === true ? "#1A9E6E" : C.brassLabel;
+
+    const flags = [];
+    if (agrees === false) flags.push(`Claimed ${c.claimed_conservatory || "—"}, document says ${d.conservatory_name || "nothing"}`);
+    if (c.name_matches_claim === false) flags.push(`Name on document is ${d.student_name || "absent"}, not ${c.claimed_name}`);
+    if (c.duplicate_document?.found) flags.push("This exact file was uploaded by another applicant");
+    if (d.legible === false) flags.push("The scan is hard to read — open it yourself");
+    if (d.notes) flags.push(d.notes);
+
+    return (
+      <div style={{ marginBottom: 10, padding: "8px 9px", borderRadius: 8, border: `1px solid ${tone}33`, background: `${tone}0D` }}>
+        <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: tone }}>
+          {agrees === false ? "Document disagrees with the claim" : agrees === true ? "Document matches the claim" : "Document read"}
+        </p>
+        <p style={{ margin: "4px 0 0", fontSize: 11, color: C.ivory }}>
+          {d.conservatory_name || "No institution named"}
+          {d.conservatory_location ? ` · ${d.conservatory_location}` : ""}
+          {d.student_name ? ` · ${d.student_name}` : ""}
+          {d.academic_year ? ` · ${d.academic_year}` : ""}
+        </p>
+        {d.evidence && (
+          <p style={{ margin: "4px 0 0", fontSize: 10, color: C.ivoryDim, fontStyle: "italic" }}>“{d.evidence}”</p>
+        )}
+        {flags.map((f, i) => (
+          <p key={i} style={{ margin: "4px 0 0", fontSize: 10, color: C.burgundy }}>⚠ {f}</p>
+        ))}
+        <div style={{ display: "flex", gap: 6, marginTop: 7 }}>
+          <button
+            onClick={() => { setField(r, "conservatory_name", d.conservatory_name || ""); setField(r, "conservatory_address", d.conservatory_location || ""); }}
+            style={{ ...readBtn, marginBottom: 0 }}
+          >
+            Use these values
+          </button>
+          <button onClick={() => readDoc(r)} style={{ ...readBtn, marginBottom: 0 }}>Re-read</button>
+        </div>
+        <p style={{ margin: "6px 0 0", fontSize: 10, color: C.ivoryDim }}>
+          Reports what the document claims. It cannot tell a genuine document from a forged one — you decide.
+        </p>
+      </div>
+    );
+  }
 
   function Table({ list, editable }) {
     if (list.length === 0) return <div style={{ ...card, textAlign: "center" }}><p style={{ fontSize: 14, color: C.ivoryDim, margin: 0 }}>{editable ? "No pending student verifications." : "No reviewed verifications yet."}</p></div>;
@@ -5485,6 +5567,7 @@ function AdminVerifications({ card, STATUS_COLOR }) {
                 <td style={td}>
                   {editable ? (
                     <>
+                      <Extraction r={r} />
                       <input style={inp} value={fieldVal(r, "conservatory_name")} onChange={(e) => setField(r, "conservatory_name", e.target.value)} placeholder="Conservatory name" />
                       <input style={inp} value={fieldVal(r, "conservatory_address")} onChange={(e) => setField(r, "conservatory_address", e.target.value)} placeholder="Address" />
                     </>
