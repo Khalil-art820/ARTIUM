@@ -3861,9 +3861,23 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
           </div>
         )}
         </div>
-        {(studentLoggedIn || learnerProfile) && (
+        {(studentLoggedIn || learnerProfile) ? (
           <p style={{ textAlign: "center", marginTop: 32, fontSize: 13, color: C.ivoryDim }}>
             {studentLoggedIn ? "Logged in as a conservatory student" : <>Logged in as {learnerProfile.name}</>}
+          </p>
+        ) : (
+          // Returning users had no way back in from here. "Log in" only ever
+          // appeared once this browser had seen someone log out, so on a new
+          // device — or a private window — every circle led to signup and
+          // there was no route to an existing account.
+          <p style={{ textAlign: "center", marginTop: 32, fontSize: 13, color: C.ivoryDim }}>
+            Already have an account?{" "}
+            <button
+              onClick={onLogin}
+              style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: C.brassLabel, cursor: "pointer", textDecoration: "underline" }}
+            >
+              Log in
+            </button>
           </p>
         )}
         {!studentLoggedIn && !learnerProfile && (
