@@ -2054,7 +2054,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
 
       {/* Hero */}
       <div style={{ background: "#fff", borderBottom: `1px solid ${C.inkLine}` }}>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "4px 24px 24px", gap: 16 }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "36px 24px 28px", gap: 30 }}>
           <h1 style={{ fontSize: "clamp(24px,3vw,40px)", fontWeight: 700, lineHeight: 1.08, letterSpacing: 0, color: C.ivory, margin: 0, fontFamily: "'DM Serif Display', serif", textAlign: "center" }}>
             Every Conservatory. One Network.
           </h1>
@@ -2104,7 +2104,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
               style={{ display: "block", height: "min(200px, 34vw)", width: "auto", marginTop: 2 }}
             />
             <span style={{ fontSize: 12, color: C.ivoryDim, fontFamily: FONT_BODY, fontStyle: "italic", lineHeight: 1.4 }}>
-              Tap the pin to get to know your network before signing up
+              Tap the pin to explore your network before signing up
             </span>
           </button>
         </div>
