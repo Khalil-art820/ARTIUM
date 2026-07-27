@@ -2034,6 +2034,21 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
               <Avatar name={myProfile.name} id="me" size={32} photoUrl={myProfile.photoUrl} online />
             </button>
           )}
+          {/* Sits where the avatar goes once signed in. This is now the page's
+              only call to action — the intro card that used to carry it is gone.
+              Returning students who logged out get the login route instead. */}
+          {!myProfile && (
+            <button
+              onClick={studentLoggedOut ? onLogin : onApply}
+              style={{
+                background: C.brass, color: C.brassText, border: "none", borderRadius: 999,
+                padding: "7px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer",
+                fontFamily: FONT_BODY, whiteSpace: "nowrap",
+              }}
+            >
+              {studentLoggedOut ? "Log in" : "Sign Up"}
+            </button>
+          )}
         </div>
       </div>
 
@@ -2044,60 +2059,52 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
           <h1 style={{ fontSize: "clamp(24px,3vw,40px)", fontWeight: 700, lineHeight: 1.08, letterSpacing: 0, color: C.ivory, margin: 0, fontFamily: "'DM Serif Display', serif", textAlign: "center" }}>
             Every Conservatory. One Network.
           </h1>
-          {/* Content pill */}
-          <div style={{ background: "#fff", borderRadius: 20, padding: "24px 28px", boxShadow: "0 4px 20px rgba(0,0,0,0.13), 0 0 0 1px rgba(0,0,0,0.08)", width: "100%", maxWidth: 520, textAlign: "center" }}>
-            <p style={{ color: C.ivoryDim, fontSize: 15, lineHeight: 1.65, margin: 0 }}>
-              Artium connects conservatory students across the world's top conservatories — message peers, promote yourself and earn while giving lessons to classical music enthusiasts.
-            </p>
-            {!myProfile && (
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginTop: 20, flexWrap: "wrap" }}>
-                {studentLoggedOut
-                  ? <PrimaryBtn onClick={onLogin} icon={ArrowRight}>Log in</PrimaryBtn>
-                  : <PrimaryBtn onClick={onApply} icon={ArrowRight}>Get started free</PrimaryBtn>}
-                <span style={{ fontSize: 13, color: C.ivoryDim }}>No credit card required.</span>
-              </div>
-            )}
-            {error && <p style={{ marginTop: 12, fontSize: 14, color: C.burgundy, lineHeight: 1.5 }}>{error}</p>}
-          </div>
-          {/* The whole panel is one button, not just the heading: the pin is the
-              biggest thing on it and was the obvious thing to click, yet did
-              nothing. Buttons cannot nest, so the heading is now a span. */}
+          {/* The intro card is gone and its call to action moved to the header
+              pill, so auth errors render on their own rather than inside it. */}
+          {error && (
+            <p style={{ maxWidth: 520, textAlign: "center", fontSize: 14, color: C.burgundy, lineHeight: 1.5, margin: 0 }}>{error}</p>
+          )}
+          {/* One button, not just the heading: the pin is the biggest thing here
+              and the obvious thing to click. Buttons cannot nest, so the heading
+              is a span. Circular, so everything is inset from the edge — a
+              square-cornered layout would clip against the curve. */}
           <button
             type="button"
             onClick={onPreview}
             className="artium-explore"
             aria-label="Explore Artium's network"
             style={{
-              display: "block", width: "100%", maxWidth: 520, padding: 0, textAlign: "inherit",
-              borderRadius: 12, overflow: "hidden", border: `1px solid ${C.inkLine}`,
-              background: "#fff", cursor: "pointer", font: "inherit",
+              width: "min(430px, 88vw)", aspectRatio: "1 / 1", borderRadius: "50%",
+              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+              gap: 6, padding: "0 10%", overflow: "hidden",
+              border: `1px solid ${C.inkLine}`, background: "#fff", cursor: "pointer",
+              font: "inherit", textAlign: "center",
             }}
           >
-            <span style={{ padding: "10px 18px", background: "#fff", display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
-              <span style={{ fontSize: 14, fontWeight: 600, color: C.ivory, fontFamily: FONT_BODY, display: "inline-flex", alignItems: "center", gap: 6 }}>
-                <Compass size={16} /> Explore Artium's Network
-                <ChevronRight size={15} color={C.ivory} className="artium-explore-chevron" style={{ marginTop: 2 }} />
-              </span>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 13, color: C.ivoryDim, fontFamily: FONT_BODY }}>
-                <Users size={14} /> {Object.values(studentsByCons).flat().length}
-              </span>
+            {/* Inline rather than flex so the chevron stays welded to the last
+                word when the label wraps in the narrow circle — as flex it was
+                pushed to the far edge of the second line. */}
+            <span style={{ fontSize: 14, fontWeight: 600, color: C.ivory, fontFamily: FONT_BODY, lineHeight: 1.35 }}>
+              {/* display inline-block because Tailwind's preflight makes every
+                  svg display:block, which broke the line after the icon. */}
+              <Compass size={15} style={{ verticalAlign: -3, marginRight: 6, display: "inline-block" }} />
+              Explore Artium's Network
+              <ChevronRight size={15} color={C.ivory} className="artium-explore-chevron" style={{ verticalAlign: -3, marginLeft: 3, display: "inline-block" }} />
             </span>
-            {/* A symbol, not a map: this panel is a doorway to the network, and
-                a live Leaflet map here was doing interactive work nobody could
-                use at 240px. */}
-            <span style={{ padding: "22px 7px 16px", background: "#fff", borderTop: `1px solid ${C.inkLine}`, display: "flex", justifyContent: "center" }}>
-              {/* Taller than it is wide (0.669), so it is sized by height —
-                  giving it a square box would letterbox it. */}
-              <img
-                src="/glo-pin.png"
-                alt=""
-                width={560}
-                height={837}
-                className="artium-explore-pin"
-                style={{ display: "block", height: "min(280px, 42vw)", width: "auto" }}
-              />
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 13, color: C.ivoryDim, fontFamily: FONT_BODY }}>
+              <Users size={14} /> {Object.values(studentsByCons).flat().length}
             </span>
-            <span style={{ display: "block", background: "#fff", padding: "0 12px 18px", fontSize: 12, color: C.ivoryDim, fontFamily: FONT_BODY, textAlign: "center" }}>
+            {/* Taller than it is wide (0.669), so sized by height — a square box
+                would letterbox it. */}
+            <img
+              src="/glo-pin.png"
+              alt=""
+              width={560}
+              height={837}
+              className="artium-explore-pin"
+              style={{ display: "block", height: "min(200px, 34vw)", width: "auto", marginTop: 2 }}
+            />
+            <span style={{ fontSize: 12, color: C.ivoryDim, fontFamily: FONT_BODY }}>
               Tap the pin to open the globe
             </span>
           </button>
