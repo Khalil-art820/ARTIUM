@@ -940,7 +940,14 @@ const GLOBE_CONTINENTS = [
   { label: "OCEANIA", lat: -25, lng: 134 },
 ];
 
-function GlobeMap({ selectedId, onSelect, studentsByCons, height = 640, onOpenStudent, canViewRoster = false, onLockedClick }) {
+function GlobeMap({ selectedId, onSelect, studentsByCons, height = 640, onOpenStudent, canViewRoster = false, onLockedClick, extraCons = [] }) {
+  // Built-in schools plus any established from an approved document. Only
+  // geocoded ones can be placed, so the rest are filtered out rather than
+  // landing at 0,0 in the Gulf of Guinea.
+  const ALL_CONS = React.useMemo(
+    () => [...CONSERVATORIES, ...extraCons.filter((c) => Number.isFinite(c.lat) && Number.isFinite(c.lng))],
+    [extraCons],
+  );
   const [wrapRef, { w, h }] = useMeasured();
   const globeRef = useRef(null);
   // A phone frame is narrow and short: keeping the desktop height and camera
@@ -950,8 +957,8 @@ function GlobeMap({ selectedId, onSelect, studentsByCons, height = 640, onOpenSt
 
   const allStudents = Object.values(studentsByCons).flat();
   const totalTeachers = allStudents.filter((s) => s.teaching && s.teaching.open).length;
-  const pinned = CONSERVATORIES.filter((c) => (studentsByCons[c.id] || []).length > 0);
-  const cons = CONSERVATORIES.find((c) => c.id === selectedId);
+  const pinned = ALL_CONS.filter((c) => (studentsByCons[c.id] || []).length > 0);
+  const cons = ALL_CONS.find((c) => c.id === selectedId);
   const roster = selectedId ? studentsByCons[selectedId] || [] : [];
 
   // onGlobeReady is the only reliable signal that the three.js scene exists.
@@ -1486,6 +1493,17 @@ export default function App() {
   const [selectedStudentId, setSelectedStudentId] = useState(null);
   const [profileBack, setProfileBack] = useState("map");
 
+  // Conservatories established from an approved document. They aren't in the
+  // built-in list — that one is keyed on email domains — so without this the
+  // globe has nowhere to put their students.
+  const [docCons, setDocCons] = useState([]);
+  React.useEffect(() => {
+    let live = true;
+    supabase.from("approved_conservatories").select("id, name, address, lat, lng")
+      .then(({ data }) => { if (live) setDocCons((data || []).map(asConservatory)); });
+    return () => { live = false; };
+  }, []);
+
   const [conversations, setConversations] = useState(SAMPLE_CONVERSATIONS);
   const [activeChatId, setActiveChatId] = useState(null);
   const [showGuestPrompt, setShowGuestPrompt] = useState(false);
@@ -1974,6 +1992,7 @@ export default function App() {
                 // belt-and-braces — the popup's locked state shouldn't normally
                 // be reachable by a signed-in student.
                 canViewRoster={!!myProfile && authProfile?.approved !== false}
+                extraCons={docCons}
               />
             </>
           )}
@@ -2478,6 +2497,52 @@ function StepIntro({ draft, update }) {
       </div>
     </div>
   );
+}
+
+/**
+ * Turn a conservatory's name + address into coordinates so it can be placed
+ * on the globe. Nominatim (OpenStreetMap) needs no key and is well inside its
+ * usage policy here — this runs once per approval, by hand, not per pageview.
+ *
+ * Returns null rather than throwing: geocoding failing must never block an
+ * approval. The pin simply waits for coordinates.
+ */
+async function geocodeConservatory(name, address) {
+  const attempts = [[name, address].filter(Boolean).join(", "), address, name].filter(Boolean);
+  for (const q of attempts) {
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(q)}`,
+        { headers: { Accept: "application/json" } },
+      );
+      if (!res.ok) continue;
+      const hits = await res.json();
+      const hit = hits?.[0];
+      if (!hit) continue;
+      const lat = parseFloat(hit.lat);
+      const lng = parseFloat(hit.lon);
+      if (Number.isFinite(lat) && Number.isFinite(lng)) return { lat, lng, query: q };
+    } catch {
+      // Network or CORS failure — fall through to the next, less specific query.
+    }
+  }
+  return null;
+}
+
+/** An approved_conservatories row, shaped like a built-in CONSERVATORIES entry. */
+function asConservatory(row) {
+  const [city = "", country = ""] = (row.address || "").split(",").map((s) => s.trim());
+  return {
+    id: row.id,
+    name: row.name,
+    short: row.name,
+    city,
+    country,
+    lat: row.lat,
+    lng: row.lng,
+    domains: [],          // no institutional domain — that's why it came via a document
+    fromDocument: true,
+  };
 }
 
 function emailMatchesConservatory(email, cons) {
@@ -3208,8 +3273,9 @@ function SignupPromptModal({ onClose, onSignup }) {
   );
 }
 
-function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId, onOpenStudent, isGuest, onGuestClick, onBack, canViewRoster }) {
-  const cons = CONSERVATORIES.find((c) => c.id === selectedConsId);
+function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId, onOpenStudent, isGuest, onGuestClick, onBack, canViewRoster, extraCons = [] }) {
+  const ALL_CONS = React.useMemo(() => [...CONSERVATORIES, ...extraCons], [extraCons]);
+  const cons = ALL_CONS.find((c) => c.id === selectedConsId);
   const roster = selectedConsId ? studentsByCons[selectedConsId] || [] : [];
   return (
     <div className="lg-split-map h-full">
@@ -3218,15 +3284,16 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
         <GlobeMap
           selectedId={selectedConsId} onSelect={setSelectedConsId} studentsByCons={studentsByCons} height={640}
           onOpenStudent={onOpenStudent} canViewRoster={canViewRoster} onLockedClick={onGuestClick}
+          extraCons={extraCons}
         />
       </div>
       <div className="lg-scroll overflow-y-auto" style={{ borderLeft: `1px solid ${C.inkLine}`, maxHeight: 720 }}>
         {!cons ? (
           <div className="p-6">
-            <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.ivoryDim }}>{CONSERVATORIES.length} CONSERVATORIES</p>
+            <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.ivoryDim }}>{ALL_CONS.length} CONSERVATORIES</p>
             <p className="mt-2 text-sm" style={{ color: C.ivoryDim }}>Spin the globe and pick a pin to see who's studying there.</p>
             <div className="mt-5 flex flex-col gap-1">
-              {CONSERVATORIES.map((c) => (
+              {ALL_CONS.map((c) => (
                 <button key={c.id} onClick={() => setSelectedConsId(c.id)} className="text-left px-3 py-2.5 rounded-lg flex items-center justify-between" style={{ border: `1px solid ${C.inkLine}` }}>
                   <div>
                     <p style={{ fontSize: 13, fontWeight: 600 }}>{c.name}</p>
@@ -3240,7 +3307,10 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
         ) : (
           <div className="p-6">
             <button onClick={() => setSelectedConsId(null)} className="text-xs flex items-center gap-1 mb-4" style={{ color: C.ivoryDim }}><ArrowLeft size={13} /> All conservatories</button>
-            <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brassLabel }}>{cons.city.toUpperCase()}, {cons.country.toUpperCase()} · @{cons.domains?.[0]}</p>
+            <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brassLabel }}>
+              {[cons.city, cons.country].filter(Boolean).join(", ").toUpperCase()}
+              {cons.domains?.[0] ? ` · @${cons.domains[0]}` : ""}
+            </p>
             <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600, marginTop: 4 }}>{cons.name}</h3>
             <p className="mt-1 text-xs" style={{ color: C.ivoryDim }}>{roster.length} student{roster.length === 1 ? "" : "s"} on Artium</p>
             <div className="mt-5 flex flex-col gap-2">
@@ -5562,10 +5632,43 @@ function AdminVerifications({ authUser, card, STATUS_COLOR }) {
       return;
     }
 
+    // The conservatory has to exist before the profile is written, because the
+    // profile needs its id: the globe groups students by conservatory_id, and
+    // the document route leaves that null. Approved but unlinked means the
+    // school shows in the list with no pin and an empty roster.
+    let consId = null;
+    if (approving && name.trim()) {
+      const consName = name.trim();
+      const consAddress = address.trim();
+      const { data: consRows, error: consError } = await supabase.from("approved_conservatories")
+        .upsert({ name: consName, address: consAddress }, { onConflict: "name" })
+        .select("id, lat, lng");
+      if (consError) {
+        alert(`Could not add "${consName}" to the conservatory list: ${consError.message}`);
+      } else {
+        const row = consRows?.[0];
+        consId = row?.id || null;
+        // Without coordinates there is nowhere to put the pin, so the student
+        // ends up approved but invisible on the globe. Geocode once, here.
+        if (row && (row.lat == null || row.lng == null)) {
+          const hit = await geocodeConservatory(consName, consAddress);
+          if (hit) {
+            await supabase.from("approved_conservatories")
+              .update({ lat: hit.lat, lng: hit.lng, geocoded_at: new Date().toISOString(), geocode_query: hit.query })
+              .eq("id", row.id);
+          } else {
+            alert(`"${consName}" was added to the list, but its address could not be located — it won't appear on the globe yet. Try a fuller address (street, city, country) and approve again.`);
+          }
+        }
+      }
+    }
+
     // .select() so the response carries the affected rows: RLS can refuse an
     // update by matching zero rows without raising an error at all.
+    const patch = { approved: approving, conservatory_verified: approving };
+    if (approving && consId) patch.conservatory_id = consId;
     const { data: touched, error: profileError } = await supabase.from("profiles")
-      .update({ approved: approving, conservatory_verified: approving })
+      .update(patch)
       .eq("id", r.user_id)
       .select("id, approved");
     if (profileError) { setBusy(""); alert(`Request updated, but the student's profile was not: ${profileError.message}`); return; }
@@ -5573,14 +5676,6 @@ function AdminVerifications({ authUser, card, STATUS_COLOR }) {
       setBusy(""); load();
       alert("Request updated, but no profile row was changed — the student's account may not have a profile, or row-level security blocked the write. They will still see \"under review\".");
       return;
-    }
-
-    if (approving && name.trim()) {
-      // Approving a proof is also what adds the school to the document
-      // route's list, so the next student from there can just pick it.
-      const { error: consError } = await supabase.from("approved_conservatories")
-        .upsert({ name: name.trim(), address: address.trim() }, { onConflict: "name" });
-      if (consError) alert(`Student approved, but "${name.trim()}" was not added to the conservatory list: ${consError.message}`);
     }
 
     setBusy(""); load();
