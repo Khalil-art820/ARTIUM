@@ -220,7 +220,7 @@ const colorFor = (seed) => {
 const initials = (name) => name.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
 
 const SAMPLE_STUDENTS = [
-  { id: "demo-teacher", name: "Demo Teacher", instrument: "Piano", conservatoryId: "juilliard", year: "Final year", bio: "Demo account for testing teacher–learner interactions.", tastes: ["Chopin", "Debussy"], pieces: [{ title: "Ballade No. 1", composer: "Chopin" }], videoLink: "", top: "", flop: "", photoUrl: null, coverPhotoUrl: null, teaching: { open: true, mode: "online", price: "60" }, status: "approved", online: true },
+  { id: "demo-teacher", name: "Marcus Feld", instrument: "Piano", conservatoryId: "juilliard", year: "Final year", bio: "Final-year pianist at Juilliard. Happiest inside a Chopin ballade.", tastes: ["Chopin", "Debussy"], pieces: [{ title: "Ballade No. 1", composer: "Chopin" }], videoLink: "", top: "", flop: "", photoUrl: null, coverPhotoUrl: null, teaching: { open: true, mode: "online", price: "60" }, status: "approved", online: true },
   { id: "elise", name: "Élise Marchand", instrument: "Piano", conservatoryId: "paris", year: "3rd year", bio: "Drawn to color and light at the keyboard — chasing the perfect pedal half-tone.", tastes: ["Debussy", "Ravel", "Impressionism", "Chopin"], pieces: [{ title: "Images, Book I", composer: "Debussy" }, { title: "Gaspard de la nuit", composer: "Ravel" }], videoLink: "https://instagram.com/elise.piano", top: "Just nailed the voicing in \"Reflets dans l'eau\" — finally sounds like water instead of notes.", flop: "Still wrestling with the tremolo passage in Gaspard, my wrist gives out after a few bars.", online: true },
   { id: "theo", name: "Théo Lambert", instrument: "Piano", conservatoryId: "paris", year: "1st year", bio: "Recovering organist, newly obsessed with counterpoint.", tastes: ["Bach", "Baroque", "Beethoven"], pieces: [{ title: "Goldberg Variations, BWV 988", composer: "Bach" }], videoLink: "", top: "Finished memorizing the Goldberg aria — it finally feels like home.", flop: "Variation 26 is destroying my left hand independence.", online: false },
   { id: "lukas", name: "Lukas Brunner", instrument: "Piano", conservatoryId: "vienna", year: "4th year", bio: "Viennese classicism is home turf, but I'm trying to loosen up rhythmically.", tastes: ["Beethoven", "Schubert", "Classical Era"], pieces: [{ title: "Sonata No. 23 'Appassionata'", composer: "Beethoven" }, { title: "Wanderer Fantasy", composer: "Schubert" }], videoLink: "https://instagram.com/lukas.keys", top: "Played the Appassionata finale up to tempo for the first time.", flop: "The Wanderer Fantasy's octave passages are still sloppy under pressure.", online: true },
@@ -268,17 +268,6 @@ const CURTIS_MOCK_STUDENTS = [
   { id: "curtis-samuel", name: "Samuel Adeleke", instrument: "Trumpet", conservatoryId: "curtis", year: "2nd year", bio: "Piccolo trumpet enthusiast, to everyone else's dismay.", tastes: ["Bach", "Baroque"], pieces: [{ title: "Cantata BWV 51", composer: "Bach" }], videoLink: "", top: "Made it through the whole cantata without splitting a note.", flop: "Piccolo intonation is unforgiving when I'm tired.", online: false },
   { id: "curtis-hanne", name: "Hanne Voss", instrument: "Percussion", conservatoryId: "curtis", year: "3rd year", bio: "Timpani principally, marimba when nobody is looking.", tastes: ["Beethoven", "Brahms", "Classical Era"], pieces: [{ title: "Symphony No. 9, timpani excerpts", composer: "Beethoven" }], videoLink: "", top: "My tuning between movements is quick and accurate now.", flop: "Still over-playing in the loud tutti passages.", online: true, teaching: { open: true, mode: "physical", price: "37" } },
 ];
-
-/* ---------------------------------------------------------------- */
-/* DEMO PERSONAS — one per signup route, so each can be walked from  */
-/* the entry gate. Both students are approved with full access; the  */
-/* only difference between them is how they proved enrolment.        */
-/* ---------------------------------------------------------------- */
-// Keeps the id "demo-teacher": SAMPLE_CONVERSATIONS, TEACHING_SEED and the
-// seeded learner requests all key off it.
-const DEMO_STUDENT_EMAIL = { id: "demo-teacher", name: "Demo Teacher", instrument: "Piano", conservatoryId: "juilliard", year: "Final year", bio: "Demo account for testing teacher flows.", tastes: ["Chopin", "Debussy"], pieces: [{ title: "Ballade No. 1", composer: "Chopin" }], videoLink: "", top: "", flop: "", photoUrl: null, coverPhotoUrl: null, conservatoryEmail: "demo@juilliard.edu", conservatoryVerified: true, teaching: { open: true, mode: "online", price: "60" }, status: "approved", online: true };
-const DEMO_STUDENT_DOC = { id: "demo-student-doc", name: "Demo Student (no email)", instrument: "Cello", conservatoryId: "curtis", year: "3rd year", bio: "Demo account for the document-verified signup route.", tastes: ["Bach", "Brahms"], pieces: [{ title: "Cello Suite No. 3, BWV 1009", composer: "Bach" }], videoLink: "", top: "", flop: "", photoUrl: null, coverPhotoUrl: null, conservatoryEmail: "", conservatoryVerified: false, teaching: { open: true, mode: "both", price: "45" }, status: "approved", online: true };
-const DEMO_TEACHER_2 = { id: "demo-teacher-2", name: "Sophie Renard", instrument: "Violin", conservatoryId: "paris", year: "3rd year", bio: "Violin teacher based in Paris.", tastes: ["Bach", "Mozart"], pieces: [{ title: "Sonata No. 1", composer: "Bach" }], videoLink: "", top: "", flop: "", photoUrl: null, coverPhotoUrl: null, teaching: { open: true, mode: "online", price: "55" }, status: "approved", online: false };
 
 const SAMPLE_CONVERSATIONS = {
   daniel: [
@@ -1414,32 +1403,10 @@ export default function App() {
         }
       }
     }
-    // Restore demo session on refresh (demo users have no Supabase session)
-    if (!authProfile && !authUser) {
-      const demo = localStorage.getItem("artium_demo_session");
-      // "teacher" is the value this key held before there were three personas;
-      // sessions stored under it are still out there, so it stays accepted.
-      if (demo === "teacher" || demo === "student-email" || demo === "student-doc") {
-        const profile = demo === "student-doc" ? DEMO_STUDENT_DOC : DEMO_STUDENT_EMAIL;
-        setMyProfile(profile);
-        setStudents((arr) => arr.some((s) => s.id === profile.id) ? arr : [...arr, profile]);
-        seedDemoLearner(profile.id);
-        const savedTab = localStorage.getItem("artium_app_tab") || "map";
-        setScreen("app"); setAppTab(savedTab);
-      } else if (demo === "learner") {
-        setLearnerProfile({ name: "Demo Learner", location: "Paris", instrument: "Piano", bio: "Amateur pianist exploring lessons." });
-        setStudents((arr) => {
-          let next = arr.some((s) => s.id === "demo-teacher") ? arr : [...arr, DEMO_STUDENT_EMAIL];
-          next = next.some((s) => s.id === "demo-teacher-2") ? next : [...next, DEMO_TEACHER_2];
-          return next;
-        });
-        const tr = JSON.parse(localStorage.getItem("teachRequests") || "{}");
-        if (!tr["demo-teacher"]) tr["demo-teacher"] = "accepted";
-        if (!tr["demo-teacher-2"]) tr["demo-teacher-2"] = "accepted";
-        localStorage.setItem("teachRequests", JSON.stringify(tr));
-        setScreen("learnerMap");
-      }
-    }
+    // Anyone still holding a demo session from before the personas were
+    // removed would otherwise be restored into an account that no longer
+    // exists, so the key is cleared rather than read.
+    if (!authProfile && !authUser) localStorage.removeItem("artium_demo_session");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, authProfile, authUser]);
 
@@ -1525,9 +1492,10 @@ export default function App() {
     return acc;
   }, {});
 
-  // Owner/admin: real users via profiles.is_admin; the local demo teacher is
-  // treated as admin so the approval flow is fully previewable offline.
-  const isAdmin = authProfile?.is_admin === true || myProfile?.id === "demo-teacher";
+  // Admin is now strictly profiles.is_admin — a real, signed-in account. The
+  // demo teacher used to count too, which put the tab on screen while every
+  // query behind it ran unauthenticated and came back empty.
+  const isAdmin = authProfile?.is_admin === true;
 
   // Takes no argument on purpose: it is wired straight to onClick handlers in
   // several places, so a positional verifyMethod would receive a click event.
@@ -1580,45 +1548,6 @@ export default function App() {
     if (learnerProfile) { setScreen("learnerMap"); return; }
     if (learnerLoggedOut) { startLogin(); return; }
     setLearnerProfile(null); setAuthError(""); setScreen("learnerSignup");
-  }
-  function seedDemoLearner(teacherId) {
-    const existing = JSON.parse(localStorage.getItem("incomingRequests") || "{}");
-    existing[teacherId] = existing[teacherId] || [];
-    if (!existing[teacherId].find((r) => r.learnerId === "demo-learner")) {
-      existing[teacherId].push({ learnerId: "demo-learner", name: "Demo Learner", instrument: "Piano", bio: "Amateur pianist exploring lessons.", status: "accepted" });
-      localStorage.setItem("incomingRequests", JSON.stringify(existing));
-    }
-  }
-  // Both student demos land in the app fully approved. What separates them is
-  // only how enrolment was proved: an institutional email vs an uploaded
-  // document. Session key is "student-email"/"student-doc"; see the restore
-  // block for why the legacy "teacher" value is still honoured.
-  function enterDemoStudent(profile, sessionKey) {
-    setMyProfile(profile);
-    setStudents((arr) => arr.some((s) => s.id === profile.id) ? arr : [...arr, profile]);
-    seedDemoLearner(profile.id);
-    localStorage.setItem("artium_demo_session", sessionKey);
-    setScreen("app"); setAppTabPersist("map");
-  }
-  function enterDemoStudentEmail() { enterDemoStudent(DEMO_STUDENT_EMAIL, "student-email"); }
-  function enterDemoStudentDoc() { enterDemoStudent(DEMO_STUDENT_DOC, "student-doc"); }
-  function enterDemoLearner() {
-    const lp = { name: "Demo Learner", location: "Paris", instrument: "Piano", bio: "Amateur pianist exploring lessons." };
-    setLearnerProfile(lp);
-    const demoTeacher = DEMO_STUDENT_EMAIL;
-    const demoTeacher2 = DEMO_TEACHER_2;
-    setStudents((arr) => {
-      let next = arr.some((s) => s.id === "demo-teacher") ? arr : [...arr, demoTeacher];
-      next = next.some((s) => s.id === "demo-teacher-2") ? next : [...next, demoTeacher2];
-      return next;
-    });
-    const tr = JSON.parse(localStorage.getItem("teachRequests") || "{}");
-    if (!tr["demo-teacher"]) tr["demo-teacher"] = "accepted";
-    if (!tr["demo-teacher-2"]) tr["demo-teacher-2"] = "accepted";
-    localStorage.setItem("teachRequests", JSON.stringify(tr));
-    setTeachRequests(tr);
-    localStorage.setItem("artium_demo_session", "learner");
-    setScreen("learnerMap");
   }
   async function submitLearner({ name, location, email, password, instrument, motivation }) {
     setAuthError("");
@@ -1885,7 +1814,7 @@ export default function App() {
         />
       )}
 
-      {screen === "entry" && <EntryGate onLearner={chooseLearner} onStudent={() => chooseStudent("otp")} onStudentNoEmail={() => chooseStudent("document")} onLogin={startLogin} learnerProfile={learnerProfile} learnerLoggedOut={learnerLoggedOut} studentLoggedIn={!!myProfile} musicOn={musicPlaying} onMusicToggle={toggleMusic} onlineCount={onlineCount} onDemoStudentEmail={enterDemoStudentEmail} onDemoStudentDoc={enterDemoStudentDoc} onDemoLearner={enterDemoLearner} />}
+      {screen === "entry" && <EntryGate onLearner={chooseLearner} onStudent={() => chooseStudent("otp")} onStudentNoEmail={() => chooseStudent("document")} onLogin={startLogin} learnerProfile={learnerProfile} learnerLoggedOut={learnerLoggedOut} studentLoggedIn={!!myProfile} musicOn={musicPlaying} onMusicToggle={toggleMusic} onlineCount={onlineCount} />}
       {screen === "learnerSignup" && <LearnerSignup onSubmit={submitLearner} onBack={backToEntry} onLogin={startLogin} error={authError} googleName={learnerGoogleName} />}
       {screen === "learnerMap" && (
         <LearnerScreen
@@ -3822,7 +3751,7 @@ function GateCard({ onClick, bg, bgPos, overlay, icon, title, sub, desc, descWid
   );
 }
 
-function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerProfile, learnerLoggedOut, studentLoggedIn, musicOn, onMusicToggle, onlineCount, onDemoStudentEmail, onDemoStudentDoc, onDemoLearner }) {
+function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerProfile, learnerLoggedOut, studentLoggedIn, musicOn, onMusicToggle, onlineCount }) {
   const singleCard = !!learnerProfile || learnerLoggedOut || studentLoggedIn;
   const showLearner = !studentLoggedIn;
   const showStudent = !singleCard || studentLoggedIn;
@@ -3949,23 +3878,6 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
               Log in
             </button>
           </p>
-        )}
-        {!studentLoggedIn && !learnerProfile && (
-          <div style={{ marginTop: 48, textAlign: "center" }}>
-            <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: C.ivoryDim, marginBottom: 12 }}>Demo access</p>
-            {/* One per signup route, in the same order as the circles above. */}
-            <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap", rowGap: 8 }}>
-              <button onClick={onDemoLearner} style={{ padding: "8px 18px", borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: "pointer", background: "transparent", border: `1.5px solid ${C.inkLine}`, color: C.ivoryDim }}>
-                Learner
-              </button>
-              <button onClick={onDemoStudentEmail} style={{ padding: "8px 18px", borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: "pointer", background: "transparent", border: `1.5px solid ${C.inkLine}`, color: C.ivoryDim }}>
-                Student · with email
-              </button>
-              <button onClick={onDemoStudentDoc} style={{ padding: "8px 18px", borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: "pointer", background: "transparent", border: `1.5px solid ${C.inkLine}`, color: C.ivoryDim }}>
-                Student · no email
-              </button>
-            </div>
-          </div>
         )}
       </div>
       <div style={{ position: "fixed", bottom: 12, left: 24, display: "flex", alignItems: "center", gap: 0 }}>
@@ -5522,7 +5434,7 @@ function AdminScreen({ authUser }) {
           ))}
         </div>
 
-        {section === "verifications" && <AdminVerifications authUser={authUser} card={card} STATUS_COLOR={STATUS_COLOR} />}
+        {section === "verifications" && <AdminVerifications card={card} STATUS_COLOR={STATUS_COLOR} />}
 
         {section === "promotions" && <>
         <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
@@ -5565,19 +5477,13 @@ function AdminScreen({ authUser }) {
 }
 
 /* Admin — student document-verification review (4-column table) */
-function AdminVerifications({ authUser, card, STATUS_COLOR }) {
-  // The demo teacher is flagged as an admin locally so the tab is reachable,
-  // but it has no Supabase session — so every query here runs as anon, RLS
-  // refuses it, and an empty result reads as "the documents are gone" rather
-  // than "you aren't allowed to see them". Say which it is.
-  const isRealUser = !!authUser?.id;
+function AdminVerifications({ card, STATUS_COLOR }) {
   const [rows, setRows] = useState([]);
   const [edits, setEdits] = useState({}); // id -> { conservatory_name, conservatory_address }
   const [busy, setBusy] = useState("");
   const [reading, setReading] = useState("");
 
   async function load() {
-    if (!isRealUser) { setRows([]); return; }
     const { data } = await supabase.from("student_verifications").select("*").order("created_at", { ascending: false });
     setRows(data || []);
   }
@@ -5755,14 +5661,6 @@ function AdminVerifications({ authUser, card, STATUS_COLOR }) {
   }
 
   function Table({ list, editable }) {
-    if (!isRealUser) return (
-      <div style={{ ...card, textAlign: "center", border: `1px solid ${C.brass}` }}>
-        <p style={{ fontSize: 14, color: C.ivory, margin: 0, fontWeight: 600 }}>Demo session — verification data is hidden</p>
-        <p style={{ fontSize: 13, color: C.ivoryDim, margin: "6px 0 0" }}>
-          Enrolment proofs are private, so they load only for a signed-in admin account. Nothing has been deleted — log in with your own account to review them.
-        </p>
-      </div>
-    );
     if (list.length === 0) return <div style={{ ...card, textAlign: "center" }}><p style={{ fontSize: 14, color: C.ivoryDim, margin: 0 }}>{editable ? "No pending student verifications." : "No reviewed verifications yet."}</p></div>;
     return (
       <div style={{ ...card, overflowX: "auto", padding: "8px 8px" }}>
