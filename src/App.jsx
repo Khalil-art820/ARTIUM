@@ -1835,6 +1835,16 @@ export default function App() {
         .artium-tri > .artium-tri-left { position: absolute; top: 345px; left: 0; width: 230px; }
         .artium-tri > .artium-tri-right { position: absolute; top: 345px; right: 0; width: 230px; }
         .artium-tri > .artium-tri-arrows { position: absolute; inset: 0; pointer-events: none; }
+        /* The bars are a fixed height, so their contents have to fit rather
+           than wrap — a wrapped footer overflows and reads as a taller bar
+           even though the bar itself never changed. */
+        .artium-gate-bar { padding-left: 32px; padding-right: 32px; }
+        @media (max-width: 700px) {
+          .artium-gate-bar { padding-left: 14px; padding-right: 14px; }
+          .artium-gate-bar .artium-gate-partner { font-size: 10.5px; }
+          .artium-gate-bar .artium-gate-partner a { font-size: 12px; }
+        }
+
         .artium-gate-circle { width: 202px; height: 202px; }
         .artium-gate-title { font-size: 15px; }
         .artium-gate-sub { font-size: 12px; }
@@ -1864,7 +1874,9 @@ export default function App() {
           .artium-tri > .artium-tri-top { width: 140px; }
           .artium-tri > .artium-tri-left { top: 272px; width: 140px; }
           .artium-tri > .artium-tri-right { top: 272px; width: 140px; }
-          .artium-tri .artium-gate-circle { width: 108px; height: 108px; box-shadow: 0 0 0 3px #C9A24B, 0 6px 20px rgba(10,37,64,0.14); }
+          /* Ring width stays 4px here: it is set inline on the element, which
+             outranks this rule — the arrows are matched to that 4px. */
+          .artium-tri .artium-gate-circle { width: 108px; height: 108px; }
           .artium-tri .artium-gate-icon > img { width: 32px !important; height: 32px !important; }
           .artium-tri .artium-gate-icon > svg { width: 29px; height: 29px; }
           .artium-tri .artium-gate-title { font-size: 11.5px; }
@@ -3886,7 +3898,7 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
 
   return (
     <div className="min-h-full flex flex-col" style={{ background: C.inkSoft, color: C.ivory }}>
-      <div className="max-w-5xl w-full mx-auto px-8" style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#FFFFFF", height: GATE_BAR_H, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div className="max-w-5xl w-full mx-auto artium-gate-bar" style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#FFFFFF", height: GATE_BAR_H, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <Logo size={22} markSize={HEADER_CONTROL} />
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <MusicBtn playing={musicOn} onToggle={onMusicToggle} />
@@ -3915,15 +3927,16 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
                   <path d="M 0 0 L 10 5 L 0 10 z" fill={C.brass} />
                 </marker>
               </defs>
-              {/* Circle centres: top (380,101), left (115,446), right (645,446), outer
-                  radius 110. The two rising curves bow outward to stay clear of the top
-                  card's text block (x 250–510, from y≈220 down). */}
-              <path d="M 193 368 Q 175 225 302 179" stroke={C.brass} strokeWidth={3} strokeLinecap="round" opacity={0.6} markerStart="url(#artium-tri-arrowhead-wide)" markerEnd="url(#artium-tri-arrowhead-wide)" />
-              <path d="M 567 368 Q 585 225 458 179" stroke={C.brass} strokeWidth={3} strokeLinecap="round" opacity={0.6} markerStart="url(#artium-tri-arrowhead-wide)" markerEnd="url(#artium-tri-arrowhead-wide)" />
+              {/* Circle centres: top (380,101), left (115,446), right (645,446),
+                  radius 110. The top card occupies x 265–495 from y 181 down, so the
+                  rising curves land on the circle above y=181 and stay left/right of
+                  x 265/495 for the whole stretch where they are level with it. */}
+              <path d="M 193 368 Q 150 240 280 147" stroke={C.brass} strokeWidth={4} strokeLinecap="round" opacity={0.6} markerStart="url(#artium-tri-arrowhead-wide)" markerEnd="url(#artium-tri-arrowhead-wide)" />
+              <path d="M 567 368 Q 610 240 480 147" stroke={C.brass} strokeWidth={4} strokeLinecap="round" opacity={0.6} markerStart="url(#artium-tri-arrowhead-wide)" markerEnd="url(#artium-tri-arrowhead-wide)" />
               {/* Base runs at y≈492, where the circles reach x=216 and x=544 (half-width
                   √(110²−46²)≈100). Ends sit just inside those, so the heads land on the
                   circle edges instead of stopping short in the middle of the gap. */}
-              <path d="M 216 492 Q 380 520 544 492" stroke={C.brass} strokeWidth={3} strokeLinecap="round" opacity={0.6} markerStart="url(#artium-tri-arrowhead-wide)" markerEnd="url(#artium-tri-arrowhead-wide)" />
+              <path d="M 216 492 Q 380 520 544 492" stroke={C.brass} strokeWidth={4} strokeLinecap="round" opacity={0.6} markerStart="url(#artium-tri-arrowhead-wide)" markerEnd="url(#artium-tri-arrowhead-wide)" />
             </svg>
             <svg className="artium-tri-arrows artium-tri-arrows-narrow" viewBox="0 0 320 530" width="100%" height="100%" fill="none" aria-hidden="true">
               <defs>
@@ -3931,14 +3944,14 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
                   <path d="M 0 0 L 10 5 L 0 10 z" fill={C.brass} />
                 </marker>
               </defs>
-              {/* Circle centres: top (160,54), left (70,326), right (250,326), outer
-                  radius 61. The rising curves route around the outside of the top card's
-                  text block (x 95–225, from y≈118 down). */}
-              <path d="M 27 283 Q 24 172 117 97" stroke={C.brass} strokeWidth={2.4} strokeLinecap="round" opacity={0.6} markerStart="url(#artium-tri-arrowhead-narrow)" markerEnd="url(#artium-tri-arrowhead-narrow)" />
-              <path d="M 293 283 Q 296 172 203 97" stroke={C.brass} strokeWidth={2.4} strokeLinecap="round" opacity={0.6} markerStart="url(#artium-tri-arrowhead-narrow)" markerEnd="url(#artium-tri-arrowhead-narrow)" />
+              {/* Circle centres: top (160,54), left (70,326), right (250,326). The top
+                  card occupies x 90–230 from y 90 down, so these land above y=90 and
+                  keep left/right of it while level with the card. */}
+              <path d="M 27 283 Q 10 170 104 62" stroke={C.brass} strokeWidth={4} strokeLinecap="round" opacity={0.6} markerStart="url(#artium-tri-arrowhead-narrow)" markerEnd="url(#artium-tri-arrowhead-narrow)" />
+              <path d="M 293 283 Q 310 170 216 62" stroke={C.brass} strokeWidth={4} strokeLinecap="round" opacity={0.6} markerStart="url(#artium-tri-arrowhead-narrow)" markerEnd="url(#artium-tri-arrowhead-narrow)" />
               {/* Base runs at y≈350, where the circles reach x=127 and x=193 (half-width
                   √(61²−24²)≈56). Ends sit just inside those rather than short of them. */}
-              <path d="M 127 350 Q 160 364 193 350" stroke={C.brass} strokeWidth={2.4} strokeLinecap="round" opacity={0.6} markerStart="url(#artium-tri-arrowhead-narrow)" markerEnd="url(#artium-tri-arrowhead-narrow)" />
+              <path d="M 127 350 Q 160 364 193 350" stroke={C.brass} strokeWidth={4} strokeLinecap="round" opacity={0.6} markerStart="url(#artium-tri-arrowhead-narrow)" markerEnd="url(#artium-tri-arrowhead-narrow)" />
             </svg>
             <div className="artium-tri-left">{studentCard}</div>
             <div className="artium-tri-right">{studentNoEmailCard}</div>
@@ -3971,9 +3984,9 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
           </p>
         )}
       </div>
-      <div className="max-w-5xl w-full mx-auto px-8" style={{ borderTop: `1px solid ${C.inkLine}`, background: "#FFFFFF", height: GATE_BAR_H, display: "flex", alignItems: "center", gap: 0, flexShrink: 0 }}>
+      <div className="max-w-5xl w-full mx-auto artium-gate-bar" style={{ borderTop: `1px solid ${C.inkLine}`, background: "#FFFFFF", height: GATE_BAR_H, display: "flex", alignItems: "center", gap: 0, flexShrink: 0, whiteSpace: "nowrap", overflow: "hidden" }}>
         <Logo size={17} markSize={22} />
-        <span style={{ fontSize: 13, color: C.ivoryDim, marginLeft: 10 }}>
+        <span className="artium-gate-partner" style={{ fontSize: 13, color: C.ivoryDim, marginLeft: 10 }}>
           — In partnership with{" "}
           {/* Set like the artium wordmark: same stack, same weight, same tight
               tracking, so the two names read as a pair rather than one mark
