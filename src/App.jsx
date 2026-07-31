@@ -1840,6 +1840,17 @@ export default function App() {
         .artium-gate-sub { font-size: 12px; }
         .artium-gate-desc { font-size: 12px; }
 
+        /* Pulled up under the circle so the two fuse into one shape. The top
+           padding replaces the swallowed margin, keeping the title clear of
+           the circle's edge. */
+        .artium-gate-card {
+          width: 100%;
+          max-width: 300px;
+          margin-top: -30px;
+          padding: 42px 20px 18px;
+          border-radius: 18px;
+        }
+
         @media (max-width: 820px) {
           .artium-tri { width: 320px; height: 530px; }
           .artium-tri > .artium-tri-top { width: 130px; }
@@ -1852,7 +1863,12 @@ export default function App() {
           .artium-tri .artium-gate-sub { font-size: 9.5px; }
           .artium-tri .artium-gate-desc { font-size: 9.5px; }
           .artium-tri .artium-gate-desc { max-width: none !important; }
-          .artium-tri button { gap: 10px !important; }
+          .artium-tri .artium-gate-card {
+            max-width: none;
+            margin-top: -18px;
+            padding: 24px 10px 12px;
+            border-radius: 14px;
+          }
           .artium-tri-arrows-wide { display: none; }
         }
         @media (min-width: 821px) {
@@ -3790,9 +3806,12 @@ function StepTeaching({ draft, update }) {
 
 /* ---- First screen: pick your role ---- */
 function GateCard({ onClick, bg, bgPos, overlay, icon, title, sub, desc, descWidth }) {
+  // gap 0 and z-index 2: the description card slides up underneath the circle
+  // with a negative margin, so the two read as one object. The overlap lives
+  // in CSS because it has to shrink along with the circle.
   return (
-    <button onClick={onClick} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 18 }}>
-      <div className="artium-gate-circle" style={{ borderRadius: "50%", overflow: "hidden", position: "relative", boxShadow: `0 0 0 4px ${C.brass}, 0 8px 32px rgba(10,37,64,0.14)`, transition: "transform 0.18s", flexShrink: 0 }}
+    <button onClick={onClick} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 0, width: "100%", padding: 0 }}>
+      <div className="artium-gate-circle" style={{ borderRadius: "50%", overflow: "hidden", position: "relative", zIndex: 2, boxShadow: `0 0 0 4px ${C.brass}, 0 8px 32px rgba(10,37,64,0.14)`, transition: "transform 0.18s", flexShrink: 0 }}
         onMouseEnter={e => e.currentTarget.style.transform = "scale(1.04)"}
         onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
       >
@@ -3805,10 +3824,10 @@ function GateCard({ onClick, bg, bgPos, overlay, icon, title, sub, desc, descWid
           {icon}
         </div>
       </div>
-      <div style={{ textAlign: "center" }}>
+      <div className="artium-gate-card" style={{ textAlign: "center", background: "#fff", border: `1px solid ${C.inkLine}`, boxShadow: "0 2px 14px rgba(10,37,64,0.07)" }}>
         <div className="artium-gate-title" style={{ fontWeight: 700, color: C.ivory, marginBottom: 4 }}>{title}</div>
         {sub && <div className="artium-gate-sub" style={{ fontWeight: 600, color: C.brassLabel, marginBottom: 4 }}>{sub}</div>}
-        <div className="artium-gate-desc" style={{ color: C.ivoryDim, lineHeight: 1.5, maxWidth: descWidth }}>{desc}</div>
+        <div className="artium-gate-desc" style={{ color: C.ivoryDim, lineHeight: 1.5, maxWidth: descWidth, margin: "0 auto" }}>{desc}</div>
       </div>
     </button>
   );
