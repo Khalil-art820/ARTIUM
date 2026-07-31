@@ -355,6 +355,40 @@ const TEACHER_MARK = "/teacher-mark.png";
 // `size` drives the wordmark; `markSize` the disc beside it. They were one
 // value, which meant matching the disc to the avatar would have scaled the
 // word "artium" with it.
+/**
+ * The mark's construction: a brass disc, a white ring inside it, a brass core
+ * inside that, and whatever symbol you pass rendered on top in white.
+ *
+ * Shared by the logo and the music button so the two can't drift apart — the
+ * ring proportions are the recognisable part, and they only read as the same
+ * object if the numbers stay identical at every size.
+ *
+ * The app icon puts its white ring hard against the outer edge, where the
+ * phone's wallpaper supplies the contrast. On a white page that ring would be
+ * invisible, so a thin brass rim sits outside it — that rim is what makes the
+ * white circle read at all.
+ */
+function RingedDisc({ size, children, style }) {
+  const ring = Math.max(1, size * 0.06);
+  const core = ring + Math.max(1.5, size * 0.12);
+  return (
+    <span
+      style={{
+        width: size, height: size, borderRadius: "50%", background: LOGO_BG,
+        flexShrink: 0, position: "relative", display: "flex",
+        alignItems: "center", justifyContent: "center", ...style,
+      }}
+    >
+      <span style={{ position: "absolute", inset: ring, borderRadius: "50%", background: LOGO_FG }} />
+      <span style={{ position: "absolute", inset: core, borderRadius: "50%", background: LOGO_BG }} />
+      {/* Relative so it paints above the absolutely-positioned discs. */}
+      <span style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        {children}
+      </span>
+    </span>
+  );
+}
+
 function Logo({ tone = "light", size = 20, markSize, slogan = false }) {
   const col = tone === "light" ? C.ivory : C.inkText;
   const fontSize = size * 0.9;
@@ -366,33 +400,10 @@ function Logo({ tone = "light", size = 20, markSize, slogan = false }) {
   const hairpinStroke = Math.max(1, fontSize * 0.05);
   return (
     <div className="flex items-center gap-2.5">
-      <div
-        style={{
-          width: mark, height: mark, borderRadius: "50%", background: LOGO_BG,
-          flexShrink: 0, position: "relative", display: "flex",
-          alignItems: "center", justifyContent: "center",
-        }}
-      >
-        {/* The app icon puts the white ring hard against the outer edge, where
-            the phone's wallpaper supplies the contrast. Here the surface behind
-            the mark is white, so an edge ring would be invisible — a thin brass
-            rim outside it is what makes the white circle read at all. */}
+      <RingedDisc size={mark}>
         <span
           style={{
-            position: "absolute", inset: Math.max(1, mark * 0.06),
-            borderRadius: "50%", background: LOGO_FG,
-          }}
-        />
-        <span
-          style={{
-            position: "absolute", inset: Math.max(1, mark * 0.06) + Math.max(1.5, mark * 0.12),
-            borderRadius: "50%", background: LOGO_BG,
-          }}
-        />
-        <span
-          style={{
-            // Positioned so it paints above the absolutely-positioned disc.
-            position: "relative",
+            display: "block",
             width: mark * 0.4, height: mark * 0.47, backgroundColor: LOGO_FG,
             WebkitMaskImage: `url('${TEACHER_MARK}')`, maskImage: `url('${TEACHER_MARK}')`,
             WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat",
@@ -400,7 +411,7 @@ function Logo({ tone = "light", size = 20, markSize, slogan = false }) {
             WebkitMaskPosition: "center", maskPosition: "center",
           }}
         />
-      </div>
+      </RingedDisc>
       <span style={{ fontFamily: "'Fraunces', serif", color: col, fontSize, fontWeight: 500, letterSpacing: 0, lineHeight: 1 }}>
         <span style={{ position: "relative", display: "inline-block" }}>
           art
@@ -546,15 +557,19 @@ function MusicBtn({ playing, onToggle, size = HEADER_CONTROL }) {
       title={playing ? "Pause" : "Play"}
       aria-label={playing ? "Pause playlist" : "Play playlist"}
       style={{
-        display: "inline-flex", alignItems: "center", justifyContent: "center",
-        width: size, height: size, borderRadius: "50%", background: C.brass,
-        border: "none", cursor: "pointer", flexShrink: 0, padding: 0,
-        transition: "filter 0.15s",
+        display: "inline-flex", padding: 0, border: "none",
+        background: "transparent", cursor: "pointer", flexShrink: 0,
+        borderRadius: "50%", lineHeight: 0,
       }}
     >
-      {playing
-        ? <Pause size={Math.round(size * 0.36)} color="#fff" />
-        : <Play size={Math.round(size * 0.36)} color="#fff" />}
+      {/* Same ringed disc as the logo mark; the symbol replaces the figure.
+          fill as well as color — these are outline icons by default, and an
+          unfilled triangle inside the core reads as a hollow scratch. */}
+      <RingedDisc size={size}>
+        {playing
+          ? <Pause size={Math.round(size * 0.3)} color="#fff" fill="#fff" />
+          : <Play size={Math.round(size * 0.3)} color="#fff" fill="#fff" />}
+      </RingedDisc>
     </button>
   );
 }
