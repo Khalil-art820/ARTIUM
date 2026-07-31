@@ -5439,6 +5439,9 @@ function ArtiumSoundCard({ myProfile, authUser }) {
 }
 
 function PromoteMe({ myProfile, authUser }) {
+  // Two unrelated offers on one screen read as a single long form, so the tab
+  // opens on a choice and each one gets the screen to itself.
+  const [view, setView] = useState(null);   // null | "artium" | "aclassicaltone"
   const isRealUser = !!authUser?.id;
   const lsKey = "artium_promotions";
 
@@ -5544,15 +5547,44 @@ function PromoteMe({ myProfile, authUser }) {
           </p>
         </div>
 
-        {/* The two offers are different enough to need naming: one is a paid
-            placement on someone else's audience, the other is free and plays
-            here. Unlabelled, the cards below read as one long form. */}
-        <ArtiumSoundCard myProfile={myProfile} authUser={authUser} />
+        {!view && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 4 }}>
+            {[
+              { v: "artium", t: "artium", d: "Your recording, played across the site. Free." },
+              { v: "aclassicaltone", t: "aclassicaltone", d: `A promotional video to their audience. €${PROMO_TOTAL}.` },
+            ].map(({ v, t, d }) => (
+              <button
+                key={v}
+                onClick={() => setView(v)}
+                style={{
+                  display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
+                  width: "100%", textAlign: "left", padding: "18px 20px", borderRadius: 999,
+                  border: `1px solid ${C.inkLine}`, background: "#fff", cursor: "pointer",
+                  font: "inherit", boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
+                }}
+              >
+                <span style={{ minWidth: 0 }}>
+                  <span style={{ display: "block", fontSize: 16, fontWeight: 800, color: C.ivory, letterSpacing: -0.3 }}>{t}</span>
+                  <span style={{ display: "block", fontSize: 13, color: C.ivoryDim, marginTop: 2 }}>{d}</span>
+                </span>
+                <ChevronRight size={18} color={C.brassLabel} style={{ flexShrink: 0 }} />
+              </button>
+            ))}
+          </div>
+        )}
 
-        <p style={{ fontSize: 11, fontWeight: 700, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em", margin: "10px 0 -6px" }}>
-          aclassicaltone
-        </p>
+        {view && (
+          <button
+            onClick={() => setView(null)}
+            style={{ alignSelf: "flex-start", display: "inline-flex", alignItems: "center", gap: 6, background: "none", border: "none", padding: 0, font: "inherit", fontSize: 13, fontWeight: 600, color: C.ivoryDim, cursor: "pointer" }}
+          >
+            <ArrowLeft size={14} /> Both options
+          </button>
+        )}
 
+        {view === "artium" && <ArtiumSoundCard myProfile={myProfile} authUser={authUser} />}
+
+        {view === "aclassicaltone" && (<>
         {/* Offer */}
         <div style={card}>
           {label("What you get")}
@@ -5656,6 +5688,7 @@ function PromoteMe({ myProfile, authUser }) {
             <p style={{ fontSize: 14, color: C.burgundy, fontWeight: 600, margin: 0 }}>Your previous link wasn't approved. Please submit a new video link above.</p>
           </div>
         )}
+        </>)}
 
       </div>
     </div>
