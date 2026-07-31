@@ -41,6 +41,11 @@ const C = {
   forest: "#8B5560",
 };
 
+// The wordmark, set the way Stripe sets theirs: one heavy lowercase sans,
+// tracked tight, in a single dark navy. Deliberately a system stack rather
+// than 'Inter' — no web font is actually loaded, so 'Inter' silently falls
+// back and the weight lands wherever the system default happens to be.
+const FONT_WORDMARK = "-apple-system, 'SF Pro Display', BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
 const FONT_DISPLAY = "'Inter', sans-serif";
 const FONT_BODY = "'Inter', sans-serif";
 const FONT_MONO = "'ui-monospace', monospace";
@@ -412,7 +417,7 @@ function Logo({ tone = "light", size = 20, markSize, slogan = false }) {
           }}
         />
       </RingedDisc>
-      <span style={{ fontFamily: "'Fraunces', serif", color: col, fontSize, fontWeight: 500, letterSpacing: 0, lineHeight: 1 }}>
+      <span style={{ fontFamily: FONT_WORDMARK, color: col, fontSize, fontWeight: 800, letterSpacing: fontSize * -0.035, lineHeight: 1 }}>
         <span style={{ position: "relative", display: "inline-block" }}>
           art
           {/* preserveAspectRatio="none" stretches the hairpin to the width of
