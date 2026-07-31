@@ -323,6 +323,10 @@ const emptyDraft = () => ({
   photoUrl: "",
   coverPhotoUrl: "",
   teaching: { open: false, mode: "", price: "" },
+  // Optional student recording. Lives outside toDbProfile because it becomes a
+  // row in student_tracks, not a column on profiles — a student may have more
+  // than one later, and each needs its own review status.
+  track: { audioUrl: "", audioName: "", title: "", composer: "", rightsConfirmed: false },
 });
 
 /* ---------------------------------------------------------------- */
@@ -1418,6 +1422,7 @@ export default function App() {
           supabase.auth.updateUser({ data: { pendingProfile: null } });
           const isDoc = pendingStudent.verifyMethod === "document";
           if (isDoc) { await insertVerificationRequest(authUser.id, pendingStudent); }
+          await insertStudentTrack(authUser.id, pendingStudent);
           const me = { id: authUser.id, name: pendingStudent.name, instrument: pendingStudent.instrument, conservatoryId: pendingStudent.conservatoryId, year: pendingStudent.years, bio: pendingStudent.bio, tastes: pendingStudent.tastes, pieces: pendingStudent.pieces, videoLink: pendingStudent.videoLink, top: pendingStudent.top, flop: pendingStudent.flop, photoUrl: pendingStudent.photoUrl, teaching: pendingStudent.teaching, online: true };
           setMyProfile(me);
           if (isDoc) { setScreen("pendingReview"); return; }
@@ -1666,6 +1671,26 @@ export default function App() {
   function toggleTaste(t) {
     setDraft((d) => ({ ...d, tastes: d.tastes.includes(t) ? d.tastes.filter((x) => x !== t) : [...d.tastes, t] }));
   }
+  // Only inserted when a file was uploaded AND the consent box was ticked.
+  // rights_confirmed carries that consent into the row, so an admin reviewing
+  // it later can see the permission was given rather than assume it.
+  async function insertStudentTrack(userId, d) {
+    const t = d.track;
+    if (!t?.audioUrl || !t.rightsConfirmed) return;
+    const { error } = await supabase.from("student_tracks").insert({
+      user_id: userId,
+      title: (t.title || "").trim() || "Untitled",
+      composer: (t.composer || "").trim(),
+      audio_url: t.audioUrl,
+      audio_name: t.audioName || "",
+      rights_confirmed: true,
+      status: "pending",
+    });
+    // Never block a signup on this: the profile is the thing that matters, and
+    // the recording is optional. Surface it, don't fail the submit.
+    if (error) console.error("Could not save the recording:", error.message);
+  }
+
   async function insertVerificationRequest(userId, d) {
     // The id may come from either roster: the built-in list (if they reached
     // this route with one already picked) or the admin-approved one. Blank is
@@ -1702,6 +1727,7 @@ export default function App() {
       const { error: insertError } = await supabase.from("profiles").insert(toDbProfile(draft, authUser.id));
       if (insertError) { setAuthError(insertError.message); return; }
       if (draft.verifyMethod === "document") { await insertVerificationRequest(authUser.id, draft); }
+      await insertStudentTrack(authUser.id, draft);
       setDraft((d) => ({ ...d, id: authUser.id }));
       setScreen(draft.verifyMethod === "document" ? "pendingReview" : "pending");
     } else {
@@ -1717,6 +1743,7 @@ export default function App() {
         if (insertError) { setAuthError(insertError.message); return; }
         await supabase.auth.updateUser({ data: { pendingProfile: null } });
         if (draft.verifyMethod === "document") { await insertVerificationRequest(data.user.id, draft); }
+        await insertStudentTrack(data.user.id, draft);
         setDraft((d) => ({ ...d, id: data.user.id }));
         setScreen(draft.verifyMethod === "document" ? "pendingReview" : "pending");
       } else {
@@ -2814,6 +2841,125 @@ function StepPieces({ draft, update }) {
         ))}
         {draft.pieces.length === 0 && <p className="text-sm" style={{ color: C.ivoryDim }}>Nothing added yet.</p>}
       </div>
+      <StudentTrackField draft={draft} update={update} />
+    </div>
+  );
+}
+
+const TRACK_MAX_SECONDS = 60;
+const TRACK_MAX_BYTES = 12 * 1024 * 1024;
+
+/**
+ * A student's own recording, played as the site's sound bed once approved.
+ *
+ * Optional on purpose — it must never block finishing a profile. The consent
+ * checkbox is what makes playing the audio lawful, so the upload control stays
+ * disabled until it is ticked, rather than collecting the file first and
+ * asking afterwards.
+ */
+function StudentTrackField({ draft, update }) {
+  const [uploading, setUploading] = useState(false);
+  const [err, setErr] = useState("");
+  const t = draft.track || {};
+  const setTrack = (partial) => update({ track: { ...t, ...partial } });
+
+  async function upload(file) {
+    if (!file) return;
+    setErr("");
+    if (file.size > TRACK_MAX_BYTES) { setErr("That file is over 12 MB. A minute of audio should be well under it."); return; }
+
+    // Read the duration before uploading — rejecting a 9-minute file after a
+    // slow upload wastes the student's time and our storage.
+    const seconds = await new Promise((resolve) => {
+      const el = document.createElement("audio");
+      el.preload = "metadata";
+      el.onloadedmetadata = () => { URL.revokeObjectURL(el.src); resolve(el.duration); };
+      el.onerror = () => resolve(NaN);
+      el.src = URL.createObjectURL(file);
+    });
+    if (Number.isFinite(seconds) && seconds > TRACK_MAX_SECONDS + 2) {
+      setErr(`That's ${Math.round(seconds)} seconds. Please trim it to ${TRACK_MAX_SECONDS} or less — pick the passage you'd want someone to hear first.`);
+      return;
+    }
+
+    setUploading(true);
+    const ext = (file.name.split(".").pop() || "mp3").toLowerCase();
+    const path = `tracks/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const { error } = await supabase.storage.from("student-audio").upload(path, file, { upsert: false, contentType: file.type || undefined });
+    setUploading(false);
+    if (error) { setErr("Upload failed: " + error.message); return; }
+    setTrack({ audioUrl: path, audioName: file.name });
+  }
+
+  const box = { border: `1px solid ${t.audioUrl ? "#1A9E6E" : C.inkLine}`, borderRadius: 16, padding: "16px 18px", marginTop: 22 };
+
+  return (
+    <div style={box}>
+      <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brassLabel, letterSpacing: 0.5, marginBottom: 8 }}>
+        PLAY ON ARTIUM — OPTIONAL
+      </p>
+      <p className="text-sm" style={{ color: C.ivoryDim, marginBottom: 14 }}>
+        Up to {TRACK_MAX_SECONDS} seconds of you playing. Approved recordings become the music
+        visitors hear on Artium — so choose the passage you'd want heard first.
+      </p>
+
+      <label style={{ display: "flex", gap: 10, alignItems: "flex-start", cursor: "pointer", marginBottom: 14 }}>
+        <input
+          type="checkbox"
+          checked={!!t.rightsConfirmed}
+          onChange={(e) => setTrack({ rightsConfirmed: e.target.checked })}
+          style={{ marginTop: 3, width: 16, height: 16, flexShrink: 0, accentColor: C.brass }}
+        />
+        <span className="text-sm" style={{ color: C.ivory }}>
+          This is <b>my own performance</b>, and I give Artium permission to play this excerpt on the site.
+        </span>
+      </label>
+
+      {t.audioUrl ? (
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          <CheckIcon size={18} color="#1A9E6E" />
+          <span style={{ fontSize: 14, color: "#1A9E6E", fontWeight: 600 }}>{t.audioName || "Recording uploaded"}</span>
+          <button
+            onClick={() => setTrack({ audioUrl: "", audioName: "" })}
+            style={{ background: "none", border: "none", padding: 0, font: "inherit", fontSize: 13, color: C.ivoryDim, cursor: "pointer", textDecoration: "underline" }}
+          >
+            Remove
+          </button>
+        </div>
+      ) : (
+        <label
+          title={t.rightsConfirmed ? undefined : "Tick the box above first"}
+          style={{
+            display: "inline-flex", alignItems: "center", gap: 8, padding: "11px 18px",
+            borderRadius: 10, border: `1.5px dashed ${C.inkLine}`, background: "#fff",
+            fontWeight: 600, fontSize: 14,
+            color: t.rightsConfirmed ? C.ivory : C.ivoryDim,
+            opacity: t.rightsConfirmed ? 1 : 0.55,
+            cursor: t.rightsConfirmed && !uploading ? "pointer" : "not-allowed",
+          }}
+        >
+          <Upload size={16} /> {uploading ? "Uploading…" : "Choose an audio file"}
+          <input
+            type="file"
+            accept="audio/*"
+            style={{ display: "none" }}
+            disabled={!t.rightsConfirmed || uploading}
+            onChange={(e) => upload(e.target.files?.[0])}
+          />
+        </label>
+      )}
+
+      {t.audioUrl && (
+        <div className="grid gap-2" style={{ gridTemplateColumns: "1fr 1fr", marginTop: 14 }}>
+          <input style={inputStyle} value={t.title || ""} onChange={(e) => setTrack({ title: e.target.value })} placeholder="What you're playing" />
+          <input style={inputStyle} value={t.composer || ""} onChange={(e) => setTrack({ composer: e.target.value })} placeholder="Composer" />
+        </div>
+      )}
+
+      <p className="text-xs" style={{ color: C.ivoryDim, marginTop: 12, fontFamily: FONT_MONO }}>
+        Audio only · max {TRACK_MAX_SECONDS}s · reviewed before it goes live
+      </p>
+      {err && <p className="text-sm" style={{ color: C.burgundy, marginTop: 10 }}>{err}</p>}
     </div>
   );
 }
