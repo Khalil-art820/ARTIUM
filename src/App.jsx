@@ -1843,17 +1843,25 @@ export default function App() {
         /* Pulled up under the circle so the two fuse into one shape. The top
            padding replaces the swallowed margin, keeping the title clear of
            the circle's edge. */
+        /* Fixed width and min-height rather than shrink-to-fit: the three
+           slots differ in width and the three descriptions differ in length,
+           so left to themselves no two cards ever match. Content is centred in
+           whatever height is left over. */
         .artium-gate-card {
-          width: 100%;
-          max-width: 300px;
+          width: 230px;
+          max-width: 100%;
+          min-height: 156px;
           margin-top: -30px;
-          padding: 42px 20px 18px;
+          padding: 42px 18px 18px;
           border-radius: 18px;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
         }
 
         @media (max-width: 820px) {
           .artium-tri { width: 320px; height: 530px; }
-          .artium-tri > .artium-tri-top { width: 130px; }
+          .artium-tri > .artium-tri-top { width: 140px; }
           .artium-tri > .artium-tri-left { top: 272px; width: 140px; }
           .artium-tri > .artium-tri-right { top: 272px; width: 140px; }
           .artium-tri .artium-gate-circle { width: 108px; height: 108px; box-shadow: 0 0 0 3px #C9A24B, 0 6px 20px rgba(10,37,64,0.14); }
@@ -1864,7 +1872,9 @@ export default function App() {
           .artium-tri .artium-gate-desc { font-size: 9.5px; }
           .artium-tri .artium-gate-desc { max-width: none !important; }
           .artium-tri .artium-gate-card {
+            width: 100%;
             max-width: none;
+            min-height: 112px;
             margin-top: -18px;
             padding: 24px 10px 12px;
             border-radius: 14px;
@@ -3847,8 +3857,8 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
       overlay="rgba(0,0,0,0.38)"
       icon={<img src="/3.png" style={{ width: 52, height: 52, objectFit: "contain", filter: "invert(1)", mixBlendMode: "screen" }} />}
       title={learnerLoggedOut ? "Log in" : "Find a teacher"}
-      desc="Learn from top conservatory musicians"
-      descWidth={160}
+      desc="Learn your favorite instrument from top conservatory musicians"
+      descWidth={190}
     />
   );
 
@@ -3860,8 +3870,6 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
       icon={<img src="/4.png" style={{ width: 52, height: 52, objectFit: "contain", mixBlendMode: "screen" }} />}
       title={studentLoggedIn ? "Continue" : "I'm a conservatory student"}
       sub={!studentLoggedIn ? "with an institutional student email" : null}
-      desc="Connect with conservatory students at the world's top conservatories. Promote yourself. Earn while you teach."
-      descWidth={180}
     />
   );
 
@@ -3873,8 +3881,6 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
       icon={<FileText size={46} color="#fff" strokeWidth={1.6} />}
       title="I'm a conservatory student"
       sub="without an institutional student email"
-      desc="Verify with a student ID, enrollment certificate or tuition receipt — reviewed by our team."
-      descWidth={190}
     />
   );
 
@@ -3896,7 +3902,7 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
         <div style={{ display: "flex", flexDirection: "column", gap: 56, justifyContent: "center", alignItems: "center" }}>
         <h1 style={{ fontFamily: "-apple-system, 'SF Pro Display', BlinkMacSystemFont, 'Inter', sans-serif", fontSize: "clamp(22px,2.8vw,32px)", fontWeight: 800, lineHeight: 1.15, color: C.ivory, letterSpacing: -0.8, textAlign: "center", margin: 0 }}>
-          Your Path<br />to Classical Music Excellence.
+          Connect. Learn. Elevate
         </h1>
         {triangle ? (
           <div className="artium-tri">
