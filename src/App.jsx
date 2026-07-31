@@ -658,6 +658,24 @@ function SpotifyPlayer({ open, controllerRef, onPlayingChange, onClose }) {
         <X size={13} />
       </button>
       <div ref={mountRef} />
+      {/* Embeds play 30-second previews unless the iframe can see a logged-in
+          Premium session — and it reads that from a third-party cookie on
+          open.spotify.com, which Safari blocks, Chrome increasingly blocks,
+          and every private window blocks. Nothing here can change that, so
+          say so: without this, a visitor hears 30 seconds and concludes the
+          site is broken. */}
+      <p style={{ margin: "8px 4px 2px", fontSize: 11, lineHeight: 1.45, color: C.ivoryDim, fontFamily: FONT_BODY }}>
+        30-second previews.{" "}
+        <a
+          href={`https://open.spotify.com/playlist/${SPOTIFY_PLAYLIST_ID}`}
+          target="_blank"
+          rel="noreferrer"
+          style={{ color: C.brassLabel, fontWeight: 700, textDecoration: "underline" }}
+        >
+          Open in Spotify
+        </a>{" "}
+        for full tracks.
+      </p>
     </div>
   );
 }
