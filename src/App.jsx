@@ -55,6 +55,11 @@ const FONT_MONO = "'ui-monospace', monospace";
 // behind a "Get Spotify" prompt rather than full tracks.
 const SPOTIFY_PLAYLIST_ID = "3ydc8YZVqfFW1Dj681FMMe";
 
+// One diameter for every round thing in a header — the avatar, the music
+// button and the logo mark. They each carried their own number before, so
+// they never quite lined up.
+const HEADER_CONTROL = 32;
+
 /* ---- Promote Me (aclassicaltone) ---- */
 const PROMO_PROVIDERS = [
   { name: "Google Drive", hosts: ["drive.google.com", "docs.google.com"] },
@@ -347,9 +352,13 @@ const LOGO_FG = LOGO_SWAPPED ? C.brass : "#FFFFFF";
 // is the same figure reduced to an alpha silhouette, which CSS can mask and tint.
 const TEACHER_MARK = "/teacher-mark.png";
 
-function Logo({ tone = "light", size = 20, slogan = false }) {
+// `size` drives the wordmark; `markSize` the disc beside it. They were one
+// value, which meant matching the disc to the avatar would have scaled the
+// word "artium" with it.
+function Logo({ tone = "light", size = 20, markSize, slogan = false }) {
   const col = tone === "light" ? C.ivory : C.inkText;
   const fontSize = size * 0.9;
+  const mark = markSize || size;
   // Hairpin geometry all derives from the type size, so the mark stays in
   // proportion at every size it is used at (18, 20 and 22 today).
   const hairpinHeight = Math.max(4, fontSize * 0.26);
@@ -359,7 +368,7 @@ function Logo({ tone = "light", size = 20, slogan = false }) {
     <div className="flex items-center gap-2.5">
       <div
         style={{
-          width: size, height: size, borderRadius: "50%", background: LOGO_BG,
+          width: mark, height: mark, borderRadius: "50%", background: LOGO_BG,
           flexShrink: 0, position: "relative", display: "flex",
           alignItems: "center", justifyContent: "center",
         }}
@@ -370,13 +379,13 @@ function Logo({ tone = "light", size = 20, slogan = false }) {
             rim outside it is what makes the white circle read at all. */}
         <span
           style={{
-            position: "absolute", inset: Math.max(1, size * 0.06),
+            position: "absolute", inset: Math.max(1, mark * 0.06),
             borderRadius: "50%", background: LOGO_FG,
           }}
         />
         <span
           style={{
-            position: "absolute", inset: Math.max(1, size * 0.06) + Math.max(1.5, size * 0.12),
+            position: "absolute", inset: Math.max(1, mark * 0.06) + Math.max(1.5, mark * 0.12),
             borderRadius: "50%", background: LOGO_BG,
           }}
         />
@@ -384,7 +393,7 @@ function Logo({ tone = "light", size = 20, slogan = false }) {
           style={{
             // Positioned so it paints above the absolutely-positioned disc.
             position: "relative",
-            width: size * 0.4, height: size * 0.47, backgroundColor: LOGO_FG,
+            width: mark * 0.4, height: mark * 0.47, backgroundColor: LOGO_FG,
             WebkitMaskImage: `url('${TEACHER_MARK}')`, maskImage: `url('${TEACHER_MARK}')`,
             WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat",
             WebkitMaskSize: "contain", maskSize: "contain",
@@ -525,19 +534,28 @@ function HomeBtn({ onClick }) {
 
 // Icon only, everywhere. aria-label carries the accessible name in place of
 // the caption this used to show.
-function MusicBtn({ playing, onToggle }) {
+// The brass fill used to appear only while playing, so at rest the control was
+// a faint outline that read as disabled. It is now the resting state too —
+// the icon alone says whether it is playing. Sized to HEADER_CONTROL so it
+// matches the avatar and the logo mark across every header.
+function MusicBtn({ playing, onToggle, size = HEADER_CONTROL }) {
   if (!SPOTIFY_PLAYLIST_ID) return null;
   return (
-    <div style={{ display: "inline-flex", alignItems: "center", background: "rgba(10,37,64,0.05)", borderRadius: 999, padding: 5, border: `1px solid ${C.inkLine}` }}>
-      <button
-        onClick={onToggle}
-        title={playing ? "Pause" : "Play"}
-        aria-label={playing ? "Pause playlist" : "Play playlist"}
-        style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 24, height: 24, borderRadius: "50%", background: playing ? C.brass : "transparent", border: "none", cursor: "pointer", flexShrink: 0, transition: "background 0.15s" }}
-      >
-        {playing ? <Pause size={10} color="#fff" /> : <Play size={10} color={C.ivory} />}
-      </button>
-    </div>
+    <button
+      onClick={onToggle}
+      title={playing ? "Pause" : "Play"}
+      aria-label={playing ? "Pause playlist" : "Play playlist"}
+      style={{
+        display: "inline-flex", alignItems: "center", justifyContent: "center",
+        width: size, height: size, borderRadius: "50%", background: C.brass,
+        border: "none", cursor: "pointer", flexShrink: 0, padding: 0,
+        transition: "filter 0.15s",
+      }}
+    >
+      {playing
+        ? <Pause size={Math.round(size * 0.36)} color="#fff" />
+        : <Play size={Math.round(size * 0.36)} color="#fff" />}
+    </button>
   );
 }
 
@@ -1253,7 +1271,7 @@ function AccessGate({ onUnlock }) {
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: C.inkSoft, fontFamily: FONT_BODY, padding: 24 }}>
       <div style={{ width: "100%", maxWidth: 400, background: "#FFFFFF", border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: 40, boxShadow: "0 4px 24px rgba(10,37,64,0.07)" }}>
         <div style={{ marginBottom: 28 }}>
-          <Logo size={22} />
+          <Logo size={22} markSize={HEADER_CONTROL} />
           <p style={{ color: C.ivoryDim, fontSize: 14, marginTop: 12 }}>Private beta — enter access key to continue.</p>
         </div>
         <input
@@ -1999,7 +2017,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
               <ChevronLeft size={18} />
             </button>
           )}
-          <Logo size={20} />
+          <Logo size={20} markSize={HEADER_CONTROL} />
         </div>
         <div className="flex items-center gap-2 ml-auto">
           <MusicBtn playing={musicOn} onToggle={onMusicToggle} />
@@ -2012,7 +2030,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
           {myProfile && <NotificationBell myProfile={myProfile} onGoToLessonRoom={onGoToLessonRoom} />}
           {myProfile && (
             <button onClick={onProfile} title="My profile" style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}>
-              <Avatar name={myProfile.name} id="me" size={32} photoUrl={myProfile.photoUrl} online />
+              <Avatar name={myProfile.name} id="me" size={HEADER_CONTROL} photoUrl={myProfile.photoUrl} online />
             </button>
           )}
           {/* Sits where the avatar goes once signed in. This is now the page's
@@ -3130,7 +3148,7 @@ function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, mus
               {backLabel && <span style={{ fontSize: 13, fontWeight: 500 }}>{backLabel}</span>}
             </button>
           )}
-          <Logo size={20} />
+          <Logo size={20} markSize={HEADER_CONTROL} />
         </div>
         {!previewOnly && !hideTabs && (
           <div className="flex items-center gap-1">
@@ -3168,7 +3186,7 @@ function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, mus
           ) : (
             <button onClick={hideTabs ? undefined : () => setAppTab("profile")} title={hideTabs ? undefined : "My profile"}
               style={{ background: "none", border: "none", padding: 0, cursor: hideTabs ? "default" : "pointer" }}>
-              <Avatar name={myProfile.name} id="me" size={32} photoUrl={myProfile.photoUrl} online />
+              <Avatar name={myProfile.name} id="me" size={HEADER_CONTROL} photoUrl={myProfile.photoUrl} online />
             </button>
           )}
         </div>
@@ -3806,7 +3824,7 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
   return (
     <div className="min-h-full flex flex-col" style={{ background: C.inkSoft, color: C.ivory }}>
       <div className="max-w-5xl w-full mx-auto px-8" style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#FFFFFF", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <Logo size={22} />
+        <Logo size={22} markSize={HEADER_CONTROL} />
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <MusicBtn playing={musicOn} onToggle={onMusicToggle} />
           {onlineCount != null && (
