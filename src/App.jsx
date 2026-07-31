@@ -1677,6 +1677,11 @@ export default function App() {
   async function insertStudentTrack(userId, d) {
     const t = d.track;
     if (!t?.audioUrl || !t.rightsConfirmed) return;
+    // One submission at a time: editing the profile again with a new file
+    // replaces a recording still awaiting review rather than queueing a
+    // second one. Anything already approved is left alone — it may be
+    // playing on the site right now.
+    await supabase.from("student_tracks").delete().eq("user_id", userId).eq("status", "pending");
     const { error } = await supabase.from("student_tracks").insert({
       user_id: userId,
       title: (t.title || "").trim() || "Untitled",
@@ -1718,6 +1723,10 @@ export default function App() {
     if (editingProfile) {
       const { error } = await supabase.from("profiles").update(toDbProfile(draft, myProfile.id)).eq("id", myProfile.id);
       if (error) { setAuthError(error.message); return; }
+      // Editing is the only route to the recording field for anyone who
+      // already signed up, so this branch has to save it too — otherwise the
+      // file uploads and the row is never created.
+      await insertStudentTrack(myProfile.id, draft);
       const updated = { ...myProfile, ...draft };
       setMyProfile(updated);
       setStudents((arr) => arr.map((s) => (s.id === myProfile.id ? updated : s)));
