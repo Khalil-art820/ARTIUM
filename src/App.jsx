@@ -65,6 +65,14 @@ const SPOTIFY_PLAYLIST_ID = "3ydc8YZVqfFW1Dj681FMMe";
 // they never quite lined up.
 const HEADER_CONTROL = 32;
 
+// The entry gate's two bars are the same height, so the page reads as a band
+// between two rules rather than a header with something trailing underneath.
+const GATE_BAR_H = 52;
+// The field the circles sit on. Lighter than the old #F6F9FC, but deliberately
+// not white — the cards are white, and they only fuse with their circles if
+// the surface behind them is a shade back.
+const GATE_FIELD = "#FAFBFC";
+
 /* ---- Promote Me (aclassicaltone) ---- */
 const PROMO_PROVIDERS = [
   { name: "Google Drive", hosts: ["drive.google.com", "docs.google.com"] },
@@ -1827,14 +1835,6 @@ export default function App() {
         .artium-tri > .artium-tri-left { position: absolute; top: 345px; left: 0; width: 230px; }
         .artium-tri > .artium-tri-right { position: absolute; top: 345px; right: 0; width: 230px; }
         .artium-tri > .artium-tri-arrows { position: absolute; inset: 0; pointer-events: none; }
-        /* Floats bottom-left on a wide screen; on a phone the gate's content
-           reaches the bottom of the viewport, so a fixed footer would sit on
-           top of the last line. There it flows with the content instead. */
-        .artium-gate-footer { position: fixed; bottom: 12px; left: 24px; }
-        @media (max-width: 700px) {
-          .artium-gate-footer { position: static; justify-content: center; padding: 8px 24px 20px; }
-        }
-
         .artium-gate-circle { width: 202px; height: 202px; }
         .artium-gate-title { font-size: 15px; }
         .artium-gate-sub { font-size: 12px; }
@@ -3886,7 +3886,7 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
 
   return (
     <div className="min-h-full flex flex-col" style={{ background: C.inkSoft, color: C.ivory }}>
-      <div className="max-w-5xl w-full mx-auto px-8" style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#FFFFFF", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div className="max-w-5xl w-full mx-auto px-8" style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#FFFFFF", height: GATE_BAR_H, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <Logo size={22} markSize={HEADER_CONTROL} />
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <MusicBtn playing={musicOn} onToggle={onMusicToggle} />
@@ -3899,7 +3899,7 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
           )}
         </div>
       </div>
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
+      <div className="flex-1 flex flex-col items-center justify-center px-6 py-12" style={{ background: GATE_FIELD }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 56, justifyContent: "center", alignItems: "center" }}>
         <h1 style={{ fontFamily: "-apple-system, 'SF Pro Display', BlinkMacSystemFont, 'Inter', sans-serif", fontSize: "clamp(22px,2.8vw,32px)", fontWeight: 800, lineHeight: 1.15, color: C.ivory, letterSpacing: -0.8, textAlign: "center", margin: 0 }}>
           Connect. Learn. Elevate
@@ -3971,12 +3971,15 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
           </p>
         )}
       </div>
-      <div className="artium-gate-footer" style={{ display: "flex", alignItems: "center", gap: 0 }}>
-        <Logo size={20} />
-        <span style={{ fontSize: 13, color: C.ivoryDim, fontStyle: "italic", marginLeft: 10 }}>
+      <div className="max-w-5xl w-full mx-auto px-8" style={{ borderTop: `1px solid ${C.inkLine}`, background: "#FFFFFF", height: GATE_BAR_H, display: "flex", alignItems: "center", gap: 0, flexShrink: 0 }}>
+        <Logo size={17} markSize={22} />
+        <span style={{ fontSize: 13, color: C.ivoryDim, marginLeft: 10 }}>
           — In partnership with{" "}
+          {/* Set like the artium wordmark: same stack, same weight, same tight
+              tracking, so the two names read as a pair rather than one mark
+              and one piece of body copy. */}
           <a href="https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==" target="_blank" rel="noreferrer"
-            style={{ color: C.brassLabel, textDecoration: "none", fontStyle: "italic" }}>
+            style={{ fontFamily: FONT_WORDMARK, fontWeight: 800, fontSize: 15, letterSpacing: 15 * -0.035, color: C.ivory, textDecoration: "none" }}>
             aclassicaltone
           </a>
         </span>
