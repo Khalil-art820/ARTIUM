@@ -5640,13 +5640,14 @@ function AdminScreen({ authUser }) {
 
         {/* Section toggle */}
         <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
-          {[{ v: "verifications", t: "Student verifications" }, { v: "promotions", t: "Promotions" }].map(({ v, t }) => (
+          {[{ v: "verifications", t: "Student verifications" }, { v: "tracks", t: "Recordings" }, { v: "promotions", t: "Promotions" }].map(({ v, t }) => (
             <button key={v} onClick={() => setSection(v)}
               style={{ padding: "9px 18px", borderRadius: 20, fontSize: 13, fontWeight: 700, cursor: "pointer", background: section === v ? C.ivory : "#fff", color: section === v ? "#fff" : C.ivoryDim, border: section === v ? "none" : `1px solid ${C.inkLine}` }}>{t}</button>
           ))}
         </div>
 
         {section === "verifications" && <AdminVerifications card={card} STATUS_COLOR={STATUS_COLOR} />}
+        {section === "tracks" && <AdminTracks card={card} STATUS_COLOR={STATUS_COLOR} />}
 
         {section === "promotions" && <>
         <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
@@ -5689,6 +5690,129 @@ function AdminScreen({ authUser }) {
 }
 
 /* Admin — student document-verification review (4-column table) */
+/**
+ * Review queue for student recordings. Listen, then approve or reject —
+ * approved tracks become the audio every visitor hears, so nothing reaches
+ * the player without someone having actually played it here first.
+ */
+function AdminTracks({ card, STATUS_COLOR }) {
+  const [rows, setRows] = useState([]);
+  const [names, setNames] = useState({});
+  const [busy, setBusy] = useState("");
+
+  async function load() {
+    const { data } = await supabase.from("student_tracks").select("*").order("created_at", { ascending: false });
+    const list = data || [];
+    setRows(list);
+    // student_tracks.user_id references auth.users, not profiles, so PostgREST
+    // has no relationship to embed — the names are fetched and joined here.
+    const ids = [...new Set(list.map((r) => r.user_id).filter(Boolean))];
+    if (ids.length) {
+      const { data: people } = await supabase.from("profiles").select("id, name").in("id", ids);
+      setNames(Object.fromEntries((people || []).map((p) => [p.id, p.name])));
+    }
+  }
+  React.useEffect(() => { load(); const id = setInterval(load, 5000); return () => clearInterval(id); /* eslint-disable-next-line */ }, []);
+
+  function publicUrl(path) {
+    return supabase.storage.from("student-audio").getPublicUrl(path).data.publicUrl;
+  }
+
+  async function decide(r, status) {
+    setBusy(r.id);
+    const { data, error } = await supabase.from("student_tracks")
+      .update({ status }).eq("id", r.id).select("id");
+    setBusy("");
+    if (error) { alert(`Could not update this recording: ${error.message}`); return; }
+    if (!data || data.length === 0) {
+      alert("No row was changed — row-level security blocked the write. The recording is unchanged.");
+      return;
+    }
+    load();
+  }
+
+  const pending = rows.filter((r) => r.status === "pending");
+  const decided = rows.filter((r) => r.status !== "pending");
+
+  function List({ list, editable }) {
+    if (list.length === 0) {
+      return (
+        <div style={{ ...card, textAlign: "center" }}>
+          <p style={{ fontSize: 14, color: C.ivoryDim, margin: 0 }}>
+            {editable ? "No recordings waiting for review." : "Nothing reviewed yet."}
+          </p>
+        </div>
+      );
+    }
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {list.map((r) => (
+          <div key={r.id} style={card}>
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+              <div style={{ minWidth: 0 }}>
+                <p style={{ margin: 0, fontWeight: 700, fontSize: 15 }}>{r.title}</p>
+                <p style={{ margin: "2px 0 0", fontSize: 13, color: C.ivoryDim }}>
+                  {r.composer ? `${r.composer} · ` : ""}{names[r.user_id] || "Unknown student"}
+                </p>
+              </div>
+              {!editable && (
+                <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: STATUS_COLOR[r.status] || C.ivoryDim }}>
+                  {r.status}
+                </span>
+              )}
+            </div>
+
+            <audio controls preload="none" src={publicUrl(r.audio_url)} style={{ width: "100%", marginTop: 12 }} />
+
+            <p style={{ margin: "10px 0 0", fontSize: 11, fontFamily: FONT_MONO, color: r.rights_confirmed ? "#1A9E6E" : C.burgundy }}>
+              {r.rights_confirmed
+                ? "✓ Confirmed as their own performance, cleared for use"
+                : "✕ No permission recorded — do not publish"}
+            </p>
+
+            <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
+              {editable ? (
+                <>
+                  <button
+                    disabled={busy === r.id || !r.rights_confirmed}
+                    onClick={() => decide(r, "approved")}
+                    title={r.rights_confirmed ? undefined : "No permission was recorded for this recording"}
+                    style={{ padding: "8px 14px", borderRadius: 8, border: "none", background: r.rights_confirmed ? "#1A9E6E" : C.inkLine, color: "#fff", fontSize: 12, fontWeight: 700, cursor: r.rights_confirmed ? "pointer" : "not-allowed" }}
+                  >
+                    Approve
+                  </button>
+                  <button disabled={busy === r.id} onClick={() => decide(r, "rejected")}
+                    style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "#fff", color: C.burgundy, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                    Reject
+                  </button>
+                </>
+              ) : (
+                <button onClick={() => decide(r, "pending")}
+                  style={{ padding: "7px 12px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "#fff", color: C.ivoryDim, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
+                  Reset
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brassLabel, letterSpacing: "0.06em", margin: 0 }}>
+        PENDING ({pending.length})
+      </p>
+      <List list={pending} editable />
+      <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brassLabel, letterSpacing: "0.06em", margin: "6px 0 0" }}>
+        HISTORY ({decided.length})
+      </p>
+      <List list={decided} editable={false} />
+    </div>
+  );
+}
+
 function AdminVerifications({ card, STATUS_COLOR }) {
   const [rows, setRows] = useState([]);
   const [edits, setEdits] = useState({}); // id -> { conservatory_name, conservatory_address }
