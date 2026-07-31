@@ -323,10 +323,6 @@ const emptyDraft = () => ({
   photoUrl: "",
   coverPhotoUrl: "",
   teaching: { open: false, mode: "", price: "" },
-  // Optional student recording. Lives outside toDbProfile because it becomes a
-  // row in student_tracks, not a column on profiles — a student may have more
-  // than one later, and each needs its own review status.
-  track: { audioUrl: "", audioName: "", title: "", composer: "", rightsConfirmed: false },
 });
 
 /* ---------------------------------------------------------------- */
@@ -1422,7 +1418,6 @@ export default function App() {
           supabase.auth.updateUser({ data: { pendingProfile: null } });
           const isDoc = pendingStudent.verifyMethod === "document";
           if (isDoc) { await insertVerificationRequest(authUser.id, pendingStudent); }
-          await insertStudentTrack(authUser.id, pendingStudent);
           const me = { id: authUser.id, name: pendingStudent.name, instrument: pendingStudent.instrument, conservatoryId: pendingStudent.conservatoryId, year: pendingStudent.years, bio: pendingStudent.bio, tastes: pendingStudent.tastes, pieces: pendingStudent.pieces, videoLink: pendingStudent.videoLink, top: pendingStudent.top, flop: pendingStudent.flop, photoUrl: pendingStudent.photoUrl, teaching: pendingStudent.teaching, online: true };
           setMyProfile(me);
           if (isDoc) { setScreen("pendingReview"); return; }
@@ -1671,31 +1666,6 @@ export default function App() {
   function toggleTaste(t) {
     setDraft((d) => ({ ...d, tastes: d.tastes.includes(t) ? d.tastes.filter((x) => x !== t) : [...d.tastes, t] }));
   }
-  // Only inserted when a file was uploaded AND the consent box was ticked.
-  // rights_confirmed carries that consent into the row, so an admin reviewing
-  // it later can see the permission was given rather than assume it.
-  async function insertStudentTrack(userId, d) {
-    const t = d.track;
-    if (!t?.audioUrl || !t.rightsConfirmed) return;
-    // One submission at a time: editing the profile again with a new file
-    // replaces a recording still awaiting review rather than queueing a
-    // second one. Anything already approved is left alone — it may be
-    // playing on the site right now.
-    await supabase.from("student_tracks").delete().eq("user_id", userId).eq("status", "pending");
-    const { error } = await supabase.from("student_tracks").insert({
-      user_id: userId,
-      title: (t.title || "").trim() || "Untitled",
-      composer: (t.composer || "").trim(),
-      audio_url: t.audioUrl,
-      audio_name: t.audioName || "",
-      rights_confirmed: true,
-      status: "pending",
-    });
-    // Never block a signup on this: the profile is the thing that matters, and
-    // the recording is optional. Surface it, don't fail the submit.
-    if (error) console.error("Could not save the recording:", error.message);
-  }
-
   async function insertVerificationRequest(userId, d) {
     // The id may come from either roster: the built-in list (if they reached
     // this route with one already picked) or the admin-approved one. Blank is
@@ -1723,10 +1693,6 @@ export default function App() {
     if (editingProfile) {
       const { error } = await supabase.from("profiles").update(toDbProfile(draft, myProfile.id)).eq("id", myProfile.id);
       if (error) { setAuthError(error.message); return; }
-      // Editing is the only route to the recording field for anyone who
-      // already signed up, so this branch has to save it too — otherwise the
-      // file uploads and the row is never created.
-      await insertStudentTrack(myProfile.id, draft);
       const updated = { ...myProfile, ...draft };
       setMyProfile(updated);
       setStudents((arr) => arr.map((s) => (s.id === myProfile.id ? updated : s)));
@@ -1736,7 +1702,6 @@ export default function App() {
       const { error: insertError } = await supabase.from("profiles").insert(toDbProfile(draft, authUser.id));
       if (insertError) { setAuthError(insertError.message); return; }
       if (draft.verifyMethod === "document") { await insertVerificationRequest(authUser.id, draft); }
-      await insertStudentTrack(authUser.id, draft);
       setDraft((d) => ({ ...d, id: authUser.id }));
       setScreen(draft.verifyMethod === "document" ? "pendingReview" : "pending");
     } else {
@@ -1752,7 +1717,6 @@ export default function App() {
         if (insertError) { setAuthError(insertError.message); return; }
         await supabase.auth.updateUser({ data: { pendingProfile: null } });
         if (draft.verifyMethod === "document") { await insertVerificationRequest(data.user.id, draft); }
-        await insertStudentTrack(data.user.id, draft);
         setDraft((d) => ({ ...d, id: data.user.id }));
         setScreen(draft.verifyMethod === "document" ? "pendingReview" : "pending");
       } else {
@@ -2850,125 +2814,6 @@ function StepPieces({ draft, update }) {
         ))}
         {draft.pieces.length === 0 && <p className="text-sm" style={{ color: C.ivoryDim }}>Nothing added yet.</p>}
       </div>
-      <StudentTrackField draft={draft} update={update} />
-    </div>
-  );
-}
-
-const TRACK_MAX_SECONDS = 60;
-const TRACK_MAX_BYTES = 12 * 1024 * 1024;
-
-/**
- * A student's own recording, played as the site's sound bed once approved.
- *
- * Optional on purpose — it must never block finishing a profile. The consent
- * checkbox is what makes playing the audio lawful, so the upload control stays
- * disabled until it is ticked, rather than collecting the file first and
- * asking afterwards.
- */
-function StudentTrackField({ draft, update }) {
-  const [uploading, setUploading] = useState(false);
-  const [err, setErr] = useState("");
-  const t = draft.track || {};
-  const setTrack = (partial) => update({ track: { ...t, ...partial } });
-
-  async function upload(file) {
-    if (!file) return;
-    setErr("");
-    if (file.size > TRACK_MAX_BYTES) { setErr("That file is over 12 MB. A minute of audio should be well under it."); return; }
-
-    // Read the duration before uploading — rejecting a 9-minute file after a
-    // slow upload wastes the student's time and our storage.
-    const seconds = await new Promise((resolve) => {
-      const el = document.createElement("audio");
-      el.preload = "metadata";
-      el.onloadedmetadata = () => { URL.revokeObjectURL(el.src); resolve(el.duration); };
-      el.onerror = () => resolve(NaN);
-      el.src = URL.createObjectURL(file);
-    });
-    if (Number.isFinite(seconds) && seconds > TRACK_MAX_SECONDS + 2) {
-      setErr(`That's ${Math.round(seconds)} seconds. Please trim it to ${TRACK_MAX_SECONDS} or less — pick the passage you'd want someone to hear first.`);
-      return;
-    }
-
-    setUploading(true);
-    const ext = (file.name.split(".").pop() || "mp3").toLowerCase();
-    const path = `tracks/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    const { error } = await supabase.storage.from("student-audio").upload(path, file, { upsert: false, contentType: file.type || undefined });
-    setUploading(false);
-    if (error) { setErr("Upload failed: " + error.message); return; }
-    setTrack({ audioUrl: path, audioName: file.name });
-  }
-
-  const box = { border: `1px solid ${t.audioUrl ? "#1A9E6E" : C.inkLine}`, borderRadius: 16, padding: "16px 18px", marginTop: 22 };
-
-  return (
-    <div style={box}>
-      <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brassLabel, letterSpacing: 0.5, marginBottom: 8 }}>
-        PLAY ON ARTIUM — OPTIONAL
-      </p>
-      <p className="text-sm" style={{ color: C.ivoryDim, marginBottom: 14 }}>
-        Up to {TRACK_MAX_SECONDS} seconds of you playing. Approved recordings become the music
-        visitors hear on Artium — so choose the passage you'd want heard first.
-      </p>
-
-      <label style={{ display: "flex", gap: 10, alignItems: "flex-start", cursor: "pointer", marginBottom: 14 }}>
-        <input
-          type="checkbox"
-          checked={!!t.rightsConfirmed}
-          onChange={(e) => setTrack({ rightsConfirmed: e.target.checked })}
-          style={{ marginTop: 3, width: 16, height: 16, flexShrink: 0, accentColor: C.brass }}
-        />
-        <span className="text-sm" style={{ color: C.ivory }}>
-          This is <b>my own performance</b>, and I give Artium permission to play this excerpt on the site.
-        </span>
-      </label>
-
-      {t.audioUrl ? (
-        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-          <CheckIcon size={18} color="#1A9E6E" />
-          <span style={{ fontSize: 14, color: "#1A9E6E", fontWeight: 600 }}>{t.audioName || "Recording uploaded"}</span>
-          <button
-            onClick={() => setTrack({ audioUrl: "", audioName: "" })}
-            style={{ background: "none", border: "none", padding: 0, font: "inherit", fontSize: 13, color: C.ivoryDim, cursor: "pointer", textDecoration: "underline" }}
-          >
-            Remove
-          </button>
-        </div>
-      ) : (
-        <label
-          title={t.rightsConfirmed ? undefined : "Tick the box above first"}
-          style={{
-            display: "inline-flex", alignItems: "center", gap: 8, padding: "11px 18px",
-            borderRadius: 10, border: `1.5px dashed ${C.inkLine}`, background: "#fff",
-            fontWeight: 600, fontSize: 14,
-            color: t.rightsConfirmed ? C.ivory : C.ivoryDim,
-            opacity: t.rightsConfirmed ? 1 : 0.55,
-            cursor: t.rightsConfirmed && !uploading ? "pointer" : "not-allowed",
-          }}
-        >
-          <Upload size={16} /> {uploading ? "Uploading…" : "Choose an audio file"}
-          <input
-            type="file"
-            accept="audio/*"
-            style={{ display: "none" }}
-            disabled={!t.rightsConfirmed || uploading}
-            onChange={(e) => upload(e.target.files?.[0])}
-          />
-        </label>
-      )}
-
-      {t.audioUrl && (
-        <div className="grid gap-2" style={{ gridTemplateColumns: "1fr 1fr", marginTop: 14 }}>
-          <input style={inputStyle} value={t.title || ""} onChange={(e) => setTrack({ title: e.target.value })} placeholder="What you're playing" />
-          <input style={inputStyle} value={t.composer || ""} onChange={(e) => setTrack({ composer: e.target.value })} placeholder="Composer" />
-        </div>
-      )}
-
-      <p className="text-xs" style={{ color: C.ivoryDim, marginTop: 12, fontFamily: FONT_MONO }}>
-        Audio only · max {TRACK_MAX_SECONDS}s · reviewed before it goes live
-      </p>
-      {err && <p className="text-sm" style={{ color: C.burgundy, marginTop: 10 }}>{err}</p>}
     </div>
   );
 }
@@ -5383,6 +5228,216 @@ const MOCK_LESSON_LEARNERS = [
 /* ---------------------------------------------------------------- */
 /* PROMOTE ME — aclassicaltone promotion offer + approval flow        */
 /* ---------------------------------------------------------------- */
+const TRACK_MAX_SECONDS = 60;
+const TRACK_MAX_BYTES = 12 * 1024 * 1024;
+
+/**
+ * The artium half of Promote Me: a student's own recording, played across the
+ * site once approved.
+ *
+ * Talks to student_tracks directly rather than going through the signup draft.
+ * The draft route only existed inside the profile form, which meant the only
+ * way to reach it was to re-open and step through an edit — nobody would have
+ * found it, and every re-save risked a duplicate row.
+ *
+ * The consent checkbox is what makes playing the audio lawful, so the file
+ * input stays disabled until it is ticked. Collecting the file first and
+ * asking afterwards would mean holding a recording we had no right to.
+ */
+function ArtiumSoundCard({ myProfile, authUser }) {
+  const [mine, setMine] = useState(null);
+  const [rights, setRights] = useState(false);
+  const [audio, setAudio] = useState({ url: "", name: "" });
+  const [title, setTitle] = useState("");
+  const [composer, setComposer] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState("");
+  const [replacing, setReplacing] = useState(false);
+
+  const uid = authUser?.id || null;
+
+  async function load() {
+    if (!uid) return;
+    const { data } = await supabase.from("student_tracks")
+      .select("*").eq("user_id", uid).order("created_at", { ascending: false }).limit(1);
+    setMine(data && data[0] ? data[0] : null);
+  }
+  React.useEffect(() => { load(); const id = setInterval(load, 5000); return () => clearInterval(id); /* eslint-disable-next-line */ }, [uid]);
+
+  async function upload(file) {
+    if (!file) return;
+    setErr("");
+    if (file.size > TRACK_MAX_BYTES) { setErr("That file is over 12 MB. A minute of audio should be well under it."); return; }
+
+    // Read the duration before uploading — refusing a nine-minute take after a
+    // slow upload wastes the student's time and our storage.
+    const seconds = await new Promise((resolve) => {
+      const el = document.createElement("audio");
+      el.preload = "metadata";
+      el.onloadedmetadata = () => { URL.revokeObjectURL(el.src); resolve(el.duration); };
+      el.onerror = () => resolve(NaN);
+      el.src = URL.createObjectURL(file);
+    });
+    if (Number.isFinite(seconds) && seconds > TRACK_MAX_SECONDS + 2) {
+      setErr(`That's ${Math.round(seconds)} seconds. Trim it to ${TRACK_MAX_SECONDS} or less — pick the passage you'd want heard first.`);
+      return;
+    }
+
+    setUploading(true);
+    const ext = (file.name.split(".").pop() || "mp3").toLowerCase();
+    const path = `tracks/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const { error } = await supabase.storage.from("student-audio").upload(path, file, { upsert: false, contentType: file.type || undefined });
+    setUploading(false);
+    if (error) { setErr("Upload failed: " + error.message); return; }
+    setAudio({ url: path, name: file.name });
+  }
+
+  async function submit() {
+    if (!uid || !audio.url || !rights) return;
+    setErr(""); setSaving(true);
+    // One submission at a time: a new file replaces one still awaiting review
+    // rather than queueing a second. Anything approved is left alone — it may
+    // be playing on the site right now.
+    await supabase.from("student_tracks").delete().eq("user_id", uid).eq("status", "pending");
+    const { error } = await supabase.from("student_tracks").insert({
+      user_id: uid,
+      title: title.trim() || "Untitled",
+      composer: composer.trim(),
+      audio_url: audio.url,
+      audio_name: audio.name,
+      rights_confirmed: true,
+      status: "pending",
+    });
+    setSaving(false);
+    if (error) { setErr("Could not submit: " + error.message); return; }
+    setAudio({ url: "", name: "" }); setTitle(""); setComposer(""); setRights(false); setReplacing(false);
+    load();
+  }
+
+  const card = { background: "#fff", borderRadius: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06)", padding: "18px 18px" };
+  const label = (t) => <span style={{ fontSize: 11, fontWeight: 700, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em" }}>{t}</span>;
+  const publicUrl = (p) => supabase.storage.from("student-audio").getPublicUrl(p).data.publicUrl;
+
+  const STATE = {
+    pending:  { colour: C.brassLabel, title: "Waiting for review", body: "Our team listens to every recording before it goes live. This usually takes a day or two." },
+    approved: { colour: "#1A9E6E",    title: "Live on Artium",     body: "Visitors hear this when they play the music on Artium." },
+    rejected: { colour: C.burgundy,   title: "Not accepted",       body: "This one wasn't right for the site — you're welcome to submit a different recording." },
+  };
+
+  if (!uid) {
+    return (
+      <div style={card}>
+        {label("artium")}
+        <p style={{ fontSize: 14, color: C.ivoryDim, margin: "10px 0 0" }}>
+          Log in with your student account to submit a recording.
+        </p>
+      </div>
+    );
+  }
+
+  const s = mine ? STATE[mine.status] : null;
+  const showForm = !mine || mine.status === "rejected" || replacing;
+
+  return (
+    <div style={card}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+        <Logo size={17} markSize={26} />
+      </div>
+      <p style={{ fontSize: 15, fontWeight: 700, color: C.ivory, margin: "10px 0 4px" }}>Be the sound of Artium</p>
+      <p style={{ fontSize: 13, color: C.ivoryDim, margin: 0, lineHeight: 1.5 }}>
+        Up to {TRACK_MAX_SECONDS} seconds of you playing. Approved recordings become the music
+        visitors hear across the site — so choose the passage you'd want heard first.
+        <b style={{ color: C.ivory }}> Free.</b>
+      </p>
+
+      {mine && (
+        <div style={{ marginTop: 14, padding: "12px 14px", borderRadius: 12, border: `1px solid ${s.colour}` }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ width: 9, height: 9, borderRadius: "50%", background: s.colour, display: "inline-block", flexShrink: 0 }} />
+            <span style={{ fontSize: 14, fontWeight: 700, color: s.colour }}>{s.title}</span>
+          </div>
+          <p style={{ fontSize: 13, color: C.ivoryDim, margin: "6px 0 0", lineHeight: 1.5 }}>{s.body}</p>
+          <p style={{ fontSize: 13, color: C.ivory, margin: "10px 0 0", fontWeight: 600 }}>
+            {mine.title}{mine.composer ? ` · ${mine.composer}` : ""}
+          </p>
+          <audio controls preload="none" src={publicUrl(mine.audio_url)} style={{ width: "100%", marginTop: 8 }} />
+          {!showForm && (
+            <button
+              onClick={() => setReplacing(true)}
+              style={{ marginTop: 10, background: "none", border: "none", padding: 0, font: "inherit", fontSize: 13, fontWeight: 600, color: C.brassLabel, cursor: "pointer", textDecoration: "underline" }}
+            >
+              {mine.status === "approved" ? "Submit a different recording" : "Replace it"}
+            </button>
+          )}
+        </div>
+      )}
+
+      {showForm && (
+        <div style={{ marginTop: 16, paddingTop: 16, borderTop: mine ? `1px solid ${C.inkLine}` : "none" }}>
+          <label style={{ display: "flex", gap: 10, alignItems: "flex-start", cursor: "pointer", marginBottom: 14 }}>
+            <input
+              type="checkbox"
+              checked={rights}
+              onChange={(e) => setRights(e.target.checked)}
+              style={{ marginTop: 3, width: 16, height: 16, flexShrink: 0, accentColor: C.brass }}
+            />
+            <span className="text-sm" style={{ color: C.ivory }}>
+              This is <b>my own performance</b>, and I give Artium permission to play this excerpt on the site.
+            </span>
+          </label>
+
+          {audio.url ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+              <CheckIcon size={18} color="#1A9E6E" />
+              <span style={{ fontSize: 14, color: "#1A9E6E", fontWeight: 600 }}>{audio.name}</span>
+              <button
+                onClick={() => setAudio({ url: "", name: "" })}
+                style={{ background: "none", border: "none", padding: 0, font: "inherit", fontSize: 13, color: C.ivoryDim, cursor: "pointer", textDecoration: "underline" }}
+              >
+                Remove
+              </button>
+            </div>
+          ) : (
+            <label
+              title={rights ? undefined : "Tick the box above first"}
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 8, padding: "11px 18px",
+                borderRadius: 10, border: `1.5px dashed ${C.inkLine}`, background: "#fff",
+                fontWeight: 600, fontSize: 14,
+                color: rights ? C.ivory : C.ivoryDim,
+                opacity: rights ? 1 : 0.55,
+                cursor: rights && !uploading ? "pointer" : "not-allowed",
+              }}
+            >
+              <Upload size={16} /> {uploading ? "Uploading…" : "Choose an audio file"}
+              <input type="file" accept="audio/*" style={{ display: "none" }} disabled={!rights || uploading} onChange={(e) => upload(e.target.files?.[0])} />
+            </label>
+          )}
+
+          {audio.url && (
+            <div className="grid gap-2" style={{ gridTemplateColumns: "1fr 1fr", marginTop: 12 }}>
+              <input style={inputStyle} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="What you're playing" />
+              <input style={inputStyle} value={composer} onChange={(e) => setComposer(e.target.value)} placeholder="Composer" />
+            </div>
+          )}
+
+          <div style={{ marginTop: 14 }}>
+            <PrimaryBtn disabled={!audio.url || !rights || saving} onClick={submit}>
+              {saving ? "Submitting…" : "Submit for review"}
+            </PrimaryBtn>
+          </div>
+
+          <p className="text-xs" style={{ color: C.ivoryDim, marginTop: 12, fontFamily: FONT_MONO }}>
+            Audio only · max {TRACK_MAX_SECONDS}s · reviewed before it goes live
+          </p>
+          {err && <p className="text-sm" style={{ color: C.burgundy, marginTop: 10 }}>{err}</p>}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function PromoteMe({ myProfile, authUser }) {
   const isRealUser = !!authUser?.id;
   const lsKey = "artium_promotions";
@@ -5485,9 +5540,18 @@ function PromoteMe({ myProfile, authUser }) {
             <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 700, color: C.ivory, margin: 0 }}>Promote Me</h2>
           </div>
           <p style={{ fontSize: 13, color: C.ivoryDim, margin: 0, lineHeight: 1.5 }}>
-            Claim your promotional video on <a href="https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==" target="_blank" rel="noreferrer" style={{ color: C.brassLabel, fontWeight: 600, textDecoration: "none" }}>aclassicaltone</a> and reach classical music enthusiasts.
+            Two ways to be heard — on <a href="https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==" target="_blank" rel="noreferrer" style={{ color: C.brassLabel, fontWeight: 600, textDecoration: "none" }}>aclassicaltone</a>, and on Artium itself.
           </p>
         </div>
+
+        {/* The two offers are different enough to need naming: one is a paid
+            placement on someone else's audience, the other is free and plays
+            here. Unlabelled, the cards below read as one long form. */}
+        <ArtiumSoundCard myProfile={myProfile} authUser={authUser} />
+
+        <p style={{ fontSize: 11, fontWeight: 700, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em", margin: "10px 0 -6px" }}>
+          aclassicaltone
+        </p>
 
         {/* Offer */}
         <div style={card}>
