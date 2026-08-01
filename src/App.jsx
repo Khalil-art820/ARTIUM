@@ -3866,6 +3866,11 @@ function StepTeaching({ draft, update }) {
   );
 }
 
+/** Behind the entry-gate icons. The photographs were three different images
+ *  under three different overlays, so the circles never quite matched; one
+ *  flat tone puts the weight on the icons instead. */
+const GATE_CIRCLE_BG = "#3A424B";
+
 /** The entry gate's three connecting arrows. */
 const GATE_ARROW = C.brass;
 
@@ -3888,7 +3893,7 @@ function GateArrow({ x, y, angle, scale = 1 }) {
 }
 
 /* ---- First screen: pick your role ---- */
-function GateCard({ onClick, bg, bgPos, overlay, icon, title, sub, desc, descWidth, short }) {
+function GateCard({ onClick, icon, title, sub, desc, descWidth, short }) {
   // gap 0 and z-index 2: the description card slides up underneath the circle
   // with a negative margin, so the two read as one object. The overlap lives
   // in CSS because it has to shrink along with the circle.
@@ -3899,8 +3904,7 @@ function GateCard({ onClick, bg, bgPos, overlay, icon, title, sub, desc, descWid
         onMouseEnter={e => e.currentTarget.style.transform = "scale(1.04)"}
         onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
       >
-        <div style={{ position: "absolute", inset: 0, backgroundImage: `url('${bg}')`, backgroundSize: "cover", backgroundPosition: bgPos, filter: "grayscale(100%) contrast(1.1) brightness(0.82)" }} />
-        <div style={{ position: "absolute", inset: 0, background: overlay }} />
+        <div style={{ position: "absolute", inset: 0, background: GATE_CIRCLE_BG }} />
         {/* No wrapper element here: a transform on the icon would create a stacking
             context and break the `mixBlendMode: screen` on the icon images. The
             compact triangle resizes these icons by selector instead. */}
@@ -3928,8 +3932,6 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
   const learnerCard = (
     <GateCard
       onClick={onLearner}
-      bg="/2.png" bgPos="center"
-      overlay="rgba(0,0,0,0.38)"
       icon={<img src="/3.png" style={{ width: 52, height: 52, objectFit: "contain", filter: "invert(1)", mixBlendMode: "screen" }} />}
       title={learnerLoggedOut ? "Log in" : "Find a teacher"}
       desc="Learn your favorite instrument from top conservatory musicians"
@@ -3941,8 +3943,6 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
   const studentCard = (
     <GateCard
       onClick={onStudent}
-      bg="/juilliard.png" bgPos="25% top"
-      overlay="rgba(0,0,0,0.38)"
       icon={<img src="/4.png" style={{ width: 52, height: 52, objectFit: "contain", mixBlendMode: "screen" }} />}
       title={studentLoggedIn ? "Continue" : "I'm a conservatory student"}
       sub={!studentLoggedIn ? "with an institutional student email" : null}
@@ -3953,8 +3953,6 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
   const studentNoEmailCard = (
     <GateCard
       onClick={onStudentNoEmail}
-      bg="/1.png" bgPos="center"
-      overlay="rgba(0,0,0,0.42)"
       icon={<img src="/4.png" style={{ width: 52, height: 52, objectFit: "contain", mixBlendMode: "screen" }} />}
       title="I'm a conservatory student"
       sub="without an institutional student email"
