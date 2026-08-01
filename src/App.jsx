@@ -3846,6 +3846,34 @@ function StepTeaching({ draft, update }) {
   );
 }
 
+/** Grey for the entry-gate connectors. Starting point — easy to swap. */
+const GATE_ARROW = "#9AA6B2";
+
+/**
+ * A triple chevron, the ">>>" glyph, pointing along `angle` (0 = right).
+ * Placed at intervals around the rectangular circuit rather than as a single
+ * head at one end, so the direction of travel reads anywhere you look.
+ */
+function Chevrons({ x, y, angle = 0, size = 1, colour = GATE_ARROW }) {
+  const arm = 9 * size;
+  const gap = 13 * size;
+  return (
+    <g transform={`translate(${x} ${y}) rotate(${angle})`}>
+      {[-gap, 0, gap].map((dx) => (
+        <polyline
+          key={dx}
+          points={`${dx - arm / 2},${-arm} ${dx + arm / 2},0 ${dx - arm / 2},${arm}`}
+          fill="none"
+          stroke={colour}
+          strokeWidth={4.5 * size}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      ))}
+    </g>
+  );
+}
+
 /* ---- First screen: pick your role ---- */
 function GateCard({ onClick, bg, bgPos, overlay, icon, title, sub, desc, descWidth }) {
   // gap 0 and z-index 2: the description card slides up underneath the circle
@@ -3942,36 +3970,31 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
             {/* Every arrow is two-way: `auto-start-reverse` lets one marker serve
                 both ends, so markerStart points back down the path. */}
             <svg className="artium-tri-arrows artium-tri-arrows-wide" viewBox="0 0 760 680" width="100%" height="100%" fill="none" aria-hidden="true">
-              <defs>
-                <marker id="artium-tri-arrowhead-wide" viewBox="0 0 10 10" refX="8" refY="5" markerWidth={6} markerHeight={6} orient="auto-start-reverse">
-                  <path d="M 0 0 L 10 5 L 0 10 z" fill={C.brass} />
-                </marker>
-              </defs>
-              {/* Circle centres: top (380,101), left (115,446), right (645,446),
-                  radius 110. The top card occupies x 265–495 from y 181 down, so the
-                  rising curves land on the circle above y=181 and stay left/right of
-                  x 265/495 for the whole stretch where they are level with it. */}
-              <path d="M 193 368 Q 150 240 280 147" stroke={C.brass} strokeWidth={4} strokeLinecap="round" opacity={0.6} markerStart="url(#artium-tri-arrowhead-wide)" markerEnd="url(#artium-tri-arrowhead-wide)" />
-              <path d="M 567 368 Q 610 240 480 147" stroke={C.brass} strokeWidth={4} strokeLinecap="round" opacity={0.6} markerStart="url(#artium-tri-arrowhead-wide)" markerEnd="url(#artium-tri-arrowhead-wide)" />
-              {/* Base runs at y≈492, where the circles reach x=216 and x=544 (half-width
-                  √(110²−46²)≈100). Ends sit just inside those, so the heads land on the
-                  circle edges instead of stopping short in the middle of the gap. */}
-              <path d="M 216 492 Q 380 520 544 492" stroke={C.brass} strokeWidth={4} strokeLinecap="round" opacity={0.6} markerStart="url(#artium-tri-arrowhead-wide)" markerEnd="url(#artium-tri-arrowhead-wide)" />
+              {/* A rectangular circuit rather than three arcs. Circle centres are
+                  top (380,101), left (115,446), right (645,446), radius 110; the
+                  uprights run at x=115 and x=645, outside the top card's 265–495,
+                  and the rails at y=101 and y=446 clear every card. */}
+              <path
+                d="M 115 336 L 115 101 L 270 101 M 490 101 L 645 101 L 645 336 M 536 446 L 224 446"
+                stroke={GATE_ARROW} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" opacity={0.35}
+              />
+              <Chevrons x={115} y={225} angle={-90} size={1.15} />
+              <Chevrons x={195} y={101} angle={0} size={1.15} />
+              <Chevrons x={565} y={101} angle={0} size={1.15} />
+              <Chevrons x={645} y={225} angle={90} size={1.15} />
+              <Chevrons x={380} y={446} angle={180} size={1.15} />
             </svg>
             <svg className="artium-tri-arrows artium-tri-arrows-narrow" viewBox="0 0 320 530" width="100%" height="100%" fill="none" aria-hidden="true">
-              <defs>
-                <marker id="artium-tri-arrowhead-narrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth={5} markerHeight={5} orient="auto-start-reverse">
-                  <path d="M 0 0 L 10 5 L 0 10 z" fill={C.brass} />
-                </marker>
-              </defs>
-              {/* Circle centres: top (160,54), left (70,326), right (250,326). The top
-                  card occupies x 90–230 from y 90 down, so these land above y=90 and
-                  keep left/right of it while level with the card. */}
-              <path d="M 27 283 Q 10 170 104 62" stroke={C.brass} strokeWidth={4} strokeLinecap="round" opacity={0.6} markerStart="url(#artium-tri-arrowhead-narrow)" markerEnd="url(#artium-tri-arrowhead-narrow)" />
-              <path d="M 293 283 Q 310 170 216 62" stroke={C.brass} strokeWidth={4} strokeLinecap="round" opacity={0.6} markerStart="url(#artium-tri-arrowhead-narrow)" markerEnd="url(#artium-tri-arrowhead-narrow)" />
-              {/* Base runs at y≈350, where the circles reach x=127 and x=193 (half-width
-                  √(61²−24²)≈56). Ends sit just inside those rather than short of them. */}
-              <path d="M 127 350 Q 160 364 193 350" stroke={C.brass} strokeWidth={4} strokeLinecap="round" opacity={0.6} markerStart="url(#artium-tri-arrowhead-narrow)" markerEnd="url(#artium-tri-arrowhead-narrow)" />
+              {/* Same circuit, compact. Centres top (160,54), left (70,326),
+                  right (250,326); uprights at x=70 and x=250 sit outside the top
+                  card's 90–230, and the rails at y=54 and y=326 clear the cards. */}
+              <path
+                d="M 70 272 L 70 54 L 106 54 M 214 54 L 250 54 L 250 272 M 196 326 L 124 326"
+                stroke={GATE_ARROW} strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" opacity={0.35}
+              />
+              <Chevrons x={70} y={170} angle={-90} size={0.62} />
+              <Chevrons x={250} y={170} angle={90} size={0.62} />
+              <Chevrons x={160} y={326} angle={180} size={0.62} />
             </svg>
             <div className="artium-tri-left">{studentCard}</div>
             <div className="artium-tri-right">{studentNoEmailCard}</div>
