@@ -8,11 +8,11 @@ body,
   height: 100%;
   margin: 0;
   overflow-x: hidden;
-}
-
-/* Mobile safe areas (iPhone notch / home bar) */
-body {
-  padding-env: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  /* Anything the app doesn't paint over falls through to here. Left white,
+     the strip below the entry gate's white footer bar merged with it and the
+     two read as one band roughly twice the header's height. Matching the
+     gate's field colour keeps the bar a bar. */
+  background: #FAFBFC;
 }
 
 /* Prevent horizontal scroll on all screens */
