@@ -4003,7 +4003,7 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
           </p>
         )}
       </div>
-      <div className="max-w-5xl w-full mx-auto artium-gate-bar artium-gate-footbar" style={{ borderTop: `1px solid ${C.inkLine}`, height: `calc(${GATE_BAR_H}px + env(safe-area-inset-bottom, 0px))`, paddingBottom: "env(safe-area-inset-bottom, 0px)", flexShrink: 0, display: "flex", alignItems: "center", gap: 0, whiteSpace: "nowrap", overflow: "hidden" }}>
+      <div className="max-w-5xl w-full mx-auto artium-gate-bar artium-gate-footbar" style={{ position: "sticky", bottom: 0, zIndex: 5, borderTop: `1px solid ${C.inkLine}`, height: `calc(${GATE_BAR_H}px + env(safe-area-inset-bottom, 0px))`, paddingBottom: "env(safe-area-inset-bottom, 0px)", flexShrink: 0, display: "flex", alignItems: "center", gap: 0, whiteSpace: "nowrap", overflow: "hidden" }}>
         <Logo size={17} markSize={22} />
         <span className="artium-gate-partner" style={{ display: "inline-flex", alignItems: "center", gap: 5, color: C.ivoryDim, marginLeft: 10, lineHeight: 1 }}>
           <span>— In partnership with</span>
