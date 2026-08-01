@@ -1964,8 +1964,14 @@ export default function App() {
         @media (max-width: 820px) {
           .artium-tri { width: 320px; height: 530px; }
           .artium-tri > .artium-tri-top { width: 140px; }
-          .artium-tri > .artium-tri-left { top: 272px; width: 140px; }
-          .artium-tri > .artium-tri-right { top: 272px; width: 140px; }
+          /* The lower slots hang off the sides here too, but only by 10px:
+             the triangle is 320 wide and the field's own padding left it
+             3.5px of room on a 375 screen, so the padding gives that room
+             back first. Widening .artium-tri instead would stretch the arrow
+             overlay, which is sized to the 320 box. */
+          .artium-gate-field { padding-left: 12px; padding-right: 12px; }
+          .artium-tri > .artium-tri-left { top: 272px; width: 140px; left: -10px; }
+          .artium-tri > .artium-tri-right { top: 272px; width: 140px; right: -10px; }
           /* Ring width stays 4px here: it is set inline on the element, which
              outranks this rule — the arrows are matched to that 4px. */
           .artium-tri .artium-gate-circle { width: 108px; height: 108px; }
@@ -4084,7 +4090,7 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
           )}
         </div>
       </div>
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-12" style={{ background: GATE_FIELD }}>
+      <div className="artium-gate-field flex-1 flex flex-col items-center justify-center px-6 py-12" style={{ background: GATE_FIELD }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 56, justifyContent: "center", alignItems: "center" }}>
         {/* Tagline and headline are one group: the column they sit in spaces
             its children 56px apart, which is the distance to the triangle, not
