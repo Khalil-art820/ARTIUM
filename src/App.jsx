@@ -72,10 +72,12 @@ const MUSIC_BTN_INK = C.brass;
 // The entry gate's two bars are the same height, so the page reads as a band
 // between two rules rather than a header with something trailing underneath.
 const GATE_BAR_H = 52;
-// The field the circles sit on. Lighter than the old #F6F9FC, but deliberately
-// not white — the cards are white, and they only fuse with their circles if
-// the surface behind them is a shade back.
-const GATE_FIELD = "#FAFBFC";
+// The field the circles sit on. White, and the same white as the two bars and
+// the cards — the gate used to stack three near-whites (#F6F9FC behind
+// #FAFBFC behind #FFFFFF) whose edges caught the light as faint bands. One
+// surface throughout; the cards are held by their border and shadow instead
+// of by a change of tone.
+const GATE_FIELD = "#FFFFFF";
 
 /* ---- Promote Me (aclassicaltone) ---- */
 const PROMO_PROVIDERS = [
@@ -4073,8 +4075,11 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
     />
   );
 
+  // GATE_FIELD, not inkSoft: this sits behind the bars either side of their
+  // max-width, so a different tone here reappears as a band down each edge on
+  // a wide screen.
   return (
-    <div className="min-h-full flex flex-col" style={{ background: C.inkSoft, color: C.ivory }}>
+    <div className="min-h-full flex flex-col" style={{ background: GATE_FIELD, color: C.ivory }}>
       <div className="max-w-5xl w-full mx-auto artium-gate-bar" style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#FFFFFF", height: `calc(${GATE_BAR_H}px + env(safe-area-inset-top, 0px))`, paddingTop: "env(safe-area-inset-top, 0px)", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <Logo size={22} markSize={HEADER_CONTROL} />
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
