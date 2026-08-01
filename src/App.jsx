@@ -564,25 +564,25 @@ function HomeBtn({ onClick }) {
 // matches the avatar and the logo mark across every header.
 function MusicBtn({ playing, onToggle, size = HEADER_CONTROL }) {
   if (!SPOTIFY_PLAYLIST_ID) return null;
+  // Outlined: a ring with the symbol inside it, rather than a filled disc.
+  // Ring weight is a fraction of the diameter so it holds its proportion if
+  // HEADER_CONTROL ever changes.
+  const ring = Math.max(2, Math.round(size * 0.075));
   return (
     <button
       onClick={onToggle}
       title={playing ? "Pause" : "Play"}
       aria-label={playing ? "Pause playlist" : "Play playlist"}
       style={{
-        display: "inline-flex", padding: 0, border: "none",
-        background: "transparent", cursor: "pointer", flexShrink: 0,
-        borderRadius: "50%", lineHeight: 0,
+        display: "inline-flex", alignItems: "center", justifyContent: "center",
+        width: size, height: size, padding: 0, boxSizing: "border-box",
+        border: `${ring}px solid ${C.brass}`, borderRadius: "50%",
+        background: "transparent", cursor: "pointer", flexShrink: 0, lineHeight: 0,
       }}
     >
-      {/* Same ringed disc as the logo mark; the symbol replaces the figure.
-          fill as well as color — these are outline icons by default, and an
-          unfilled triangle inside the core reads as a hollow scratch. */}
-      <RingedDisc size={size}>
-        {playing
-          ? <Pause size={Math.round(size * 0.3)} color="#fff" fill="#fff" />
-          : <Play size={Math.round(size * 0.3)} color="#fff" fill="#fff" />}
-      </RingedDisc>
+      {playing
+        ? <Pause size={Math.round(size * 0.4)} color={C.brass} fill={C.brass} strokeWidth={1.5} />
+        : <Play size={Math.round(size * 0.4)} color={C.brass} fill={C.brass} strokeWidth={1.5} />}
     </button>
   );
 }
@@ -3861,10 +3861,14 @@ const GATE_ARROW = C.brass;
 const GATE_ARROW_PATH =
   "M -58 12 C -32 -8 2 -16 26 -13 L 26 -29 L 58 0 L 26 29 L 26 10 C 4 8 -28 14 -50 30 Z";
 
-function GateArrow({ x, y, angle, scale = 1 }) {
+/** Deeper arc, for the long run along the bottom where the gentle one reads flat. */
+const GATE_ARROW_PATH_DEEP =
+  "M -58 30 C -26 -14 8 -26 26 -20 L 26 -37 L 58 -5 L 26 24 L 26 5 C 10 2 -22 12 -46 48 Z";
+
+function GateArrow({ x, y, angle, scale = 1, deep = false }) {
   return (
     <path
-      d={GATE_ARROW_PATH}
+      d={deep ? GATE_ARROW_PATH_DEEP : GATE_ARROW_PATH}
       fill={GATE_ARROW}
       transform={`translate(${x} ${y}) rotate(${angle}) scale(${scale})`}
     />
@@ -3974,17 +3978,17 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
                   between circles. Each sits at a side's midpoint pushed outward
                   along the perpendicular, which is what keeps them off the top
                   card (x 265–495 from y 223 down). */}
-              <GateArrow x={197} y={251} angle={-52.5} scale={1} />
-              <GateArrow x={563} y={251} angle={52.5} scale={1} />
-              <GateArrow x={380} y={452} angle={180} scale={1} />
+              <GateArrow x={197} y={278} angle={-52.5} scale={1} />
+              <GateArrow x={563} y={278} angle={52.5} scale={1} />
+              <GateArrow x={380} y={452} angle={180} scale={1} deep />
             </svg>
             <svg className="artium-tri-arrows artium-tri-arrows-narrow" viewBox="0 0 320 530" width="100%" height="100%" fill="none" aria-hidden="true">
               {/* Pushed further out and scaled down than the wide layout would
                   suggest: the compact triangle is tight and the top card reaches
                   x 90–230, so these have to clear it on either side. */}
-              <GateArrow x={62} y={150} angle={-71.7} scale={0.4} />
-              <GateArrow x={258} y={150} angle={71.7} scale={0.4} />
-              <GateArrow x={160} y={330} angle={180} scale={0.46} />
+              <GateArrow x={62} y={185} angle={-71.7} scale={0.4} />
+              <GateArrow x={258} y={185} angle={71.7} scale={0.4} />
+              <GateArrow x={160} y={330} angle={180} scale={0.46} deep />
             </svg>
             <div className="artium-tri-left">{studentCard}</div>
             <div className="artium-tri-right">{studentNoEmailCard}</div>
