@@ -1886,12 +1886,23 @@ export default function App() {
            the narrow steps where the label shrinks but the name does not.
            The tile's border is the whole hover response — the name itself
            stays unmarked. */
+        /* The tile is taller than the line it sits on, so in normal flow it
+           grows the line box upward however it is vertically aligned — and
+           the footer centres the wordmark against this row, so a taller box
+           here dragged the two names off a shared baseline. The slot is a
+           zero-height inline-block: it reserves the tile's width, sits on the
+           baseline, and contributes no height at all. The tile hangs off it
+           absolutely, so raising it costs no layout. */
+        .artium-gate-extlink-slot {
+          position: relative; display: inline-block;
+          width: 1.18em; height: 0; vertical-align: baseline;
+        }
         .artium-gate-extlink {
+          position: absolute; left: 0.26em; bottom: 0.15em;
           display: inline-flex; align-items: center; justify-content: center;
-          width: 0.92em; height: 0.92em;
-          margin-left: 0.26em; border-radius: 0.26em;
+          width: 0.92em; height: 0.92em; border-radius: 0.26em;
           background: ${C.parchmentDim}; border: 1px solid ${C.inkLine};
-          line-height: 1; vertical-align: 0.34em; flex-shrink: 0;
+          line-height: 1;
         }
         .artium-gate-extlink svg { width: 68%; height: 68%; display: block; }
         .artium-gate-partner a:hover .artium-gate-extlink { border-color: ${C.brass}; }
@@ -1899,17 +1910,18 @@ export default function App() {
            fragment hanging off the wordmark — "artium — In partnership with" —
            so the two names ran together as one string. A hairline separates
            them without claiming to be punctuation. */
-        /* align-self because the row aligns on the baseline and this has no
-           text: left to itself it would hang from its bottom edge. */
-        .artium-gate-rule { width: 1px; height: 18px; background: ${C.inkLine}; flex-shrink: 0; align-self: center; }
+        /* stretch, so the rule takes its height from the row rather than
+           setting it. At a fixed 18px it was the tallest thing here, which
+           made the row taller than the type; the row is centred against the
+           wordmark next to it, so that extra height pushed the two names off
+           a shared baseline. It also has no text of its own to align on. */
+        .artium-gate-rule { width: 1px; background: ${C.inkLine}; flex-shrink: 0; align-self: stretch; }
         @media (max-width: 700px) {
           .artium-gate-bar { padding-left: 14px; padding-right: 14px; }
           .artium-gate-partner { font-size: 11px; gap: 6px; }
-          .artium-gate-rule { height: 14px; }
         }
         @media (max-width: 380px) {
           .artium-gate-partner { font-size: 10px; gap: 5px; margin-left: 9px; }
-          .artium-gate-rule { height: 12px; }
         }
         /* Holding the two names at one size costs width, and below ~360px the
            bar runs out of it — the arrow and the tail of the name were being
@@ -4134,11 +4146,13 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
             {/* Drawn rather than the ↗ character: the glyph's barbs are stubby
                 at this size, and its shape is whatever the system font decides.
                 Here the barbs run most of the shaft's length. */}
-            <span className="artium-gate-extlink" aria-hidden="true">
-              <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-                <path d="M2.5 7.5 L7.3 2.7" />
-                <path d="M3.7 2.7 H7.3 V6.3" />
-              </svg>
+            <span className="artium-gate-extlink-slot" aria-hidden="true">
+              <span className="artium-gate-extlink">
+                <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M2.5 7.5 L7.3 2.7" />
+                  <path d="M3.7 2.7 H7.3 V6.3" />
+                </svg>
+              </span>
             </span>
           </a>
         </span>
