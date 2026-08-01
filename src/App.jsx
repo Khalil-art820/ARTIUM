@@ -1877,26 +1877,12 @@ export default function App() {
            slots differ in width and the three descriptions differ in length,
            so left to themselves no two cards ever match. Content is centred in
            whatever height is left over. */
-        /* A slow drift, staggered so the three don't bob in lockstep.
-           Negative delays start each one mid-cycle rather than waiting. */
-        @keyframes artiumFloat {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-6px); }
-        }
-        .artium-gate-float { animation: artiumFloat 5.5s ease-in-out infinite; }
-        .artium-tri-left .artium-gate-float { animation-delay: -1.8s; }
-        .artium-tri-right .artium-gate-float { animation-delay: -3.6s; }
-        .artium-tri-arrows { animation: artiumFloat 5.5s ease-in-out infinite; animation-delay: -0.9s; }
-        @media (prefers-reduced-motion: reduce) {
-          .artium-gate-float, .artium-tri-arrows { animation: none; }
-        }
-
         .artium-gate-card {
           width: 230px;
           max-width: 100%;
           min-height: 156px;
-          margin-top: 12px;
-          padding: 18px 18px;
+          margin-top: -30px;
+          padding: 42px 18px 18px;
           border-radius: 18px;
           display: flex;
           flex-direction: column;
@@ -1921,8 +1907,8 @@ export default function App() {
             width: 100%;
             max-width: none;
             min-height: 112px;
-            margin-top: 8px;
-            padding: 12px 10px;
+            margin-top: -18px;
+            padding: 24px 10px 12px;
             border-radius: 14px;
           }
           .artium-tri-arrows-wide { display: none; }
@@ -3860,8 +3846,8 @@ function StepTeaching({ draft, update }) {
   );
 }
 
-/** Chevron colour for the entry gate. */
-const GATE_ARROW = C.brass;
+/** Grey for the entry-gate chevrons. Starting point — easy to swap. */
+const GATE_ARROW = "#9AA6B2";
 /** The rail they sit on, kept separate so the two can be coloured apart. */
 const GATE_RAIL = C.brass;
 
@@ -3897,8 +3883,7 @@ function GateCard({ onClick, bg, bgPos, overlay, icon, title, sub, desc, descWid
   // in CSS because it has to shrink along with the circle.
   return (
     <button onClick={onClick} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 0, width: "100%", padding: 0 }}>
-      <div className="artium-gate-float" style={{ zIndex: 2 }}>
-      <div className="artium-gate-circle" style={{ borderRadius: "50%", overflow: "hidden", position: "relative", boxShadow: `0 0 0 4px ${C.brass}, 0 8px 32px rgba(10,37,64,0.14)`, transition: "transform 0.18s", flexShrink: 0 }}
+      <div className="artium-gate-circle" style={{ borderRadius: "50%", overflow: "hidden", position: "relative", zIndex: 2, boxShadow: `0 0 0 4px ${C.brass}, 0 8px 32px rgba(10,37,64,0.14)`, transition: "transform 0.18s", flexShrink: 0 }}
         onMouseEnter={e => e.currentTarget.style.transform = "scale(1.04)"}
         onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
       >
@@ -3910,7 +3895,6 @@ function GateCard({ onClick, bg, bgPos, overlay, icon, title, sub, desc, descWid
         <div className="artium-gate-icon" style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
           {icon}
         </div>
-      </div>
       </div>
       <div className="artium-gate-card" style={{ textAlign: "center", background: "#fff", border: `1px solid ${C.inkLine}`, boxShadow: "0 2px 14px rgba(10,37,64,0.07)" }}>
         <div className="artium-gate-title" style={{ fontWeight: 700, color: C.ivory, marginBottom: 4 }}>{title}</div>
