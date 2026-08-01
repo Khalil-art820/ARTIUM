@@ -1870,15 +1870,28 @@ export default function App() {
         /* Sizes live here rather than inline: an inline font-size outranks a
            media query, so mobile steps written inline never take effect. */
         .artium-gate-partner { font-size: 13px; }
-        .artium-gate-partner a { font-size: 15px; letter-spacing: -0.525px; }
+        /* text-decoration belongs here, not inline: an inline "none" outranks
+           the :hover rule below and the underline never appears. */
+        .artium-gate-partner a { font-size: 15px; letter-spacing: -0.525px; text-decoration: none; }
+        /* A rule instead of an em dash. The dash made the credit a sentence
+           fragment hanging off the wordmark — "artium — In partnership with" —
+           so the two names ran together as one string. A hairline separates
+           them without claiming to be punctuation. */
+        .artium-gate-rule { width: 1px; height: 18px; background: ${C.inkLine}; flex-shrink: 0; }
+        /* The Instagram glyph used to be the only sign this was a link. An
+           underline on hover says the same thing without putting a third mark
+           in a bar that already holds two. */
+        .artium-gate-partner a:hover { text-decoration: underline; }
         @media (max-width: 700px) {
           .artium-gate-bar { padding-left: 14px; padding-right: 14px; }
-          .artium-gate-partner { font-size: 10.5px; gap: 4px; }
-          .artium-gate-partner a { font-size: 12px; letter-spacing: -0.42px; gap: 4px; }
+          .artium-gate-partner { font-size: 10.5px; gap: 6px; }
+          .artium-gate-partner a { font-size: 12px; letter-spacing: -0.42px; }
+          .artium-gate-rule { height: 14px; }
         }
         @media (max-width: 380px) {
-          .artium-gate-partner { font-size: 9.5px; }
+          .artium-gate-partner { font-size: 9.5px; gap: 5px; }
           .artium-gate-partner a { font-size: 11px; }
+          .artium-gate-rule { height: 12px; }
         }
 
         .artium-gate-circle { width: 202px; height: 202px; }
@@ -4069,15 +4082,15 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
       </div>
       <div className="max-w-5xl w-full mx-auto artium-gate-bar artium-gate-footbar" style={{ position: "sticky", bottom: "env(safe-area-inset-bottom, 0px)", zIndex: 5, borderTop: `1px solid ${C.inkLine}`, height: GATE_BAR_H, minHeight: GATE_BAR_H, flexShrink: 0, display: "flex", alignItems: "center", gap: 0, whiteSpace: "nowrap", overflow: "hidden" }}>
         <Logo size={17} markSize={22} />
-        <span className="artium-gate-partner" style={{ display: "inline-flex", alignItems: "center", gap: 5, color: C.ivoryDim, marginLeft: 10, lineHeight: 1 }}>
-          <span>— In partnership with</span>
+        <span className="artium-gate-partner" style={{ display: "inline-flex", alignItems: "center", gap: 9, color: C.ivoryDim, marginLeft: 12, lineHeight: 1 }}>
+          <span className="artium-gate-rule" aria-hidden="true" />
+          <span>In partnership with</span>
           {/* Set like the artium wordmark: same stack, same weight, same tight
               tracking, so the two names read as a pair rather than one mark
               and one piece of body copy. */}
           <a href="https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==" target="_blank" rel="noreferrer"
-            style={{ fontFamily: FONT_WORDMARK, fontWeight: 800, color: C.ivory, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 5, lineHeight: 1 }}>
-            <Instagram size={14} strokeWidth={2.2} style={{ flexShrink: 0, display: "block" }} />
-            <span style={{ display: "block" }}>aclassicaltone</span>
+            style={{ fontFamily: FONT_WORDMARK, fontWeight: 800, color: C.ivory, lineHeight: 1 }}>
+            aclassicaltone
           </a>
         </span>
       </div>
