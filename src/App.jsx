@@ -1877,6 +1877,10 @@ export default function App() {
            slots differ in width and the three descriptions differ in length,
            so left to themselves no two cards ever match. Content is centred in
            whatever height is left over. */
+        /* "Find a teacher" carries one short line. Holding it to the two
+           student cards' floor only bought it empty space, so it sizes to its
+           own content; the two that need to match each other still do. */
+        .artium-gate-card--short { min-height: 0 !important; }
         .artium-gate-card {
           width: 230px;
           max-width: 100%;
@@ -3868,7 +3872,7 @@ function GateArrow({ x, y, angle, scale = 1 }) {
 }
 
 /* ---- First screen: pick your role ---- */
-function GateCard({ onClick, bg, bgPos, overlay, icon, title, sub, desc, descWidth }) {
+function GateCard({ onClick, bg, bgPos, overlay, icon, title, sub, desc, descWidth, short }) {
   // gap 0 and z-index 2: the description card slides up underneath the circle
   // with a negative margin, so the two read as one object. The overlap lives
   // in CSS because it has to shrink along with the circle.
@@ -3887,7 +3891,7 @@ function GateCard({ onClick, bg, bgPos, overlay, icon, title, sub, desc, descWid
           {icon}
         </div>
       </div>
-      <div className="artium-gate-card" style={{ textAlign: "center", background: "#fff", border: `1px solid ${C.inkLine}`, boxShadow: "0 2px 14px rgba(10,37,64,0.07)" }}>
+      <div className={`artium-gate-card${short ? " artium-gate-card--short" : ""}`} style={{ textAlign: "center", background: "#fff", border: `1px solid ${C.inkLine}`, boxShadow: "0 2px 14px rgba(10,37,64,0.07)" }}>
         <div className="artium-gate-title" style={{ fontWeight: 700, color: C.ivory, marginBottom: 4 }}>{title}</div>
         {sub && <div className="artium-gate-sub" style={{ fontWeight: 600, color: C.brassLabel, marginBottom: 4 }}>{sub}</div>}
         <div className="artium-gate-desc" style={{ color: C.ivoryDim, lineHeight: 1.5, maxWidth: descWidth, margin: "0 auto" }}>{desc}</div>
@@ -3912,6 +3916,7 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
       title={learnerLoggedOut ? "Log in" : "Find a teacher"}
       desc="Learn your favorite instrument from top conservatory musicians"
       descWidth={190}
+      short
     />
   );
 
