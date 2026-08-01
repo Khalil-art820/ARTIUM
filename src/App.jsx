@@ -4006,6 +4006,12 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
           </a>
         </span>
       </div>
+      {/* Installed, the page runs behind the system navigation area. The footer
+          is the last element, so its white painted down there too and the bar
+          read as three times its height — the strip below it is not part of the
+          bar at all. Filling that space with the field colour leaves the white
+          bar visibly 52px. Collapses to nothing where there is no inset. */}
+      <div aria-hidden="true" style={{ height: "env(safe-area-inset-bottom, 0px)", background: GATE_FIELD, flexShrink: 0 }} />
     </div>
   );
 }
