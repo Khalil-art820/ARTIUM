@@ -1872,8 +1872,6 @@ export default function App() {
         /* gap and margin-left live here, not inline, so the narrow steps below
            can claw back width — an inline value would outrank them. */
         .artium-gate-partner { font-size: 14px; gap: 9px; margin-left: 12px; }
-        /* text-decoration belongs here, not inline: an inline "none" outranks
-           the :hover rule below and the underline never appears. */
         /* 15.3px and -0.035em are not arbitrary — they are what the footer's
            own <Logo size={17}> resolves to (17 * 0.9, tracked by fontSize *
            -0.035). The two names are meant to be the same mark at the same
@@ -1886,8 +1884,8 @@ export default function App() {
            belonging to the word, which is the same mistake the em dash made.
            Everything is in em so the tile tracks the name's size, including
            the narrow steps where the label shrinks but the name does not.
-           inline-flex is atomic inline-level, so the hover underline stops at
-           the word instead of running under the tile. */
+           The tile's border is the whole hover response — the name itself
+           stays unmarked. */
         .artium-gate-extlink {
           display: inline-flex; align-items: center; justify-content: center;
           font-size: 0.7em; width: 1.62em; height: 1.62em;
@@ -1901,10 +1899,6 @@ export default function App() {
            so the two names ran together as one string. A hairline separates
            them without claiming to be punctuation. */
         .artium-gate-rule { width: 1px; height: 18px; background: ${C.inkLine}; flex-shrink: 0; }
-        /* The Instagram glyph used to be the only sign this was a link. An
-           underline on hover says the same thing without putting a third mark
-           in a bar that already holds two. */
-        .artium-gate-partner a:hover { text-decoration: underline; }
         @media (max-width: 700px) {
           .artium-gate-bar { padding-left: 14px; padding-right: 14px; }
           .artium-gate-partner { font-size: 11px; gap: 6px; }
@@ -3946,12 +3940,18 @@ const GATE_ARROW = C.brass;
 const GATE_ARROW_PATH =
   "M -58 12 C -32 -8 2 -16 26 -13 L 26 -29 L 58 0 L 26 29 L 26 10 C 4 8 -28 14 -50 30 Z";
 
-function GateArrow({ x, y, angle, scale = 1 }) {
+/**
+ * `flip` mirrors the arrow across its own vertical axis. The path tapers from
+ * tail to head and its curve is not symmetric, so a rotated copy and a
+ * mirrored copy are different shapes — only the mirrored one reads as the
+ * same arrow facing the other way.
+ */
+function GateArrow({ x, y, angle, scale = 1, flip = false }) {
   return (
     <path
       d={GATE_ARROW_PATH}
       fill={GATE_ARROW}
-      transform={`translate(${x} ${y}) rotate(${angle}) scale(${scale})`}
+      transform={`translate(${x} ${y}) rotate(${angle}) scale(${flip ? -scale : scale} ${scale})`}
     />
   );
 }
@@ -4060,17 +4060,20 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
                   between circles. Each sits at a side's midpoint pushed outward
                   along the perpendicular, which is what keeps them off the top
                   card (x 265–495 from y 223 down). */}
-              <GateArrow x={197} y={278} angle={-52.5} scale={1} />
+              {/* The left arrow is the right one mirrored across x=380, the
+                  triangle's centre line — which works out to the same position
+                  and the negated angle, so only the flip is new. */}
+              <GateArrow x={197} y={278} angle={-52.5} scale={1} flip />
               <GateArrow x={563} y={278} angle={52.5} scale={1} />
-              <GateArrow x={380} y={452} angle={180} scale={1} />
+              <GateArrow x={380} y={452} angle={195} scale={1} />
             </svg>
             <svg className="artium-tri-arrows artium-tri-arrows-narrow" viewBox="0 0 320 530" width="100%" height="100%" fill="none" aria-hidden="true">
               {/* Pushed further out and scaled down than the wide layout would
                   suggest: the compact triangle is tight and the top card reaches
                   x 90–230, so these have to clear it on either side. */}
-              <GateArrow x={62} y={185} angle={-71.7} scale={0.4} />
+              <GateArrow x={62} y={185} angle={-71.7} scale={0.4} flip />
               <GateArrow x={258} y={185} angle={71.7} scale={0.4} />
-              <GateArrow x={160} y={330} angle={180} scale={0.46} />
+              <GateArrow x={160} y={330} angle={195} scale={0.46} />
             </svg>
             <div className="artium-tri-left">{studentCard}</div>
             <div className="artium-tri-right">{studentNoEmailCard}</div>
