@@ -69,8 +69,10 @@ const HEADER_CONTROL = 32;
 // brass and navy, and it dominated. The outlined shape is kept.
 const MUSIC_BTN_INK = C.brass;
 
-// The entry gate's two bars are the same height, so the page reads as a band
-// between two rules rather than a header with something trailing underneath.
+// The entry gate's two bars are the same height, so the page reads as evenly
+// bounded rather than as a header with something trailing underneath. They
+// carry no rules and no tone of their own — matching heights are the only
+// thing holding the top and bottom of the screen together.
 const GATE_BAR_H = 52;
 // The field the circles sit on. White, and the same white as the two bars and
 // the cards — the gate used to stack three near-whites (#F6F9FC behind
@@ -4080,7 +4082,7 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
   // a wide screen.
   return (
     <div className="min-h-full flex flex-col" style={{ background: GATE_FIELD, color: C.ivory }}>
-      <div className="max-w-5xl w-full mx-auto artium-gate-bar" style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#FFFFFF", height: `calc(${GATE_BAR_H}px + env(safe-area-inset-top, 0px))`, paddingTop: "env(safe-area-inset-top, 0px)", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div className="max-w-5xl w-full mx-auto artium-gate-bar" style={{ background: "#FFFFFF", height: `calc(${GATE_BAR_H}px + env(safe-area-inset-top, 0px))`, paddingTop: "env(safe-area-inset-top, 0px)", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <Logo size={22} markSize={HEADER_CONTROL} />
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <MusicBtn playing={musicOn} onToggle={onMusicToggle} />
@@ -4182,7 +4184,7 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
           </div>
         )}
       </div>
-      <div className="max-w-5xl w-full mx-auto artium-gate-bar artium-gate-footbar" style={{ position: "sticky", bottom: "env(safe-area-inset-bottom, 0px)", zIndex: 5, borderTop: `1px solid ${C.inkLine}`, height: GATE_BAR_H, minHeight: GATE_BAR_H, flexShrink: 0, display: "flex", alignItems: "center", gap: 0, whiteSpace: "nowrap", overflow: "hidden" }}>
+      <div className="max-w-5xl w-full mx-auto artium-gate-bar artium-gate-footbar" style={{ position: "sticky", bottom: "env(safe-area-inset-bottom, 0px)", zIndex: 5, height: GATE_BAR_H, minHeight: GATE_BAR_H, flexShrink: 0, display: "flex", alignItems: "center", gap: 0, whiteSpace: "nowrap", overflow: "hidden" }}>
         <Logo size={17} markSize={22} />
         {/* The same brown the signup cards use for "with an institutional
             student email" — a label colour that is already doing this job
