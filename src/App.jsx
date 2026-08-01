@@ -1888,11 +1888,12 @@ export default function App() {
            stays unmarked. */
         .artium-gate-extlink {
           display: inline-flex; align-items: center; justify-content: center;
-          font-size: 0.7em; width: 1.62em; height: 1.62em;
-          margin-left: 0.42em; border-radius: 0.42em;
+          width: 0.92em; height: 0.92em;
+          margin-left: 0.26em; border-radius: 0.26em;
           background: ${C.parchmentDim}; border: 1px solid ${C.inkLine};
-          line-height: 1; vertical-align: 0.06em; flex-shrink: 0;
+          line-height: 1; vertical-align: 0.34em; flex-shrink: 0;
         }
+        .artium-gate-extlink svg { width: 68%; height: 68%; display: block; }
         .artium-gate-partner a:hover .artium-gate-extlink { border-color: ${C.brass}; }
         /* A rule instead of an em dash. The dash made the credit a sentence
            fragment hanging off the wordmark — "artium — In partnership with" —
@@ -4060,10 +4061,11 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
                   between circles. Each sits at a side's midpoint pushed outward
                   along the perpendicular, which is what keeps them off the top
                   card (x 265–495 from y 223 down). */}
-              {/* The left arrow is the right one mirrored across x=380, the
-                  triangle's centre line — which works out to the same position
-                  and the negated angle, so only the flip is new. */}
-              <GateArrow x={197} y={278} angle={-52.5} scale={1} flip />
+              {/* The left arrow carries the right one's mirrored shape but
+                  points back up the triangle, so the three still read as one
+                  cycle. Mirroring alone aims it down-left, hence the extra
+                  half turn: 180 + 127.5 lands on -52.5, the heading it needs. */}
+              <GateArrow x={197} y={278} angle={127.5} scale={1} flip />
               <GateArrow x={563} y={278} angle={52.5} scale={1} />
               <GateArrow x={380} y={452} angle={195} scale={1} />
             </svg>
@@ -4071,7 +4073,7 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
               {/* Pushed further out and scaled down than the wide layout would
                   suggest: the compact triangle is tight and the top card reaches
                   x 90–230, so these have to clear it on either side. */}
-              <GateArrow x={62} y={185} angle={-71.7} scale={0.4} flip />
+              <GateArrow x={62} y={185} angle={108.3} scale={0.4} flip />
               <GateArrow x={258} y={185} angle={71.7} scale={0.4} />
               <GateArrow x={160} y={330} angle={195} scale={0.46} />
             </svg>
@@ -4127,7 +4129,15 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
           <a href="https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==" target="_blank" rel="noreferrer"
             style={{ fontFamily: FONT_WORDMARK, fontWeight: 800, color: C.ivory, lineHeight: 1 }}>
             aclassicaltone
-            <span className="artium-gate-extlink" aria-hidden="true">↗</span>
+            {/* Drawn rather than the ↗ character: the glyph's barbs are stubby
+                at this size, and its shape is whatever the system font decides.
+                Here the barbs run most of the shaft's length. */}
+            <span className="artium-gate-extlink" aria-hidden="true">
+              <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M2.5 7.5 L7.3 2.7" />
+                <path d="M3.7 2.7 H7.3 V6.3" />
+              </svg>
+            </span>
           </a>
         </span>
       </div>
