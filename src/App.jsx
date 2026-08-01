@@ -3846,8 +3846,10 @@ function StepTeaching({ draft, update }) {
   );
 }
 
-/** Grey for the entry-gate connectors. Starting point — easy to swap. */
+/** Grey for the entry-gate chevrons. Starting point — easy to swap. */
 const GATE_ARROW = "#9AA6B2";
+/** The rail they sit on, kept separate so the two can be coloured apart. */
+const GATE_RAIL = C.brass;
 
 /**
  * A triple chevron, the ">>>" glyph, pointing along `angle` (0 = right).
@@ -3976,7 +3978,7 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
                   and the rails at y=101 and y=446 clear every card. */}
               <path
                 d="M 115 336 L 115 101 L 270 101 M 490 101 L 645 101 L 645 336 M 536 446 L 224 446"
-                stroke={GATE_ARROW} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" opacity={0.35}
+                stroke={GATE_RAIL} strokeWidth={3.5} strokeLinecap="round" strokeLinejoin="round" opacity={0.75}
               />
               <Chevrons x={115} y={225} angle={-90} size={1.15} />
               <Chevrons x={195} y={101} angle={0} size={1.15} />
@@ -3990,7 +3992,7 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
                   card's 90–230, and the rails at y=54 and y=326 clear the cards. */}
               <path
                 d="M 70 272 L 70 54 L 106 54 M 214 54 L 250 54 L 250 272 M 196 326 L 124 326"
-                stroke={GATE_ARROW} strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" opacity={0.35}
+                stroke={GATE_RAIL} strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round" opacity={0.75}
               />
               <Chevrons x={70} y={170} angle={-90} size={0.62} />
               <Chevrons x={250} y={170} angle={90} size={0.62} />
