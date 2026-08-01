@@ -1880,7 +1880,7 @@ export default function App() {
         .artium-gate-card {
           width: 230px;
           max-width: 100%;
-          min-height: 156px;
+          min-height: 205px;
           margin-top: -30px;
           padding: 42px 18px 18px;
           border-radius: 18px;
@@ -1906,7 +1906,7 @@ export default function App() {
           .artium-tri .artium-gate-card {
             width: 100%;
             max-width: none;
-            min-height: 112px;
+            min-height: 166px;
             margin-top: -18px;
             padding: 24px 10px 12px;
             border-radius: 14px;
@@ -3932,6 +3932,7 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
       icon={<img src="/4.png" style={{ width: 52, height: 52, objectFit: "contain", mixBlendMode: "screen" }} />}
       title={studentLoggedIn ? "Continue" : "I'm a conservatory student"}
       sub={!studentLoggedIn ? "with an institutional student email" : null}
+      desc="Connect with peers worldwide, earn while you teach and promote yourself"
     />
   );
 
@@ -3943,6 +3944,7 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
       icon={<FileText size={46} color="#fff" strokeWidth={1.6} />}
       title="I'm a conservatory student"
       sub="without an institutional student email"
+      desc="Connect with peers worldwide, earn while you teach and promote yourself"
     />
   );
 
