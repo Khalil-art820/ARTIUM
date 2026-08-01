@@ -1955,7 +1955,7 @@ export default function App() {
         />
       )}
 
-      {screen === "entry" && <EntryGate onLearner={chooseLearner} onStudent={() => chooseStudent("otp")} onStudentNoEmail={() => chooseStudent("document")} onLogin={startLogin} learnerProfile={learnerProfile} learnerLoggedOut={learnerLoggedOut} studentLoggedIn={!!myProfile} musicOn={musicPlaying} onMusicToggle={toggleMusic} onlineCount={onlineCount} />}
+      {screen === "entry" && <EntryGate onLearner={chooseLearner} onStudent={() => chooseStudent("otp")} onStudentNoEmail={() => chooseStudent("document")} onLogin={startLogin} learnerProfile={learnerProfile} learnerLoggedOut={learnerLoggedOut} studentLoggedIn={!!myProfile} musicOn={musicPlaying} onMusicToggle={toggleMusic} memberCount={Object.values(studentsByCons).flat().length} />}
       {screen === "learnerSignup" && <LearnerSignup onSubmit={submitLearner} onBack={backToEntry} onLogin={startLogin} error={authError} googleName={learnerGoogleName} />}
       {screen === "learnerMap" && (
         <LearnerScreen
@@ -3918,7 +3918,7 @@ function GateCard({ onClick, bg, bgPos, overlay, icon, title, sub, desc, descWid
   );
 }
 
-function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerProfile, learnerLoggedOut, studentLoggedIn, musicOn, onMusicToggle, onlineCount }) {
+function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerProfile, learnerLoggedOut, studentLoggedIn, musicOn, onMusicToggle, memberCount }) {
   const singleCard = !!learnerProfile || learnerLoggedOut || studentLoggedIn;
   const showLearner = !studentLoggedIn;
   const showStudent = !singleCard || studentLoggedIn;
@@ -3968,11 +3968,13 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
         <Logo size={22} markSize={HEADER_CONTROL} />
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <MusicBtn playing={musicOn} onToggle={onMusicToggle} />
-          {onlineCount != null && (
+          {/* Registered members, the same figure and mark as under "Explore
+              Artium's Network" — a headcount of the network, not of who
+              happens to be connected this second. */}
+          {memberCount != null && (
             <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 13, color: C.ivoryDim }}>
-              <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#1A9E6E", display: "inline-block" }} />
-              <span style={{ color: C.ivory, fontWeight: 600 }}>{onlineCount}</span>
-              <span style={{ color: C.ivory, fontWeight: 600 }}>online</span>
+              <Users size={14} />
+              <span style={{ color: C.ivory, fontWeight: 600 }}>{memberCount}</span>
             </span>
           )}
         </div>
