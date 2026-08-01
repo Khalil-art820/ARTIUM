@@ -3947,7 +3947,7 @@ function StepTeaching({ draft, update }) {
  *  black: a trace of the navy the rest of the palette runs on, so the discs
  *  sit in the same family as the type instead of reading as holes in the
  *  page. */
-const GATE_CIRCLE_BG = "#1C1F24";
+const GATE_CIRCLE_BG = "#2B2F36";
 
 /** Both lines of the entry gate's heading, set like the header wordmark —
  *  same face, same 800 weight, same proportional -0.035em tracking. One
