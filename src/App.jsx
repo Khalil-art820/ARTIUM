@@ -1869,10 +1869,21 @@ export default function App() {
         }
         /* Sizes live here rather than inline: an inline font-size outranks a
            media query, so mobile steps written inline never take effect. */
-        .artium-gate-partner { font-size: 13px; }
+        /* gap and margin-left live here, not inline, so the narrow steps below
+           can claw back width — an inline value would outrank them. */
+        .artium-gate-partner { font-size: 14px; gap: 9px; margin-left: 12px; }
         /* text-decoration belongs here, not inline: an inline "none" outranks
            the :hover rule below and the underline never appears. */
-        .artium-gate-partner a { font-size: 15px; letter-spacing: -0.525px; text-decoration: none; }
+        /* 15.3px and -0.035em are not arbitrary — they are what the footer's
+           own <Logo size={17}> resolves to (17 * 0.9, tracked by fontSize *
+           -0.035). The two names are meant to be the same mark at the same
+           size, so this has to follow the Logo's arithmetic, not approximate
+           it. The Logo does not shrink on narrow screens, so neither does
+           this; only the label between them steps down. */
+        .artium-gate-partner a { font-size: 15.3px; letter-spacing: -0.035em; text-decoration: none; }
+        /* inline-block keeps the hover underline under the word: text
+           decoration propagates to inline children but stops at this. */
+        .artium-gate-extlink { display: inline-block; font-size: 0.76em; margin-left: 3px; vertical-align: 1px; }
         /* A rule instead of an em dash. The dash made the credit a sentence
            fragment hanging off the wordmark — "artium — In partnership with" —
            so the two names ran together as one string. A hairline separates
@@ -1884,14 +1895,21 @@ export default function App() {
         .artium-gate-partner a:hover { text-decoration: underline; }
         @media (max-width: 700px) {
           .artium-gate-bar { padding-left: 14px; padding-right: 14px; }
-          .artium-gate-partner { font-size: 10.5px; gap: 6px; }
-          .artium-gate-partner a { font-size: 12px; letter-spacing: -0.42px; }
+          .artium-gate-partner { font-size: 11px; gap: 6px; }
           .artium-gate-rule { height: 14px; }
         }
         @media (max-width: 380px) {
-          .artium-gate-partner { font-size: 9.5px; gap: 5px; }
-          .artium-gate-partner a { font-size: 11px; }
+          .artium-gate-partner { font-size: 10px; gap: 5px; margin-left: 9px; }
           .artium-gate-rule { height: 12px; }
+        }
+        /* Holding the two names at one size costs width, and below ~360px the
+           bar runs out of it — the arrow and the tail of the name were being
+           cut off by the bar's overflow. The label and the spacing give the
+           width back, so the names stay matched instead of drifting apart
+           again on the smallest phones. */
+        @media (max-width: 360px) {
+          .artium-gate-bar { padding-left: 10px; padding-right: 10px; }
+          .artium-gate-partner { font-size: 9px; gap: 4px; margin-left: 6px; }
         }
 
         .artium-gate-circle { width: 202px; height: 202px; }
@@ -4082,7 +4100,10 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
       </div>
       <div className="max-w-5xl w-full mx-auto artium-gate-bar artium-gate-footbar" style={{ position: "sticky", bottom: "env(safe-area-inset-bottom, 0px)", zIndex: 5, borderTop: `1px solid ${C.inkLine}`, height: GATE_BAR_H, minHeight: GATE_BAR_H, flexShrink: 0, display: "flex", alignItems: "center", gap: 0, whiteSpace: "nowrap", overflow: "hidden" }}>
         <Logo size={17} markSize={22} />
-        <span className="artium-gate-partner" style={{ display: "inline-flex", alignItems: "center", gap: 9, color: C.ivoryDim, marginLeft: 12, lineHeight: 1 }}>
+        {/* The same brown the signup cards use for "with an institutional
+            student email" — a label colour that is already doing this job
+            elsewhere rather than a second muted grey. */}
+        <span className="artium-gate-partner" style={{ display: "inline-flex", alignItems: "center", color: C.brassLabel, lineHeight: 1 }}>
           <span className="artium-gate-rule" aria-hidden="true" />
           <span>In partnership with</span>
           {/* Set like the artium wordmark: same stack, same weight, same tight
@@ -4091,6 +4112,7 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
           <a href="https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==" target="_blank" rel="noreferrer"
             style={{ fontFamily: FONT_WORDMARK, fontWeight: 800, color: C.ivory, lineHeight: 1 }}>
             aclassicaltone
+            <span className="artium-gate-extlink" aria-hidden="true">↗</span>
           </a>
         </span>
       </div>
