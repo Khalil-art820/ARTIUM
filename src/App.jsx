@@ -66,16 +66,8 @@ const SPOTIFY_PLAYLIST_ID = "3ydc8YZVqfFW1Dj681FMMe";
 const HEADER_CONTROL = 32;
 
 // Brass, not black: the reference's black was the only black in a header of
-// brass and navy, and it dominated.
+// brass and navy, and it dominated. The outlined shape is kept.
 const MUSIC_BTN_INK = C.brass;
-
-/** Behind the entry-gate icons. The photographs were three different images
- *  under three different overlays, so the circles never quite matched; one
- *  flat tone puts the weight on the icons instead. The music button fills
- *  itself with this too — a brass ring around a grey disc is the same object
- *  in the header as it is on the gate, so the two share the value rather than
- *  each carrying their own copy of it. */
-const GATE_CIRCLE_BG = "#525C68";
 
 // The entry gate's two bars are the same height, so the page reads as a band
 // between two rules rather than a header with something trailing underneath.
@@ -576,10 +568,9 @@ function HomeBtn({ onClick }) {
 // matches the avatar and the logo mark across every header.
 function MusicBtn({ playing, onToggle, size = HEADER_CONTROL }) {
   if (!SPOTIFY_PLAYLIST_ID) return null;
-  // Built like an entry-gate circle: grey disc, brass ring, white glyph. The
-  // glyph is filled rather than stroked — against a filled disc an outlined
-  // mark reads as a hole in it. Ring weight and glyph size are fractions of
-  // the diameter, keeping the proportion if HEADER_CONTROL moves.
+  // Black ring, black glyph, both stroked — the reference is drawn in outline,
+  // so nothing here is filled. Ring weight and glyph size are fractions of the
+  // diameter, keeping the proportion if HEADER_CONTROL moves.
   const ring = Math.max(2, Math.round(size * 0.085));
   const glyph = Math.round(size * 0.46);
   return (
@@ -591,12 +582,12 @@ function MusicBtn({ playing, onToggle, size = HEADER_CONTROL }) {
         display: "inline-flex", alignItems: "center", justifyContent: "center",
         width: size, height: size, padding: 0, boxSizing: "border-box",
         border: `${ring}px solid ${MUSIC_BTN_INK}`, borderRadius: "50%",
-        background: GATE_CIRCLE_BG, cursor: "pointer", flexShrink: 0, lineHeight: 0,
+        background: "transparent", cursor: "pointer", flexShrink: 0, lineHeight: 0,
       }}
     >
       {playing
-        ? <Pause size={glyph} color="#FFFFFF" fill="#FFFFFF" strokeWidth={2.6} />
-        : <Play size={glyph} color="#FFFFFF" fill="#FFFFFF" strokeWidth={2.6} style={{ marginLeft: 1 }} />}
+        ? <Pause size={glyph} color={MUSIC_BTN_INK} strokeWidth={2.6} />
+        : <ChevronRight size={glyph} color={MUSIC_BTN_INK} strokeWidth={2.8} style={{ marginLeft: 1 }} />}
     </button>
   );
 }
@@ -3879,6 +3870,11 @@ function StepTeaching({ draft, update }) {
     </div>
   );
 }
+
+/** Behind the entry-gate icons. The photographs were three different images
+ *  under three different overlays, so the circles never quite matched; one
+ *  flat tone puts the weight on the icons instead. */
+const GATE_CIRCLE_BG = "#525C68";
 
 /** The entry gate's three connecting arrows. */
 const GATE_ARROW = C.brass;
