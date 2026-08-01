@@ -1877,9 +1877,6 @@ export default function App() {
            slots differ in width and the three descriptions differ in length,
            so left to themselves no two cards ever match. Content is centred in
            whatever height is left over. */
-        /* "Find a teacher" carries one short line, so it is no longer held to
-           the two student cards' floor — those two still match each other. */
-        .artium-gate-card--short { min-height: 0 !important; }
         .artium-gate-card {
           width: 230px;
           max-width: 100%;
@@ -3852,8 +3849,26 @@ function StepTeaching({ draft, update }) {
 /** The entry gate's three connecting arrows. */
 const GATE_ARROW = C.brass;
 
+/**
+ * One chunky curved arrow, drawn pointing right around a local origin at its
+ * middle. Filled rather than stroked: the shape tapers from tail to head, and
+ * a stroke is the same width along its whole length.
+ */
+const GATE_ARROW_PATH =
+  "M -58 12 C -32 -8 2 -16 26 -13 L 26 -29 L 58 0 L 26 29 L 26 10 C 4 8 -28 14 -50 30 Z";
+
+function GateArrow({ x, y, angle, scale = 1 }) {
+  return (
+    <path
+      d={GATE_ARROW_PATH}
+      fill={GATE_ARROW}
+      transform={`translate(${x} ${y}) rotate(${angle}) scale(${scale})`}
+    />
+  );
+}
+
 /* ---- First screen: pick your role ---- */
-function GateCard({ onClick, bg, bgPos, overlay, icon, title, sub, desc, descWidth, short }) {
+function GateCard({ onClick, bg, bgPos, overlay, icon, title, sub, desc, descWidth }) {
   // gap 0 and z-index 2: the description card slides up underneath the circle
   // with a negative margin, so the two read as one object. The overlap lives
   // in CSS because it has to shrink along with the circle.
@@ -3872,7 +3887,7 @@ function GateCard({ onClick, bg, bgPos, overlay, icon, title, sub, desc, descWid
           {icon}
         </div>
       </div>
-      <div className={`artium-gate-card${short ? " artium-gate-card--short" : ""}`} style={{ textAlign: "center", background: "#fff", border: `1px solid ${C.inkLine}`, boxShadow: "0 2px 14px rgba(10,37,64,0.07)" }}>
+      <div className="artium-gate-card" style={{ textAlign: "center", background: "#fff", border: `1px solid ${C.inkLine}`, boxShadow: "0 2px 14px rgba(10,37,64,0.07)" }}>
         <div className="artium-gate-title" style={{ fontWeight: 700, color: C.ivory, marginBottom: 4 }}>{title}</div>
         {sub && <div className="artium-gate-sub" style={{ fontWeight: 600, color: C.brassLabel, marginBottom: 4 }}>{sub}</div>}
         <div className="artium-gate-desc" style={{ color: C.ivoryDim, lineHeight: 1.5, maxWidth: descWidth, margin: "0 auto" }}>{desc}</div>
@@ -3897,7 +3912,6 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
       title={learnerLoggedOut ? "Log in" : "Find a teacher"}
       desc="Learn your favorite instrument from top conservatory musicians"
       descWidth={190}
-      short
     />
   );
 
@@ -3951,29 +3965,21 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
             {/* Every arrow is two-way: `auto-start-reverse` lets one marker serve
                 both ends, so markerStart points back down the path. */}
             <svg className="artium-tri-arrows artium-tri-arrows-wide" viewBox="0 0 760 680" width="100%" height="100%" fill="none" aria-hidden="true">
-              <defs>
-                {/* markerUnits defaults to strokeWidth, so the head scales with
-                    the shaft and the two stay in proportion. */}
-                <marker id="artium-arrow-wide" viewBox="0 0 10 10" refX="7" refY="5" markerWidth={3.4} markerHeight={3.4} orient="auto">
-                  <path d="M 0 0 L 10 5 L 0 10 z" fill={GATE_ARROW} />
-                </marker>
-              </defs>
-              {/* One turning circuit: left up to the top, top down to the right,
-                  right back along the bottom. Each bows outward, away from the
-                  cards hanging beneath the circles. */}
-              <path d="M 150 345 Q 168 232 298 192" stroke={GATE_ARROW} strokeWidth={11} strokeLinecap="butt" markerEnd="url(#artium-arrow-wide)" />
-              <path d="M 462 192 Q 592 232 610 345" stroke={GATE_ARROW} strokeWidth={11} strokeLinecap="butt" markerEnd="url(#artium-arrow-wide)" />
-              <path d="M 545 487 Q 380 546 215 487" stroke={GATE_ARROW} strokeWidth={11} strokeLinecap="butt" markerEnd="url(#artium-arrow-wide)" />
+              {/* Three separate arrows turning about the centroid, not spans
+                  between circles. Each sits at a side's midpoint pushed outward
+                  along the perpendicular, which is what keeps them off the top
+                  card (x 265–495 from y 223 down). */}
+              <GateArrow x={197} y={251} angle={-52.5} scale={1} />
+              <GateArrow x={563} y={251} angle={52.5} scale={1} />
+              <GateArrow x={380} y={452} angle={180} scale={1} />
             </svg>
             <svg className="artium-tri-arrows artium-tri-arrows-narrow" viewBox="0 0 320 530" width="100%" height="100%" fill="none" aria-hidden="true">
-              <defs>
-                <marker id="artium-arrow-narrow" viewBox="0 0 10 10" refX="7" refY="5" markerWidth={3.4} markerHeight={3.4} orient="auto">
-                  <path d="M 0 0 L 10 5 L 0 10 z" fill={GATE_ARROW} />
-                </marker>
-              </defs>
-              <path d="M 33 268 Q 26 150 112 82" stroke={GATE_ARROW} strokeWidth={6} strokeLinecap="butt" markerEnd="url(#artium-arrow-narrow)" />
-              <path d="M 208 82 Q 294 150 287 268" stroke={GATE_ARROW} strokeWidth={6} strokeLinecap="butt" markerEnd="url(#artium-arrow-narrow)" />
-              <path d="M 196 348 Q 160 366 124 348" stroke={GATE_ARROW} strokeWidth={6} strokeLinecap="butt" markerEnd="url(#artium-arrow-narrow)" />
+              {/* Pushed further out and scaled down than the wide layout would
+                  suggest: the compact triangle is tight and the top card reaches
+                  x 90–230, so these have to clear it on either side. */}
+              <GateArrow x={62} y={150} angle={-71.7} scale={0.4} />
+              <GateArrow x={258} y={150} angle={71.7} scale={0.4} />
+              <GateArrow x={160} y={330} angle={180} scale={0.46} />
             </svg>
             <div className="artium-tri-left">{studentCard}</div>
             <div className="artium-tri-right">{studentNoEmailCard}</div>
