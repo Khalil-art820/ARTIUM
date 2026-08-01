@@ -65,9 +65,9 @@ const SPOTIFY_PLAYLIST_ID = "3ydc8YZVqfFW1Dj681FMMe";
 // they never quite lined up.
 const HEADER_CONTROL = 32;
 
-// The music button is drawn in black, as its reference is — deliberately not
-// C.ivory, which is the navy the rest of the app uses for dark text.
-const MUSIC_BTN_INK = "#000000";
+// Brass, not black: the reference's black was the only black in a header of
+// brass and navy, and it dominated. The outlined shape is kept.
+const MUSIC_BTN_INK = C.brass;
 
 // The entry gate's two bars are the same height, so the page reads as a band
 // between two rules rather than a header with something trailing underneath.
@@ -1833,6 +1833,13 @@ export default function App() {
         @media (prefers-reduced-motion: reduce) {
           .artium-explore-pin { animation: none; }
           .artium-explore:hover { transform: none; }
+        }
+
+        /* Same bob as the landing globe pin, and deliberately no per-circle
+           delay: all three rise and fall together. */
+        .artium-gate-float { animation: artiumBob 3.2s ease-in-out infinite; }
+        @media (prefers-reduced-motion: reduce) {
+          .artium-gate-float { animation: none; }
         }
 
         .artium-tri { position: relative; width: 760px; height: 680px; }
@@ -3883,7 +3890,8 @@ function GateCard({ onClick, bg, bgPos, overlay, icon, title, sub, desc, descWid
   // in CSS because it has to shrink along with the circle.
   return (
     <button onClick={onClick} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 0, width: "100%", padding: 0 }}>
-      <div className="artium-gate-circle" style={{ borderRadius: "50%", overflow: "hidden", position: "relative", zIndex: 2, boxShadow: `0 0 0 4px ${C.brass}, 0 8px 32px rgba(10,37,64,0.14)`, transition: "transform 0.18s", flexShrink: 0 }}
+      <div className="artium-gate-float" style={{ zIndex: 2 }}>
+      <div className="artium-gate-circle" style={{ borderRadius: "50%", overflow: "hidden", position: "relative", boxShadow: `0 0 0 4px ${C.brass}, 0 8px 32px rgba(10,37,64,0.14)`, transition: "transform 0.18s", flexShrink: 0 }}
         onMouseEnter={e => e.currentTarget.style.transform = "scale(1.04)"}
         onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
       >
@@ -3895,6 +3903,7 @@ function GateCard({ onClick, bg, bgPos, overlay, icon, title, sub, desc, descWid
         <div className="artium-gate-icon" style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
           {icon}
         </div>
+      </div>
       </div>
       <div className={`artium-gate-card${short ? " artium-gate-card--short" : ""}`} style={{ textAlign: "center", background: "#fff", border: `1px solid ${C.inkLine}`, boxShadow: "0 2px 14px rgba(10,37,64,0.07)" }}>
         <div className="artium-gate-title" style={{ fontWeight: 700, color: C.ivory, marginBottom: 4 }}>{title}</div>
@@ -3942,7 +3951,7 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
       onClick={onStudentNoEmail}
       bg="/1.png" bgPos="center"
       overlay="rgba(0,0,0,0.42)"
-      icon={<FileText size={46} color="#fff" strokeWidth={1.6} />}
+      icon={<img src="/4.png" style={{ width: 52, height: 52, objectFit: "contain", mixBlendMode: "screen" }} />}
       title="I'm a conservatory student"
       sub="without an institutional student email"
       desc="Connect with peers worldwide, earn while you teach and promote yourself"
