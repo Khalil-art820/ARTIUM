@@ -1845,6 +1845,12 @@ export default function App() {
            inset instead, and the space behind the navigation bar falls through
            to the page background. */
         .artium-gate-footbar { background: #FFFFFF; }
+        .artium-gate-login:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(10,37,64,0.16); }
+        .artium-gate-login:active { transform: translateY(0); }
+        @media (prefers-reduced-motion: reduce) {
+          .artium-gate-login { transition: none; }
+          .artium-gate-login:hover { transform: none; }
+        }
         /* Sizes live here rather than inline: an inline font-size outranks a
            media query, so mobile steps written inline never take effect. */
         .artium-gate-partner { font-size: 13px; }
@@ -3987,15 +3993,22 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
           // appeared once this browser had seen someone log out, so on a new
           // device — or a private window — every circle led to signup and
           // there was no route to an existing account.
-          <p style={{ textAlign: "center", marginTop: 32, fontSize: 13, color: C.ivoryDim }}>
-            Already have an account?{" "}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10, marginTop: 32 }}>
+            <span style={{ fontSize: 13, color: C.ivoryDim }}>Already have an account?</span>
             <button
               onClick={onLogin}
-              style={{ background: "none", border: "none", padding: 0, font: "inherit", fontWeight: 700, color: C.brassLabel, cursor: "pointer", textDecoration: "underline" }}
+              className="artium-gate-login"
+              style={{
+                background: C.brass, color: C.inkText, border: "none",
+                borderRadius: 999, padding: "10px 30px", cursor: "pointer",
+                fontFamily: FONT_BODY, fontSize: 14, fontWeight: 700,
+                boxShadow: "0 2px 10px rgba(10,37,64,0.10)",
+                transition: "transform 0.15s, box-shadow 0.15s",
+              }}
             >
               Log in
             </button>
-          </p>
+          </div>
         )}
       </div>
       <div className="max-w-5xl w-full mx-auto artium-gate-bar artium-gate-footbar" style={{ position: "sticky", bottom: "env(safe-area-inset-bottom, 0px)", zIndex: 5, borderTop: `1px solid ${C.inkLine}`, height: GATE_BAR_H, minHeight: GATE_BAR_H, flexShrink: 0, display: "flex", alignItems: "center", gap: 0, whiteSpace: "nowrap", overflow: "hidden" }}>
