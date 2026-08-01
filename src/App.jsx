@@ -415,14 +415,14 @@ function RingedDisc({ size, children, style }) {
  * header and the entry gate's circles both draw it, and "the same wordmark"
  * only stays true if there is one of it.
  */
-function Wordmark({ fontSize, color, hairpin = HAIRPIN }) {
+function Wordmark({ fontSize, color, hairpin = HAIRPIN, className }) {
   // Hairpin geometry all derives from the type size, so the mark stays in
   // proportion at every size it is used at (18, 20 and 22 today).
   const hairpinHeight = Math.max(4, fontSize * 0.26);
   const hairpinOffset = Math.max(1, fontSize * 0.06);
   const hairpinStroke = Math.max(1, fontSize * 0.05);
   return (
-    <span style={{ fontFamily: FONT_WORDMARK, color, fontSize, fontWeight: 800, letterSpacing: fontSize * -0.035, lineHeight: 1 }}>
+    <span className={className} style={{ fontFamily: FONT_WORDMARK, color, fontSize, fontWeight: 800, letterSpacing: fontSize * -0.035, lineHeight: 1 }}>
       <span style={{ position: "relative", display: "inline-block" }}>
         art
         {/* preserveAspectRatio="none" stretches the hairpin to the width of
@@ -1868,7 +1868,7 @@ export default function App() {
         .artium-gate-flip {
           position: absolute; inset: 0;
           transform-style: preserve-3d;
-          animation: artiumGateTurn 12s ease-in-out infinite;
+          animation: artiumGateTurn 18s ease-in-out infinite;
         }
         .artium-gate-face {
           position: absolute; inset: 0;
@@ -1879,26 +1879,50 @@ export default function App() {
           display: flex; align-items: center; justify-content: center;
           overflow: hidden;
         }
-        /* nowrap because the compact disc scales the word down with a
-           transform, which does not shrink its layout box: at full size the
-           word is wider than that disc and broke to "art / ium" before the
-           scale ever applied. */
-        .artium-gate-face--word { transform: rotateY(180deg); white-space: nowrap; }
-        /* Holds long enough on each side to be read, and turns the same way
-           throughout — 0 to 180 to 360 — so it reads as one disc revolving
-           rather than swinging back and forth. */
-        @keyframes artiumGateTurn {
-          0%, 40%   { transform: rotateY(0deg); }
-          50%, 75%  { transform: rotateY(180deg); }
-          85%, 100% { transform: rotateY(360deg); }
+        .artium-gate-face--back { transform: rotateY(180deg); }
+        /* nowrap because the compact disc scales these down with a transform,
+           which does not shrink a layout box: at full size the word is wider
+           than that disc and broke to "art / ium" before the scale applied. */
+        .artium-gate-slot {
+          position: absolute; inset: 0;
+          display: flex; align-items: center; justify-content: center;
+          white-space: nowrap; opacity: 0;
+          animation: artiumGateSlot 18s linear infinite;
         }
-        /* Staggered, unlike the bob: three discs turning in unison reads as a
-           page glitch, where three taking their turn reads as one diagram
-           breathing. */
-        .artium-tri-left .artium-gate-flip { animation-delay: 4s; }
-        .artium-tri-right .artium-gate-flip { animation-delay: 8s; }
+        .artium-gate-cta {
+          font-family: ${FONT_WORDMARK}; font-weight: 700; font-size: 30px;
+          color: #FFFFFF; letter-spacing: -0.02em; line-height: 1;
+        }
+        /* Six turns of 180, not three: three states on a two-sided disc means
+           each side has to show a different thing each time it comes round, so
+           the sequence only closes after both sides have shown all three. */
+        @keyframes artiumGateTurn {
+          0%, 10.67%     { transform: rotateY(0deg); }
+          16.67%, 27.33% { transform: rotateY(180deg); }
+          33.33%, 44%    { transform: rotateY(360deg); }
+          50%, 60.67%    { transform: rotateY(540deg); }
+          66.67%, 77.33% { transform: rotateY(720deg); }
+          83.33%, 94%    { transform: rotateY(900deg); }
+          100%           { transform: rotateY(1080deg); }
+        }
+        /* Each slot is lit for a third of the cycle. The delays place those
+           thirds over each face's blind window — the front is hidden from 2.46s
+           to 5.46s and every 6s after, the back the opposite — so a slot never
+           changes while anyone is looking at it. */
+        @keyframes artiumGateSlot {
+          0%, 33.32%   { opacity: 1; }
+          33.33%, 100% { opacity: 0; }
+        }
+        .artium-gate-slot--a1 { animation-delay: -2s; }
+        .artium-gate-slot--a2 { animation-delay: -14s; }
+        .artium-gate-slot--a3 { animation-delay: -8s; }
+        .artium-gate-slot--b1 { animation-delay: -17s; }
+        .artium-gate-slot--b2 { animation-delay: -11s; }
+        .artium-gate-slot--b3 { animation-delay: -5s; }
         @media (prefers-reduced-motion: reduce) {
           .artium-gate-flip { animation: none; }
+          .artium-gate-slot { animation: none; }
+          .artium-gate-slot--a1 { opacity: 1; }
         }
 
         .artium-tri { position: relative; width: 760px; height: 680px; }
@@ -2041,7 +2065,8 @@ export default function App() {
              are all worked out from the type size in JS, so a second font-size
              here would leave the mark behind. 0.54 is 108/202, the compact
              disc against the wide one. */
-          .artium-tri .artium-gate-face--word > span { transform: scale(0.54); }
+          .artium-tri .artium-gate-word,
+          .artium-tri .artium-gate-cta { transform: scale(0.54); }
           .artium-tri .artium-gate-title { font-size: 11.5px; }
           .artium-tri .artium-gate-sub { font-size: 9.5px; }
           .artium-tri .artium-gate-desc { font-size: 9.5px; }
@@ -4084,17 +4109,41 @@ function GateCard({ onClick, icon, title, sub, desc, descWidth, short }) {
         onMouseEnter={e => e.currentTarget.style.transform = "scale(1.04)"}
         onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
       >
+        {/* Three things to show and a disc with two sides, so each side
+            carries all three and reveals one at a time. The reveals are timed
+            to land while that side is turned away, which is why the slot
+            delays look arbitrary — they are the midpoints of each face's
+            blind window. Read the two columns together and the sequence is
+            symbol, Sign Up, artium, repeating. */}
         <div className="artium-gate-flip">
           <div className="artium-gate-face">
-            {/* No wrapper element here: a transform on the icon would create a stacking
-                context and break the `mixBlendMode: screen` on the icon images. The
-                compact triangle resizes these icons by selector instead. */}
-            <div className="artium-gate-icon" style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              {icon}
+            <div className="artium-gate-slot artium-gate-slot--a1">
+              {/* No wrapper element around the icon: a transform on it would create
+                  a stacking context and break the `mixBlendMode: screen` on the icon
+                  images. The compact triangle resizes these by selector instead. */}
+              <div className="artium-gate-icon" style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                {icon}
+              </div>
+            </div>
+            <div className="artium-gate-slot artium-gate-slot--a2">
+              <Wordmark fontSize={38} color="#FFFFFF" hairpin="#FFFFFF" className="artium-gate-word" />
+            </div>
+            <div className="artium-gate-slot artium-gate-slot--a3">
+              <span className="artium-gate-cta">Sign Up</span>
             </div>
           </div>
-          <div className="artium-gate-face artium-gate-face--word">
-            <Wordmark fontSize={38} color="#FFFFFF" hairpin="#FFFFFF" />
+          <div className="artium-gate-face artium-gate-face--back">
+            <div className="artium-gate-slot artium-gate-slot--b1">
+              <span className="artium-gate-cta">Sign Up</span>
+            </div>
+            <div className="artium-gate-slot artium-gate-slot--b2">
+              <div className="artium-gate-icon" style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                {icon}
+              </div>
+            </div>
+            <div className="artium-gate-slot artium-gate-slot--b3">
+              <Wordmark fontSize={38} color="#FFFFFF" hairpin="#FFFFFF" className="artium-gate-word" />
+            </div>
           </div>
         </div>
       </div>
