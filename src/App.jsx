@@ -3906,7 +3906,7 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
 
   return (
     <div className="min-h-full flex flex-col" style={{ background: C.inkSoft, color: C.ivory }}>
-      <div className="max-w-5xl w-full mx-auto artium-gate-bar" style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#FFFFFF", height: GATE_BAR_H, minHeight: GATE_BAR_H, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div className="max-w-5xl w-full mx-auto artium-gate-bar" style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#FFFFFF", height: `calc(${GATE_BAR_H}px + env(safe-area-inset-top, 0px))`, paddingTop: "env(safe-area-inset-top, 0px)", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <Logo size={22} markSize={HEADER_CONTROL} />
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <MusicBtn playing={musicOn} onToggle={onMusicToggle} />
