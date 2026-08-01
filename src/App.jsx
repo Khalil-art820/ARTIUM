@@ -4076,6 +4076,10 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
                   between circles. Each sits at a side's midpoint pushed outward
                   along the perpendicular, which is what keeps them off the top
                   card (x 265–495 from y 223 down). */}
+              {/* The right arrow turned back 105 degrees — same path, same
+                  bow, no mirror. A half turn would aim it up and left, out of
+                  the diagram; 105 is what lands it on the top circle and
+                  closes the loop. */}
               <GateArrow x={197} y={278} angle={-52.5} scale={1} />
               <GateArrow x={563} y={278} angle={52.5} scale={1} />
               <GateArrow x={380} y={452} angle={195} scale={1} />
