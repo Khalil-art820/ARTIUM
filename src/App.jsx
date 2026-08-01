@@ -1839,17 +1839,12 @@ export default function App() {
            than wrap — a wrapped footer overflows and reads as a taller bar
            even though the bar itself never changed. */
         .artium-gate-bar { padding-left: 32px; padding-right: 32px; }
+        /* White in every display mode: installed and in a tab should look the
+           same. What made the installed version differ was the bar growing to
+           52px + the navigation inset, not its colour — it now sits above that
+           inset instead, and the space behind the navigation bar falls through
+           to the page background. */
         .artium-gate-footbar { background: #FFFFFF; }
-        /* Installed, Chrome tints Android's navigation bar to match the page.
-           A white bar at the bottom turns that bar white as well, and the two
-           read as one enormous footer — which is why measuring the bar always
-           returned a correct 52px. Installed, the footer takes the field
-           colour: there is then no white left to leak into the system bar.
-           False in a browser tab, so the layout confirmed working there is
-           untouched. */
-        @media (display-mode: standalone), (display-mode: fullscreen), (display-mode: minimal-ui) {
-          .artium-gate-footbar { background: #FAFBFC; }
-        }
         /* Sizes live here rather than inline: an inline font-size outranks a
            media query, so mobile steps written inline never take effect. */
         .artium-gate-partner { font-size: 13px; }
@@ -4003,7 +3998,7 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
           </p>
         )}
       </div>
-      <div className="max-w-5xl w-full mx-auto artium-gate-bar artium-gate-footbar" style={{ position: "sticky", bottom: 0, zIndex: 5, borderTop: `1px solid ${C.inkLine}`, height: `calc(${GATE_BAR_H}px + env(safe-area-inset-bottom, 0px))`, paddingBottom: "env(safe-area-inset-bottom, 0px)", flexShrink: 0, display: "flex", alignItems: "center", gap: 0, whiteSpace: "nowrap", overflow: "hidden" }}>
+      <div className="max-w-5xl w-full mx-auto artium-gate-bar artium-gate-footbar" style={{ position: "sticky", bottom: "env(safe-area-inset-bottom, 0px)", zIndex: 5, borderTop: `1px solid ${C.inkLine}`, height: GATE_BAR_H, minHeight: GATE_BAR_H, flexShrink: 0, display: "flex", alignItems: "center", gap: 0, whiteSpace: "nowrap", overflow: "hidden" }}>
         <Logo size={17} markSize={22} />
         <span className="artium-gate-partner" style={{ display: "inline-flex", alignItems: "center", gap: 5, color: C.ivoryDim, marginLeft: 10, lineHeight: 1 }}>
           <span>— In partnership with</span>
