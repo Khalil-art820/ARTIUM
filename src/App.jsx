@@ -410,15 +410,45 @@ function RingedDisc({ size, children, style }) {
   );
 }
 
-function Logo({ tone = "light", size = 20, markSize, slogan = false }) {
-  const col = tone === "light" ? C.ivory : C.inkText;
-  const fontSize = size * 0.9;
-  const mark = markSize || size;
+/**
+ * The word on its own, without the disc mark. Its own component because the
+ * header and the entry gate's circles both draw it, and "the same wordmark"
+ * only stays true if there is one of it.
+ */
+function Wordmark({ fontSize, color, hairpin = HAIRPIN }) {
   // Hairpin geometry all derives from the type size, so the mark stays in
   // proportion at every size it is used at (18, 20 and 22 today).
   const hairpinHeight = Math.max(4, fontSize * 0.26);
   const hairpinOffset = Math.max(1, fontSize * 0.06);
   const hairpinStroke = Math.max(1, fontSize * 0.05);
+  return (
+    <span style={{ fontFamily: FONT_WORDMARK, color, fontSize, fontWeight: 800, letterSpacing: fontSize * -0.035, lineHeight: 1 }}>
+      <span style={{ position: "relative", display: "inline-block" }}>
+        art
+        {/* preserveAspectRatio="none" stretches the hairpin to the width of
+            "art"; non-scaling-stroke keeps the line an even weight despite it. */}
+        <svg
+          width="100%"
+          height={hairpinHeight}
+          viewBox="0 0 100 10"
+          preserveAspectRatio="none"
+          aria-hidden="true"
+          style={{ position: "absolute", left: 0, top: "100%", marginTop: hairpinOffset, display: "block", overflow: "visible" }}
+        >
+          {/* Apex on the left, opening rightward: a crescendo. Reversing the
+              two x values would make it a diminuendo. */}
+          <path d="M 0 5 L 100 0.6 M 0 5 L 100 9.4" stroke={hairpin} strokeWidth={hairpinStroke} fill="none" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+        </svg>
+      </span>
+      ium
+    </span>
+  );
+}
+
+function Logo({ tone = "light", size = 20, markSize, slogan = false }) {
+  const col = tone === "light" ? C.ivory : C.inkText;
+  const fontSize = size * 0.9;
+  const mark = markSize || size;
   return (
     <div className="flex items-center gap-2.5">
       <RingedDisc size={mark}>
@@ -433,26 +463,7 @@ function Logo({ tone = "light", size = 20, markSize, slogan = false }) {
           }}
         />
       </RingedDisc>
-      <span style={{ fontFamily: FONT_WORDMARK, color: col, fontSize, fontWeight: 800, letterSpacing: fontSize * -0.035, lineHeight: 1 }}>
-        <span style={{ position: "relative", display: "inline-block" }}>
-          art
-          {/* preserveAspectRatio="none" stretches the hairpin to the width of
-              "art"; non-scaling-stroke keeps the line an even weight despite it. */}
-          <svg
-            width="100%"
-            height={hairpinHeight}
-            viewBox="0 0 100 10"
-            preserveAspectRatio="none"
-            aria-hidden="true"
-            style={{ position: "absolute", left: 0, top: "100%", marginTop: hairpinOffset, display: "block", overflow: "visible" }}
-          >
-            {/* Apex on the left, opening rightward: a crescendo. Reversing the
-                two x values would make it a diminuendo. */}
-            <path d="M 0 5 L 100 0.6 M 0 5 L 100 9.4" stroke={HAIRPIN} strokeWidth={hairpinStroke} fill="none" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
-          </svg>
-        </span>
-        ium
-      </span>
+      <Wordmark fontSize={fontSize} color={col} />
       {slogan && (
         <span style={{ fontSize: 13, color: C.ivoryDim, fontWeight: 500, letterSpacing: 0.1, whiteSpace: "nowrap" }}>
           — A World Connected by Music
@@ -1850,6 +1861,46 @@ export default function App() {
           .artium-tri-arrows { animation: none; }
         }
 
+        /* The disc turns; the ring does not. The rotation lives on this inner
+           element so the box-shadow ring on the circle above stays a circle
+           instead of flattening to an ellipse as it turns. */
+        .artium-gate-circle { perspective: 900px; }
+        .artium-gate-flip {
+          position: absolute; inset: 0;
+          transform-style: preserve-3d;
+          animation: artiumGateTurn 12s ease-in-out infinite;
+        }
+        .artium-gate-face {
+          position: absolute; inset: 0;
+          border-radius: 50%;
+          background: ${GATE_CIRCLE_BG};
+          backface-visibility: hidden;
+          -webkit-backface-visibility: hidden;
+          display: flex; align-items: center; justify-content: center;
+          overflow: hidden;
+        }
+        /* nowrap because the compact disc scales the word down with a
+           transform, which does not shrink its layout box: at full size the
+           word is wider than that disc and broke to "art / ium" before the
+           scale ever applied. */
+        .artium-gate-face--word { transform: rotateY(180deg); white-space: nowrap; }
+        /* Holds long enough on each side to be read, and turns the same way
+           throughout — 0 to 180 to 360 — so it reads as one disc revolving
+           rather than swinging back and forth. */
+        @keyframes artiumGateTurn {
+          0%, 40%   { transform: rotateY(0deg); }
+          50%, 75%  { transform: rotateY(180deg); }
+          85%, 100% { transform: rotateY(360deg); }
+        }
+        /* Staggered, unlike the bob: three discs turning in unison reads as a
+           page glitch, where three taking their turn reads as one diagram
+           breathing. */
+        .artium-tri-left .artium-gate-flip { animation-delay: 4s; }
+        .artium-tri-right .artium-gate-flip { animation-delay: 8s; }
+        @media (prefers-reduced-motion: reduce) {
+          .artium-gate-flip { animation: none; }
+        }
+
         .artium-tri { position: relative; width: 760px; height: 680px; }
         .artium-tri > .artium-tri-top { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 260px; }
         .artium-tri > .artium-tri-left { position: absolute; top: 345px; left: 0; width: 230px; }
@@ -1986,6 +2037,11 @@ export default function App() {
              compact triangle flattens all three back to one size. */
           .artium-tri > .artium-tri-top .artium-gate-icon > img { width: 39px !important; height: 39px !important; }
           .artium-tri .artium-gate-icon > svg { width: 32px; height: 32px; }
+          /* Scaled rather than resized: the hairpin's height, offset and stroke
+             are all worked out from the type size in JS, so a second font-size
+             here would leave the mark behind. 0.54 is 108/202, the compact
+             disc against the wide one. */
+          .artium-tri .artium-gate-face--word > span { transform: scale(0.54); }
           .artium-tri .artium-gate-title { font-size: 11.5px; }
           .artium-tri .artium-gate-sub { font-size: 9.5px; }
           .artium-tri .artium-gate-desc { font-size: 9.5px; }
@@ -4020,16 +4076,26 @@ function GateCard({ onClick, icon, title, sub, desc, descWidth, short }) {
   return (
     <button onClick={onClick} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 0, width: "100%", padding: 0 }}>
       <div className="artium-gate-float" style={{ zIndex: 2 }}>
-      <div className="artium-gate-circle" style={{ borderRadius: "50%", overflow: "hidden", position: "relative", boxShadow: `0 0 0 4px ${C.brass}, 0 8px 32px rgba(10,37,64,0.14)`, transition: "transform 0.18s", flexShrink: 0 }}
+      {/* The ring is a box-shadow on this element and this element never turns,
+          so it stays a circle while the disc inside it rotates. Nothing here
+          clips: each face is round in its own right, and an overflow on the
+          turning element's parent flattens the 3D. */}
+      <div className="artium-gate-circle" style={{ borderRadius: "50%", position: "relative", boxShadow: `0 0 0 4px ${C.brass}, 0 8px 32px rgba(10,37,64,0.14)`, transition: "transform 0.18s", flexShrink: 0 }}
         onMouseEnter={e => e.currentTarget.style.transform = "scale(1.04)"}
         onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
       >
-        <div style={{ position: "absolute", inset: 0, background: GATE_CIRCLE_BG }} />
-        {/* No wrapper element here: a transform on the icon would create a stacking
-            context and break the `mixBlendMode: screen` on the icon images. The
-            compact triangle resizes these icons by selector instead. */}
-        <div className="artium-gate-icon" style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          {icon}
+        <div className="artium-gate-flip">
+          <div className="artium-gate-face">
+            {/* No wrapper element here: a transform on the icon would create a stacking
+                context and break the `mixBlendMode: screen` on the icon images. The
+                compact triangle resizes these icons by selector instead. */}
+            <div className="artium-gate-icon" style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              {icon}
+            </div>
+          </div>
+          <div className="artium-gate-face artium-gate-face--word">
+            <Wordmark fontSize={38} color="#FFFFFF" hairpin="#FFFFFF" />
+          </div>
         </div>
       </div>
       </div>
