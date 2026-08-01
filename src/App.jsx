@@ -1917,8 +1917,8 @@ export default function App() {
           /* Ring width stays 4px here: it is set inline on the element, which
              outranks this rule — the arrows are matched to that 4px. */
           .artium-tri .artium-gate-circle { width: 108px; height: 108px; }
-          .artium-tri .artium-gate-icon > img { width: 32px !important; height: 32px !important; }
-          .artium-tri .artium-gate-icon > svg { width: 29px; height: 29px; }
+          .artium-tri .artium-gate-icon > img { width: 35.5px !important; height: 35.5px !important; }
+          .artium-tri .artium-gate-icon > svg { width: 32px; height: 32px; }
           .artium-tri .artium-gate-title { font-size: 11.5px; }
           .artium-tri .artium-gate-sub { font-size: 9.5px; }
           .artium-tri .artium-gate-desc { font-size: 9.5px; }
@@ -3869,7 +3869,7 @@ function StepTeaching({ draft, update }) {
 /** Behind the entry-gate icons. The photographs were three different images
  *  under three different overlays, so the circles never quite matched; one
  *  flat tone puts the weight on the icons instead. */
-const GATE_CIRCLE_BG = "#3A424B";
+const GATE_CIRCLE_BG = "#525C68";
 
 /** The entry gate's three connecting arrows. */
 const GATE_ARROW = C.brass;
@@ -3932,7 +3932,7 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
   const learnerCard = (
     <GateCard
       onClick={onLearner}
-      icon={<img src="/3.png" style={{ width: 52, height: 52, objectFit: "contain", filter: "invert(1)", mixBlendMode: "screen" }} />}
+      icon={<img src="/3.png" style={{ width: 58, height: 58, objectFit: "contain", filter: "invert(1)", mixBlendMode: "screen" }} />}
       title={learnerLoggedOut ? "Log in" : "Find a teacher"}
       desc="Learn your favorite instrument from top conservatory musicians"
       descWidth={190}
@@ -3943,7 +3943,7 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
   const studentCard = (
     <GateCard
       onClick={onStudent}
-      icon={<img src="/4.png" style={{ width: 52, height: 52, objectFit: "contain", mixBlendMode: "screen" }} />}
+      icon={<img src="/4.png" style={{ width: 58, height: 58, objectFit: "contain", mixBlendMode: "screen" }} />}
       title={studentLoggedIn ? "Continue" : "I'm a conservatory student"}
       sub={!studentLoggedIn ? "with an institutional student email" : null}
       desc="Connect with peers worldwide, earn while you teach and promote yourself"
@@ -3953,7 +3953,7 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
   const studentNoEmailCard = (
     <GateCard
       onClick={onStudentNoEmail}
-      icon={<img src="/4.png" style={{ width: 52, height: 52, objectFit: "contain", mixBlendMode: "screen" }} />}
+      icon={<img src="/4.png" style={{ width: 58, height: 58, objectFit: "contain", mixBlendMode: "screen" }} />}
       title="I'm a conservatory student"
       sub="without an institutional student email"
       desc="Connect with peers worldwide, earn while you teach and promote yourself"
