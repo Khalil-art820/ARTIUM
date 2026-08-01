@@ -1992,6 +1992,14 @@ export default function App() {
         }
         @media (min-width: 821px) {
           .artium-tri-arrows-narrow { display: none; }
+          /* The two lower slots hang 20px off each side, opening the gap
+             between them from 300 to 340 without touching .artium-tri itself
+             — the arrow overlays are sized to that box, so widening it would
+             stretch them off the positions they are tuned to. Only the wide
+             layout can afford this: the compact triangle has 3.5px of room
+             beside it, so there it stays at the edges. */
+          .artium-tri > .artium-tri-left { left: -20px; }
+          .artium-tri > .artium-tri-right { right: -20px; }
         }
         @media (max-width: 370px) {
           .artium-tri { transform: scale(0.9); transform-origin: top center; }
