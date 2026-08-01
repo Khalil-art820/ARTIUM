@@ -4168,10 +4168,13 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
         {/* The same brown the signup cards use for "with an institutional
             student email" — a label colour that is already doing this job
             elsewhere rather than a second muted grey. */}
-        {/* baseline, not center: the label and the name are different sizes,
-            so centring their boxes leaves the two lines of type sitting at
-            different heights. */}
-        <span className="artium-gate-partner" style={{ display: "inline-flex", alignItems: "baseline", color: C.brassLabel, lineHeight: 1 }}>
+        {/* center, so every word in the bar sits on the logo disc's middle.
+            A shared baseline cannot do that with mixed sizes: it hangs the
+            smaller label from the same line as the names, which drops its
+            cap centre well below the disc — 2.2px at the narrow steps, a
+            fifth of the label's own height. Centring costs nothing between
+            the two names, which are the same size and stay identical. */}
+        <span className="artium-gate-partner" style={{ display: "inline-flex", alignItems: "center", color: C.brassLabel, lineHeight: 1 }}>
           <span className="artium-gate-rule" aria-hidden="true" />
           <span>In partnership with</span>
           {/* Set like the artium wordmark: same stack, same weight, same tight
