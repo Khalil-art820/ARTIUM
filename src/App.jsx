@@ -1918,6 +1918,11 @@ export default function App() {
              outranks this rule — the arrows are matched to that 4px. */
           .artium-tri .artium-gate-circle { width: 108px; height: 108px; }
           .artium-tri .artium-gate-icon > img { width: 35.5px !important; height: 35.5px !important; }
+          /* The conductor runs a step larger than the two mortarboards, which
+             is set inline for the wide layout. That inline size loses to the
+             rule above, so the difference has to be restated here or the
+             compact triangle flattens all three back to one size. */
+          .artium-tri > .artium-tri-top .artium-gate-icon > img { width: 39px !important; height: 39px !important; }
           .artium-tri .artium-gate-icon > svg { width: 32px; height: 32px; }
           .artium-tri .artium-gate-title { font-size: 11.5px; }
           .artium-tri .artium-gate-sub { font-size: 9.5px; }
@@ -3932,7 +3937,7 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
   const learnerCard = (
     <GateCard
       onClick={onLearner}
-      icon={<img src="/3.png" style={{ width: 58, height: 58, objectFit: "contain", filter: "invert(1)", mixBlendMode: "screen" }} />}
+      icon={<img src="/3.png" style={{ width: 64, height: 64, objectFit: "contain", filter: "invert(1)", mixBlendMode: "screen" }} />}
       title={learnerLoggedOut ? "Log in" : "Find a teacher"}
       desc="Learn your favorite instrument from top conservatory musicians"
       descWidth={190}
