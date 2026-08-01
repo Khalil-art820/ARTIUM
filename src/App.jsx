@@ -1881,8 +1881,8 @@ export default function App() {
           width: 230px;
           max-width: 100%;
           min-height: 205px;
-          margin-top: 14px;
-          padding: 18px;
+          margin-top: -30px;
+          padding: 42px 18px 18px;
           border-radius: 18px;
           display: flex;
           flex-direction: column;
@@ -1907,8 +1907,8 @@ export default function App() {
             width: 100%;
             max-width: none;
             min-height: 166px;
-            margin-top: 10px;
-            padding: 12px 10px;
+            margin-top: -18px;
+            padding: 24px 10px 12px;
             border-radius: 14px;
           }
           .artium-tri-arrows-wide { display: none; }
