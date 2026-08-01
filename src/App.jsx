@@ -1835,11 +1835,15 @@ export default function App() {
           .artium-explore:hover { transform: none; }
         }
 
-        /* Same bob as the landing globe pin, and deliberately no per-circle
-           delay: all three rise and fall together. */
-        .artium-gate-float { animation: artiumBob 3.2s ease-in-out infinite; }
+        /* Same bob as the landing globe pin. No delay anywhere — circles and
+           arrows share one timing, so the whole diagram rises and falls as a
+           single object rather than the arrows sitting still between moving
+           circles. */
+        .artium-gate-float,
+        .artium-tri-arrows { animation: artiumBob 3.2s ease-in-out infinite; }
         @media (prefers-reduced-motion: reduce) {
-          .artium-gate-float { animation: none; }
+          .artium-gate-float,
+          .artium-tri-arrows { animation: none; }
         }
 
         .artium-tri { position: relative; width: 760px; height: 680px; }
