@@ -1881,9 +1881,21 @@ export default function App() {
            it. The Logo does not shrink on narrow screens, so neither does
            this; only the label between them steps down. */
         .artium-gate-partner a { font-size: 15.3px; letter-spacing: -0.035em; text-decoration: none; }
-        /* inline-block keeps the hover underline under the word: text
-           decoration propagates to inline children but stops at this. */
-        .artium-gate-extlink { display: inline-block; font-size: 0.76em; margin-left: 3px; vertical-align: 1px; }
+        /* The arrow sits in its own rounded tile rather than running on as a
+           character after the name — as a bare glyph it read as punctuation
+           belonging to the word, which is the same mistake the em dash made.
+           Everything is in em so the tile tracks the name's size, including
+           the narrow steps where the label shrinks but the name does not.
+           inline-flex is atomic inline-level, so the hover underline stops at
+           the word instead of running under the tile. */
+        .artium-gate-extlink {
+          display: inline-flex; align-items: center; justify-content: center;
+          font-size: 0.7em; width: 1.62em; height: 1.62em;
+          margin-left: 0.42em; border-radius: 0.42em;
+          background: ${C.parchmentDim}; border: 1px solid ${C.inkLine};
+          line-height: 1; vertical-align: 0.06em; flex-shrink: 0;
+        }
+        .artium-gate-partner a:hover .artium-gate-extlink { border-color: ${C.brass}; }
         /* A rule instead of an em dash. The dash made the credit a sentence
            fragment hanging off the wordmark — "artium — In partnership with" —
            so the two names ran together as one string. A hairline separates
