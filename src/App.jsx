@@ -1839,10 +1839,18 @@ export default function App() {
            than wrap — a wrapped footer overflows and reads as a taller bar
            even though the bar itself never changed. */
         .artium-gate-bar { padding-left: 32px; padding-right: 32px; }
+        /* Sizes live here rather than inline: an inline font-size outranks a
+           media query, so mobile steps written inline never take effect. */
+        .artium-gate-partner { font-size: 13px; }
+        .artium-gate-partner a { font-size: 15px; letter-spacing: -0.525px; }
         @media (max-width: 700px) {
           .artium-gate-bar { padding-left: 14px; padding-right: 14px; }
-          .artium-gate-bar .artium-gate-partner { font-size: 10.5px; }
-          .artium-gate-bar .artium-gate-partner a { font-size: 12px; }
+          .artium-gate-partner { font-size: 10.5px; gap: 4px; }
+          .artium-gate-partner a { font-size: 12px; letter-spacing: -0.42px; gap: 4px; }
+        }
+        @media (max-width: 380px) {
+          .artium-gate-partner { font-size: 9.5px; }
+          .artium-gate-partner a { font-size: 11px; }
         }
 
         .artium-gate-circle { width: 202px; height: 202px; }
@@ -3984,17 +3992,17 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
           </p>
         )}
       </div>
-      <div className="max-w-5xl w-full mx-auto artium-gate-bar" style={{ borderTop: `1px solid ${C.inkLine}`, background: "#FFFFFF", height: `calc(${GATE_BAR_H}px + env(safe-area-inset-bottom, 0px))`, paddingBottom: "env(safe-area-inset-bottom, 0px)", flexShrink: 0, display: "flex", alignItems: "center", gap: 0, whiteSpace: "nowrap", overflow: "hidden" }}>
+      <div className="max-w-5xl w-full mx-auto artium-gate-bar" style={{ borderTop: `1px solid ${C.inkLine}`, background: "#FFFFFF", height: GATE_BAR_H, minHeight: GATE_BAR_H, flexShrink: 0, display: "flex", alignItems: "center", gap: 0, whiteSpace: "nowrap", overflow: "hidden" }}>
         <Logo size={17} markSize={22} />
-        <span className="artium-gate-partner" style={{ fontSize: 13, color: C.ivoryDim, marginLeft: 10 }}>
-          — In partnership with{" "}
+        <span className="artium-gate-partner" style={{ display: "inline-flex", alignItems: "center", gap: 5, color: C.ivoryDim, marginLeft: 10, lineHeight: 1 }}>
+          <span>— In partnership with</span>
           {/* Set like the artium wordmark: same stack, same weight, same tight
               tracking, so the two names read as a pair rather than one mark
               and one piece of body copy. */}
           <a href="https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==" target="_blank" rel="noreferrer"
-            style={{ fontFamily: FONT_WORDMARK, fontWeight: 800, fontSize: 15, letterSpacing: 15 * -0.035, color: C.ivory, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 5 }}>
-            <Instagram size={15} style={{ flexShrink: 0 }} />
-            aclassicaltone
+            style={{ fontFamily: FONT_WORDMARK, fontWeight: 800, color: C.ivory, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 5, lineHeight: 1 }}>
+            <Instagram size={14} strokeWidth={2.2} style={{ flexShrink: 0, display: "block" }} />
+            <span style={{ display: "block" }}>aclassicaltone</span>
           </a>
         </span>
       </div>
