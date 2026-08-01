@@ -7,6 +7,9 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: "autoUpdate",
+      // Registration lives in src/pwa.js, which also forces the reload that
+      // autoUpdate on its own does not do for an already-open page.
+      injectRegister: null,
       includeAssets: ["icon-512.png", "icon-192.png", "icon-512-maskable.png", "apple-touch-icon.png"],
       manifest: {
         name: "Artium — A World Connected by Music",
@@ -43,6 +46,7 @@ export default defineConfig({
         ],
       },
       workbox: {
+        cleanupOutdatedCaches: true,
         globPatterns: ["**/*.{js,css,html,svg,png,ico,woff2}"],
         runtimeCaching: [
           {

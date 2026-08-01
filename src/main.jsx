@@ -4,6 +4,7 @@ import App from "./App.jsx";
 import ErrorBoundary from "./ErrorBoundary.jsx";
 import { AuthProvider } from "./contexts/AuthContext.jsx";
 import "./index.css";
+import "./pwa.js";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
