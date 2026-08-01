@@ -3943,8 +3943,11 @@ function StepTeaching({ draft, update }) {
 
 /** Behind the entry-gate icons. The photographs were three different images
  *  under three different overlays, so the circles never quite matched; one
- *  flat tone puts the weight on the icons instead. */
-const GATE_CIRCLE_BG = "#525C68";
+ *  flat tone puts the weight on the icons instead. Matte rather than pure
+ *  black: a trace of the navy the rest of the palette runs on, so the discs
+ *  sit in the same family as the type instead of reading as holes in the
+ *  page. */
+const GATE_CIRCLE_BG = "#1C1F24";
 
 /** Both lines of the entry gate's heading, set like the header wordmark —
  *  same face, same 800 weight, same proportional -0.035em tracking. One
