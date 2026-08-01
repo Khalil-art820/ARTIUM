@@ -3984,9 +3984,21 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
       </div>
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-12" style={{ background: GATE_FIELD }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 56, justifyContent: "center", alignItems: "center" }}>
-        <h1 style={{ fontFamily: "-apple-system, 'SF Pro Display', BlinkMacSystemFont, 'Inter', sans-serif", fontSize: "clamp(22px,2.8vw,32px)", fontWeight: 800, lineHeight: 1.15, color: C.ivory, letterSpacing: -0.8, textAlign: "center", margin: 0 }}>
-          Connect. Learn. Elevate
-        </h1>
+        {/* Tagline and headline are one group: the column they sit in spaces
+            its children 56px apart, which is the distance to the triangle, not
+            the distance between two lines of the same heading. */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+          {/* Set like the header wordmark rather than like the headline below
+              it — same face, same 800 weight, same proportional -0.035em
+              tracking — so it reads as Artium speaking, not as a second
+              headline competing with the first. */}
+          <p style={{ fontFamily: FONT_WORDMARK, fontSize: "clamp(17px,2.1vw,24px)", fontWeight: 800, lineHeight: 1, color: C.ivory, letterSpacing: "-0.035em", textAlign: "center", margin: 0 }}>
+            Your Classical Music World
+          </p>
+          <h1 style={{ fontFamily: "-apple-system, 'SF Pro Display', BlinkMacSystemFont, 'Inter', sans-serif", fontSize: "clamp(22px,2.8vw,32px)", fontWeight: 800, lineHeight: 1.15, color: C.ivory, letterSpacing: -0.8, textAlign: "center", margin: 0 }}>
+            Connect. Learn. Elevate
+          </h1>
+        </div>
         {triangle ? (
           <div className="artium-tri">
             <div className="artium-tri-top">{learnerCard}</div>
