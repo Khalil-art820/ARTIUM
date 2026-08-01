@@ -4100,8 +4100,16 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
                   head handed to the other end so it points at the top circle.
                   y is 278 + 26.3: dropped so this arrow's tail sits level with
                   the right arrow's point, and the pair reads as one line
-                  running through the top card. */}
-              <GateArrow x={197} y={304.3} angle={-52.5} scale={1} flip headAtTail />
+                  running through the top card.
+
+                  x is 197 - 21.65. The drop carried this arrow into the card's
+                  own band, where it touched the card's left edge while the
+                  right one cleared by 13.8; moving it out by that much gives
+                  the two the same gap. It is why the pair no longer sits at
+                  matching distances from the centre line — the clearance is
+                  measured against the card, and the card is what the eye
+                  reads the gap against. */}
+              <GateArrow x={175.35} y={304.3} angle={-52.5} scale={1} flip headAtTail />
               <GateArrow x={563} y={278} angle={52.5} scale={1} />
               <GateArrow x={380} y={452} angle={195} scale={1} />
             </svg>
@@ -4109,8 +4117,11 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
               {/* Pushed further out and scaled down than the wide layout would
                   suggest: the compact triangle is tight and the top card reaches
                   x 90–230, so these have to clear it on either side. */}
-              {/* 185 + 12.34, the compact triangle's own version of the drop. */}
-              <GateArrow x={62} y={197.34} angle={-71.7} scale={0.4} flip headAtTail />
+              {/* 185 + 12.34 and 62 - 5.16: the compact triangle's own version
+                  of the drop and of the clearance match. Its card and its
+                  arrows are at different sizes, so neither figure carries
+                  over from the wide layout. */}
+              <GateArrow x={56.84} y={197.34} angle={-71.7} scale={0.4} flip headAtTail />
               <GateArrow x={258} y={185} angle={71.7} scale={0.4} />
               <GateArrow x={160} y={330} angle={195} scale={0.46} />
             </svg>
