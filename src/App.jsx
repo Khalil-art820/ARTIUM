@@ -4097,8 +4097,11 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
                   card (x 265–495 from y 223 down). */}
               {/* The right arrow reflected across x=380, the triangle's centre
                   line — same position, negated angle, and the flip — then the
-                  head handed to the other end so it points at the top circle. */}
-              <GateArrow x={197} y={278} angle={-52.5} scale={1} flip headAtTail />
+                  head handed to the other end so it points at the top circle.
+                  y is 278 + 26.3: dropped so this arrow's tail sits level with
+                  the right arrow's point, and the pair reads as one line
+                  running through the top card. */}
+              <GateArrow x={197} y={304.3} angle={-52.5} scale={1} flip headAtTail />
               <GateArrow x={563} y={278} angle={52.5} scale={1} />
               <GateArrow x={380} y={452} angle={195} scale={1} />
             </svg>
@@ -4106,7 +4109,8 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
               {/* Pushed further out and scaled down than the wide layout would
                   suggest: the compact triangle is tight and the top card reaches
                   x 90–230, so these have to clear it on either side. */}
-              <GateArrow x={62} y={185} angle={-71.7} scale={0.4} flip headAtTail />
+              {/* 185 + 12.34, the compact triangle's own version of the drop. */}
+              <GateArrow x={62} y={197.34} angle={-71.7} scale={0.4} flip headAtTail />
               <GateArrow x={258} y={185} angle={71.7} scale={0.4} />
               <GateArrow x={160} y={330} angle={195} scale={0.46} />
             </svg>
