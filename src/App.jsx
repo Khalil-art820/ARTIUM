@@ -1899,7 +1899,9 @@ export default function App() {
            fragment hanging off the wordmark — "artium — In partnership with" —
            so the two names ran together as one string. A hairline separates
            them without claiming to be punctuation. */
-        .artium-gate-rule { width: 1px; height: 18px; background: ${C.inkLine}; flex-shrink: 0; }
+        /* align-self because the row aligns on the baseline and this has no
+           text: left to itself it would hang from its bottom edge. */
+        .artium-gate-rule { width: 1px; height: 18px; background: ${C.inkLine}; flex-shrink: 0; align-self: center; }
         @media (max-width: 700px) {
           .artium-gate-bar { padding-left: 14px; padding-right: 14px; }
           .artium-gate-partner { font-size: 11px; gap: 6px; }
@@ -3942,17 +3944,18 @@ const GATE_ARROW_PATH =
   "M -58 12 C -32 -8 2 -16 26 -13 L 26 -29 L 58 0 L 26 29 L 26 10 C 4 8 -28 14 -50 30 Z";
 
 /**
- * `flip` mirrors the arrow across its own vertical axis. The path tapers from
- * tail to head and its curve is not symmetric, so a rotated copy and a
- * mirrored copy are different shapes — only the mirrored one reads as the
- * same arrow facing the other way.
+ * Rotation only, deliberately. The path is a banana — its centreline runs from
+ * about (-58, 21) at the tail to (58, 0) at the head — so it bows one way, and
+ * any mirror inverts that bow. A mirrored arrow curves against the circle the
+ * other two ride, which is what makes it look off its path. Three copies of
+ * one shape at three angles is what reads as a single arc.
  */
-function GateArrow({ x, y, angle, scale = 1, flip = false }) {
+function GateArrow({ x, y, angle, scale = 1 }) {
   return (
     <path
       d={GATE_ARROW_PATH}
       fill={GATE_ARROW}
-      transform={`translate(${x} ${y}) rotate(${angle}) scale(${flip ? -scale : scale} ${scale})`}
+      transform={`translate(${x} ${y}) rotate(${angle}) scale(${scale})`}
     />
   );
 }
@@ -4061,11 +4064,7 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
                   between circles. Each sits at a side's midpoint pushed outward
                   along the perpendicular, which is what keeps them off the top
                   card (x 265–495 from y 223 down). */}
-              {/* The left arrow carries the right one's mirrored shape but
-                  points back up the triangle, so the three still read as one
-                  cycle. Mirroring alone aims it down-left, hence the extra
-                  half turn: 180 + 127.5 lands on -52.5, the heading it needs. */}
-              <GateArrow x={197} y={278} angle={127.5} scale={1} flip />
+              <GateArrow x={197} y={278} angle={-52.5} scale={1} />
               <GateArrow x={563} y={278} angle={52.5} scale={1} />
               <GateArrow x={380} y={452} angle={195} scale={1} />
             </svg>
@@ -4073,7 +4072,7 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
               {/* Pushed further out and scaled down than the wide layout would
                   suggest: the compact triangle is tight and the top card reaches
                   x 90–230, so these have to clear it on either side. */}
-              <GateArrow x={62} y={185} angle={108.3} scale={0.4} flip />
+              <GateArrow x={62} y={185} angle={-71.7} scale={0.4} />
               <GateArrow x={258} y={185} angle={71.7} scale={0.4} />
               <GateArrow x={160} y={330} angle={195} scale={0.46} />
             </svg>
@@ -4120,7 +4119,10 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
         {/* The same brown the signup cards use for "with an institutional
             student email" — a label colour that is already doing this job
             elsewhere rather than a second muted grey. */}
-        <span className="artium-gate-partner" style={{ display: "inline-flex", alignItems: "center", color: C.brassLabel, lineHeight: 1 }}>
+        {/* baseline, not center: the label and the name are different sizes,
+            so centring their boxes leaves the two lines of type sitting at
+            different heights. */}
+        <span className="artium-gate-partner" style={{ display: "inline-flex", alignItems: "baseline", color: C.brassLabel, lineHeight: 1 }}>
           <span className="artium-gate-rule" aria-hidden="true" />
           <span>In partnership with</span>
           {/* Set like the artium wordmark: same stack, same weight, same tight
