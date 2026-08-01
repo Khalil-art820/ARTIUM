@@ -3956,21 +3956,35 @@ const GATE_ARROW_PATH =
   "M -58 12 C -32 -8 2 -16 26 -13 L 26 -29 L 58 0 L 26 29 L 26 10 C 4 8 -28 14 -50 30 Z";
 
 /**
+ * The same band with the head at the other end: both long edges are the two
+ * curves above, unchanged, so the body sits exactly where the body above sits.
+ * Only the ends differ — the barbs move to the tail and the head end is cut
+ * square. Reversing a curved band cannot be done with a transform, because
+ * turning it round also turns its arc over; the band has to keep its bow and
+ * hand the point to the other end.
+ *
+ * Head geometry is built off the tail's cut, midpoint (-54, 21), running
+ * along it for the barbs and out along its normal for the tip.
+ */
+const GATE_ARROW_PATH_HEAD_AT_TAIL =
+  "M 26 -13 C 2 -16 -32 -8 -58 12 L -63.7 -0.9 L -81.4 33.2 L -44.3 42.9 L -50 30 C -28 14 4 8 26 10 Z";
+
+/**
  * `flip` mirrors the arrow across its own vertical axis, for the pair at the
  * top of the triangle: two arrows only read as the same curve reversed if one
  * is literally the other's reflection, and a rotation of this path never is —
  * it is a banana, its centreline running from about (-58, 21) at the tail to
  * (58, 0) at the head, so the bow has a handedness.
  *
- * The cost is that a reflection reverses circulation: the mirrored pair points
- * outward from the top circle rather than continuing round it. Mirror symmetry
- * and a closed loop cannot both hold, and the pair is the thing that has to
- * match here.
+ * A reflection also reverses circulation, which is why the left arrow takes
+ * `headAtTail` as well: the reflection keeps its curve matched to the right
+ * one, and the swapped head puts the point back on the top circle. The two
+ * together are the only way to have both.
  */
-function GateArrow({ x, y, angle, scale = 1, flip = false }) {
+function GateArrow({ x, y, angle, scale = 1, flip = false, headAtTail = false }) {
   return (
     <path
-      d={GATE_ARROW_PATH}
+      d={headAtTail ? GATE_ARROW_PATH_HEAD_AT_TAIL : GATE_ARROW_PATH}
       fill={GATE_ARROW}
       transform={`translate(${x} ${y}) rotate(${angle}) scale(${flip ? -scale : scale} ${scale})`}
     />
@@ -4082,9 +4096,9 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
                   along the perpendicular, which is what keeps them off the top
                   card (x 265–495 from y 223 down). */}
               {/* The right arrow reflected across x=380, the triangle's centre
-                  line — same position, negated angle, and the flip. Same curve,
-                  reversed. */}
-              <GateArrow x={197} y={278} angle={-52.5} scale={1} flip />
+                  line — same position, negated angle, and the flip — then the
+                  head handed to the other end so it points at the top circle. */}
+              <GateArrow x={197} y={278} angle={-52.5} scale={1} flip headAtTail />
               <GateArrow x={563} y={278} angle={52.5} scale={1} />
               <GateArrow x={380} y={452} angle={195} scale={1} />
             </svg>
@@ -4092,7 +4106,7 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
               {/* Pushed further out and scaled down than the wide layout would
                   suggest: the compact triangle is tight and the top card reaches
                   x 90–230, so these have to clear it on either side. */}
-              <GateArrow x={62} y={185} angle={-71.7} scale={0.4} flip />
+              <GateArrow x={62} y={185} angle={-71.7} scale={0.4} flip headAtTail />
               <GateArrow x={258} y={185} angle={71.7} scale={0.4} />
               <GateArrow x={160} y={330} angle={195} scale={0.46} />
             </svg>
