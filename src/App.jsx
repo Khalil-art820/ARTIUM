@@ -3898,7 +3898,7 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
 
   return (
     <div className="min-h-full flex flex-col" style={{ background: C.inkSoft, color: C.ivory }}>
-      <div className="max-w-5xl w-full mx-auto artium-gate-bar" style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#FFFFFF", height: GATE_BAR_H, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div className="max-w-5xl w-full mx-auto artium-gate-bar" style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#FFFFFF", height: GATE_BAR_H, minHeight: GATE_BAR_H, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <Logo size={22} markSize={HEADER_CONTROL} />
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <MusicBtn playing={musicOn} onToggle={onMusicToggle} />
@@ -3984,7 +3984,7 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
           </p>
         )}
       </div>
-      <div className="max-w-5xl w-full mx-auto artium-gate-bar" style={{ borderTop: `1px solid ${C.inkLine}`, background: "#FFFFFF", height: GATE_BAR_H, display: "flex", alignItems: "center", gap: 0, flexShrink: 0, whiteSpace: "nowrap", overflow: "hidden" }}>
+      <div className="max-w-5xl w-full mx-auto artium-gate-bar" style={{ borderTop: `1px solid ${C.inkLine}`, background: "#FFFFFF", height: `calc(${GATE_BAR_H}px + env(safe-area-inset-bottom, 0px))`, paddingBottom: "env(safe-area-inset-bottom, 0px)", flexShrink: 0, display: "flex", alignItems: "center", gap: 0, whiteSpace: "nowrap", overflow: "hidden" }}>
         <Logo size={17} markSize={22} />
         <span className="artium-gate-partner" style={{ fontSize: 13, color: C.ivoryDim, marginLeft: 10 }}>
           — In partnership with{" "}
@@ -3992,7 +3992,8 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
               tracking, so the two names read as a pair rather than one mark
               and one piece of body copy. */}
           <a href="https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==" target="_blank" rel="noreferrer"
-            style={{ fontFamily: FONT_WORDMARK, fontWeight: 800, fontSize: 15, letterSpacing: 15 * -0.035, color: C.ivory, textDecoration: "none" }}>
+            style={{ fontFamily: FONT_WORDMARK, fontWeight: 800, fontSize: 15, letterSpacing: 15 * -0.035, color: C.ivory, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 5 }}>
+            <Instagram size={15} style={{ flexShrink: 0 }} />
             aclassicaltone
           </a>
         </span>
