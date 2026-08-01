@@ -4003,7 +4003,7 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
           </p>
         )}
       </div>
-      <div className="max-w-5xl w-full mx-auto artium-gate-bar artium-gate-footbar" style={{ borderTop: `1px solid ${C.inkLine}`, height: GATE_BAR_H, minHeight: GATE_BAR_H, flexShrink: 0, display: "flex", alignItems: "center", gap: 0, whiteSpace: "nowrap", overflow: "hidden" }}>
+      <div className="max-w-5xl w-full mx-auto artium-gate-bar artium-gate-footbar" style={{ borderTop: `1px solid ${C.inkLine}`, height: `calc(${GATE_BAR_H}px + env(safe-area-inset-bottom, 0px))`, paddingBottom: "env(safe-area-inset-bottom, 0px)", flexShrink: 0, display: "flex", alignItems: "center", gap: 0, whiteSpace: "nowrap", overflow: "hidden" }}>
         <Logo size={17} markSize={22} />
         <span className="artium-gate-partner" style={{ display: "inline-flex", alignItems: "center", gap: 5, color: C.ivoryDim, marginLeft: 10, lineHeight: 1 }}>
           <span>— In partnership with</span>
@@ -4017,12 +4017,6 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
           </a>
         </span>
       </div>
-      {/* Installed, the page runs behind the system navigation area. The footer
-          is the last element, so its white painted down there too and the bar
-          read as three times its height — the strip below it is not part of the
-          bar at all. Filling that space with the field colour leaves the white
-          bar visibly 52px. Collapses to nothing where there is no inset. */}
-      <div aria-hidden="true" style={{ height: "env(safe-area-inset-bottom, 0px)", background: GATE_FIELD, flexShrink: 0 }} />
     </div>
   );
 }
