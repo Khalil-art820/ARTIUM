@@ -65,6 +65,10 @@ const SPOTIFY_PLAYLIST_ID = "3ydc8YZVqfFW1Dj681FMMe";
 // they never quite lined up.
 const HEADER_CONTROL = 32;
 
+// The music button is drawn in black, as its reference is — deliberately not
+// C.ivory, which is the navy the rest of the app uses for dark text.
+const MUSIC_BTN_INK = "#000000";
+
 // The entry gate's two bars are the same height, so the page reads as a band
 // between two rules rather than a header with something trailing underneath.
 const GATE_BAR_H = 52;
@@ -564,10 +568,11 @@ function HomeBtn({ onClick }) {
 // matches the avatar and the logo mark across every header.
 function MusicBtn({ playing, onToggle, size = HEADER_CONTROL }) {
   if (!SPOTIFY_PLAYLIST_ID) return null;
-  // Outlined: a ring with the symbol inside it, rather than a filled disc.
-  // Ring weight is a fraction of the diameter so it holds its proportion if
-  // HEADER_CONTROL ever changes.
-  const ring = Math.max(2, Math.round(size * 0.075));
+  // Black ring, black glyph, both stroked — the reference is drawn in outline,
+  // so nothing here is filled. Ring weight and glyph size are fractions of the
+  // diameter, keeping the proportion if HEADER_CONTROL moves.
+  const ring = Math.max(2, Math.round(size * 0.085));
+  const glyph = Math.round(size * 0.46);
   return (
     <button
       onClick={onToggle}
@@ -576,13 +581,13 @@ function MusicBtn({ playing, onToggle, size = HEADER_CONTROL }) {
       style={{
         display: "inline-flex", alignItems: "center", justifyContent: "center",
         width: size, height: size, padding: 0, boxSizing: "border-box",
-        border: `${ring}px solid ${C.brass}`, borderRadius: "50%",
+        border: `${ring}px solid ${MUSIC_BTN_INK}`, borderRadius: "50%",
         background: "transparent", cursor: "pointer", flexShrink: 0, lineHeight: 0,
       }}
     >
       {playing
-        ? <Pause size={Math.round(size * 0.4)} color={C.brass} fill={C.brass} strokeWidth={1.5} />
-        : <Play size={Math.round(size * 0.4)} color={C.brass} fill={C.brass} strokeWidth={1.5} />}
+        ? <Pause size={glyph} color={MUSIC_BTN_INK} strokeWidth={2.6} />
+        : <ChevronRight size={glyph} color={MUSIC_BTN_INK} strokeWidth={2.8} style={{ marginLeft: 1 }} />}
     </button>
   );
 }
@@ -3861,14 +3866,10 @@ const GATE_ARROW = C.brass;
 const GATE_ARROW_PATH =
   "M -58 12 C -32 -8 2 -16 26 -13 L 26 -29 L 58 0 L 26 29 L 26 10 C 4 8 -28 14 -50 30 Z";
 
-/** Deeper arc, for the long run along the bottom where the gentle one reads flat. */
-const GATE_ARROW_PATH_DEEP =
-  "M -58 30 C -26 -14 8 -26 26 -20 L 26 -37 L 58 -5 L 26 24 L 26 5 C 10 2 -22 12 -46 48 Z";
-
-function GateArrow({ x, y, angle, scale = 1, deep = false }) {
+function GateArrow({ x, y, angle, scale = 1 }) {
   return (
     <path
-      d={deep ? GATE_ARROW_PATH_DEEP : GATE_ARROW_PATH}
+      d={GATE_ARROW_PATH}
       fill={GATE_ARROW}
       transform={`translate(${x} ${y}) rotate(${angle}) scale(${scale})`}
     />
@@ -3980,7 +3981,7 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
                   card (x 265–495 from y 223 down). */}
               <GateArrow x={197} y={278} angle={-52.5} scale={1} />
               <GateArrow x={563} y={278} angle={52.5} scale={1} />
-              <GateArrow x={380} y={452} angle={180} scale={1} deep />
+              <GateArrow x={380} y={452} angle={180} scale={1} />
             </svg>
             <svg className="artium-tri-arrows artium-tri-arrows-narrow" viewBox="0 0 320 530" width="100%" height="100%" fill="none" aria-hidden="true">
               {/* Pushed further out and scaled down than the wide layout would
@@ -3988,7 +3989,7 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
                   x 90–230, so these have to clear it on either side. */}
               <GateArrow x={62} y={185} angle={-71.7} scale={0.4} />
               <GateArrow x={258} y={185} angle={71.7} scale={0.4} />
-              <GateArrow x={160} y={330} angle={180} scale={0.46} deep />
+              <GateArrow x={160} y={330} angle={180} scale={0.46} />
             </svg>
             <div className="artium-tri-left">{studentCard}</div>
             <div className="artium-tri-right">{studentNoEmailCard}</div>
