@@ -1907,36 +1907,14 @@ export default function App() {
         /* Measured off the artwork: the window sits 52.95% across, 35.3% down,
            and is 69.8% of the pin's width. The globe has to cover the one
            printed into the image, so its white disc reaches the ring — a
-           smaller one would leave the painted globe showing around it. */
+           smaller one would leave the painted globe showing around it.
+           aspect-ratio because the WebGL canvas inside fills this box
+           absolutely and no longer gives it a height of its own. */
         .artium-globepin-globe {
           position: absolute; left: 52.95%; top: 35.3%;
-          width: 69.8%; transform: translate(-50%, -50%);
+          width: 69.8%; aspect-ratio: 1 / 1;
+          transform: translate(-50%, -50%);
           pointer-events: none;
-        }
-        /* One full turn is the band scrolling one circumference — 283 user
-           units, 2·pi·45 — at which point the second copy of the map sits
-           exactly where the first began and the loop point is invisible. */
-        .artium-globe-band { animation: artiumGlobeBand 18s linear infinite; }
-        @keyframes artiumGlobeBand {
-          from { transform: translateX(0); }
-          to   { transform: translateX(-283px); }
-        }
-        /* A meridian reads the same front and back, so it repeats every half
-           turn — 9s of the band's 18 — and the four delays spread across that
-           half. It dwells wide and hurries through edge-on, which is what a
-           circle seen from the side actually does. */
-        .artium-globe-meridian {
-          transform-box: fill-box; transform-origin: center;
-          animation: artiumGlobeMeridian 9s ease-in-out infinite;
-        }
-        @keyframes artiumGlobeMeridian {
-          0%   { transform: scaleX(1); }
-          50%  { transform: scaleX(0.05); }
-          100% { transform: scaleX(1); }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .artium-globe-band { animation: none; }
-          .artium-globe-meridian { animation: none; }
         }
 
         /* In the pin's body, under the globe. Sized off the same viewport
@@ -2371,82 +2349,66 @@ export default function App() {
 /* LANDING                                                             */
 /* ---------------------------------------------------------------- */
 /**
- * The turning globe in the landing pin, drawn to read as the one painted into
- * glo-pin.png: brass sphere, white graticule, white continents, set in the
- * artwork's white ring. Drawn rather than overlaid because a flat painting
- * only ever shows one face of a sphere — there is nothing behind its horizon
- * to turn into view, so rotation has to come from geometry the painting does
- * not have.
+ * The turning globe in the landing pin — the same real globe the map screen
+ * runs, not a drawing of one. Same texture, same brass atmosphere, same
+ * graticules, so the pin previews exactly what tapping it opens.
  *
- * The rotation is a band of continents twice the sphere's circumference wide,
- * scrolling behind a circular clip; two copies of the map end to end make the
- * wrap seamless. The meridians ride the same timing, each a circle squashed
- * flat and back as it comes round. Parallels stay put, as they do on a globe
- * turning about its axis.
- *
- * Continent shapes are deliberately loose. At 140px nobody reads coastlines;
- * what carries is the rhythm of land and ocean passing.
+ * Rotation is a rAF loop pumping controls.update() with autoRotate on.
+ * GlobeMap's comment records that autoRotate "does nothing" — that is because
+ * nothing there drives update(); the flag only takes effect while something
+ * pumps it, which is also what lets this stop cleanly on unmount.
  */
-function SpinningGlobe() {
-  // One world of landmasses, on a 360-wide band (the sphere is r=45, so a
-  // full circumference is ~283 — 360 leaves ocean gaps, which the painting
-  // also has). Shapes echo the artwork: a big northern mass left, a tapering
-  // southern one, an eastern block.
-  const landmasses = (dx) => (
-    <g transform={`translate(${dx} 0)`} fill="#FFFFFF">
-      {/* broad north tapering to a thin south (americas-ish) */}
-      <path d="M 22 20 Q 32 15 44 18 Q 52 16 56 22 Q 58 28 50 31 Q 44 33 40 31 Q 42 39 38 46 Q 35 55 31 63 Q 28 70 25 63 Q 22 54 25 46 Q 20 40 18 32 Q 16 24 22 20 Z" />
-      {/* wide eastern mass with peninsulas hanging south (eurasia-ish) */}
-      <path d="M 92 16 Q 108 11 126 14 Q 144 11 158 17 Q 166 22 160 27 Q 150 25 144 30 Q 138 36 130 31 Q 122 37 114 31 Q 104 34 98 27 Q 88 23 92 16 Z" />
-      {/* taper below its west end (africa-ish) */}
-      <path d="M 104 38 Q 114 34 121 40 Q 126 47 122 55 Q 118 64 111 69 Q 106 72 103 65 Q 99 55 101 46 Q 101 41 104 38 Z" />
-      {/* islands trailing east */}
-      <path d="M 172 42 Q 177 39 181 43 Q 183 47 178 50 Q 172 51 172 46 Z" />
-      <path d="M 190 50 Q 195 47 198 52 Q 196 56 191 54 Z" />
-      {/* lone southern island (australia-ish) */}
-      <path d="M 210 60 Q 218 55 226 61 Q 229 67 222 70 Q 213 71 210 65 Z" />
-    </g>
-  );
+function PinGlobe() {
+  const wrapRef = useRef(null);
+  const globeRef = useRef(null);
+  const [size, setSize] = useState(0);
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setSize(Math.round(el.getBoundingClientRect().width)));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  useEffect(() => {
+    if (!ready) return;
+    const g = globeRef.current;
+    const controls = g.controls();
+    controls.enableZoom = false;
+    controls.enableRotate = false;
+    controls.enablePan = false;
+    // Altitude keeps the atmosphere inside the square canvas: at 1.6 the
+    // camera sees ~121 units half-height against the glow's 118, so the halo
+    // fades out before the canvas edge instead of being cut square by it.
+    g.pointOfView({ lat: 18, lng: 0, altitude: 1.6 }, 0);
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 0.55;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let raf;
+    const tick = () => { controls.update(); raf = requestAnimationFrame(tick); };
+    tick();
+    return () => cancelAnimationFrame(raf);
+  }, [ready]);
   return (
-    <svg viewBox="0 0 100 100" style={{ display: "block", width: "100%", height: "auto" }}>
-      <defs>
-        <clipPath id="artium-globe-clip"><circle cx="50" cy="50" r="45" /></clipPath>
-        {/* Rim shading: brass fades a shade darker toward the edge, which is
-            what makes the disc read as a ball. */}
-        <radialGradient id="artium-globe-shade" cx="42%" cy="38%" r="72%">
-          <stop offset="0%" stopColor="#FFD35C" />
-          <stop offset="62%" stopColor={C.brass} />
-          <stop offset="100%" stopColor="#E0A81C" />
-        </radialGradient>
-      </defs>
-      <circle cx="50" cy="50" r="50" fill="#FFFFFF" />
-      <circle cx="50" cy="50" r="45" fill="url(#artium-globe-shade)" />
-      <g clipPath="url(#artium-globe-clip)">
-        {/* The map, twice over: when the first copy has scrolled fully out,
-            the second is exactly where the first began, and the jump back is
-            invisible. Squashed to the sphere's face by the group transform. */}
-        <g className="artium-globe-band" opacity="0.92">
-          {landmasses(0)}
-          {landmasses(283)}
-        </g>
-      </g>
-      <g fill="none" stroke="#FFFFFF" strokeWidth="1.6" strokeLinecap="round" opacity="0.85">
-        {/* Parallels: chords at each height, sqrt(45² - dy²). */}
-        <line x1="5" y1="50" x2="95" y2="50" />
-        <line x1="7.6" y1="35" x2="92.4" y2="35" />
-        <line x1="7.6" y1="65" x2="92.4" y2="65" />
-        <line x1="15.6" y1="21" x2="84.4" y2="21" />
-        <line x1="15.6" y1="79" x2="84.4" y2="79" />
-        {/* Meridians: six across the half-cycle, riding the band's timing —
-            the painting's net is about that dense. */}
-        {[0, -1.5, -3, -4.5, -6, -7.5].map((d) => (
-          <ellipse key={d} className="artium-globe-meridian" cx="50" cy="50" rx="45" ry="45" style={{ animationDelay: `${d}s` }} />
-        ))}
-      </g>
-      {/* The ring's inner shadow, so the sphere sits behind the ring rather
-          than on it — the painting has the same. */}
-      <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(10,37,64,0.18)" strokeWidth="1.4" />
-    </svg>
+    // The white disc is the wrapper itself, so the sphere sits in the
+    // artwork's ring the way the painted globe did, and covers it entirely.
+    <span ref={wrapRef} style={{ position: "absolute", inset: 0, borderRadius: "50%", background: "#FFFFFF", overflow: "hidden" }}>
+      {size > 0 && (
+        <Suspense fallback={null}>
+          <Globe
+            ref={globeRef}
+            width={size}
+            height={size}
+            onGlobeReady={() => setReady(true)}
+            globeImageUrl="/earth-blue-marble.jpg"
+            backgroundColor="rgba(0,0,0,0)"
+            atmosphereColor={C.brass}
+            atmosphereAltitude={0.18}
+            showGraticules
+          />
+        </Suspense>
+      )}
+    </span>
   );
 }
 
@@ -2531,7 +2493,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
                 style={{ display: "block", height: "100%", width: "auto" }}
               />
               <span className="artium-globepin-globe" aria-hidden="true">
-                <SpinningGlobe />
+                <PinGlobe />
               </span>
               <span className="artium-globepin-count">
                 <Users />
