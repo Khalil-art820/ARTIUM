@@ -1929,8 +1929,25 @@ export default function App() {
         .artium-globepin-count > svg { width: min(16px, 2.7vw); height: auto; display: block; }
         .artium-globepin-count-n { font-weight: 700; font-size: min(17px, 2.9vw); line-height: 1; letter-spacing: -0.01em; }
 
+        /* Points at the pin from its left, nudging toward it — the push says
+           "press this" the way the bob alone never quite did. Anchored to the
+           pin wrapper so it rides the bob and the hover lift with it, and
+           off the right edge of its own box so the gap stays put while the
+           nudge moves the hand. */
+        .artium-globepin-hand {
+          position: absolute; right: calc(100% + 12px); top: 50%;
+          font-size: min(38px, 6.4vw); line-height: 1;
+          animation: artiumPoint 1.3s ease-in-out infinite;
+          pointer-events: none;
+        }
+        @keyframes artiumPoint {
+          0%, 100% { transform: translate(0, -50%); }
+          55%      { transform: translate(9px, -50%); }
+        }
+
         @media (prefers-reduced-motion: reduce) {
           .artium-globepin { animation: none; }
+          .artium-globepin-hand { animation: none; transform: translate(0, -50%); }
           .artium-explore:hover .artium-globepin { transform: none; }
         }
 
@@ -2498,6 +2515,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
               <span className="artium-globepin-globe" aria-hidden="true">
                 <PinGlobe />
               </span>
+              <span className="artium-globepin-hand" aria-hidden="true">👉</span>
               <span className="artium-globepin-count">
                 <Users />
                 {/* Grouped thousands: this reads as a headcount, and five
