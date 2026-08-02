@@ -6,7 +6,7 @@ import {
   Pencil, Plus, Trash2, Home, Upload, Eye, EyeOff, ChevronLeft,
   Calendar, CreditCard, Video, Link2, Clock, Bell,
   Map, BookOpen, ListChecks, LayoutList, Megaphone, Check as CheckIcon, ShieldCheck, FileText, Lock,
-  ScanLine, Pointer,
+  ScanLine,
 } from "lucide-react";
 import { useAuth } from "./contexts/AuthContext";
 import { supabase } from "./lib/supabase";
