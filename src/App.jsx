@@ -1596,13 +1596,17 @@ export default function App() {
   // query behind it ran unauthenticated and came back empty.
   const isAdmin = authProfile?.is_admin === true;
 
-  // Dev only: artiumWhoAmI() in the console reports what the app actually sees
+  // artiumWhoAmI() in the browser console reports what the app actually sees
   // for the signed-in account. The Admin tab depends on two separate things —
   // the is_admin flag, and myProfile being set at all, since the whole tab bar
   // is gated on it — and from the outside a missing flag and a profile that
   // never loaded look identical.
+  //
+  // Not restricted to the dev server: the account being diagnosed is often the
+  // one on the published site, and a diagnostic that only runs where the
+  // problem isn't is no use. It reads state already in the page and belonging
+  // to whoever is signed in, so it discloses nothing they cannot already see.
   useEffect(() => {
-    if (!import.meta.env.DEV) return;
     window.artiumWhoAmI = () => ({
       signedInAs: authUser?.email ?? "(not signed in)",
       userId: authUser?.id ?? null,
