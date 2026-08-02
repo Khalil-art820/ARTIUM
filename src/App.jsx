@@ -1893,21 +1893,59 @@ export default function App() {
         .artium-map .leaflet-popup-close-button { color: #425466 !important; }
         .artium-pin { background: transparent !important; border: none !important; }
 
-        /* Affordance for the "Explore Artium's Network" panel. Several weak
-           signals rather than one: the card lifts, the pin grows and rises, the
-           chevron nudges, and the pin bobs gently at rest to catch the eye. */
-        .artium-explore { transition: box-shadow .2s ease, transform .2s ease, border-color .2s ease; box-shadow: 0 8px 32px rgba(10,37,64,0.10); }
-        .artium-explore:hover { transform: translateY(-3px); box-shadow: 0 16px 44px rgba(10,37,64,0.17); border-color: #FFC629; }
+        /* Affordance for the pin. The card that held it is gone, so every
+           signal is on the pin itself: it rises on hover and bobs at rest. The
+           bob moved to the wrapper — the globe and the count sit on top of the
+           artwork and have to rise with it, not stay behind while it moves. */
+        .artium-explore { transition: transform .2s ease; }
         .artium-explore:active { transform: translateY(-1px); }
-        .artium-explore:focus-visible { outline: 2px solid #FFC629; outline-offset: 3px; }
-        .artium-explore-chevron, .artium-explore-pin { transition: transform .2s ease; }
-        .artium-explore:hover .artium-explore-chevron { transform: translateX(4px); }
-        .artium-explore-pin { animation: artiumBob 3.2s ease-in-out infinite; }
-        .artium-explore:hover .artium-explore-pin { animation: none; transform: translateY(-6px) scale(1.05); }
+        .artium-explore:focus-visible { outline: 2px solid #FFC629; outline-offset: 6px; border-radius: 14px; }
+        .artium-globepin { position: relative; display: block; transition: transform .2s ease; animation: artiumBob 3.2s ease-in-out infinite; }
+        .artium-explore:hover .artium-globepin { animation: none; transform: translateY(-6px) scale(1.05); }
         @keyframes artiumBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+
+        /* Measured off the artwork: the window sits 52.95% across, 35.3% down,
+           and is 69.8% of the pin's width. The overlay has to cover the globe
+           printed into the image, so its white disc reaches the ring — a
+           smaller one would leave the old globe showing around the new one. */
+        .artium-globepin-globe {
+          position: absolute; left: 52.95%; top: 35.3%;
+          width: 69.8%; transform: translate(-50%, -50%);
+          pointer-events: none;
+        }
+        .artium-globepin-globe > svg { display: block; width: 100%; height: auto; }
+        /* Each meridian is a circle squashed flat and back. Six of them, a
+           sixth of a turn apart, read as one sphere revolving. The keyframes
+           dwell at the edges and hurry through the middle because that is what
+           a meridian's width actually does as it comes round. */
+        .artium-globepin-meridian {
+          transform-box: fill-box; transform-origin: center;
+          animation: artiumGlobeTurn 9s linear infinite;
+        }
+        @keyframes artiumGlobeTurn {
+          0%   { transform: scaleX(1); }
+          25%  { transform: scaleX(0.04); }
+          50%  { transform: scaleX(1); }
+          75%  { transform: scaleX(0.04); }
+          100% { transform: scaleX(1); }
+        }
+
+        /* In the pin's body, under the globe. Sized off the same viewport
+           measure as the pin so the two scale together, and held on one line
+           with a thousands separator so five figures still fit the taper. */
+        .artium-globepin-count {
+          position: absolute; left: 52.95%; top: 68%;
+          transform: translate(-50%, -50%);
+          display: flex; flex-direction: column; align-items: center; gap: 3px;
+          color: #FFFFFF; white-space: nowrap; pointer-events: none;
+        }
+        .artium-globepin-count > svg { width: min(16px, 2.7vw); height: auto; display: block; }
+        .artium-globepin-count-n { font-weight: 700; font-size: min(17px, 2.9vw); line-height: 1; letter-spacing: -0.01em; }
+
         @media (prefers-reduced-motion: reduce) {
-          .artium-explore-pin { animation: none; }
-          .artium-explore:hover { transform: none; }
+          .artium-globepin { animation: none; }
+          .artium-globepin-meridian { animation: none; }
+          .artium-explore:hover .artium-globepin { transform: none; }
         }
 
         /* Same bob as the landing globe pin. No delay anywhere — circles and
@@ -2380,51 +2418,63 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
           {error && (
             <p style={{ maxWidth: 520, textAlign: "center", fontSize: 14, color: C.burgundy, lineHeight: 1.5, margin: 0 }}>{error}</p>
           )}
-          {/* One button, not just the heading: the pin is the biggest thing here
-              and the obvious thing to click. Buttons cannot nest, so the heading
-              is a span. Circular, so everything is inset from the edge — a
-              square-cornered layout would clip against the curve. */}
+          {/* The pin is the button now — the circular card it used to sit in is
+              gone, so there is nothing between it and the page. */}
           <button
             type="button"
             onClick={onPreview}
             className="artium-explore"
-            aria-label="Explore Artium's network"
+            aria-label={`Explore Artium's network — ${memberCount} members`}
             style={{
-              width: "min(430px, 88vw)", aspectRatio: "1 / 1", borderRadius: "50%",
-              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-              gap: 6, padding: "0 10%", overflow: "hidden",
-              border: `1px solid ${C.inkLine}`, background: "#fff", cursor: "pointer",
-              font: "inherit", textAlign: "center",
+              display: "flex", flexDirection: "column", alignItems: "center",
+              gap: 14, padding: 0, border: "none", background: "none",
+              cursor: "pointer", font: "inherit", textAlign: "center",
             }}
           >
-            {/* Inline rather than flex so the chevron stays welded to the last
-                word when the label wraps in the narrow circle — as flex it was
-                pushed to the far edge of the second line. */}
-            <span style={{ fontSize: 14, fontWeight: 600, color: C.ivory, fontFamily: FONT_BODY, lineHeight: 1.35 }}>
-              {/* display inline-block because Tailwind's preflight makes every
-                  svg display:block, which broke the line after the icon. */}
-              <Compass size={15} style={{ verticalAlign: -3, marginRight: 6, display: "inline-block" }} />
-              Explore Artium's Network
-              <ChevronRight size={15} color={C.ivory} className="artium-explore-chevron" style={{ verticalAlign: -3, marginLeft: 3, display: "inline-block" }} />
-            </span>
-            <MemberCount count={memberCount} />
             {/* Taller than it is wide (0.669), so sized by height — a square box
-                would letterbox it. */}
-            <img
-              src="/glo-pin.png"
-              alt=""
-              width={560}
-              height={837}
-              className="artium-explore-pin"
-              // The extra top margin is what lifts the label and count: the
-              // column is centre-justified, so adding height below them pushes
-              // the whole block up by half of it.
-              style={{ display: "block", height: "min(230px, 39vw)", width: "auto", marginTop: 14 }}
-            />
+                would letterbox it. The globe and the count are positioned
+                against this wrapper, so it has to be the thing that moves. */}
+            <span className="artium-globepin" style={{ height: "min(299px, 50.7vw)", aspectRatio: "560 / 837" }}>
+              <img
+                src="/glo-pin.png"
+                alt=""
+                width={560}
+                height={837}
+                style={{ display: "block", height: "100%", width: "auto" }}
+              />
+              {/* Covers the globe printed into the artwork with a live one. The
+                  white disc is the full width of the overlay so it meets the
+                  ring; the sphere sits inside it. */}
+              <span className="artium-globepin-globe" aria-hidden="true">
+                <svg viewBox="0 0 100 100">
+                  <circle cx="50" cy="50" r="50" fill="#FFFFFF" />
+                  <circle cx="50" cy="50" r="45" fill={C.brass} />
+                  <g fill="none" stroke="#FFFFFF" strokeWidth="1.7" strokeLinecap="round">
+                    {/* Parallels are chords of the sphere: half-width is
+                        sqrt(45² - dy²) at each height. */}
+                    <line x1="5" y1="50" x2="95" y2="50" />
+                    <line x1="7.6" y1="35" x2="92.4" y2="35" />
+                    <line x1="7.6" y1="65" x2="92.4" y2="65" />
+                    <line x1="15.6" y1="21" x2="84.4" y2="21" />
+                    <line x1="15.6" y1="79" x2="84.4" y2="79" />
+                    {/* Delays span half the cycle: a meridian repeats every half
+                        turn, so five across that half are five evenly spaced.
+                        Six read as a thicket once they crowd the centre. */}
+                    {[0, -0.9, -1.8, -2.7, -3.6].map((d) => (
+                      <ellipse key={d} className="artium-globepin-meridian" cx="50" cy="50" rx="45" ry="45" style={{ animationDelay: `${d}s` }} />
+                    ))}
+                  </g>
+                </svg>
+              </span>
+              <span className="artium-globepin-count">
+                <Users />
+                {/* Grouped thousands: this reads as a headcount, and five
+                    figures unseparated read as a serial number. */}
+                <span className="artium-globepin-count-n">{memberCount.toLocaleString()}</span>
+              </span>
+            </span>
             <span style={{ fontSize: 12, color: C.ivoryDim, fontFamily: FONT_BODY, fontStyle: "italic", lineHeight: 1.4 }}>
-              {/* Explicit break so it always splits here, rather than wherever
-                  the circle's width happens to put it. */}
-              Tap the pin to explore your network<br />before signing up
+              Tap the pin to explore your artium's world
             </span>
           </button>
         </div>
