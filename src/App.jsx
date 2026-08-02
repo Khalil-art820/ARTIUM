@@ -2516,12 +2516,23 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
               <span className="artium-globepin-globe" aria-hidden="true">
                 <PinGlobe />
               </span>
-              {/* Drawn, not the emoji: the emoji brings its own colours per
-                  platform, and this one has to sit in the pin's matte black.
-                  Lucide's Pointer points up, so it is turned a quarter to
-                  point at the pin. */}
+              {/* A drawn silhouette, not lucide and not the emoji: the emoji
+                  brings its own colours per platform, and lucide's Pointer is
+                  an outline — filled solid it collapses into a blob, because
+                  its path was never meant to be a silhouette. This one is:
+                  palm, index out to the right, curled fingers under it, in
+                  the pin's own black. */}
               <span className="artium-globepin-hand" aria-hidden="true">
-                <Pointer color="#222222" strokeWidth={2.1} style={{ transform: "rotate(90deg)", display: "block" }} />
+                <svg viewBox="0 0 24 24" fill="#222222" style={{ display: "block" }}>
+                  {/* palm, thumb hump, slender index, two curled fingers —
+                      the slits between them are what makes it read as a hand
+                      at 36px rather than a lump */}
+                  <rect x="3" y="8" width="7.8" height="11" rx="3" />
+                  <rect x="4.2" y="6.2" width="5.2" height="4.2" rx="2.1" />
+                  <rect x="8.2" y="9.3" width="14.3" height="3.4" rx="1.7" />
+                  <rect x="9.2" y="13.5" width="6.6" height="2.5" rx="1.25" />
+                  <rect x="9.2" y="16.6" width="5.8" height="2.5" rx="1.25" />
+                </svg>
               </span>
               <span className="artium-globepin-count">
                 <Users />
