@@ -1608,6 +1608,10 @@ export default function App() {
   // to whoever is signed in, so it discloses nothing they cannot already see.
   useEffect(() => {
     window.artiumWhoAmI = () => ({
+      // Which database this build talks to. A dashboard open on a different
+      // project answers every question about the wrong data, and does it
+      // without ever looking like an error.
+      supabaseProject: (import.meta.env.VITE_SUPABASE_URL || "").replace(/^https:\/\//, "").split(".")[0] || "(not configured)",
       signedInAs: authUser?.email ?? "(not signed in)",
       userId: authUser?.id ?? null,
       profileRowLoaded: !!authProfile,
