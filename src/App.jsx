@@ -2503,9 +2503,9 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
                 would letterbox it. The globe and the count are positioned
                 against this wrapper, so it has to be the thing that moves. */}
             <span className="artium-globepin" style={{ height: "min(299px, 50.7vw)", aspectRatio: "560 / 837" }}>
-              {/* glo-pin-ink is glo-pin recolored to the step circles' ink
-                  (#2C3E50) by tools/recolor-pin.py — same artwork, same
-                  alpha, shading kept, bezel ring wiped clean. */}
+              {/* glo-pin-ink is glo-pin recolored to burgundy (#7B2D3B) by
+                  tools/recolor-pin.py — same artwork, same alpha, shading
+                  kept, bezel ring painted the palette's cream (#F4EDE6). */}
               <img
                 src="/glo-pin-ink.png"
                 alt=""
@@ -2517,11 +2517,11 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
                 <PinGlobe />
               </span>
               {/* Drawn, not the emoji: the emoji brings its own colours per
-                  platform, and this one has to sit in the step circles' ink.
+                  platform, and this one has to sit in the pin's burgundy.
                   Lucide's Pointer points up, so it is turned a quarter to
                   point at the pin. */}
               <span className="artium-globepin-hand" aria-hidden="true">
-                <Pointer color="#2C3E50" strokeWidth={2.1} style={{ transform: "rotate(90deg)", display: "block" }} />
+                <Pointer color="#7B2D3B" strokeWidth={2.1} style={{ transform: "rotate(90deg)", display: "block" }} />
               </span>
               <span className="artium-globepin-count">
                 <Users />

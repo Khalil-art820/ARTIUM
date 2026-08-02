@@ -1,6 +1,8 @@
 # Regenerates public/glo-pin-ink.png from public/glo-pin.png: the brass pin
-# recolored to the "How it works" step-circle ink (#2C3E50), keeping the
-# artwork's shading and alpha, with the bezel ring wiped clean.
+# recolored to burgundy (#7B2D3B), keeping the artwork's shading and alpha,
+# with the bezel ring painted a clean warm cream (#F4EDE6). The artwork's own
+# luminance carries the shadow tones, so the darker #5E202B of the palette
+# falls out of the shading rather than being painted in.
 #
 #   python3 tools/recolor-pin.py
 #
@@ -21,11 +23,12 @@ src = Image.open('public/glo-pin.png').convert('RGBA')
 px = src.load()
 W, H = src.size
 
-# #2C3E50 -> hue 210deg, HLS sat 0.290, lightness 0.243
-TH, TS = 210.0/360.0, 0.290
+# #7B2D3B -> hue 349.2deg, HLS sat 0.4643, lightness 0.3294
+TH, TS = 349.2/360.0, 0.4643
 # Its lightness over the brass body's. 0.507 is measured, not assumed.
-SCALE = 0.243/0.507
+SCALE = 0.3294/0.507
 CX, CY = 296.5, 295.5
+RING = (0xF4, 0xED, 0xE6)   # the palette's warm cream, not pure white
 
 def smooth(a, b, x):
     t = max(0.0, min(1.0, (x - a) / (b - a)))
@@ -53,9 +56,9 @@ for j in range(H):
         d = math.hypot(i - CX, j - CY)
         wr = smooth(150, 158, d) * (1 - smooth(204, 212, d))
         if wr > 0:
-            r = r*(1-wr) + 255*wr
-            g = g*(1-wr) + 255*wr
-            b = b*(1-wr) + 255*wr
+            r = r*(1-wr) + RING[0]*wr
+            g = g*(1-wr) + RING[1]*wr
+            b = b*(1-wr) + RING[2]*wr
         px[i, j] = (round(r), round(g), round(b), a)
 
 src.save('public/glo-pin-ink.png', optimize=True)
