@@ -1604,33 +1604,6 @@ export default function App() {
   // query behind it ran unauthenticated and came back empty.
   const isAdmin = authProfile?.is_admin === true;
 
-  // artiumWhoAmI() in the browser console reports what the app actually sees
-  // for the signed-in account. The Admin tab depends on two separate things —
-  // the is_admin flag, and myProfile being set at all, since the whole tab bar
-  // is gated on it — and from the outside a missing flag and a profile that
-  // never loaded look identical.
-  //
-  // Not restricted to the dev server: the account being diagnosed is often the
-  // one on the published site, and a diagnostic that only runs where the
-  // problem isn't is no use. It reads state already in the page and belonging
-  // to whoever is signed in, so it discloses nothing they cannot already see.
-  useEffect(() => {
-    window.artiumWhoAmI = () => ({
-      // Which database this build talks to. A dashboard open on a different
-      // project answers every question about the wrong data, and does it
-      // without ever looking like an error.
-      supabaseProject: (import.meta.env.VITE_SUPABASE_URL || "").replace(/^https:\/\//, "").split(".")[0] || "(not configured)",
-      signedInAs: authUser?.email ?? "(not signed in)",
-      userId: authUser?.id ?? null,
-      profileRowLoaded: !!authProfile,
-      role: authProfile?.role ?? null,
-      approved: authProfile?.approved ?? null,
-      is_admin: authProfile?.is_admin ?? null,
-      tabBarShows: !!myProfile,
-      adminTabShows: !!myProfile && authProfile?.is_admin === true,
-    });
-  }, [authUser, authProfile, myProfile]);
-
   // Takes no argument on purpose: it is wired straight to onClick handlers in
   // several places, so a positional verifyMethod would receive a click event.
   function startApply() {
