@@ -1,7 +1,8 @@
 # Regenerates public/glo-pin-ink.png from public/glo-pin.png: the brass pin
-# recolored to burgundy (#7B2D3B), keeping the artwork's shading and alpha,
-# with the bezel ring painted a clean warm cream (#F4EDE6). The artwork's own
-# luminance carries the shadow tones, so the darker #5E202B of the palette
+# recolored to matte black (#222222), keeping the artwork's shading and alpha,
+# with the bezel ring painted a clean neutral white (#F8F8F8 — the palette
+# sheet says F8F878, but its swatch is plainly neutral; read as a typo). The
+# artwork's own luminance carries the shadow tones, so the palette's #111111
 # falls out of the shading rather than being painted in.
 #
 #   python3 tools/recolor-pin.py
@@ -23,13 +24,13 @@ src = Image.open('public/glo-pin.png').convert('RGBA')
 px = src.load()
 W, H = src.size
 
-# #7B2D3B -> hue 349.2deg, HLS sat 0.4643, lightness 0.3294
-TH, TS = 349.2/360.0, 0.4643
-TL = 0.3294
+# #222222 -> neutral: saturation 0, so the hue is moot; lightness 0.1333
+TH, TS = 0.0, 0.0
+TL = 0.1333
 # Its lightness over the brass body's. 0.507 is measured, not assumed.
 SCALE = TL/0.507
 CX, CY = 296.5, 295.5
-RING = (0xF4, 0xED, 0xE6)   # the palette's warm cream, not pure white
+RING = (0xF8, 0xF8, 0xF8)
 # Matte: how much of a highlight survives. The artwork is glossy in two ways —
 # warm sheen on the body, which the hue mask catches, and near-white specular
 # streaks, which it cannot (they are unsaturated). Both get their lift above
