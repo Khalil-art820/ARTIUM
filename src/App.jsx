@@ -60,6 +60,21 @@ const FONT_MONO = "'ui-monospace', monospace";
 // behind a "Get Spotify" prompt rather than full tracks.
 const SPOTIFY_PLAYLIST_ID = "3ydc8YZVqfFW1Dj681FMMe";
 
+/**
+ * The account that owns the admin screens.
+ *
+ * This is used for exactly one thing: skipping the prototype's fake audition
+ * gate at signup, so the owner lands in the app instead of on a screen whose
+ * own caption calls it "not part of the real product".
+ *
+ * It grants nothing. Admin is profiles.is_admin, and RLS decides what that can
+ * read and write through public.is_admin() — a constant in a bundle everybody
+ * can download could not grant it if we wanted it to. Whoever holds this
+ * mailbox still has to own the row.
+ */
+const ADMIN_EMAIL = "ktannous0@gmail.com";
+const isAdminEmail = (email) => (email || "").trim().toLowerCase() === ADMIN_EMAIL;
+
 // One diameter for every round thing in a header — the avatar, the music
 // button and the logo mark. They each carried their own number before, so
 // they never quite lined up.
@@ -1731,7 +1746,7 @@ export default function App() {
       if (insertError) { setAuthError(insertError.message); return; }
       if (draft.verifyMethod === "document") { await insertVerificationRequest(authUser.id, draft); }
       setDraft((d) => ({ ...d, id: authUser.id }));
-      setScreen(draft.verifyMethod === "document" ? "pendingReview" : "pending");
+      finishSignup(authUser.id, authUser.email || draft.email, draft.verifyMethod);
     } else {
       const { data, error } = await supabase.auth.signUp({
         email: draft.email,
@@ -1746,7 +1761,7 @@ export default function App() {
         await supabase.auth.updateUser({ data: { pendingProfile: null } });
         if (draft.verifyMethod === "document") { await insertVerificationRequest(data.user.id, draft); }
         setDraft((d) => ({ ...d, id: data.user.id }));
-        setScreen(draft.verifyMethod === "document" ? "pendingReview" : "pending");
+        finishSignup(data.user.id, data.user.email || draft.email, draft.verifyMethod);
       } else {
         // Email confirmation required — the draft is stored server-side in the
         // user's auth metadata, so it's picked up after confirming on any device.
@@ -1755,8 +1770,20 @@ export default function App() {
       }
     }
   }
-  function simulateApproval() {
-    const me = { id: draft.id, name: draft.name || "Your name", instrument: draft.instrument, conservatoryId: draft.conservatoryId, year: draft.years || "Current student", bio: draft.bio, tastes: draft.tastes, pieces: draft.pieces, videoLink: draft.videoLink, top: draft.top, flop: draft.flop, photoUrl: draft.photoUrl, teaching: draft.teaching, online: true };
+  /**
+   * Where a finished signup lands. Document-proof students wait for a human,
+   * everyone else meets the prototype's audition gate — except the owner, who
+   * would otherwise have to click through a fake review to reach their own
+   * admin screens. The id is passed rather than read from draft: setDraft has
+   * only just been queued, so draft.id is still undefined at this point.
+   */
+  function finishSignup(userId, email, verifyMethod) {
+    if (verifyMethod === "document") { setScreen("pendingReview"); return; }
+    if (isAdminEmail(email)) { simulateApproval(userId); return; }
+    setScreen("pending");
+  }
+  function simulateApproval(userId) {
+    const me = { id: userId || draft.id, name: draft.name || "Your name", instrument: draft.instrument, conservatoryId: draft.conservatoryId, year: draft.years || "Current student", bio: draft.bio, tastes: draft.tastes, pieces: draft.pieces, videoLink: draft.videoLink, top: draft.top, flop: draft.flop, photoUrl: draft.photoUrl, teaching: draft.teaching, online: true };
     setMyProfile(me);
     setStudents((arr) => [...arr.filter((s) => s.id !== me.id), me]);
     setPreviewOnly(false);
@@ -2134,7 +2161,9 @@ export default function App() {
         />
       )}
       {screen === "confirmEmail" && <ConfirmEmail email={pendingEmail} onLogin={startLogin} onHome={goHome} />}
-      {screen === "pending" && <Pending name={draft.name} onApprove={simulateApproval} onHome={goHome} />}
+      {/* Wrapped, not passed by reference: simulateApproval takes a user id
+          now, and onClick would hand it a click event. */}
+      {screen === "pending" && <Pending name={draft.name} onApprove={() => simulateApproval()} onHome={goHome} />}
       {screen === "pendingReview" && <PendingReview onHome={goHome} onLogout={handleLogout} />}
       {screen === "app" && (
         <AppShell
