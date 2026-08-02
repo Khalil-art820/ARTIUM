@@ -41,12 +41,16 @@ select u.id   as auth_user,
 -- approved is set too. Students who verify by conservatory email are inserted
 -- approved already, so that part is usually a no-op, but it covers the row
 -- having been created down the document-proof path.
+-- returning, so the editor shows the row it changed. Without it an update
+-- reports "No rows returned" either way — that is the absence of a result set,
+-- not a count, and it reads exactly like failure when it has just succeeded.
 update profiles p
    set is_admin = true,
        approved = true
   from auth.users u
  where u.id = p.id
-   and lower(u.email) = lower('ktannous0@gmail.com');
+   and lower(u.email) = lower('ktannous0@gmail.com')
+returning p.id, u.email, p.role, p.approved, p.is_admin;
 
 
 -- 3. Confirm. Expect exactly one row, is_admin and approved both true. If this
