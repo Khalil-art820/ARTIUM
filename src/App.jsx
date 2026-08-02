@@ -1596,6 +1596,25 @@ export default function App() {
   // query behind it ran unauthenticated and came back empty.
   const isAdmin = authProfile?.is_admin === true;
 
+  // Dev only: artiumWhoAmI() in the console reports what the app actually sees
+  // for the signed-in account. The Admin tab depends on two separate things —
+  // the is_admin flag, and myProfile being set at all, since the whole tab bar
+  // is gated on it — and from the outside a missing flag and a profile that
+  // never loaded look identical.
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    window.artiumWhoAmI = () => ({
+      signedInAs: authUser?.email ?? "(not signed in)",
+      userId: authUser?.id ?? null,
+      profileRowLoaded: !!authProfile,
+      role: authProfile?.role ?? null,
+      approved: authProfile?.approved ?? null,
+      is_admin: authProfile?.is_admin ?? null,
+      tabBarShows: !!myProfile,
+      adminTabShows: !!myProfile && authProfile?.is_admin === true,
+    });
+  }, [authUser, authProfile, myProfile]);
+
   // Takes no argument on purpose: it is wired straight to onClick handlers in
   // several places, so a positional verifyMethod would receive a click event.
   function startApply() {
