@@ -6,7 +6,7 @@ import {
   Pencil, Plus, Trash2, Home, Upload, Eye, EyeOff, ChevronLeft,
   Calendar, CreditCard, Video, Link2, Clock, Bell,
   Map, BookOpen, ListChecks, LayoutList, Megaphone, Check as CheckIcon, ShieldCheck, FileText, Lock,
-  ScanLine,
+  ScanLine, Pointer,
 } from "lucide-react";
 import { useAuth } from "./contexts/AuthContext";
 import { supabase } from "./lib/supabase";
@@ -1933,13 +1933,14 @@ export default function App() {
            "press this" the way the bob alone never quite did. Anchored to the
            pin wrapper so it rides the bob and the hover lift with it, and
            off the right edge of its own box so the gap stays put while the
-           nudge moves the hand. */
+           nudge moves the hand. 35.3% is the globe's centre, measured off the
+           artwork — the hand points at the globe, not at the pin's middle. */
         .artium-globepin-hand {
-          position: absolute; right: calc(100% + 12px); top: 50%;
-          font-size: min(38px, 6.4vw); line-height: 1;
+          position: absolute; right: calc(100% + 12px); top: 35.3%;
           animation: artiumPoint 1.3s ease-in-out infinite;
           pointer-events: none;
         }
+        .artium-globepin-hand svg { width: min(36px, 6.2vw); height: auto; }
         @keyframes artiumPoint {
           0%, 100% { transform: translate(0, -50%); }
           55%      { transform: translate(9px, -50%); }
@@ -2502,9 +2503,9 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
                 would letterbox it. The globe and the count are positioned
                 against this wrapper, so it has to be the thing that moves. */}
             <span className="artium-globepin" style={{ height: "min(299px, 50.7vw)", aspectRatio: "560 / 837" }}>
-              {/* glo-pin-ink is glo-pin recolored to the entry gate's circle
-                  tone (#363B44) by tools/recolor-pin.py — same artwork, same
-                  alpha, brass swapped for the slate with the shading kept. */}
+              {/* glo-pin-ink is glo-pin recolored to the step circles' ink
+                  (#2C3E50) by tools/recolor-pin.py — same artwork, same
+                  alpha, shading kept, bezel ring wiped clean. */}
               <img
                 src="/glo-pin-ink.png"
                 alt=""
@@ -2515,7 +2516,13 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
               <span className="artium-globepin-globe" aria-hidden="true">
                 <PinGlobe />
               </span>
-              <span className="artium-globepin-hand" aria-hidden="true">👉</span>
+              {/* Drawn, not the emoji: the emoji brings its own colours per
+                  platform, and this one has to sit in the step circles' ink.
+                  Lucide's Pointer points up, so it is turned a quarter to
+                  point at the pin. */}
+              <span className="artium-globepin-hand" aria-hidden="true">
+                <Pointer color="#2C3E50" strokeWidth={2.1} style={{ transform: "rotate(90deg)", display: "block" }} />
+              </span>
               <span className="artium-globepin-count">
                 <Users />
                 {/* Grouped thousands: this reads as a headcount, and five

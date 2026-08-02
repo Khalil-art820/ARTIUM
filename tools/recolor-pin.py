@@ -1,6 +1,6 @@
 # Regenerates public/glo-pin-ink.png from public/glo-pin.png: the brass pin
-# recolored to the entry gate's circle tone (#363B44), keeping the artwork's
-# shading, alpha and whites.
+# recolored to the "How it works" step-circle ink (#2C3E50), keeping the
+# artwork's shading and alpha, with the bezel ring wiped clean.
 #
 #   python3 tools/recolor-pin.py
 #
@@ -8,17 +8,24 @@
 # fully saturated in HLS and came out dark with the body. In HSV cream is
 # ~0.09 and stays put. The band from 0.10 to 0.22 is deliberately narrow —
 # a wide ramp left half-recolored gold highlights behind as olive fringes.
+#
+# The ring pass paints the bezel annulus flat white: the painted globe's edge
+# and the bezel's brush texture survived the hue mask (they are unsaturated)
+# and read as dirt around the live globe. Radii are measured off the artwork —
+# window centre (296.5, 295.5), white band out to ~195.5 — with soft edges so
+# neither boundary shows a seam.
 from PIL import Image
-import colorsys
+import colorsys, math
 
 src = Image.open('public/glo-pin.png').convert('RGBA')
 px = src.load()
 W, H = src.size
 
-TH, TS = 218.6/360.0, 0.1148   # hue/sat of #363B44
-# Its lightness over the brass body's. 0.507 is measured, not assumed: a first
-# pass at 0.58 left the flat body at #2f333b, a shade under the target.
-SCALE = 0.239/0.507
+# #2C3E50 -> hue 210deg, HLS sat 0.290, lightness 0.243
+TH, TS = 210.0/360.0, 0.290
+# Its lightness over the brass body's. 0.507 is measured, not assumed.
+SCALE = 0.243/0.507
+CX, CY = 296.5, 295.5
 
 def smooth(a, b, x):
     t = max(0.0, min(1.0, (x - a) / (b - a)))
@@ -37,13 +44,19 @@ for j in range(H):
         wh = smooth(0, 20, 90 - abs(hue_deg - 45)) if abs(hue_deg - 45) < 90 else 0.0
         ws = smooth(0.10, 0.22, s_hsv)
         w = wh*ws
-        if w <= 0:
-            continue
-        nl = min(1.0, l*SCALE)
-        nr, ng, nb = colorsys.hls_to_rgb(TH, nl, TS)
-        px[i, j] = (round(r*(1-w) + nr*255*w),
-                    round(g*(1-w) + ng*255*w),
-                    round(b*(1-w) + nb*255*w), a)
+        if w > 0:
+            nl = min(1.0, l*SCALE)
+            nr, ng, nb = colorsys.hls_to_rgb(TH, nl, TS)
+            r = r*(1-w) + nr*255*w
+            g = g*(1-w) + ng*255*w
+            b = b*(1-w) + nb*255*w
+        d = math.hypot(i - CX, j - CY)
+        wr = smooth(150, 158, d) * (1 - smooth(204, 212, d))
+        if wr > 0:
+            r = r*(1-wr) + 255*wr
+            g = g*(1-wr) + 255*wr
+            b = b*(1-wr) + 255*wr
+        px[i, j] = (round(r), round(g), round(b), a)
 
 src.save('public/glo-pin-ink.png', optimize=True)
 print('written public/glo-pin-ink.png', src.size)
