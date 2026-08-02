@@ -2485,8 +2485,11 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
                 would letterbox it. The globe and the count are positioned
                 against this wrapper, so it has to be the thing that moves. */}
             <span className="artium-globepin" style={{ height: "min(299px, 50.7vw)", aspectRatio: "560 / 837" }}>
+              {/* glo-pin-ink is glo-pin recolored to the entry gate's circle
+                  tone (#363B44) by tools/recolor-pin.py — same artwork, same
+                  alpha, brass swapped for the slate with the shading kept. */}
               <img
-                src="/glo-pin.png"
+                src="/glo-pin-ink.png"
                 alt=""
                 width={560}
                 height={837}
