@@ -25,10 +25,16 @@ W, H = src.size
 
 # #7B2D3B -> hue 349.2deg, HLS sat 0.4643, lightness 0.3294
 TH, TS = 349.2/360.0, 0.4643
+TL = 0.3294
 # Its lightness over the brass body's. 0.507 is measured, not assumed.
-SCALE = 0.3294/0.507
+SCALE = TL/0.507
 CX, CY = 296.5, 295.5
 RING = (0xF4, 0xED, 0xE6)   # the palette's warm cream, not pure white
+# Matte: how much of a highlight survives. The artwork is glossy in two ways —
+# warm sheen on the body, which the hue mask catches, and near-white specular
+# streaks, which it cannot (they are unsaturated). Both get their lift above
+# the body tone compressed by this.
+MATTE = 0.35
 
 def smooth(a, b, x):
     t = max(0.0, min(1.0, (x - a) / (b - a)))
@@ -49,12 +55,24 @@ for j in range(H):
         w = wh*ws
         if w > 0:
             nl = min(1.0, l*SCALE)
+            if nl > TL:
+                nl = TL + (nl - TL)*MATTE
             nr, ng, nb = colorsys.hls_to_rgb(TH, nl, TS)
             r = r*(1-w) + nr*255*w
             g = g*(1-w) + ng*255*w
             b = b*(1-w) + nb*255*w
         d = math.hypot(i - CX, j - CY)
         wr = smooth(150, 158, d) * (1 - smooth(204, 212, d))
+        # The specular streaks: bright and unsaturated, so the hue mask above
+        # never touches them. Outside the ring band they become burgundy with
+        # most of their lift removed — a sheen, not a shine.
+        ww = smooth(0.38, 0.52, l) * (1 - smooth(0.10, 0.18, s_hsv)) * (1 - wr)
+        if ww > 0:
+            sl = TL + (l - TL)*0.2
+            sr, sg, sb = colorsys.hls_to_rgb(TH, sl, TS)
+            r = r*(1-ww) + sr*255*ww
+            g = g*(1-ww) + sg*255*ww
+            b = b*(1-ww) + sb*255*ww
         if wr > 0:
             r = r*(1-wr) + RING[0]*wr
             g = g*(1-wr) + RING[1]*wr
