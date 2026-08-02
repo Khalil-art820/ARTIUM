@@ -488,6 +488,26 @@ function Logo({ tone = "light", size = 20, markSize, slogan = false }) {
   );
 }
 
+/**
+ * Registered members — a headcount of the network, not of who happens to be
+ * connected this second. One component because it appears in three headers and
+ * under "Explore Artium's Network", and four copies of a mark and a number is
+ * how they stop matching.
+ *
+ * The live figure it replaced is not gone, it is in the admin screen: how many
+ * people are connected right now is something the owner watches, not something
+ * a visitor needs on every page.
+ */
+function MemberCount({ count }) {
+  if (count == null) return null;
+  return (
+    <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 13, color: C.ivoryDim }}>
+      <Users size={14} />
+      <span style={{ color: C.ivory, fontWeight: 600 }}>{count}</span>
+    </span>
+  );
+}
+
 function Chip({ active, onClick, children }) {
   return (
     <button
@@ -2157,13 +2177,13 @@ export default function App() {
             setLearnerLoggedOut(false);
             setScreen("entry");
           }}
-          onlineCount={onlineCount}
+          memberCount={Object.values(studentsByCons).flat().length}
           musicOn={musicPlaying}
           onMusicToggle={toggleMusic}
         />
       )}
 
-      {screen === "landing" && <Landing onApply={startApply} onBack={backToEntry} onPreview={startPreview} onProfile={goToProfile} onLogin={startLogin} myProfile={myProfile} studentLoggedOut={studentLoggedOut} musicOn={musicPlaying} onMusicToggle={toggleMusic} error={authError} onlineCount={onlineCount} onGoToLessonRoom={() => { setScreen("app"); setAppTabPersist("lessons"); }} studentsByCons={studentsByCons} />}
+      {screen === "landing" && <Landing onApply={startApply} onBack={backToEntry} onPreview={startPreview} onProfile={goToProfile} onLogin={startLogin} myProfile={myProfile} studentLoggedOut={studentLoggedOut} musicOn={musicPlaying} onMusicToggle={toggleMusic} error={authError} onGoToLessonRoom={() => { setScreen("app"); setAppTabPersist("lessons"); }} studentsByCons={studentsByCons} />}
       {screen === "login" && <LoginScreen onSubmit={handleLogin} onBack={goHome} error={authError} />}
       {screen === "signup" && (
         <SignupFlow
@@ -2182,7 +2202,7 @@ export default function App() {
         <AppShell
           appTab={appTab} setAppTab={setAppTab} myProfile={myProfile}
           onApply={startApply} onHome={goHome} musicOn={musicPlaying} onMusicToggle={toggleMusic}
-          onGuestTabClick={() => setShowGuestPrompt(true)} onlineCount={onlineCount} previewOnly={previewOnly}
+          onGuestTabClick={() => setShowGuestPrompt(true)} memberCount={Object.values(studentsByCons).flat().length} previewOnly={previewOnly}
           hideTabs={!!selectedStudentId}
           authUser={authUser}
           isAdmin={isAdmin}
@@ -2280,7 +2300,7 @@ export default function App() {
             <PromoteMe myProfile={myProfile} authUser={authUser} />
           )}
           {appTab === "admin" && !selectedStudentId && isAdmin && (
-            <AdminScreen authUser={authUser} />
+            <AdminScreen authUser={authUser} onlineCount={onlineCount} />
           )}
           {appTab === "lessons" && !selectedStudentId && myProfile && (
             <TeacherLessonRoom teacherId={myProfile.id} roomView={teacherRoomView} setRoomView={setTeacherRoomView} />
@@ -2304,11 +2324,16 @@ export default function App() {
 /* ---------------------------------------------------------------- */
 /* LANDING                                                             */
 /* ---------------------------------------------------------------- */
-function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, studentLoggedOut, musicOn, onMusicToggle, error, onlineCount, onGoToLessonRoom, studentsByCons }) {
+function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, studentLoggedOut, musicOn, onMusicToggle, error, onGoToLessonRoom, studentsByCons }) {
+  const memberCount = Object.values(studentsByCons).flat().length;
   return (
+    // One white from the top of the page to the bottom, and no rules across
+    // it: the header, the hero and the footer were each fenced off by a
+    // hairline, which cut the page into three bands rather than letting it
+    // read as one.
     <div style={{ background: "#FFFFFF", color: C.ivory, minHeight: "100vh" }}>
       {/* Nav — matches AppShell header */}
-      <div className="px-6 flex items-center gap-4" style={{ height: 60, background: "#FFFFFF", borderBottom: `1px solid ${C.inkLine}` }}>
+      <div className="px-6 flex items-center gap-4" style={{ height: 60, background: "#FFFFFF" }}>
         <div className="flex items-center gap-3">
           {!myProfile && !studentLoggedOut && (
             <button onClick={onBack} style={{ color: C.ivoryDim, background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 2, padding: 0 }}>
@@ -2319,12 +2344,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
         </div>
         <div className="flex items-center gap-2 ml-auto">
           <MusicBtn playing={musicOn} onToggle={onMusicToggle} />
-          {onlineCount != null && (
-            <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: C.ivoryDim, whiteSpace: "nowrap" }}>
-              <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#1A9E6E", display: "inline-block", flexShrink: 0 }} />
-              <span style={{ color: C.ivory, fontWeight: 600 }}>{onlineCount}</span>
-            </span>
-          )}
+          <MemberCount count={memberCount} />
           {myProfile && <NotificationBell myProfile={myProfile} onGoToLessonRoom={onGoToLessonRoom} />}
           {myProfile && (
             <button onClick={onProfile} title="My profile" style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}>
@@ -2350,7 +2370,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
       </div>
 
       {/* Hero */}
-      <div style={{ background: "#fff", borderBottom: `1px solid ${C.inkLine}` }}>
+      <div style={{ background: "#fff" }}>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "36px 24px 28px", gap: 30 }}>
           <h1 style={{ fontSize: "clamp(24px,3vw,40px)", fontWeight: 700, lineHeight: 1.08, letterSpacing: 0, color: C.ivory, margin: 0, fontFamily: "'DM Serif Display', serif", textAlign: "center" }}>
             Every Conservatory. One Network.
@@ -2387,9 +2407,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
               Explore Artium's Network
               <ChevronRight size={15} color={C.ivory} className="artium-explore-chevron" style={{ verticalAlign: -3, marginLeft: 3, display: "inline-block" }} />
             </span>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 13, color: C.ivoryDim, fontFamily: FONT_BODY }}>
-              <Users size={14} /> {Object.values(studentsByCons).flat().length}
-            </span>
+            <MemberCount count={memberCount} />
             {/* Taller than it is wide (0.669), so sized by height — a square box
                 would letterbox it. */}
             <img
@@ -2439,7 +2457,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
         </div>
       </div>
 
-      <div style={{ borderTop: `1px solid ${C.inkLine}`, padding: "20px 0" }}>
+      <div style={{ padding: "20px 0" }}>
         <div className="max-w-6xl mx-auto px-8" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <Logo size={18} slogan />
         </div>
@@ -3434,7 +3452,7 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
   );
 }
 
-function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, musicOn, onMusicToggle, onBack, backLabel, onGuestTabClick, onlineCount, previewOnly, hideTabs, onGoToLessonRoom, authUser, isAdmin, onGoToAdmin }) {
+function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, musicOn, onMusicToggle, onBack, backLabel, onGuestTabClick, memberCount, previewOnly, hideTabs, onGoToLessonRoom, authUser, isAdmin, onGoToAdmin }) {
   const tabs = [];
   return (
     <div className="min-h-full flex flex-col" style={{ background: C.inkSoft, color: C.ivory }}>
@@ -3472,12 +3490,7 @@ function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, mus
         )}
         <div className="flex items-center gap-2 ml-auto">
           <MusicBtn playing={musicOn} onToggle={onMusicToggle} />
-          {onlineCount != null && (
-            <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: C.ivoryDim, whiteSpace: "nowrap" }}>
-              <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#1A9E6E", display: "inline-block", flexShrink: 0 }} />
-              <span style={{ color: C.ivory, fontWeight: 600 }}>{onlineCount}</span>
-            </span>
-          )}
+          <MemberCount count={memberCount} />
           {myProfile && <NotificationBell myProfile={myProfile} onGoToLessonRoom={onGoToLessonRoom} authUser={authUser} isAdmin={isAdmin} onGoToAdmin={onGoToAdmin} />}
           {!myProfile ? (
             !previewOnly && <PrimaryBtn onClick={onApply}>Sign up</PrimaryBtn>
@@ -4207,15 +4220,7 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
         <Logo size={22} markSize={HEADER_CONTROL} />
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <MusicBtn playing={musicOn} onToggle={onMusicToggle} />
-          {/* Registered members, the same figure and mark as under "Explore
-              Artium's Network" — a headcount of the network, not of who
-              happens to be connected this second. */}
-          {memberCount != null && (
-            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 13, color: C.ivoryDim }}>
-              <Users size={14} />
-              <span style={{ color: C.ivory, fontWeight: 600 }}>{memberCount}</span>
-            </span>
-          )}
+          <MemberCount count={memberCount} />
         </div>
       </div>
       <div className="artium-gate-field flex-1 flex flex-col items-center justify-center px-6 py-12" style={{ background: GATE_FIELD }}>
@@ -4602,7 +4607,7 @@ function TeacherMap({ teachers, selectedId, onSelect, height = 520 }) {
 }
 
 /* ---- Learner home: map + request + chat ---- */
-function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conversations, activeChatId, setActiveChatId, onSend, onBack, onUpdateProfile, onLogout, onDeleteAccount, onlineCount, musicOn, onMusicToggle }) {
+function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conversations, activeChatId, setActiveChatId, onSend, onBack, onUpdateProfile, onLogout, onDeleteAccount, memberCount, musicOn, onMusicToggle }) {
   const [appTab, setAppTab] = useState("map");
   const [selectedConsId, setSelectedConsId] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
@@ -4686,7 +4691,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
       appTab={appTab} setAppTab={setAppTab}
       myProfile={learnerProfile}
       musicOn={musicOn} onMusicToggle={onMusicToggle}
-      onlineCount={onlineCount}
+      memberCount={memberCount}
       onBack={selectedId ? () => setSelectedId(null) : appTab === "lesson" && learnerRoomView !== "teachers" ? () => setLearnerRoomView("teachers") : appTab !== "map" ? () => setAppTab("map") : onBack}
       hideTabs={!!selectedId}
     >
@@ -6081,7 +6086,7 @@ function PromoteMe({ myProfile, authUser }) {
 /* ---------------------------------------------------------------- */
 /* ADMIN — owner-only promotion approvals                             */
 /* ---------------------------------------------------------------- */
-function AdminScreen({ authUser }) {
+function AdminScreen({ authUser, onlineCount }) {
   const isRealUser = !!authUser?.id;
   const lsKey = "artium_promotions";
   const [section, setSection] = useState("verifications");
@@ -6125,6 +6130,16 @@ function AdminScreen({ authUser }) {
             <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 700, color: C.ivory, margin: 0 }}>Admin</h2>
           </div>
           <p style={{ fontSize: 13, color: C.ivoryDim, margin: 0 }}>Review student verifications and promotions.</p>
+          {/* The live figure that used to sit in every header. How many people
+              are connected this second is an operational number, not something
+              a visitor needs on the way in — so it lives here and nowhere
+              else. The green dot is the same mark it always carried. */}
+          {onlineCount != null && (
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 10, padding: "5px 12px", borderRadius: 999, background: C.parchmentDim, border: `1px solid ${C.inkLine}`, fontSize: 12, color: C.ivoryDim }}>
+              <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#1A9E6E", display: "inline-block", flexShrink: 0 }} />
+              <span style={{ color: C.ivory, fontWeight: 600 }}>{onlineCount}</span> online now
+            </span>
+          )}
         </div>
 
         {/* Section toggle */}
