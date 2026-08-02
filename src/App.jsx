@@ -1435,7 +1435,13 @@ export default function App() {
       const me = fromDbProfile(authProfile);
       setMyProfile(me);
       setPreviewOnly(false);
-      setStudents((arr) => [...arr.filter((s) => s.id !== me.id), me]);
+      // The owner administers the network rather than appearing in it. Every
+      // other account already fails to see them — the roster query filters
+      // is_admin — so this is the one place left that put them on a map: their
+      // own copy, added locally without ever going through that query.
+      if (authProfile.is_admin !== true) {
+        setStudents((arr) => [...arr.filter((s) => s.id !== me.id), me]);
+      }
       if (authProfile.approved === false) {
         // Document-proof student still awaiting manual review.
         if (["entry", "landing", "login", "confirmEmail"].includes(screen)) setScreen("pendingReview");
@@ -1464,7 +1470,9 @@ export default function App() {
           const me = { id: authUser.id, name: pendingStudent.name, instrument: pendingStudent.instrument, conservatoryId: pendingStudent.conservatoryId, year: pendingStudent.years, bio: pendingStudent.bio, tastes: pendingStudent.tastes, pieces: pendingStudent.pieces, videoLink: pendingStudent.videoLink, top: pendingStudent.top, flop: pendingStudent.flop, photoUrl: pendingStudent.photoUrl, teaching: pendingStudent.teaching, online: true };
           setMyProfile(me);
           if (isDoc) { setScreen("pendingReview"); return; }
-          setStudents((arr) => [...arr.filter((s) => s.id !== me.id), me]);
+          if (!isAdminEmail(authUser.email)) {
+            setStudents((arr) => [...arr.filter((s) => s.id !== me.id), me]);
+          }
           setSelectedConsId(me.conservatoryId);
           setScreen("app");
           setAppTabPersist("map");
@@ -1806,13 +1814,18 @@ export default function App() {
    */
   function finishSignup(userId, email, verifyMethod) {
     if (verifyMethod === "document") { setScreen("pendingReview"); return; }
-    if (isAdminEmail(email)) { simulateApproval(userId); return; }
+    if (isAdminEmail(email)) { simulateApproval(userId, email); return; }
     setScreen("pending");
   }
-  function simulateApproval(userId) {
+  function simulateApproval(userId, email) {
     const me = { id: userId || draft.id, name: draft.name || "Your name", instrument: draft.instrument, conservatoryId: draft.conservatoryId, year: draft.years || "Current student", bio: draft.bio, tastes: draft.tastes, pieces: draft.pieces, videoLink: draft.videoLink, top: draft.top, flop: draft.flop, photoUrl: draft.photoUrl, teaching: draft.teaching, online: true };
     setMyProfile(me);
-    setStudents((arr) => [...arr.filter((s) => s.id !== me.id), me]);
+    // Same reason as the roster add in the auth effect: the owner does not
+    // appear on the map they administer. The email is passed in because this
+    // runs before the profile has been read back, so is_admin is not known yet.
+    if (!isAdminEmail(email || draft.email)) {
+      setStudents((arr) => [...arr.filter((s) => s.id !== me.id), me]);
+    }
     setPreviewOnly(false);
     setSelectedConsId(me.conservatoryId);
     setScreen("app"); setAppTabPersist("map");
