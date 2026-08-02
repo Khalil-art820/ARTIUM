@@ -1904,32 +1904,6 @@ export default function App() {
         .artium-explore:hover .artium-globepin { animation: none; transform: translateY(-6px) scale(1.05); }
         @keyframes artiumBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
 
-        /* Measured off the artwork: the window sits 52.95% across, 35.3% down,
-           and is 69.8% of the pin's width. The overlay has to cover the globe
-           printed into the image, so its white disc reaches the ring — a
-           smaller one would leave the old globe showing around the new one. */
-        .artium-globepin-globe {
-          position: absolute; left: 52.95%; top: 35.3%;
-          width: 69.8%; transform: translate(-50%, -50%);
-          pointer-events: none;
-        }
-        .artium-globepin-globe > svg { display: block; width: 100%; height: auto; }
-        /* Each meridian is a circle squashed flat and back. Six of them, a
-           sixth of a turn apart, read as one sphere revolving. The keyframes
-           dwell at the edges and hurry through the middle because that is what
-           a meridian's width actually does as it comes round. */
-        .artium-globepin-meridian {
-          transform-box: fill-box; transform-origin: center;
-          animation: artiumGlobeTurn 9s linear infinite;
-        }
-        @keyframes artiumGlobeTurn {
-          0%   { transform: scaleX(1); }
-          25%  { transform: scaleX(0.04); }
-          50%  { transform: scaleX(1); }
-          75%  { transform: scaleX(0.04); }
-          100% { transform: scaleX(1); }
-        }
-
         /* In the pin's body, under the globe. Sized off the same viewport
            measure as the pin so the two scale together, and held on one line
            with a thousands separator so five figures still fit the taper. */
@@ -1944,7 +1918,6 @@ export default function App() {
 
         @media (prefers-reduced-motion: reduce) {
           .artium-globepin { animation: none; }
-          .artium-globepin-meridian { animation: none; }
           .artium-explore:hover .artium-globepin { transform: none; }
         }
 
@@ -2442,30 +2415,6 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
                 height={837}
                 style={{ display: "block", height: "100%", width: "auto" }}
               />
-              {/* Covers the globe printed into the artwork with a live one. The
-                  white disc is the full width of the overlay so it meets the
-                  ring; the sphere sits inside it. */}
-              <span className="artium-globepin-globe" aria-hidden="true">
-                <svg viewBox="0 0 100 100">
-                  <circle cx="50" cy="50" r="50" fill="#FFFFFF" />
-                  <circle cx="50" cy="50" r="45" fill={C.brass} />
-                  <g fill="none" stroke="#FFFFFF" strokeWidth="1.7" strokeLinecap="round">
-                    {/* Parallels are chords of the sphere: half-width is
-                        sqrt(45² - dy²) at each height. */}
-                    <line x1="5" y1="50" x2="95" y2="50" />
-                    <line x1="7.6" y1="35" x2="92.4" y2="35" />
-                    <line x1="7.6" y1="65" x2="92.4" y2="65" />
-                    <line x1="15.6" y1="21" x2="84.4" y2="21" />
-                    <line x1="15.6" y1="79" x2="84.4" y2="79" />
-                    {/* Delays span half the cycle: a meridian repeats every half
-                        turn, so five across that half are five evenly spaced.
-                        Six read as a thicket once they crowd the centre. */}
-                    {[0, -0.9, -1.8, -2.7, -3.6].map((d) => (
-                      <ellipse key={d} className="artium-globepin-meridian" cx="50" cy="50" rx="45" ry="45" style={{ animationDelay: `${d}s` }} />
-                    ))}
-                  </g>
-                </svg>
-              </span>
               <span className="artium-globepin-count">
                 <Users />
                 {/* Grouped thousands: this reads as a headcount, and five
