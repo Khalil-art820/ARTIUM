@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, lazy, Suspense } from "react";
 import {
   Search, Send,
   ChevronRight, Check, X, Instagram, Facebook, Youtube,
-  Music2, Music, GraduationCap, Users, MessageCircle, ArrowRight, ArrowLeft, Play, Pause, Globe2, Compass,
+  Music2, Music, GraduationCap, Users, MessageCircle, ArrowRight, ArrowLeft, Play, Pause, Globe2,
   Pencil, Plus, Trash2, Home, Upload, Eye, EyeOff, ChevronLeft,
   Calendar, CreditCard, Video, Link2, Clock, Bell,
   Map, BookOpen, ListChecks, LayoutList, Megaphone, Check as CheckIcon, ShieldCheck, FileText, Lock,
@@ -80,21 +80,29 @@ const isAdminEmail = (email) => (email || "").trim().toLowerCase() === ADMIN_EMA
 // they never quite lined up.
 const HEADER_CONTROL = 32;
 
+/**
+ * The entry gate runs on its own palette — a lit room rather than a white
+ * page — so it does not draw from C, which is built for the light screens
+ * behind it. Kept together here so the gate's colours can be read at once.
+ */
+const GATE = {
+  ink: "#0C0A09",          // the room
+  gold: "#C9A24E",         // icons, rules, the filled arrows
+  goldSoft: "#B8965A",     // labels and the eyebrow
+  goldLine: "rgba(201,162,78,0.22)",
+  cream: "#F3EEE7",        // headings
+  muted: "#A79E93",        // body copy
+  cardTop: "rgba(255,255,255,0.055)",
+  cardBottom: "rgba(255,255,255,0.018)",
+};
+// Cormorant Garamond is loaded in index.html. The fallbacks are the elegant
+// serifs Apple and Windows ship, so the gate still reads as intended in the
+// moment before the web font lands — or if it never does.
+const GATE_SERIF = "'Cormorant Garamond', 'Didot', 'Bodoni 72', Georgia, serif";
+
 // Brass, not black: the reference's black was the only black in a header of
 // brass and navy, and it dominated. The outlined shape is kept.
 const MUSIC_BTN_INK = C.brass;
-
-// The entry gate's two bars are the same height, so the page reads as evenly
-// bounded rather than as a header with something trailing underneath. They
-// carry no rules and no tone of their own — matching heights are the only
-// thing holding the top and bottom of the screen together.
-const GATE_BAR_H = 52;
-// The field the circles sit on. White, and the same white as the two bars and
-// the cards — the gate used to stack three near-whites (#F6F9FC behind
-// #FAFBFC behind #FFFFFF) whose edges caught the light as faint bands. One
-// surface throughout; the cards are held by their border and shadow instead
-// of by a change of tone.
-const GATE_FIELD = "#FFFFFF";
 
 /* ---- Promote Me (aclassicaltone) ---- */
 const PROMO_PROVIDERS = [
@@ -498,12 +506,12 @@ function Logo({ tone = "light", size = 20, markSize, slogan = false }) {
  * people are connected right now is something the owner watches, not something
  * a visitor needs on every page.
  */
-function MemberCount({ count }) {
+function MemberCount({ count, mark = C.ivoryDim, figure = C.ivory }) {
   if (count == null) return null;
   return (
-    <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 13, color: C.ivoryDim }}>
+    <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 13, color: mark }}>
       <Users size={14} />
-      <span style={{ color: C.ivory, fontWeight: 600 }}>{count}</span>
+      <span style={{ color: figure, fontWeight: 600 }}>{count}</span>
     </span>
   );
 }
@@ -1876,6 +1884,174 @@ export default function App() {
         input[type=range].artium-slider::-webkit-slider-thumb { -webkit-appearance: none !important; appearance: none !important; width: 7px !important; height: 7px !important; border-radius: 50% !important; background: #000 !important; cursor: pointer !important; border: none !important; }
         input[type=range].artium-slider::-moz-range-thumb { width: 7px !important; height: 7px !important; border-radius: 50% !important; background: #000 !important; border: none !important; cursor: pointer !important; }
 
+        /* ---- Entry gate: a lit room, not a white page ------------------ */
+        .artium-gx {
+          position: relative; min-height: 100%;
+          display: flex; flex-direction: column;
+          background: ${GATE.ink}; color: ${GATE.cream};
+          font-family: ${FONT_BODY};
+          overflow: hidden;
+        }
+        /* Warm light from the upper corners, over the near-black. The mockup
+           photographs the gate inside a hall; this is that light without the
+           room — dark enough for gold to carry, and nothing to download. */
+        .artium-gx-glow {
+          position: absolute; inset: 0; pointer-events: none;
+          background:
+            radial-gradient(58% 42% at 12% 4%, rgba(201,162,78,0.20), transparent 70%),
+            radial-gradient(52% 40% at 92% 10%, rgba(201,162,78,0.13), transparent 72%),
+            radial-gradient(70% 45% at 50% 100%, rgba(120,82,30,0.16), transparent 70%);
+        }
+        .artium-gx > *:not(.artium-gx-glow) { position: relative; z-index: 1; }
+
+        .artium-gx-bar {
+          display: flex; align-items: center; justify-content: space-between;
+          width: 100%; max-width: 640px; margin: 0 auto;
+          padding: calc(14px + env(safe-area-inset-top, 0px)) 22px 10px;
+          flex-shrink: 0;
+        }
+        /* The music button is brass by default, which is a brighter yellow
+           than this screen's gold. Retinted here rather than given a prop:
+           it is the gate that is unusual, not the button. */
+        .artium-gx-bar button[aria-label*="playlist"] { border-color: ${GATE.gold} !important; }
+        .artium-gx-bar button[aria-label*="playlist"] svg { stroke: ${GATE.gold}; }
+
+        .artium-gx-main {
+          flex: 1; width: 100%; max-width: 640px; margin: 0 auto;
+          padding: 18px 22px 30px;
+          display: flex; flex-direction: column; align-items: center;
+        }
+        .artium-gx-eyebrow {
+          margin: 0 0 14px; font-size: 11px; font-weight: 600;
+          letter-spacing: 0.22em; text-transform: uppercase; color: ${GATE.goldSoft};
+        }
+        .artium-gx-h1 {
+          margin: 0; text-align: center; color: ${GATE.cream};
+          font-family: ${GATE_SERIF};
+          font-size: clamp(38px, 11vw, 58px); font-weight: 500;
+          line-height: 1.08; letter-spacing: 0.01em;
+        }
+        .artium-gx-tag {
+          margin: 14px 0 0; font-size: clamp(15px, 4vw, 18px);
+          color: ${GATE.muted}; letter-spacing: 0.01em;
+        }
+        /* The one flourish: a rule broken by a diamond, between the welcome
+           and the choosing. */
+        .artium-gx-rule {
+          display: flex; align-items: center; gap: 10px;
+          margin: 20px 0 26px; width: 168px;
+        }
+        .artium-gx-rule span { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, ${GATE.gold}); }
+        .artium-gx-rule span:last-child { background: linear-gradient(90deg, ${GATE.gold}, transparent); }
+        .artium-gx-rule i { width: 6px; height: 6px; background: ${GATE.gold}; transform: rotate(45deg); flex-shrink: 0; }
+
+        .artium-gx-cards { width: 100%; display: flex; flex-direction: column; gap: 14px; }
+        /* Side by side down to the narrowest phones — the mockup pairs them at
+           390px, and stacking three full-width cards pushes the log in below
+           the fold. */
+        .artium-gx-pair { display: flex; gap: 14px; align-items: stretch; }
+        /* The paired cards carry the same content in half the width, so they
+           step down a size rather than wrap into towers. */
+        .artium-gx-pair .artium-gx-card { padding: 22px 14px 18px; }
+        .artium-gx-pair .artium-gx-disc { width: 52px; height: 52px; margin-bottom: 13px; }
+        .artium-gx-pair .artium-gx-title { font-size: 17px; }
+        .artium-gx-pair .artium-gx-sub { font-size: 11px; margin-top: 6px; }
+        .artium-gx-pair .artium-gx-desc { font-size: 11.5px; margin-top: 9px; }
+        .artium-gx-pair .artium-gx-go { width: 34px; height: 34px; margin-top: 14px; }
+
+        .artium-gx-card {
+          display: flex; flex-direction: column; align-items: center;
+          padding: 26px 20px 22px; gap: 0;
+          border-radius: 18px; cursor: pointer; text-align: center;
+          border: 1px solid ${GATE.goldLine};
+          background: linear-gradient(180deg, ${GATE.cardTop}, ${GATE.cardBottom});
+          font: inherit; color: inherit;
+          transition: border-color .2s ease, transform .2s ease, background .2s ease;
+        }
+        .artium-gx-card:hover {
+          border-color: rgba(201,162,78,0.55);
+          transform: translateY(-2px);
+        }
+        .artium-gx-card:active { transform: translateY(0); }
+        .artium-gx-card:focus-visible { outline: 2px solid ${GATE.gold}; outline-offset: 3px; }
+        .artium-gx-disc {
+          width: 64px; height: 64px; border-radius: 50%; flex-shrink: 0;
+          border: 1px solid ${GATE.goldLine};
+          display: flex; align-items: center; justify-content: center;
+          margin-bottom: 16px;
+        }
+        .artium-gx-title {
+          font-family: ${GATE_SERIF}; font-size: 21px; font-weight: 500;
+          line-height: 1.22; color: ${GATE.cream};
+        }
+        .artium-gx-sub {
+          margin-top: 7px; font-size: 12.5px; font-weight: 500;
+          line-height: 1.35; color: ${GATE.goldSoft};
+        }
+        .artium-gx-desc {
+          margin-top: 11px; font-size: 13px; line-height: 1.5; color: ${GATE.muted};
+        }
+        .artium-gx-go {
+          margin-top: 18px; width: 38px; height: 38px; border-radius: 50%;
+          background: ${GATE.gold}; color: ${GATE.ink};
+          display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+          transition: transform .2s ease;
+        }
+        .artium-gx-card:hover .artium-gx-go { transform: translateX(3px); }
+
+        .artium-gx-note { margin: 26px 0 0; font-size: 13px; color: ${GATE.muted}; }
+        .artium-gx-login {
+          margin-top: 12px; width: 100%;
+          display: flex; align-items: center; justify-content: center; gap: 8px;
+          padding: 15px 0; border-radius: 999px; cursor: pointer;
+          border: 1px solid ${GATE.gold}; background: transparent;
+          color: ${GATE.gold}; font: inherit; font-size: 15px; font-weight: 600;
+          transition: background .2s ease;
+        }
+        .artium-gx-login:hover { background: rgba(201,162,78,0.10); }
+        .artium-gx-login:focus-visible { outline: 2px solid ${GATE.gold}; outline-offset: 3px; }
+
+        .artium-gx-foot {
+          display: flex; align-items: center; flex-shrink: 0;
+          width: 100%; max-width: 640px; margin: 0 auto;
+          padding: 14px 22px calc(16px + env(safe-area-inset-bottom, 0px));
+          white-space: nowrap; overflow: hidden;
+        }
+        .artium-gx-partner {
+          display: inline-flex; align-items: center; gap: 9px; margin-left: 12px;
+          font-size: 12px; color: ${GATE.muted}; line-height: 1;
+        }
+        .artium-gx-partner-rule { width: 1px; align-self: stretch; background: ${GATE.goldLine}; flex-shrink: 0; }
+        .artium-gx-partner a {
+          display: inline-flex; align-items: center;
+          font-family: ${FONT_WORDMARK}; font-weight: 800; font-size: 14px;
+          letter-spacing: -0.035em; color: ${GATE.cream}; text-decoration: none;
+        }
+        .artium-gx-ext {
+          display: inline-flex; align-items: center; justify-content: center;
+          width: 0.92em; height: 0.92em; margin-left: 0.3em; border-radius: 0.26em;
+          border: 1px solid ${GATE.goldLine}; color: ${GATE.goldSoft};
+          position: relative; top: -0.44em; flex-shrink: 0;
+        }
+        .artium-gx-ext svg { width: 68%; height: 68%; }
+        .artium-gx-partner a:hover .artium-gx-ext { border-color: ${GATE.gold}; }
+
+        /* Only below the narrowest phones do the pair finally stack: by 340px
+           the two columns are too tight for "conservatory" to sit on one line
+           at any size worth reading. */
+        @media (max-width: 340px) {
+          .artium-gx-pair { flex-direction: column; }
+        }
+        @media (max-width: 420px) {
+          .artium-gx-partner { font-size: 10.5px; gap: 7px; margin-left: 9px; }
+          .artium-gx-partner a { font-size: 12.5px; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .artium-gx-card, .artium-gx-go { transition: none; }
+          .artium-gx-card:hover { transform: none; }
+          .artium-gx-card:hover .artium-gx-go { transform: none; }
+        }
+
         .artium-map, .artium-map .leaflet-container { border-radius: inherit; }
         .artium-map .leaflet-tile-pane { filter: saturate(0.5) brightness(1.08); }
         .artium-map .leaflet-control-zoom { border: 1px solid #E6EBF1 !important; box-shadow: 0 2px 8px rgba(10,37,64,0.08) !important; border-radius: 8px !important; overflow: hidden; }
@@ -1952,235 +2128,6 @@ export default function App() {
           .artium-explore:hover .artium-globepin { transform: none; }
         }
 
-        /* Same bob as the landing globe pin. No delay anywhere — circles and
-           arrows share one timing, so the whole diagram rises and falls as a
-           single object rather than the arrows sitting still between moving
-           circles. */
-        .artium-gate-float,
-        .artium-tri-arrows { animation: artiumBob 3.2s ease-in-out infinite; }
-        @media (prefers-reduced-motion: reduce) {
-          .artium-gate-float,
-          .artium-tri-arrows { animation: none; }
-        }
-
-        /* The disc turns; the ring does not. The rotation lives on this inner
-           element so the box-shadow ring on the circle above stays a circle
-           instead of flattening to an ellipse as it turns. */
-        .artium-gate-circle { perspective: 900px; }
-        .artium-gate-flip {
-          position: absolute; inset: 0;
-          transform-style: preserve-3d;
-          animation: artiumGateTurn 9s ease-in-out infinite;
-        }
-        /* A column, so the call to action sits over the symbol and the two read
-           as one face. Nothing between this and the icon carries a transform or
-           an animated opacity: either opens a stacking context, and the icon's
-           screen blend would then resolve against nothing but its own black
-           plate, which is what drew a square around it.
-
-           nowrap because the compact disc scales the type down with a
-           transform, which does not shrink a layout box — at full size it is
-           wider than that disc and would break before the scale applied. */
-        .artium-gate-face {
-          position: absolute; inset: 0;
-          border-radius: 50%;
-          background: ${GATE_CIRCLE_BG};
-          backface-visibility: hidden;
-          -webkit-backface-visibility: hidden;
-          display: flex; flex-direction: column;
-          align-items: center; justify-content: center; gap: 4px;
-          white-space: nowrap; overflow: hidden;
-        }
-        .artium-gate-face--back { transform: rotateY(180deg); }
-        .artium-gate-icon { display: flex; align-items: center; justify-content: center; }
-        .artium-gate-cta {
-          font-family: ${FONT_WORDMARK}; font-weight: 700; font-size: 26px;
-          color: #FFFFFF; letter-spacing: -0.02em; line-height: 1;
-        }
-        /* Turned one way throughout — 0 to 180 to 360 — so it reads as a disc
-           revolving rather than swinging back and forth, and held long enough
-           on each side to be read. */
-        @keyframes artiumGateTurn {
-          0%, 40%  { transform: rotateY(0deg); }
-          50%, 90% { transform: rotateY(180deg); }
-          100%     { transform: rotateY(360deg); }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .artium-gate-flip { animation: none; }
-          .artium-gate-slot { animation: none; }
-          .artium-gate-slot--a1 { opacity: 1; }
-        }
-
-        .artium-tri { position: relative; width: 760px; height: 680px; }
-        .artium-tri > .artium-tri-top { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 260px; }
-        .artium-tri > .artium-tri-left { position: absolute; top: 345px; left: 0; width: 230px; }
-        .artium-tri > .artium-tri-right { position: absolute; top: 345px; right: 0; width: 230px; }
-        .artium-tri > .artium-tri-arrows { position: absolute; inset: 0; pointer-events: none; }
-        /* The bars are a fixed height, so their contents have to fit rather
-           than wrap — a wrapped footer overflows and reads as a taller bar
-           even though the bar itself never changed. */
-        .artium-gate-bar { padding-left: 32px; padding-right: 32px; }
-        /* White in every display mode: installed and in a tab should look the
-           same. What made the installed version differ was the bar growing to
-           52px + the navigation inset, not its colour — it now sits above that
-           inset instead, and the space behind the navigation bar falls through
-           to the page background. */
-        .artium-gate-footbar { background: #FFFFFF; }
-        .artium-gate-login:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(10,37,64,0.16); }
-        .artium-gate-login:active { transform: translateY(0); }
-        @media (prefers-reduced-motion: reduce) {
-          .artium-gate-login { transition: none; }
-          .artium-gate-login:hover { transform: none; }
-        }
-        /* Sizes live here rather than inline: an inline font-size outranks a
-           media query, so mobile steps written inline never take effect. */
-        /* gap and margin-left live here, not inline, so the narrow steps below
-           can claw back width — an inline value would outrank them. */
-        .artium-gate-partner { font-size: 14px; gap: 9px; margin-left: 12px; }
-        /* 15.3px and -0.035em are not arbitrary — they are what the footer's
-           own <Logo size={17}> resolves to (17 * 0.9, tracked by fontSize *
-           -0.035). The two names are meant to be the same mark at the same
-           size, so this has to follow the Logo's arithmetic, not approximate
-           it. The Logo does not shrink on narrow screens, so neither does
-           this; only the label between them steps down. */
-        .artium-gate-partner a { font-size: 15.3px; letter-spacing: -0.035em; text-decoration: none; }
-        /* The arrow sits in its own rounded tile rather than running on as a
-           character after the name — as a bare glyph it read as punctuation
-           belonging to the word, which is the same mistake the em dash made.
-           Everything is in em so the tile tracks the name's size, including
-           the narrow steps where the label shrinks but the name does not.
-           The tile's border is the whole hover response — the name itself
-           stays unmarked. */
-        /* The tile is taller than the line it sits on, so in normal flow it
-           grows the line box upward however it is vertically aligned — and
-           the footer centres the wordmark against this row, so a taller box
-           here dragged the two names off a shared baseline. The slot is a
-           zero-height inline-block: it reserves the tile's width, sits on the
-           baseline, and contributes no height at all. The tile hangs off it
-           absolutely, so raising it costs no layout. */
-        .artium-gate-extlink-slot {
-          position: relative; display: inline-block;
-          width: 1.18em; height: 0; vertical-align: baseline;
-        }
-        .artium-gate-extlink {
-          position: absolute; left: 0.26em; bottom: 0.15em;
-          display: inline-flex; align-items: center; justify-content: center;
-          width: 0.92em; height: 0.92em; border-radius: 0.26em;
-          background: ${C.parchmentDim}; border: 1px solid ${C.inkLine};
-          line-height: 1;
-        }
-        .artium-gate-extlink svg { width: 68%; height: 68%; display: block; }
-        .artium-gate-partner a:hover .artium-gate-extlink { border-color: ${C.brass}; }
-        /* A rule instead of an em dash. The dash made the credit a sentence
-           fragment hanging off the wordmark — "artium — In partnership with" —
-           so the two names ran together as one string. A hairline separates
-           them without claiming to be punctuation. */
-        /* stretch, so the rule takes its height from the row rather than
-           setting it. At a fixed 18px it was the tallest thing here, which
-           made the row taller than the type; the row is centred against the
-           wordmark next to it, so that extra height pushed the two names off
-           a shared baseline. It also has no text of its own to align on. */
-        .artium-gate-rule { width: 1px; background: ${C.inkLine}; flex-shrink: 0; align-self: stretch; }
-        @media (max-width: 700px) {
-          .artium-gate-bar { padding-left: 14px; padding-right: 14px; }
-          .artium-gate-partner { font-size: 11px; gap: 6px; }
-        }
-        @media (max-width: 380px) {
-          .artium-gate-partner { font-size: 10px; gap: 5px; margin-left: 9px; }
-        }
-        /* Holding the two names at one size costs width, and below ~360px the
-           bar runs out of it — the arrow and the tail of the name were being
-           cut off by the bar's overflow. The label and the spacing give the
-           width back, so the names stay matched instead of drifting apart
-           again on the smallest phones. */
-        @media (max-width: 360px) {
-          .artium-gate-bar { padding-left: 10px; padding-right: 10px; }
-          .artium-gate-partner { font-size: 9px; gap: 4px; margin-left: 6px; }
-        }
-
-        .artium-gate-circle { width: 202px; height: 202px; }
-        .artium-gate-title { font-size: 15px; }
-        .artium-gate-sub { font-size: 12px; }
-        .artium-gate-desc { font-size: 12px; }
-
-        /* Pulled up under the circle so the two fuse into one shape. The top
-           padding replaces the swallowed margin, keeping the title clear of
-           the circle's edge. */
-        /* Fixed width and min-height rather than shrink-to-fit: the three
-           slots differ in width and the three descriptions differ in length,
-           so left to themselves no two cards ever match. Content is centred in
-           whatever height is left over. */
-        /* "Find a teacher" carries one short line. Holding it to the two
-           student cards' floor only bought it empty space, so it sizes to its
-           own content; the two that need to match each other still do. */
-        .artium-gate-card--short { min-height: 0 !important; }
-        .artium-gate-card {
-          width: 230px;
-          max-width: 100%;
-          min-height: 205px;
-          margin-top: -30px;
-          padding: 42px 18px 18px;
-          border-radius: 18px;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-        }
-
-        @media (max-width: 820px) {
-          .artium-tri { width: 320px; height: 530px; }
-          .artium-tri > .artium-tri-top { width: 140px; }
-          /* The lower slots hang off the sides here too, but only by 10px:
-             the triangle is 320 wide and the field's own padding left it
-             3.5px of room on a 375 screen, so the padding gives that room
-             back first. Widening .artium-tri instead would stretch the arrow
-             overlay, which is sized to the 320 box. */
-          .artium-gate-field { padding-left: 12px; padding-right: 12px; }
-          .artium-tri > .artium-tri-left { top: 272px; width: 140px; left: -10px; }
-          .artium-tri > .artium-tri-right { top: 272px; width: 140px; right: -10px; }
-          /* Ring width stays 4px here: it is set inline on the element, which
-             outranks this rule — the arrows are matched to that 4px. */
-          .artium-tri .artium-gate-circle { width: 108px; height: 108px; }
-          .artium-tri .artium-gate-icon > img { width: 35.5px !important; height: 35.5px !important; }
-          /* The conductor runs a step larger than the two mortarboards, which
-             is set inline for the wide layout. That inline size loses to the
-             rule above, so the difference has to be restated here or the
-             compact triangle flattens all three back to one size. */
-          .artium-tri > .artium-tri-top .artium-gate-icon > img { width: 39px !important; height: 39px !important; }
-          .artium-tri .artium-gate-icon > svg { width: 32px; height: 32px; }
-          /* Scaled rather than resized: the hairpin's height, offset and stroke
-             are all worked out from the type size in JS, so a second font-size
-             here would leave the mark behind. 0.54 is 108/202, the compact
-             disc against the wide one. */
-          .artium-tri .artium-gate-word,
-          .artium-tri .artium-gate-cta { transform: scale(0.54); }
-          .artium-tri .artium-gate-title { font-size: 11.5px; }
-          .artium-tri .artium-gate-sub { font-size: 9.5px; }
-          .artium-tri .artium-gate-desc { font-size: 9.5px; }
-          .artium-tri .artium-gate-desc { max-width: none !important; }
-          .artium-tri .artium-gate-card {
-            width: 100%;
-            max-width: none;
-            min-height: 166px;
-            margin-top: -18px;
-            padding: 24px 10px 12px;
-            border-radius: 14px;
-          }
-          .artium-tri-arrows-wide { display: none; }
-        }
-        @media (min-width: 821px) {
-          .artium-tri-arrows-narrow { display: none; }
-          /* The two lower slots hang 20px off each side, opening the gap
-             between them from 300 to 340 without touching .artium-tri itself
-             — the arrow overlays are sized to that box, so widening it would
-             stretch them off the positions they are tuned to. Only the wide
-             layout can afford this: the compact triangle has 3.5px of room
-             beside it, so there it stays at the edges. */
-          .artium-tri > .artium-tri-left { left: -20px; }
-          .artium-tri > .artium-tri-right { right: -20px; }
-        }
-        @media (max-width: 370px) {
-          .artium-tri { transform: scale(0.9); transform-origin: top center; }
-        }
       `}</style>
 
       <SpotifyPlayer
@@ -4179,114 +4126,51 @@ function StepTeaching({ draft, update }) {
   );
 }
 
-/** Behind the entry-gate icons. The photographs were three different images
- *  under three different overlays, so the circles never quite matched; one
- *  flat tone puts the weight on the icons instead. Matte rather than pure
- *  black: a trace of the navy the rest of the palette runs on, so the discs
- *  sit in the same family as the type instead of reading as holes in the
- *  page. */
-const GATE_CIRCLE_BG = "#363B44";
-
-/** Both lines of the entry gate's heading, set like the header wordmark —
- *  same face, same 800 weight, same proportional -0.035em tracking. One
- *  object rather than two copies: the whole point is that the two lines are
- *  indistinguishable in everything but their words, and a duplicated style
- *  block is exactly where that stops being true. */
-const GATE_HEADING = {
-  fontFamily: FONT_WORDMARK,
-  fontSize: "clamp(22px,2.8vw,32px)",
-  fontWeight: 800,
-  lineHeight: 1,
-  color: C.ivory,
-  letterSpacing: "-0.035em",
-  textAlign: "center",
-  margin: 0,
-};
-
-/** The entry gate's three connecting arrows. */
-const GATE_ARROW = C.brass;
-
 /**
- * One chunky curved arrow, drawn pointing right around a local origin at its
- * middle. Filled rather than stroked: the shape tapers from tail to head, and
- * a stroke is the same width along its whole length.
+ * The lockup for the gate: a thin gold ring around the conductor, and the
+ * wordmark in gold. Its own component rather than Logo with another tone,
+ * because Logo's disc is a filled brass coin — right on a white header, a
+ * bright blot on a dark one. The word itself is the shared Wordmark, so the
+ * gate cannot drift from the rest of the app.
  */
-const GATE_ARROW_PATH =
-  "M -58 12 C -32 -8 2 -16 26 -13 L 26 -29 L 58 0 L 26 29 L 26 10 C 4 8 -28 14 -50 30 Z";
-
-/**
- * The same band with the head at the other end: both long edges are the two
- * curves above, unchanged, so the body sits exactly where the body above sits.
- * Only the ends differ — the barbs move to the tail and the head end is cut
- * square. Reversing a curved band cannot be done with a transform, because
- * turning it round also turns its arc over; the band has to keep its bow and
- * hand the point to the other end.
- *
- * Head geometry is built off the tail's cut, midpoint (-54, 21), running
- * along it for the barbs and out along its normal for the tip.
- */
-const GATE_ARROW_PATH_HEAD_AT_TAIL =
-  "M 26 -13 C 2 -16 -32 -8 -58 12 L -63.7 -0.9 L -81.4 33.2 L -44.3 42.9 L -50 30 C -28 14 4 8 26 10 Z";
-
-/**
- * `flip` mirrors the arrow across its own vertical axis, for the pair at the
- * top of the triangle: two arrows only read as the same curve reversed if one
- * is literally the other's reflection, and a rotation of this path never is —
- * it is a banana, its centreline running from about (-58, 21) at the tail to
- * (58, 0) at the head, so the bow has a handedness.
- *
- * A reflection also reverses circulation, which is why the left arrow takes
- * `headAtTail` as well: the reflection keeps its curve matched to the right
- * one, and the swapped head puts the point back on the top circle. The two
- * together are the only way to have both.
- */
-function GateArrow({ x, y, angle, scale = 1, flip = false, headAtTail = false }) {
+function GateLogo({ size = 22 }) {
+  const disc = Math.round(size * 1.45);
   return (
-    <path
-      d={headAtTail ? GATE_ARROW_PATH_HEAD_AT_TAIL : GATE_ARROW_PATH}
-      fill={GATE_ARROW}
-      transform={`translate(${x} ${y}) rotate(${angle}) scale(${flip ? -scale : scale} ${scale})`}
-    />
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
+      <span style={{
+        width: disc, height: disc, borderRadius: "50%", flexShrink: 0,
+        border: `1px solid ${GATE.gold}`, display: "flex",
+        alignItems: "center", justifyContent: "center",
+      }}>
+        <span style={{
+          display: "block", width: disc * 0.42, height: disc * 0.5, backgroundColor: GATE.gold,
+          WebkitMaskImage: `url('${TEACHER_MARK}')`, maskImage: `url('${TEACHER_MARK}')`,
+          WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat",
+          WebkitMaskSize: "contain", maskSize: "contain",
+          WebkitMaskPosition: "center", maskPosition: "center",
+        }} />
+      </span>
+      <Wordmark fontSize={size * 1.05} color={GATE.gold} hairpin={GATE.gold} />
+    </span>
   );
 }
 
-/* ---- First screen: pick your role ---- */
-function GateCard({ onClick, icon, title, sub, desc, descWidth, short }) {
-  // gap 0 and z-index 2: the description card slides up underneath the circle
-  // with a negative margin, so the two read as one object. The overlap lives
-  // in CSS because it has to shrink along with the circle.
+/**
+ * A card in the entry gate: an outlined icon disc, a serif title, an optional
+ * gold qualifier, a line of copy, and a filled arrow. The whole card is the
+ * button — the arrow is a signal, not a separate target, so there is nothing
+ * to miss and nothing to hit twice.
+ */
+function GateCard({ onClick, icon, title, sub, desc, wide }) {
   return (
-    <button onClick={onClick} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 0, width: "100%", padding: 0 }}>
-      <div className="artium-gate-float" style={{ zIndex: 2 }}>
-      {/* The ring is a box-shadow on this element and this element never turns,
-          so it stays a circle while the disc inside it rotates. Nothing here
-          clips: each face is round in its own right, and an overflow on the
-          turning element's parent flattens the 3D. */}
-      <div className="artium-gate-circle" style={{ borderRadius: "50%", position: "relative", boxShadow: `0 0 0 4px ${C.brass}, 0 8px 32px rgba(10,37,64,0.14)`, transition: "transform 0.18s", flexShrink: 0 }}
-        onMouseEnter={e => e.currentTarget.style.transform = "scale(1.04)"}
-        onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
-      >
-        {/* Two states, so two sides and nothing else: "Sign Up" over the
-            symbol on one, the wordmark on the other. No wrapper transforms or
-            animated opacity between the face and the icon — either would open
-            a stacking context and leave the icon's screen blend resolving
-            against nothing but its own black plate. */}
-        <div className="artium-gate-flip">
-          <div className="artium-gate-face">
-            <span className="artium-gate-cta">Sign Up</span>
-            <div className="artium-gate-icon">{icon}</div>
-          </div>
-          <div className="artium-gate-face artium-gate-face--back">
-            <Wordmark fontSize={38} color="#FFFFFF" hairpin="#FFFFFF" className="artium-gate-word" />
-          </div>
-        </div>
-      </div>
-      </div>
-      <div className={`artium-gate-card${short ? " artium-gate-card--short" : ""}`} style={{ textAlign: "center", background: "#fff", border: `1px solid ${C.inkLine}`, boxShadow: "0 2px 14px rgba(10,37,64,0.07)" }}>
-        <div className="artium-gate-title" style={{ fontWeight: 700, color: C.ivory, marginBottom: 4 }}>{title}</div>
-        {sub && <div className="artium-gate-sub" style={{ fontWeight: 600, color: C.brassLabel, marginBottom: 4 }}>{sub}</div>}
-        <div className="artium-gate-desc" style={{ color: C.ivoryDim, lineHeight: 1.5, maxWidth: descWidth, margin: "0 auto" }}>{desc}</div>
-      </div>
+    <button onClick={onClick} className="artium-gx-card" style={{ flex: wide ? "none" : "1 1 0", width: wide ? "100%" : "auto" }}>
+      <span className="artium-gx-disc">{icon}</span>
+      <span className="artium-gx-title">{title}</span>
+      {sub && <span className="artium-gx-sub">{sub}</span>}
+      <span className="artium-gx-desc">{desc}</span>
+      <span className="artium-gx-go" aria-hidden="true">
+        <ArrowRight size={17} strokeWidth={2.2} />
+      </span>
     </button>
   );
 }
@@ -4296,113 +4180,87 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
   const showLearner = !studentLoggedIn;
   const showStudent = !singleCard || studentLoggedIn;
   const showStudentNoEmail = !singleCard && !studentLoggedIn;
-  const triangle = showLearner && showStudent && showStudentNoEmail;
 
-  const learnerCard = (
-    <GateCard
-      onClick={onLearner}
-      icon={<img src="/3.png" style={{ width: 64, height: 64, objectFit: "contain", filter: "invert(1) contrast(2)", mixBlendMode: "screen" }} />}
-      title={learnerLoggedOut ? "Log in" : "Find a teacher"}
-      desc="Learn your favorite instrument from top conservatory musicians"
-      descWidth={190}
-      short
+  // The conductor is the logo's own mark, painted through a mask rather than
+  // drawn: it arrives as artwork with its own colours, and here it has to be
+  // gold like everything else.
+  const conductor = (
+    <span
+      style={{
+        display: "block", width: 30, height: 35, backgroundColor: GATE.gold,
+        WebkitMaskImage: `url('${TEACHER_MARK}')`, maskImage: `url('${TEACHER_MARK}')`,
+        WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat",
+        WebkitMaskSize: "contain", maskSize: "contain",
+        WebkitMaskPosition: "center", maskPosition: "center",
+      }}
     />
   );
+  const cap = <GraduationCap size={28} color={GATE.gold} strokeWidth={1.6} />;
 
-  const studentCard = (
-    <GateCard
-      onClick={onStudent}
-      icon={<img src="/4.png" style={{ width: 58, height: 58, objectFit: "contain", filter: "contrast(2)", mixBlendMode: "screen" }} />}
-      title={studentLoggedIn ? "Continue" : "I'm a conservatory student"}
-      sub={!studentLoggedIn ? "with an institutional student email" : null}
-      desc="Connect with peers worldwide, earn while you teach and promote yourself"
-    />
-  );
-
-  const studentNoEmailCard = (
-    <GateCard
-      onClick={onStudentNoEmail}
-      icon={<img src="/4.png" style={{ width: 58, height: 58, objectFit: "contain", filter: "contrast(2)", mixBlendMode: "screen" }} />}
-      title="I'm a conservatory student"
-      sub="without an institutional student email"
-      desc="Connect with peers worldwide, earn while you teach and promote yourself"
-    />
-  );
-
-  // GATE_FIELD, not inkSoft: this sits behind the bars either side of their
-  // max-width, so a different tone here reappears as a band down each edge on
-  // a wide screen.
   return (
-    <div className="min-h-full flex flex-col" style={{ background: GATE_FIELD, color: C.ivory }}>
-      <div className="max-w-5xl w-full mx-auto artium-gate-bar" style={{ background: "#FFFFFF", height: `calc(${GATE_BAR_H}px + env(safe-area-inset-top, 0px))`, paddingTop: "env(safe-area-inset-top, 0px)", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <Logo size={22} markSize={HEADER_CONTROL} />
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <MusicBtn playing={musicOn} onToggle={onMusicToggle} />
-          <MemberCount count={memberCount} />
-        </div>
-      </div>
-      <div className="artium-gate-field flex-1 flex flex-col items-center justify-center px-6 py-12" style={{ background: GATE_FIELD }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 56, justifyContent: "center", alignItems: "center" }}>
-        {/* Tagline and headline are one group: the column they sit in spaces
-            its children 56px apart, which is the distance to the triangle, not
-            the distance between two lines of the same heading. */}
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
-          <p style={GATE_HEADING}>Your Classical Music World</p>
-          <h1 style={GATE_HEADING}>Connect. Learn. Elevate</h1>
-        </div>
-        {triangle ? (
-          <div className="artium-tri">
-            <div className="artium-tri-top">{learnerCard}</div>
-            {/* Every arrow is two-way: `auto-start-reverse` lets one marker serve
-                both ends, so markerStart points back down the path. */}
-            <svg className="artium-tri-arrows artium-tri-arrows-wide" viewBox="0 0 760 680" width="100%" height="100%" fill="none" aria-hidden="true">
-              {/* Three separate arrows turning about the centroid, not spans
-                  between circles. Each sits at a side's midpoint pushed outward
-                  along the perpendicular, which is what keeps them off the top
-                  card (x 265–495 from y 223 down). */}
-              {/* The right arrow reflected across x=380, the triangle's centre
-                  line — same position, negated angle, and the flip — then the
-                  head handed to the other end so it points at the top circle.
-                  y is 278 + 26.3: dropped so this arrow's tail sits level with
-                  the right arrow's point, and the pair reads as one line
-                  running through the top card.
+    <div className="artium-gx">
+      {/* Two washes of warm light over the near-black, one from each upper
+          corner. The mockup sits the gate in a photographed hall; this is the
+          light from that room without the room, which keeps the panel dark
+          enough for gold to carry and costs nothing to load. */}
+      <div className="artium-gx-glow" aria-hidden="true" />
 
-                  x is 197 - 21.65. The drop carried this arrow into the card's
-                  own band, where it touched the card's left edge while the
-                  right one cleared by 13.8; moving it out by that much gives
-                  the two the same gap. It is why the pair no longer sits at
-                  matching distances from the centre line — the clearance is
-                  measured against the card, and the card is what the eye
-                  reads the gap against. */}
-              <GateArrow x={175.35} y={304.3} angle={-52.5} scale={1} flip headAtTail />
-              <GateArrow x={563} y={278} angle={52.5} scale={1} />
-              <GateArrow x={380} y={452} angle={195} scale={1} />
-            </svg>
-            <svg className="artium-tri-arrows artium-tri-arrows-narrow" viewBox="0 0 320 530" width="100%" height="100%" fill="none" aria-hidden="true">
-              {/* Pushed further out and scaled down than the wide layout would
-                  suggest: the compact triangle is tight and the top card reaches
-                  x 90–230, so these have to clear it on either side. */}
-              {/* 185 + 12.34 and 62 - 5.16: the compact triangle's own version
-                  of the drop and of the clearance match. Its card and its
-                  arrows are at different sizes, so neither figure carries
-                  over from the wide layout. */}
-              <GateArrow x={56.84} y={197.34} angle={-71.7} scale={0.4} flip headAtTail />
-              <GateArrow x={258} y={185} angle={71.7} scale={0.4} />
-              <GateArrow x={160} y={330} angle={195} scale={0.46} />
-            </svg>
-            <div className="artium-tri-left">{studentCard}</div>
-            <div className="artium-tri-right">{studentNoEmailCard}</div>
-          </div>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 40, alignItems: "center" }}>
-            {showLearner && learnerCard}
-            {showStudent && studentCard}
-            {showStudentNoEmail && studentNoEmailCard}
-          </div>
-        )}
+      <header className="artium-gx-bar">
+        <GateLogo size={22} />
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <MusicBtn playing={musicOn} onToggle={onMusicToggle} />
+          <MemberCount count={memberCount} mark={GATE.goldSoft} figure={GATE.cream} />
         </div>
+      </header>
+
+      <main className="artium-gx-main">
+        <p className="artium-gx-eyebrow">Welcome to Artium</p>
+        <h1 className="artium-gx-h1">Your Classical<br />Music World</h1>
+        <p className="artium-gx-tag">Connect. Learn. Elevate.</p>
+
+        {/* A rule broken by a diamond — the one flourish in the design, and
+            the thing that separates the welcome from the choosing. */}
+        <div className="artium-gx-rule" aria-hidden="true">
+          <span /><i /><span />
+        </div>
+
+        <div className="artium-gx-cards">
+          {showLearner && (
+            <GateCard
+              wide
+              onClick={onLearner}
+              icon={conductor}
+              title={learnerLoggedOut ? "Log in" : "Find a teacher"}
+              desc="Learn your favorite instrument from top conservatory musicians."
+            />
+          )}
+          {(showStudent || showStudentNoEmail) && (
+            <div className="artium-gx-pair">
+              {showStudent && (
+                <GateCard
+                  wide={!showStudentNoEmail}
+                  onClick={onStudent}
+                  icon={cap}
+                  title={studentLoggedIn ? "Continue" : "I'm a conservatory student"}
+                  sub={!studentLoggedIn ? "with an institutional student email" : null}
+                  desc="Connect with peers worldwide, earn while you teach and promote yourself."
+                />
+              )}
+              {showStudentNoEmail && (
+                <GateCard
+                  onClick={onStudentNoEmail}
+                  icon={cap}
+                  title="I'm a conservatory student"
+                  sub="without an institutional student email"
+                  desc="Connect with peers worldwide, earn while you teach and promote yourself."
+                />
+              )}
+            </div>
+          )}
+        </div>
+
         {(studentLoggedIn || learnerProfile) ? (
-          <p style={{ textAlign: "center", marginTop: 32, fontSize: 13, color: C.ivoryDim }}>
+          <p className="artium-gx-note">
             {studentLoggedIn ? "Logged in as a conservatory student" : <>Logged in as {learnerProfile.name}</>}
           </p>
         ) : (
@@ -4410,58 +4268,31 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
           // appeared once this browser had seen someone log out, so on a new
           // device — or a private window — every circle led to signup and
           // there was no route to an existing account.
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10, marginTop: 32 }}>
-            <span style={{ fontSize: 13, color: C.ivoryDim }}>Already have an account?</span>
-            <button
-              onClick={onLogin}
-              className="artium-gate-login"
-              style={{
-                background: C.brass, color: C.inkText, border: "none",
-                borderRadius: 999, padding: "10px 30px", cursor: "pointer",
-                fontFamily: FONT_BODY, fontSize: 14, fontWeight: 700,
-                boxShadow: "0 2px 10px rgba(10,37,64,0.10)",
-                transition: "transform 0.15s, box-shadow 0.15s",
-              }}
-            >
-              Log in
+          <>
+            <p className="artium-gx-note">Already have an account?</p>
+            <button onClick={onLogin} className="artium-gx-login">
+              Log in <ArrowRight size={16} strokeWidth={2} />
             </button>
-          </div>
+          </>
         )}
-      </div>
-      <div className="max-w-5xl w-full mx-auto artium-gate-bar artium-gate-footbar" style={{ position: "sticky", bottom: "env(safe-area-inset-bottom, 0px)", zIndex: 5, height: GATE_BAR_H, minHeight: GATE_BAR_H, flexShrink: 0, display: "flex", alignItems: "center", gap: 0, whiteSpace: "nowrap", overflow: "hidden" }}>
-        <Logo size={17} markSize={22} />
-        {/* The same brown the signup cards use for "with an institutional
-            student email" — a label colour that is already doing this job
-            elsewhere rather than a second muted grey. */}
-        {/* center, so every word in the bar sits on the logo disc's middle.
-            A shared baseline cannot do that with mixed sizes: it hangs the
-            smaller label from the same line as the names, which drops its
-            cap centre well below the disc — 2.2px at the narrow steps, a
-            fifth of the label's own height. Centring costs nothing between
-            the two names, which are the same size and stay identical. */}
-        <span className="artium-gate-partner" style={{ display: "inline-flex", alignItems: "center", color: C.brassLabel, lineHeight: 1 }}>
-          <span className="artium-gate-rule" aria-hidden="true" />
+      </main>
+
+      <footer className="artium-gx-foot">
+        <GateLogo size={17} />
+        <span className="artium-gx-partner">
+          <span className="artium-gx-partner-rule" aria-hidden="true" />
           <span>In partnership with</span>
-          {/* Set like the artium wordmark: same stack, same weight, same tight
-              tracking, so the two names read as a pair rather than one mark
-              and one piece of body copy. */}
-          <a href="https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==" target="_blank" rel="noreferrer"
-            style={{ fontFamily: FONT_WORDMARK, fontWeight: 800, color: C.ivory, lineHeight: 1 }}>
+          <a href="https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==" target="_blank" rel="noreferrer">
             aclassicaltone
-            {/* Drawn rather than the ↗ character: the glyph's barbs are stubby
-                at this size, and its shape is whatever the system font decides.
-                Here the barbs run most of the shaft's length. */}
-            <span className="artium-gate-extlink-slot" aria-hidden="true">
-              <span className="artium-gate-extlink">
-                <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M2.5 7.5 L7.3 2.7" />
-                  <path d="M3.7 2.7 H7.3 V6.3" />
-                </svg>
-              </span>
+            <span className="artium-gx-ext" aria-hidden="true">
+              <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M2.5 7.5 L7.3 2.7" />
+                <path d="M3.7 2.7 H7.3 V6.3" />
+              </svg>
             </span>
           </a>
         </span>
-      </div>
+      </footer>
     </div>
   );
 }

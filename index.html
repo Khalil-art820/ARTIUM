@@ -12,6 +12,13 @@
     <meta name="apple-mobile-web-app-title" content="Artium" />
     <meta name="description" content="Connect with conservatory musicians worldwide" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <!-- The entry gate is set in this. Nothing else was loading a web font —
+         'DM Serif Display' elsewhere in the app has always fallen through to
+         whatever serif the platform happens to have. swap, so the text is
+         readable while it arrives rather than invisible. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <title>Artium — A World Connected by Music</title>
   </head>
   <body>
