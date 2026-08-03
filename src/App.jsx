@@ -6,7 +6,7 @@ import {
   Pencil, Plus, Trash2, Home, Upload, Eye, EyeOff, ChevronLeft,
   Calendar, CreditCard, Video, Link2, Clock, Bell,
   Map, BookOpen, ListChecks, LayoutList, Megaphone, Check as CheckIcon, ShieldCheck, FileText, Lock,
-  ScanLine,
+  ScanLine, ExternalLink,
 } from "lucide-react";
 import { useAuth } from "./contexts/AuthContext";
 import { supabase } from "./lib/supabase";
@@ -86,19 +86,22 @@ const HEADER_CONTROL = 32;
  * behind it. Kept together here so the gate's colours can be read at once.
  */
 const GATE = {
-  ink: "#0C0A09",          // the room
-  gold: "#C9A24E",         // icons, rules, the filled arrows
-  goldSoft: "#B8965A",     // labels and the eyebrow
-  goldLine: "rgba(201,162,78,0.22)",
-  cream: "#F3EEE7",        // headings
-  muted: "#A79E93",        // body copy
-  cardTop: "rgba(255,255,255,0.055)",
-  cardBottom: "rgba(255,255,255,0.018)",
+  bg: "#0F1012",
+  card: "#17181C",
+  cardGlass: "rgba(255,255,255,0.03)",
+  cardLine: "rgba(212,175,55,0.18)",
+  gold: "#D4AF37",
+  goldDeep: "#C9A227",
+  text: "#FFFFFF",
+  text2: "#CFCFCF",
+  muted: "#8B8B8B",
+  divider: "rgba(255,255,255,0.08)",
 };
-// Cormorant Garamond is loaded in index.html. The fallbacks are the elegant
-// serifs Apple and Windows ship, so the gate still reads as intended in the
-// moment before the web font lands — or if it never does.
+// Both loaded in index.html. The fallbacks are the elegant serifs Apple and
+// Windows ship, so the gate still reads as intended in the moment before the
+// web font lands — or if it never does.
 const GATE_SERIF = "'Cormorant Garamond', 'Didot', 'Bodoni 72', Georgia, serif";
+const GATE_SANS = "'Manrope', -apple-system, 'Segoe UI', Roboto, sans-serif";
 
 // Brass, not black: the reference's black was the only black in a header of
 // brass and navy, and it dominated. The outlined shape is kept.
@@ -1884,172 +1887,236 @@ export default function App() {
         input[type=range].artium-slider::-webkit-slider-thumb { -webkit-appearance: none !important; appearance: none !important; width: 7px !important; height: 7px !important; border-radius: 50% !important; background: #000 !important; cursor: pointer !important; border: none !important; }
         input[type=range].artium-slider::-moz-range-thumb { width: 7px !important; height: 7px !important; border-radius: 50% !important; background: #000 !important; border: none !important; cursor: pointer !important; }
 
-        /* ---- Entry gate: a lit room, not a white page ------------------ */
+        /* ---- Entry gate: Dark Prestige --------------------------------
+           Steinway black, gold at the edges, and as little else as the screen
+           can carry. Every surface floats; nothing is outlined heavily. */
         .artium-gx {
           position: relative; min-height: 100%;
           display: flex; flex-direction: column;
-          background: ${GATE.ink}; color: ${GATE.cream};
-          font-family: ${FONT_BODY};
+          background:
+            radial-gradient(120% 80% at 50% -10%, #17181C 0%, transparent 60%),
+            linear-gradient(180deg, #131417 0%, #0F1012 45%, #0B0C0E 100%);
+          color: #FFFFFF;
+          font-family: 'Manrope', -apple-system, 'Segoe UI', Roboto, sans-serif;
           overflow: hidden;
         }
-        /* Warm light from the upper corners, over the near-black. The mockup
-           photographs the gate inside a hall; this is that light without the
-           room — dark enough for gold to carry, and nothing to download. */
-        .artium-gx-glow {
-          position: absolute; inset: 0; pointer-events: none;
-          background:
-            radial-gradient(58% 42% at 12% 4%, rgba(201,162,78,0.20), transparent 70%),
-            radial-gradient(52% 40% at 92% 10%, rgba(201,162,78,0.13), transparent 72%),
-            radial-gradient(70% 45% at 50% 100%, rgba(120,82,30,0.16), transparent 70%);
-        }
-        .artium-gx > *:not(.artium-gx-glow) { position: relative; z-index: 1; }
 
+        /* Backdrop, in layers, all of it under 8% so it reads as depth rather
+           than decoration: staff lines, a conductor, notes, then noise. */
+        .artium-gx-bd { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+        .artium-gx-bd > * { position: absolute; }
+        /* Five staff lines, drawn once and repeated — a stave, not a grid. */
+        .artium-gx-stave {
+          left: -10%; right: -10%; height: 128px;
+          background: repeating-linear-gradient(180deg,
+            rgba(255,255,255,0.055) 0 1px, transparent 1px 26px);
+          transform: rotate(-4deg);
+        }
+        .artium-gx-stave--a { top: 14%; }
+        .artium-gx-stave--b { top: 58%; transform: rotate(3deg); opacity: 0.7; }
+        /* The conductor: the logo's own mark, blown up and turned down. */
+        .artium-gx-maestro {
+          left: -6%; bottom: 0; width: 62%; height: 76%;
+          background: linear-gradient(180deg, rgba(212,175,55,0.075), rgba(212,175,55,0.015));
+          -webkit-mask-image: var(--maestro); mask-image: var(--maestro);
+          -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+          -webkit-mask-size: contain; mask-size: contain;
+          -webkit-mask-position: left bottom; mask-position: left bottom;
+        }
+        /* Musical, not the login note below — two different things cannot
+           share one class, and the later rule was winning, painting these
+           grey at body size instead of faint gold. */
+        .artium-gx-mnote { color: rgba(212,175,55,0.07); line-height: 1; }
+        /* Grain. An SVG turbulence rather than an image — no request, and it
+           tiles at any size without banding. */
+        .artium-gx-grain {
+          inset: 0; opacity: 0.035; mix-blend-mode: overlay;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+        }
+        /* Dust in the light. Slow enough to be felt rather than watched. */
+        .artium-gx-dust {
+          width: 3px; height: 3px; border-radius: 50%;
+          background: rgba(212,175,55,0.5);
+          animation: artiumDust linear infinite;
+        }
+        @keyframes artiumDust {
+          0%   { transform: translateY(0) translateX(0); opacity: 0; }
+          12%  { opacity: 0.55; }
+          88%  { opacity: 0.5; }
+          100% { transform: translateY(-88vh) translateX(22px); opacity: 0; }
+        }
+
+        .artium-gx > *:not(.artium-gx-bd) { position: relative; z-index: 1; }
+
+        /* ---- header ---- */
         .artium-gx-bar {
           display: flex; align-items: center; justify-content: space-between;
-          width: 100%; max-width: 640px; margin: 0 auto;
-          padding: calc(14px + env(safe-area-inset-top, 0px)) 22px 10px;
+          width: 100%; max-width: 460px; margin: 0 auto;
+          padding: calc(18px + env(safe-area-inset-top, 0px)) 24px 6px;
           flex-shrink: 0;
         }
-        /* The music button is brass by default, which is a brighter yellow
-           than this screen's gold. Retinted here rather than given a prop:
-           it is the gate that is unusual, not the button. */
-        .artium-gx-bar button[aria-label*="playlist"] { border-color: ${GATE.gold} !important; }
-        .artium-gx-bar button[aria-label*="playlist"] svg { stroke: ${GATE.gold}; }
+        .artium-gx-bar-right { display: flex; align-items: center; gap: 16px; }
+        .artium-gx-bar button[aria-label*="playlist"] {
+          border-color: rgba(212,175,55,0.55) !important;
+          width: 36px !important; height: 36px !important;
+          transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+        }
+        .artium-gx-bar button[aria-label*="playlist"] svg { stroke: #D4AF37; }
+        .artium-gx-bar button[aria-label*="playlist"]:hover {
+          transform: scale(1.05);
+          border-color: #D4AF37 !important;
+          box-shadow: 0 0 18px rgba(212,175,55,0.28);
+        }
+        .artium-gx-count { display: flex; align-items: center; gap: 7px; color: #CFCFCF; font-size: 15px; font-weight: 600; }
+        .artium-gx-count svg { color: #8B8B8B; }
 
+        /* ---- hero ---- */
         .artium-gx-main {
-          flex: 1; width: 100%; max-width: 640px; margin: 0 auto;
-          padding: 18px 22px 30px;
+          flex: 1; width: 100%; max-width: 460px; margin: 0 auto;
+          padding: 26px 24px 34px;
           display: flex; flex-direction: column; align-items: center;
         }
         .artium-gx-eyebrow {
-          margin: 0 0 14px; font-size: 11px; font-weight: 600;
-          letter-spacing: 0.22em; text-transform: uppercase; color: ${GATE.goldSoft};
+          margin: 0; font-size: 11px; font-weight: 600; letter-spacing: 0.34em;
+          text-transform: uppercase; color: #D4AF37;
         }
         .artium-gx-h1 {
-          margin: 0; text-align: center; color: ${GATE.cream};
-          font-family: ${GATE_SERIF};
-          font-size: clamp(38px, 11vw, 58px); font-weight: 500;
-          line-height: 1.08; letter-spacing: 0.01em;
+          margin: 18px 0 0; text-align: center; color: #FFFFFF;
+          font-family: 'Cormorant Garamond', 'Didot', 'Bodoni 72', Georgia, serif; font-weight: 700;
+          font-size: clamp(40px, 13.3vw, 52px); line-height: 1.06;
+          letter-spacing: 0.005em;
         }
         .artium-gx-tag {
-          margin: 14px 0 0; font-size: clamp(15px, 4vw, 18px);
-          color: ${GATE.muted}; letter-spacing: 0.01em;
+          margin: 16px 0 0; font-size: 16px; font-weight: 500; line-height: 1.6;
+          color: #CFCFCF;
         }
-        /* The one flourish: a rule broken by a diamond, between the welcome
-           and the choosing. */
-        .artium-gx-rule {
-          display: flex; align-items: center; gap: 10px;
-          margin: 20px 0 26px; width: 168px;
-        }
-        .artium-gx-rule span { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, ${GATE.gold}); }
-        .artium-gx-rule span:last-child { background: linear-gradient(90deg, ${GATE.gold}, transparent); }
-        .artium-gx-rule i { width: 6px; height: 6px; background: ${GATE.gold}; transform: rotate(45deg); flex-shrink: 0; }
+        /* Divider: a hairline that fades out both ways, pinched by a lozenge. */
+        .artium-gx-rule { display: flex; align-items: center; gap: 12px; margin: 26px 0 32px; width: 190px; }
+        .artium-gx-rule span { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(212,175,55,0.65)); }
+        .artium-gx-rule span:last-child { background: linear-gradient(90deg, rgba(212,175,55,0.65), transparent); }
+        .artium-gx-rule i { width: 5px; height: 5px; background: #D4AF37; transform: rotate(45deg); flex-shrink: 0; }
 
-        .artium-gx-cards { width: 100%; display: flex; flex-direction: column; gap: 14px; }
-        /* Side by side down to the narrowest phones — the mockup pairs them at
-           390px, and stacking three full-width cards pushes the log in below
-           the fold. */
-        .artium-gx-pair { display: flex; gap: 14px; align-items: stretch; }
-        /* The paired cards carry the same content in half the width, so they
-           step down a size rather than wrap into towers. */
-        .artium-gx-pair .artium-gx-card { padding: 22px 14px 18px; }
-        .artium-gx-pair .artium-gx-disc { width: 52px; height: 52px; margin-bottom: 13px; }
-        .artium-gx-pair .artium-gx-title { font-size: 17px; }
-        .artium-gx-pair .artium-gx-sub { font-size: 11px; margin-top: 6px; }
-        .artium-gx-pair .artium-gx-desc { font-size: 11.5px; margin-top: 9px; }
-        .artium-gx-pair .artium-gx-go { width: 34px; height: 34px; margin-top: 14px; }
+        /* ---- cards ---- */
+        .artium-gx-cards { width: 100%; display: flex; flex-direction: column; gap: 16px; }
+        .artium-gx-pair { display: flex; gap: 16px; align-items: stretch; }
 
         .artium-gx-card {
-          display: flex; flex-direction: column; align-items: center;
-          padding: 26px 20px 22px; gap: 0;
-          border-radius: 18px; cursor: pointer; text-align: center;
-          border: 1px solid ${GATE.goldLine};
-          background: linear-gradient(180deg, ${GATE.cardTop}, ${GATE.cardBottom});
+          display: flex; flex-direction: column; align-items: center; text-align: center;
+          padding: 30px 22px 26px; border-radius: 26px; cursor: pointer;
+          border: 1px solid rgba(212,175,55,0.18);
+          background: rgba(255,255,255,0.03);
+          -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
+          box-shadow: 0 18px 45px rgba(0,0,0,0.45);
           font: inherit; color: inherit;
-          transition: border-color .2s ease, transform .2s ease, background .2s ease;
+          transition: transform .35s cubic-bezier(.22,1,.36,1), box-shadow .35s ease, border-color .35s ease;
         }
         .artium-gx-card:hover {
-          border-color: rgba(201,162,78,0.55);
-          transform: translateY(-2px);
+          transform: translateY(-8px);
+          border-color: rgba(212,175,55,0.55);
+          box-shadow: 0 30px 70px rgba(0,0,0,0.6), 0 0 26px rgba(212,175,55,0.13);
         }
-        .artium-gx-card:active { transform: translateY(0); }
-        .artium-gx-card:focus-visible { outline: 2px solid ${GATE.gold}; outline-offset: 3px; }
+        .artium-gx-card:active { transform: translateY(-3px); }
+        .artium-gx-card:focus-visible { outline: 1px solid #D4AF37; outline-offset: 4px; }
+
         .artium-gx-disc {
-          width: 64px; height: 64px; border-radius: 50%; flex-shrink: 0;
-          border: 1px solid ${GATE.goldLine};
-          display: flex; align-items: center; justify-content: center;
-          margin-bottom: 16px;
+          width: 72px; height: 72px; border-radius: 50%; flex-shrink: 0;
+          border: 1px solid rgba(212,175,55,0.32);
+          background: radial-gradient(circle at 50% 32%, rgba(212,175,55,0.10), transparent 68%);
+          display: flex; align-items: center; justify-content: center; margin-bottom: 22px;
+          transition: border-color .35s ease, box-shadow .35s ease;
+        }
+        .artium-gx-card:hover .artium-gx-disc {
+          border-color: rgba(212,175,55,0.6);
+          box-shadow: 0 0 22px rgba(212,175,55,0.15) inset;
         }
         .artium-gx-title {
-          font-family: ${GATE_SERIF}; font-size: 21px; font-weight: 500;
-          line-height: 1.22; color: ${GATE.cream};
+          font-family: 'Cormorant Garamond', 'Didot', 'Bodoni 72', Georgia, serif; font-weight: 700; color: #FFFFFF;
+          font-size: clamp(22px, 7.7vw, 30px); line-height: 1.18;
         }
-        .artium-gx-sub {
-          margin-top: 7px; font-size: 12.5px; font-weight: 500;
-          line-height: 1.35; color: ${GATE.goldSoft};
-        }
-        .artium-gx-desc {
-          margin-top: 11px; font-size: 13px; line-height: 1.5; color: ${GATE.muted};
-        }
+        .artium-gx-sub { margin-top: 9px; font-size: 13px; font-weight: 600; line-height: 1.5; color: #D4AF37; }
+        .artium-gx-desc { margin-top: 13px; font-size: 14px; font-weight: 500; line-height: 1.6; color: #8B8B8B; }
         .artium-gx-go {
-          margin-top: 18px; width: 38px; height: 38px; border-radius: 50%;
-          background: ${GATE.gold}; color: ${GATE.ink};
-          display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-          transition: transform .2s ease;
+          margin-top: 24px; width: 46px; height: 46px; border-radius: 50%; flex-shrink: 0;
+          background: linear-gradient(160deg, #D4AF37, #C9A227);
+          color: #0F1012; display: flex; align-items: center; justify-content: center;
+          transition: transform .3s ease, box-shadow .3s ease;
         }
-        .artium-gx-card:hover .artium-gx-go { transform: translateX(3px); }
+        .artium-gx-card:hover .artium-gx-go {
+          transform: scale(1.05);
+          box-shadow: 0 0 22px rgba(212,175,55,0.45);
+        }
+        /* The paired cards hold the same words in half the width, so they take
+           a smaller step of the same scale rather than wrapping into towers. */
+        .artium-gx-pair .artium-gx-card { padding: 26px 13px 22px; border-radius: 24px; }
+        .artium-gx-pair .artium-gx-disc { width: 58px; height: 58px; margin-bottom: 17px; }
+        /* 4.4vw puts "I'm a conservatory" at 124px inside 135px of content at
+           390px, so the title breaks after "conservatory" as the mockup does
+           rather than stacking three lines. */
+        .artium-gx-pair .artium-gx-title { font-size: clamp(17px, 4.4vw, 24px); }
+        .artium-gx-pair .artium-gx-sub { font-size: 11.5px; margin-top: 8px; }
+        .artium-gx-pair .artium-gx-desc { font-size: 12.5px; margin-top: 11px; }
+        .artium-gx-pair .artium-gx-go { width: 40px; height: 40px; margin-top: 18px; }
 
-        .artium-gx-note { margin: 26px 0 0; font-size: 13px; color: ${GATE.muted}; }
+        /* ---- login ---- */
+        .artium-gx-note { margin: 34px 0 0; font-size: 14px; font-weight: 500; color: #8B8B8B; }
         .artium-gx-login {
-          margin-top: 12px; width: 100%;
-          display: flex; align-items: center; justify-content: center; gap: 8px;
-          padding: 15px 0; border-radius: 999px; cursor: pointer;
-          border: 1px solid ${GATE.gold}; background: transparent;
-          color: ${GATE.gold}; font: inherit; font-size: 15px; font-weight: 600;
-          transition: background .2s ease;
+          /* The spec asks for 90% and the mockup lines this up with the cards.
+             They are the same thing: 90% of a 390 screen is 351px, and the
+             card column is 342 — so it takes the column, and its edges meet
+             the cards' rather than sitting 17px inside them. */
+          margin-top: 14px; width: 100%; height: 60px;
+          display: flex; align-items: center; justify-content: center; gap: 10px;
+          border-radius: 22px; cursor: pointer;
+          border: 1px solid rgba(212,175,55,0.55); background: transparent;
+          color: #D4AF37; font: inherit; font-size: 16px; font-weight: 600;
+          transition: background .3s ease, color .3s ease, box-shadow .3s ease, transform .3s ease;
         }
-        .artium-gx-login:hover { background: rgba(201,162,78,0.10); }
-        .artium-gx-login:focus-visible { outline: 2px solid ${GATE.gold}; outline-offset: 3px; }
+        .artium-gx-login:hover {
+          background: #D4AF37; color: #0F1012; border-color: #D4AF37;
+          box-shadow: 0 0 30px rgba(212,175,55,0.32); transform: scale(1.015);
+        }
+        .artium-gx-login:focus-visible { outline: 1px solid #D4AF37; outline-offset: 4px; }
 
+        /* ---- footer ---- */
         .artium-gx-foot {
-          display: flex; align-items: center; flex-shrink: 0;
-          width: 100%; max-width: 640px; margin: 0 auto;
-          padding: 14px 22px calc(16px + env(safe-area-inset-bottom, 0px));
-          white-space: nowrap; overflow: hidden;
+          flex-shrink: 0; width: 100%; max-width: 460px; margin: 0 auto;
+          padding: 20px 24px calc(20px + env(safe-area-inset-bottom, 0px));
+          border-top: 1px solid rgba(255,255,255,0.08);
+          display: flex; flex-direction: column; align-items: center; gap: 12px;
         }
         .artium-gx-partner {
-          display: inline-flex; align-items: center; gap: 9px; margin-left: 12px;
-          font-size: 12px; color: ${GATE.muted}; line-height: 1;
+          display: inline-flex; align-items: center; gap: 8px;
+          font-size: 12.5px; font-weight: 500; color: #8B8B8B; line-height: 1;
         }
-        .artium-gx-partner-rule { width: 1px; align-self: stretch; background: ${GATE.goldLine}; flex-shrink: 0; }
         .artium-gx-partner a {
-          display: inline-flex; align-items: center;
-          font-family: ${FONT_WORDMARK}; font-weight: 800; font-size: 14px;
-          letter-spacing: -0.035em; color: ${GATE.cream}; text-decoration: none;
+          display: inline-flex; align-items: center; gap: 6px;
+          color: #CFCFCF; text-decoration: none; font-weight: 600;
+          transition: color .25s ease;
         }
-        .artium-gx-ext {
-          display: inline-flex; align-items: center; justify-content: center;
-          width: 0.92em; height: 0.92em; margin-left: 0.3em; border-radius: 0.26em;
-          border: 1px solid ${GATE.goldLine}; color: ${GATE.goldSoft};
-          position: relative; top: -0.44em; flex-shrink: 0;
-        }
-        .artium-gx-ext svg { width: 68%; height: 68%; }
-        .artium-gx-partner a:hover .artium-gx-ext { border-color: ${GATE.gold}; }
+        .artium-gx-partner a:hover { color: #D4AF37; }
 
-        /* Only below the narrowest phones do the pair finally stack: by 340px
-           the two columns are too tight for "conservatory" to sit on one line
-           at any size worth reading. */
-        @media (max-width: 340px) {
-          .artium-gx-pair { flex-direction: column; }
-        }
-        @media (max-width: 420px) {
-          .artium-gx-partner { font-size: 10.5px; gap: 7px; margin-left: 9px; }
-          .artium-gx-partner a { font-size: 12.5px; }
-        }
+        /* ---- entrance ---- */
+        /* The hero settles, then the cards arrive in order. Short distances and
+           a soft curve: at this weight of design, movement should be noticed
+           only in its absence. */
+        @keyframes artiumRise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+        .artium-gx-in { opacity: 0; animation: artiumRise .85s cubic-bezier(.22,1,.36,1) forwards; }
+        .artium-gx-in--1 { animation-delay: .05s; }
+        .artium-gx-in--2 { animation-delay: .16s; }
+        .artium-gx-in--3 { animation-delay: .27s; }
+        .artium-gx-in--4 { animation-delay: .40s; }
+        .artium-gx-in--5 { animation-delay: .52s; }
+        .artium-gx-in--6 { animation-delay: .64s; }
+        .artium-gx-in--7 { animation-delay: .76s; }
+
+        @media (max-width: 340px) { .artium-gx-pair { flex-direction: column; } }
         @media (prefers-reduced-motion: reduce) {
-          .artium-gx-card, .artium-gx-go { transition: none; }
+          .artium-gx-in { opacity: 1; animation: none; }
+          .artium-gx-dust { animation: none; opacity: 0; }
+          .artium-gx-card, .artium-gx-go, .artium-gx-login { transition: none; }
           .artium-gx-card:hover { transform: none; }
           .artium-gx-card:hover .artium-gx-go { transform: none; }
+          .artium-gx-login:hover { transform: none; }
         }
 
         .artium-map, .artium-map .leaflet-container { border-radius: inherit; }
@@ -4133,8 +4200,8 @@ function StepTeaching({ draft, update }) {
  * bright blot on a dark one. The word itself is the shared Wordmark, so the
  * gate cannot drift from the rest of the app.
  */
-function GateLogo({ size = 22 }) {
-  const disc = Math.round(size * 1.45);
+function GateLogo({ size = 21 }) {
+  const disc = Math.round(size * 1.5);
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
       <span style={{
@@ -4143,33 +4210,78 @@ function GateLogo({ size = 22 }) {
         alignItems: "center", justifyContent: "center",
       }}>
         <span style={{
-          display: "block", width: disc * 0.42, height: disc * 0.5, backgroundColor: GATE.gold,
+          display: "block", width: disc * 0.4, height: disc * 0.48, backgroundColor: GATE.gold,
           WebkitMaskImage: `url('${TEACHER_MARK}')`, maskImage: `url('${TEACHER_MARK}')`,
           WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat",
           WebkitMaskSize: "contain", maskSize: "contain",
           WebkitMaskPosition: "center", maskPosition: "center",
         }} />
       </span>
-      <Wordmark fontSize={size * 1.05} color={GATE.gold} hairpin={GATE.gold} />
+      <Wordmark fontSize={size} color={GATE.gold} hairpin={GATE.gold} />
     </span>
   );
 }
 
 /**
- * A card in the entry gate: an outlined icon disc, a serif title, an optional
+ * Everything behind the gate's content, all of it under 8%: two staves at
+ * opposing angles, the conductor standing off the left edge, a few notes, a
+ * drift of dust, and a film of grain over the lot. Inline positions rather
+ * than classes — each element is placed once and never reused, so a rule per
+ * item would be a rule read once.
+ */
+function GateBackdrop() {
+  // Kept to the margins. Centred over the headline a note stops being texture
+  // and becomes a smudge on the type, however faint it is.
+  const notes = [
+    { c: "♪", top: "7%", right: "5%", size: 30, rot: -12 },
+    { c: "♫", top: "34%", right: "3%", size: 24, rot: 8 },
+    { c: "♩", top: "58%", left: "4%", size: 28, rot: -6 },
+    { c: "♬", top: "84%", right: "6%", size: 22, rot: 14 },
+  ];
+  // Spread across the width, each on its own clock so they never pulse
+  // together — the give-away that dust is really a loop.
+  const dust = [
+    { left: "12%", dur: 34, delay: 0, size: 3 },
+    { left: "28%", dur: 46, delay: 6, size: 2 },
+    { left: "47%", dur: 39, delay: 14, size: 3 },
+    { left: "63%", dur: 52, delay: 3, size: 2 },
+    { left: "78%", dur: 42, delay: 19, size: 3 },
+    { left: "91%", dur: 48, delay: 11, size: 2 },
+  ];
+  return (
+    <div className="artium-gx-bd" aria-hidden="true">
+      <div className="artium-gx-stave artium-gx-stave--a" />
+      <div className="artium-gx-stave artium-gx-stave--b" />
+      <div className="artium-gx-maestro" style={{ "--maestro": `url('${TEACHER_MARK}')` }} />
+      {notes.map((n) => (
+        <span key={n.c + n.top} className="artium-gx-mnote"
+          style={{ top: n.top, right: n.right, left: n.left, fontSize: n.size, transform: `rotate(${n.rot}deg)` }}>{n.c}</span>
+      ))}
+      {dust.map((d) => (
+        <span key={d.left} className="artium-gx-dust"
+          style={{ left: d.left, bottom: "-6px", width: d.size, height: d.size,
+                   animationDuration: `${d.dur}s`, animationDelay: `-${d.delay}s` }} />
+      ))}
+      <div className="artium-gx-grain" />
+    </div>
+  );
+}
+
+/**
+ * A card in the entry gate: a gold-ringed icon, a serif title, an optional
  * gold qualifier, a line of copy, and a filled arrow. The whole card is the
  * button — the arrow is a signal, not a separate target, so there is nothing
  * to miss and nothing to hit twice.
  */
-function GateCard({ onClick, icon, title, sub, desc, wide }) {
+function GateCard({ onClick, icon, title, sub, desc, step }) {
   return (
-    <button onClick={onClick} className="artium-gx-card" style={{ flex: wide ? "none" : "1 1 0", width: wide ? "100%" : "auto" }}>
+    <button onClick={onClick} className={`artium-gx-card artium-gx-in artium-gx-in--${step}`} style={{ flex: "1 1 0" }}>
       <span className="artium-gx-disc">{icon}</span>
       <span className="artium-gx-title">{title}</span>
       {sub && <span className="artium-gx-sub">{sub}</span>}
       <span className="artium-gx-desc">{desc}</span>
       <span className="artium-gx-go" aria-hidden="true">
-        <ArrowRight size={17} strokeWidth={2.2} />
+        <ArrowRight size={19} strokeWidth={2.1} />
       </span>
     </button>
   );
@@ -4187,7 +4299,7 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
   const conductor = (
     <span
       style={{
-        display: "block", width: 30, height: 35, backgroundColor: GATE.gold,
+        display: "block", width: 32, height: 38, backgroundColor: GATE.gold,
         WebkitMaskImage: `url('${TEACHER_MARK}')`, maskImage: `url('${TEACHER_MARK}')`,
         WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat",
         WebkitMaskSize: "contain", maskSize: "contain",
@@ -4195,39 +4307,38 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
       }}
     />
   );
-  const cap = <GraduationCap size={28} color={GATE.gold} strokeWidth={1.6} />;
+  const cap = <GraduationCap size={30} color={GATE.gold} strokeWidth={1.4} />;
 
   return (
     <div className="artium-gx">
-      {/* Two washes of warm light over the near-black, one from each upper
-          corner. The mockup sits the gate in a photographed hall; this is the
-          light from that room without the room, which keeps the panel dark
-          enough for gold to carry and costs nothing to load. */}
-      <div className="artium-gx-glow" aria-hidden="true" />
+      <GateBackdrop />
 
-      <header className="artium-gx-bar">
-        <GateLogo size={22} />
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+      <header className="artium-gx-bar artium-gx-in artium-gx-in--1">
+        <GateLogo size={21} />
+        <div className="artium-gx-bar-right">
           <MusicBtn playing={musicOn} onToggle={onMusicToggle} />
-          <MemberCount count={memberCount} mark={GATE.goldSoft} figure={GATE.cream} />
+          {memberCount != null && (
+            <span className="artium-gx-count">
+              <Users size={17} strokeWidth={1.8} />
+              {memberCount}
+            </span>
+          )}
         </div>
       </header>
 
       <main className="artium-gx-main">
-        <p className="artium-gx-eyebrow">Welcome to Artium</p>
-        <h1 className="artium-gx-h1">Your Classical<br />Music World</h1>
-        <p className="artium-gx-tag">Connect. Learn. Elevate.</p>
+        <p className="artium-gx-eyebrow artium-gx-in artium-gx-in--1">Welcome to Artium</p>
+        <h1 className="artium-gx-h1 artium-gx-in artium-gx-in--2">Your Classical<br />Music World</h1>
+        <p className="artium-gx-tag artium-gx-in artium-gx-in--3">Connect. Learn. Elevate.</p>
 
-        {/* A rule broken by a diamond — the one flourish in the design, and
-            the thing that separates the welcome from the choosing. */}
-        <div className="artium-gx-rule" aria-hidden="true">
+        <div className="artium-gx-rule artium-gx-in artium-gx-in--3" aria-hidden="true">
           <span /><i /><span />
         </div>
 
         <div className="artium-gx-cards">
           {showLearner && (
             <GateCard
-              wide
+              step={4}
               onClick={onLearner}
               icon={conductor}
               title={learnerLoggedOut ? "Log in" : "Find a teacher"}
@@ -4238,7 +4349,7 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
             <div className="artium-gx-pair">
               {showStudent && (
                 <GateCard
-                  wide={!showStudentNoEmail}
+                  step={5}
                   onClick={onStudent}
                   icon={cap}
                   title={studentLoggedIn ? "Continue" : "I'm a conservatory student"}
@@ -4248,6 +4359,7 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
               )}
               {showStudentNoEmail && (
                 <GateCard
+                  step={6}
                   onClick={onStudentNoEmail}
                   icon={cap}
                   title="I'm a conservatory student"
@@ -4260,36 +4372,30 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
         </div>
 
         {(studentLoggedIn || learnerProfile) ? (
-          <p className="artium-gx-note">
+          <p className="artium-gx-note artium-gx-in artium-gx-in--7">
             {studentLoggedIn ? "Logged in as a conservatory student" : <>Logged in as {learnerProfile.name}</>}
           </p>
         ) : (
           // Returning users had no way back in from here. "Log in" only ever
           // appeared once this browser had seen someone log out, so on a new
-          // device — or a private window — every circle led to signup and
-          // there was no route to an existing account.
+          // device — or a private window — every route led to signup and there
+          // was no way to an existing account.
           <>
-            <p className="artium-gx-note">Already have an account?</p>
-            <button onClick={onLogin} className="artium-gx-login">
-              Log in <ArrowRight size={16} strokeWidth={2} />
+            <p className="artium-gx-note artium-gx-in artium-gx-in--7">Already have an account?</p>
+            <button onClick={onLogin} className="artium-gx-login artium-gx-in artium-gx-in--7">
+              Log in <ArrowRight size={17} strokeWidth={2} />
             </button>
           </>
         )}
       </main>
 
-      <footer className="artium-gx-foot">
-        <GateLogo size={17} />
+      <footer className="artium-gx-foot artium-gx-in artium-gx-in--7">
+        <GateLogo size={16} />
         <span className="artium-gx-partner">
-          <span className="artium-gx-partner-rule" aria-hidden="true" />
-          <span>In partnership with</span>
+          In partnership with
           <a href="https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==" target="_blank" rel="noreferrer">
             aclassicaltone
-            <span className="artium-gx-ext" aria-hidden="true">
-              <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-                <path d="M2.5 7.5 L7.3 2.7" />
-                <path d="M3.7 2.7 H7.3 V6.3" />
-              </svg>
-            </span>
+            <ExternalLink size={13} strokeWidth={2} />
           </a>
         </span>
       </footer>
