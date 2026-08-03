@@ -2023,16 +2023,34 @@ export default function App() {
           display: flex; flex-direction: column; align-items: center; text-align: center;
           padding: 30px 22px 26px; border-radius: 26px; cursor: pointer;
           border: 1px solid rgba(239,208,155,0.18);
-          background: rgba(255,255,255,0.03);
+          /* Lit from the upper left. Measured against the backdrop beside it,
+             the reference card sits +24 luminance at its top-left corner,
+             +10 at its middle and +2 at its foot — a decay in both axes at
+             once, which is a radial from the corner rather than a linear at
+             an angle. It is barely darker than its surroundings anywhere: the
+             falloff down the reference is mostly the photograph behind it
+             going dark, so only a whisper of shadow at the very bottom.
+             The inset white is the specular line along the top edge, which
+             the reference carries at nearly twice the brightness of the fill
+             just beneath it. */
+          background:
+            radial-gradient(135% 105% at 6% -4%,
+              rgba(255,255,255,0.105) 0%, rgba(255,255,255,0.072) 30%,
+              rgba(255,255,255,0.043) 60%, rgba(255,255,255,0.020) 82%,
+              rgba(255,255,255,0.006) 100%),
+            linear-gradient(180deg, rgba(255,255,255,0.012) 58%, rgba(0,0,0,0.07) 100%);
           -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
-          box-shadow: 0 18px 45px rgba(0,0,0,0.45);
+          box-shadow: 0 18px 45px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.13);
           font: inherit; color: inherit;
           transition: transform .35s cubic-bezier(.22,1,.36,1), box-shadow .35s ease, border-color .35s ease;
         }
         .artium-gx-card:hover {
           transform: translateY(-8px);
           border-color: rgba(239,208,155,0.55);
-          box-shadow: 0 30px 70px rgba(0,0,0,0.6), 0 0 26px rgba(239,208,155,0.13);
+          /* Carries the top-edge specular through the hover, or the card
+             loses its lit edge at exactly the moment it lifts. */
+          box-shadow: 0 30px 70px rgba(0,0,0,0.6), 0 0 26px rgba(239,208,155,0.13),
+                      inset 0 1px 0 rgba(255,255,255,0.17);
         }
         .artium-gx-card:active { transform: translateY(-3px); }
         .artium-gx-card:focus-visible { outline: 1px solid #EFD09B; outline-offset: 4px; }
