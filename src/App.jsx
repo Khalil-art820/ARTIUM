@@ -6,7 +6,7 @@ import {
   Pencil, Plus, Trash2, Home, Upload, Eye, EyeOff, ChevronLeft,
   Calendar, CreditCard, Video, Link2, Clock, Bell,
   Map, BookOpen, ListChecks, LayoutList, Megaphone, Check as CheckIcon, ShieldCheck, FileText, Lock,
-  ScanLine, ExternalLink,
+  ScanLine, ArrowUpRight,
 } from "lucide-react";
 import { useAuth } from "./contexts/AuthContext";
 import { supabase } from "./lib/supabase";
@@ -1418,6 +1418,16 @@ export default function App() {
   const [onlineCount, setOnlineCount] = useState(1);
   const { user: authUser, profile: authProfile, loading: authLoading } = useAuth();
   const [screen, setScreen] = useState("entry");
+  // The rubber band at the end of a scroll, and the safe area under the home
+  // indicator, both paint the document's own colour — not the app shell's. On
+  // the gate that means a band of white below a black screen, so the document
+  // follows the screen it is showing.
+  React.useEffect(() => {
+    const el = document.documentElement;
+    const prev = el.style.backgroundColor;
+    el.style.backgroundColor = screen === "entry" ? GATE.bg : "";
+    return () => { el.style.backgroundColor = prev; };
+  }, [screen]);
   const [appTab, setAppTab] = useState(() => localStorage.getItem("artium_app_tab") || "map");
   const setAppTabPersist = (tab) => { localStorage.setItem("artium_app_tab", tab); setAppTab(tab); };
   const [teacherRoomView, setTeacherRoomView] = useState("students");
@@ -1881,7 +1891,12 @@ export default function App() {
   if (!unlocked) return <AccessGate onUnlock={() => { localStorage.setItem(ACCESS_KEY, "1"); setUnlocked(true); }} />;
 
   return (
-    <div style={{ fontFamily: FONT_BODY, background: C.ink, minHeight: "100%", width: "100%" }}>
+    // The gate is the one dark screen in a white app, so the shell behind it
+    // has to be dark too. Two ways it showed otherwise: the wrapper rounds up
+    // to a whole pixel where the gate lands on a fraction, leaving a hairline
+    // of white along the foot; and on a phone the safe area and the rubber
+    // band at the end of a scroll both reveal whatever is underneath.
+    <div style={{ fontFamily: FONT_BODY, background: screen === "entry" ? GATE.bg : C.ink, minHeight: "100%", width: "100%" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Serif+Display&family=Fraunces:opsz,wght@9..144,500&display=swap');
         * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
@@ -1910,7 +1925,12 @@ export default function App() {
            Steinway black, gold at the edges, and as little else as the screen
            can carry. Every surface floats; nothing is outlined heavily. */
         .artium-gx {
-          position: relative; min-height: 100%;
+          /* Not 100%: a percentage min-height needs a parent with a definite
+             height, and every wrapper above this one is auto, so it resolved
+             to nothing and the gate stopped short of the fold. dvh over vh
+             because mobile browser chrome moves — vh is the tallest the
+             viewport ever gets, which puts the footer under the address bar. */
+          position: relative; min-height: 100vh; min-height: 100dvh;
           display: flex; flex-direction: column;
           background:
             radial-gradient(120% 80% at 50% -10%, #17181C 0%, transparent 60%),
@@ -2002,18 +2022,24 @@ export default function App() {
           padding: 26px 24px 34px;
           display: flex; flex-direction: column; align-items: center;
         }
+        /* The hero, remeasured against the reference. Everything here was
+           running large: the eyebrow 178px wide against 118, the headline's
+           first line 290 against 209, the tagline 182 against 151. Most of the
+           eyebrow's excess was tracking, not type size — 0.34em is a lot of
+           air across seventeen characters — so the letter-spacing comes down
+           further than the size does. */
         .artium-gx-eyebrow {
-          margin: 0; font-size: 11px; font-weight: 600; letter-spacing: 0.34em;
+          margin: 0; font-size: 10px; font-weight: 600; letter-spacing: 0.08em;
           text-transform: uppercase; color: #E6DAB0;
         }
         .artium-gx-h1 {
-          margin: 18px 0 0; text-align: center; color: #FFFFFF;
+          margin: 16px 0 0; text-align: center; color: #FFFFFF;
           font-family: 'Cormorant Garamond', 'Didot', 'Bodoni 72', Georgia, serif; font-weight: 700;
-          font-size: clamp(40px, 13.3vw, 52px); line-height: 1.06;
+          font-size: clamp(29px, 9.56vw, 40px); line-height: 1.05;
           letter-spacing: 0.005em;
         }
         .artium-gx-tag {
-          margin: 16px 0 0; font-size: 16px; font-weight: 500; line-height: 1.6;
+          margin: 14px 0 0; font-size: 13.3px; font-weight: 500; line-height: 1.6;
           color: #CFCFCF;
         }
         /* Divider: a hairline that fades out both ways, pinched by a lozenge. */
@@ -2107,8 +2133,11 @@ export default function App() {
         .artium-gx-login {
           /* 93% of the column, not all of it: measured on the reference the
              button runs 538 against the cards' 578, so it sits just inside
-             them. Reverts an earlier call that squared it off with the cards.  */
-          margin-top: 14px; width: 93%; height: 60px;
+             them. Reverts an earlier call that squared it off with the cards.
+             Height 44, not the 60 the brief asked for. The reference draws it
+             at 38, which is under the 44px minimum for a touch target — so
+             this goes as short as it can without becoming hard to hit. */
+          margin-top: 14px; width: 93%; height: 44px;
           display: flex; align-items: center; justify-content: center; gap: 10px;
           border-radius: 22px; cursor: pointer;
           border: 1px solid rgba(239,208,155,0.55); background: transparent;
@@ -2122,22 +2151,39 @@ export default function App() {
         .artium-gx-login:focus-visible { outline: 1px solid #EFD09B; outline-offset: 4px; }
 
         /* ---- footer ---- */
+        /* One row, as the reference has it: the lockup, a rule, then the
+           credit — 360px across and 30 tall. It was two stacked rows here,
+           which read as a footer with a logo above it rather than as a single
+           line of small print. */
         .artium-gx-foot {
           flex-shrink: 0; width: 100%; max-width: 460px; margin: 0 auto;
-          padding: 20px 24px calc(20px + env(safe-area-inset-bottom, 0px));
+          padding: 14px 18px calc(14px + env(safe-area-inset-bottom, 0px));
           border-top: 1px solid rgba(255,255,255,0.08);
-          display: flex; flex-direction: column; align-items: center; gap: 12px;
+          display: flex; flex-direction: row; align-items: center;
+          justify-content: center; gap: 12px; flex-wrap: wrap;
+        }
+        /* Hairline between the two halves. Its own element rather than a
+           border on a neighbour, so it can be shorter than the row. */
+        .artium-gx-foot-rule {
+          width: 1px; height: 16px; background: rgba(255,255,255,0.18); flex-shrink: 0;
         }
         .artium-gx-partner {
-          display: inline-flex; align-items: center; gap: 8px;
-          font-size: 12.5px; font-weight: 500; color: #8B8B8B; line-height: 1;
+          display: inline-flex; align-items: center; gap: 7px;
+          font-size: 10px; font-weight: 500; color: #8B8B8B; line-height: 1;
         }
         .artium-gx-partner a {
-          display: inline-flex; align-items: center; gap: 6px;
-          color: #CFCFCF; text-decoration: none; font-weight: 600;
+          display: inline-flex; align-items: center; gap: 5px;
+          color: #EDEDED; text-decoration: none; font-weight: 600; font-size: 12px;
           transition: color .25s ease;
         }
         .artium-gx-partner a:hover { color: #EFD09B; }
+        /* The reference sets the mark in a bordered tile rather than loose
+           beside the word. */
+        .artium-gx-partner a i {
+          display: inline-flex; align-items: center; justify-content: center;
+          width: 19px; height: 19px; border-radius: 6px; flex-shrink: 0;
+          border: 1px solid rgba(239,208,155,0.42); color: #EFD09B;
+        }
 
         /* ---- entrance ---- */
         /* The hero settles, then the cards arrive in order. Short distances and
@@ -4277,10 +4323,11 @@ function StepTeaching({ draft, update }) {
  * gate cannot drift from the rest of the app.
  */
 function GateLogo({ size = 25 }) {
-  // Ring and gap read off the reference: the ring is 1.36x the type size, and
-  // the word runs about 2.2 ring-widths long, which is what makes the lockup
-  // read as wordmark-with-a-mark rather than mark-with-a-caption.
-  const disc = Math.round(size * 1.36);
+  // 1.28, remeasured. The ring was already right at 34px against the
+  // reference's 34.7; it was the word that was short, 67.5 against 73.2. So
+  // the word grows and the ring holds, which is a change to the ratio between
+  // them rather than to the size of the lockup.
+  const disc = Math.round(size * 1.28);
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap: Math.round(size * 0.42) }}>
       <span style={{
@@ -4399,7 +4446,7 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
       <GateBackdrop />
 
       <header className="artium-gx-bar artium-gx-in artium-gx-in--1">
-        <GateLogo size={25} />
+        <GateLogo size={27} />
         <div className="artium-gx-bar-right">
           <MusicBtn playing={musicOn} onToggle={onMusicToggle} />
           {memberCount != null && (
@@ -4469,11 +4516,12 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
 
       <footer className="artium-gx-foot artium-gx-in artium-gx-in--7">
         <GateLogo size={18} />
+        <span className="artium-gx-foot-rule" aria-hidden="true" />
         <span className="artium-gx-partner">
           In partnership with
           <a href="https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==" target="_blank" rel="noreferrer">
             aclassicaltone
-            <ExternalLink size={13} strokeWidth={2} />
+            <i><ArrowUpRight size={12} strokeWidth={2.2} /></i>
           </a>
         </span>
       </footer>
