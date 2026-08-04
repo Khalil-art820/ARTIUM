@@ -2131,21 +2131,22 @@ export default function App() {
         /* ---- login ---- */
         .artium-gx-note { margin: 34px 0 0; font-size: 14px; font-weight: 500; color: #8B8B8B; }
         .artium-gx-login {
-          /* 93% of the column, not all of it: measured on the reference the
-             button runs 538 against the cards' 578, so it sits just inside
-             them. Reverts an earlier call that squared it off with the cards.
-             Height 44, not the 60 the brief asked for. The reference draws it
-             at 38, which is under the 44px minimum for a touch target — so
-             this goes as short as it can without becoming hard to hit. */
-          margin-top: 14px; width: 93%; height: 44px;
+          /* Sized to its text now: 16px of "Log in" with 10px of air above and
+             below. Filled in the same amber as the cards' arrows, so the two
+             ways forward on this screen are one colour.
+             Below the 44px touch-target guideline by design — asked for
+             twice, and the button is 318 wide, so it is only short in the
+             axis that is easiest to hit. */
+          margin-top: 14px; width: 93%; height: 36px;
           display: flex; align-items: center; justify-content: center; gap: 10px;
-          border-radius: 22px; cursor: pointer;
-          border: 1px solid rgba(239,208,155,0.55); background: transparent;
-          color: #EFD09B; font: inherit; font-size: 16px; font-weight: 600;
-          transition: background .3s ease, color .3s ease, box-shadow .3s ease, transform .3s ease;
+          border-radius: 18px; cursor: pointer;
+          border: 1px solid transparent;
+          background: linear-gradient(160deg, #E3BB7A, #C99A55);
+          color: #0F1012; font: inherit; font-size: 16px; font-weight: 600;
+          transition: background .3s ease, box-shadow .3s ease, transform .3s ease;
         }
         .artium-gx-login:hover {
-          background: #EFD09B; color: #0F1012; border-color: #EFD09B;
+          background: linear-gradient(160deg, #EFCB8C, #D4A75F);
           box-shadow: 0 0 30px rgba(239,208,155,0.32); transform: scale(1.015);
         }
         .artium-gx-login:focus-visible { outline: 1px solid #EFD09B; outline-offset: 4px; }
@@ -4322,26 +4323,43 @@ function StepTeaching({ draft, update }) {
  * bright blot on a dark one. The word itself is the shared Wordmark, so the
  * gate cannot drift from the rest of the app.
  */
-function GateLogo({ size = 25 }) {
-  // 1.28, remeasured. The ring was already right at 34px against the
-  // reference's 34.7; it was the word that was short, 67.5 against 73.2. So
-  // the word grows and the ring holds, which is a change to the ratio between
-  // them rather than to the size of the lockup.
-  const disc = Math.round(size * 1.28);
+function GateLogo({ word = 27, ring = Math.round(word * 1.28), mark = "conductor" }) {
+  // Word and ring size independently. They used to be one number at a fixed
+  // 1.28 ratio, which was right until the word had to grow on its own — with
+  // one number the ring grew with it, and the ring already matched.
+  //
+  // Optical centring, against the ring. align-items: center lands the word's
+  // bounding box dead on the ring's centre — measured, it is exact — but the
+  // box is not what the eye reads. "artium" is bottom-heavy: all of its mass
+  // is in the x-height, with only the t's stem and the i's dot above. Its
+  // centre of mass sits 0.089em below the box's centre, so geometric centring
+  // makes it look like it has sagged. Raising it by that much aligns the
+  // weight instead of the box.
+  //
+  // The figure is the vertical centroid of the rendered glyphs — drawn to a
+  // canvas and weighted by coverage — not a number from the font's metrics,
+  // which would not survive falling back to Didot or Georgia.
+  const OPTICAL = -word * 0.089;
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: Math.round(size * 0.42) }}>
+    <span style={{ display: "inline-flex", alignItems: "center", gap: Math.round(word * 0.38) }}>
       <span style={{
-        width: disc, height: disc, borderRadius: "50%", flexShrink: 0,
+        width: ring, height: ring, borderRadius: "50%", flexShrink: 0,
         border: `1px solid ${GATE.gold}`, display: "flex",
         alignItems: "center", justifyContent: "center",
       }}>
-        <span style={{
-          display: "block", width: disc * 0.44, height: disc * 0.53, backgroundColor: GATE.gold,
-          WebkitMaskImage: `url('${TEACHER_MARK}')`, maskImage: `url('${TEACHER_MARK}')`,
-          WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat",
-          WebkitMaskSize: "contain", maskSize: "contain",
-          WebkitMaskPosition: "center", maskPosition: "center",
-        }} />
+        {mark === "pin" ? (
+          <svg width={ring * 0.46} height={ring * 0.58} viewBox="0 0 16 22" aria-hidden="true" style={{ display: "block" }}>
+            <path d="M8 0.6C3.99 0.6 0.74 3.85 0.74 7.86c0 5.44 6.5 13.02 6.78 13.34a.64.64 0 0 0 .96 0c.28-.32 6.78-7.9 6.78-13.34C15.26 3.85 12.01.6 8 .6z" fill={GATE.gold} />
+          </svg>
+        ) : (
+          <span style={{
+            display: "block", width: ring * 0.44, height: ring * 0.53, backgroundColor: GATE.gold,
+            WebkitMaskImage: `url('${TEACHER_MARK}')`, maskImage: `url('${TEACHER_MARK}')`,
+            WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat",
+            WebkitMaskSize: "contain", maskSize: "contain",
+            WebkitMaskPosition: "center", maskPosition: "center",
+          }} />
+        )}
       </span>
       {/* Deliberately not the shared Wordmark. That one is the brand lockup —
           heavy grotesque, negative tracking, crescendo hairpin — and it is
@@ -4350,8 +4368,9 @@ function GateLogo({ size = 25 }) {
           hairpin under it, so it is drawn here rather than bent into shape
           through props. */}
       <span style={{
-        fontFamily: GATE_SERIF, fontWeight: 600, fontSize: size,
-        letterSpacing: size * 0.005, lineHeight: 1, color: GATE.gold,
+        fontFamily: GATE_SERIF, fontWeight: 600, fontSize: word,
+        letterSpacing: word * 0.005, lineHeight: 1, color: GATE.gold,
+        transform: `translateY(${OPTICAL.toFixed(2)}px)`,
       }}>artium</span>
     </span>
   );
@@ -4446,7 +4465,8 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
       <GateBackdrop />
 
       <header className="artium-gx-bar artium-gx-in artium-gx-in--1">
-        <GateLogo size={27} />
+        {/* 30 is 27 plus 12%. The ring stays at the 34 that already matched. */}
+        <GateLogo word={30} ring={34} mark="pin" />
         <div className="artium-gx-bar-right">
           <MusicBtn playing={musicOn} onToggle={onMusicToggle} />
           {memberCount != null && (
@@ -4515,7 +4535,7 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
       </main>
 
       <footer className="artium-gx-foot artium-gx-in artium-gx-in--7">
-        <GateLogo size={18} />
+        <GateLogo word={18} />
         <span className="artium-gx-foot-rule" aria-hidden="true" />
         <span className="artium-gx-partner">
           In partnership with
