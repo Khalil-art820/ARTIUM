@@ -1425,14 +1425,15 @@ export default function App() {
   const [previewOnly, setPreviewOnly] = useState(false);
   const [authError, setAuthError] = useState("");
   const [pendingEmail, setPendingEmail] = useState("");
-  // Which student route the entry gate chose: "otp" verifies an institutional
-  // email, "document" uploads proof for manual review. Both options now go via
-  // the landing page first, so the choice has to outlive that detour.
+  // Which student route is in play: "otp" verifies an institutional email,
+  // "document" uploads proof for manual review. It starts at "otp" and the
+  // verification step switches it if they say they have no institutional
+  // address — the entry gate used to decide this, back when there was a card
+  // for each.
   // Signing in with Google leaves the page entirely and comes back, which
-  // wipes React state — so which entry-gate circle they picked has to survive
-  // in sessionStorage, the same way the Google role already does. Without
-  // this, every Google signup silently landed on the institutional-email
-  // route regardless of which circle they came from.
+  // wipes React state, so the route has to survive in sessionStorage the same
+  // way the Google role already does. Without this, every Google signup
+  // silently landed on the institutional-email route.
   const [verifyMethod, setVerifyMethod] = useState(() => sessionStorage.getItem("artium_verify_method") || "otp");
   React.useEffect(() => { sessionStorage.setItem("artium_verify_method", verifyMethod); }, [verifyMethod]);
 
@@ -1599,6 +1600,13 @@ export default function App() {
   }, []);
 
   const [draft, setDraft] = useState(emptyDraft());
+  // The verification step can switch the route mid-signup. Mirror it back so
+  // the sessionStorage copy above stays true: if they switch and then go back
+  // a step to sign in with Google, the OAuth round-trip restores from that
+  // copy, and a stale one would drop them back on the email route.
+  React.useEffect(() => {
+    if (draft.verifyMethod) setVerifyMethod(draft.verifyMethod);
+  }, [draft.verifyMethod]);
   const [step, setStep] = useState(0);
 
   const [selectedConsId, setSelectedConsId] = useState(null);
@@ -1684,6 +1692,10 @@ export default function App() {
     setSelectedStudentId(null);
     setAppTabPersist("map");
   }
+  // Always "otp" from the gate now. The email route is the default and the
+  // document route is the fallback offered inside the verification step, so
+  // the gate no longer decides — but the argument stays, because this is also
+  // where a caller that does know the route would set it.
   function chooseStudent(method) {
     if (myProfile) { setScreen("app"); setAppTabPersist("map"); return; }
     setVerifyMethod(method);
@@ -2012,12 +2024,7 @@ export default function App() {
         /* ---- cards ---- */
         .artium-gx-cards { width: 100%; display: flex; flex-direction: column; gap: 16px; }
         .artium-gx-pair { display: flex; gap: 11px; align-items: stretch; }
-        /* Measured off the reference: against a card column of 578, the teacher
-           card runs 324 and each of the pair 280 with 18 between. So it is not
-           a full-width banner over two halves — it is a slightly larger card
-           centred over them, which is what gives the group its shape.
-           flex: none, because GateCard sets flex: 1 1 0 inline for the pair. */
-        .artium-gx-card--hero { width: 56%; align-self: center; }
+        /* Gap measured off the reference: 18 against a card column of 578. */
 
         .artium-gx-card {
           display: flex; flex-direction: column; align-items: center; text-align: center;
@@ -2093,20 +2100,6 @@ export default function App() {
         .artium-gx-pair .artium-gx-sub { font-size: 11.5px; margin-top: 8px; }
         .artium-gx-pair .artium-gx-desc { font-size: 12.5px; margin-top: 11px; }
         .artium-gx-pair .artium-gx-go { width: 40px; height: 40px; margin-top: 18px; }
-
-        /* Hero card internals. Sized down with the card: narrowing the box
-           without narrowing what is in it just builds a tower. The reference
-           runs its hero type close to the pair's rather than at the 30px the
-           brief asks for, and breaks the copy over three lines — these sizes
-           reproduce those breaks.
-           Child-combinator for weight: a bare .artium-gx-card--hero ties with
-           .artium-gx-card and loses on order, which is how the padding here
-           silently did nothing the first time. */
-        .artium-gx-cards > .artium-gx-card--hero { padding: 15px 15px 15px; border-radius: 24px; }
-        .artium-gx-cards > .artium-gx-card--hero .artium-gx-disc { width: 58px; height: 58px; margin-bottom: 11px; }
-        .artium-gx-cards > .artium-gx-card--hero .artium-gx-title { font-size: 18px; }
-        .artium-gx-cards > .artium-gx-card--hero .artium-gx-desc { font-size: 11.5px; margin-top: 9px; line-height: 1.45; }
-        .artium-gx-cards > .artium-gx-card--hero .artium-gx-go { width: 36px; height: 36px; margin-top: 13px; }
 
         /* ---- login ---- */
         .artium-gx-note { margin: 34px 0 0; font-size: 14px; font-weight: 500; color: #8B8B8B; }
@@ -2261,7 +2254,7 @@ export default function App() {
         />
       )}
 
-      {screen === "entry" && <EntryGate onLearner={chooseLearner} onStudent={() => chooseStudent("otp")} onStudentNoEmail={() => chooseStudent("document")} onLogin={startLogin} learnerProfile={learnerProfile} learnerLoggedOut={learnerLoggedOut} studentLoggedIn={!!myProfile} musicOn={musicPlaying} onMusicToggle={toggleMusic} memberCount={Object.values(studentsByCons).flat().length} />}
+      {screen === "entry" && <EntryGate onLearner={chooseLearner} onStudent={() => chooseStudent("otp")} onLogin={startLogin} learnerProfile={learnerProfile} learnerLoggedOut={learnerLoggedOut} studentLoggedIn={!!myProfile} musicOn={musicPlaying} onMusicToggle={toggleMusic} memberCount={Object.values(studentsByCons).flat().length} />}
       {screen === "learnerSignup" && <LearnerSignup onSubmit={submitLearner} onBack={backToEntry} onLogin={startLogin} error={authError} googleName={learnerGoogleName} />}
       {screen === "learnerMap" && (
         <LearnerScreen
@@ -3044,6 +3037,18 @@ function StepConservatory({ draft, update, editing }) {
     setCodeSent(false); setCode(""); setErr("");
   }
 
+  // Clearing the conservatory is not tidiness, it is required: the two routes
+  // read from different rosters — the built-in list, where every school has a
+  // known email domain, and the admin-approved list — so an id carried across
+  // would point at a school the other roster has never heard of. The proof and
+  // the verified email go too, since neither means anything on the far side.
+  function switchMethod(method) {
+    setQ(""); setEmail(""); setCode(""); setCodeSent(false); setErr("");
+    update(method === "document"
+      ? { verifyMethod: "document", conservatoryId: "", conservatoryVerified: false, conservatoryEmail: "" }
+      : { verifyMethod: "otp", conservatoryId: "", conservatoryVerified: false, proofDocUrl: "", proofDocName: "" });
+  }
+
   async function uploadProof(file) {
     if (!file) return;
     if (file.size > 10 * 1024 * 1024) { setErr("File too large (max 10 MB)."); return; }
@@ -3197,6 +3202,26 @@ function StepConservatory({ draft, update, editing }) {
         <div className="mt-5 rounded-2xl" style={{ border: `1px solid #1A9E6E`, background: C.inkSoft, padding: "14px 18px", display: "flex", alignItems: "center", gap: 8 }}>
           <CheckIcon size={18} color="#1A9E6E" />
           <p style={{ fontSize: 14, color: "#1A9E6E", fontWeight: 600, margin: 0 }}>Verified via Google ({draft.email})</p>
+        </div>
+      )}
+
+      {/* The other route, offered rather than demanded. The entry gate used to
+          ask this as a third card, which made people classify themselves
+          before they had seen what either route involves. Here the question
+          arrives with its answer already in view: they have searched for their
+          school and can see whether it is listed and which address it wants. */}
+      {!editing && (
+        <div style={{ marginTop: 22, paddingTop: 16, borderTop: `1px solid ${C.inkLine}` }}>
+          <p className="text-sm" style={{ color: C.ivoryDim, margin: 0 }}>
+            {isDoc ? "Do you have an institutional student email?" : "No institutional student email?"}
+          </p>
+          <button
+            onClick={() => switchMethod(isDoc ? "otp" : "document")}
+            style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 6, padding: 0, background: "none", border: "none", cursor: "pointer", color: C.brassLabel, fontFamily: FONT_BODY, fontSize: 14, fontWeight: 600 }}
+          >
+            {isDoc ? "Verify with your student email instead" : "Verify with a document instead"}
+            <ArrowRight size={14} />
+          </button>
         </div>
       )}
     </div>
@@ -4335,9 +4360,9 @@ function GateBackdrop() {
  * button — the arrow is a signal, not a separate target, so there is nothing
  * to miss and nothing to hit twice.
  */
-function GateCard({ onClick, icon, title, sub, desc, step, hero }) {
+function GateCard({ onClick, icon, title, sub, desc, step }) {
   return (
-    <button onClick={onClick} className={`artium-gx-card${hero ? " artium-gx-card--hero" : ""} artium-gx-in artium-gx-in--${step}`} style={{ flex: "1 1 0" }}>
+    <button onClick={onClick} className={`artium-gx-card artium-gx-in artium-gx-in--${step}`} style={{ flex: "1 1 0" }}>
       <span className="artium-gx-disc">{icon}</span>
       <span className="artium-gx-title">{title}</span>
       {sub && <span className="artium-gx-sub">{sub}</span>}
@@ -4349,11 +4374,10 @@ function GateCard({ onClick, icon, title, sub, desc, step, hero }) {
   );
 }
 
-function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerProfile, learnerLoggedOut, studentLoggedIn, musicOn, onMusicToggle, memberCount }) {
+function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLoggedOut, studentLoggedIn, musicOn, onMusicToggle, memberCount }) {
   const singleCard = !!learnerProfile || learnerLoggedOut || studentLoggedIn;
   const showLearner = !studentLoggedIn;
   const showStudent = !singleCard || studentLoggedIn;
-  const showStudentNoEmail = !singleCard && !studentLoggedIn;
 
   // The conductor is the logo's own mark, painted through a mask rather than
   // drawn: it arrives as artwork with its own colours, and here it has to be
@@ -4408,44 +4432,33 @@ function EntryGate({ onLearner, onStudent, onStudentNoEmail, onLogin, learnerPro
           <span /><i /><span />
         </div>
 
+        {/* Two audiences, two cards, equal weight. There used to be a third —
+            conservatory students without an institutional email — but it asked
+            the visitor to classify themselves before they knew it mattered,
+            and both cards ran the same signup either way. The question now
+            gets asked at the point it is actually answerable: on the
+            verification step, where they can see what is being asked for. */}
         <div className="artium-gx-cards">
-          {showLearner && (
-            <GateCard
-              step={4}
-              // Narrow only when it is sitting over the pair. On its own it
-              // has no neighbours to be proportionate to, and a 56%-wide card
-              // alone on the page is just a small card.
-              hero={showStudent && showStudentNoEmail}
-              onClick={onLearner}
-              icon={conductor}
-              title={learnerLoggedOut ? "Log in" : "Find a teacher"}
-              desc="Learn your favorite instrument from top conservatory musicians."
-            />
-          )}
-          {(showStudent || showStudentNoEmail) && (
-            <div className="artium-gx-pair">
-              {showStudent && (
-                <GateCard
-                  step={5}
-                  onClick={onStudent}
-                  icon={cap}
-                  title={studentLoggedIn ? "Continue" : "I'm a conservatory student"}
-                  sub={!studentLoggedIn ? "with an institutional student email" : null}
-                  desc="Connect with peers worldwide, earn while you teach and promote yourself."
-                />
-              )}
-              {showStudentNoEmail && (
-                <GateCard
-                  step={6}
-                  onClick={onStudentNoEmail}
-                  icon={cap}
-                  title="I'm a conservatory student"
-                  sub="without an institutional student email"
-                  desc="Connect with peers worldwide, earn while you teach and promote yourself."
-                />
-              )}
-            </div>
-          )}
+          <div className="artium-gx-pair">
+            {showLearner && (
+              <GateCard
+                step={4}
+                onClick={onLearner}
+                icon={conductor}
+                title={learnerLoggedOut ? "Log in" : "Find a teacher"}
+                desc="Learn your favorite instrument from top conservatory musicians."
+              />
+            )}
+            {showStudent && (
+              <GateCard
+                step={5}
+                onClick={onStudent}
+                icon={cap}
+                title={studentLoggedIn ? "Continue" : "I'm a conservatory student"}
+                desc="Connect with peers worldwide, earn while you teach and promote yourself."
+              />
+            )}
+          </div>
         </div>
 
         {(studentLoggedIn || learnerProfile) ? (
