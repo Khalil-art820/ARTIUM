@@ -2048,85 +2048,104 @@ export default function App() {
         .artium-gx-rule span:last-child { background: linear-gradient(90deg, rgba(239,208,155,0.65), transparent); }
         .artium-gx-rule i { width: 5px; height: 5px; background: #EFD09B; transform: rotate(45deg); flex-shrink: 0; }
 
-        /* ---- cards ---- */
+        /* ---- cards ----
+           Medallions, not panels. A circle cannot hold a paragraph — the
+           usable width collapses as you move away from its diameter — so the
+           glass moves into the disc, the disc carries only the mark, and the
+           words sit beneath it. The whole column is still one button. */
         .artium-gx-cards { width: 100%; display: flex; flex-direction: column; gap: 16px; }
-        .artium-gx-pair { display: flex; gap: 11px; align-items: stretch; }
-        /* Gap measured off the reference: 18 against a card column of 578. */
+        .artium-gx-pair { display: flex; gap: 14px; align-items: flex-start; }
 
         .artium-gx-card {
           display: flex; flex-direction: column; align-items: center; text-align: center;
-          padding: 30px 22px 26px; border-radius: 26px; cursor: pointer;
-          border: 1px solid rgba(239,208,155,0.18);
-          /* Lit from the upper left. Measured against the backdrop beside it,
-             the reference card sits +24 luminance at its top-left corner,
-             +10 at its middle and +2 at its foot — a decay in both axes at
-             once, which is a radial from the corner rather than a linear at
-             an angle. It is barely darker than its surroundings anywhere: the
-             falloff down the reference is mostly the photograph behind it
-             going dark, so only a whisper of shadow at the very bottom.
-             The inset white is the specular line along the top edge, which
-             the reference carries at nearly twice the brightness of the fill
-             just beneath it. */
-          background:
-            radial-gradient(135% 105% at 6% -4%,
-              rgba(255,255,255,0.105) 0%, rgba(255,255,255,0.072) 30%,
-              rgba(255,255,255,0.043) 60%, rgba(255,255,255,0.020) 82%,
-              rgba(255,255,255,0.006) 100%),
-            linear-gradient(180deg, rgba(255,255,255,0.012) 58%, rgba(0,0,0,0.07) 100%);
-          -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
-          box-shadow: 0 18px 45px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.13);
+          padding: 0; border: none; background: none; cursor: pointer;
           font: inherit; color: inherit;
-          transition: transform .35s cubic-bezier(.22,1,.36,1), box-shadow .35s ease, border-color .35s ease;
+          transition: transform .4s cubic-bezier(.22,1,.36,1);
         }
-        .artium-gx-card:hover {
-          transform: translateY(-8px);
-          border-color: rgba(239,208,155,0.55);
-          /* Carries the top-edge specular through the hover, or the card
-             loses its lit edge at exactly the moment it lifts. */
-          box-shadow: 0 30px 70px rgba(0,0,0,0.6), 0 0 26px rgba(239,208,155,0.13),
-                      inset 0 1px 0 rgba(255,255,255,0.17);
-        }
-        .artium-gx-card:active { transform: translateY(-3px); }
-        .artium-gx-card:focus-visible { outline: 1px solid #EFD09B; outline-offset: 4px; }
+        .artium-gx-card:hover { transform: translateY(-6px); }
+        .artium-gx-card:active { transform: translateY(-2px); }
+        /* The ring is the shape of this control, so the focus ring follows it
+           rather than boxing the whole column. */
+        .artium-gx-card:focus-visible { outline: none; }
+        .artium-gx-card:focus-visible .artium-gx-orb { outline: 1px solid #EFD09B; outline-offset: 6px; }
 
-        .artium-gx-disc {
-          width: 72px; height: 72px; border-radius: 50%; flex-shrink: 0;
-          border: 1px solid rgba(239,208,155,0.32);
-          background: radial-gradient(circle at 50% 32%, rgba(239,208,155,0.10), transparent 68%);
-          display: flex; align-items: center; justify-content: center; margin-bottom: 22px;
+        .artium-gx-orb {
+          position: relative; width: 100%; max-width: 148px; aspect-ratio: 1;
+          border-radius: 50%; flex-shrink: 0;
+          display: flex; align-items: center; justify-content: center;
+          border: 1px solid rgba(239,208,155,0.22);
+          /* The same upper-left light as the panels had, bent round a circle:
+             the measured falloff was radial from the corner to begin with, so
+             it survives the change of shape. */
+          background:
+            radial-gradient(125% 125% at 24% 10%,
+              rgba(255,255,255,0.105) 0%, rgba(255,255,255,0.062) 34%,
+              rgba(255,255,255,0.026) 64%, rgba(255,255,255,0.008) 86%,
+              rgba(255,255,255,0) 100%),
+            rgba(255,255,255,0.015);
+          -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
+          box-shadow: 0 18px 45px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.10);
           transition: border-color .35s ease, box-shadow .35s ease;
         }
-        .artium-gx-card:hover .artium-gx-disc {
-          border-color: rgba(239,208,155,0.6);
-          box-shadow: 0 0 22px rgba(239,208,155,0.15) inset;
+
+        /* Two rotations, opposed. A sheen travels the rim like light moving
+           round a struck cymbal; outside it a ring of ticks turns the other
+           way, slowly enough to read as a dial rather than a spinner. Both are
+           annuli — a radial mask punches the middle out — so the glass inside
+           stays clean and the mark never sits on moving ground. */
+        .artium-gx-orb::before, .artium-gx-orb::after {
+          content: ''; position: absolute; border-radius: 50%; pointer-events: none;
         }
+        .artium-gx-orb::before {
+          inset: -1px;
+          background: conic-gradient(from 0deg,
+            rgba(239,208,155,0) 0deg, rgba(239,208,155,0.78) 34deg, rgba(239,208,155,0) 98deg,
+            rgba(239,208,155,0) 188deg, rgba(239,208,155,0.30) 222deg, rgba(239,208,155,0) 286deg);
+          -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 1.5px), #000 calc(100% - 1.5px));
+                  mask: radial-gradient(farthest-side, transparent calc(100% - 1.5px), #000 calc(100% - 1.5px));
+          animation: artiumOrbit 13s linear infinite;
+        }
+        .artium-gx-orb::after {
+          inset: -8px; opacity: 0.55;
+          background: repeating-conic-gradient(from 0deg,
+            rgba(239,208,155,0.34) 0deg 1.2deg, rgba(239,208,155,0) 1.2deg 9deg);
+          -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+                  mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+          animation: artiumOrbit 52s linear infinite reverse;
+        }
+        @keyframes artiumOrbit { to { transform: rotate(360deg); } }
+
+        .artium-gx-card:hover .artium-gx-orb {
+          border-color: rgba(239,208,155,0.5);
+          box-shadow: 0 26px 60px rgba(0,0,0,0.6), 0 0 30px rgba(239,208,155,0.12),
+                      inset 0 1px 0 rgba(255,255,255,0.14);
+        }
+        /* The sweep quickens under the cursor — the one place the motion is
+           meant to be noticed rather than felt. */
+        .artium-gx-card:hover .artium-gx-orb::before { animation-duration: 4.5s; }
+        .artium-gx-card:hover .artium-gx-orb::after { opacity: 0.85; }
+
+        /* Two lines' worth whether it uses them or not. "Find a teacher" is one
+           line and "I'm a conservatory student" is two, so without a floor the
+           two columns' arrows land at different heights and the pair reads as
+           misaligned rather than as a pair. */
         .artium-gx-title {
+          margin-top: 17px; min-height: 2.4em;
           font-family: 'Cormorant Garamond', 'Didot', 'Bodoni 72', Georgia, serif; font-weight: 700; color: #FFFFFF;
-          font-size: clamp(22px, 7.7vw, 30px); line-height: 1.18;
+          font-size: 17px; line-height: 1.2;
         }
-        .artium-gx-sub { margin-top: 9px; font-size: 13px; font-weight: 600; line-height: 1.5; color: #E6DAB0; }
-        .artium-gx-desc { margin-top: 13px; font-size: 14px; font-weight: 500; line-height: 1.6; color: #8B8B8B; }
+        .artium-gx-sub { margin-top: 6px; font-size: 11.5px; font-weight: 600; line-height: 1.45; color: #E6DAB0; }
+        .artium-gx-desc { margin-top: 8px; font-size: 12px; font-weight: 500; line-height: 1.5; color: #8B8B8B; }
         .artium-gx-go {
-          margin-top: 24px; width: 46px; height: 46px; border-radius: 50%; flex-shrink: 0;
+          margin-top: 13px; width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
           background: linear-gradient(160deg, #E3BB7A, #C99A55);
           color: #0F1012; display: flex; align-items: center; justify-content: center;
           transition: transform .3s ease, box-shadow .3s ease;
         }
         .artium-gx-card:hover .artium-gx-go {
-          transform: scale(1.05);
+          transform: scale(1.08);
           box-shadow: 0 0 22px rgba(239,208,155,0.45);
         }
-        /* The paired cards hold the same words in half the width, so they take
-           a smaller step of the same scale rather than wrapping into towers. */
-        .artium-gx-pair .artium-gx-card { padding: 26px 13px 22px; border-radius: 24px; }
-        .artium-gx-pair .artium-gx-disc { width: 58px; height: 58px; margin-bottom: 17px; }
-        /* 4.4vw puts "I'm a conservatory" at 124px inside 135px of content at
-           390px, so the title breaks after "conservatory" as the mockup does
-           rather than stacking three lines. */
-        .artium-gx-pair .artium-gx-title { font-size: clamp(17px, 4.4vw, 24px); }
-        .artium-gx-pair .artium-gx-sub { font-size: 11.5px; margin-top: 8px; }
-        .artium-gx-pair .artium-gx-desc { font-size: 12.5px; margin-top: 11px; }
-        .artium-gx-pair .artium-gx-go { width: 40px; height: 40px; margin-top: 18px; }
 
         /* ---- login ---- */
         .artium-gx-note { margin: 34px 0 0; font-size: 14px; font-weight: 500; color: #8B8B8B; }
@@ -2204,6 +2223,9 @@ export default function App() {
         @media (prefers-reduced-motion: reduce) {
           .artium-gx-in { opacity: 1; animation: none; }
           .artium-gx-dust { animation: none; opacity: 0; }
+          /* The rings hold their position rather than vanishing — they are
+             part of the drawing, and only their turning is the motion. */
+          .artium-gx-orb::before, .artium-gx-orb::after { animation: none; }
           .artium-gx-card, .artium-gx-go, .artium-gx-login { transition: none; }
           .artium-gx-card:hover { transform: none; }
           .artium-gx-card:hover .artium-gx-go { transform: none; }
@@ -4348,8 +4370,15 @@ function GateLogo({ word = 27, ring = Math.round(word * 1.28), mark = "conductor
         alignItems: "center", justifyContent: "center",
       }}>
         {mark === "pin" ? (
+          // evenodd is what makes the window: the second subpath runs the
+          // same direction as the first, so nonzero would fill straight over
+          // it and give back the solid pin.
           <svg width={ring * 0.46} height={ring * 0.58} viewBox="0 0 16 22" aria-hidden="true" style={{ display: "block" }}>
-            <path d="M8 0.6C3.99 0.6 0.74 3.85 0.74 7.86c0 5.44 6.5 13.02 6.78 13.34a.64.64 0 0 0 .96 0c.28-.32 6.78-7.9 6.78-13.34C15.26 3.85 12.01.6 8 .6z" fill={GATE.gold} />
+            <path
+              fillRule="evenodd"
+              d="M8 0.6C3.99 0.6 0.74 3.85 0.74 7.86c0 5.44 6.5 13.02 6.78 13.34a.64.64 0 0 0 .96 0c.28-.32 6.78-7.9 6.78-13.34C15.26 3.85 12.01.6 8 .6zM8 4.68a3.18 3.18 0 1 0 0 6.36 3.18 3.18 0 0 0 0-6.36z"
+              fill={GATE.gold}
+            />
           </svg>
         ) : (
           <span style={{
@@ -4417,7 +4446,7 @@ function GateBackdrop() {
 function GateCard({ onClick, icon, title, sub, desc, step }) {
   return (
     <button onClick={onClick} className={`artium-gx-card artium-gx-in artium-gx-in--${step}`} style={{ flex: "1 1 0" }}>
-      <span className="artium-gx-disc">{icon}</span>
+      <span className="artium-gx-orb">{icon}</span>
       <span className="artium-gx-title">{title}</span>
       {sub && <span className="artium-gx-sub">{sub}</span>}
       <span className="artium-gx-desc">{desc}</span>
@@ -4439,7 +4468,7 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
   const conductor = (
     <span
       style={{
-        display: "block", width: 32, height: 38, backgroundColor: GATE.gold,
+        display: "block", width: 46, height: 55, backgroundColor: GATE.gold,
         WebkitMaskImage: `url('${TEACHER_MARK}')`, maskImage: `url('${TEACHER_MARK}')`,
         WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat",
         WebkitMaskSize: "contain", maskSize: "contain",
@@ -4452,7 +4481,7 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
   // a blot, because its shape is the stroke's centreline, not the form. Board,
   // crown and tassel as three filled pieces.
   const cap = (
-    <svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true" style={{ display: "block" }}>
+    <svg width="48" height="48" viewBox="0 0 24 24" aria-hidden="true" style={{ display: "block" }}>
       <path d="M12 3.4 23 8.7 12 14 1 8.7z" fill={GATE.gold} />
       <path d="M6.6 11.05 12 13.65l5.4-2.6v4.02c0 .43-.26.82-.7 1.08-1.1.66-2.79 1.05-4.7 1.05s-3.6-.39-4.7-1.05c-.44-.26-.7-.65-.7-1.08z" fill={GATE.gold} />
       <path d="M20.7 10.15a.62.62 0 0 1 .62.62v4.06a.62.62 0 0 1-1.24 0v-4.06c0-.34.28-.62.62-.62z" fill={GATE.gold} />
