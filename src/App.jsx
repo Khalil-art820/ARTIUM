@@ -1920,32 +1920,33 @@ export default function App() {
           overflow: hidden;
         }
 
-        /* Backdrop, in layers, all of it under 8% so it reads as depth rather
-           than decoration: staff lines, a conductor, notes, then noise. */
+        /* Backdrop: the photograph, a scrim to sit type on, then dust and
+           grain. The staves, the conductor and the scattered notes used to be
+           drawn in CSS here — the photograph carries all three, so they are
+           gone rather than doubled. */
         .artium-gx-bd { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
         .artium-gx-bd > * { position: absolute; }
-        /* Five staff lines, drawn once and repeated — a stave, not a grid. */
-        .artium-gx-stave {
-          left: -10%; right: -10%; height: 128px;
-          background: repeating-linear-gradient(180deg,
-            rgba(255,255,255,0.055) 0 1px, transparent 1px 26px);
-          transform: rotate(-4deg);
+        /* top, not center: everything in the photograph — the conductor, the
+           hall, the notes — lives in its upper third, and the lower two thirds
+           are all but pure black. Anchoring the top keeps the subject behind
+           the headline at every viewport height, and the dead area falls where
+           the cards are, which is what makes it dead space well spent. */
+        .artium-gx-photo {
+          inset: 0;
+          background: url('/gate-hall.webp') center top / cover no-repeat;
         }
-        .artium-gx-stave--a { top: 14%; }
-        .artium-gx-stave--b { top: 58%; transform: rotate(3deg); opacity: 0.7; }
-        /* The conductor: the logo's own mark, blown up and turned down. */
-        .artium-gx-maestro {
-          left: -6%; bottom: 0; width: 62%; height: 76%;
-          background: linear-gradient(180deg, rgba(239,208,155,0.075), rgba(239,208,155,0.015));
-          -webkit-mask-image: var(--maestro); mask-image: var(--maestro);
-          -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
-          -webkit-mask-size: contain; mask-size: contain;
-          -webkit-mask-position: left bottom; mask-position: left bottom;
+        /* Light over the photograph, heavy under the cards. The reference
+           leaves the hall clearly legible behind the headline, so this veils
+           rather than hides — but it closes to near-solid by the foot, so the
+           cards sit on ground of one tone instead of on whatever the
+           photograph happens to be doing at that scroll position. */
+        .artium-gx-scrim {
+          inset: 0;
+          background: linear-gradient(180deg,
+            rgba(15,16,18,0.30) 0%, rgba(15,16,18,0.18) 22%,
+            rgba(15,16,18,0.34) 48%, rgba(15,16,18,0.72) 78%,
+            rgba(15,16,18,0.92) 100%);
         }
-        /* Musical, not the login note below — two different things cannot
-           share one class, and the later rule was winning, painting these
-           grey at body size instead of faint gold. */
-        .artium-gx-mnote { color: rgba(239,208,155,0.07); line-height: 1; }
         /* Grain. An SVG turbulence rather than an image — no request, and it
            tiles at any size without banding. */
         .artium-gx-grain {
@@ -4317,14 +4318,6 @@ function GateLogo({ size = 25 }) {
  * item would be a rule read once.
  */
 function GateBackdrop() {
-  // Kept to the margins. Centred over the headline a note stops being texture
-  // and becomes a smudge on the type, however faint it is.
-  const notes = [
-    { c: "♪", top: "7%", right: "5%", size: 30, rot: -12 },
-    { c: "♫", top: "34%", right: "3%", size: 24, rot: 8 },
-    { c: "♩", top: "58%", left: "4%", size: 28, rot: -6 },
-    { c: "♬", top: "84%", right: "6%", size: 22, rot: 14 },
-  ];
   // Spread across the width, each on its own clock so they never pulse
   // together — the give-away that dust is really a loop.
   const dust = [
@@ -4337,13 +4330,8 @@ function GateBackdrop() {
   ];
   return (
     <div className="artium-gx-bd" aria-hidden="true">
-      <div className="artium-gx-stave artium-gx-stave--a" />
-      <div className="artium-gx-stave artium-gx-stave--b" />
-      <div className="artium-gx-maestro" style={{ "--maestro": `url('${TEACHER_MARK}')` }} />
-      {notes.map((n) => (
-        <span key={n.c + n.top} className="artium-gx-mnote"
-          style={{ top: n.top, right: n.right, left: n.left, fontSize: n.size, transform: `rotate(${n.rot}deg)` }}>{n.c}</span>
-      ))}
+      <div className="artium-gx-photo" />
+      <div className="artium-gx-scrim" />
       {dust.map((d) => (
         <span key={d.left} className="artium-gx-dust"
           style={{ left: d.left, bottom: "-6px", width: d.size, height: d.size,
