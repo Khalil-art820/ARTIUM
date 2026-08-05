@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, lazy, Suspense } from "react";
 import {
   Search, Send,
   ChevronRight, Check, X, Instagram, Facebook, Youtube,
-  Music2, Music, Users, MessageCircle, ArrowRight, ArrowLeft, Play, Pause, Globe2,
+  Music2, Music, Users, MessageCircle, ArrowRight, ArrowLeft, Play, Pause,
   Pencil, Plus, Trash2, Home, Upload, Eye, EyeOff, ChevronLeft,
   Calendar, CreditCard, Video, Link2, Clock, Bell,
   Map, BookOpen, ListChecks, LayoutList, Megaphone, Check as CheckIcon, ShieldCheck, FileText, Lock,
@@ -1951,9 +1951,12 @@ export default function App() {
            are all but pure black. Anchoring the top keeps the subject behind
            the headline at every viewport height, and the dead area falls where
            the cards are, which is what makes it dead space well spent. */
+        /* The photograph is a variable because the gate and the landing use
+           different frames of the same hall — the landing's is the one with
+           the lit floor, which the pin has to stand on. */
         .artium-gx-photo {
           inset: 0;
-          background: url('/gate-hall.webp') center top / cover no-repeat;
+          background: var(--gx-photo, url('/gate-hall.webp')) center top / cover no-repeat;
         }
         /* Light over the photograph, heavy under the cards. The reference
            leaves the hall clearly legible behind the headline, so this veils
@@ -2194,9 +2197,15 @@ export default function App() {
           display: inline-flex; align-items: center; gap: 7px;
           font-size: 10px; font-weight: 500; color: #8B8B8B; line-height: 1;
         }
+        /* Set like the wordmark beside it: same serif, same weight, same gold.
+           The two names in this line are both names, and one of them was in
+           the body sans — which made it read as a link that happened to be
+           there rather than as the other half of a partnership. */
         .artium-gx-partner a {
-          display: inline-flex; align-items: center; gap: 5px;
-          color: #EDEDED; text-decoration: none; font-weight: 600; font-size: 12px;
+          display: inline-flex; align-items: center; gap: 6px;
+          color: #EFD09B; text-decoration: none;
+          font-family: 'Cormorant Garamond', 'Didot', 'Bodoni 72', Georgia, serif;
+          font-weight: 600; font-size: 18px; line-height: 1;
           transition: color .25s ease;
         }
         .artium-gx-partner a:hover { color: #EFD09B; }
@@ -2332,21 +2341,42 @@ export default function App() {
            gradient by the time the steps begin; left at inset 0 it would
            stretch the length of the page and the conductor would stand three
            storeys tall behind the small print. */
-        .artium-lp .artium-gx-bd { height: 112vh; bottom: auto; }
+        /* Sized to the photograph's own aspect, not to the viewport. It is
+           863x820 — nearly square — and cover on a tall narrow box scaled it
+           until only the dark middle was left in frame: the hall cropped off
+           one side, the notes off the other, and what remained looked like a
+           plain gradient. At its own ratio it fits the width exactly and
+           nothing is lost. */
+        .artium-lp .artium-gx-bd { height: auto; aspect-ratio: 863 / 820; bottom: auto; }
+        /* Lighter than the gate's. That photograph is lit — a conductor, a
+           balcony, a wall of notes — and needs holding back off the type.
+           This one is a dark room with a lit floor, and the gate's scrim
+           pushed what little it has to nothing. It still closes hard at the
+           foot, where the steps begin. */
+        .artium-lp .artium-gx-scrim {
+          background: linear-gradient(180deg,
+            rgba(15,16,18,0.18) 0%, rgba(15,16,18,0.09) 28%,
+            rgba(15,16,18,0.24) 62%, rgba(15,16,18,0.74) 88%,
+            rgba(15,16,18,0.95) 100%);
+        }
 
         .artium-lp-bar {
           display: flex; align-items: center; gap: 11px;
           width: 100%; max-width: 560px; margin: 0 auto; flex-shrink: 0;
           padding: calc(14px + env(safe-area-inset-top, 0px)) 20px 4px;
         }
-        .artium-lp-round {
-          width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; padding: 0;
-          border: 1px solid rgba(239,208,155,0.42); background: transparent;
-          color: #EFD09B; cursor: pointer;
+        /* No ring, and an arrow rather than a chevron. Ringed-chevron-left next
+           to ringed-chevron-right made two different controls — go back, and
+           play the music — into near-twins that differed only in which way the
+           mark pointed. Dropping the ring separates them by silhouette, which
+           is read before direction. */
+        .artium-lp-back {
           display: flex; align-items: center; justify-content: center;
-          transition: border-color .25s ease, box-shadow .25s ease, transform .25s ease;
+          width: 30px; height: 34px; flex-shrink: 0; padding: 0; margin-left: -4px;
+          border: none; background: none; color: #B9B9B9; cursor: pointer;
+          transition: color .25s ease, transform .25s ease;
         }
-        .artium-lp-round:hover { border-color: #EFD09B; box-shadow: 0 0 18px rgba(239,208,155,0.28); transform: scale(1.05); }
+        .artium-lp-back:hover { color: #EFD09B; transform: translateX(-2px); }
         .artium-lp-right { display: flex; align-items: center; gap: 12px; margin-left: auto; }
         .artium-lp-cta {
           border: none; border-radius: 999px; padding: 9px 17px; cursor: pointer;
@@ -2690,21 +2720,82 @@ function PinGlobe() {
   );
 }
 
+/* ---- the step marks -------------------------------------------------
+   Drawn, not picked. lucide has a file, a globe and a pair of people, and
+   at a glance those stand in for the reference's marks — but they are not
+   them. The reference's first mark is a document with a folded corner
+   carrying a person's bust and two rules beneath it, which is a CV, not a
+   text file; its second is a globe with a hollow pin over its shoulder,
+   not a globe; its third is three figures with the middle one larger, not
+   two of a size. The difference between those pairs is the difference
+   between "a profile" and "a document", so they are drawn.
+
+   One language across all five: a 24 box, 1.5 stroke, round caps and
+   joins, nothing filled. strokeWidth comes in as a prop so the row can
+   set it once. */
+const IconBox = ({ size = 34, strokeWidth = 1.5, children }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round"
+    aria-hidden="true" style={{ display: "block" }}>{children}</svg>
+);
+const IconProfileDoc = (p) => (
+  <IconBox {...p}>
+    <path d="M14.2 2.5H6.6a2.1 2.1 0 0 0-2.1 2.1v14.8a2.1 2.1 0 0 0 2.1 2.1h10.8a2.1 2.1 0 0 0 2.1-2.1V7.8z" />
+    <path d="M14.2 2.5v5.3h5.3" />
+    <circle cx="12" cy="10.6" r="1.9" />
+    <path d="M8.9 16.1a3.1 3.1 0 0 1 6.2 0z" />
+    <path d="M8.2 18.3h7.6M8.2 20.1h4.4" />
+  </IconBox>
+);
+const IconGlobePin = (p) => (
+  <IconBox {...p}>
+    {/* The globe is cut where the pin crosses it, so the pin reads as being
+        in front rather than welded on. */}
+    <path d="M12.6 20.9a8.9 8.9 0 1 1 3.6-17" />
+    <path d="M3.4 12.3h13.4M5.2 7.4h6.9M5.2 17.2h11" />
+    <path d="M12 3.4c-4.6 5.2-4.6 12 0 17.5M12 3.4c2 2.3 3.1 4.9 3.4 7.6M12 20.9c1.6-1.8 2.6-3.8 3.1-5.9" />
+    <path d="M18.4 3.1a3.6 3.6 0 0 0-3.6 3.6c0 2.7 3.6 6.4 3.6 6.4s3.6-3.7 3.6-6.4a3.6 3.6 0 0 0-3.6-3.6z" />
+    <circle cx="18.4" cy="6.7" r="1.3" />
+  </IconBox>
+);
+const IconThreePeople = (p) => (
+  <IconBox {...p}>
+    <circle cx="12" cy="8.1" r="3.1" />
+    <path d="M5.9 20.1a6.1 6.1 0 0 1 12.2 0z" />
+    <circle cx="4.6" cy="10.6" r="2.1" />
+    <path d="M1.2 19.2a3.6 3.6 0 0 1 3.1-4.4" />
+    <circle cx="19.4" cy="10.6" r="2.1" />
+    <path d="M22.8 19.2a3.6 3.6 0 0 0-3.1-4.4" />
+  </IconBox>
+);
+const IconCoinHand = (p) => (
+  <IconBox {...p}>
+    <circle cx="12" cy="7.6" r="4.4" />
+    <path d="M12 5.4v4.4M10.7 6.3h2.1a.95.95 0 0 1 0 1.9h-1.6a.95.95 0 0 0 0 1.9h2.2" />
+    <path d="M2.6 16.1h3.1l2.6 1.9h3.4a1.3 1.3 0 0 1 0 2.6H8.9" />
+    <path d="M11.7 18h1.9l5.4-2.2a1.4 1.4 0 0 1 1.3 2.4l-6.1 3.1a3 3 0 0 1-1.4.3H5.7l-3.1-1.5" />
+  </IconBox>
+);
+const IconMegaphone = (p) => (
+  <IconBox {...p}>
+    <path d="M3.4 9.6v4.1a1.9 1.9 0 0 0 1.9 1.9h1.8l9.6 4.3V5.3L7.1 9.6H5.3a1.9 1.9 0 0 0-1.9 1.9z" />
+    <path d="M7.1 15.6v3.6a1.8 1.8 0 0 0 3.6 0v-2" />
+    <path d="M19.6 9.4a3.6 3.6 0 0 1 0 5.7" />
+  </IconBox>
+);
+
 function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, studentLoggedOut, musicOn, onMusicToggle, error, onGoToLessonRoom, studentsByCons }) {
   const memberCount = Object.values(studentsByCons).flat().length;
-  // Line art rather than filled marks, and held back in the CSS: the number
-  // and the words carry each row, and a second gold object at full strength
-  // would argue with them.
   const steps = [
-    { n: "1", t: "Build your profile", Icon: FileText,
+    { n: "1", t: "Build your profile", Icon: IconProfileDoc,
       d: "Add your conservatory, repertoire, and a performance video to stand out." },
-    { n: "2", t: "Join the map", Icon: Globe2,
+    { n: "2", t: "Join the map", Icon: IconGlobePin,
       d: "Your pin appears on the global map under your conservatory alongside current students." },
-    { n: "3", t: "Connect worldwide", Icon: Users,
+    { n: "3", t: "Connect worldwide", Icon: IconThreePeople,
       d: "Message students at any conservatory in the world, directly." },
-    { n: "4", t: "Earn while you teach", Icon: CreditCard,
+    { n: "4", t: "Earn while you teach", Icon: IconCoinHand,
       d: "Accept tutoring requests from music enthusiasts and set your own rate." },
-    { n: "5", t: "Marketing and Advertising", Icon: Megaphone,
+    { n: "5", t: "Marketing and Advertising", Icon: IconMegaphone,
       d: <>Claim your promotional video on <a href="https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==" target="_blank" rel="noreferrer">aclassicaltone</a> (may be subject to fees, as per our partnership agreement).</> },
   ];
   return (
@@ -2713,12 +2804,16 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
     // the two reading as one product matters more than either reading well
     // alone.
     <div className="artium-lp">
-      <GateBackdrop />
+      {/* The landing's own frame of the hall — the one with the lit floor.
+          The gate's has the conductor high on the left and nothing beneath;
+          this one puts the light on the ground, which is what the pin stands
+          in. Same room, different moment. */}
+      <GateBackdrop photo="/landing-hall.webp" />
 
       <header className="artium-lp-bar">
         {!myProfile && !studentLoggedOut && (
-          <button onClick={onBack} className="artium-lp-round" aria-label="Back to the entrance">
-            <ChevronLeft size={17} strokeWidth={2} />
+          <button onClick={onBack} className="artium-lp-back" aria-label="Back to the entrance">
+            <ArrowLeft size={19} strokeWidth={1.9} />
           </button>
         )}
         {/* The gate's lockup, not the app's. The reference draws the header
@@ -2726,7 +2821,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
             but this screen sits one tap from the gate — a wordmark that
             changes size and grows a mark between the two reads as a fault,
             not as a design. Consistency wins where the two disagree. */}
-        <GateLogo word={22} ring={28} mark="pin" />
+        <GateLogo word={22} />
         <div className="artium-lp-right">
           <MusicBtn playing={musicOn} onToggle={onMusicToggle} />
           <span className="artium-gx-count">
@@ -2791,23 +2886,35 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
               <span className="artium-globepin-globe" aria-hidden="true">
                 <PinGlobe />
               </span>
-              {/* A drawn silhouette, not lucide and not the emoji: the emoji
-                  brings its own colours per platform, and lucide's Pointer is
-                  an outline — filled solid it collapses into a blob, because
-                  its path was never meant to be a silhouette. This one is:
-                  palm, index out to the right, curled fingers under it.
-                  Gold now: it was the pin's own black, which on a black page
-                  is an invisible hand pointing at nothing. */}
+              {/* A manicule — the printer's pointing hand — drawn as an
+                  outline rather than a silhouette.
+
+                  The five stacked rectangles this replaces were legible as
+                  "a hand" only if you already knew that was the intention:
+                  rounded bars have no knuckles, no taper and no thumb web, so
+                  what read at 36px was a stack of lozenges. Anatomy is what
+                  was missing, not detail. Here the index tapers to a blunt
+                  tip, the three curled fingers are separate arcs of
+                  decreasing length, the thumb crosses over them, and the cuff
+                  closes the wrist — the same five parts, but each with the
+                  shape it has on a hand.
+
+                  Outline, not solid: at this size a filled hand loses the
+                  gaps between the curled fingers and goes back to being a
+                  lump, and the line weight matches the step marks below. */}
               <span className="artium-globepin-hand" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill={GATE.gold} style={{ display: "block" }}>
-                  {/* palm, thumb hump, slender index, two curled fingers —
-                      the slits between them are what makes it read as a hand
-                      at 36px rather than a lump */}
-                  <rect x="3" y="8" width="7.8" height="11" rx="3" />
-                  <rect x="4.2" y="6.2" width="5.2" height="4.2" rx="2.1" />
-                  <rect x="8.2" y="9.3" width="14.3" height="3.4" rx="1.7" />
-                  <rect x="9.2" y="13.5" width="6.6" height="2.5" rx="1.25" />
-                  <rect x="9.2" y="16.6" width="5.8" height="2.5" rx="1.25" />
+                <svg viewBox="0 0 30 26" fill="none" stroke={GATE.gold}
+                  strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
+                  style={{ display: "block" }}>
+                  {/* index finger, out to the right and slightly tapered */}
+                  <path d="M13.2 10.1h11.3a1.85 1.85 0 0 1 0 3.7H13.2" />
+                  {/* the three curled fingers, each shorter than the last */}
+                  <path d="M13.4 13.8h5.9a1.7 1.7 0 0 1 0 3.4h-5.9" />
+                  <path d="M13.4 17.2h4.6a1.7 1.7 0 0 1 0 3.4h-4.6" />
+                  <path d="M13.4 20.6h3.1a1.55 1.55 0 0 1 0 3.1h-3.1" />
+                  {/* palm and the thumb web crossing over the top */}
+                  <path d="M13.4 23.7H10a5.6 5.6 0 0 1-5.6-5.6v-4.6a3.5 3.5 0 0 1 3.5-3.5h5.3" />
+                  <path d="M7.9 10a4.6 4.6 0 0 1 4.3-4.4c1.9-.1 3.4 1 4.6 2.5" />
                 </svg>
               </span>
               <span className="artium-globepin-count">
@@ -2823,7 +2930,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
           </span>
         </button>
 
-        <h2 className="artium-lp-h2" style={{ marginTop: 40 }}>How it works..<br />Simple, from day one.</h2>
+        <h2 className="artium-lp-h2" style={{ marginTop: 40 }}>How it works<br />Simple, from day one.</h2>
         <div className="artium-gx-rule" aria-hidden="true"><span /><i /><span /></div>
 
         <div className="artium-lp-steps">
@@ -2835,7 +2942,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
                 <p className="artium-lp-step-d">{s.d}</p>
               </span>
               <span className="artium-lp-step-i" aria-hidden="true">
-                <s.Icon size={34} strokeWidth={1.1} />
+                <s.Icon size={36} strokeWidth={1.5} />
               </span>
             </div>
           ))}
@@ -4485,19 +4592,18 @@ function StepTeaching({ draft, update }) {
 }
 
 /**
- * The lockup for the gate: a thin gold ring around the conductor, and the
- * wordmark in gold. Its own component rather than Logo with another tone,
- * because Logo's disc is a filled brass coin — right on a white header, a
- * bright blot on a dark one. The word itself is the shared Wordmark, so the
- * gate cannot drift from the rest of the app.
+ * The dark-theme lockup: a pin and the wordmark, both gold. Its own component
+ * rather than Logo with another tone, because Logo's disc is a filled brass
+ * coin — right on a white header, a bright blot on a dark one.
+ *
+ * The ring is gone. It was a container for a mark that did not need one: the
+ * pin already reads as a single closed silhouette, and the circle around it
+ * only added a second, competing one. Without it the mark can be taller —
+ * a pin is a vertical shape, and a circle was forcing it to be square.
  */
-function GateLogo({ word = 27, ring = Math.round(word * 1.28), mark = "conductor" }) {
-  // Word and ring size independently. They used to be one number at a fixed
-  // 1.28 ratio, which was right until the word had to grow on its own — with
-  // one number the ring grew with it, and the ring already matched.
-  //
-  // Optical centring, against the ring. align-items: center lands the word's
-  // bounding box dead on the ring's centre — measured, it is exact — but the
+function GateLogo({ word = 27, markScale = 1.0 }) {
+  // Optical centring, against the mark. align-items: center lands the word's
+  // bounding box dead on the mark's centre — measured, it is exact — but the
   // box is not what the eye reads. "artium" is bottom-heavy: all of its mass
   // is in the x-height, with only the t's stem and the i's dot above. Its
   // centre of mass sits 0.089em below the box's centre, so geometric centring
@@ -4508,34 +4614,27 @@ function GateLogo({ word = 27, ring = Math.round(word * 1.28), mark = "conductor
   // canvas and weighted by coverage — not a number from the font's metrics,
   // which would not survive falling back to Didot or Georgia.
   const OPTICAL = -word * 0.089;
+  const markH = word * 1.16 * markScale;
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: Math.round(word * 0.38) }}>
-      <span style={{
-        width: ring, height: ring, borderRadius: "50%", flexShrink: 0,
-        border: `1px solid ${GATE.gold}`, display: "flex",
-        alignItems: "center", justifyContent: "center",
-      }}>
-        {mark === "pin" ? (
-          // evenodd is what makes the window: the second subpath runs the
-          // same direction as the first, so nonzero would fill straight over
-          // it and give back the solid pin.
-          <svg width={ring * 0.46} height={ring * 0.58} viewBox="0 0 16 22" aria-hidden="true" style={{ display: "block" }}>
-            <path
-              fillRule="evenodd"
-              d="M8 0.6C3.99 0.6 0.74 3.85 0.74 7.86c0 5.44 6.5 13.02 6.78 13.34a.64.64 0 0 0 .96 0c.28-.32 6.78-7.9 6.78-13.34C15.26 3.85 12.01.6 8 .6zM8 4.68a3.18 3.18 0 1 0 0 6.36 3.18 3.18 0 0 0 0-6.36z"
-              fill={GATE.gold}
-            />
-          </svg>
-        ) : (
-          <span style={{
-            display: "block", width: ring * 0.44, height: ring * 0.53, backgroundColor: GATE.gold,
-            WebkitMaskImage: `url('${TEACHER_MARK}')`, maskImage: `url('${TEACHER_MARK}')`,
-            WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat",
-            WebkitMaskSize: "contain", maskSize: "contain",
-            WebkitMaskPosition: "center", maskPosition: "center",
-          }} />
-        )}
-      </span>
+    <span style={{ display: "inline-flex", alignItems: "center", gap: Math.round(word * 0.30) }}>
+      {/* Redrawn rather than rescaled. The old pin was a circle with a cone
+          hung off it — a shoulder where the two met, and a point that arrived
+          too abruptly. This one is a single continuous curve from the tip:
+          the flanks leave the point at a shallower angle and only turn over
+          near the crown, which is what gives a pin its drop shape instead of
+          its balloon shape. The window is 0.40 of the head's width, the
+          proportion the reference draws, and evenodd is what makes it a hole
+          rather than a disc painted on top. */}
+      <svg
+        width={markH * 0.70} height={markH} viewBox="0 0 28 40"
+        aria-hidden="true" style={{ display: "block", flexShrink: 0 }}
+      >
+        <path
+          fillRule="evenodd"
+          d="M14 0.9C6.82 0.9 1.4 6.28 1.4 13.2c0 3.35 1.3 6.36 3.2 9.36 1.6 2.53 3.63 5.02 5.53 7.62 1.35 1.85 2.6 3.72 3.28 5.98a.62.62 0 0 0 1.18 0c.68-2.26 1.93-4.13 3.28-5.98 1.9-2.6 3.93-5.09 5.53-7.62 1.9-3 3.2-6.01 3.2-9.36C26.6 6.28 21.18.9 14 .9zm0 7.68a5.04 5.04 0 1 0 0 10.08 5.04 5.04 0 0 0 0-10.08z"
+          fill={GATE.gold}
+        />
+      </svg>
       {/* Deliberately not the shared Wordmark. That one is the brand lockup —
           heavy grotesque, negative tracking, crescendo hairpin — and it is
           correct everywhere else in the app. The gate is set in Cormorant, and
@@ -4558,7 +4657,7 @@ function GateLogo({ word = 27, ring = Math.round(word * 1.28), mark = "conductor
  * than classes — each element is placed once and never reused, so a rule per
  * item would be a rule read once.
  */
-function GateBackdrop() {
+function GateBackdrop({ photo }) {
   // Spread across the width, each on its own clock so they never pulse
   // together — the give-away that dust is really a loop.
   const dust = [
@@ -4570,7 +4669,7 @@ function GateBackdrop() {
     { left: "91%", dur: 48, delay: 11, size: 2 },
   ];
   return (
-    <div className="artium-gx-bd" aria-hidden="true">
+    <div className="artium-gx-bd" aria-hidden="true" style={photo ? { "--gx-photo": `url('${photo}')` } : undefined}>
       <div className="artium-gx-photo" />
       <div className="artium-gx-scrim" />
       {dust.map((d) => (
@@ -4641,7 +4740,7 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
 
       <header className="artium-gx-bar artium-gx-in artium-gx-in--1">
         {/* 30 is 27 plus 12%. The ring stays at the 34 that already matched. */}
-        <GateLogo word={30} ring={34} mark="pin" />
+        <GateLogo word={30} />
         <div className="artium-gx-bar-right">
           <MusicBtn playing={musicOn} onToggle={onMusicToggle} />
           {memberCount != null && (
