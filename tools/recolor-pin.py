@@ -30,7 +30,17 @@ TL = 0.1333
 # Its lightness over the brass body's. 0.507 is measured, not assumed.
 SCALE = TL/0.507
 CX, CY = 296.5, 295.5
-RING = (0xF8, 0xF8, 0xF8)
+# The bezel is gold now, not neutral white — the page it sits on went dark and
+# a white annulus reads as a hole cut in the artwork.
+#
+# It is still painted rather than tinted, for the reason the flat white was:
+# the artwork's own brush texture and the painted globe's edge survive the hue
+# mask (they are unsaturated) and read as dirt around the live globe. But flat
+# gold reads as plastic, so the shading is synthesised instead of kept — a
+# clean vertical ramp, lit from the top, which is where the reference lights
+# it. Sampled off the reference: #F9DEA1 at the crown, #C19652 at the foot.
+RING_LIT = (0xF9, 0xDE, 0xA1)
+RING_DEEP = (0xB0, 0x86, 0x42)
 # Matte: how much of a highlight survives. The artwork is glossy in two ways —
 # warm sheen on the body, which the hue mask catches, and near-white specular
 # streaks, which it cannot (they are unsaturated). Both get their lift above
@@ -75,9 +85,16 @@ for j in range(H):
             g = g*(1-ww) + sg*255*ww
             b = b*(1-ww) + sb*255*ww
         if wr > 0:
-            r = r*(1-wr) + RING[0]*wr
-            g = g*(1-wr) + RING[1]*wr
-            b = b*(1-wr) + RING[2]*wr
+            # Vertical ramp across the annulus, crown to foot, eased so the
+            # transition has no visible band. j is the row; the ring spans
+            # roughly CY +/- 208.
+            t = smooth(CY - 208, CY + 208, j)
+            rr = RING_LIT[0] + (RING_DEEP[0] - RING_LIT[0])*t
+            rg = RING_LIT[1] + (RING_DEEP[1] - RING_LIT[1])*t
+            rb = RING_LIT[2] + (RING_DEEP[2] - RING_LIT[2])*t
+            r = r*(1-wr) + rr*wr
+            g = g*(1-wr) + rg*wr
+            b = b*(1-wr) + rb*wr
         px[i, j] = (round(r), round(g), round(b), a)
 
 src.save('public/glo-pin-ink.png', optimize=True)

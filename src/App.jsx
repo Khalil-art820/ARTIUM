@@ -2001,13 +2001,16 @@ export default function App() {
            black ring that has to hold its own against the page; here that is
            three times too heavy, so the weight is overridden rather than the
            component's default changed. */
-        .artium-gx-bar button[aria-label*="playlist"] {
+        .artium-gx-bar button[aria-label*="playlist"],
+        .artium-lp-bar button[aria-label*="playlist"] {
           border: 1px solid rgba(239,208,155,0.62) !important;
           width: 34px !important; height: 34px !important;
           transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
         }
-        .artium-gx-bar button[aria-label*="playlist"] svg { stroke: #EFD09B; }
-        .artium-gx-bar button[aria-label*="playlist"]:hover {
+        .artium-gx-bar button[aria-label*="playlist"] svg,
+        .artium-lp-bar button[aria-label*="playlist"] svg { stroke: #EFD09B; }
+        .artium-gx-bar button[aria-label*="playlist"]:hover,
+        .artium-lp-bar button[aria-label*="playlist"]:hover {
           transform: scale(1.05);
           border-color: #EFD09B !important;
           box-shadow: 0 0 18px rgba(239,208,155,0.28);
@@ -2308,6 +2311,136 @@ export default function App() {
           .artium-explore:hover .artium-globepin { transform: none; }
         }
 
+        /* ---- Landing: the gate's world, continued ---------------------
+           The screen straight after the gate cannot look like a different
+           product, so it takes the gate's ground, palette, type and backdrop
+           outright — GateBackdrop is the same component — and only the layout
+           here is new. */
+        .artium-lp {
+          position: relative; min-height: 100vh; min-height: 100dvh;
+          display: flex; flex-direction: column;
+          background:
+            radial-gradient(120% 60% at 50% -8%, #17181C 0%, transparent 60%),
+            linear-gradient(180deg, #131417 0%, #0F1012 38%, #0B0C0E 100%);
+          color: #FFFFFF;
+          font-family: 'Manrope', -apple-system, 'Segoe UI', Roboto, sans-serif;
+          overflow-x: hidden;
+        }
+        .artium-lp > *:not(.artium-gx-bd) { position: relative; z-index: 1; }
+        /* The photograph belongs to the hero, not to the whole scroll. Pinned
+           to the top with a viewport's height it has faded into the base
+           gradient by the time the steps begin; left at inset 0 it would
+           stretch the length of the page and the conductor would stand three
+           storeys tall behind the small print. */
+        .artium-lp .artium-gx-bd { height: 112vh; bottom: auto; }
+
+        .artium-lp-bar {
+          display: flex; align-items: center; gap: 11px;
+          width: 100%; max-width: 560px; margin: 0 auto; flex-shrink: 0;
+          padding: calc(14px + env(safe-area-inset-top, 0px)) 20px 4px;
+        }
+        .artium-lp-round {
+          width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; padding: 0;
+          border: 1px solid rgba(239,208,155,0.42); background: transparent;
+          color: #EFD09B; cursor: pointer;
+          display: flex; align-items: center; justify-content: center;
+          transition: border-color .25s ease, box-shadow .25s ease, transform .25s ease;
+        }
+        .artium-lp-round:hover { border-color: #EFD09B; box-shadow: 0 0 18px rgba(239,208,155,0.28); transform: scale(1.05); }
+        .artium-lp-right { display: flex; align-items: center; gap: 12px; margin-left: auto; }
+        .artium-lp-cta {
+          border: none; border-radius: 999px; padding: 9px 17px; cursor: pointer;
+          background: linear-gradient(160deg, #E3BB7A, #C99A55);
+          color: #0F1012; font-family: inherit; font-size: 13px; font-weight: 700;
+          white-space: nowrap; flex-shrink: 0;
+          transition: background .3s ease, box-shadow .3s ease, transform .3s ease;
+        }
+        .artium-lp-cta:hover {
+          background: linear-gradient(160deg, #EFCB8C, #D4A75F);
+          box-shadow: 0 0 26px rgba(239,208,155,0.35); transform: scale(1.04);
+        }
+
+        .artium-lp-main {
+          flex: 1; width: 100%; max-width: 560px; margin: 0 auto;
+          padding: 14px 24px calc(28px + env(safe-area-inset-bottom, 0px));
+          display: flex; flex-direction: column; align-items: center;
+        }
+        .artium-lp-h1, .artium-lp-h2 {
+          margin: 0; text-align: center; color: #FFFFFF;
+          font-family: 'Cormorant Garamond', 'Didot', 'Bodoni 72', Georgia, serif;
+          font-weight: 700; line-height: 1.16; letter-spacing: 0.005em;
+        }
+        .artium-lp-h1 { font-size: clamp(20px, 6.0vw, 30px); }
+        .artium-lp-h2 { font-size: clamp(21px, 6.4vw, 32px); }
+
+        /* The pin stands in its own pool of light. Two layers: a broad halo
+           behind it, and a low ellipse under its point standing in for the
+           ground it is stuck into. */
+        .artium-lp-stage { position: relative; display: flex; justify-content: center; width: 100%; }
+        .artium-lp-stage::before {
+          content: ''; position: absolute; left: 50%; top: 44%;
+          width: 116%; height: 74%; transform: translate(-50%, -50%);
+          background: radial-gradient(ellipse at center, rgba(239,208,155,0.13), rgba(239,208,155,0.05) 42%, transparent 70%);
+          pointer-events: none;
+        }
+        .artium-lp-stage::after {
+          content: ''; position: absolute; left: 50%; bottom: 2%;
+          width: 84%; height: 13%; transform: translateX(-50%);
+          background: radial-gradient(ellipse at center, rgba(239,208,155,0.42), rgba(239,208,155,0.10) 38%, transparent 72%);
+          pointer-events: none; filter: blur(2px);
+        }
+        .artium-lp-cap { margin: 0; font-size: 12.5px; font-style: italic; color: #9A9A9A; line-height: 1.5; text-align: center; }
+        .artium-lp-cap b { color: #EFD09B; font-weight: 600; }
+
+        /* ---- the five steps ---- */
+        .artium-lp-steps { width: 100%; display: flex; flex-direction: column; gap: 12px; }
+        .artium-lp-step {
+          display: flex; align-items: center; gap: 13px;
+          padding: 15px 15px; border-radius: 20px; text-align: left;
+          border: 1px solid rgba(239,208,155,0.16);
+          /* The gate's card light, at the smaller scale these run to. */
+          background:
+            radial-gradient(135% 120% at 5% -6%,
+              rgba(255,255,255,0.085) 0%, rgba(255,255,255,0.055) 32%,
+              rgba(255,255,255,0.028) 62%, rgba(255,255,255,0.010) 86%,
+              rgba(255,255,255,0.004) 100%),
+            linear-gradient(180deg, rgba(255,255,255,0.010) 58%, rgba(0,0,0,0.06) 100%);
+          -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
+          box-shadow: 0 14px 34px rgba(0,0,0,0.40), inset 0 1px 0 rgba(255,255,255,0.10);
+          transition: border-color .3s ease, box-shadow .3s ease, transform .3s ease;
+        }
+        .artium-lp-step:hover {
+          border-color: rgba(239,208,155,0.4); transform: translateY(-3px);
+          box-shadow: 0 20px 46px rgba(0,0,0,0.5), 0 0 22px rgba(239,208,155,0.10),
+                      inset 0 1px 0 rgba(255,255,255,0.14);
+        }
+        .artium-lp-num {
+          width: 35px; height: 35px; border-radius: 50%; flex-shrink: 0;
+          border: 1px solid rgba(239,208,155,0.5); color: #EFD09B;
+          display: flex; align-items: center; justify-content: center;
+          font-family: 'Cormorant Garamond', 'Didot', 'Bodoni 72', Georgia, serif;
+          font-size: 17px; font-weight: 600; line-height: 1;
+          /* Cormorant sets old-style figures by default, where 1 is a short
+             serifed stroke that reads as a capital I — so step one looked like
+             step "I" while 2 and 3 were fine. Lining figures are what a
+             numbered list needs. */
+          font-variant-numeric: lining-nums;
+          font-feature-settings: "lnum" 1;
+        }
+        .artium-lp-step-body { flex: 1; min-width: 0; }
+        .artium-lp-step-t {
+          margin: 0; color: #FFFFFF; line-height: 1.25;
+          font-family: 'Cormorant Garamond', 'Didot', 'Bodoni 72', Georgia, serif;
+          font-weight: 700; font-size: 16px;
+        }
+        .artium-lp-step-d { margin: 5px 0 0; font-size: 12px; font-weight: 500; line-height: 1.5; color: #8B8B8B; }
+        .artium-lp-step-d a { color: #E6DAB0; font-weight: 600; text-decoration: none; }
+        .artium-lp-step-d a:hover { color: #EFD09B; text-decoration: underline; }
+        /* Line art, held well back: the number and the words are what is read,
+           and a second gold object at full strength would compete with them. */
+        .artium-lp-step-i { flex-shrink: 0; display: flex; color: rgba(239,208,155,0.42); }
+        .artium-lp-err { margin: 0; max-width: 460px; text-align: center; font-size: 13px; line-height: 1.5; color: #E5A0A0; }
+
       `}</style>
 
       <SpotifyPlayer
@@ -2559,80 +2692,95 @@ function PinGlobe() {
 
 function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, studentLoggedOut, musicOn, onMusicToggle, error, onGoToLessonRoom, studentsByCons }) {
   const memberCount = Object.values(studentsByCons).flat().length;
+  // Line art rather than filled marks, and held back in the CSS: the number
+  // and the words carry each row, and a second gold object at full strength
+  // would argue with them.
+  const steps = [
+    { n: "1", t: "Build your profile", Icon: FileText,
+      d: "Add your conservatory, repertoire, and a performance video to stand out." },
+    { n: "2", t: "Join the map", Icon: Globe2,
+      d: "Your pin appears on the global map under your conservatory alongside current students." },
+    { n: "3", t: "Connect worldwide", Icon: Users,
+      d: "Message students at any conservatory in the world, directly." },
+    { n: "4", t: "Earn while you teach", Icon: CreditCard,
+      d: "Accept tutoring requests from music enthusiasts and set your own rate." },
+    { n: "5", t: "Marketing and Advertising", Icon: Megaphone,
+      d: <>Claim your promotional video on <a href="https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==" target="_blank" rel="noreferrer">aclassicaltone</a> (may be subject to fees, as per our partnership agreement).</> },
+  ];
   return (
-    // One white from the top of the page to the bottom, and no rules across
-    // it: the header, the hero and the footer were each fenced off by a
-    // hairline, which cut the page into three bands rather than letting it
-    // read as one.
-    <div style={{ background: "#FFFFFF", color: C.ivory, minHeight: "100vh" }}>
-      {/* Nav — matches AppShell header */}
-      <div className="px-6 flex items-center gap-4" style={{ height: 60, background: "#FFFFFF" }}>
-        <div className="flex items-center gap-3">
-          {!myProfile && !studentLoggedOut && (
-            <button onClick={onBack} style={{ color: C.ivoryDim, background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 2, padding: 0 }}>
-              <ChevronLeft size={18} />
-            </button>
-          )}
-          <Logo size={20} markSize={HEADER_CONTROL} />
-        </div>
-        <div className="flex items-center gap-2 ml-auto">
+    // The gate's world, continued. Same ground, same backdrop component, same
+    // palette and type — this is the screen immediately after the gate, and
+    // the two reading as one product matters more than either reading well
+    // alone.
+    <div className="artium-lp">
+      <GateBackdrop />
+
+      <header className="artium-lp-bar">
+        {!myProfile && !studentLoggedOut && (
+          <button onClick={onBack} className="artium-lp-round" aria-label="Back to the entrance">
+            <ChevronLeft size={17} strokeWidth={2} />
+          </button>
+        )}
+        {/* The gate's lockup, not the app's. The reference draws the header
+            word smaller than the gate does and keeps the crescendo under it,
+            but this screen sits one tap from the gate — a wordmark that
+            changes size and grows a mark between the two reads as a fault,
+            not as a design. Consistency wins where the two disagree. */}
+        <GateLogo word={22} ring={28} mark="pin" />
+        <div className="artium-lp-right">
           <MusicBtn playing={musicOn} onToggle={onMusicToggle} />
-          <MemberCount count={memberCount} />
+          <span className="artium-gx-count">
+            <Users size={16} strokeWidth={1.8} />
+            {memberCount}
+          </span>
           {myProfile && <NotificationBell myProfile={myProfile} onGoToLessonRoom={onGoToLessonRoom} />}
           {myProfile && (
             <button onClick={onProfile} title="My profile" style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}>
               <Avatar name={myProfile.name} id="me" size={HEADER_CONTROL} photoUrl={myProfile.photoUrl} online />
             </button>
           )}
-          {/* Sits where the avatar goes once signed in. This is now the page's
-              only call to action — the intro card that used to carry it is gone.
-              Returning students who logged out get the login route instead. */}
+          {/* Sits where the avatar goes once signed in. This is the page's only
+              call to action. Returning students who logged out get login. */}
           {!myProfile && (
-            <button
-              onClick={studentLoggedOut ? onLogin : onApply}
-              style={{
-                background: C.brass, color: C.brassText, border: "none", borderRadius: 999,
-                padding: "7px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer",
-                fontFamily: FONT_BODY, whiteSpace: "nowrap",
-              }}
-            >
+            <button className="artium-lp-cta" onClick={studentLoggedOut ? onLogin : onApply}>
               {studentLoggedOut ? "Log in" : "Sign Up"}
             </button>
           )}
         </div>
-      </div>
+      </header>
 
-      {/* Hero */}
-      <div style={{ background: "#fff" }}>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "36px 24px 28px", gap: 30 }}>
-          <h1 style={{ fontSize: "clamp(24px,3vw,40px)", fontWeight: 700, lineHeight: 1.08, letterSpacing: 0, color: C.ivory, margin: 0, fontFamily: "'DM Serif Display', serif", textAlign: "center" }}>
-            Every Conservatory. One Network.
-          </h1>
-          {/* The intro card is gone and its call to action moved to the header
-              pill, so auth errors render on their own rather than inside it. */}
-          {error && (
-            <p style={{ maxWidth: 520, textAlign: "center", fontSize: 14, color: C.burgundy, lineHeight: 1.5, margin: 0 }}>{error}</p>
-          )}
-          {/* The pin is the button now — the circular card it used to sit in is
-              gone, so there is nothing between it and the page. */}
-          <button
+      <main className="artium-lp-main">
+        <h1 className="artium-lp-h1">Every Conservatory. One Network.</h1>
+        <div className="artium-gx-rule" aria-hidden="true"><span /><i /><span /></div>
+
+        {/* The intro card is gone and its call to action moved to the header
+            pill, so auth errors render on their own rather than inside it. */}
+        {error && <p className="artium-lp-err">{error}</p>}
+
+        {/* The pin is the button — the circular card it used to sit in is
+            gone, so there is nothing between it and the page. */}
+        <button
             type="button"
             onClick={onPreview}
             className="artium-explore"
             aria-label={`Explore Artium's network — ${memberCount} members`}
             style={{
               display: "flex", flexDirection: "column", alignItems: "center",
-              gap: 14, padding: 0, border: "none", background: "none",
-              cursor: "pointer", font: "inherit", textAlign: "center",
+              gap: 12, padding: 0, border: "none", background: "none",
+              cursor: "pointer", font: "inherit", textAlign: "center", width: "100%",
             }}
           >
+          <span className="artium-lp-stage">
             {/* Taller than it is wide (0.669), so sized by height — a square box
                 would letterbox it. The globe and the count are positioned
                 against this wrapper, so it has to be the thing that moves. */}
             <span className="artium-globepin" style={{ height: "min(299px, 50.7vw)", aspectRatio: "560 / 837" }}>
-              {/* glo-pin-ink is glo-pin recolored to matte black (#222222) by
+              {/* glo-pin-ink is glo-pin recoloured to matte black (#222222) by
                   tools/recolor-pin.py — same artwork, same alpha, shading
-                  kept, bezel ring painted neutral white (#F8F8F8). */}
+                  kept, and the bezel ring now painted a gold that ramps from
+                  #F9DEA1 at the crown to #B08642 at the foot. It was neutral
+                  white, which was right on a white page and reads as a hole
+                  punched through the artwork on this one. */}
               <img
                 src="/glo-pin-ink.png"
                 alt=""
@@ -2647,10 +2795,11 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
                   brings its own colours per platform, and lucide's Pointer is
                   an outline — filled solid it collapses into a blob, because
                   its path was never meant to be a silhouette. This one is:
-                  palm, index out to the right, curled fingers under it, in
-                  the pin's own black. */}
+                  palm, index out to the right, curled fingers under it.
+                  Gold now: it was the pin's own black, which on a black page
+                  is an invisible hand pointing at nothing. */}
               <span className="artium-globepin-hand" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="#222222" style={{ display: "block" }}>
+                <svg viewBox="0 0 24 24" fill={GATE.gold} style={{ display: "block" }}>
                   {/* palm, thumb hump, slender index, two curled fingers —
                       the slits between them are what makes it read as a hand
                       at 36px rather than a lump */}
@@ -2668,45 +2817,42 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
                 <span className="artium-globepin-count-n">{memberCount.toLocaleString()}</span>
               </span>
             </span>
-            <span style={{ fontSize: 12, color: C.ivoryDim, fontFamily: FONT_BODY, fontStyle: "italic", lineHeight: 1.4 }}>
-              Tap the pin to explore your artium's world
-            </span>
-          </button>
-        </div>
-      </div>
+          </span>
+          <span className="artium-lp-cap">
+            Tap the pin to explore your <b>artium's</b> world
+          </span>
+        </button>
 
-      {/* How it works */}
-      <div className="max-w-6xl mx-auto px-8 py-20">
-        <p style={{ fontSize: "clamp(24px,3vw,40px)", fontWeight: 700, lineHeight: 1.08, letterSpacing: 0, color: C.ivory, margin: 0, marginBottom: 12, fontFamily: "'DM Serif Display', serif", textAlign: "center" }}>How it works..</p>
-        <h2 style={{ fontSize: "clamp(24px,3vw,40px)", fontWeight: 700, lineHeight: 1.08, letterSpacing: 0, color: C.ivory, margin: 0, marginBottom: 48, fontFamily: "'DM Serif Display', serif", textAlign: "center" }}>Simple, from day one.</h2>
-        <div style={{ maxWidth: 560, margin: "0 auto", display: "flex", flexDirection: "column", gap: 14 }}>
-          {[
-            { n: "1", t: "Build your profile", d: "Add your conservatory, repertoire, and a performance video to stand out." },
-            { n: "2", t: "Join the map", d: "Your pin appears on the global map under your conservatory alongside current students." },
-            { n: "3", t: "Connect worldwide", d: "Message students at any conservatory in the world, directly." },
-            { n: "4", t: "Earn while you teach", d: "Accept tutoring requests from music enthusiasts and set your own rate." },
-            { n: "5", t: "Marketing and Advertising", d: "Claim your promotional video on aclassicaltone (may be subject to fees)." },
-          ].map((s) => (
-            <div key={s.n} style={{ display: "flex", alignItems: "flex-start", gap: 16, padding: "20px 24px", background: "#fff", borderRadius: 20, boxShadow: "0 4px 20px rgba(0,0,0,0.08)" }}>
-              <div style={{ flexShrink: 0, width: 34, height: 34, marginTop: -5, borderRadius: "50%", background: "#2C3E50", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, fontWeight: 700, fontFamily: FONT_BODY }}>{s.n}</div>
-              <div style={{ flex: 1 }}>
-                <h3 style={{ fontSize: 18, fontWeight: 700, color: "#1A1A1A", margin: 0, lineHeight: 1.3 }}>{s.t}</h3>
-                <p style={{ fontSize: 15, color: "#6B6B6B", margin: "4px 0 0", lineHeight: 1.45 }}>
-                  {s.n === "5"
-                    ? <>Claim your promotional video on <a href="https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==" target="_blank" rel="noreferrer" style={{ color: C.brassLabel, fontWeight: 600, textDecoration: "none" }}>aclassicaltone</a> (may be subject to fees, as per our partnership agreement).</>
-                    : s.d}
-                </p>
-              </div>
+        <h2 className="artium-lp-h2" style={{ marginTop: 40 }}>How it works..<br />Simple, from day one.</h2>
+        <div className="artium-gx-rule" aria-hidden="true"><span /><i /><span /></div>
+
+        <div className="artium-lp-steps">
+          {steps.map((s) => (
+            <div key={s.n} className="artium-lp-step">
+              <span className="artium-lp-num">{s.n}</span>
+              <span className="artium-lp-step-body">
+                <h3 className="artium-lp-step-t">{s.t}</h3>
+                <p className="artium-lp-step-d">{s.d}</p>
+              </span>
+              <span className="artium-lp-step-i" aria-hidden="true">
+                <s.Icon size={34} strokeWidth={1.1} />
+              </span>
             </div>
           ))}
         </div>
-      </div>
+      </main>
 
-      <div style={{ padding: "20px 0" }}>
-        <div className="max-w-6xl mx-auto px-8" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <Logo size={18} slogan />
-        </div>
-      </div>
+      <footer className="artium-gx-foot">
+        <GateLogo word={18} />
+        <span className="artium-gx-foot-rule" aria-hidden="true" />
+        <span className="artium-gx-partner">
+          In partnership with
+          <a href="https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==" target="_blank" rel="noreferrer">
+            aclassicaltone
+            <i><ArrowUpRight size={12} strokeWidth={2.2} /></i>
+          </a>
+        </span>
+      </footer>
     </div>
   );
 }
