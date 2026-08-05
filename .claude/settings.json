@@ -13,6 +13,8 @@
       "Bash(npx vite build)",
       "Bash(npm run build)",
       "Bash(npm run dev)",
+      "Bash(npm run preview)",
+      "Bash(npx vite preview *)",
       "mcp__Claude_Browser__navigate",
       "mcp__Claude_Browser__computer",
       "mcp__Claude_Browser__javascript_tool",
@@ -31,9 +33,21 @@
       "mcp__Claude_Browser__tabs_create",
       "mcp__Claude_Browser__tabs_select",
       "mcp__Claude_Browser__tabs_close",
+      "mcp__Claude_Preview__preview_start",
+      "mcp__Claude_Preview__preview_eval",
+      "mcp__Claude_Preview__preview_screenshot",
+      "mcp__Claude_Preview__preview_console_logs",
+      "mcp__Claude_Preview__preview_snapshot",
+      "mcp__Claude_Preview__preview_inspect",
+      "mcp__Claude_Preview__preview_resize",
+      "mcp__Claude_Preview__preview_click",
+      "mcp__Claude_Preview__preview_fill",
       "mcp__visualize__read_me",
       "mcp__visualize__show_widget",
-      "mcp__ccd_session__mark_chapter"
+      "mcp__ccd_session__mark_chapter",
+      "mcp__ccd_session__spawn_task",
+      "mcp__ccd_session__dismiss_task",
+      "mcp__ccd_session__read_widget_context"
     ]
   }
 }
