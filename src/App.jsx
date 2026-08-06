@@ -2095,18 +2095,25 @@ export default function App() {
            sides. Shifting it as well moved it twice. */
         .artium-gx-stage {
           --tw: min(96vw, 680px);
-          position: relative; width: var(--tw); height: calc(var(--tw) * 0.5889);
+          position: relative; width: var(--tw); height: calc(var(--tw) * 0.5875);
           flex-shrink: 0;
         }
 
         /* The orbit the whole composition hangs from: the node sits at its
            top, the closing dot at its bottom, and the two small dots where it
            passes the flanking circles. Behind everything. */
+        /* Two arcs, not a ring. The reference draws the orbit only in the
+           open air between the circles: each arc stops dead on the dot where
+           it meets a flank's rim, and nothing is drawn across the cards. A
+           full circle behind translucent glass showed through them. */
         .artium-gx-orbit {
-          position: absolute; left: 50%; top: 51.71%;
+          position: absolute; left: 50.10%; top: 51.40%;
           width: 56.48%; aspect-ratio: 1; transform: translate(-50%, -50%);
-          border: 1px solid rgba(239,208,155,0.30); border-radius: 50%;
-          pointer-events: none;
+          overflow: visible; pointer-events: none;
+        }
+        .artium-gx-orbit path {
+          fill: none; stroke: rgba(239,208,155,0.34); stroke-width: 1;
+          vector-effect: non-scaling-stroke;
         }
         .artium-gx-dot {
           position: absolute; width: 1.3%; aspect-ratio: 1; border-radius: 50%;
@@ -2120,7 +2127,9 @@ export default function App() {
           display: flex; align-items: center; justify-content: center;
           pointer-events: none;
         }
-        .artium-gx-node svg { width: 52%; height: 52%; }
+        /* The reference's bust dominates its ring — roughly seven tenths of the
+           inner width, not half. */
+        .artium-gx-node svg { width: 80%; height: 80%; }
         /* The dashed stems: node down to the centre circle, centre circle
            down to the closing dot. */
         .artium-gx-stem {
@@ -2142,8 +2151,7 @@ export default function App() {
               rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.058) 34%,
               rgba(255,255,255,0.024) 64%, rgba(255,255,255,0.008) 86%,
               rgba(255,255,255,0) 100%),
-            rgba(255,255,255,0.015);
-          -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
+            rgba(19,20,25,0.96);
           box-shadow: 0 18px 45px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.09);
           transition: transform .4s cubic-bezier(.22,1,.36,1), border-color .35s ease, box-shadow .35s ease;
         }
@@ -2162,12 +2170,16 @@ export default function App() {
            width — percentages on top resolve against the containing block's
            height, and mixing the two is how the flanks ended up above their
            mark. */
+        /* Wider and lower than before, so their inner edges run 24px (at the
+           reference's scale) under the centre's ring — the reference tucks
+           them beneath it, which is what makes the trio read as fused rather
+           than as three shapes set side by side. */
         .artium-gx-cc--side {
-          width: 31.56%; height: calc(var(--tw) * 0.3648); top: 57.25%;
-          padding: 0 2.6%; z-index: 1;
+          width: 34.17%; height: calc(var(--tw) * 0.4020); top: 56.36%;
+          padding: 0 3.2%; z-index: 1;
         }
-        .artium-gx-cc--left  { left: 15.78%; }
-        .artium-gx-cc--right { left: 84.22%; }
+        .artium-gx-cc--left  { left: 17.09%; }
+        .artium-gx-cc--right { left: 82.91%; }
         .artium-gx-cc--side::after {
           content: ''; position: absolute; inset: -3.2%; border-radius: 50%;
           pointer-events: none; opacity: 0.5;
@@ -2186,7 +2198,7 @@ export default function App() {
            against the stage's height, which would make the throne 85px
            instead of 143 and turn the circle into a letterbox. */
         .artium-gx-cc--hero {
-          width: 36.48%; height: calc(var(--tw) * 0.3829); left: 50%; top: 51.02%;
+          width: 36.48%; height: calc(var(--tw) * 0.3829); left: 50%; top: 50.72%;
           padding: 0 4%; z-index: 2;
           border: 1.5px solid rgba(239,208,155,0.85);
           box-shadow:
@@ -2209,8 +2221,10 @@ export default function App() {
            circle and can be read. */
         /* Marks scale with the stage like everything else: 52/997 on the
            flanks, 60/997 in the centre. */
-        .artium-gx-cc-mark { display: block; flex-shrink: 0; width: max(18px, calc(var(--tw) * 0.0522)); height: auto; }
-        .artium-gx-cc--hero .artium-gx-cc-mark { width: max(20px, calc(var(--tw) * 0.0602)); }
+        /* Measured off the reference: every mark is 0.067 of the stage wide —
+           conductor 66x71, piano 67x71, cap 67x43. They were at 0.052 and
+           0.060, which is the whole of why they read as small. */
+        .artium-gx-cc-mark { display: block; flex-shrink: 0; width: max(23px, calc(var(--tw) * 0.067)); height: auto; }
         .artium-gx-cc-eyebrow {
           font-family: 'Cormorant Garamond', 'Didot', 'Bodoni 72', Georgia, serif;
           font-weight: 600; line-height: 1; color: #FFFFFF; margin-top: 3%;
@@ -2261,23 +2275,29 @@ export default function App() {
         /* 846/997 of the stage in the reference — so it reads as sitting
            under the trio rather than as a separate slab. */
         .artium-gx-trust {
-          width: min(85vw, 578px); margin: 26px auto 0; border-radius: 20px;
+          /* 870/995 of the trio in the reference, and the trio is 96vw. */
+          --tb: min(83.9vw, 585px);
+          width: var(--tb); margin: 26px auto 0; border-radius: 20px;
           border: 1px solid rgba(239,208,155,0.16);
           background: rgba(255,255,255,0.03);
           -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
           box-shadow: 0 14px 34px rgba(0,0,0,0.35);
-          display: flex; flex-direction: column;
+          display: flex; flex-direction: row;
         }
-        .artium-gx-trust-item { display: flex; align-items: center; gap: 12px; padding: 13px 18px; text-align: left; }
-        .artium-gx-trust-item + .artium-gx-trust-item { border-top: 1px solid rgba(255,255,255,0.07); }
-        .artium-gx-trust-item svg { flex-shrink: 0; color: rgba(239,208,155,0.85); }
-        .artium-gx-trust-t { margin: 0; font-size: 12.5px; font-weight: 700; color: #FFFFFF; line-height: 1.3; }
-        .artium-gx-trust-d { margin: 2px 0 0; font-size: 11px; font-weight: 500; color: #8B8B8B; line-height: 1.45; }
-        @media (min-width: 620px) {
-          .artium-gx-trust { flex-direction: row; width: min(85vw, 578px); }
-          .artium-gx-trust-item { flex: 1 1 0; padding: 16px 20px; }
-          .artium-gx-trust-item + .artium-gx-trust-item { border-top: none; border-left: 1px solid rgba(255,255,255,0.07); }
+        /* Three columns at every width, as the reference has it — it stacked
+           below 620 before. Three columns of ~109px on a phone is the whole
+           constraint on the type here, hence the floors. */
+        .artium-gx-trust-item {
+          flex: 1 1 0; min-width: 0; display: flex; align-items: center;
+          gap: max(7px, calc(var(--tb) * 0.030)); padding: max(11px, calc(var(--tb) * 0.038)) max(9px, calc(var(--tb) * 0.032));
+          text-align: left;
         }
+        .artium-gx-trust-item + .artium-gx-trust-item { border-left: 1px solid rgba(255,255,255,0.09); }
+        .artium-gx-trust-item svg { flex-shrink: 0; color: #E3BB7A; width: max(19px, calc(var(--tb) * 0.062)); height: auto; }
+        /* Gold, not white: the reference sets the headings in the same
+           champagne as the marks and the body beneath them in grey. */
+        .artium-gx-trust-t { margin: 0; font-weight: 700; color: #E8C88A; line-height: 1.3; font-size: max(9.5px, calc(var(--tb) * 0.0292)); }
+        .artium-gx-trust-d { margin: 2px 0 0; font-weight: 500; color: #9C9C9C; line-height: 1.4; font-size: max(8.5px, calc(var(--tb) * 0.0263)); }
 
         /* ---- login ---- */
         .artium-gx-note { margin: 34px 0 0; font-size: 14px; font-weight: 500; color: #8B8B8B; }
@@ -5117,17 +5137,24 @@ function EntryGate({ onLearner, onStudent, onPianist, onLogin, learnerProfile, l
   // mark for the concert card. Filled pieces like the cap: rim, raised lid,
   // keybed and three legs, so it reads at 40px where an outline would fuzz.
   const piano = (
-    <svg className="artium-gx-cc-mark" viewBox="0 0 44 34" aria-hidden="true" style={{ aspectRatio: "44 / 34" }}>
+    <svg className="artium-gx-cc-mark" viewBox="3 0 68 72" aria-hidden="true" style={{ aspectRatio: "68 / 72" }}>
       <g fill={GATE.gold}>
-        {/* raised lid, hinged at the left, rising to the tail */}
-        <path d="M7 15.5 36.5 3.2c1.4-.6 2.9.4 2.9 1.9v10.4z" />
-        {/* lid prop */}
-        <path d="M30.2 8.9l1.5.9-4.6 6.9-1.5-.1z" />
-        {/* body and keybed */}
-        <path d="M4.6 16.9h34.8a1.6 1.6 0 0 1 1.6 1.6v2.9a1.6 1.6 0 0 1-1.6 1.6H4.6A1.6 1.6 0 0 1 3 21.4v-2.9a1.6 1.6 0 0 1 1.6-1.6z" />
-        {/* legs and castors */}
-        <path d="M7.4 23h3v7.2h-3zM20.5 23h3v5.6h-3zM33.6 23h3v7.2h-3z" />
-        <circle cx="8.9" cy="31.2" r="1.3" /><circle cx="35.1" cy="31.2" r="1.3" />
+        {/* A grand from above and to the left with its lid standing open, as
+            the reference draws it — not the side elevation this was, and not
+            the wide box either: the reference's mark is 67 x 71, all but
+            square. The lid is what identifies the instrument: a straight
+            front edge rising to the right, then the bent side curling round
+            the tail and tucking back in. */}
+        <path d="M21.7 34.9 45.3 4.9c.5-.7 1.3-1.1 2.2-1.1l9 -.4c6.2 0 10.9 4.1 10.9 9.4 0 5-3.5 8.6-8.2 9.6l-6.3 1.4c-2.7.6-4.5 2.1-5.9 4.3l-3.2 5.2z" />
+        {/* the prop stick */}
+        <path d="M46.3 8.6 48.2 9.7 37.6 33.5 35.7 32.4z" />
+        {/* the case: keyboard end at the left, curving round to the tail */}
+        <path d="M3.1 36.5c0-1.1.9-2 2-2h4.4v-4.1c0-1.1.9-2 2-2H41c.9 0 1.8.3 2.5.8l22.5 15.3c2.7 1.8 4.3 4.8 4.3 8 0 1.3-1.1 2.4-2.4 2.4H6.1c-1.7 0-3-1.3-3-3z" />
+        {/* four legs, the nearer ones longer */}
+        <path d="M12 54.9h3.2v12.4H12zM25.6 54.9h3.2v13.9h-3.2zM44.6 54.9h3.8v15.6h-3.8zM61.4 54.9h3v10.8h-3z" />
+        <rect x="10.7" y="66.6" width="5.8" height="2.2" rx="1.1" />
+        <rect x="24.3" y="68.1" width="5.8" height="2.2" rx="1.1" />
+        <rect x="43.2" y="69.8" width="6.6" height="2.2" rx="1.1" />
       </g>
     </svg>
   );
@@ -5169,16 +5196,21 @@ function EntryGate({ onLearner, onStudent, onPianist, onLogin, learnerProfile, l
               {/* The orbit the composition hangs from. Its top carries the
                   node, its foot the closing dot, and the two dots mark where
                   it passes behind the flanking circles. */}
-              <span className="artium-gx-orbit" aria-hidden="true" />
-              <span className="artium-gx-dot" style={{ left: "25.4%", top: "26.9%" }} aria-hidden="true" />
-              <span className="artium-gx-dot" style={{ left: "74.6%", top: "26.9%" }} aria-hidden="true" />
-              <span className="artium-gx-dot" style={{ left: "50%", top: "99.1%" }} aria-hidden="true" />
+              <svg className="artium-gx-orbit" viewBox="0 0 100 100" aria-hidden="true">
+                {/* Both arcs end exactly where the orbit meets a flank's rim,
+                    which is where the reference puts the dots. */}
+                <path d="M 6.97 24.54 A 50 50 0 0 1 92.94 24.38" />
+                <path d="M 88.35 82.08 A 50 50 0 0 1 11.50 81.90" />
+              </svg>
+              <span className="artium-gx-dot" style={{ left: "25.79%", top: "26.93%" }} aria-hidden="true" />
+              <span className="artium-gx-dot" style={{ left: "74.21%", top: "26.93%" }} aria-hidden="true" />
+              <span className="artium-gx-dot" style={{ left: "50.07%", top: "98.89%" }} aria-hidden="true" />
               <span className="artium-gx-node" aria-hidden="true">
                 {/* Solid, not stroked: at 18px a two-line outline reads as a
                     smudge, and this mark is a full stop on the orbit. */}
                 <svg viewBox="0 0 24 24" fill="currentColor">
-                  <circle cx="12" cy="8.2" r="4.1" />
-                  <path d="M12 13.4c4.2 0 7.6 3.4 7.6 7.6H4.4c0-4.2 3.4-7.6 7.6-7.6z" />
+                  <circle cx="12" cy="7.2" r="4.6" />
+                  <path d="M12 13.2c-4.7 0-8.5 2.9-8.5 6.6 0 .9.7 1.6 1.6 1.6h13.8c.9 0 1.6-.7 1.6-1.6 0-3.7-3.8-6.6-8.5-6.6z" />
                 </svg>
               </span>
               <span className="artium-gx-stem artium-gx-stem--top" aria-hidden="true" />
