@@ -1446,6 +1446,13 @@ export default function App() {
   // silently landed on the institutional-email route.
   const [verifyMethod, setVerifyMethod] = useState(() => sessionStorage.getItem("artium_verify_method") || "otp");
   React.useEffect(() => { sessionStorage.setItem("artium_verify_method", verifyMethod); }, [verifyMethod]);
+  // Which door they came through. The concert-pianist card lands on the same
+  // landing page as the student card, so the page alone cannot know what
+  // Sign Up should open — this flag is that memory, and it sits in
+  // sessionStorage for the same reason verifyMethod does: a reload on the
+  // landing page would otherwise quietly turn a hirer into a student.
+  const [pianistEntry, setPianistEntry] = useState(() => sessionStorage.getItem("artium_entry_pianist") === "1");
+  React.useEffect(() => { sessionStorage.setItem("artium_entry_pianist", pianistEntry ? "1" : "0"); }, [pianistEntry]);
 
   const [students, setStudents] = useState(() => seedTeaching([...SAMPLE_STUDENTS, ...CURTIS_MOCK_STUDENTS]));
   const [myProfile, setMyProfile] = useState(null);
@@ -1709,6 +1716,16 @@ export default function App() {
   function chooseStudent(method) {
     if (myProfile) { setScreen("app"); setAppTabPersist("map"); return; }
     setVerifyMethod(method);
+    setPianistEntry(false);
+    setScreen("landing");
+  }
+  // The concert-pianist card. For now it lands on the same landing page as
+  // the student card — the content is shared deliberately — and the flag is
+  // what diverges later: Sign Up from a pianist entry opens the hirer's
+  // signup instead of the student audition.
+  function choosePianist() {
+    if (myProfile) { setScreen("app"); setAppTabPersist("map"); return; }
+    setPianistEntry(true);
     setScreen("landing");
   }
   function chooseLearner() {
@@ -2055,68 +2072,57 @@ export default function App() {
         .artium-gx-rule i { width: 5px; height: 5px; background: #EFD09B; transform: rotate(45deg); flex-shrink: 0; }
 
         /* ---- cards ----
-           Medallions, not panels. A circle cannot hold a paragraph — the
-           usable width collapses as you move away from its diameter — so the
-           glass moves into the disc, the disc carries only the mark, and the
-           words sit beneath it. The whole column is still one button. */
-        .artium-gx-cards { width: 100%; display: flex; flex-direction: column; gap: 16px; }
-        /* stretch, not flex-start: the pair's cards equalise heights, and with
-           the arrow pushed to the column's foot below, the two arrows sit on
-           one line no matter how each card's copy happens to wrap. The title's
-           min-height stops carrying that job alone. */
-        .artium-gx-pair { display: flex; gap: 14px; align-items: stretch; }
-
-        .artium-gx-card {
-          display: flex; flex-direction: column; align-items: center; text-align: center;
-          padding: 0; border: none; background: none; cursor: pointer;
-          font: inherit; color: inherit;
-          transition: transform .4s cubic-bezier(.22,1,.36,1);
-        }
-        .artium-gx-card:hover { transform: translateY(-6px); }
-        .artium-gx-card:active { transform: translateY(-2px); }
-        /* The ring is the shape of this control, so the focus ring follows it
-           rather than boxing the whole column. */
-        .artium-gx-card:focus-visible { outline: none; }
-        .artium-gx-card:focus-visible .artium-gx-orb { outline: 1px solid #EFD09B; outline-offset: 6px; }
-
-        .artium-gx-orb {
-          position: relative; width: 100%; max-width: 148px; aspect-ratio: 1;
-          border-radius: 50%; flex-shrink: 0;
+           Three circles, per the reference: the student ellipse enthroned in
+           the middle with a lit gold ring, the two ways in from outside —
+           find a teacher, hire a pianist — as dialled medallions either side.
+           The words live inside the circles now, which only works because
+           every description is two short clauses; a circle's usable width
+           collapses away from its diameter, so the copy budget is part of
+           the design. Each circle is one button. */
+        .artium-gx-trio { width: 100%; display: flex; flex-direction: column; align-items: center; }
+        /* The lineage stem: a small bust in a ring, a dashed drop, then the
+           student circle — the reference's way of saying "this one is you". */
+        .artium-gx-node {
+          width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+          border: 1px solid rgba(239,208,155,0.55); color: #EFD09B;
           display: flex; align-items: center; justify-content: center;
+          background: rgba(255,255,255,0.02);
+        }
+        .artium-gx-drop { width: 0; height: 24px; border-left: 1px dashed rgba(239,208,155,0.4); }
+        .artium-gx-ring3 {
+          position: relative; width: 100%;
+          display: flex; flex-direction: column; align-items: center; gap: 18px;
+        }
+        .artium-gx-sidepair { display: flex; gap: 13px; width: 100%; justify-content: center; }
+
+        .artium-gx-cc {
+          position: relative; display: flex; flex-direction: column;
+          align-items: center; justify-content: center; text-align: center;
+          border-radius: 50%; cursor: pointer; font: inherit; color: inherit;
           border: 1px solid rgba(239,208,155,0.22);
-          /* The same upper-left light as the panels had, bent round a circle:
-             the measured falloff was radial from the corner to begin with, so
-             it survives the change of shape. */
+          /* The gate's upper-left light, bent round a circle. */
           background:
-            radial-gradient(125% 125% at 24% 10%,
-              rgba(255,255,255,0.105) 0%, rgba(255,255,255,0.062) 34%,
-              rgba(255,255,255,0.026) 64%, rgba(255,255,255,0.008) 86%,
+            radial-gradient(125% 125% at 26% 8%,
+              rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.058) 34%,
+              rgba(255,255,255,0.024) 64%, rgba(255,255,255,0.008) 86%,
               rgba(255,255,255,0) 100%),
             rgba(255,255,255,0.015);
           -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
-          box-shadow: 0 18px 45px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.10);
-          transition: border-color .35s ease, box-shadow .35s ease;
+          box-shadow: 0 18px 45px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.09);
+          transition: transform .4s cubic-bezier(.22,1,.36,1), border-color .35s ease, box-shadow .35s ease;
         }
+        .artium-gx-cc:hover { transform: translateY(-6px); border-color: rgba(239,208,155,0.5); }
+        .artium-gx-cc:active { transform: translateY(-2px); }
+        .artium-gx-cc:focus-visible { outline: 1px solid #EFD09B; outline-offset: 6px; }
 
-        /* Two rotations, opposed. A sheen travels the rim like light moving
-           round a struck cymbal; outside it a ring of ticks turns the other
-           way, slowly enough to read as a dial rather than a spinner. Both are
-           annuli — a radial mask punches the middle out — so the glass inside
-           stays clean and the mark never sits on moving ground. */
-        .artium-gx-orb::before, .artium-gx-orb::after {
-          content: ''; position: absolute; border-radius: 50%; pointer-events: none;
-        }
-        .artium-gx-orb::before {
-          inset: -1px;
-          background: conic-gradient(from 0deg,
-            rgba(239,208,155,0) 0deg, rgba(239,208,155,0.78) 34deg, rgba(239,208,155,0) 98deg,
-            rgba(239,208,155,0) 188deg, rgba(239,208,155,0.30) 222deg, rgba(239,208,155,0) 286deg);
-          -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 1.5px), #000 calc(100% - 1.5px));
-                  mask: radial-gradient(farthest-side, transparent calc(100% - 1.5px), #000 calc(100% - 1.5px));
-          animation: artiumOrbit 13s linear infinite;
-        }
-        .artium-gx-orb::after {
-          inset: -8px; opacity: 0.55;
+        /* The side medallions: square circles with the dial ring of ticks
+           turning slowly outside — the reference draws the same ticks, just
+           not moving. Sized against the 390 column: two of these plus the
+           gap is 341. */
+        .artium-gx-cc--side { width: 164px; aspect-ratio: 1; padding: 14px 15px; }
+        .artium-gx-cc--side::after {
+          content: ''; position: absolute; inset: -8px; border-radius: 50%;
+          pointer-events: none; opacity: 0.5;
           background: repeating-conic-gradient(from 0deg,
             rgba(239,208,155,0.34) 0deg 1.2deg, rgba(239,208,155,0) 1.2deg 9deg);
           -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
@@ -2125,41 +2131,90 @@ export default function App() {
         }
         @keyframes artiumOrbit { to { transform: rotate(360deg); } }
 
-        .artium-gx-card:hover .artium-gx-orb {
-          border-color: rgba(239,208,155,0.5);
-          box-shadow: 0 26px 60px rgba(0,0,0,0.6), 0 0 30px rgba(239,208,155,0.12),
-                      inset 0 1px 0 rgba(255,255,255,0.14);
+        /* The student ellipse. Taller than wide, as the reference draws it,
+           and the only card whose ring is lit: border carries the line, the
+           outer shadow carries the halo, the inset keeps the rim bright on
+           the glass. */
+        .artium-gx-cc--hero {
+          width: min(64vw, 234px); aspect-ratio: 21 / 24; padding: 8% 9%;
+          border: 1.5px solid rgba(239,208,155,0.8);
+          box-shadow:
+            0 0 42px rgba(239,208,155,0.16), 0 22px 55px rgba(0,0,0,0.5),
+            inset 0 0 22px rgba(239,208,155,0.07), inset 0 1px 0 rgba(255,255,255,0.12);
         }
-        /* The sweep quickens under the cursor — the one place the motion is
-           meant to be noticed rather than felt. */
-        .artium-gx-card:hover .artium-gx-orb::before { animation-duration: 4.5s; }
-        .artium-gx-card:hover .artium-gx-orb::after { opacity: 0.85; }
+        .artium-gx-cc--hero:hover {
+          border-color: rgba(239,208,155,0.95);
+          box-shadow:
+            0 0 56px rgba(239,208,155,0.22), 0 26px 62px rgba(0,0,0,0.55),
+            inset 0 0 26px rgba(239,208,155,0.09), inset 0 1px 0 rgba(255,255,255,0.14);
+        }
 
-        /* Two lines' worth whether it uses them or not. "Find a teacher" is one
-           line and "I'm a conservatory student" is two, so without a floor the
-           two columns' arrows land at different heights and the pair reads as
-           misaligned rather than as a pair. */
-        .artium-gx-title {
-          margin-top: 17px; min-height: 2.4em;
-          font-family: 'Cormorant Garamond', 'Didot', 'Bodoni 72', Georgia, serif; font-weight: 700; color: #FFFFFF;
-          font-size: 17px; line-height: 1.2;
+        .artium-gx-cc-eyebrow {
+          font-family: 'Cormorant Garamond', 'Didot', 'Bodoni 72', Georgia, serif;
+          font-weight: 600; font-size: 14px; line-height: 1; color: #FFFFFF;
         }
-        .artium-gx-sub { margin-top: 6px; font-size: 11.5px; font-weight: 600; line-height: 1.45; color: #E6DAB0; }
-        /* margin-bottom is the arrow gap now that the arrow's own margin is
-           auto — without it the shorter card's copy would touch its arrow. */
-        .artium-gx-desc { margin: 8px 0 13px; font-size: 12px; font-weight: 500; line-height: 1.5; color: #8B8B8B; }
+        .artium-gx-cc-title {
+          margin-top: 3px;
+          font-family: 'Cormorant Garamond', 'Didot', 'Bodoni 72', Georgia, serif;
+          font-weight: 700; color: #FFFFFF; line-height: 1.16;
+        }
+        .artium-gx-cc--hero .artium-gx-cc-title { font-size: 21px; }
+        .artium-gx-cc--side .artium-gx-cc-title { font-size: 15.5px; }
+        /* The lozenge under the side titles, straight off the reference. */
+        .artium-gx-cc-gem { width: 5px; height: 5px; background: #EFD09B; transform: rotate(45deg); margin-top: 7px; }
+        .artium-gx-cc-desc { margin: 7px 0 0; font-weight: 500; color: #9C9C9C; line-height: 1.45; }
+        .artium-gx-cc--hero .artium-gx-cc-desc { font-size: 12px; }
+        .artium-gx-cc--side .artium-gx-cc-desc { font-size: 10.5px; }
         .artium-gx-go {
-          /* auto, not a fixed 13px: in the stretched pair this pins every
-             arrow to its card's foot, which is what actually aligns them. */
-          margin-top: auto; padding-top: 0;
-          width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+          margin-top: 10px; width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
           background: linear-gradient(160deg, #E3BB7A, #C99A55);
           color: #0F1012; display: flex; align-items: center; justify-content: center;
           transition: transform .3s ease, box-shadow .3s ease;
         }
-        .artium-gx-card:hover .artium-gx-go {
+        .artium-gx-cc:hover .artium-gx-go {
           transform: scale(1.08);
           box-shadow: 0 0 22px rgba(239,208,155,0.45);
+        }
+
+        /* Wide screens: left, throne, right on one line — the sidepair melts
+           into the row (display: contents) and order pulls the hero between
+           its flanks. The faint orbit arc behind them is the reference's
+           connecting circle, faded out before it can collide with the copy
+           below. */
+        @media (min-width: 700px) {
+          .artium-gx-ring3 { flex-direction: row; justify-content: center; align-items: center; gap: 26px; }
+          .artium-gx-sidepair { display: contents; }
+          .artium-gx-cc--hero { order: 0; }
+          .artium-gx-sidepair .artium-gx-cc:first-child { order: -1; }
+          .artium-gx-sidepair .artium-gx-cc:last-child { order: 1; }
+          .artium-gx-ring3::before {
+            content: ''; position: absolute; left: 50%; top: 50%;
+            width: 560px; height: 560px; transform: translate(-50%, -52%);
+            border: 1px solid rgba(239,208,155,0.22); border-radius: 50%;
+            -webkit-mask: linear-gradient(180deg, #000 52%, transparent 72%);
+                    mask: linear-gradient(180deg, #000 52%, transparent 72%);
+            pointer-events: none;
+          }
+        }
+
+        /* ---- the trust bar ---- */
+        .artium-gx-trust {
+          width: 100%; margin-top: 24px; border-radius: 20px;
+          border: 1px solid rgba(239,208,155,0.16);
+          background: rgba(255,255,255,0.025);
+          -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
+          box-shadow: 0 14px 34px rgba(0,0,0,0.35);
+          display: flex; flex-direction: column;
+        }
+        .artium-gx-trust-item { display: flex; align-items: center; gap: 13px; padding: 13px 18px; text-align: left; }
+        .artium-gx-trust-item + .artium-gx-trust-item { border-top: 1px solid rgba(255,255,255,0.07); }
+        .artium-gx-trust-item svg { flex-shrink: 0; color: rgba(239,208,155,0.8); }
+        .artium-gx-trust-t { margin: 0; font-size: 12.5px; font-weight: 700; color: #FFFFFF; line-height: 1.3; }
+        .artium-gx-trust-d { margin: 2px 0 0; font-size: 11px; font-weight: 500; color: #8B8B8B; line-height: 1.45; }
+        @media (min-width: 700px) {
+          .artium-gx-trust { flex-direction: row; }
+          .artium-gx-trust-item { flex: 1 1 0; }
+          .artium-gx-trust-item + .artium-gx-trust-item { border-top: none; border-left: 1px solid rgba(255,255,255,0.07); }
         }
 
         /* ---- login ---- */
@@ -2497,7 +2552,7 @@ export default function App() {
         />
       )}
 
-      {screen === "entry" && <EntryGate onLearner={chooseLearner} onStudent={() => chooseStudent("otp")} onLogin={startLogin} learnerProfile={learnerProfile} learnerLoggedOut={learnerLoggedOut} studentLoggedIn={!!myProfile} musicOn={musicPlaying} onMusicToggle={toggleMusic} memberCount={Object.values(studentsByCons).flat().length} />}
+      {screen === "entry" && <EntryGate onLearner={chooseLearner} onStudent={() => chooseStudent("otp")} onPianist={choosePianist} onLogin={startLogin} learnerProfile={learnerProfile} learnerLoggedOut={learnerLoggedOut} studentLoggedIn={!!myProfile} musicOn={musicPlaying} onMusicToggle={toggleMusic} memberCount={Object.values(studentsByCons).flat().length} />}
       {screen === "learnerSignup" && <LearnerSignup onSubmit={submitLearner} onBack={backToEntry} onLogin={startLogin} error={authError} googleName={learnerGoogleName} />}
       {screen === "learnerMap" && (
         <LearnerScreen
@@ -2525,7 +2580,13 @@ export default function App() {
         />
       )}
 
-      {screen === "landing" && <Landing onApply={startApply} onBack={backToEntry} onPreview={startPreview} onProfile={goToProfile} onLogin={startLogin} myProfile={myProfile} studentLoggedOut={studentLoggedOut} musicOn={musicPlaying} onMusicToggle={toggleMusic} error={authError} onGoToLessonRoom={() => { setScreen("app"); setAppTabPersist("lessons"); }} studentsByCons={studentsByCons} />}
+      {screen === "landing" && <Landing onApply={pianistEntry ? () => { setAuthError(""); setScreen("hirerSignup"); } : startApply} onBack={backToEntry} onPreview={startPreview} onProfile={goToProfile} onLogin={startLogin} myProfile={myProfile} studentLoggedOut={studentLoggedOut} musicOn={musicPlaying} onMusicToggle={toggleMusic} error={authError} onGoToLessonRoom={() => { setScreen("app"); setAppTabPersist("lessons"); }} studentsByCons={studentsByCons} />}
+      {screen === "hirerSignup" && (
+        <HirerSignup
+          onBack={() => setScreen("landing")}
+          onDone={() => { setPianistEntry(false); setScreen("entry"); }}
+        />
+      )}
       {screen === "login" && <LoginScreen onSubmit={handleLogin} onBack={goHome} error={authError} />}
       {screen === "signup" && (
         <SignupFlow
@@ -2988,6 +3049,215 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
           </a>
         </span>
       </footer>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------- */
+/* HIRER SIGNUP — Find a Concert Pianist                              */
+/* ---------------------------------------------------------------- */
+/**
+ * Signup for the third audience: people hiring a pianist, not joining as
+ * musicians. Four steps, because a hirer's questions are not a student's —
+ * no audition, no conservatory, no repertoire history. Instead: who is
+ * engaging, for what occasion, in what format, at what budget. The flow
+ * borrows the student signup's whole visual language (roman stepper,
+ * progress bars, chips, paper ground) so it reads as the same institution
+ * asking different questions.
+ *
+ * On submit the account is created with the engagement carried in the auth
+ * metadata (role: "concert_hirer") — no profiles row and no new tables, so
+ * nothing here can collide with the students' schema while the concert
+ * side of the product is still forming.
+ */
+const HIRER_STEPS = ["Create your account", "Who's hiring", "The engagement", "Review & send"];
+const HIRER_ORG = ["Individual", "Concert venue", "Orchestra", "Festival", "Agency", "Other"];
+const HIRER_OCCASION = ["Concert", "Recital", "Wedding", "Corporate event", "Recording session", "Other"];
+const HIRER_FORMAT = ["Solo recital", "Accompanist", "Chamber ensemble"];
+const HIRER_BUDGET = ["Up to €500", "€500–1,500", "€1,500–5,000", "€5,000+", "To be discussed"];
+
+function HirerSignup({ onBack, onDone }) {
+  const [step, setStep] = useState(0);
+  const [d, setD] = useState({
+    email: "", password: "", confirm: "",
+    name: "", org: "",
+    occasion: "", city: "", date: "", format: "", budget: "", notes: "",
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [err, setErr] = useState("");
+  const [done, setDone] = useState(false);
+  const up = (patch) => setD((v) => ({ ...v, ...patch }));
+
+  const canNext = [
+    d.email.trim().length > 3 && d.password.length >= 6 && d.password === d.confirm,
+    d.name.trim().length > 1 && !!d.org,
+    !!d.occasion && d.city.trim().length > 1 && !!d.format && !!d.budget,
+    true,
+  ][step];
+
+  async function submit() {
+    setErr(""); setSubmitting(true);
+    // The engagement rides in the auth metadata: no profiles row, so the
+    // hirer cannot trip the students' RLS or show up on the map.
+    const { error } = await supabase.auth.signUp({
+      email: d.email.trim(),
+      password: d.password,
+      options: {
+        data: {
+          role: "concert_hirer", hirer_name: d.name.trim(), org_type: d.org,
+          occasion: d.occasion, city: d.city.trim(), date: d.date.trim(),
+          format: d.format, budget: d.budget, notes: d.notes.trim(),
+        },
+      },
+    });
+    setSubmitting(false);
+    if (error) { setErr(error.message); return; }
+    setDone(true);
+  }
+
+  if (done) {
+    return (
+      <div className="min-h-full" style={{ background: C.ink, color: C.ivory, fontFamily: FONT_BODY }}>
+        <div className="max-w-xl mx-auto px-6" style={{ paddingTop: 96, textAlign: "center" }}>
+          <div style={{ width: 58, height: 58, margin: "0 auto 20px", borderRadius: "50%", border: `1.5px solid ${C.brass}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <CheckIcon size={26} color={C.brass} />
+          </div>
+          <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 28, fontWeight: 600, margin: 0 }}>Request received</h2>
+          <p className="text-sm" style={{ color: C.ivoryDim, lineHeight: 1.6, marginTop: 14 }}>
+            Your account is created and your engagement is with us — <b>{d.occasion || "your event"}</b>
+            {d.city ? <> in <b>{d.city}</b></> : null}. We match every request against the
+            conservatory pianists on the network and come back to you with a shortlist by email.
+            Check your inbox to confirm your address.
+          </p>
+          <div style={{ marginTop: 26 }}>
+            <PrimaryBtn onClick={onDone}>Back to Artium</PrimaryBtn>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-full" style={{ background: C.ink, color: C.ivory, fontFamily: FONT_BODY }}>
+      <div className="max-w-3xl mx-auto px-6 pt-8">
+        <div className="flex items-center gap-3">
+          <button onClick={step === 0 ? onBack : () => setStep(step - 1)} style={{ color: C.ivoryDim, background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", padding: 0 }}>
+            <ChevronLeft size={18} />
+          </button>
+          <Logo size={20} markSize={HEADER_CONTROL} />
+        </div>
+        <div className="mt-8 flex items-center gap-4">
+          <span style={{ fontFamily: FONT_MONO, color: C.brassLabel, fontSize: 13 }}>Step {ROMAN[step]} of {ROMAN[HIRER_STEPS.length - 1]}</span>
+          <div className="flex-1 flex gap-1">
+            {HIRER_STEPS.map((_, i) => (
+              <div key={i} className="flex-1 rounded-full" style={{ height: 3, background: i <= step ? C.brass : C.inkLine }} />
+            ))}
+          </div>
+        </div>
+        <h2 className="mt-5" style={{ fontFamily: FONT_DISPLAY, fontSize: 30, fontWeight: 600 }}>{HIRER_STEPS[step]}</h2>
+      </div>
+
+      <div className="max-w-3xl mx-auto px-6 py-10 lg-fade" key={step}>
+        {step === 0 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 18, maxWidth: 420 }}>
+            <Field label="Email">
+              <input style={inputStyle} type="email" value={d.email} onChange={(e) => up({ email: e.target.value })} placeholder="you@example.com" autoComplete="email" />
+            </Field>
+            <Field label="Password">
+              <input style={inputStyle} type="password" value={d.password} onChange={(e) => up({ password: e.target.value })} placeholder="At least 6 characters" autoComplete="new-password" />
+            </Field>
+            <Field label="Confirm password">
+              <input style={inputStyle} type="password" value={d.confirm} onChange={(e) => up({ confirm: e.target.value })} autoComplete="new-password" />
+              {d.confirm && d.confirm !== d.password && (
+                <p className="text-sm" style={{ color: C.burgundy, marginTop: 6 }}>Passwords don't match yet.</p>
+              )}
+            </Field>
+          </div>
+        )}
+        {step === 1 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 22, maxWidth: 520 }}>
+            <Field label="Your name">
+              <input style={inputStyle} value={d.name} onChange={(e) => up({ name: e.target.value })} placeholder="Full name" autoComplete="name" />
+            </Field>
+            <Field label="You're hiring as">
+              <div className="flex flex-wrap gap-2">
+                {HIRER_ORG.map((o) => (
+                  <Chip key={o} active={d.org === o} onClick={() => up({ org: o })}>{o}</Chip>
+                ))}
+              </div>
+            </Field>
+          </div>
+        )}
+        {step === 2 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 22, maxWidth: 560 }}>
+            <Field label="The occasion">
+              <div className="flex flex-wrap gap-2">
+                {HIRER_OCCASION.map((o) => (
+                  <Chip key={o} active={d.occasion === o} onClick={() => up({ occasion: o })}>{o}</Chip>
+                ))}
+              </div>
+            </Field>
+            <div className="grid sm:grid-cols-2 gap-4">
+              <Field label="City">
+                <input style={inputStyle} value={d.city} onChange={(e) => up({ city: e.target.value })} placeholder="e.g. Vienna" />
+              </Field>
+              <Field label="Date (or roughly when)">
+                <input style={inputStyle} value={d.date} onChange={(e) => up({ date: e.target.value })} placeholder="e.g. 14 May 2027 — or 'flexible'" />
+              </Field>
+            </div>
+            <Field label="Format">
+              <div className="flex flex-wrap gap-2">
+                {HIRER_FORMAT.map((o) => (
+                  <Chip key={o} active={d.format === o} onClick={() => up({ format: o })}>{o}</Chip>
+                ))}
+              </div>
+            </Field>
+            <Field label="Budget">
+              <div className="flex flex-wrap gap-2">
+                {HIRER_BUDGET.map((o) => (
+                  <Chip key={o} active={d.budget === o} onClick={() => up({ budget: o })}>{o}</Chip>
+                ))}
+              </div>
+            </Field>
+            <Field label="Anything the pianist should know? (optional)">
+              <textarea style={{ ...inputStyle, resize: "vertical", minHeight: 80, lineHeight: 1.6 }} value={d.notes} onChange={(e) => up({ notes: e.target.value })} placeholder="Repertoire wishes, the venue's piano, rehearsal plans…" />
+            </Field>
+          </div>
+        )}
+        {step === 3 && (
+          <div style={{ maxWidth: 560 }}>
+            <div style={{ background: "#fff", border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: "18px 22px", display: "flex", flexDirection: "column", gap: 10 }}>
+              {[
+                ["Account", d.email],
+                ["Hiring as", `${d.name} — ${d.org}`],
+                ["Engagement", `${d.occasion} · ${d.city}${d.date ? " · " + d.date : ""}`],
+                ["Format", d.format],
+                ["Budget", d.budget],
+                d.notes ? ["Notes", d.notes] : null,
+              ].filter(Boolean).map(([k, v]) => (
+                <div key={k} style={{ display: "flex", gap: 14 }}>
+                  <span style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brassLabel, letterSpacing: 0.5, width: 92, flexShrink: 0, paddingTop: 2 }}>{k.toUpperCase()}</span>
+                  <span style={{ fontSize: 14, lineHeight: 1.5 }}>{v}</span>
+                </div>
+              ))}
+            </div>
+            <p className="text-sm" style={{ color: C.ivoryDim, lineHeight: 1.6, marginTop: 16 }}>
+              We come back with a shortlist of conservatory pianists who fit the
+              engagement — you choose who to talk to. Nothing is booked until
+              you agree it with the pianist.
+            </p>
+            {err && <p className="text-sm" style={{ color: C.burgundy, marginTop: 12 }}>{err}</p>}
+          </div>
+        )}
+
+        <div className="mt-10 flex items-center gap-4">
+          {step < HIRER_STEPS.length - 1 ? (
+            <PrimaryBtn disabled={!canNext} onClick={() => setStep(step + 1)}>Continue</PrimaryBtn>
+          ) : (
+            <PrimaryBtn disabled={submitting} onClick={submit}>{submitting ? "Sending…" : "Create account & send request"}</PrimaryBtn>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -4711,29 +4981,38 @@ function GateBackdrop({ photo }) {
 }
 
 /**
- * A card in the entry gate: a gold-ringed icon, a serif title, an optional
- * gold qualifier, a line of copy, and a filled arrow. The whole card is the
- * button — the arrow is a signal, not a separate target, so there is nothing
- * to miss and nothing to hit twice.
+ * A circle card in the entry gate: everything — icon, serif title, a line of
+ * copy, the filled arrow — lives inside the circle, and the whole circle is
+ * the button. hero renders the lit student ellipse; the rest are the dialled
+ * side medallions. The copy has a budget: a circle's usable width collapses
+ * away from its diameter, so descriptions stay to two short clauses.
  */
-function GateCard({ onClick, icon, title, sub, desc, step }) {
+function GateCircle({ onClick, icon, eyebrow, title, desc, step, hero }) {
   return (
-    <button onClick={onClick} className={`artium-gx-card artium-gx-in artium-gx-in--${step}`} style={{ flex: "1 1 0" }}>
-      <span className="artium-gx-orb">{icon}</span>
-      <span className="artium-gx-title">{title}</span>
-      {sub && <span className="artium-gx-sub">{sub}</span>}
-      <span className="artium-gx-desc">{desc}</span>
+    <button
+      onClick={onClick}
+      className={`artium-gx-cc ${hero ? "artium-gx-cc--hero" : "artium-gx-cc--side"} artium-gx-in artium-gx-in--${step}`}
+    >
+      {icon}
+      {eyebrow && <span className="artium-gx-cc-eyebrow" style={{ marginTop: 7 }}>{eyebrow}</span>}
+      <span className="artium-gx-cc-title">{title}</span>
+      {!hero && <span className="artium-gx-cc-gem" aria-hidden="true" />}
+      <span className="artium-gx-cc-desc">{desc}</span>
       <span className="artium-gx-go" aria-hidden="true">
-        <ArrowRight size={19} strokeWidth={2.1} />
+        <ArrowRight size={17} strokeWidth={2.1} />
       </span>
     </button>
   );
 }
 
-function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLoggedOut, studentLoggedIn, musicOn, onMusicToggle, memberCount }) {
+function EntryGate({ onLearner, onStudent, onPianist, onLogin, learnerProfile, learnerLoggedOut, studentLoggedIn, musicOn, onMusicToggle, memberCount }) {
   const singleCard = !!learnerProfile || learnerLoggedOut || studentLoggedIn;
   const showLearner = !studentLoggedIn;
   const showStudent = !singleCard || studentLoggedIn;
+  // The full trio only in the fresh state. In every reduced state — a learner
+  // profile on this device, a logged-out learner, a signed-in student — the
+  // gate collapses to the one card that continues their story.
+  const fullTrio = showLearner && showStudent && !singleCard;
 
   // The conductor is the logo's own mark, painted through a mask rather than
   // drawn: it arrives as artwork with its own colours, and here it has to be
@@ -4741,7 +5020,7 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
   const conductor = (
     <span
       style={{
-        display: "block", width: 46, height: 55, backgroundColor: GATE.gold,
+        display: "block", width: 34, height: 41, backgroundColor: GATE.gold,
         WebkitMaskImage: `url('${TEACHER_MARK}')`, maskImage: `url('${TEACHER_MARK}')`,
         WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat",
         WebkitMaskSize: "contain", maskSize: "contain",
@@ -4754,11 +5033,29 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
   // a blot, because its shape is the stroke's centreline, not the form. Board,
   // crown and tassel as three filled pieces.
   const cap = (
-    <svg width="48" height="48" viewBox="0 0 24 24" aria-hidden="true" style={{ display: "block" }}>
+    <svg width="40" height="40" viewBox="0 0 24 24" aria-hidden="true" style={{ display: "block" }}>
       <path d="M12 3.4 23 8.7 12 14 1 8.7z" fill={GATE.gold} />
       <path d="M6.6 11.05 12 13.65l5.4-2.6v4.02c0 .43-.26.82-.7 1.08-1.1.66-2.79 1.05-4.7 1.05s-3.6-.39-4.7-1.05c-.44-.26-.7-.65-.7-1.08z" fill={GATE.gold} />
       <path d="M20.7 10.15a.62.62 0 0 1 .62.62v4.06a.62.62 0 0 1-1.24 0v-4.06c0-.34.28-.62.62-.62z" fill={GATE.gold} />
       <circle cx="20.7" cy="16.1" r="1.15" fill={GATE.gold} />
+    </svg>
+  );
+  // A grand piano in silhouette, side on with the lid up — the reference's
+  // mark for the concert card. Filled pieces like the cap: rim, raised lid,
+  // keybed and three legs, so it reads at 40px where an outline would fuzz.
+  const piano = (
+    <svg width="44" height="34" viewBox="0 0 44 34" aria-hidden="true" style={{ display: "block" }}>
+      <g fill={GATE.gold}>
+        {/* raised lid, hinged at the left, rising to the tail */}
+        <path d="M7 15.5 36.5 3.2c1.4-.6 2.9.4 2.9 1.9v10.4z" />
+        {/* lid prop */}
+        <path d="M30.2 8.9l1.5.9-4.6 6.9-1.5-.1z" />
+        {/* body and keybed */}
+        <path d="M4.6 16.9h34.8a1.6 1.6 0 0 1 1.6 1.6v2.9a1.6 1.6 0 0 1-1.6 1.6H4.6A1.6 1.6 0 0 1 3 21.4v-2.9a1.6 1.6 0 0 1 1.6-1.6z" />
+        {/* legs and castors */}
+        <path d="M7.4 23h3v7.2h-3zM20.5 23h3v5.6h-3zM33.6 23h3v7.2h-3z" />
+        <circle cx="8.9" cy="31.2" r="1.3" /><circle cx="35.1" cy="31.2" r="1.3" />
+      </g>
     </svg>
   );
 
@@ -4789,34 +5086,84 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
           <span /><i /><span />
         </div>
 
-        {/* Two audiences, two cards, equal weight. There used to be a third —
-            conservatory students without an institutional email — but it asked
-            the visitor to classify themselves before they knew it mattered,
-            and both cards ran the same signup either way. The question now
-            gets asked at the point it is actually answerable: on the
-            verification step, where they can see what is being asked for. */}
-        <div className="artium-gx-cards">
-          <div className="artium-gx-pair">
-            {showLearner && (
-              <GateCard
+        {/* Three audiences now: students in the lit centre, and the two ways
+            in from outside — learning from them, hiring them — either side.
+            The stem above the centre (bust, dashed drop) is the reference's
+            way of saying "this one is you". */}
+        <div className="artium-gx-trio">
+          {fullTrio && (
+            <>
+              <span className="artium-gx-node artium-gx-in artium-gx-in--4" aria-hidden="true">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <circle cx="12" cy="8" r="4" />
+                  <path d="M4.5 20.5a7.5 7.5 0 0 1 15 0" />
+                </svg>
+              </span>
+              <span className="artium-gx-drop artium-gx-in artium-gx-in--4" aria-hidden="true" />
+            </>
+          )}
+          <div className="artium-gx-ring3">
+            {showStudent && (
+              <GateCircle
+                hero
+                step={4}
+                onClick={onStudent}
+                icon={cap}
+                eyebrow={studentLoggedIn ? null : "I'm a"}
+                title={studentLoggedIn ? "Continue" : <>Conservatory<br />Student | Graduate</>}
+                desc="Learn, connect with peers, access resources, and grow."
+              />
+            )}
+            {fullTrio ? (
+              <div className="artium-gx-sidepair">
+                <GateCircle
+                  step={5}
+                  onClick={onLearner}
+                  icon={conductor}
+                  title="Find a Teacher"
+                  desc="Discover and connect with top conservatory musicians and inspiring teachers."
+                />
+                <GateCircle
+                  step={6}
+                  onClick={onPianist}
+                  icon={piano}
+                  title="Find a Concert Pianist"
+                  desc="Hire talented conservatory pianists for your concert, event or project."
+                />
+              </div>
+            ) : showLearner && (
+              <GateCircle
+                hero
                 step={4}
                 onClick={onLearner}
                 icon={conductor}
-                title={learnerLoggedOut ? "Log in" : "Find a teacher"}
-                desc="Learn your favorite instrument from top conservatory musicians."
-              />
-            )}
-            {showStudent && (
-              <GateCard
-                step={5}
-                onClick={onStudent}
-                icon={cap}
-                title={studentLoggedIn ? "Continue" : "I'm a conservatory student"}
-                desc="Discover peers worldwide, earn while you teach and promote yourself."
+                title={learnerLoggedOut ? "Log in" : "Find a Teacher"}
+                desc="Discover and connect with top conservatory musicians and inspiring teachers."
               />
             )}
           </div>
         </div>
+
+        {fullTrio && (
+          <div className="artium-gx-trust artium-gx-in artium-gx-in--7">
+            {[
+              { t: "Trusted Community", d: "Verified conservatory students & musicians",
+                i: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><circle cx="9.2" cy="8.2" r="3" /><path d="M3.2 19.4a6 6 0 0 1 12 0" /><circle cx="17.4" cy="9.4" r="2.3" /><path d="M16.3 14.9a4.6 4.6 0 0 1 5 4.5" /></svg> },
+              { t: "Safe & Secure", d: "Private, secure and reliable platform",
+                i: <ShieldCheck size={22} strokeWidth={1.6} /> },
+              { t: "Grow Together", d: "Opportunities, collaborations and real connections",
+                i: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M4 20v-4M9.3 20v-8M14.6 20V7M19.9 20V3.5" /></svg> },
+            ].map((f) => (
+              <div key={f.t} className="artium-gx-trust-item">
+                {f.i}
+                <span>
+                  <p className="artium-gx-trust-t">{f.t}</p>
+                  <p className="artium-gx-trust-d">{f.d}</p>
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
 
         {(studentLoggedIn || learnerProfile) ? (
           <p className="artium-gx-note artium-gx-in artium-gx-in--7">
