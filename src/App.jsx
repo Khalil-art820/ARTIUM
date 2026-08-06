@@ -2071,36 +2071,72 @@ export default function App() {
         .artium-gx-rule span:last-child { background: linear-gradient(90deg, rgba(239,208,155,0.65), transparent); }
         .artium-gx-rule i { width: 5px; height: 5px; background: #EFD09B; transform: rotate(45deg); flex-shrink: 0; }
 
-        /* ---- cards ----
-           Three circles, per the reference: the student ellipse enthroned in
-           the middle with a lit gold ring, the two ways in from outside —
-           find a teacher, hire a pianist — as dialled medallions either side.
-           The words live inside the circles now, which only works because
-           every description is two short clauses; a circle's usable width
-           collapses away from its diameter, so the copy budget is part of
-           the design. Each circle is one button. */
-        .artium-gx-trio { width: 100%; display: flex; flex-direction: column; align-items: center; }
-        /* The lineage stem: a small bust in a ring, a dashed drop, then the
-           student circle — the reference's way of saying "this one is you". */
+        /* ---- the trio ------------------------------------------------
+           Measured off the reference rather than approximated. Every number
+           below is a fraction of --tw, the stage's width, so the composition
+           is the reference at any size:
+
+             side circle      326/997 = 0.3270      centre  363 x 381
+             side centre dx   335.5/997 = 0.3365    orbit R 281/997 = 0.2818
+             side centre dy   +41 below the centre's, 0.0411
+             stage height     595/997 = 0.5968
+
+           The three overlap by ~9px at the reference's scale and the centre
+           sits 41 higher than its flanks — that offset is what makes it read
+           as enthroned rather than merely bigger. Absolute positioning,
+           because flexbox cannot express overlap and a vertical offset at
+           once.
+
+           The stage breaks out of the padded column: the reference gives the
+           trio 92% of its frame, which is wider than the gate's 460 reading
+           column. */
+        /* No breakout maths: the gate's main is a centred flex column, and a
+           flex item wider than its column already overflows evenly on both
+           sides. Shifting it as well moved it twice. */
+        .artium-gx-stage {
+          --tw: min(96vw, 680px);
+          position: relative; width: var(--tw); height: calc(var(--tw) * 0.5968);
+          flex-shrink: 0;
+        }
+
+        /* The orbit the whole composition hangs from: the node sits at its
+           top, the closing dot at its bottom, and the two small dots where it
+           passes the flanking circles. Behind everything. */
+        .artium-gx-orbit {
+          position: absolute; left: 50%; top: 51.4%;
+          width: 56.37%; aspect-ratio: 1; transform: translate(-50%, -50%);
+          border: 1px solid rgba(239,208,155,0.30); border-radius: 50%;
+          pointer-events: none;
+        }
+        .artium-gx-dot {
+          position: absolute; width: 1.0%; aspect-ratio: 1; border-radius: 50%;
+          background: #EFD09B; transform: translate(-50%, -50%); pointer-events: none;
+        }
         .artium-gx-node {
-          width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
-          border: 1px solid rgba(239,208,155,0.55); color: #EFD09B;
+          position: absolute; left: 49.9%; top: 4.0%;
+          width: 4.81%; aspect-ratio: 1; transform: translate(-50%, -50%);
+          border-radius: 50%; border: 1px solid rgba(239,208,155,0.55);
+          background: rgba(255,255,255,0.03); color: #EFD09B;
           display: flex; align-items: center; justify-content: center;
-          background: rgba(255,255,255,0.02);
+          pointer-events: none;
         }
-        .artium-gx-drop { width: 0; height: 24px; border-left: 1px dashed rgba(239,208,155,0.4); }
-        .artium-gx-ring3 {
-          position: relative; width: 100%;
-          display: flex; flex-direction: column; align-items: center; gap: 18px;
+        .artium-gx-node svg { width: 52%; height: 52%; }
+        /* The dashed stems: node down to the centre circle, centre circle
+           down to the closing dot. */
+        .artium-gx-stem {
+          position: absolute; left: 50%; width: 0;
+          border-left: 1px dashed rgba(239,208,155,0.42);
+          transform: translateX(-50%); pointer-events: none;
         }
-        .artium-gx-sidepair { display: flex; gap: 13px; width: 100%; justify-content: center; }
+        .artium-gx-stem--top { top: 8.1%; height: 10.7%; }
+        .artium-gx-stem--bot { top: 82.8%; height: 14.7%; }
 
         .artium-gx-cc {
-          position: relative; display: flex; flex-direction: column;
-          align-items: center; justify-content: center; text-align: center;
+          position: absolute; transform: translate(-50%, -50%);
+          display: flex; flex-direction: column; align-items: center;
+          justify-content: center; text-align: center;
           border-radius: 50%; cursor: pointer; font: inherit; color: inherit;
           border: 1px solid rgba(239,208,155,0.22);
-          /* The gate's upper-left light, bent round a circle. */
           background:
             radial-gradient(125% 125% at 26% 8%,
               rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.058) 34%,
@@ -2111,17 +2147,29 @@ export default function App() {
           box-shadow: 0 18px 45px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.09);
           transition: transform .4s cubic-bezier(.22,1,.36,1), border-color .35s ease, box-shadow .35s ease;
         }
-        .artium-gx-cc:hover { transform: translateY(-6px); border-color: rgba(239,208,155,0.5); }
-        .artium-gx-cc:active { transform: translateY(-2px); }
-        .artium-gx-cc:focus-visible { outline: 1px solid #EFD09B; outline-offset: 6px; }
+        .artium-gx-cc:focus-visible { outline: 1px solid #EFD09B; outline-offset: 5px; }
+        /* These are centred by transform, so they cannot share the entrance
+           animation: artiumRise ends on transform none, and a filled
+           animation outranks the element's own transform, so every circle
+           snapped to its top-left corner and hover scale stopped working.
+           They fade in on the same stagger instead, leaving transform to
+           positioning and hover. */
+        .artium-gx-cc.artium-gx-in { animation-name: artiumFadeIn; }
+        @keyframes artiumFadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* The side medallions: square circles with the dial ring of ticks
-           turning slowly outside — the reference draws the same ticks, just
-           not moving. Sized against the 390 column: two of these plus the
-           gap is 341. */
-        .artium-gx-cc--side { width: 164px; aspect-ratio: 1; padding: 14px 15px; }
+        /* Flanks. 33.65% either side of the mid, and 4.11% lower. */
+        /* top is a percentage of the stage's height (343/595), not of its
+           width — percentages on top resolve against the containing block's
+           height, and mixing the two is how the flanks ended up above their
+           mark. */
+        .artium-gx-cc--side {
+          width: 32.70%; aspect-ratio: 1; top: 57.65%;
+          padding: 0 3.4%; z-index: 1;
+        }
+        .artium-gx-cc--left  { left: 16.35%; }
+        .artium-gx-cc--right { left: 83.65%; }
         .artium-gx-cc--side::after {
-          content: ''; position: absolute; inset: -8px; border-radius: 50%;
+          content: ''; position: absolute; inset: -3.2%; border-radius: 50%;
           pointer-events: none; opacity: 0.5;
           background: repeating-conic-gradient(from 0deg,
             rgba(239,208,155,0.34) 0deg 1.2deg, rgba(239,208,155,0) 1.2deg 9deg);
@@ -2131,89 +2179,92 @@ export default function App() {
         }
         @keyframes artiumOrbit { to { transform: rotate(360deg); } }
 
-        /* The student ellipse. Taller than wide, as the reference draws it,
-           and the only card whose ring is lit: border carries the line, the
-           outer shadow carries the halo, the inset keeps the rim bright on
-           the glass. */
+        /* The throne: 363 x 381, so a whisker taller than wide — not the
+           elongated ellipse it was. Above its flanks, and the only ring that
+           is lit. */
+        /* height off --tw, not a percentage: a percentage height resolves
+           against the stage's height, which would make the throne 85px
+           instead of 143 and turn the circle into a letterbox. */
         .artium-gx-cc--hero {
-          width: min(64vw, 234px); aspect-ratio: 21 / 24; padding: 8% 9%;
-          border: 1.5px solid rgba(239,208,155,0.8);
+          width: 36.41%; height: calc(var(--tw) * 0.3821); left: 50%; top: 50.8%;
+          padding: 0 4%; z-index: 2;
+          border: 1.5px solid rgba(239,208,155,0.85);
           box-shadow:
-            0 0 42px rgba(239,208,155,0.16), 0 22px 55px rgba(0,0,0,0.5),
-            inset 0 0 22px rgba(239,208,155,0.07), inset 0 1px 0 rgba(255,255,255,0.12);
+            0 0 46px rgba(239,208,155,0.20), 0 22px 55px rgba(0,0,0,0.5),
+            inset 0 0 24px rgba(239,208,155,0.08), inset 0 1px 0 rgba(255,255,255,0.12);
         }
+        .artium-gx-cc:hover { transform: translate(-50%, -50%) scale(1.035); border-color: rgba(239,208,155,0.6); }
         .artium-gx-cc--hero:hover {
-          border-color: rgba(239,208,155,0.95);
+          border-color: rgba(239,208,155,1);
           box-shadow:
-            0 0 56px rgba(239,208,155,0.22), 0 26px 62px rgba(0,0,0,0.55),
-            inset 0 0 26px rgba(239,208,155,0.09), inset 0 1px 0 rgba(255,255,255,0.14);
+            0 0 60px rgba(239,208,155,0.26), 0 26px 62px rgba(0,0,0,0.55),
+            inset 0 0 28px rgba(239,208,155,0.10), inset 0 1px 0 rgba(255,255,255,0.14);
         }
 
+        /* Type scales with the stage, but with floors: at a 390 phone the
+           stage is 374 and the reference's own ratios would put the body at
+           7.3px. The floors hold it legible; below 620 the flanks' body copy
+           is dropped entirely rather than shrunk past reading, because at
+           1:2.7 there is no size at which those four lines both fit the
+           circle and can be read. */
+        /* Marks scale with the stage like everything else: 52/997 on the
+           flanks, 60/997 in the centre. */
+        .artium-gx-cc-mark { display: block; flex-shrink: 0; width: max(18px, calc(var(--tw) * 0.0522)); height: auto; }
+        .artium-gx-cc--hero .artium-gx-cc-mark { width: max(20px, calc(var(--tw) * 0.0602)); }
         .artium-gx-cc-eyebrow {
           font-family: 'Cormorant Garamond', 'Didot', 'Bodoni 72', Georgia, serif;
-          font-weight: 600; font-size: 14px; line-height: 1; color: #FFFFFF;
+          font-weight: 600; line-height: 1; color: #FFFFFF; margin-top: 3%;
+          font-size: max(9px, calc(var(--tw) * 0.0221));
         }
         .artium-gx-cc-title {
-          margin-top: 3px;
           font-family: 'Cormorant Garamond', 'Didot', 'Bodoni 72', Georgia, serif;
-          font-weight: 700; color: #FFFFFF; line-height: 1.16;
+          font-weight: 700; color: #FFFFFF; line-height: 1.16; margin-top: 2%;
         }
-        .artium-gx-cc--hero .artium-gx-cc-title { font-size: 21px; }
-        .artium-gx-cc--side .artium-gx-cc-title { font-size: 15.5px; }
-        /* The lozenge under the side titles, straight off the reference. */
-        .artium-gx-cc-gem { width: 5px; height: 5px; background: #EFD09B; transform: rotate(45deg); margin-top: 7px; }
-        .artium-gx-cc-desc { margin: 7px 0 0; font-weight: 500; color: #9C9C9C; line-height: 1.45; }
-        .artium-gx-cc--hero .artium-gx-cc-desc { font-size: 12px; }
-        .artium-gx-cc--side .artium-gx-cc-desc { font-size: 10.5px; }
+        .artium-gx-cc--hero .artium-gx-cc-title { font-size: max(12px, calc(var(--tw) * 0.0341)); }
+        .artium-gx-cc--side .artium-gx-cc-title { font-size: max(12px, calc(var(--tw) * 0.0271)); }
+        .artium-gx-cc-gem {
+          width: max(4px, calc(var(--tw) * 0.0055)); aspect-ratio: 1;
+          background: #EFD09B; transform: rotate(45deg); margin-top: 4%;
+        }
+        .artium-gx-cc-desc {
+          margin: 4% 0 0; font-weight: 500; color: #9C9C9C; line-height: 1.45;
+          font-size: max(9px, calc(var(--tw) * 0.0191));
+        }
+        .artium-gx-cc--side .artium-gx-cc-desc { display: none; }
+        @media (min-width: 620px) { .artium-gx-cc--side .artium-gx-cc-desc { display: block; } }
         .artium-gx-go {
-          margin-top: 10px; width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+          margin-top: 5%; width: max(22px, calc(var(--tw) * 0.0461)); aspect-ratio: 1;
+          border-radius: 50%; flex-shrink: 0;
           background: linear-gradient(160deg, #E3BB7A, #C99A55);
           color: #0F1012; display: flex; align-items: center; justify-content: center;
           transition: transform .3s ease, box-shadow .3s ease;
         }
-        .artium-gx-cc:hover .artium-gx-go {
-          transform: scale(1.08);
-          box-shadow: 0 0 22px rgba(239,208,155,0.45);
-        }
+        .artium-gx-go svg { width: 52%; height: 52%; }
+        .artium-gx-cc:hover .artium-gx-go { transform: scale(1.1); box-shadow: 0 0 22px rgba(239,208,155,0.45); }
 
-        /* Wide screens: left, throne, right on one line — the sidepair melts
-           into the row (display: contents) and order pulls the hero between
-           its flanks. The faint orbit arc behind them is the reference's
-           connecting circle, faded out before it can collide with the copy
-           below. */
-        @media (min-width: 700px) {
-          .artium-gx-ring3 { flex-direction: row; justify-content: center; align-items: center; gap: 26px; }
-          .artium-gx-sidepair { display: contents; }
-          .artium-gx-cc--hero { order: 0; }
-          .artium-gx-sidepair .artium-gx-cc:first-child { order: -1; }
-          .artium-gx-sidepair .artium-gx-cc:last-child { order: 1; }
-          .artium-gx-ring3::before {
-            content: ''; position: absolute; left: 50%; top: 50%;
-            width: 560px; height: 560px; transform: translate(-50%, -52%);
-            border: 1px solid rgba(239,208,155,0.22); border-radius: 50%;
-            -webkit-mask: linear-gradient(180deg, #000 52%, transparent 72%);
-                    mask: linear-gradient(180deg, #000 52%, transparent 72%);
-            pointer-events: none;
-          }
-        }
-
-        /* ---- the trust bar ---- */
+        /* ---- the trust bar ----
+           One bar, three columns, hairlines between — 846/997 = 0.849 of the
+           stage wide in the reference. It keeps that on any screen wide
+           enough to read three columns; narrower than 620 it stacks, because
+           three columns of 105px cannot carry this copy. */
+        /* 846/997 of the stage in the reference — so it reads as sitting
+           under the trio rather than as a separate slab. */
         .artium-gx-trust {
-          width: 100%; margin-top: 24px; border-radius: 20px;
+          width: min(85vw, 578px); margin: 26px auto 0; border-radius: 20px;
           border: 1px solid rgba(239,208,155,0.16);
-          background: rgba(255,255,255,0.025);
+          background: rgba(255,255,255,0.03);
           -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
           box-shadow: 0 14px 34px rgba(0,0,0,0.35);
           display: flex; flex-direction: column;
         }
-        .artium-gx-trust-item { display: flex; align-items: center; gap: 13px; padding: 13px 18px; text-align: left; }
+        .artium-gx-trust-item { display: flex; align-items: center; gap: 12px; padding: 13px 18px; text-align: left; }
         .artium-gx-trust-item + .artium-gx-trust-item { border-top: 1px solid rgba(255,255,255,0.07); }
-        .artium-gx-trust-item svg { flex-shrink: 0; color: rgba(239,208,155,0.8); }
+        .artium-gx-trust-item svg { flex-shrink: 0; color: rgba(239,208,155,0.85); }
         .artium-gx-trust-t { margin: 0; font-size: 12.5px; font-weight: 700; color: #FFFFFF; line-height: 1.3; }
         .artium-gx-trust-d { margin: 2px 0 0; font-size: 11px; font-weight: 500; color: #8B8B8B; line-height: 1.45; }
-        @media (min-width: 700px) {
-          .artium-gx-trust { flex-direction: row; }
-          .artium-gx-trust-item { flex: 1 1 0; }
+        @media (min-width: 620px) {
+          .artium-gx-trust { flex-direction: row; width: min(85vw, 578px); }
+          .artium-gx-trust-item { flex: 1 1 0; padding: 16px 20px; }
           .artium-gx-trust-item + .artium-gx-trust-item { border-top: none; border-left: 1px solid rgba(255,255,255,0.07); }
         }
 
@@ -4987,19 +5038,19 @@ function GateBackdrop({ photo }) {
  * side medallions. The copy has a budget: a circle's usable width collapses
  * away from its diameter, so descriptions stay to two short clauses.
  */
-function GateCircle({ onClick, icon, eyebrow, title, desc, step, hero }) {
+function GateCircle({ onClick, icon, eyebrow, title, desc, step, hero, side }) {
   return (
     <button
       onClick={onClick}
-      className={`artium-gx-cc ${hero ? "artium-gx-cc--hero" : "artium-gx-cc--side"} artium-gx-in artium-gx-in--${step}`}
+      className={`artium-gx-cc ${hero ? "artium-gx-cc--hero" : `artium-gx-cc--side artium-gx-cc--${side}`} artium-gx-in artium-gx-in--${step}`}
     >
       {icon}
-      {eyebrow && <span className="artium-gx-cc-eyebrow" style={{ marginTop: 7 }}>{eyebrow}</span>}
+      {eyebrow && <span className="artium-gx-cc-eyebrow">{eyebrow}</span>}
       <span className="artium-gx-cc-title">{title}</span>
       {!hero && <span className="artium-gx-cc-gem" aria-hidden="true" />}
       <span className="artium-gx-cc-desc">{desc}</span>
       <span className="artium-gx-go" aria-hidden="true">
-        <ArrowRight size={17} strokeWidth={2.1} />
+        <ArrowRight strokeWidth={2.1} />
       </span>
     </button>
   );
@@ -5019,8 +5070,9 @@ function EntryGate({ onLearner, onStudent, onPianist, onLogin, learnerProfile, l
   // gold like everything else.
   const conductor = (
     <span
+      className="artium-gx-cc-mark"
       style={{
-        display: "block", width: 34, height: 41, backgroundColor: GATE.gold,
+        aspectRatio: "34 / 41", backgroundColor: GATE.gold,
         WebkitMaskImage: `url('${TEACHER_MARK}')`, maskImage: `url('${TEACHER_MARK}')`,
         WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat",
         WebkitMaskSize: "contain", maskSize: "contain",
@@ -5033,7 +5085,7 @@ function EntryGate({ onLearner, onStudent, onPianist, onLogin, learnerProfile, l
   // a blot, because its shape is the stroke's centreline, not the form. Board,
   // crown and tassel as three filled pieces.
   const cap = (
-    <svg width="40" height="40" viewBox="0 0 24 24" aria-hidden="true" style={{ display: "block" }}>
+    <svg className="artium-gx-cc-mark" viewBox="0 0 24 24" aria-hidden="true" style={{ aspectRatio: "1" }}>
       <path d="M12 3.4 23 8.7 12 14 1 8.7z" fill={GATE.gold} />
       <path d="M6.6 11.05 12 13.65l5.4-2.6v4.02c0 .43-.26.82-.7 1.08-1.1.66-2.79 1.05-4.7 1.05s-3.6-.39-4.7-1.05c-.44-.26-.7-.65-.7-1.08z" fill={GATE.gold} />
       <path d="M20.7 10.15a.62.62 0 0 1 .62.62v4.06a.62.62 0 0 1-1.24 0v-4.06c0-.34.28-.62.62-.62z" fill={GATE.gold} />
@@ -5044,7 +5096,7 @@ function EntryGate({ onLearner, onStudent, onPianist, onLogin, learnerProfile, l
   // mark for the concert card. Filled pieces like the cap: rim, raised lid,
   // keybed and three legs, so it reads at 40px where an outline would fuzz.
   const piano = (
-    <svg width="44" height="34" viewBox="0 0 44 34" aria-hidden="true" style={{ display: "block" }}>
+    <svg className="artium-gx-cc-mark" viewBox="0 0 44 34" aria-hidden="true" style={{ aspectRatio: "44 / 34" }}>
       <g fill={GATE.gold}>
         {/* raised lid, hinged at the left, rising to the tail */}
         <path d="M7 15.5 36.5 3.2c1.4-.6 2.9.4 2.9 1.9v10.4z" />
@@ -5090,58 +5142,69 @@ function EntryGate({ onLearner, onStudent, onPianist, onLogin, learnerProfile, l
             in from outside — learning from them, hiring them — either side.
             The stem above the centre (bust, dashed drop) is the reference's
             way of saying "this one is you". */}
-        <div className="artium-gx-trio">
+        <div className="artium-gx-stage artium-gx-in artium-gx-in--4">
           {fullTrio && (
             <>
-              <span className="artium-gx-node artium-gx-in artium-gx-in--4" aria-hidden="true">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              {/* The orbit the composition hangs from. Its top carries the
+                  node, its foot the closing dot, and the two dots mark where
+                  it passes behind the flanking circles. */}
+              <span className="artium-gx-orbit" aria-hidden="true" />
+              <span className="artium-gx-dot" style={{ left: "25.4%", top: "26.4%" }} aria-hidden="true" />
+              <span className="artium-gx-dot" style={{ left: "74.8%", top: "26.4%" }} aria-hidden="true" />
+              <span className="artium-gx-dot" style={{ left: "49.4%", top: "97.5%" }} aria-hidden="true" />
+              <span className="artium-gx-node" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                   <circle cx="12" cy="8" r="4" />
                   <path d="M4.5 20.5a7.5 7.5 0 0 1 15 0" />
                 </svg>
               </span>
-              <span className="artium-gx-drop artium-gx-in artium-gx-in--4" aria-hidden="true" />
+              <span className="artium-gx-stem artium-gx-stem--top" aria-hidden="true" />
+              <span className="artium-gx-stem artium-gx-stem--bot" aria-hidden="true" />
             </>
           )}
-          <div className="artium-gx-ring3">
-            {showStudent && (
-              <GateCircle
-                hero
-                step={4}
-                onClick={onStudent}
-                icon={cap}
-                eyebrow={studentLoggedIn ? null : "I'm a"}
-                title={studentLoggedIn ? "Continue" : <>Conservatory<br />Student | Graduate</>}
-                desc="Learn, connect with peers, access resources, and grow."
-              />
-            )}
-            {fullTrio ? (
-              <div className="artium-gx-sidepair">
-                <GateCircle
-                  step={5}
-                  onClick={onLearner}
-                  icon={conductor}
-                  title="Find a Teacher"
-                  desc="Discover and connect with top conservatory musicians and inspiring teachers."
-                />
-                <GateCircle
-                  step={6}
-                  onClick={onPianist}
-                  icon={piano}
-                  title="Find a Concert Pianist"
-                  desc="Hire talented conservatory pianists for your concert, event or project."
-                />
-              </div>
-            ) : showLearner && (
-              <GateCircle
-                hero
-                step={4}
-                onClick={onLearner}
-                icon={conductor}
-                title={learnerLoggedOut ? "Log in" : "Find a Teacher"}
-                desc="Discover and connect with top conservatory musicians and inspiring teachers."
-              />
-            )}
-          </div>
+
+          {fullTrio && (
+            <GateCircle
+              side="left"
+              step={5}
+              onClick={onLearner}
+              icon={conductor}
+              title="Find a Teacher"
+              desc="Discover and connect with top conservatory musicians and inspiring teachers."
+            />
+          )}
+
+          {showStudent ? (
+            <GateCircle
+              hero
+              step={4}
+              onClick={onStudent}
+              icon={cap}
+              eyebrow={studentLoggedIn ? null : "I'm a"}
+              title={studentLoggedIn ? "Continue" : <>Conservatory<br />Student | Graduate</>}
+              desc="Learn, connect with peers, access resources, and grow."
+            />
+          ) : showLearner && (
+            <GateCircle
+              hero
+              step={4}
+              onClick={onLearner}
+              icon={conductor}
+              title={learnerLoggedOut ? "Log in" : "Find a Teacher"}
+              desc="Discover and connect with top conservatory musicians and inspiring teachers."
+            />
+          )}
+
+          {fullTrio && (
+            <GateCircle
+              side="right"
+              step={6}
+              onClick={onPianist}
+              icon={piano}
+              title="Find a Concert Pianist"
+              desc="Hire talented conservatory pianists for your concert, event or project."
+            />
+          )}
         </div>
 
         {fullTrio && (
