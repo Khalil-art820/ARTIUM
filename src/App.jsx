@@ -2060,7 +2060,11 @@ export default function App() {
            glass moves into the disc, the disc carries only the mark, and the
            words sit beneath it. The whole column is still one button. */
         .artium-gx-cards { width: 100%; display: flex; flex-direction: column; gap: 16px; }
-        .artium-gx-pair { display: flex; gap: 14px; align-items: flex-start; }
+        /* stretch, not flex-start: the pair's cards equalise heights, and with
+           the arrow pushed to the column's foot below, the two arrows sit on
+           one line no matter how each card's copy happens to wrap. The title's
+           min-height stops carrying that job alone. */
+        .artium-gx-pair { display: flex; gap: 14px; align-items: stretch; }
 
         .artium-gx-card {
           display: flex; flex-direction: column; align-items: center; text-align: center;
@@ -2141,9 +2145,14 @@ export default function App() {
           font-size: 17px; line-height: 1.2;
         }
         .artium-gx-sub { margin-top: 6px; font-size: 11.5px; font-weight: 600; line-height: 1.45; color: #E6DAB0; }
-        .artium-gx-desc { margin-top: 8px; font-size: 12px; font-weight: 500; line-height: 1.5; color: #8B8B8B; }
+        /* margin-bottom is the arrow gap now that the arrow's own margin is
+           auto — without it the shorter card's copy would touch its arrow. */
+        .artium-gx-desc { margin: 8px 0 13px; font-size: 12px; font-weight: 500; line-height: 1.5; color: #8B8B8B; }
         .artium-gx-go {
-          margin-top: 13px; width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+          /* auto, not a fixed 13px: in the stretched pair this pins every
+             arrow to its card's foot, which is what actually aligns them. */
+          margin-top: auto; padding-top: 0;
+          width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
           background: linear-gradient(160deg, #E3BB7A, #C99A55);
           color: #0F1012; display: flex; align-items: center; justify-content: center;
           transition: transform .3s ease, box-shadow .3s ease;
@@ -2466,9 +2475,10 @@ export default function App() {
         .artium-lp-step-d { margin: 5px 0 0; font-size: 12px; font-weight: 500; line-height: 1.5; color: #8B8B8B; }
         .artium-lp-step-d a { color: #E6DAB0; font-weight: 600; text-decoration: none; }
         .artium-lp-step-d a:hover { color: #EFD09B; text-decoration: underline; }
-        /* Line art, held well back: the number and the words are what is read,
-           and a second gold object at full strength would compete with them. */
-        .artium-lp-step-i { flex-shrink: 0; display: flex; color: rgba(239,208,155,0.42); }
+        /* Line art, quieter than the number but not ghostly. 0.42 read as
+           blur, not restraint — a thin gold line on near-black needs its
+           full edge to look drawn rather than smudged. */
+        .artium-lp-step-i { flex-shrink: 0; display: flex; color: rgba(239,208,155,0.66); }
         .artium-lp-err { margin: 0; max-width: 460px; text-align: center; font-size: 13px; line-height: 1.5; color: #E5A0A0; }
 
       `}</style>
@@ -2749,13 +2759,26 @@ const IconProfileDoc = (p) => (
 );
 const IconGlobePin = (p) => (
   <IconBox {...p}>
-    {/* The globe is cut where the pin crosses it, so the pin reads as being
-        in front rather than welded on. */}
-    <path d="M12.6 20.9a8.9 8.9 0 1 1 3.6-17" />
-    <path d="M3.4 12.3h13.4M5.2 7.4h6.9M5.2 17.2h11" />
-    <path d="M12 3.4c-4.6 5.2-4.6 12 0 17.5M12 3.4c2 2.3 3.1 4.9 3.4 7.6M12 20.9c1.6-1.8 2.6-3.8 3.1-5.9" />
-    <path d="M18.4 3.1a3.6 3.6 0 0 0-3.6 3.6c0 2.7 3.6 6.4 3.6 6.4s3.6-3.7 3.6-6.4a3.6 3.6 0 0 0-3.6-3.6z" />
-    <circle cx="18.4" cy="6.7" r="1.3" />
+    {/* A complete globe, with the pin's clearance carved by a mask rather
+        than by ending the globe's arcs early. The earlier version stopped
+        the circle where the pin would sit, which at 36px read as the icon
+        being cut off. Here every globe line is whole; the mask erases a
+        stroke-width halo around the pin's silhouette, so the pin sits in
+        front with the clean gap the reference has, on any background. */}
+    <defs>
+      <mask id="artium-gpin-m" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24">
+        <rect width="24" height="24" fill="#fff" />
+        <path d="M18.2 2.5a3.7 3.7 0 0 1 3.7 3.7c0 2.6-3.7 7.4-3.7 7.4s-3.7-4.8-3.7-7.4a3.7 3.7 0 0 1 3.7-3.7z"
+          fill="#000" stroke="#000" strokeWidth="3" />
+      </mask>
+    </defs>
+    <g mask="url(#artium-gpin-m)">
+      <circle cx="10.4" cy="12.8" r="8.1" />
+      <path d="M2.5 9.9h15.8M2.5 15.7h15.8" />
+      <ellipse cx="10.4" cy="12.8" rx="3.6" ry="8.1" />
+    </g>
+    <path d="M18.2 2.5a3.7 3.7 0 0 1 3.7 3.7c0 2.6-3.7 7.4-3.7 7.4s-3.7-4.8-3.7-7.4a3.7 3.7 0 0 1 3.7-3.7z" />
+    <circle cx="18.2" cy="6.2" r="1.35" />
   </IconBox>
 );
 const IconThreePeople = (p) => (
@@ -2768,13 +2791,18 @@ const IconThreePeople = (p) => (
     <path d="M22.8 19.2a3.6 3.6 0 0 0-3.1-4.4" />
   </IconBox>
 );
-const IconCoinHand = (p) => (
-  <IconBox {...p}>
-    <circle cx="12" cy="7.6" r="4.4" />
-    <path d="M12 5.4v4.4M10.7 6.3h2.1a.95.95 0 0 1 0 1.9h-1.6a.95.95 0 0 0 0 1.9h2.2" />
-    <path d="M2.6 16.1h3.1l2.6 1.9h3.4a1.3 1.3 0 0 1 0 2.6H8.9" />
-    <path d="M11.7 18h1.9l5.4-2.2a1.4 1.4 0 0 1 1.3 2.4l-6.1 3.1a3 3 0 0 1-1.4.3H5.7l-3.1-1.5" />
-  </IconBox>
+// The teaching man — the mark that used to be the artium logo. A silhouette
+// through the same PNG mask the gate's conductor uses, so it is the mark
+// itself rather than a redrawing of it. currentColor through backgroundColor,
+// so it takes the row's gold like its stroked neighbours.
+const IconTeacher = ({ size = 34 }) => (
+  <span aria-hidden="true" style={{
+    display: "block", width: size * 0.84, height: size, backgroundColor: "currentColor",
+    WebkitMaskImage: `url('${TEACHER_MARK}')`, maskImage: `url('${TEACHER_MARK}')`,
+    WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat",
+    WebkitMaskSize: "contain", maskSize: "contain",
+    WebkitMaskPosition: "center", maskPosition: "center",
+  }} />
 );
 const IconMegaphone = (p) => (
   <IconBox {...p}>
@@ -2793,7 +2821,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
       d: "Your pin appears on the global map under your conservatory alongside current students." },
     { n: "3", t: "Connect worldwide", Icon: IconThreePeople,
       d: "Message students at any conservatory in the world, directly." },
-    { n: "4", t: "Earn while you teach", Icon: IconCoinHand,
+    { n: "4", t: "Earn while you teach", Icon: IconTeacher,
       d: "Accept tutoring requests from music enthusiasts and set your own rate." },
     { n: "5", t: "Marketing and Advertising", Icon: IconMegaphone,
       d: <>Claim your promotional video on <a href="https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==" target="_blank" rel="noreferrer">aclassicaltone</a> (may be subject to fees, as per our partnership agreement).</> },
@@ -4784,7 +4812,7 @@ function EntryGate({ onLearner, onStudent, onLogin, learnerProfile, learnerLogge
                 onClick={onStudent}
                 icon={cap}
                 title={studentLoggedIn ? "Continue" : "I'm a conservatory student"}
-                desc="Connect with peers worldwide, earn while you teach and promote yourself."
+                desc="Discover peers worldwide, earn while you teach and promote yourself."
               />
             )}
           </div>
