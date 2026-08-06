@@ -2095,7 +2095,7 @@ export default function App() {
            sides. Shifting it as well moved it twice. */
         .artium-gx-stage {
           --tw: min(96vw, 680px);
-          position: relative; width: var(--tw); height: calc(var(--tw) * 0.5968);
+          position: relative; width: var(--tw); height: calc(var(--tw) * 0.5889);
           flex-shrink: 0;
         }
 
@@ -2103,18 +2103,18 @@ export default function App() {
            top, the closing dot at its bottom, and the two small dots where it
            passes the flanking circles. Behind everything. */
         .artium-gx-orbit {
-          position: absolute; left: 50%; top: 51.4%;
-          width: 56.37%; aspect-ratio: 1; transform: translate(-50%, -50%);
+          position: absolute; left: 50%; top: 51.71%;
+          width: 56.48%; aspect-ratio: 1; transform: translate(-50%, -50%);
           border: 1px solid rgba(239,208,155,0.30); border-radius: 50%;
           pointer-events: none;
         }
         .artium-gx-dot {
-          position: absolute; width: 1.0%; aspect-ratio: 1; border-radius: 50%;
+          position: absolute; width: 1.3%; aspect-ratio: 1; border-radius: 50%;
           background: #EFD09B; transform: translate(-50%, -50%); pointer-events: none;
         }
         .artium-gx-node {
-          position: absolute; left: 49.9%; top: 4.0%;
-          width: 4.81%; aspect-ratio: 1; transform: translate(-50%, -50%);
+          position: absolute; left: 50.05%; top: 4.52%;
+          width: 4.82%; aspect-ratio: 1; transform: translate(-50%, -50%);
           border-radius: 50%; border: 1px solid rgba(239,208,155,0.55);
           background: rgba(255,255,255,0.03); color: #EFD09B;
           display: flex; align-items: center; justify-content: center;
@@ -2128,8 +2128,8 @@ export default function App() {
           border-left: 1px dashed rgba(239,208,155,0.42);
           transform: translateX(-50%); pointer-events: none;
         }
-        .artium-gx-stem--top { top: 8.1%; height: 10.7%; }
-        .artium-gx-stem--bot { top: 82.8%; height: 14.7%; }
+        .artium-gx-stem--top { top: 8.62%; height: 9.9%; }
+        .artium-gx-stem--bot { top: 83.5%; height: 14.55%; }
 
         .artium-gx-cc {
           position: absolute; transform: translate(-50%, -50%);
@@ -2163,11 +2163,11 @@ export default function App() {
            height, and mixing the two is how the flanks ended up above their
            mark. */
         .artium-gx-cc--side {
-          width: 32.70%; aspect-ratio: 1; top: 57.65%;
-          padding: 0 3.4%; z-index: 1;
+          width: 31.56%; height: calc(var(--tw) * 0.3648); top: 57.25%;
+          padding: 0 2.6%; z-index: 1;
         }
-        .artium-gx-cc--left  { left: 16.35%; }
-        .artium-gx-cc--right { left: 83.65%; }
+        .artium-gx-cc--left  { left: 15.78%; }
+        .artium-gx-cc--right { left: 84.22%; }
         .artium-gx-cc--side::after {
           content: ''; position: absolute; inset: -3.2%; border-radius: 50%;
           pointer-events: none; opacity: 0.5;
@@ -2186,7 +2186,7 @@ export default function App() {
            against the stage's height, which would make the throne 85px
            instead of 143 and turn the circle into a letterbox. */
         .artium-gx-cc--hero {
-          width: 36.41%; height: calc(var(--tw) * 0.3821); left: 50%; top: 50.8%;
+          width: 36.48%; height: calc(var(--tw) * 0.3829); left: 50%; top: 51.02%;
           padding: 0 4%; z-index: 2;
           border: 1.5px solid rgba(239,208,155,0.85);
           box-shadow:
@@ -2222,16 +2222,27 @@ export default function App() {
         }
         .artium-gx-cc--hero .artium-gx-cc-title { font-size: max(12px, calc(var(--tw) * 0.0341)); }
         .artium-gx-cc--side .artium-gx-cc-title { font-size: max(12px, calc(var(--tw) * 0.0271)); }
-        .artium-gx-cc-gem {
+        /* Not a bare lozenge: the reference sets a hairline either side of it,
+           the same rule that divides the hero above. */
+        .artium-gx-cc-rule {
+          display: flex; align-items: center; justify-content: center;
+          gap: 5%; width: 62%; margin-top: 4%;
+        }
+        .artium-gx-cc-rule i { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(239,208,155,0.55)); }
+        .artium-gx-cc-rule i:last-child { background: linear-gradient(90deg, rgba(239,208,155,0.55), transparent); }
+        .artium-gx-cc-rule b {
           width: max(4px, calc(var(--tw) * 0.0055)); aspect-ratio: 1;
-          background: #EFD09B; transform: rotate(45deg); margin-top: 4%;
+          background: #EFD09B; transform: rotate(45deg); flex-shrink: 0;
         }
         .artium-gx-cc-desc {
           margin: 4% 0 0; font-weight: 500; color: #9C9C9C; line-height: 1.45;
           font-size: max(9px, calc(var(--tw) * 0.0191));
         }
-        .artium-gx-cc--side .artium-gx-cc-desc { display: none; }
-        @media (min-width: 620px) { .artium-gx-cc--side .artium-gx-cc-desc { display: block; } }
+        /* The reference carries the flanks' copy at every size, so it stays.
+           Its own ratio puts it at 7.1px on a 390 screen; the floor holds it
+           at 8, which is the largest that fits four lines inside a 118 x 136
+           ellipse. */
+        .artium-gx-cc--side .artium-gx-cc-desc { font-size: max(8px, calc(var(--tw) * 0.0191)); margin-top: 3%; }
         .artium-gx-go {
           margin-top: 5%; width: max(22px, calc(var(--tw) * 0.0461)); aspect-ratio: 1;
           border-radius: 50%; flex-shrink: 0;
@@ -2316,21 +2327,31 @@ export default function App() {
            The two names in this line are both names, and one of them was in
            the body sans — which made it read as a link that happened to be
            there rather than as the other half of a partnership. */
+        /* Same face, size and weight as the wordmark beside it — and the same
+           optical lift, so the two names share a baseline. The wordmark rides
+           0.089em high to centre its mass against the pin; without matching
+           that, aclassicaltone sat a pixel and a half low against it. */
         .artium-gx-partner a {
-          display: inline-flex; align-items: center; gap: 6px;
+          position: relative; display: inline-block;
           color: #EFD09B; text-decoration: none;
           font-family: 'Cormorant Garamond', 'Didot', 'Bodoni 72', Georgia, serif;
           font-weight: 600; font-size: 18px; line-height: 1;
+          transform: translateY(-0.089em);
           transition: color .25s ease;
         }
         .artium-gx-partner a:hover { color: #EFD09B; }
-        /* The reference sets the mark in a bordered tile rather than loose
-           beside the word. */
+        /* Half its old size, and lifted onto the final e rather than trailing
+           the word — set like the radical over a square root, so the mark
+           belongs to the name instead of following it. Absolute, so it takes
+           no space on the line and the two names stay evenly spaced. */
         .artium-gx-partner a i {
+          position: absolute; right: -1px; top: -0.42em;
           display: inline-flex; align-items: center; justify-content: center;
-          width: 19px; height: 19px; border-radius: 6px; flex-shrink: 0;
-          border: 1px solid rgba(239,208,155,0.42); color: #EFD09B;
+          width: 9.5px; height: 9.5px; border-radius: 3px;
+          border: 1px solid rgba(239,208,155,0.55); color: #EFD09B;
+          background: rgba(15,16,18,0.55);
         }
+        .artium-gx-partner a i svg { width: 6px; height: 6px; }
 
         /* ---- entrance ---- */
         /* The hero settles, then the cards arrive in order. Short distances and
@@ -5047,7 +5068,7 @@ function GateCircle({ onClick, icon, eyebrow, title, desc, step, hero, side }) {
       {icon}
       {eyebrow && <span className="artium-gx-cc-eyebrow">{eyebrow}</span>}
       <span className="artium-gx-cc-title">{title}</span>
-      {!hero && <span className="artium-gx-cc-gem" aria-hidden="true" />}
+      {!hero && <span className="artium-gx-cc-rule" aria-hidden="true"><i /><b /><i /></span>}
       <span className="artium-gx-cc-desc">{desc}</span>
       <span className="artium-gx-go" aria-hidden="true">
         <ArrowRight strokeWidth={2.1} />
@@ -5149,13 +5170,15 @@ function EntryGate({ onLearner, onStudent, onPianist, onLogin, learnerProfile, l
                   node, its foot the closing dot, and the two dots mark where
                   it passes behind the flanking circles. */}
               <span className="artium-gx-orbit" aria-hidden="true" />
-              <span className="artium-gx-dot" style={{ left: "25.4%", top: "26.4%" }} aria-hidden="true" />
-              <span className="artium-gx-dot" style={{ left: "74.8%", top: "26.4%" }} aria-hidden="true" />
-              <span className="artium-gx-dot" style={{ left: "49.4%", top: "97.5%" }} aria-hidden="true" />
+              <span className="artium-gx-dot" style={{ left: "25.4%", top: "26.9%" }} aria-hidden="true" />
+              <span className="artium-gx-dot" style={{ left: "74.6%", top: "26.9%" }} aria-hidden="true" />
+              <span className="artium-gx-dot" style={{ left: "50%", top: "99.1%" }} aria-hidden="true" />
               <span className="artium-gx-node" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                  <circle cx="12" cy="8" r="4" />
-                  <path d="M4.5 20.5a7.5 7.5 0 0 1 15 0" />
+                {/* Solid, not stroked: at 18px a two-line outline reads as a
+                    smudge, and this mark is a full stop on the orbit. */}
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <circle cx="12" cy="8.2" r="4.1" />
+                  <path d="M12 13.4c4.2 0 7.6 3.4 7.6 7.6H4.4c0-4.2 3.4-7.6 7.6-7.6z" />
                 </svg>
               </span>
               <span className="artium-gx-stem artium-gx-stem--top" aria-hidden="true" />
