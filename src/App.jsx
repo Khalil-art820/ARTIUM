@@ -108,6 +108,10 @@ const GATE = {
 // Windows ship, so the gate still reads as intended in the moment before the
 // web font lands — or if it never does.
 const GATE_SERIF = "'Cormorant Garamond', 'Didot', 'Bodoni 72', Georgia, serif";
+// The partner's own channels. Named, because the Instagram address was
+// pasted inline in five places and the footer now needs two of them.
+const ACT_INSTAGRAM = "https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==";
+const ACT_FACEBOOK = "https://www.facebook.com/share/1Q4piEHHN7/";
 const GATE_SANS = "'Manrope', -apple-system, 'Segoe UI', Roboto, sans-serif";
 
 // Brass, not black: the reference's black was the only black in a header of
@@ -2324,51 +2328,69 @@ export default function App() {
            credit — 360px across and 30 tall. It was two stacked rows here,
            which read as a footer with a logo above it rather than as a single
            line of small print. */
+        /* ---- footer ----
+           Two rows under a ruled line, per the reference: the partnership and
+           the social marks on the first, the small print and the copyright on
+           the second, with a hairline between them. Measured off the
+           reference at 768 wide, where the content spans 703 of it — the same
+           91% this column already gives at 390.
+
+           The reference's own type would scale to about 7.6px on a phone, so
+           the sizes here are floored at what can be read and grow with the
+           column from there. */
         .artium-gx-foot {
           flex-shrink: 0; width: 100%; max-width: 460px; margin: 0 auto;
-          padding: 14px 18px calc(14px + env(safe-area-inset-bottom, 0px));
-          border-top: 1px solid rgba(255,255,255,0.08);
-          display: flex; flex-direction: row; align-items: center;
-          justify-content: center; gap: 12px; flex-wrap: wrap;
+          padding: 0 20px calc(16px + env(safe-area-inset-bottom, 0px));
+          display: flex; flex-direction: column;
         }
-        /* Hairline between the two halves. Its own element rather than a
-           border on a neighbour, so it can be shorter than the row. */
-        .artium-gx-foot-rule {
-          width: 1px; height: 16px; background: rgba(255,255,255,0.18); flex-shrink: 0;
+        /* The ruled line that opens the footer: a hairline the full width with
+           a lozenge set into its middle. */
+        .artium-gx-foot-top {
+          position: relative; height: 1px; width: 100%;
+          background: rgba(255,255,255,0.10); margin-bottom: 16px;
         }
+        .artium-gx-foot-top::after {
+          content: ''; position: absolute; left: 50%; top: 50%;
+          width: 6px; height: 6px; background: #EFD09B;
+          transform: translate(-50%, -50%) rotate(45deg);
+        }
+        .artium-gx-foot-row {
+          display: flex; align-items: center; justify-content: space-between;
+          gap: 10px 16px; flex-wrap: wrap;
+        }
+        .artium-gx-foot-line { height: 1px; background: rgba(255,255,255,0.08); margin: 14px 0; }
+
         .artium-gx-partner {
-          display: inline-flex; align-items: center; gap: 7px;
-          font-size: 10px; font-weight: 500; color: #8B8B8B; line-height: 1;
+          display: inline-flex; align-items: baseline; gap: 9px;
+          font-size: 10.5px; font-weight: 500; color: #7C7C7C; line-height: 1;
         }
-        /* Set like the wordmark beside it: same serif, same weight, same gold.
-           The two names in this line are both names, and one of them was in
-           the body sans — which made it read as a link that happened to be
-           there rather than as the other half of a partnership. */
-        /* Same face, size and weight as the wordmark beside it — and the same
-           optical lift, so the two names share a baseline. The wordmark rides
-           0.089em high to centre its mass against the pin; without matching
-           that, aclassicaltone sat a pixel and a half low against it. */
-        .artium-gx-partner a {
-          position: relative; display: inline-block;
-          color: #EFD09B; text-decoration: none;
+        /* Set in the gate's serif, in the gold the reference samples at
+           #DAB688 — this is a name, not a link that happens to be here. */
+        .artium-gx-partner b {
+          color: #EFD09B; font-weight: 600; line-height: 1;
           font-family: 'Cormorant Garamond', 'Didot', 'Bodoni 72', Georgia, serif;
-          font-weight: 600; font-size: 18px; line-height: 1;
-          transform: translateY(-0.089em);
-          transition: color .25s ease;
+          font-size: 20px; letter-spacing: 0.01em;
         }
-        .artium-gx-partner a:hover { color: #EFD09B; }
-        /* Half its old size, and lifted onto the final e rather than trailing
-           the word — set like the radical over a square root, so the mark
-           belongs to the name instead of following it. Absolute, so it takes
-           no space on the line and the two names stay evenly spaced. */
-        .artium-gx-partner a i {
-          position: absolute; right: -1px; top: -0.42em;
+
+        /* The social marks, ringed as the reference draws them. */
+        .artium-gx-social { display: inline-flex; align-items: center; gap: 9px; }
+        .artium-gx-social a {
+          width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+          border: 1px solid rgba(239,208,155,0.45); color: #E3BB7A;
           display: inline-flex; align-items: center; justify-content: center;
-          width: 9.5px; height: 9.5px; border-radius: 3px;
-          border: 1px solid rgba(239,208,155,0.55); color: #EFD09B;
-          background: rgba(15,16,18,0.55);
+          transition: border-color .25s ease, color .25s ease, box-shadow .25s ease, transform .25s ease;
         }
-        .artium-gx-partner a i svg { width: 6px; height: 6px; }
+        .artium-gx-social a:hover {
+          border-color: #EFD09B; color: #EFD09B; transform: scale(1.06);
+          box-shadow: 0 0 16px rgba(239,208,155,0.24);
+        }
+
+        .artium-gx-foot-links { display: inline-flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+        .artium-gx-foot-links span { font-size: 10.5px; font-weight: 500; color: #7C7C7C; line-height: 1.4; }
+        .artium-gx-foot-links i { color: #4E4E4E; font-style: normal; font-size: 10px; }
+        /* Grey, not gold — the reference samples it at #747575, the same tone
+           as the links to its left. */
+        .artium-gx-copy { font-size: 10px; font-weight: 500; color: #6E6E6E; line-height: 1.4; }
 
         /* ---- entrance ---- */
         /* The hero settles, then the cards arrive in order. Short distances and
@@ -3127,16 +3149,32 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
         </div>
       </main>
 
+      {/* The gate's footer, verbatim — the two screens are one tap apart and
+          share the stylesheet, so they cannot carry different footers. */}
       <footer className="artium-gx-foot">
-        <GateLogo word={18} />
-        <span className="artium-gx-foot-rule" aria-hidden="true" />
-        <span className="artium-gx-partner">
-          In partnership with
-          <a href="https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==" target="_blank" rel="noreferrer">
-            aclassicaltone
-            <i><ArrowUpRight size={12} strokeWidth={2.2} /></i>
-          </a>
-        </span>
+        <div className="artium-gx-foot-top" aria-hidden="true" />
+        <div className="artium-gx-foot-row">
+          <span className="artium-gx-partner">
+            In partnership with <b>aclassicaltone</b>
+          </span>
+          <span className="artium-gx-social">
+            <a href={ACT_INSTAGRAM} target="_blank" rel="noreferrer" aria-label="aclassicaltone on Instagram">
+              <Instagram size={15} strokeWidth={1.7} />
+            </a>
+            <a href={ACT_FACEBOOK} target="_blank" rel="noreferrer" aria-label="aclassicaltone on Facebook">
+              <Facebook size={15} strokeWidth={1.7} />
+            </a>
+          </span>
+        </div>
+        <div className="artium-gx-foot-line" aria-hidden="true" />
+        <div className="artium-gx-foot-row">
+          <span className="artium-gx-foot-links">
+            <span>About Us</span><i aria-hidden="true">•</i>
+            <span>Help Center</span><i aria-hidden="true">•</i>
+            <span>Contact</span>
+          </span>
+          <span className="artium-gx-copy">© 2026 Artium. All rights reserved.</span>
+        </div>
       </footer>
     </div>
   );
@@ -5307,15 +5345,34 @@ function EntryGate({ onLearner, onStudent, onPianist, onLogin, learnerProfile, l
       </main>
 
       <footer className="artium-gx-foot artium-gx-in artium-gx-in--7">
-        <GateLogo word={18} />
-        <span className="artium-gx-foot-rule" aria-hidden="true" />
-        <span className="artium-gx-partner">
-          In partnership with
-          <a href="https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==" target="_blank" rel="noreferrer">
-            aclassicaltone
-            <i><ArrowUpRight size={12} strokeWidth={2.2} /></i>
-          </a>
-        </span>
+        <div className="artium-gx-foot-top" aria-hidden="true" />
+        <div className="artium-gx-foot-row">
+          {/* The name is no longer the link — the ringed marks beside it are,
+              so it loses the radical tile it was carrying. */}
+          <span className="artium-gx-partner">
+            In partnership with <b>aclassicaltone</b>
+          </span>
+          <span className="artium-gx-social">
+            <a href={ACT_INSTAGRAM} target="_blank" rel="noreferrer" aria-label="aclassicaltone on Instagram">
+              <Instagram size={15} strokeWidth={1.7} />
+            </a>
+            <a href={ACT_FACEBOOK} target="_blank" rel="noreferrer" aria-label="aclassicaltone on Facebook">
+              <Facebook size={15} strokeWidth={1.7} />
+            </a>
+          </span>
+        </div>
+        <div className="artium-gx-foot-line" aria-hidden="true" />
+        <div className="artium-gx-foot-row">
+          {/* Rendered as text, not as links: there is nowhere for them to go
+              yet, and a footer link that does nothing when tapped is worse
+              than one that does not invite the tap. */}
+          <span className="artium-gx-foot-links">
+            <span>About Us</span><i aria-hidden="true">•</i>
+            <span>Help Center</span><i aria-hidden="true">•</i>
+            <span>Contact</span>
+          </span>
+          <span className="artium-gx-copy">© 2026 Artium. All rights reserved.</span>
+        </div>
       </footer>
     </div>
   );
