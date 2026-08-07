@@ -2095,7 +2095,7 @@ export default function App() {
            sides. Shifting it as well moved it twice. */
         .artium-gx-stage {
           --tw: min(96vw, 680px);
-          position: relative; width: var(--tw); height: calc(var(--tw) * 0.5875);
+          position: relative; width: var(--tw); height: calc(var(--tw) * 0.5955);
           flex-shrink: 0;
         }
 
@@ -2107,7 +2107,7 @@ export default function App() {
            it meets a flank's rim, and nothing is drawn across the cards. A
            full circle behind translucent glass showed through them. */
         .artium-gx-orbit {
-          position: absolute; left: 50.10%; top: 51.40%;
+          position: absolute; left: 50%; top: 51.47%;
           width: 56.48%; aspect-ratio: 1; transform: translate(-50%, -50%);
           overflow: visible; pointer-events: none;
         }
@@ -2115,21 +2115,26 @@ export default function App() {
           fill: none; stroke: rgba(239,208,155,0.34); stroke-width: 1;
           vector-effect: non-scaling-stroke;
         }
+        /* Above the circles, not beneath them: sitting on a flank's rim, half
+           of each upper dot was being swallowed by the card it rests on. */
         .artium-gx-dot {
-          position: absolute; width: 1.3%; aspect-ratio: 1; border-radius: 50%;
-          background: #EFD09B; transform: translate(-50%, -50%); pointer-events: none;
+          position: absolute; width: 1.31%; aspect-ratio: 1; border-radius: 50%;
+          background: #EFD09B; transform: translate(-50%, -50%);
+          pointer-events: none; z-index: 3;
         }
         .artium-gx-node {
-          position: absolute; left: 50.05%; top: 4.52%;
+          position: absolute; left: 50%; top: 4.05%;
           width: 4.82%; aspect-ratio: 1; transform: translate(-50%, -50%);
-          border-radius: 50%; border: 1px solid rgba(239,208,155,0.55);
-          background: rgba(255,255,255,0.03); color: #EFD09B;
+          border-radius: 50%; border: 1.4px solid rgba(239,208,155,0.65);
+          /* Opaque, and above the arcs: the reference shows the orbit meeting
+             this ring and stopping, not running behind the bust. */
+          background: #14151A; color: #EFD09B; z-index: 3;
           display: flex; align-items: center; justify-content: center;
           pointer-events: none;
         }
         /* The reference's bust dominates its ring — roughly seven tenths of the
            inner width, not half. */
-        .artium-gx-node svg { width: 80%; height: 80%; }
+        .artium-gx-node svg { width: 76%; height: 76%; }
         /* The dashed stems: node down to the centre circle, centre circle
            down to the closing dot. */
         .artium-gx-stem {
@@ -2175,20 +2180,12 @@ export default function App() {
            them beneath it, which is what makes the trio read as fused rather
            than as three shapes set side by side. */
         .artium-gx-cc--side {
-          width: 34.17%; height: calc(var(--tw) * 0.4020); top: 56.36%;
+          width: 32.50%; height: calc(var(--tw) * 0.3820); top: 57.05%;
           padding: 0 3.2%; z-index: 1;
+          border-width: 1.6px; border-color: rgba(239,208,155,0.42);
         }
-        .artium-gx-cc--left  { left: 17.09%; }
-        .artium-gx-cc--right { left: 82.91%; }
-        .artium-gx-cc--side::after {
-          content: ''; position: absolute; inset: -3.2%; border-radius: 50%;
-          pointer-events: none; opacity: 0.5;
-          background: repeating-conic-gradient(from 0deg,
-            rgba(239,208,155,0.34) 0deg 1.2deg, rgba(239,208,155,0) 1.2deg 9deg);
-          -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
-                  mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
-          animation: artiumOrbit 52s linear infinite reverse;
-        }
+        .artium-gx-cc--left  { left: 17%; }
+        .artium-gx-cc--right { left: 83%; }
         @keyframes artiumOrbit { to { transform: rotate(360deg); } }
 
         /* The throne: 363 x 381, so a whisker taller than wide — not the
@@ -2198,7 +2195,7 @@ export default function App() {
            against the stage's height, which would make the throne 85px
            instead of 143 and turn the circle into a letterbox. */
         .artium-gx-cc--hero {
-          width: 36.48%; height: calc(var(--tw) * 0.3829); left: 50%; top: 50.72%;
+          width: 38.50%; height: calc(var(--tw) * 0.4050); left: 50%; top: 51.47%;
           padding: 0 4%; z-index: 2;
           border: 1.5px solid rgba(239,208,155,0.85);
           box-shadow:
@@ -5137,24 +5134,26 @@ function EntryGate({ onLearner, onStudent, onPianist, onLogin, learnerProfile, l
   // mark for the concert card. Filled pieces like the cap: rim, raised lid,
   // keybed and three legs, so it reads at 40px where an outline would fuzz.
   const piano = (
-    <svg className="artium-gx-cc-mark" viewBox="3 0 68 72" aria-hidden="true" style={{ aspectRatio: "68 / 72" }}>
+    <svg className="artium-gx-cc-mark" viewBox="0 0 100 107" aria-hidden="true" style={{ aspectRatio: "100 / 107" }}>
       <g fill={GATE.gold}>
-        {/* A grand from above and to the left with its lid standing open, as
-            the reference draws it — not the side elevation this was, and not
-            the wide box either: the reference's mark is 67 x 71, all but
-            square. The lid is what identifies the instrument: a straight
-            front edge rising to the right, then the bent side curling round
-            the tail and tucking back in. */}
-        <path d="M21.7 34.9 45.3 4.9c.5-.7 1.3-1.1 2.2-1.1l9 -.4c6.2 0 10.9 4.1 10.9 9.4 0 5-3.5 8.6-8.2 9.6l-6.3 1.4c-2.7.6-4.5 2.1-5.9 4.3l-3.2 5.2z" />
-        {/* the prop stick */}
-        <path d="M46.3 8.6 48.2 9.7 37.6 33.5 35.7 32.4z" />
-        {/* the case: keyboard end at the left, curving round to the tail */}
-        <path d="M3.1 36.5c0-1.1.9-2 2-2h4.4v-4.1c0-1.1.9-2 2-2H41c.9 0 1.8.3 2.5.8l22.5 15.3c2.7 1.8 4.3 4.8 4.3 8 0 1.3-1.1 2.4-2.4 2.4H6.1c-1.7 0-3-1.3-3-3z" />
-        {/* four legs, the nearer ones longer */}
-        <path d="M12 54.9h3.2v12.4H12zM25.6 54.9h3.2v13.9h-3.2zM44.6 54.9h3.8v15.6h-3.8zM61.4 54.9h3v10.8h-3z" />
-        <rect x="10.7" y="66.6" width="5.8" height="2.2" rx="1.1" />
-        <rect x="24.3" y="68.1" width="5.8" height="2.2" rx="1.1" />
-        <rect x="43.2" y="69.8" width="6.6" height="2.2" rx="1.1" />
+        {/* Traced row by row off the reference. Two things this kept getting
+            wrong: the lid and the case are separate planes with ground
+            between them, and the prop is a dark line CUT THROUGH the lid,
+            not a gold one laid over it — hence evenodd and the second
+            subpath. The lid's apex is at the top right and it widens
+            down-left; the bent side bulges to x=93 around a third of the way
+            down, which is what makes it a grand rather than a wedge. */}
+        <path
+          fillRule="evenodd"
+          d="M70 19.5 85.5 19.5C90 21 93.5 28 93.5 37c0 8-4.5 14.5-11.5 17.5L76 56.5 23 58.5zM69.3 26.5 71.8 26.5 77.3 50 74.8 50z"
+        />
+        {/* the case: rounded keyboard end at the left, tail sweeping right */}
+        <path d="M18 66c0-4.5 3-7 7-7h49c8 0 15 2.5 20 7 3.5 3 5 6 3.5 8-1.5 2.2-5.5 2.5-9.5 2.5L26 77c-5 0-8-3-8-7z" />
+        {/* four legs, the nearer ones longer, on castors */}
+        <path d="M29 76.5h4.2V95H29zM45 76.5h5v20h-5zM67 76.5h6v26h-6zM89.5 74h3v18h-3z" />
+        <rect x="27.4" y="93" width="7.4" height="2.5" rx="1.25" />
+        <rect x="42.6" y="94.6" width="9.8" height="2.6" rx="1.3" />
+        <rect x="64.6" y="100.8" width="10.8" height="2.8" rx="1.4" />
       </g>
     </svg>
   );
@@ -5199,18 +5198,24 @@ function EntryGate({ onLearner, onStudent, onPianist, onLogin, learnerProfile, l
               <svg className="artium-gx-orbit" viewBox="0 0 100 100" aria-hidden="true">
                 {/* Both arcs end exactly where the orbit meets a flank's rim,
                     which is where the reference puts the dots. */}
-                <path d="M 6.97 24.54 A 50 50 0 0 1 92.94 24.38" />
-                <path d="M 88.35 82.08 A 50 50 0 0 1 11.50 81.90" />
+                <path d="M 5.86 26.52 A 50 50 0 0 1 94.14 26.52" />
+                <path d="M 89.20 81.04 A 50 50 0 0 1 10.80 81.04" />
               </svg>
-              <span className="artium-gx-dot" style={{ left: "25.79%", top: "26.93%" }} aria-hidden="true" />
-              <span className="artium-gx-dot" style={{ left: "74.21%", top: "26.93%" }} aria-hidden="true" />
-              <span className="artium-gx-dot" style={{ left: "50.07%", top: "98.89%" }} aria-hidden="true" />
+              <span className="artium-gx-dot" style={{ left: "25.07%", top: "29.20%" }} aria-hidden="true" />
+              <span className="artium-gx-dot" style={{ left: "74.93%", top: "29.20%" }} aria-hidden="true" />
+              <span className="artium-gx-dot" style={{ left: "50%", top: "98.90%" }} aria-hidden="true" />
               <span className="artium-gx-node" aria-hidden="true">
                 {/* Solid, not stroked: at 18px a two-line outline reads as a
                     smudge, and this mark is a full stop on the orbit. */}
                 <svg viewBox="0 0 24 24" fill="currentColor">
-                  <circle cx="12" cy="7.2" r="4.6" />
-                  <path d="M12 13.2c-4.7 0-8.5 2.9-8.5 6.6 0 .9.7 1.6 1.6 1.6h13.8c.9 0 1.6-.7 1.6-1.6 0-3.7-3.8-6.6-8.5-6.6z" />
+                  {/* Traced off the reference at 5x. The body is an oval — 42
+                      wide by 25 tall there, widest across its middle and
+                      tapering at both ends — not the arch with a flat foot
+                      this had. There is clear ground between it and the head,
+                      and the pair fills about four fifths of the ring rather
+                      than half. */}
+                  <circle cx="12" cy="5.6" r="5.5" />
+                  <ellipse cx="12" cy="18.6" rx="9" ry="5.4" />
                 </svg>
               </span>
               <span className="artium-gx-stem artium-gx-stem--top" aria-hidden="true" />
