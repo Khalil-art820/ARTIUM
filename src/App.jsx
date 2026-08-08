@@ -4004,7 +4004,33 @@ function StepAccount({ draft, update, error }) {
   const mismatch = draft.confirmPassword.length > 0 && draft.password !== draft.confirmPassword;
   return (
     <div>
-      <p className="text-sm mb-6" style={{ color: C.ivoryDim }}>Use a personal email you'll always have access to — this is your login, so it works even after you graduate. You'll verify your conservatory email separately, as a one-time student check.</p>
+      <p className="text-sm" style={{ color: C.ivoryDim, lineHeight: 1.6 }}>
+        Use a personal email you'll always have access to — this is your login,
+        so it keeps working after you graduate.
+      </p>
+      {/* The two routes, named here rather than sprung on them at step III.
+          Which one applies is the visitor's own fact about themselves, and
+          knowing it now is what stops the document route feeling like a
+          rejection when they reach it. */}
+      <div className="mb-6" style={{ marginTop: 14, borderRadius: 14, border: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.025)", padding: "13px 15px" }}>
+        <p style={{ fontFamily: FONT_MONO, fontSize: 10.5, letterSpacing: 0.5, color: C.brassLabel, margin: 0 }}>
+          PROVING YOU'RE A CONSERVATORY MUSICIAN
+        </p>
+        <p className="text-sm" style={{ color: C.ivoryDim, lineHeight: 1.55, margin: "8px 0 0" }}>
+          You'll do this on a later step, whichever fits you:
+        </p>
+        <ul style={{ margin: "9px 0 0", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 7 }}>
+          {[
+            ["With an institutional student email", "we send a one-time code to your @conservatory address."],
+            ["Without one", "upload a student ID, enrolment certificate or tuition receipt — or, if you've graduated, your diploma."],
+          ].map(([t, d]) => (
+            <li key={t} className="text-sm" style={{ color: C.ivoryDim, lineHeight: 1.55, display: "flex", gap: 9 }}>
+              <span aria-hidden="true" style={{ color: C.brass, flexShrink: 0, marginTop: 1 }}>·</span>
+              <span><b style={{ color: C.ivory, fontWeight: 600 }}>{t}</b> — {d}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
       <GoogleBtn label="Sign up with Google" />
       <Divider />
       <Field label="Personal email">
@@ -4248,10 +4274,26 @@ function StepConservatory({ draft, update, editing }) {
           enrolment, so the Google shortcut that skips OTP doesn't apply. */}
       {!editing && isDoc && (
         <div className="mt-5 rounded-2xl" style={{ border: `1px solid ${draft.proofDocUrl ? "#1A9E6E" : C.brass}`, background: C.inkSoft, padding: "18px 18px" }}>
-          <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brassLabel, letterSpacing: 0.5, marginBottom: 8 }}>UPLOAD PROOF OF ENROLLMENT</p>
-          <p className="text-sm" style={{ color: C.ivoryDim, marginBottom: 12 }}>
-            Upload a <b>student ID card</b>, <b>enrollment certificate</b>, or <b>tuition receipt</b>
-            {selectedCons ? ` from ${selectedCons.name}` : " from your conservatory"}. Our team reviews it manually before granting student status
+          <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brassLabel, letterSpacing: 0.5, marginBottom: 8 }}>UPLOAD YOUR PROOF</p>
+          {/* Split by where the person is, not by document type. A graduate
+              hunting for a "proof of enrolment" they no longer have was the
+              old copy's dead end — the card at the gate now says Student |
+              Graduate, and this is the step that has to honour it. */}
+          <p className="text-sm" style={{ color: C.ivoryDim, marginBottom: 10, lineHeight: 1.55 }}>
+            One document{selectedCons ? ` from ${selectedCons.name}` : ""}, whichever applies:
+          </p>
+          <ul style={{ margin: "0 0 12px", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 6 }}>
+            <li className="text-sm" style={{ color: C.ivoryDim, lineHeight: 1.55, display: "flex", gap: 9 }}>
+              <span aria-hidden="true" style={{ color: C.brass, flexShrink: 0, marginTop: 1 }}>·</span>
+              <span><b style={{ color: C.ivory, fontWeight: 600 }}>Still studying</b> — a student ID card, enrolment certificate or tuition receipt.</span>
+            </li>
+            <li className="text-sm" style={{ color: C.ivoryDim, lineHeight: 1.55, display: "flex", gap: 9 }}>
+              <span aria-hidden="true" style={{ color: C.brass, flexShrink: 0, marginTop: 1 }}>·</span>
+              <span><b style={{ color: C.ivory, fontWeight: 600 }}>Graduated</b> — your diploma, or a transcript naming the conservatory.</span>
+            </li>
+          </ul>
+          <p className="text-sm" style={{ color: C.ivoryDim, marginBottom: 12, lineHeight: 1.55 }}>
+            Our team reviews it by hand before granting access
             {selectedCons ? "" : ", and confirms your conservatory from the document"}.
           </p>
           {draft.proofDocUrl ? (
@@ -4335,13 +4377,13 @@ function StepConservatory({ draft, update, editing }) {
       {!editing && (
         <div style={{ marginTop: 22, paddingTop: 16, borderTop: `1px solid ${C.inkLine}` }}>
           <p className="text-sm" style={{ color: C.ivoryDim, margin: 0 }}>
-            {isDoc ? "Do you have an institutional student email?" : "No institutional student email?"}
+            {isDoc ? "Do you have an institutional student email?" : "No institutional student email, or already graduated?"}
           </p>
           <button
             onClick={() => switchMethod(isDoc ? "otp" : "document")}
             style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 6, padding: 0, background: "none", border: "none", cursor: "pointer", color: C.brassLabel, fontFamily: FONT_BODY, fontSize: 14, fontWeight: 600 }}
           >
-            {isDoc ? "Verify with your student email instead" : "Verify with a document instead"}
+            {isDoc ? "Verify with your student email instead" : "Verify with a document or diploma instead"}
             <ArrowRight size={14} />
           </button>
         </div>
