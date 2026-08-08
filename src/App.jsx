@@ -3962,6 +3962,20 @@ function CoverPhotoUpload({ coverPhotoUrl, onChange }) {
   );
 }
 
+// Google's mark on its own. GoogleBtn draws the same paths inline; this
+// pulls them out so the "signed up with Google" panel can show the provider
+// without offering a button that would start the redirect again.
+function GoogleMark({ size = 20 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" aria-hidden="true" style={{ flexShrink: 0, display: "block" }}>
+      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+    </svg>
+  );
+}
+
 function GoogleBtn({ label = "Continue with Google", role = "student" }) {
   const [loading, setLoading] = useState(false);
   async function handleClick() {
@@ -4002,6 +4016,7 @@ function Divider() {
 
 function StepAccount({ draft, update, error }) {
   const mismatch = draft.confirmPassword.length > 0 && draft.password !== draft.confirmPassword;
+  const isGoogle = draft.password === "__google__";
   return (
     <div>
       <p className="text-sm" style={{ color: C.ivoryDim, lineHeight: 1.6 }}>
@@ -4031,6 +4046,25 @@ function StepAccount({ draft, update, error }) {
           ))}
         </ul>
       </div>
+      {/* Signed up through Google, there is no password to show — and the
+          draft's "__google__" is a sentinel meaning exactly that, not a
+          credential. Rendering it into a password box put a string the
+          visitor never typed in front of them, in the one field where a
+          value you do not recognise is alarming. This step reports the
+          account instead. */}
+      {isGoogle ? (
+        <div style={{ borderRadius: 14, border: `1px solid rgba(26,158,110,0.45)`, background: "rgba(26,158,110,0.07)", padding: "15px 16px", display: "flex", alignItems: "center", gap: 12 }}>
+          <GoogleMark />
+          <span style={{ minWidth: 0 }}>
+            <p style={{ margin: 0, fontSize: 13.5, fontWeight: 700, color: C.ivory }}>Signed up with Google</p>
+            <p style={{ margin: "2px 0 0", fontSize: 12.5, color: C.ivoryDim, overflow: "hidden", textOverflow: "ellipsis" }}>
+              {draft.email || "your Google account"}
+            </p>
+          </span>
+          <CheckIcon size={18} color="#1A9E6E" style={{ marginLeft: "auto", flexShrink: 0 }} />
+        </div>
+      ) : (
+      <>
       <GoogleBtn label="Sign up with Google" />
       <Divider />
       <Field label="Personal email">
@@ -4043,6 +4077,8 @@ function StepAccount({ draft, update, error }) {
         <PasswordField value={draft.confirmPassword} onChange={(e) => update({ confirmPassword: e.target.value })} placeholder="Re-enter your password" autoComplete="new-password" />
       </Field>
       {mismatch && <p className="text-sm" style={{ color: C.burgundy }}>Passwords don't match.</p>}
+      </>
+      )}
       {error && <p className="text-sm" style={{ color: C.burgundy }}>{error}</p>}
     </div>
   );
@@ -6134,6 +6170,22 @@ function LearnerSignup({ onSubmit, onBack, onLogin, error, googleName = "" }) {
               </div>
             </Field>
 
+            {/* Same sentinel, same trap as the student flow: a Google signup
+                starts on step 2, and Back walks straight into these fields
+                with "__google__" sitting in them. */}
+            {isGoogle ? (
+              <div className="mb-5" style={{ borderRadius: 14, border: "1px solid rgba(26,158,110,0.45)", background: "rgba(26,158,110,0.07)", padding: "15px 16px", display: "flex", alignItems: "center", gap: 12 }}>
+                <GoogleMark />
+                <span style={{ minWidth: 0 }}>
+                  <p style={{ margin: 0, fontSize: 13.5, fontWeight: 700, color: C.ivory }}>Signed up with Google</p>
+                  <p style={{ margin: "2px 0 0", fontSize: 12.5, color: C.ivoryDim, overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {email || "your Google account"}
+                  </p>
+                </span>
+                <CheckIcon size={18} color="#1A9E6E" style={{ marginLeft: "auto", flexShrink: 0 }} />
+              </div>
+            ) : (
+            <>
             <GoogleBtn label="Sign up with Google" role="learner" />
             <Divider />
 
@@ -6147,6 +6199,8 @@ function LearnerSignup({ onSubmit, onBack, onLogin, error, googleName = "" }) {
               <PasswordField value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Re-enter your password" autoComplete="new-password" />
             </Field>
             {mismatch && <p className="text-sm mb-4" style={{ color: C.burgundy }}>Passwords don't match.</p>}
+            </>
+            )}
             {error && <p className="text-sm mb-4" style={{ color: C.burgundy }}>{error}</p>}
             <div className="mt-2">
               <PrimaryBtn disabled={!step1Ready} onClick={() => setStep(2)} icon={ArrowRight}>Continue</PrimaryBtn>
