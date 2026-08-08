@@ -545,13 +545,17 @@ function Chip({ active, onClick, children }) {
   return (
     <button
       onClick={onClick}
-      className="px-3 py-1.5 rounded-full text-sm transition-colors"
+      className="px-3.5 py-2 rounded-full text-sm transition-colors"
       style={{
         fontFamily: FONT_BODY,
-        border: `1px solid ${active ? C.brass : C.inkLine}`,
-        background: active ? C.brass : "transparent",
-        color: active ? C.inkText : C.ivoryDim,
-        fontWeight: active ? 600 : 500,
+        // brassText, not inkText: inkText is the page's type colour, which is
+        // white now — and white on champagne is a 1.6:1 chip.
+        border: `1px solid ${active ? "transparent" : "rgba(255,255,255,0.12)"}`,
+        background: active ? "linear-gradient(160deg, #E9C88D, #C99A55)" : "rgba(255,255,255,0.035)",
+        color: active ? C.brassText : C.ivoryDim,
+        fontWeight: active ? 700 : 500,
+        boxShadow: active ? "0 3px 14px rgba(233,200,141,0.20)" : "none",
+        cursor: "pointer",
       }}
     >
       {children}
@@ -2395,6 +2399,71 @@ export default function App() {
            as the links to its left. */
         .artium-gx-copy { font-size: 10px; font-weight: 500; color: #6E6E6E; line-height: 1.4; }
 
+        /* ---- signup ------------------------------------------------------
+           The eight steps, in the gate's language rather than merely dark:
+           the same ground, the same glass panel, the same champagne. */
+        .artium-su {
+          position: relative; min-height: 100vh; min-height: 100dvh;
+          background:
+            radial-gradient(120% 55% at 50% -10%, #191A20 0%, transparent 62%),
+            linear-gradient(180deg, #131417 0%, #0F1012 42%, #0B0C0E 100%);
+          color: #FFFFFF; font-family: 'Manrope', -apple-system, 'Segoe UI', Roboto, sans-serif;
+        }
+        /* The step's content sits on the gate's card: glass, a gold hairline,
+           and the same light from the upper left. */
+        .artium-su-card {
+          border-radius: 22px; padding: 22px 20px;
+          border: 1px solid rgba(239,208,155,0.15);
+          background:
+            radial-gradient(130% 110% at 6% -6%,
+              rgba(255,255,255,0.075) 0%, rgba(255,255,255,0.045) 32%,
+              rgba(255,255,255,0.020) 64%, rgba(255,255,255,0.006) 100%),
+            rgba(255,255,255,0.014);
+          -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
+          box-shadow: 0 18px 45px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.08);
+        }
+        /* The progress rail. Filled segments take the buttons' amber so the
+           stepper and the primary action read as the same accent. */
+        .artium-su-rail { flex: 1; display: flex; gap: 4px; }
+        .artium-su-seg { flex: 1; height: 3px; border-radius: 99px; background: rgba(255,255,255,0.10); transition: background .35s ease; }
+        .artium-su-seg[data-on="1"] { background: linear-gradient(90deg, #E9C88D, #C99A55); }
+        .artium-su-step { font-family: 'ui-monospace', monospace; font-size: 12px; letter-spacing: 0.06em; color: #E6DAB0; white-space: nowrap; }
+        .artium-su-title {
+          margin: 16px 0 0; color: #FFFFFF; line-height: 1.14;
+          font-family: 'Cormorant Garamond', 'Didot', 'Bodoni 72', Georgia, serif;
+          font-weight: 700; font-size: clamp(26px, 8vw, 34px);
+        }
+        /* The gate's divider, at the width the flow needs. */
+        .artium-su-rule { display: flex; align-items: center; gap: 10px; width: 150px; margin: 14px 0 0; }
+        .artium-su-rule span { flex: 1; height: 1px; background: linear-gradient(90deg, rgba(239,208,155,0.55), transparent); }
+        .artium-su-rule i { width: 5px; height: 5px; background: #EFD09B; transform: rotate(45deg); flex-shrink: 0; }
+
+        /* ---- forms ------------------------------------------------------
+           The signup fields are styled inline, which cannot express :focus,
+           a placeholder colour, or what the browser does to an autofilled
+           input. All three live here. */
+        input::placeholder, textarea::placeholder { color: #6E6E6E; opacity: 1; }
+        input:focus, textarea:focus, select:focus {
+          border-color: rgba(239,208,155,0.55) !important;
+          box-shadow: 0 0 0 3px rgba(239,208,155,0.10) !important;
+        }
+        /* Chrome paints autofilled fields a solid pale yellow and sets the
+           text near-black. Neither is overridable directly, so the fill is
+           faked with a large inset shadow and the text colour is forced. */
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover,
+        input:-webkit-autofill:focus {
+          -webkit-text-fill-color: #FFFFFF;
+          -webkit-box-shadow: 0 0 0 1000px #17181D inset;
+          caret-color: #FFFFFF;
+          transition: background-color 9999s ease-out 0s;
+        }
+        /* The date and time pickers ship a black glyph, invisible on this
+           ground until it is inverted. */
+        input[type="date"]::-webkit-calendar-picker-indicator,
+        input[type="time"]::-webkit-calendar-picker-indicator { filter: invert(1) opacity(0.55); cursor: pointer; }
+        select option { background: #17181D; color: #FFFFFF; }
+
         /* ---- Artium's World -------------------------------------------
            The network page, in the gate's language. Matte black ground, the
            globe floating on it, and everything below set on the same glass
@@ -2615,7 +2684,26 @@ export default function App() {
         }
 
         .artium-map, .artium-map .leaflet-container { border-radius: inherit; }
-        .artium-map .leaflet-tile-pane { filter: saturate(0.5) brightness(1.08); }
+        /* OSM ships one set of tiles and they are drawn for a white page.
+           Inverting and rotating the hue a half-turn is the standard way to a
+           dark map: invert makes land dark and water light, and the 180deg
+           rotation puts the hues back where they started, so the sea is blue
+           again rather than orange. The rest pulls the result down to this
+           page's luminance. */
+        .artium-map .leaflet-tile-pane {
+          filter: invert(1) hue-rotate(180deg) saturate(0.42) brightness(0.78) contrast(1.05);
+        }
+        .artium-map .leaflet-container { background: #0F1012; }
+        /* Not scoped to .artium-map: the zoom control lives in its own pane,
+           outside the tile pane the filter above applies to, and the signup's
+           map does not carry that class. */
+        .leaflet-control-zoom a, .leaflet-bar a {
+          background: #17181D !important; color: #CFCFCF !important;
+          border-bottom-color: rgba(255,255,255,0.10) !important;
+        }
+        .leaflet-control-zoom a:hover, .leaflet-bar a:hover { background: #232430 !important; color: #EFD09B !important; }
+        .leaflet-bar { border: 1px solid rgba(255,255,255,0.12) !important; box-shadow: 0 4px 14px rgba(0,0,0,0.45) !important; }
+        .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: #17181D !important; color: #FFFFFF !important; }
         .artium-map .leaflet-control-zoom { border: 1px solid #E6EBF1 !important; box-shadow: 0 2px 8px rgba(0,0,0,0.32) !important; border-radius: 8px !important; overflow: hidden; }
         .artium-map .leaflet-control-zoom a { background: #FFFFFF !important; color: #0A2540 !important; border-color: #E6EBF1 !important; font-weight: 600 !important; }
         .artium-map .leaflet-control-zoom a:hover { background: #F6F9FC !important; }
@@ -3630,31 +3718,35 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
   }
 
   return (
-    <div className="min-h-full" style={{ background: C.ink, color: C.ivory }}>
-      <div className="max-w-3xl mx-auto px-6 pt-8">
+    <div className="artium-su">
+      <div className="max-w-3xl mx-auto px-6" style={{ paddingTop: "calc(20px + env(safe-area-inset-top, 0px))" }}>
         <div className="flex items-center gap-3">
-          <button onClick={step === 0 ? onCancel : () => setStep(step - 1)} style={{ color: C.ivoryDim, background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", padding: 0 }}>
-            <ChevronLeft size={18} />
+          <button onClick={step === 0 ? onCancel : () => setStep(step - 1)} className="artium-aw-round" aria-label="Back">
+            <ChevronLeft size={17} strokeWidth={2} />
           </button>
-          <Logo slogan />
+          {/* The gate's lockup, so the flow reads as the same product the
+              visitor just came through rather than a form it handed them to. */}
+          <GateLogo word={20} />
           {editing && (
-            <button onClick={onCancel} style={{ marginLeft: "auto", fontSize: 13, fontWeight: 600, color: C.ivoryDim, background: "none", border: `1px solid ${C.inkLine}`, borderRadius: 6, padding: "5px 14px", cursor: "pointer" }}>
+            <button onClick={onCancel} style={{ marginLeft: "auto", fontSize: 12.5, fontWeight: 600, color: C.ivoryDim, background: "rgba(255,255,255,0.04)", border: `1px solid ${C.inkLine}`, borderRadius: 999, padding: "7px 15px", cursor: "pointer" }}>
               Cancel
             </button>
           )}
         </div>
-        <div className="mt-8 flex items-center gap-4">
-          <span style={{ fontFamily: FONT_MONO, color: C.brassLabel, fontSize: 13 }}>Step {ROMAN[step]} of {ROMAN[lastStep]}</span>
-          <div className="flex-1 flex gap-1">
+        <div className="mt-7 flex items-center gap-4">
+          <span className="artium-su-step">Step {ROMAN[step]} of {ROMAN[lastStep]}</span>
+          <div className="artium-su-rail">
             {labels.map((_, i) => (
-              <div key={i} className="flex-1 rounded-full" style={{ height: 3, background: i <= step ? C.brass : C.inkLine }} />
+              <div key={i} className="artium-su-seg" data-on={i <= step ? "1" : "0"} />
             ))}
           </div>
         </div>
-        <h2 className="mt-5" style={{ fontFamily: FONT_DISPLAY, fontSize: 30, fontWeight: 600 }}>{labels[step]}</h2>
+        <h2 className="artium-su-title">{labels[step]}</h2>
+        <div className="artium-su-rule" aria-hidden="true"><i /><span /></div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-6 py-10 lg-fade" key={step}>
+      <div className="max-w-3xl mx-auto px-6 pt-7 pb-10 lg-fade" key={step}>
+        <div className="artium-su-card">
         {!editing && step === 0 && <StepAccount draft={draft} update={update} error={authError} />}
         {idx === 0 && <StepIntro draft={draft} update={update} />}
         {idx === 1 && <StepConservatory draft={draft} update={update} editing={editing} />}
@@ -3663,6 +3755,7 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
         {idx === 4 && <StepTopFlop draft={draft} update={update} />}
         {idx === 5 && <StepTeaching draft={draft} update={update} />}
         {idx === 6 && <StepReview draft={draft} />}
+        </div>
       </div>
 
       {step === lastStep && authError && (
@@ -3671,7 +3764,8 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
         </div>
       )}
 
-      <div className="max-w-3xl mx-auto px-6 pb-12 flex items-center justify-end">
+      <div className="max-w-3xl mx-auto px-6 flex items-center justify-end"
+        style={{ paddingBottom: "calc(40px + env(safe-area-inset-bottom, 0px))" }}>
         {step < lastStep ? (
           <PrimaryBtn disabled={!canNext} onClick={() => setStep(step + 1)} icon={ChevronRight}>Continue</PrimaryBtn>
         ) : (
@@ -3687,12 +3781,15 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
 function Field({ label, children }) {
   return (
     <label className="block mb-5">
-      <span className="block mb-1.5" style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500, color: C.ivory }}>{label}</span>
+      <span className="block mb-2" style={{ fontFamily: FONT_BODY, fontSize: 12.5, fontWeight: 600, letterSpacing: "0.01em", color: "#CFCFCF" }}>{label}</span>
       {children}
     </label>
   );
 }
-const inputStyle = { width: "100%", background: C.parchment, border: `1px solid ${C.inkLine}`, borderRadius: 6, padding: "10px 14px", color: C.ivory, fontFamily: FONT_BODY, fontSize: 15, outline: "none", boxShadow: "0 1px 2px rgba(0,0,0,0.16)" };
+// The gate's field: glass over the page with a hairline, not a white card
+// re-tinted. The focus ring is a CSS rule further down — an inline style
+// cannot express :focus.
+const inputStyle = { width: "100%", background: "rgba(255,255,255,0.035)", border: "1px solid rgba(255,255,255,0.11)", borderRadius: 11, padding: "12px 15px", color: "#FFFFFF", fontFamily: FONT_BODY, fontSize: 15, outline: "none", boxShadow: "none" };
 
 function PasswordField({ value, onChange, placeholder, autoComplete }) {
   const [visible, setVisible] = useState(false);
