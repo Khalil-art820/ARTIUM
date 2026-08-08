@@ -6,7 +6,7 @@ import {
   Pencil, Plus, Trash2, Home, Upload, Eye, EyeOff, ChevronLeft,
   Calendar, CreditCard, Video, Link2, Clock, Bell,
   Map, BookOpen, ListChecks, LayoutList, Megaphone, Check as CheckIcon, ShieldCheck, FileText, Lock,
-  ScanLine, ArrowUpRight,
+  ScanLine, ArrowUpRight, Globe2, MapPin, GraduationCap, User,
 } from "lucide-react";
 import { useAuth } from "./contexts/AuthContext";
 import { supabase } from "./lib/supabase";
@@ -2392,6 +2392,198 @@ export default function App() {
            as the links to its left. */
         .artium-gx-copy { font-size: 10px; font-weight: 500; color: #6E6E6E; line-height: 1.4; }
 
+        /* ---- Artium's World -------------------------------------------
+           The network page, in the gate's language. Matte black ground, the
+           globe floating on it, and everything below set on the same glass
+           and champagne the entry gate uses. */
+        .artium-aw {
+          position: relative; min-height: 100vh; min-height: 100dvh;
+          background: radial-gradient(120% 70% at 50% 0%, #15161B 0%, #0C0D10 55%, #08090B 100%);
+          color: #FFFFFF; font-family: 'Manrope', -apple-system, 'Segoe UI', Roboto, sans-serif;
+          display: flex; flex-direction: column; overflow-x: hidden;
+          padding-bottom: calc(62px + env(safe-area-inset-bottom, 0px));
+        }
+        .artium-aw-in { width: 100%; max-width: 560px; margin: 0 auto; padding: 0 18px; }
+
+        .artium-aw-bar {
+          display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+          padding: calc(12px + env(safe-area-inset-top, 0px)) 18px 10px;
+          width: 100%; max-width: 560px; margin: 0 auto;
+        }
+        .artium-aw-round {
+          width: 34px; height: 34px; border-radius: 50%; padding: 0; flex-shrink: 0;
+          border: 1px solid rgba(239,208,155,0.42); background: transparent;
+          color: #EFD09B; cursor: pointer;
+          display: inline-flex; align-items: center; justify-content: center;
+          transition: border-color .25s ease, box-shadow .25s ease, transform .25s ease;
+        }
+        .artium-aw-round:hover { border-color: #EFD09B; box-shadow: 0 0 16px rgba(239,208,155,0.26); transform: scale(1.05); }
+        .artium-aw-bar-right { display: flex; align-items: center; justify-content: flex-end; gap: 12px; }
+        .artium-aw-count { display: inline-flex; align-items: center; gap: 6px; color: #FFFFFF; font-size: 14px; font-weight: 600; }
+
+        /* Eyebrow with a rule running out either side. */
+        .artium-aw-eyebrow {
+          display: flex; align-items: center; gap: 12px; margin: 6px 0 0;
+          font-size: 10px; font-weight: 600; letter-spacing: 0.24em;
+          text-transform: uppercase; color: #E6DAB0; white-space: nowrap;
+        }
+        .artium-aw-eyebrow i { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(239,208,155,0.5)); }
+        .artium-aw-eyebrow i:last-child { background: linear-gradient(90deg, rgba(239,208,155,0.5), transparent); }
+        .artium-aw-h1 {
+          margin: 10px 0 0; text-align: center; color: #FFFFFF;
+          font-family: 'Cormorant Garamond', 'Didot', 'Bodoni 72', Georgia, serif;
+          font-weight: 700; font-size: clamp(22px, 6.6vw, 34px); line-height: 1.14;
+        }
+        .artium-aw-sub { margin: 8px 0 0; text-align: center; font-size: 12.5px; font-weight: 500; color: #9C9C9C; line-height: 1.5; }
+
+        /* The globe, and the gold orbits the reference draws around it. The
+           rings are CSS ellipses rather than geometry in the scene: they sit
+           in front of and behind nothing, so three.js has no opinion worth
+           having here, and a rotated border is one line. */
+        .artium-aw-stage { position: relative; width: 100%; margin: 6px 0 0; }
+        /* Sized off the stage's HEIGHT: a width-relative ring on a stage
+           wider than it is tall runs off both edges of the phone. */
+        .artium-aw-ring {
+          position: absolute; left: 50%; top: 52%; pointer-events: none;
+          border: 1px solid rgba(239,208,155,0.30); border-radius: 50%;
+          transform-style: preserve-3d;
+        }
+        .artium-aw-ring--a { height: 84%; aspect-ratio: 1; transform: translate(-50%,-50%) rotateX(75deg) rotate(-14deg); border-color: rgba(239,208,155,0.38); }
+        .artium-aw-ring--b { height: 97%; aspect-ratio: 1; transform: translate(-50%,-50%) rotateX(71deg) rotate(13deg); border-color: rgba(239,208,155,0.20); }
+        .artium-aw-glow {
+          position: absolute; left: 50%; top: 50%; width: 96%; height: 96%;
+          transform: translate(-50%,-50%); border-radius: 50%; pointer-events: none;
+          box-shadow: 0 0 70px 12px rgba(239,208,155,0.10);
+        }
+
+        /* Stats: three columns, hairlines between, as the reference draws. */
+        .artium-aw-stats {
+          display: flex; align-items: stretch; margin-top: 4px;
+          border-radius: 18px; border: 1px solid rgba(239,208,155,0.16);
+          background: rgba(255,255,255,0.028);
+          -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
+          box-shadow: 0 14px 34px rgba(0,0,0,0.38);
+        }
+        .artium-aw-stat { flex: 1 1 0; min-width: 0; padding: 13px 6px; text-align: center; }
+        .artium-aw-stat + .artium-aw-stat { border-left: 1px solid rgba(255,255,255,0.08); }
+        .artium-aw-stat-n { display: inline-flex; align-items: center; gap: 6px; font-size: 17px; font-weight: 700; color: #FFFFFF; line-height: 1; }
+        .artium-aw-stat-n svg { color: #E3BB7A; flex-shrink: 0; }
+        .artium-aw-stat-l { margin: 5px 0 0; font-size: 10.5px; font-weight: 500; color: #8B8B8B; }
+
+        /* Segmented control. The active half is the amber the gate fills its
+           buttons with; the track is the same glass as the cards. */
+        .artium-aw-seg {
+          display: flex; margin-top: 14px; padding: 4px; gap: 4px;
+          border-radius: 999px; border: 1px solid rgba(239,208,155,0.18);
+          background: rgba(255,255,255,0.025);
+        }
+        .artium-aw-seg button {
+          flex: 1 1 0; padding: 9px 6px; border: none; border-radius: 999px; cursor: pointer;
+          background: transparent; color: #CFCFCF; font: inherit; font-size: 12.5px; font-weight: 600;
+          transition: background .3s ease, color .3s ease, box-shadow .3s ease;
+        }
+        .artium-aw-seg button[data-on="1"] {
+          background: linear-gradient(160deg, #E9C88D, #C99A55); color: #0F1012;
+          box-shadow: 0 4px 16px rgba(239,208,155,0.22);
+        }
+
+        .artium-aw-find { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+        .artium-aw-field {
+          flex: 1; min-width: 0; display: flex; align-items: center; gap: 9px;
+          height: 44px; padding: 0 15px; border-radius: 999px;
+          border: 1px solid rgba(255,255,255,0.10); background: rgba(255,255,255,0.03);
+        }
+        .artium-aw-field svg { color: #7C7C7C; flex-shrink: 0; }
+        .artium-aw-field input {
+          flex: 1; min-width: 0; background: none; border: none; outline: none;
+          color: #FFFFFF; font: inherit; font-size: 12.5px;
+        }
+        .artium-aw-field input::placeholder { color: #6E6E6E; }
+        .artium-aw-filter {
+          width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0; padding: 0;
+          border: 1px solid rgba(239,208,155,0.5); background: transparent; color: #EFD09B;
+          display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+          transition: border-color .25s ease, box-shadow .25s ease;
+        }
+        .artium-aw-filter:hover { border-color: #EFD09B; box-shadow: 0 0 16px rgba(239,208,155,0.25); }
+        .artium-aw-hint { margin: 11px 0 0; text-align: center; font-size: 11.5px; color: #7C7C7C; line-height: 1.5; }
+
+        .artium-aw-listhead { display: flex; align-items: center; gap: 9px; margin: 22px 0 12px; }
+        .artium-aw-listhead h2 {
+          margin: 0; font-family: 'Cormorant Garamond', 'Didot', 'Bodoni 72', Georgia, serif;
+          font-weight: 700; font-size: 21px; color: #FFFFFF; line-height: 1;
+        }
+        .artium-aw-listhead span { font-size: 11.5px; color: #7C7C7C; }
+        .artium-aw-sort {
+          margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
+          height: 34px; padding: 0 12px; border-radius: 999px; cursor: pointer;
+          border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.03);
+          color: #CFCFCF; font: inherit; font-size: 12px; font-weight: 500;
+        }
+
+        .artium-aw-list { display: flex; flex-direction: column; gap: 9px; }
+        .artium-aw-row {
+          display: flex; align-items: center; gap: 13px; width: 100%;
+          padding: 11px 13px; border-radius: 16px; cursor: pointer; text-align: left;
+          border: 1px solid rgba(255,255,255,0.07);
+          background: rgba(255,255,255,0.022);
+          color: inherit; font: inherit;
+          transition: border-color .25s ease, background .25s ease, transform .25s ease;
+        }
+        .artium-aw-row:hover { border-color: rgba(239,208,155,0.34); background: rgba(255,255,255,0.045); transform: translateY(-2px); }
+        /* A monogram, not a logo: the schools have no marks in this project,
+           and admins can add more at any time — a lettered tile is the one
+           treatment that covers every row without a missing-image hole. */
+        .artium-aw-mono {
+          width: 58px; height: 44px; border-radius: 10px; flex-shrink: 0;
+          border: 1px solid rgba(255,255,255,0.09); background: rgba(255,255,255,0.04);
+          display: flex; align-items: center; justify-content: center;
+          font-family: 'Cormorant Garamond', 'Didot', 'Bodoni 72', Georgia, serif;
+          font-weight: 600; font-size: 13px; letter-spacing: 0.02em; color: #E6DAB0;
+          text-align: center; line-height: 1.05; padding: 0 4px; overflow: hidden;
+        }
+        .artium-aw-row-body { flex: 1; min-width: 0; }
+        .artium-aw-row-t {
+          margin: 0; font-family: 'Cormorant Garamond', 'Didot', 'Bodoni 72', Georgia, serif;
+          font-weight: 700; font-size: 16px; color: #FFFFFF; line-height: 1.2;
+          display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+        .artium-aw-sort[data-on="1"] { border-color: rgba(239,208,155,0.5); color: #EFD09B; }
+        .artium-aw-row-c { margin: 3px 0 0; display: flex; align-items: center; gap: 4px; font-size: 11.5px; color: #8B8B8B; }
+        .artium-aw-row-c svg { color: #7C7C7C; flex-shrink: 0; }
+        .artium-aw-badge {
+          flex-shrink: 0; min-width: 52px; padding: 6px 8px; border-radius: 11px; text-align: center;
+          border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.035);
+        }
+        .artium-aw-badge b { display: block; font-size: 15px; font-weight: 700; color: #FFFFFF; line-height: 1; }
+        .artium-aw-badge span { display: block; margin-top: 3px; font-size: 9.5px; color: #8B8B8B; }
+        .artium-aw-row > svg:last-child { color: #6E6E6E; flex-shrink: 0; }
+        .artium-aw-empty { padding: 26px 4px; text-align: center; font-size: 12.5px; color: #7C7C7C; }
+
+        /* Bottom bar. Fixed, because the reference has it pinned and this page
+           scrolls a long way. */
+        .artium-aw-tabs {
+          position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+          display: flex; align-items: stretch;
+          padding-bottom: env(safe-area-inset-bottom, 0px);
+          background: rgba(9,10,13,0.92);
+          -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+          border-top: 1px solid rgba(255,255,255,0.07);
+        }
+        .artium-aw-tabs button {
+          flex: 1 1 0; display: flex; flex-direction: column; align-items: center; gap: 3px;
+          padding: 9px 2px 8px; border: none; background: none; cursor: pointer;
+          color: #7C7C7C; font: inherit; font-size: 9.5px; font-weight: 500;
+          transition: color .25s ease;
+        }
+        .artium-aw-tabs button[data-on="1"] { color: #E9C88D; }
+        .artium-aw-tabs button[data-on="1"]::after {
+          content: ''; position: absolute; bottom: calc(env(safe-area-inset-bottom, 0px) + 2px);
+          width: 22px; height: 2px; border-radius: 2px; background: #E9C88D;
+        }
+        .artium-aw-tabs button { position: relative; }
+
         /* ---- entrance ---- */
         /* The hero settles, then the cards arrive in order. Short distances and
            a soft curve: at this weight of design, movement should be noticed
@@ -2718,6 +2910,7 @@ export default function App() {
           onApply={startApply} onHome={goHome} musicOn={musicPlaying} onMusicToggle={toggleMusic}
           onGuestTabClick={() => setShowGuestPrompt(true)} memberCount={Object.values(studentsByCons).flat().length} previewOnly={previewOnly}
           hideTabs={!!selectedStudentId}
+          bare={appTab === "map" && !selectedStudentId}
           authUser={authUser}
           isAdmin={isAdmin}
           onGoToAdmin={() => { setSelectedStudentId(null); setAppTabPersist("admin"); }}
@@ -2734,8 +2927,12 @@ export default function App() {
           }
           backLabel={null}
         >
-          {/* Teacher sub-tab bar (hidden when viewing a student profile) */}
-          {myProfile && !selectedStudentId && (
+          {/* Teacher sub-tab bar (hidden when viewing a student profile, and
+              on the Network page — that one carries the reference's own
+              bottom bar, and two navigations on one screen is one too many.
+              This bar still shows on every other tab, so Promote Me, Lesson
+              Room and Admin are a single hop away rather than stranded). */}
+          {myProfile && !selectedStudentId && appTab !== "map" && (
             <div className="flex" style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#fff" }}>
               {[
                 { key: "map", label: "Map", Icon: Map },
@@ -2773,6 +2970,13 @@ export default function App() {
                 isGuest={!myProfile}
                 onGuestClick={() => setShowGuestPrompt(true)}
                 onBack={goHome}
+                appTab={appTab}
+                onTab={(k) => {
+                  if (k === "home") { goHome(); return; }
+                  if (k === "saved") return;   // no feature behind it yet
+                  if (k === "map") { setSelectedConsId(null); return; }
+                  setAppTabPersist(k);
+                }}
                 // Unapproved students are routed to the pendingReview screen and
                 // never reach the map at all, so the approved check here is
                 // belt-and-braces — the popup's locked state shouldn't normally
@@ -4407,8 +4611,11 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
   );
 }
 
-function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, musicOn, onMusicToggle, onBack, backLabel, onGuestTabClick, memberCount, previewOnly, hideTabs, onGoToLessonRoom, authUser, isAdmin, onGoToAdmin }) {
+function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, musicOn, onMusicToggle, onBack, backLabel, onGuestTabClick, memberCount, previewOnly, hideTabs, onGoToLessonRoom, authUser, isAdmin, onGoToAdmin, bare }) {
   const tabs = [];
+  // bare: the page inside draws its own header and its own bottom bar, so the
+  // shell's white chrome would sit on it as a second, lighter header.
+  if (bare) return <div className="min-h-full flex flex-col">{children}</div>;
   return (
     <div className="min-h-full flex flex-col" style={{ background: C.inkSoft, color: C.ivory }}>
       <div className="px-6 flex items-center gap-4" style={{ height: 60, background: "#FFFFFF", borderBottom: `1px solid ${C.inkLine}` }}>
@@ -4493,72 +4700,286 @@ function SignupPromptModal({ onClose, onSignup }) {
   );
 }
 
-function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId, onOpenStudent, isGuest, onGuestClick, onBack, canViewRoster, extraCons = [] }) {
+/**
+ * The globe for Artium's World. Its own component rather than GlobeMap with
+ * more props: that one carries a white roster card, a legend bar and a
+ * two-tone pin scheme, none of which belong on this page.
+ *
+ * The texture is public/earth-artium.jpg, built by tools/make-earth-night.py
+ * from NASA's Blue Marble and Black Marble — city lights screened over a
+ * dimmed day pass, so the night side is lit without the oceans going flat.
+ */
+function WorldGlobe({ pins, selectedId, onSelect, height = 320 }) {
+  const [wrapRef, { w, h }] = useMeasured();
+  const globeRef = useRef(null);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    if (!ready || !globeRef.current) return;
+    const g = globeRef.current;
+    // Europe forward, as the reference frames it, and tilted a little so the
+    // globe reads as a sphere rather than a disc.
+    g.pointOfView({ lat: 22, lng: 12, altitude: 2.3 }, 0);
+    const c = g.controls();
+    if (c) {
+      c.autoRotate = true;
+      c.autoRotateSpeed = 0.28;
+      c.enableZoom = false;
+    }
+  }, [ready]);
+
+  return (
+    <div ref={wrapRef} style={{ width: "100%", height, position: "relative" }}>
+      {w > 0 && h > 0 && (
+        <Suspense fallback={null}>
+          <Globe
+            ref={globeRef}
+            width={w}
+            height={h}
+            onGlobeReady={() => setReady(true)}
+            globeImageUrl="/earth-artium.jpg"
+            backgroundColor="rgba(0,0,0,0)"
+            atmosphereColor="#EFD09B"
+            atmosphereAltitude={0.17}
+            htmlElementsData={pins}
+            htmlLat="lat"
+            htmlLng="lng"
+            htmlAltitude={0.012}
+            htmlTransitionDuration={0}
+            htmlElement={(d) => {
+              const el = document.createElement("div");
+              el.style.cssText = "cursor:pointer;pointer-events:auto;transform:translate(-50%,-100%);";
+              el.title = `${d.name} — ${d.count} student${d.count === 1 ? "" : "s"}`;
+              const on = d.id === selectedId;
+              const size = on ? 26 : 21;
+              // The gate's pin, at map scale: solid champagne with the window
+              // punched through by evenodd.
+              el.innerHTML = `
+                <svg width="${size}" height="${size * 1.32}" viewBox="0 0 28 37" style="display:block;filter:drop-shadow(0 2px 6px rgba(0,0,0,.6))">
+                  <path fill-rule="evenodd" fill="${on ? "#FFFFFF" : "#EFD09B"}"
+                    d="M14 .9C6.82.9 1.4 6.28 1.4 13.2c0 3.35 1.3 6.36 3.2 9.36 1.6 2.53 3.63 5.02 5.53 7.62 1.35 1.85 2.6 3.72 3.28 5.98a.62.62 0 0 0 1.18 0c.68-2.26 1.93-4.13 3.28-5.98 1.9-2.6 3.93-5.09 5.53-7.62 1.9-3 3.2-6.01 3.2-9.36C26.6 6.28 21.18.9 14 .9zm0 7.68a5.04 5.04 0 1 0 0 10.08 5.04 5.04 0 0 0 0-10.08z" />
+                </svg>`;
+              el.onclick = () => onSelect(d.id);
+              return el;
+            }}
+          />
+        </Suspense>
+      )}
+    </div>
+  );
+}
+
+// A monogram for the row tiles. "short" exists on the built-in schools; the
+// admin-approved ones carry only a full name, and slicing the first three
+// characters off "Conservatoire a rayonnement regional de Lyon" gives "Con"
+// — or, with the accent, a single stray letter. Initials of the words that
+// carry meaning read as a crest instead.
+const MONO_SKIP = new Set(["de","du","des","la","le","les","of","the","and","a","an","and","for","el","di","der","das","und","musik","music","school","institute","conservatory","conservatoire","conservatorium","academy"]);
+function consMonogram(c) {
+  if (c.short) return c.short;
+  const words = String(c.name || "").split(/[\s\-']+/).filter(Boolean);
+  const keep = words.filter((w) => !MONO_SKIP.has(w.toLowerCase().replace(/[^a-z]/g, "")));
+  const src = keep.length ? keep : words;
+  const initials = src.map((w) => w[0]).join("").toUpperCase().slice(0, 4);
+  return initials || "—";
+}
+
+function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId, onOpenStudent, isGuest, onGuestClick, onBack, canViewRoster, extraCons = [], onTab, appTab }) {
   const ALL_CONS = React.useMemo(() => [...CONSERVATORIES, ...extraCons], [extraCons]);
   const cons = ALL_CONS.find((c) => c.id === selectedConsId);
   const roster = selectedConsId ? studentsByCons[selectedConsId] || [] : [];
+  const [mode, setMode] = useState("cons");
+  const [q, setQ] = useState("");
+  // Off by default: the reference lists the schools in their own order, and
+  // sorting alphabetically by country buries the well-known ones behind
+  // whichever country happens to start with an A.
+  const [sortByCountry, setSortByCountry] = useState(false);
+
+  const allStudents = Object.values(studentsByCons).flat();
+  const teacherCount = allStudents.filter((s) => s.teaching && s.teaching.open).length;
+
+  // Only geocoded schools can be pinned; the rest would land at 0,0 in the
+  // Gulf of Guinea. Pins are the schools that actually have someone on them.
+  const pins = React.useMemo(() => ALL_CONS
+    .filter((c) => Number.isFinite(c.lat) && Number.isFinite(c.lng) && (studentsByCons[c.id] || []).length > 0)
+    .map((c) => ({ ...c, count: (studentsByCons[c.id] || []).length })), [ALL_CONS, studentsByCons]);
+
+  const rows = React.useMemo(() => {
+    const needle = q.trim().toLowerCase();
+    let list = ALL_CONS.filter((c) => {
+      if (mode === "teach") {
+        return (studentsByCons[c.id] || []).some((st) => st.teaching && st.teaching.open);
+      }
+      return true;
+    });
+    if (needle) {
+      list = list.filter((c) => `${c.name} ${c.city || ""} ${c.country || ""}`.toLowerCase().includes(needle));
+    }
+    return sortByCountry
+      ? [...list].sort((x, y) => (x.country || "").localeCompare(y.country || "") || (x.name || "").localeCompare(y.name || ""))
+      : list;
+  }, [ALL_CONS, studentsByCons, mode, q, sortByCountry]);
+
+  const nf = (n) => n.toLocaleString();
+
   return (
-    <div className="lg-split-map h-full">
-      <div style={{ background: C.inkSoft }}>
-        <MapTitle />
-        <GlobeMap
-          selectedId={selectedConsId} onSelect={setSelectedConsId} studentsByCons={studentsByCons} height={640}
-          onOpenStudent={onOpenStudent} canViewRoster={canViewRoster} onLockedClick={onGuestClick}
-          extraCons={extraCons}
-        />
-      </div>
-      <div className="lg-scroll overflow-y-auto" style={{ borderLeft: `1px solid ${C.inkLine}`, maxHeight: 720 }}>
-        {!cons ? (
-          <div className="p-6">
-            <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.ivoryDim }}>{ALL_CONS.length} CONSERVATORIES</p>
-            <p className="mt-2 text-sm" style={{ color: C.ivoryDim }}>Spin the globe and pick a pin to see who's studying there.</p>
-            <div className="mt-5 flex flex-col gap-1">
-              {ALL_CONS.map((c) => (
-                <button key={c.id} onClick={() => setSelectedConsId(c.id)} className="text-left px-3 py-2.5 rounded-lg flex items-center justify-between" style={{ border: `1px solid ${C.inkLine}` }}>
-                  <div>
-                    <p style={{ fontSize: 13, fontWeight: 600 }}>{c.name}</p>
-                    <p style={{ fontSize: 11, color: C.ivoryDim }}>{c.city}, {c.country}</p>
-                  </div>
-                  <span style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brassLabel }}>{(studentsByCons[c.id] || []).length}</span>
+    <div className="artium-aw">
+      <header className="artium-aw-bar">
+        <span>
+          <button className="artium-aw-round" onClick={onBack} aria-label="Back">
+            <ChevronLeft size={17} strokeWidth={2} />
+          </button>
+        </span>
+        <GateLogo word={21} />
+        <span className="artium-aw-bar-right">
+          <button className="artium-aw-round" aria-label="Search" onClick={() => {
+            const el = document.querySelector(".artium-aw-field input");
+            if (el) { el.scrollIntoView({ block: "center", behavior: "smooth" }); el.focus(); }
+          }}>
+            <Search size={16} strokeWidth={2} />
+          </button>
+          <span className="artium-aw-count">
+            <Users size={16} strokeWidth={1.8} />
+            {allStudents.length}
+          </span>
+        </span>
+      </header>
+
+      <div className="artium-aw-in">
+        <p className="artium-aw-eyebrow"><i />The Artium Network<i /></p>
+        <h1 className="artium-aw-h1">Bridging Musicians Worldwide</h1>
+        <p className="artium-aw-sub">Discover where the next generation of great musicians is.</p>
+
+        <div className="artium-aw-stage">
+          <span className="artium-aw-glow" aria-hidden="true" />
+          <span className="artium-aw-ring artium-aw-ring--a" aria-hidden="true" />
+          <span className="artium-aw-ring artium-aw-ring--b" aria-hidden="true" />
+          <WorldGlobe pins={pins} selectedId={selectedConsId} onSelect={setSelectedConsId} height={300} />
+        </div>
+
+        <div className="artium-aw-stats">
+          <div className="artium-aw-stat">
+            <span className="artium-aw-stat-n"><MapPin size={15} strokeWidth={2} />{nf(ALL_CONS.length)}</span>
+            <p className="artium-aw-stat-l">Conservatories</p>
+          </div>
+          <div className="artium-aw-stat">
+            <span className="artium-aw-stat-n"><GraduationCap size={16} strokeWidth={2} />{nf(allStudents.length)}</span>
+            <p className="artium-aw-stat-l">Students</p>
+          </div>
+          <div className="artium-aw-stat">
+            <span className="artium-aw-stat-n"><User size={15} strokeWidth={2} />{nf(teacherCount)}</span>
+            <p className="artium-aw-stat-l">Teachers</p>
+          </div>
+        </div>
+
+        <div className="artium-aw-seg">
+          <button data-on={mode === "cons" ? "1" : "0"} onClick={() => setMode("cons")}>Conservatories</button>
+          <button data-on={mode === "teach" ? "1" : "0"} onClick={() => setMode("teach")}>Teaching Opportunities</button>
+        </div>
+
+        <div className="artium-aw-find">
+          <span className="artium-aw-field">
+            <Search size={15} strokeWidth={2} />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search for a conservatory or city..." />
+          </span>
+          <button className="artium-aw-filter" aria-label="Sort by country" aria-pressed={sortByCountry}
+            onClick={() => setSortByCountry((v) => !v)}>
+            <ListChecks size={17} strokeWidth={1.8} />
+          </button>
+        </div>
+        <p className="artium-aw-hint">Explore the world map and pick a pin to see who's studying there.</p>
+
+        {cons ? (
+          <>
+            <div className="artium-aw-listhead">
+              <button className="artium-aw-sort" style={{ marginLeft: 0 }} onClick={() => setSelectedConsId(null)}>
+                <ArrowLeft size={13} /> All conservatories
+              </button>
+            </div>
+            <div className="artium-aw-row" style={{ cursor: "default", marginBottom: 12 }}>
+              <span className="artium-aw-mono">{consMonogram(cons)}</span>
+              <span className="artium-aw-row-body">
+                <p className="artium-aw-row-t">{cons.name}</p>
+                <p className="artium-aw-row-c"><MapPin size={11} strokeWidth={2} />{[cons.city, cons.country].filter(Boolean).join(", ")}</p>
+              </span>
+              <span className="artium-aw-badge"><b>{roster.length}</b><span>student{roster.length === 1 ? "" : "s"}</span></span>
+            </div>
+            <div className="artium-aw-list">
+              {roster.length === 0 && <p className="artium-aw-empty">No students from this conservatory yet.</p>}
+              {roster.map((st) => (
+                <button key={st.id} className="artium-aw-row" onClick={() => { if (isGuest) { onGuestClick(); return; } onOpenStudent(st.id); }}>
+                  <span style={{ filter: isGuest && st.id !== "me" ? "blur(4px)" : "none", pointerEvents: "none", flexShrink: 0 }}>
+                    <Avatar name={st.name} id={st.id} size={42} photoUrl={st.photoUrl} online={st.online} />
+                  </span>
+                  <span className="artium-aw-row-body">
+                    <p className="artium-aw-row-t" style={{ fontSize: 15, filter: isGuest && st.id !== "me" ? "blur(5px)" : "none" }}>
+                      {st.name}{st.id === "me" && <span style={{ color: "#E6DAB0" }}> (you)</span>}
+                    </p>
+                    <p className="artium-aw-row-c" style={{ filter: isGuest && st.id !== "me" ? "blur(4px)" : "none" }}>
+                      {[st.year, (st.tastes || []).slice(0, 2).join(", ")].filter(Boolean).join(" · ")}
+                    </p>
+                  </span>
+                  <ChevronRight size={17} strokeWidth={2} />
                 </button>
               ))}
             </div>
-          </div>
+          </>
         ) : (
-          <div className="p-6">
-            <button onClick={() => setSelectedConsId(null)} className="text-xs flex items-center gap-1 mb-4" style={{ color: C.ivoryDim }}><ArrowLeft size={13} /> All conservatories</button>
-            <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brassLabel }}>
-              {[cons.city, cons.country].filter(Boolean).join(", ").toUpperCase()}
-              {cons.domains?.[0] ? ` · @${cons.domains[0]}` : ""}
-            </p>
-            <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600, marginTop: 4 }}>{cons.name}</h3>
-            <p className="mt-1 text-xs" style={{ color: C.ivoryDim }}>{roster.length} student{roster.length === 1 ? "" : "s"} on Artium</p>
-            <div className="mt-5 flex flex-col gap-2">
-              {roster.length === 0 && <p className="text-sm" style={{ color: C.ivoryDim }}>No students yet from this conservatory.</p>}
-              {roster.map((s) => (
-                <button
-                  key={s.id}
-                  onClick={() => { if (!isGuest) { onOpenStudent(s.id); } }}
-                  className="text-left flex items-center gap-3 p-3 rounded-xl"
-                  style={{ border: `1px solid ${C.inkLine}` }}
-                >
-                  <div style={{ filter: isGuest && s.id !== "me" ? "blur(4px)" : "none", pointerEvents: "none" }}>
-                    <Avatar name={s.name} id={s.id} size={40} photoUrl={s.photoUrl} online={s.online} />
-                  </div>
-                  <div className="min-w-0">
-                    <p style={{ fontSize: 13, fontWeight: 600, filter: isGuest && s.id !== "me" ? "blur(5px)" : "none", userSelect: "none" }}>
-                      {s.name} {s.id === "me" && <span style={{ color: C.brassLabel }}>(you)</span>}
-                    </p>
-                    <p style={{ fontSize: 11, color: C.ivoryDim, filter: isGuest && s.id !== "me" ? "blur(4px)" : "none", userSelect: "none" }}>
-                      {s.year} · {s.tastes.slice(0, 2).join(", ")}
-                    </p>
-                  </div>
-                </button>
-              ))}
+          <>
+            <div className="artium-aw-listhead">
+              <h2>{mode === "cons" ? "Conservatories" : "Teaching"}</h2>
+              <span>{rows.length} result{rows.length === 1 ? "" : "s"}</span>
+              <button className="artium-aw-sort" data-on={sortByCountry ? "1" : "0"}
+                aria-pressed={sortByCountry} onClick={() => setSortByCountry((v) => !v)}>
+                Country <ChevronRight size={13} style={{ transform: "rotate(90deg)" }} />
+              </button>
             </div>
-          </div>
+            <div className="artium-aw-list">
+              {rows.length === 0 && (
+                <p className="artium-aw-empty">
+                  {mode === "teach" ? "No one is open to teaching yet." : "No conservatory matches that search."}
+                </p>
+              )}
+              {rows.map((c) => {
+                const n = (studentsByCons[c.id] || []).length;
+                return (
+                  <button key={c.id} className="artium-aw-row" onClick={() => setSelectedConsId(c.id)}>
+                    <span className="artium-aw-mono">{consMonogram(c)}</span>
+                    <span className="artium-aw-row-body">
+                      <p className="artium-aw-row-t">{c.name}</p>
+                      <p className="artium-aw-row-c"><MapPin size={11} strokeWidth={2} />{[c.city, c.country].filter(Boolean).join(", ")}</p>
+                    </span>
+                    <span className="artium-aw-badge"><b>{n}</b><span>student{n === 1 ? "" : "s"}</span></span>
+                    <ChevronRight size={17} strokeWidth={2} />
+                  </button>
+                );
+              })}
+            </div>
+          </>
         )}
       </div>
+
+      {/* The reference's bottom bar. Home, Messages and Profile go where they
+          say; Saved has no feature behind it yet, so it does nothing rather
+          than pretending. Promote Me, Lesson Room and Admin have no slot here
+          and stay on the app's own tab bar, which still shows on every other
+          screen. */}
+      {onTab && (
+        <nav className="artium-aw-tabs">
+          {[
+            { k: "home", label: "Home", Icon: Home },
+            { k: "map", label: "Network", Icon: Globe2 },
+            { k: "messages", label: "Messages", Icon: MessageCircle },
+            { k: "saved", label: "Saved", Icon: BookOpen },
+            { k: "profile", label: "Profile", Icon: User },
+          ].map(({ k, label, Icon }) => (
+            <button key={k} data-on={k === "map" ? "1" : "0"} onClick={() => onTab(k)} aria-label={label}>
+              <Icon size={19} strokeWidth={1.7} />
+              {label}
+            </button>
+          ))}
+        </nav>
+      )}
     </div>
   );
 }
