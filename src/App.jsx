@@ -383,6 +383,11 @@ const emptyDraft = () => ({
   email: "", password: "", confirmPassword: "",
   name: "", years: "", instrument: "",
   conservatoryId: null, conservatoryEmail: "", conservatoryVerified: false,
+  // Which of the three doors they took on the conservatory step. verifyMethod
+  // follows from it — "student_email" is the OTP route, the other two upload —
+  // but the two document routes are not the same question, and the copy has to
+  // know which: an enrolment certificate is not a diploma.
+  applicant: "", // "" | "student_email" | "student_doc" | "graduate"
   verifyMethod: "otp", proofDocUrl: "", proofDocName: "",
   tastes: [],
   pieces: [],
@@ -2485,6 +2490,56 @@ export default function App() {
         .artium-su-globe { position: relative; width: 100%; margin: 0 0 14px; }
         .artium-su-globe .artium-aw-ring--a { height: 86%; }
 
+        /* One pin at a time on the signup globe, lit and then let go. Every
+           school pinned at once was a pile; one arriving somewhere new every
+           few seconds says the same thing — this is a network with reach —
+           and reads as alive rather than as clutter. The fade is on the pin
+           itself so it is already leaving before the next one lands. */
+        @keyframes artiumPinBlink {
+          0%   { opacity: 0; transform: translate(-50%, -100%) scale(0.72); }
+          14%  { opacity: 1; transform: translate(-50%, -100%) scale(1); }
+          76%  { opacity: 1; transform: translate(-50%, -100%) scale(1); }
+          100% { opacity: 0; transform: translate(-50%, -100%) scale(0.9); }
+        }
+        .artium-roampin { animation: artiumPinBlink 3s ease-in-out forwards; }
+
+        /* The three doors. Each is one tap and says plainly what it will ask
+           for, so the choice is made on facts the visitor already knows about
+           themselves rather than on jargon about verification methods. */
+        .artium-su-doors { display: flex; flex-direction: column; gap: 10px; }
+        .artium-su-door {
+          display: flex; align-items: center; gap: 13px; width: 100%;
+          padding: 14px 15px; border-radius: 16px; cursor: pointer; text-align: left;
+          border: 1px solid rgba(255,255,255,0.09); background: rgba(255,255,255,0.025);
+          color: inherit; font: inherit;
+          transition: border-color .25s ease, background .25s ease, transform .25s ease;
+        }
+        .artium-su-door:hover { border-color: rgba(239,208,155,0.42); background: rgba(255,255,255,0.05); transform: translateY(-2px); }
+        .artium-su-door-i {
+          width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+          border: 1px solid rgba(239,208,155,0.32); color: #E3BB7A;
+          display: flex; align-items: center; justify-content: center;
+        }
+        .artium-su-door-t {
+          margin: 0; font-family: 'Cormorant Garamond', 'Didot', 'Bodoni 72', Georgia, serif;
+          font-weight: 700; font-size: 16px; color: #FFFFFF; line-height: 1.2;
+        }
+        .artium-su-door-d { margin: 3px 0 0; font-size: 11.5px; color: #8B8B8B; line-height: 1.45; }
+        /* The chosen door, restated at the top of the panel it opened, with
+           the way back out. */
+        .artium-su-chosen {
+          display: flex; align-items: center; gap: 11px; margin-bottom: 14px;
+          padding: 11px 14px; border-radius: 14px;
+          border: 1px solid rgba(239,208,155,0.28); background: rgba(239,208,155,0.05);
+        }
+        .artium-su-chosen p { margin: 0; font-size: 12.5px; color: #E6DAB0; font-weight: 600; line-height: 1.35; }
+        .artium-su-change {
+          margin-left: auto; flex-shrink: 0; padding: 6px 12px; border-radius: 999px;
+          border: 1px solid rgba(255,255,255,0.14); background: none; color: #CFCFCF;
+          font: inherit; font-size: 11.5px; font-weight: 600; cursor: pointer;
+        }
+        .artium-su-change:hover { border-color: rgba(239,208,155,0.5); color: #EFD09B; }
+
         /* ---- forms ------------------------------------------------------
            The signup fields are styled inline, which cannot express :focus,
            a placeholder colour, or what the browser does to an autofilled
@@ -3778,9 +3833,11 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
     // may not be selectable yet, since the approved list starts empty.
     // No Google bypass on the document route: signing in with Google says
     // nothing about whether they study anywhere.
-    draft.verifyMethod === "document"
+    // No door chosen, nothing to validate yet — the step is a question at
+    // that point, not a form.
+    (editing || !!draft.applicant) && (draft.verifyMethod === "document"
       ? (editing || !!draft.proofDocUrl)
-      : !!draft.conservatoryId && (editing || draft.password === "__google__" || draft.conservatoryVerified),
+      : !!draft.conservatoryId && (editing || draft.password === "__google__" || draft.conservatoryVerified)),
     draft.tastes.length >= 3,
     draft.pieces.length >= 1,
     true,
@@ -4215,6 +4272,12 @@ function emailMatchesConservatory(email, cons) {
   return cons.domains.some((d) => host === d.toLowerCase() || host.endsWith("." + d.toLowerCase()));
 }
 
+const DOOR_LABEL = {
+  student_email: "Student, with a conservatory email",
+  student_doc: "Student, without a conservatory email",
+  graduate: "Graduate",
+};
+
 function StepConservatory({ draft, update, editing }) {
   const [q, setQ] = useState("");
   const [email, setEmail] = useState(draft.conservatoryEmail || "");
@@ -4227,12 +4290,21 @@ function StepConservatory({ draft, update, editing }) {
   const [uploading, setUploading] = useState(false);
   const isGoogle = draft.password === "__google__";
   const isDoc = draft.verifyMethod === "document";
+  const applicant = draft.applicant || (editing ? (isDoc ? "student_doc" : "student_email") : "");
 
   // The document route gets its own roster. The built-in CONSERVATORIES list
   // exists because each entry has an email domain we can send a code to —
   // which proves nothing on a route where there is no institutional email.
   // Here the list is only what an admin has already vouched for, so it starts
   // empty and the document itself establishes the school.
+  // One pin, moving. A school every three seconds beats 110 at once: the
+  // point of the globe here is reach, not a map you are meant to read.
+  const [roamAt, setRoamAt] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setRoamAt((n) => n + 1), 3000);
+    return () => clearInterval(t);
+  }, []);
+
   const [approvedCons, setApprovedCons] = useState([]);
   React.useEffect(() => {
     if (!isDoc) return;
@@ -4241,6 +4313,14 @@ function StepConservatory({ draft, update, editing }) {
       .then(({ data }) => { if (live) setApprovedCons(data || []); });
     return () => { live = false; };
   }, [isDoc]);
+
+  // Always the built-in roster for the globe, whichever route is open: the
+  // approved list can be empty, and an empty globe reads as broken.
+  const roamable = React.useMemo(
+    () => CONSERVATORIES.filter((c) => Number.isFinite(c.lat) && Number.isFinite(c.lng)),
+    [],
+  );
+  const roamPin = roamable.length ? roamable[roamAt % roamable.length] : null;
 
   const pool = isDoc ? approvedCons : CONSERVATORIES;
   const selectedCons = pool.find((c) => c.id === draft.conservatoryId);
@@ -4259,6 +4339,22 @@ function StepConservatory({ draft, update, editing }) {
   // known email domain, and the admin-approved list — so an id carried across
   // would point at a school the other roster has never heard of. The proof and
   // the verified email go too, since neither means anything on the far side.
+  // One entry point for all three doors. Clearing the conservatory is not
+  // tidiness: the routes read from different rosters — the built-in list,
+  // where every school has a known email domain, and the admin-approved one —
+  // so an id carried across would point at a school the other has never heard
+  // of. The proof and the verified address go too, since neither means
+  // anything on the far side.
+  function chooseDoor(kind) {
+    setQ(""); setEmail(""); setCode(""); setCodeSent(false); setErr("");
+    update({
+      applicant: kind,
+      verifyMethod: kind === "student_email" ? "otp" : "document",
+      conservatoryId: "", conservatoryVerified: false, conservatoryEmail: "",
+      proofDocUrl: "", proofDocName: "",
+    });
+  }
+
   function switchMethod(method) {
     setQ(""); setEmail(""); setCode(""); setCodeSent(false); setErr("");
     update(method === "document"
@@ -4311,13 +4407,40 @@ function StepConservatory({ draft, update, editing }) {
       <div className="artium-su-globe">
         <span className="artium-aw-glow" aria-hidden="true" />
         <span className="artium-aw-ring artium-aw-ring--a" aria-hidden="true" />
-        <WorldGlobe
-          pins={results.filter((c) => Number.isFinite(c.lat) && Number.isFinite(c.lng))}
-          selectedId={draft.conservatoryId}
-          onSelect={isDoc ? () => {} : pickConservatory}
-          height={230}
-          pinScale={0.62}
-        />
+        <WorldGlobe pins={roamPin ? [roamPin] : []} selectedId={null} onSelect={() => {}} height={230} roaming />
+      </div>
+
+      {/* Three doors, asked before anything else. The old step opened straight
+          onto a list of 110 schools and left the visitor to work out whether
+          the list even applied to them; a graduate had no reason to think it
+          did. Each door is a fact they already know about themselves, and
+          each says what it will ask for. */}
+      {!applicant ? (
+        <div className="artium-su-doors">
+          {[
+            { k: "student_email", Icon: ScanLine, t: "I'm a student with a conservatory email",
+              d: "Fastest — we send a one-time code to your institutional address." },
+            { k: "student_doc", Icon: FileText, t: "I'm a student without one",
+              d: "Upload a student ID, enrolment certificate or tuition receipt." },
+            { k: "graduate", Icon: GraduationCap, t: "I've graduated",
+              d: "Upload your diploma, or a transcript naming your conservatory." },
+          ].map(({ k, Icon, t, d }) => (
+            <button key={k} className="artium-su-door" onClick={() => chooseDoor(k)}>
+              <span className="artium-su-door-i"><Icon size={18} strokeWidth={1.8} /></span>
+              <span style={{ flex: 1, minWidth: 0 }}>
+                <p className="artium-su-door-t">{t}</p>
+                <p className="artium-su-door-d">{d}</p>
+              </span>
+              <ChevronRight size={17} strokeWidth={2} style={{ color: "#6E6E6E", flexShrink: 0 }} />
+            </button>
+          ))}
+        </div>
+      ) : (
+      <>
+      <div className="artium-su-chosen">
+        <CheckIcon size={16} strokeWidth={2.4} color="#EFD09B" style={{ flexShrink: 0 }} />
+        <p>{DOOR_LABEL[applicant]}</p>
+        <button className="artium-su-change" onClick={() => chooseDoor("")}>Change</button>
       </div>
 
       <span className="artium-aw-field" style={{ marginBottom: 12 }}>
@@ -4365,9 +4488,17 @@ function StepConservatory({ draft, update, editing }) {
         </p>
         <p className="text-sm" style={{ margin: "5px 0 0", color: C.ivoryDim, lineHeight: 1.55 }}>
           {isDoc
-            ? "You don't have to pick one. Upload your document below and we'll add your conservatory from it — the list only holds schools we've already confirmed."
-            : "It doesn't have to be on this list. Verify with a document instead and we'll add your conservatory from what you upload."}
+            ? "You don't have to pick one. The list only holds schools we've already confirmed — upload your document below and we'll add yours from it, and it appears on the map once approved."
+            : "It doesn't have to be on this list. Send us a document instead and we'll add your conservatory from it — it appears on the map once approved."}
         </p>
+        {!isDoc && (
+          <button
+            onClick={() => chooseDoor("student_doc")}
+            style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 9, padding: 0, background: "none", border: "none", cursor: "pointer", color: C.brassLabel, fontFamily: FONT_BODY, fontSize: 13, fontWeight: 700 }}
+          >
+            Upload a document instead <ArrowRight size={14} />
+          </button>
+        )}
       </div>
 
       {/* Document proof upload (no institutional email path). Deliberately not
@@ -4377,24 +4508,19 @@ function StepConservatory({ draft, update, editing }) {
           enrolment, so the Google shortcut that skips OTP doesn't apply. */}
       {!editing && isDoc && (
         <div className="mt-5 rounded-2xl" style={{ border: `1px solid ${draft.proofDocUrl ? "#1A9E6E" : C.brass}`, background: C.inkSoft, padding: "18px 18px" }}>
-          <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brassLabel, letterSpacing: 0.5, marginBottom: 8 }}>UPLOAD YOUR PROOF</p>
+          <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brassLabel, letterSpacing: 0.5, marginBottom: 8 }}>{applicant === "graduate" ? "UPLOAD YOUR DIPLOMA" : "UPLOAD YOUR PROOF"}</p>
           {/* Split by where the person is, not by document type. A graduate
               hunting for a "proof of enrolment" they no longer have was the
               old copy's dead end — the card at the gate now says Student |
               Graduate, and this is the step that has to honour it. */}
-          <p className="text-sm" style={{ color: C.ivoryDim, marginBottom: 10, lineHeight: 1.55 }}>
-            One document{selectedCons ? ` from ${selectedCons.name}` : ""}, whichever applies:
+          {/* The door already said which of them this person is, so the panel
+              asks for that one thing rather than listing both and making them
+              find their own row again. */}
+          <p className="text-sm" style={{ color: C.ivoryDim, marginBottom: 12, lineHeight: 1.55 }}>
+            {applicant === "graduate"
+              ? <>Your <b style={{ color: C.ivory, fontWeight: 600 }}>diploma</b>, or a transcript naming the conservatory{selectedCons ? <> — {selectedCons.name}</> : null}.</>
+              : <>A <b style={{ color: C.ivory, fontWeight: 600 }}>student ID card</b>, <b style={{ color: C.ivory, fontWeight: 600 }}>enrolment certificate</b> or <b style={{ color: C.ivory, fontWeight: 600 }}>tuition receipt</b>{selectedCons ? <> from {selectedCons.name}</> : null}.</>}
           </p>
-          <ul style={{ margin: "0 0 12px", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 6 }}>
-            <li className="text-sm" style={{ color: C.ivoryDim, lineHeight: 1.55, display: "flex", gap: 9 }}>
-              <span aria-hidden="true" style={{ color: C.brass, flexShrink: 0, marginTop: 1 }}>·</span>
-              <span><b style={{ color: C.ivory, fontWeight: 600 }}>Still studying</b> — a student ID card, enrolment certificate or tuition receipt.</span>
-            </li>
-            <li className="text-sm" style={{ color: C.ivoryDim, lineHeight: 1.55, display: "flex", gap: 9 }}>
-              <span aria-hidden="true" style={{ color: C.brass, flexShrink: 0, marginTop: 1 }}>·</span>
-              <span><b style={{ color: C.ivory, fontWeight: 600 }}>Graduated</b> — your diploma, or a transcript naming the conservatory.</span>
-            </li>
-          </ul>
           <p className="text-sm" style={{ color: C.ivoryDim, marginBottom: 12, lineHeight: 1.55 }}>
             Our team reviews it by hand before granting access
             {selectedCons ? "" : ", and confirms your conservatory from the document"}.
@@ -4472,24 +4598,7 @@ function StepConservatory({ draft, update, editing }) {
         </div>
       )}
 
-      {/* The other route, offered rather than demanded. The entry gate used to
-          ask this as a third card, which made people classify themselves
-          before they had seen what either route involves. Here the question
-          arrives with its answer already in view: they have searched for their
-          school and can see whether it is listed and which address it wants. */}
-      {!editing && (
-        <div style={{ marginTop: 22, paddingTop: 16, borderTop: `1px solid ${C.inkLine}` }}>
-          <p className="text-sm" style={{ color: C.ivoryDim, margin: 0 }}>
-            {isDoc ? "Do you have an institutional student email?" : "No institutional student email, or already graduated?"}
-          </p>
-          <button
-            onClick={() => switchMethod(isDoc ? "otp" : "document")}
-            style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 6, padding: 0, background: "none", border: "none", cursor: "pointer", color: C.brassLabel, fontFamily: FONT_BODY, fontSize: 14, fontWeight: 600 }}
-          >
-            {isDoc ? "Verify with your student email instead" : "Verify with a document or diploma instead"}
-            <ArrowRight size={14} />
-          </button>
-        </div>
+      </>
       )}
     </div>
   );
@@ -5027,7 +5136,7 @@ function SignupPromptModal({ onClose, onSignup }) {
 // pinScale: the network page pins a handful of schools that actually have
 // students; the signup step pins every one that can be placed, and 110 pins
 // at the same size is a pile rather than a constellation.
-function WorldGlobe({ pins, selectedId, onSelect, height = 320, pinScale = 1 }) {
+function WorldGlobe({ pins, selectedId, onSelect, height = 320, pinScale = 1, roaming = false }) {
   const [wrapRef, { w, h }] = useMeasured();
   const globeRef = useRef(null);
   const [ready, setReady] = useState(false);
@@ -5067,6 +5176,7 @@ function WorldGlobe({ pins, selectedId, onSelect, height = 320, pinScale = 1 }) 
             htmlElement={(d) => {
               const el = document.createElement("div");
               el.style.cssText = "cursor:pointer;pointer-events:auto;transform:translate(-50%,-100%);";
+              if (roaming) el.className = "artium-roampin";
               el.title = d.count == null ? d.name : `${d.name} — ${d.count} student${d.count === 1 ? "" : "s"}`;
               const on = d.id === selectedId;
               const size = Math.round((on ? 26 : 21) * pinScale);
