@@ -2422,21 +2422,59 @@ export default function App() {
           -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
           box-shadow: 0 18px 45px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.08);
         }
-        /* The progress rail. Filled segments take the buttons' amber so the
-           stepper and the primary action read as the same accent. */
-        .artium-su-rail { flex: 1; display: flex; gap: 4px; }
-        .artium-su-seg { flex: 1; height: 3px; border-radius: 99px; background: rgba(255,255,255,0.10); transition: background .35s ease; }
-        .artium-su-seg[data-on="1"] { background: linear-gradient(90deg, #E9C88D, #C99A55); }
-        .artium-su-step { font-family: 'ui-monospace', monospace; font-size: 12px; letter-spacing: 0.06em; color: #E6DAB0; white-space: nowrap; }
-        .artium-su-title {
-          margin: 16px 0 0; color: #FFFFFF; line-height: 1.14;
-          font-family: 'Cormorant Garamond', 'Didot', 'Bodoni 72', Georgia, serif;
-          font-weight: 700; font-size: clamp(26px, 8vw, 34px);
+        /* The stepper. A ring carrying "n of m" with the title beside it and
+           the step after this one named underneath — so the flow answers
+           "where am I", "what is this" and "what is coming" in one glance,
+           which a bare rail of segments could only answer the first of. */
+        .artium-su-head { display: flex; align-items: center; gap: 15px; margin-top: 22px; }
+        .artium-su-ring { position: relative; width: 62px; height: 62px; flex-shrink: 0; }
+        .artium-su-ring svg { width: 100%; height: 100%; display: block; }
+        .artium-su-ring svg circle { transition: stroke-dashoffset .5s cubic-bezier(.22,1,.36,1); }
+        .artium-su-ring span {
+          position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+          font-family: 'Manrope', -apple-system, sans-serif; font-size: 11.5px; font-weight: 700;
+          color: #FFFFFF; letter-spacing: 0.01em; white-space: nowrap;
         }
-        /* The gate's divider, at the width the flow needs. */
-        .artium-su-rule { display: flex; align-items: center; gap: 10px; width: 150px; margin: 14px 0 0; }
-        .artium-su-rule span { flex: 1; height: 1px; background: linear-gradient(90deg, rgba(239,208,155,0.55), transparent); }
-        .artium-su-rule i { width: 5px; height: 5px; background: #EFD09B; transform: rotate(45deg); flex-shrink: 0; }
+        .artium-su-head-text { min-width: 0; flex: 1; }
+        .artium-su-title {
+          margin: 0; color: #FFFFFF; line-height: 1.12;
+          font-family: 'Cormorant Garamond', 'Didot', 'Bodoni 72', Georgia, serif;
+          font-weight: 700; font-size: clamp(21px, 6.4vw, 30px);
+        }
+        .artium-su-next {
+          margin: 5px 0 0; font-size: 11.5px; font-weight: 500; color: #7C7C7C; line-height: 1.35;
+        }
+        .artium-su-next b { color: #E6DAB0; font-weight: 600; }
+
+        /* Back and Next, pinned. On a form this long the action should not
+           have to be scrolled to. */
+        .artium-su-nav {
+          position: sticky; bottom: 0; z-index: 20; margin-top: 22px;
+          display: flex; align-items: center; gap: 11px;
+          padding: 12px 24px calc(14px + env(safe-area-inset-bottom, 0px));
+          background: linear-gradient(180deg, rgba(11,12,14,0) 0%, rgba(11,12,14,0.92) 26%, #0B0C0E 100%);
+        }
+        .artium-su-back {
+          flex: 0 0 auto; padding: 12px 22px; border-radius: 999px; cursor: pointer;
+          border: 1px solid rgba(255,255,255,0.13); background: rgba(255,255,255,0.04);
+          color: #CFCFCF; font: inherit; font-size: 14px; font-weight: 600;
+          transition: border-color .25s ease, color .25s ease, background .25s ease;
+        }
+        .artium-su-back:hover { border-color: rgba(239,208,155,0.42); color: #EFD09B; background: rgba(255,255,255,0.06); }
+        .artium-su-next-btn {
+          flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+          padding: 13px 22px; border-radius: 999px; border: none; cursor: pointer;
+          background: linear-gradient(160deg, #E9C88D, #C99A55); color: #0F1012;
+          font: inherit; font-size: 15px; font-weight: 700;
+          box-shadow: 0 6px 22px rgba(233,200,141,0.22);
+          transition: background .3s ease, box-shadow .3s ease, transform .2s ease;
+        }
+        .artium-su-next-btn:hover:not(:disabled) { background: linear-gradient(160deg, #F2D49B, #D4A75F); transform: translateY(-1px); }
+        .artium-su-next-btn:disabled {
+          background: rgba(255,255,255,0.07); color: #6E6E6E;
+          box-shadow: none; cursor: not-allowed;
+        }
+
 
         /* ---- forms ------------------------------------------------------
            The signup fields are styled inline, which cannot express :focus,
@@ -3492,6 +3530,30 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
  * nothing here can collide with the students' schema while the concert
  * side of the product is still forming.
  */
+/**
+ * The stepper's ring: an arc of champagne over a faint track, with "n of m"
+ * inside it. Rotated -90deg so the arc starts at twelve rather than three,
+ * and the dash offset carries the whole animation — no width to transition,
+ * so it cannot be knocked out of step by a reflow.
+ */
+function StepRing({ step, total, size = 62 }) {
+  const R = 19.5, CIRC = 2 * Math.PI * R;
+  const done = Math.max(0, Math.min(1, (step + 1) / total));
+  return (
+    <span className="artium-su-ring" style={{ width: size, height: size }}>
+      <svg viewBox="0 0 44 44" aria-hidden="true">
+        <circle cx="22" cy="22" r={R} fill="none" stroke="rgba(255,255,255,0.10)" strokeWidth="3" />
+        <circle
+          cx="22" cy="22" r={R} fill="none" stroke="#E9C88D" strokeWidth="3" strokeLinecap="round"
+          strokeDasharray={CIRC} strokeDashoffset={CIRC * (1 - done)}
+          transform="rotate(-90 22 22)"
+        />
+      </svg>
+      <span>{step + 1} of {total}</span>
+    </span>
+  );
+}
+
 const HIRER_STEPS = ["Create your account", "Who's hiring", "The engagement", "Review & send"];
 const HIRER_ORG = ["Individual", "Concert venue", "Orchestra", "Festival", "Agency", "Other"];
 const HIRER_OCCASION = ["Concert", "Recital", "Wedding", "Corporate event", "Recording session", "Other"];
@@ -3560,26 +3622,25 @@ function HirerSignup({ onBack, onDone }) {
   }
 
   return (
-    <div className="min-h-full" style={{ background: C.ink, color: C.ivory, fontFamily: FONT_BODY }}>
-      <div className="max-w-3xl mx-auto px-6 pt-8">
+    <div className="artium-su">
+      <div className="max-w-3xl mx-auto px-6" style={{ paddingTop: "calc(20px + env(safe-area-inset-top, 0px))" }}>
         <div className="flex items-center gap-3">
-          <button onClick={step === 0 ? onBack : () => setStep(step - 1)} style={{ color: C.ivoryDim, background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", padding: 0 }}>
-            <ChevronLeft size={18} />
+          <button onClick={step === 0 ? onBack : () => setStep(step - 1)} className="artium-aw-round" aria-label="Back">
+            <ChevronLeft size={17} strokeWidth={2} />
           </button>
-          <Logo size={20} markSize={HEADER_CONTROL} />
+          <GateLogo word={20} />
         </div>
-        <div className="mt-8 flex items-center gap-4">
-          <span style={{ fontFamily: FONT_MONO, color: C.brassLabel, fontSize: 13 }}>Step {ROMAN[step]} of {ROMAN[HIRER_STEPS.length - 1]}</span>
-          <div className="flex-1 flex gap-1">
-            {HIRER_STEPS.map((_, i) => (
-              <div key={i} className="flex-1 rounded-full" style={{ height: 3, background: i <= step ? C.brass : C.inkLine }} />
-            ))}
-          </div>
+        <div className="artium-su-head">
+          <StepRing step={step} total={HIRER_STEPS.length} />
+          <span className="artium-su-head-text">
+            <h2 className="artium-su-title">{HIRER_STEPS[step]}</h2>
+            {HIRER_STEPS[step + 1] && <p className="artium-su-next">Next: <b>{HIRER_STEPS[step + 1]}</b></p>}
+          </span>
         </div>
-        <h2 className="mt-5" style={{ fontFamily: FONT_DISPLAY, fontSize: 30, fontWeight: 600 }}>{HIRER_STEPS[step]}</h2>
       </div>
 
-      <div className="max-w-3xl mx-auto px-6 py-10 lg-fade" key={step}>
+      <div className="max-w-3xl mx-auto px-6 pt-7 pb-10 lg-fade" key={step}>
+        <div className="artium-su-card">
         {step === 0 && (
           <div style={{ display: "flex", flexDirection: "column", gap: 18, maxWidth: 420 }}>
             <Field label="Email">
@@ -3671,14 +3732,21 @@ function HirerSignup({ onBack, onDone }) {
             {err && <p className="text-sm" style={{ color: C.burgundy, marginTop: 12 }}>{err}</p>}
           </div>
         )}
-
-        <div className="mt-10 flex items-center gap-4">
-          {step < HIRER_STEPS.length - 1 ? (
-            <PrimaryBtn disabled={!canNext} onClick={() => setStep(step + 1)}>Continue</PrimaryBtn>
-          ) : (
-            <PrimaryBtn disabled={submitting} onClick={submit}>{submitting ? "Sending…" : "Create account & send request"}</PrimaryBtn>
-          )}
         </div>
+      </div>
+
+      <div className="max-w-3xl mx-auto artium-su-nav">
+        {step > 0 && <button className="artium-su-back" onClick={() => setStep(step - 1)}>Back</button>}
+        {step < HIRER_STEPS.length - 1 ? (
+          <button className="artium-su-next-btn" disabled={!canNext} onClick={() => setStep(step + 1)}>
+            Next <ChevronRight size={17} strokeWidth={2.2} />
+          </button>
+        ) : (
+          <button className="artium-su-next-btn" disabled={submitting} onClick={submit}>
+            {submitting ? "Sending…" : "Create account & send request"}
+            <ArrowRight size={17} strokeWidth={2.2} />
+          </button>
+        )}
       </div>
     </div>
   );
@@ -3733,16 +3801,13 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
             </button>
           )}
         </div>
-        <div className="mt-7 flex items-center gap-4">
-          <span className="artium-su-step">Step {ROMAN[step]} of {ROMAN[lastStep]}</span>
-          <div className="artium-su-rail">
-            {labels.map((_, i) => (
-              <div key={i} className="artium-su-seg" data-on={i <= step ? "1" : "0"} />
-            ))}
-          </div>
+        <div className="artium-su-head">
+          <StepRing step={step} total={labels.length} />
+          <span className="artium-su-head-text">
+            <h2 className="artium-su-title">{labels[step]}</h2>
+            {labels[step + 1] && <p className="artium-su-next">Next: <b>{labels[step + 1]}</b></p>}
+          </span>
         </div>
-        <h2 className="artium-su-title">{labels[step]}</h2>
-        <div className="artium-su-rule" aria-hidden="true"><i /><span /></div>
       </div>
 
       <div className="max-w-3xl mx-auto px-6 pt-7 pb-10 lg-fade" key={step}>
@@ -3764,14 +3829,19 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
         </div>
       )}
 
-      <div className="max-w-3xl mx-auto px-6 flex items-center justify-end"
-        style={{ paddingBottom: "calc(40px + env(safe-area-inset-bottom, 0px))" }}>
+      <div className="max-w-3xl mx-auto artium-su-nav">
+        {step > 0 && (
+          <button className="artium-su-back" onClick={() => setStep(step - 1)}>Back</button>
+        )}
         {step < lastStep ? (
-          <PrimaryBtn disabled={!canNext} onClick={() => setStep(step + 1)} icon={ChevronRight}>Continue</PrimaryBtn>
+          <button className="artium-su-next-btn" disabled={!canNext} onClick={() => setStep(step + 1)}>
+            Next <ChevronRight size={17} strokeWidth={2.2} />
+          </button>
         ) : (
-          <PrimaryBtn disabled={submitting} onClick={handleSubmit} icon={editing ? Check : ArrowRight}>
+          <button className="artium-su-next-btn" disabled={submitting} onClick={handleSubmit}>
             {submitting ? "Submitting…" : editing ? "Save changes" : "Submit application"}
-          </PrimaryBtn>
+            {editing ? <Check size={17} strokeWidth={2.2} /> : <ArrowRight size={17} strokeWidth={2.2} />}
+          </button>
         )}
       </div>
     </div>
