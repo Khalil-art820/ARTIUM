@@ -356,6 +356,10 @@ const SAMPLE_CONVERSATIONS = {
   ],
 };
 
+// Read back verbatim wherever a student is summarised, so these are the
+// phrases themselves rather than numbers needing a suffix at each call site.
+const YEAR_OPTIONS = ["1st year", "2nd year", "3rd year", "4th year", "4+ years", "Graduated"];
+
 const INSTRUMENT_OPTIONS = [
   "Piano", "Violin", "Viola", "Cello", "Double Bass", "Voice", "Flute", "Clarinet",
   "Oboe", "Bassoon", "Trumpet", "Horn", "Trombone", "Guitar", "Harp", "Percussion", "Organ", "Cimbalom",
@@ -2476,6 +2480,11 @@ export default function App() {
         }
 
 
+        /* The globe on the conservatory step, framed as the network page
+           frames it. Height-relative ring, for the same reason as there. */
+        .artium-su-globe { position: relative; width: 100%; margin: 0 0 14px; }
+        .artium-su-globe .artium-aw-ring--a { height: 86%; }
+
         /* ---- forms ------------------------------------------------------
            The signup fields are styled inline, which cannot express :focus,
            a placeholder colour, or what the browser does to an autofilled
@@ -4094,8 +4103,16 @@ function StepIntro({ draft, update }) {
       <Field label="Full name">
         <input style={inputStyle} value={draft.name} onChange={(e) => update({ name: e.target.value })} placeholder="Your full name" />
       </Field>
-      <Field label="Years at your conservatory">
-        <input style={inputStyle} value={draft.years} onChange={(e) => update({ years: e.target.value })} placeholder="e.g. 2nd year, Masters 1st year" />
+      {/* Chips rather than a text box. The value is read back in half a dozen
+          places — rosters, profiles, the lesson room — so it is stored as the
+          phrase that reads correctly there ("2nd year"), not as a bare digit
+          that would come out as "2 · Chopin, Ravel". */}
+      <Field label="Years at your current conservatory">
+        <div className="flex flex-wrap gap-2">
+          {YEAR_OPTIONS.map((y) => (
+            <Chip key={y} active={draft.years === y} onClick={() => update({ years: draft.years === y ? "" : y })}>{y}</Chip>
+          ))}
+        </div>
       </Field>
       <Field label="Which instrument do you play?">
         <div className="flex flex-wrap gap-2">
@@ -4271,37 +4288,71 @@ function StepConservatory({ draft, update, editing }) {
 
   return (
     <div>
-      <div className="rounded-2xl overflow-hidden mb-5" style={{ border: `1px solid ${C.inkLine}`, background: C.inkSoft }}>
-        <MapTitle />
-        {/* Every conservatory still shows on the map — it just isn't
-            selectable on the document route, where picking one off the map
-            would sidestep the approved list entirely. */}
-        <WorldMap selectedId={draft.conservatoryId} onSelect={isDoc ? () => {} : pickConservatory} studentsByCons={{}} height={260} />
+      {/* The network page's globe, not the flat map this used to carry — the
+          two screens show the same world and should look like it. Pins are
+          only the schools that can actually be placed; the rest would land at
+          0,0 in the Gulf of Guinea. */}
+      <div className="artium-su-globe">
+        <span className="artium-aw-glow" aria-hidden="true" />
+        <span className="artium-aw-ring artium-aw-ring--a" aria-hidden="true" />
+        <WorldGlobe
+          pins={results.filter((c) => Number.isFinite(c.lat) && Number.isFinite(c.lng))}
+          selectedId={draft.conservatoryId}
+          onSelect={isDoc ? () => {} : pickConservatory}
+          height={230}
+          pinScale={0.62}
+        />
       </div>
-      <div className="relative mb-3">
-        <Search size={15} style={{ position: "absolute", left: 14, top: 14, color: C.ivoryDim }} />
-        <input style={{ ...inputStyle, paddingLeft: 38 }} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by school, city, or country" />
-      </div>
-      {isDoc && results.length === 0 ? (
-        <div className="rounded-xl" style={{ border: `1px dashed ${C.inkLine}`, padding: "16px 18px", textAlign: "center" }}>
-          <p className="text-sm" style={{ color: C.ivoryDim, margin: 0 }}>
-            {approvedCons.length === 0
-              ? "No conservatories have been approved yet. Upload your proof of enrolment below and we'll confirm your school from the document."
-              : "No approved conservatory matches that search. Upload your proof below and we'll confirm your school from the document."}
-          </p>
-        </div>
+
+      <span className="artium-aw-field" style={{ marginBottom: 12 }}>
+        <Search size={15} strokeWidth={2} />
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by school, city, or country" />
+      </span>
+
+      {results.length === 0 ? (
+        <p className="artium-aw-empty">
+          {isDoc ? "No approved conservatory matches that search." : "No conservatory matches that search."}
+        </p>
       ) : (
-        <div className="grid sm:grid-cols-2 gap-2 max-h-64 overflow-y-auto lg-scroll pr-1">
-          {results.map((c) => (
-            <button key={c.id} onClick={() => pickConservatory(c.id)} className="text-left rounded-xl px-4 py-3" style={{ border: `1px solid ${draft.conservatoryId === c.id ? C.brass : C.inkLine}`, background: draft.conservatoryId === c.id ? "rgba(201,162,75,0.1)" : "transparent" }}>
-              <p style={{ fontFamily: FONT_BODY, fontWeight: 600, fontSize: 14 }}>{c.name}</p>
-              <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.ivoryDim, marginTop: 2 }}>
-                {isDoc ? (c.address || "Approved conservatory") : `${c.city}, ${c.country} · @${c.domains[0]}`}
-              </p>
-            </button>
-          ))}
+        <div className="artium-aw-list" style={{ maxHeight: 268, overflowY: "auto" }}>
+          {results.map((c) => {
+            const on = draft.conservatoryId === c.id;
+            return (
+              <button key={c.id} className="artium-aw-row" onClick={() => pickConservatory(c.id)}
+                style={on ? { borderColor: "rgba(239,208,155,0.55)", background: "rgba(239,208,155,0.07)" } : undefined}>
+                <span className="artium-aw-mono">{consMonogram(c)}</span>
+                <span className="artium-aw-row-body">
+                  <p className="artium-aw-row-t">{c.name}</p>
+                  <p className="artium-aw-row-c">
+                    <MapPin size={11} strokeWidth={2} />
+                    {isDoc
+                      ? (c.address || "Approved conservatory")
+                      : `${[c.city, c.country].filter(Boolean).join(", ")} · @${c.domains[0]}`}
+                  </p>
+                </span>
+                {on
+                  ? <CheckIcon size={17} strokeWidth={2.4} color="#EFD09B" />
+                  : <ChevronRight size={17} strokeWidth={2} />}
+              </button>
+            );
+          })}
         </div>
       )}
+
+      {/* Not finding your school is not a failure state, and the old copy only
+          said so once the list came back empty — which never happens on the
+          email route, where 110 schools are listed and yours simply is not
+          one of them. Said plainly, always. */}
+      <div style={{ marginTop: 14, borderRadius: 14, border: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.025)", padding: "13px 15px" }}>
+        <p className="text-sm" style={{ margin: 0, color: C.ivory, fontWeight: 600, fontSize: 13 }}>
+          Can't find your conservatory?
+        </p>
+        <p className="text-sm" style={{ margin: "5px 0 0", color: C.ivoryDim, lineHeight: 1.55 }}>
+          {isDoc
+            ? "You don't have to pick one. Upload your document below and we'll add your conservatory from it — the list only holds schools we've already confirmed."
+            : "It doesn't have to be on this list. Verify with a document instead and we'll add your conservatory from what you upload."}
+        </p>
+      </div>
 
       {/* Document proof upload (no institutional email path). Deliberately not
           gated on a selection: with an empty approved list there would be
@@ -4957,7 +5008,10 @@ function SignupPromptModal({ onClose, onSignup }) {
  * from NASA's Blue Marble and Black Marble — city lights screened over a
  * dimmed day pass, so the night side is lit without the oceans going flat.
  */
-function WorldGlobe({ pins, selectedId, onSelect, height = 320 }) {
+// pinScale: the network page pins a handful of schools that actually have
+// students; the signup step pins every one that can be placed, and 110 pins
+// at the same size is a pile rather than a constellation.
+function WorldGlobe({ pins, selectedId, onSelect, height = 320, pinScale = 1 }) {
   const [wrapRef, { w, h }] = useMeasured();
   const globeRef = useRef(null);
   const [ready, setReady] = useState(false);
@@ -4997,9 +5051,9 @@ function WorldGlobe({ pins, selectedId, onSelect, height = 320 }) {
             htmlElement={(d) => {
               const el = document.createElement("div");
               el.style.cssText = "cursor:pointer;pointer-events:auto;transform:translate(-50%,-100%);";
-              el.title = `${d.name} — ${d.count} student${d.count === 1 ? "" : "s"}`;
+              el.title = d.count == null ? d.name : `${d.name} — ${d.count} student${d.count === 1 ? "" : "s"}`;
               const on = d.id === selectedId;
-              const size = on ? 26 : 21;
+              const size = Math.round((on ? 26 : 21) * pinScale);
               // The gate's pin, at map scale: solid champagne with the window
               // punched through by evenodd.
               el.innerHTML = `
