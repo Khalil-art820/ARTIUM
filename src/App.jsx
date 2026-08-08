@@ -22,23 +22,31 @@ import "leaflet/dist/leaflet.css";
 /* ---------------------------------------------------------------- */
 /* THEME                                                              */
 /* ---------------------------------------------------------------- */
+// The whole app in the entry gate's key. These names were written for a
+// white product — "ink" was the page, "ivory" was the text on it — so the
+// words now read backwards, but they are threaded through several thousand
+// lines and the roles they stand for have not changed. Renaming them is a
+// separate job from re-tinting them; this is the re-tint.
 const C = {
-  ink: "#FFFFFF",
-  inkSoft: "#F6F9FC",
-  inkLine: "#E6EBF1",
-  parchment: "#FFFFFF",
-  parchmentDim: "#F6F9FC",
-  parchmentLine: "#E6EBF1",
-  ivory: "#0A2540",
-  ivoryDim: "#425466",
-  inkText: "#0A2540",
-  inkTextDim: "#425466",
-  brass: "#FFC629",
-  brassText: "#1A1200",
-  brassLabel: "#7A5800",
-  brassDim: "rgba(255,198,41,0.12)",
-  burgundy: "#DF1B41",
-  forest: "#8B5560",
+  ink: "#0F1012",              // the page
+  inkSoft: "#15161B",          // a surface raised off it
+  inkLine: "rgba(255,255,255,0.09)",
+  parchment: "#15161B",        // cards
+  parchmentDim: "#101116",
+  parchmentLine: "rgba(255,255,255,0.07)",
+  ivory: "#FFFFFF",            // primary text
+  ivoryDim: "#8B8B8B",         // secondary text
+  inkText: "#FFFFFF",
+  inkTextDim: "#8B8B8B",
+  brass: "#E9C88D",            // the champagne, not the old marigold
+  brassText: "#0F1012",        // text sitting on the accent
+  brassLabel: "#E6DAB0",
+  brassDim: "rgba(239,208,155,0.14)",
+  // Both of these were picked to carry on white. On #0F1012 the old
+  // burgundy is nearly unreadable, so each is lifted to the tint that keeps
+  // its meaning at this luminance.
+  burgundy: "#E8908F",
+  forest: "#A8D5B5",
 };
 
 // The wordmark, set the way Stripe sets theirs: one heavy lowercase sans,
@@ -46,8 +54,11 @@ const C = {
 // than 'Inter' — no web font is actually loaded, so 'Inter' silently falls
 // back and the weight lands wherever the system default happens to be.
 const FONT_WORDMARK = "-apple-system, 'SF Pro Display', BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
-const FONT_DISPLAY = "'Inter', sans-serif";
-const FONT_BODY = "'Inter', sans-serif";
+// The gate's pair, carried through the app: Cormorant for anything that
+// behaves like a heading, Manrope for everything read as prose. Both are
+// already loaded in index.html, so this costs no extra request.
+const FONT_DISPLAY = "'Cormorant Garamond', 'Didot', 'Bodoni 72', Georgia, serif";
+const FONT_BODY = "'Manrope', -apple-system, 'Segoe UI', Roboto, sans-serif";
 const FONT_MONO = "'ui-monospace', monospace";
 
 // Spotify playlist behind the music toggle. To change it, take just the id from
@@ -584,12 +595,12 @@ function PrimaryBtn({ children, onClick, disabled, full, icon: Icon }) {
       className={`inline-flex items-center justify-center gap-2 ${full ? "w-full" : ""}`}
       style={{
         fontFamily: FONT_BODY, fontWeight: 500, fontSize: 15,
-        background: disabled ? "rgba(46,134,193,0.20)" : C.brass,
-        color: disabled ? "#FFFFFF" : C.brassText,
+        background: disabled ? "rgba(255,255,255,0.07)" : C.brass,
+        color: disabled ? "#6E6E6E" : C.brassText,
         border: "none",
-        borderRadius: 6,
+        borderRadius: 8,
         padding: "10px 20px",
-        boxShadow: disabled ? "none" : "0 1px 3px rgba(46,134,193,0.25)",
+        boxShadow: disabled ? "none" : "0 2px 14px rgba(233,200,141,0.22)",
         cursor: disabled ? "not-allowed" : "pointer",
         transition: "opacity 0.15s",
         opacity: disabled ? 0.7 : 1,
@@ -608,7 +619,7 @@ function GhostBtn({ children, onClick, icon: Icon, tone = "light", disabled, sty
       style={{
         fontFamily: FONT_BODY, fontWeight: 500, fontSize: 15,
         color: C.ivory,
-        background: "#FFFFFF",
+        background: C.parchment,
         border: `1px solid ${C.inkLine}`,
         borderRadius: 6,
         padding: "9px 18px",
@@ -721,8 +732,8 @@ function SpotifyPlayer({ open, controllerRef, onPlayingChange, onClose }) {
         // Anchored under the header pill that opens it, rather than floating in
         // a corner: every bottom corner collides with the entry gate's triangle.
         position: "fixed", top: 72, right: 16, width: 320, zIndex: 60,
-        background: "#FFFFFF", border: `1px solid ${C.inkLine}`, borderRadius: 12,
-        boxShadow: "0 8px 32px rgba(10,37,64,0.14)", padding: 8,
+        background: C.parchment, border: `1px solid ${C.inkLine}`, borderRadius: 12,
+        boxShadow: "0 8px 32px rgba(0,0,0,0.55)", padding: 8,
         opacity: open ? 1 : 0,
         visibility: open ? "visible" : "hidden",
         transform: open ? "translateY(0)" : "translateY(8px)",
@@ -736,7 +747,7 @@ function SpotifyPlayer({ open, controllerRef, onPlayingChange, onClose }) {
         style={{
           position: "absolute", top: 6, right: 6, width: 22, height: 22,
           display: "flex", alignItems: "center", justifyContent: "center",
-          background: "rgba(10,37,64,0.05)", border: "none", borderRadius: "50%",
+          background: "rgba(0,0,0,0.2)", border: "none", borderRadius: "50%",
           cursor: "pointer", color: C.ivoryDim, zIndex: 1,
         }}
       >
@@ -966,7 +977,7 @@ function ConsRosterCard({ cons, roster, canViewRoster, onOpenStudent, onLockedCl
                   width: "100%", textAlign: "left", display: "flex", alignItems: "center", gap: 10,
                   padding: "7px 4px", background: "transparent", border: "none", cursor: "pointer", borderRadius: 8,
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(10,37,64,0.04)")}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(0,0,0,0.16)")}
                 onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
               >
                 <Avatar name={s.name} id={s.id} size={32} photoUrl={s.photoUrl} online={s.online} />
@@ -1213,8 +1224,8 @@ function GlobeMap({ selectedId, onSelect, studentsByCons, height = 640, onOpenSt
         <div
           style={{
             position: "absolute", top: 12, left: 12, width: 268, zIndex: 5,
-            background: "#FFFFFF", border: `1px solid ${C.inkLine}`, borderRadius: 12,
-            boxShadow: "0 8px 32px rgba(10,37,64,0.18)", padding: "10px 12px",
+            background: C.parchment, border: `1px solid ${C.inkLine}`, borderRadius: 12,
+            boxShadow: "0 8px 32px rgba(0,0,0,0.55)", padding: "10px 12px",
           }}
         >
           <button
@@ -1222,7 +1233,7 @@ function GlobeMap({ selectedId, onSelect, studentsByCons, height = 640, onOpenSt
             title="Close"
             style={{
               position: "absolute", top: 6, right: 6, width: 22, height: 22, display: "flex",
-              alignItems: "center", justifyContent: "center", background: "rgba(10,37,64,0.05)",
+              alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.2)",
               border: "none", borderRadius: "50%", cursor: "pointer", color: C.ivoryDim,
             }}
           >
@@ -1239,11 +1250,11 @@ function GlobeMap({ selectedId, onSelect, studentsByCons, height = 640, onOpenSt
       <div style={{
         position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 4,
         display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
-        background: "#fff", borderTop: `1px solid ${C.inkLine}`, padding: "7px 12px", pointerEvents: "none",
+        background: C.parchment, borderTop: `1px solid ${C.inkLine}`, padding: "7px 12px", pointerEvents: "none",
       }}>
         {/* Same two pin marks the flat map's legend used — without them the
             colours on the globe have nothing to key against. */}
-        <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "#425466", fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>
+        <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: C.ivoryDim, fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>
           <svg width="10" height="13" viewBox="0 0 24 30" style={{ flexShrink: 0 }}>
             <path d="M12 0C5.4 0 0 5 0 11.4 0 19.6 12 30 12 30s12-10.4 12-18.6C24 5 18.6 0 12 0z" fill="#2E7D50" stroke="#ffffff" strokeWidth="1.5" />
             <circle cx="12" cy="11.5" r="4" fill="white" opacity="0.9" />
@@ -1256,7 +1267,7 @@ function GlobeMap({ selectedId, onSelect, studentsByCons, height = 640, onOpenSt
             ? `(${pinned.length}) conservatories`
             : `(${pinned.length}) conservator${pinned.length !== 1 ? "ies" : "y"} · drag to spin`}
         </span>
-        <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "#425466", fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>
+        <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: C.ivoryDim, fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>
           <svg width="10" height="13" viewBox="0 0 24 30" style={{ flexShrink: 0 }}>
             <path d="M12 0C5.4 0 0 5 0 11.4 0 19.6 12 30 12 30s12-10.4 12-18.6C24 5 18.6 0 12 0z" fill="#C0392B" stroke="#ffffff" strokeWidth="1.5" />
             <circle cx="12" cy="11.5" r="4" fill="white" opacity="0.9" />
@@ -1280,14 +1291,14 @@ function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", inter
       <div style={{
         position: "absolute", bottom: 0, left: 0, right: 0,
         zIndex: 1000, display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8,
-        background: "#fff",
+        background: C.parchment,
         borderTop: "1px solid #E6EBF1",
         padding: "7px 12px",
         pointerEvents: "none",
         flexWrap: "wrap",
         rowGap: 3,
       }}>
-        <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "#425466", fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>
+        <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: C.ivoryDim, fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>
           <svg width="10" height="13" viewBox="0 0 24 30" style={{ flexShrink: 0 }}>
             <path d="M12 0C5.4 0 0 5 0 11.4 0 19.6 12 30 12 30s12-10.4 12-18.6C24 5 18.6 0 12 0z" fill="#27AE60" stroke="#1E8449" strokeWidth="1.5" />
             <circle cx="12" cy="11.5" r="4" fill="white" opacity="0.9" />
@@ -1298,7 +1309,7 @@ function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", inter
           </svg>
           ({pinnedCons}) conservator{pinnedCons !== 1 ? "ies" : "y"}
         </span>
-        <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "#425466", fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>
+        <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: C.ivoryDim, fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>
           <svg width="10" height="13" viewBox="0 0 24 30" style={{ flexShrink: 0 }}>
             <path d="M12 0C5.4 0 0 5 0 11.4 0 19.6 12 30 12 30s12-10.4 12-18.6C24 5 18.6 0 12 0z" fill="#C0392B" stroke="#8B1A1A" strokeWidth="1.5" />
             <circle cx="12" cy="11.5" r="4" fill="white" opacity="0.9" />
@@ -1392,7 +1403,7 @@ function AccessGate({ onUnlock }) {
   }
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: C.inkSoft, fontFamily: FONT_BODY, padding: 24 }}>
-      <div style={{ width: "100%", maxWidth: 400, background: "#FFFFFF", border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: 40, boxShadow: "0 4px 24px rgba(10,37,64,0.07)" }}>
+      <div style={{ width: "100%", maxWidth: 400, background: C.parchment, border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: 40, boxShadow: "0 4px 24px rgba(0,0,0,0.28)" }}>
         <div style={{ marginBottom: 28 }}>
           <Logo size={22} markSize={HEADER_CONTROL} />
           <p style={{ color: C.ivoryDim, fontSize: 14, marginTop: 12 }}>Private beta — enter access key to continue.</p>
@@ -1422,16 +1433,8 @@ export default function App() {
   const [onlineCount, setOnlineCount] = useState(1);
   const { user: authUser, profile: authProfile, loading: authLoading } = useAuth();
   const [screen, setScreen] = useState("entry");
-  // The rubber band at the end of a scroll, and the safe area under the home
-  // indicator, both paint the document's own colour — not the app shell's. On
-  // the gate that means a band of white below a black screen, so the document
-  // follows the screen it is showing.
-  React.useEffect(() => {
-    const el = document.documentElement;
-    const prev = el.style.backgroundColor;
-    el.style.backgroundColor = screen === "entry" ? GATE.bg : "";
-    return () => { el.style.backgroundColor = prev; };
-  }, [screen]);
+  // The document's own colour is set in index.css now that every screen is
+  // dark; this used to flip it per screen and no longer has anything to say.
   const [appTab, setAppTab] = useState(() => localStorage.getItem("artium_app_tab") || "map");
   const setAppTabPersist = (tab) => { localStorage.setItem("artium_app_tab", tab); setAppTab(tab); };
   const [teacherRoomView, setTeacherRoomView] = useState("students");
@@ -2613,13 +2616,13 @@ export default function App() {
 
         .artium-map, .artium-map .leaflet-container { border-radius: inherit; }
         .artium-map .leaflet-tile-pane { filter: saturate(0.5) brightness(1.08); }
-        .artium-map .leaflet-control-zoom { border: 1px solid #E6EBF1 !important; box-shadow: 0 2px 8px rgba(10,37,64,0.08) !important; border-radius: 8px !important; overflow: hidden; }
+        .artium-map .leaflet-control-zoom { border: 1px solid #E6EBF1 !important; box-shadow: 0 2px 8px rgba(0,0,0,0.32) !important; border-radius: 8px !important; overflow: hidden; }
         .artium-map .leaflet-control-zoom a { background: #FFFFFF !important; color: #0A2540 !important; border-color: #E6EBF1 !important; font-weight: 600 !important; }
         .artium-map .leaflet-control-zoom a:hover { background: #F6F9FC !important; }
         .artium-map .leaflet-control-attribution { display: none !important; }
-        .artium-map .leaflet-tooltip { background: #FFFFFF !important; border: 1px solid #E6EBF1 !important; color: #0A2540 !important; border-radius: 10px !important; box-shadow: 0 4px 20px rgba(10,37,64,0.12) !important; padding: 8px 14px !important; font-family: Inter, sans-serif !important; font-size: 13px !important; }
+        .artium-map .leaflet-tooltip { background: #FFFFFF !important; border: 1px solid #E6EBF1 !important; color: #0A2540 !important; border-radius: 10px !important; box-shadow: 0 4px 20px rgba(0,0,0,0.48) !important; padding: 8px 14px !important; font-family: Inter, sans-serif !important; font-size: 13px !important; }
         .artium-map .leaflet-tooltip-top:before { border-top-color: #E6EBF1 !important; }
-        .artium-map .leaflet-popup-content-wrapper { background: #FFFFFF !important; border: 1px solid #E6EBF1 !important; border-radius: 12px !important; box-shadow: 0 4px 20px rgba(10,37,64,0.12) !important; padding: 0 !important; }
+        .artium-map .leaflet-popup-content-wrapper { background: #FFFFFF !important; border: 1px solid #E6EBF1 !important; border-radius: 12px !important; box-shadow: 0 4px 20px rgba(0,0,0,0.48) !important; padding: 0 !important; }
         /* width:auto overrides the inline width Leaflet computes, which also
            defeats its minWidth prop — so the floor has to be set here too, or
            the short locked-state card collapses to a narrow column. */
@@ -2933,7 +2936,7 @@ export default function App() {
               This bar still shows on every other tab, so Promote Me, Lesson
               Room and Admin are a single hop away rather than stranded). */}
           {myProfile && !selectedStudentId && appTab !== "map" && (
-            <div className="flex" style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#fff" }}>
+            <div className="flex" style={{ borderBottom: `1px solid ${C.inkLine}`, background: C.parchment }}>
               {[
                 { key: "map", label: "Map", Icon: Map },
                 { key: "promote", label: "Promote Me", Icon: Megaphone },
@@ -3086,7 +3089,7 @@ function PinGlobe() {
   return (
     // The white disc is the wrapper itself, so the sphere sits in the
     // artwork's ring the way the painted globe did, and covers it entirely.
-    <span ref={wrapRef} style={{ position: "absolute", inset: 0, borderRadius: "50%", background: "#FFFFFF", overflow: "hidden" }}>
+    <span ref={wrapRef} style={{ position: "absolute", inset: 0, borderRadius: "50%", background: C.parchment, overflow: "hidden" }}>
       {size > 0 && (
         <Suspense fallback={null}>
           <Globe
@@ -3557,7 +3560,7 @@ function HirerSignup({ onBack, onDone }) {
         )}
         {step === 3 && (
           <div style={{ maxWidth: 560 }}>
-            <div style={{ background: "#fff", border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: "18px 22px", display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ background: C.parchment, border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: "18px 22px", display: "flex", flexDirection: "column", gap: 10 }}>
               {[
                 ["Account", d.email],
                 ["Hiring as", `${d.name} — ${d.org}`],
@@ -3689,7 +3692,7 @@ function Field({ label, children }) {
     </label>
   );
 }
-const inputStyle = { width: "100%", background: "#FFFFFF", border: `1px solid ${C.inkLine}`, borderRadius: 6, padding: "10px 14px", color: C.ivory, fontFamily: FONT_BODY, fontSize: 15, outline: "none", boxShadow: "0 1px 2px rgba(10,37,64,0.04)" };
+const inputStyle = { width: "100%", background: C.parchment, border: `1px solid ${C.inkLine}`, borderRadius: 6, padding: "10px 14px", color: C.ivory, fontFamily: FONT_BODY, fontSize: 15, outline: "none", boxShadow: "0 1px 2px rgba(0,0,0,0.16)" };
 
 function PasswordField({ value, onChange, placeholder, autoComplete }) {
   const [visible, setVisible] = useState(false);
@@ -3808,9 +3811,9 @@ function GoogleBtn({ label = "Continue with Google", role = "student" }) {
       disabled={loading}
       style={{
         width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
-        background: "#FFFFFF", color: C.ivory, border: `1px solid ${C.inkLine}`,
+        background: C.parchment, color: C.ivory, border: `1px solid ${C.inkLine}`,
         borderRadius: 6, padding: "10px 16px", fontSize: 14, fontWeight: 500,
-        boxShadow: "0 1px 2px rgba(10,37,64,0.04)",
+        boxShadow: "0 1px 2px rgba(0,0,0,0.16)",
         cursor: loading ? "default" : "pointer", opacity: loading ? 0.7 : 1,
       }}
     >
@@ -4094,7 +4097,7 @@ function StepConservatory({ draft, update, editing }) {
               </label>
             </div>
           ) : (
-            <label style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "11px 18px", borderRadius: 10, border: `1.5px dashed ${C.inkLine}`, background: "#fff", cursor: uploading ? "default" : "pointer", color: C.ivory, fontWeight: 600, fontSize: 14 }}>
+            <label style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "11px 18px", borderRadius: 10, border: `1.5px dashed ${C.inkLine}`, background: C.parchment, cursor: uploading ? "default" : "pointer", color: C.ivory, fontWeight: 600, fontSize: 14 }}>
               <Upload size={16} /> {uploading ? "Uploading…" : "Choose a file"}
               <input type="file" accept="image/*,application/pdf" style={{ display: "none" }} disabled={uploading} onChange={(e) => uploadProof(e.target.files?.[0])} />
             </label>
@@ -4135,7 +4138,7 @@ function StepConservatory({ draft, update, editing }) {
                 <div style={{ marginTop: 12 }}>
                   <p className="text-sm" style={{ color: C.ivoryDim, marginBottom: 8 }}>Enter the code sent to <b>{email}</b>.</p>
                   <input
-                    style={{ width: "100%", maxWidth: 260, padding: "12px 16px", borderRadius: 10, border: `1.5px solid ${C.inkLine}`, background: "#fff", color: C.ivory, fontFamily: FONT_MONO, fontSize: 22, fontWeight: 600, letterSpacing: 8, textAlign: "center", outline: "none", boxSizing: "border-box" }}
+                    style={{ width: "100%", maxWidth: 260, padding: "12px 16px", borderRadius: 10, border: `1.5px solid ${C.inkLine}`, background: C.parchment, color: C.ivory, fontFamily: FONT_MONO, fontSize: 22, fontWeight: 600, letterSpacing: 8, textAlign: "center", outline: "none", boxSizing: "border-box" }}
                     value={code}
                     onChange={(e) => { setCode(e.target.value.replace(/\D/g, "").slice(0, 10)); setErr(""); }}
                     placeholder="••••••••" inputMode="numeric" autoFocus />
@@ -4301,7 +4304,7 @@ function StepReview({ draft }) {
     : "Not offering lessons";
 
   const Card = ({ label, children }) => (
-    <div style={{ background: "#fff", border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "14px 18px", display: "flex", flexDirection: "column", gap: 6 }}>
+    <div style={{ background: C.parchment, border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "14px 18px", display: "flex", flexDirection: "column", gap: 6 }}>
       <span style={{ fontSize: 11, fontWeight: 600, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
       <div style={{ fontSize: 14, color: C.ivory, lineHeight: 1.6 }}>{children}</div>
     </div>
@@ -4433,14 +4436,14 @@ function LoginScreen({ onSubmit, onBack, error }) {
   }
   return (
     <div className="min-h-full flex flex-col" style={{ background: C.inkSoft, color: C.ivory }}>
-      <div style={{ background: "#FFFFFF", borderBottom: `1px solid ${C.inkLine}`, padding: "0 32px", height: 60, display: "flex", alignItems: "center" }}>
+      <div style={{ background: C.parchment, borderBottom: `1px solid ${C.inkLine}`, padding: "0 32px", height: 60, display: "flex", alignItems: "center" }}>
         <button onClick={onBack} style={{ color: C.ivoryDim, background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", padding: 0, marginRight: 12 }}>
           <ChevronLeft size={18} />
         </button>
         <Logo size={20} />
       </div>
       <div className="flex-1 flex items-center justify-center px-6 py-12">
-        <div className="w-full max-w-md lg-fade" style={{ background: "#FFFFFF", border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: 40, boxShadow: "0 4px 24px rgba(10,37,64,0.07)" }}>
+        <div className="w-full max-w-md lg-fade" style={{ background: C.parchment, border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: 40, boxShadow: "0 4px 24px rgba(0,0,0,0.28)" }}>
           <h2 style={{ fontSize: 24, fontWeight: 700, letterSpacing: -0.3, marginBottom: 4 }}>Welcome back</h2>
           <p style={{ color: C.ivoryDim, fontSize: 15, marginBottom: 24 }}>Log in to your Artium account.</p>
           <GoogleBtn />
@@ -4468,7 +4471,7 @@ function LearnerProfileModal({ learner, onClose }) {
   if (!learner) return null;
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={onClose}>
-      <div style={{ background: "#fff", borderRadius: 16, padding: 32, width: 340, maxWidth: "90vw", boxShadow: "0 16px 48px rgba(0,0,0,0.18)" }} onClick={(e) => e.stopPropagation()}>
+      <div style={{ background: C.parchment, borderRadius: 16, padding: 32, width: 340, maxWidth: "90vw", boxShadow: "0 16px 48px rgba(0,0,0,0.18)" }} onClick={(e) => e.stopPropagation()}>
         <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20 }}>
           <Avatar name={learner.name} id={learner.learnerId} size={56} />
           <div>
@@ -4560,7 +4563,7 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
         )}
       </button>
       {open && (
-        <div style={{ position: "absolute", right: 0, top: "calc(100% + 8px)", width: 320, background: "#fff", borderRadius: 12, boxShadow: "0 8px 32px rgba(0,0,0,0.14)", border: `1px solid ${C.inkLine}`, zIndex: 200, overflow: "hidden", maxHeight: 420, overflowY: "auto" }}>
+        <div style={{ position: "absolute", right: 0, top: "calc(100% + 8px)", width: 320, background: C.parchment, borderRadius: 12, boxShadow: "0 8px 32px rgba(0,0,0,0.14)", border: `1px solid ${C.inkLine}`, zIndex: 200, overflow: "hidden", maxHeight: 420, overflowY: "auto" }}>
           <div style={{ padding: "12px 16px", borderBottom: `1px solid ${C.inkLine}` }}>
             <p style={{ fontSize: 13, fontWeight: 700, color: C.ivory, margin: 0 }}>Notifications</p>
           </div>
@@ -4568,7 +4571,7 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
           {promoPending.map((p) => (
             <div key={p.id} style={{ padding: "12px 16px", background: "#EEF4FF", borderBottom: `1px solid ${C.inkLine}` }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
-                <div style={{ width: 38, height: 38, borderRadius: "50%", background: "#2C3E50", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Megaphone size={18} /></div>
+                <div style={{ width: 38, height: 38, borderRadius: "50%", background: C.inkSoft, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Megaphone size={18} /></div>
                 <div>
                   <p style={{ fontSize: 13, fontWeight: 700, color: C.ivory, margin: "0 0 2px" }}>{p.name} submitted a promo video</p>
                   <p style={{ fontSize: 12, color: C.ivoryDim, margin: 0 }}>{p.provider} · awaiting your approval</p>
@@ -4618,7 +4621,7 @@ function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, mus
   if (bare) return <div className="min-h-full flex flex-col">{children}</div>;
   return (
     <div className="min-h-full flex flex-col" style={{ background: C.inkSoft, color: C.ivory }}>
-      <div className="px-6 flex items-center gap-4" style={{ height: 60, background: "#FFFFFF", borderBottom: `1px solid ${C.inkLine}` }}>
+      <div className="px-6 flex items-center gap-4" style={{ height: 60, background: C.parchment, borderBottom: `1px solid ${C.inkLine}` }}>
         <div className="flex items-center gap-3">
           {(previewOnly || onBack) && (
             <button onClick={previewOnly ? onHome : onBack} style={{ color: C.ivoryDim, background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 2, padding: 0 }}>
@@ -5006,7 +5009,7 @@ function StudentProfile({ student, conservatory, onBack, onMessage, locked, onAp
     : "Not offering lessons";
 
   const Row = ({ label, children }) => (
-    <div style={{ background: "#fff", border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
+    <div style={{ background: C.parchment, border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
       <span style={{ fontSize: 11, fontWeight: 600, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
       <div style={{ fontSize: 15, color: C.ivory, lineHeight: 1.6 }}>{children}</div>
     </div>
@@ -5113,7 +5116,7 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack, onUpdat
     : "Not offering lessons";
 
   const Row = ({ label, children }) => (
-    <div style={{ background: "#fff", border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
+    <div style={{ background: C.parchment, border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
       <span style={{ fontSize: 11, fontWeight: 600, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
       <div style={{ fontSize: 15, color: C.ivory, lineHeight: 1.6 }}>{children}</div>
     </div>
@@ -5328,7 +5331,7 @@ function Messages({ students, conversations, activeChatId, setActiveChatId, onSe
             </div>
             <div className="flex-1 overflow-y-auto lg-scroll px-5 py-4 flex flex-col gap-2">
               {(conversations[active.id] || []).map((m, i) => (
-                <div key={i} className="px-4 py-2.5 rounded-2xl text-sm" style={{ maxWidth: "75%", alignSelf: m.from === "me" ? "flex-end" : "flex-start", background: m.from === "me" ? C.brass : C.inkSoft, color: m.from === "me" ? C.inkText : C.ivory, fontWeight: m.from === "me" ? 500 : 400 }}>
+                <div key={i} className="px-4 py-2.5 rounded-2xl text-sm" style={{ maxWidth: "75%", alignSelf: m.from === "me" ? "flex-end" : "flex-start", background: m.from === "me" ? C.brass : C.inkSoft, color: m.from === "me" ? C.brassText : C.ivory, fontWeight: m.from === "me" ? 500 : 400 }}>
                   {m.text}
                 </div>
               ))}
@@ -6148,7 +6151,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
     >
       {/* Tab bar — hidden when viewing teacher profile from Lesson Room */}
       {!(selectedId && appTab === "lesson") && (
-        <div className="flex" style={{ borderBottom: `1px solid ${C.inkLine}`, background: "#fff" }}>
+        <div className="flex" style={{ borderBottom: `1px solid ${C.inkLine}`, background: C.parchment }}>
           {[
             { key: "map", label: "Find a teacher", Icon: Map },
             ...(Object.values(teachRequests).some((s) => s === "accepted") ? [{ key: "lesson", label: "Lesson Room", Icon: BookOpen }] : []),
@@ -6232,7 +6235,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
           ? `${selected.teaching.mode === "online" ? "Online" : selected.teaching.mode === "in-person" ? "In-person" : "Online & in-person"} · €${selected.teaching.price}/session`
           : "Not offering lessons";
         const Row = ({ label, children }) => (
-          <div style={{ background: "#fff", border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ background: C.parchment, border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
             <span style={{ fontSize: 11, fontWeight: 600, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
             <div style={{ fontSize: 15, color: C.inkText, lineHeight: 1.6 }}>{children}</div>
           </div>
@@ -6347,7 +6350,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
           const STATUS_LABEL = { confirmed: "Confirmed", teacher_proposed: "Awaiting confirm", student_proposed: "Pending", cancelled: "Cancelled" };
           const STATUS_COLOR = { confirmed: "#1A9E6E", teacher_proposed: C.brass, student_proposed: "#E07B00", cancelled: "#c0392b" };
           return (
-            <div style={{ padding: "16px 20px 32px", background: "#fff", minHeight: "100%" }}>
+            <div style={{ padding: "16px 20px 32px", background: C.parchment, minHeight: "100%" }}>
               {Object.entries(byMonth).map(([monthKey, sessions]) => {
                 const spent = sessions.filter((s) => s.status === "confirmed" && s.paid).reduce((sum, s) => sum + s.teacher.price, 0);
                 const [y, m] = monthKey.split("-");
@@ -6408,21 +6411,21 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
 
         // ── Teachers view (default) ──
         return (
-          <div style={{ padding: "0 0 32px", background: "#fff", minHeight: "100%" }}>
-            <div style={{ padding: "20px 20px 0", background: "#fff" }}>
+          <div style={{ padding: "0 0 32px", background: C.parchment, minHeight: "100%" }}>
+            <div style={{ padding: "20px 20px 0", background: C.parchment }}>
               <p style={{ fontSize: 13, color: C.ivoryDim, margin: "0 0 16px", textAlign: "center" }}>
                 {acceptedTeachers.length} active teacher{acceptedTeachers.length !== 1 ? "s" : ""}
               </p>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap", padding: "12px 0 16px" }}>
                 {acceptedTeachers.map((t) => (
                   <button key={t.id} onClick={() => setActiveLessonTeacherId(t.id)}
-                    style={{ padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: t.id === activeLessonTeacher.id ? 700 : 500, border: t.id === activeLessonTeacher.id ? `2px solid ${C.brass}` : "none", background: "#fff", color: t.id === activeLessonTeacher.id ? C.ivory : C.ivoryDim, cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.06)" }}>
+                    style={{ padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: t.id === activeLessonTeacher.id ? 700 : 500, border: t.id === activeLessonTeacher.id ? `2px solid ${C.brass}` : "none", background: C.parchment, color: t.id === activeLessonTeacher.id ? C.ivory : C.ivoryDim, cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.06)" }}>
                     {t.name.split(" ")[0]}
                   </button>
                 ))}
               </div>
               <button onClick={() => selectTeacher(activeLessonTeacher.id)}
-                style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", background: "#fff", borderRadius: 12, border: "none", boxShadow: "0 1px 6px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04)", marginBottom: 16, width: "100%", cursor: "pointer", textAlign: "left" }}>
+                style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", background: C.parchment, borderRadius: 12, border: "none", boxShadow: "0 1px 6px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04)", marginBottom: 16, width: "100%", cursor: "pointer", textAlign: "left" }}>
                 <Avatar name={activeLessonTeacher.name} id={activeLessonTeacher.id} size={40} photoUrl={activeLessonTeacher.photoUrl} online={activeLessonTeacher.online} />
                 <div style={{ flex: 1 }}>
                   <p style={{ fontSize: 14, fontWeight: 700, color: C.ivory, margin: 0 }}>{activeLessonTeacher.name}</p>
@@ -6431,7 +6434,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
                 <ChevronRight size={16} color={C.ivoryDim} />
               </button>
             </div>
-            <div style={{ margin: "0 20px 20px", background: "#fff", borderRadius: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06)", overflow: "hidden", minHeight: 320 }}>
+            <div style={{ margin: "0 20px 20px", background: C.parchment, borderRadius: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06)", overflow: "hidden", minHeight: 320 }}>
               <LessonRoom
                 teacher={activeLessonTeacher}
                 messages={conversations[activeLessonTeacher.id] || []}
@@ -6442,7 +6445,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
               />
             </div>
             {/* Bottom nav — My Planning */}
-            <div style={{ display: "flex", justifyContent: "center", gap: 40, padding: "20px 20px 12px", background: "#fff", borderTop: `1px solid ${C.inkLine}` }}>
+            <div style={{ display: "flex", justifyContent: "center", gap: 40, padding: "20px 20px 12px", background: C.parchment, borderTop: `1px solid ${C.inkLine}` }}>
               {[{ v: "planning", Icon: LayoutList, label: "My Planning" }].map(({ v, Icon, label }) => (
                 <button key={v} onClick={() => setLearnerRoomView(v)}
                   style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5, background: "none", border: "none", cursor: "pointer", color: C.ivoryDim }}>
@@ -6459,7 +6462,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
 
       {appTab === "profile" && (() => {
         const Row = ({ label, children }) => (
-          <div style={{ background: "#fff", border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ background: C.parchment, border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
             <span style={{ fontSize: 11, fontWeight: 600, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
             <div style={{ fontSize: 15, color: C.inkText, lineHeight: 1.6 }}>{children}</div>
           </div>
@@ -6775,9 +6778,9 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
   }
 
   return (
-    <div style={{ overflow: "hidden", background: "#fff" }}>
+    <div style={{ overflow: "hidden", background: C.parchment }}>
       {/* Tab bar */}
-      <div style={{ display: "flex", borderBottom: `1px solid ${C.inkLine}`, background: "#fff" }}>
+      <div style={{ display: "flex", borderBottom: `1px solid ${C.inkLine}`, background: C.parchment }}>
         {tabs.map(({ id, label, Icon }) => (
           <button key={id} onClick={() => setTab(id)}
             style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "10px 4px", fontSize: 11, fontWeight: tab === id ? 700 : 400, color: tab === id ? C.ivory : C.ivoryDim, background: "none", border: "none", cursor: "pointer", borderBottom: tab === id ? `2px solid ${C.brass}` : "2px solid transparent" }}>
@@ -6972,7 +6975,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
       {confirmCancelId !== null && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(10,20,40,0.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999 }}
           onClick={() => setConfirmCancelId(null)}>
-          <div style={{ background: "#fff", borderRadius: 16, padding: "28px 28px 24px", maxWidth: 320, width: "90%", boxShadow: "0 8px 32px rgba(0,0,0,0.18)", textAlign: "center" }}
+          <div style={{ background: C.parchment, borderRadius: 16, padding: "28px 28px 24px", maxWidth: 320, width: "90%", boxShadow: "0 8px 32px rgba(0,0,0,0.18)", textAlign: "center" }}
             onClick={(e) => e.stopPropagation()}>
             <p style={{ fontSize: 16, fontWeight: 700, color: C.inkText, margin: "0 0 8px" }}>Cancel this session?</p>
             <p style={{ fontSize: 13, color: C.ivoryDim, margin: "0 0 20px", lineHeight: 1.5 }}>Are you sure you want to remove this proposal? This cannot be undone.</p>
@@ -7154,7 +7157,7 @@ function ArtiumSoundCard({ myProfile, authUser }) {
     load();
   }
 
-  const card = { background: "#fff", borderRadius: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06)", padding: "18px 18px" };
+  const card = { background: C.parchment, borderRadius: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06)", padding: "18px 18px" };
   const label = (t) => <span style={{ fontSize: 11, fontWeight: 700, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em" }}>{t}</span>;
   const publicUrl = (p) => supabase.storage.from("student-audio").getPublicUrl(p).data.publicUrl;
 
@@ -7242,7 +7245,7 @@ function ArtiumSoundCard({ myProfile, authUser }) {
               title={rights ? undefined : "Tick the box above first"}
               style={{
                 display: "inline-flex", alignItems: "center", gap: 8, padding: "11px 18px",
-                borderRadius: 10, border: `1.5px dashed ${C.inkLine}`, background: "#fff",
+                borderRadius: 10, border: `1.5px dashed ${C.inkLine}`, background: C.parchment,
                 fontWeight: 600, fontSize: 14,
                 color: rights ? C.ivory : C.ivoryDim,
                 opacity: rights ? 1 : 0.55,
@@ -7369,10 +7372,10 @@ function PromoteMe({ myProfile, authUser }) {
   const rejected = mine?.status === "rejected";
 
   const label = (t) => <span style={{ fontSize: 11, fontWeight: 700, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em" }}>{t}</span>;
-  const card = { background: "#fff", borderRadius: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06)", padding: "18px 18px" };
+  const card = { background: C.parchment, borderRadius: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06)", padding: "18px 18px" };
 
   return (
-    <div style={{ padding: "20px 16px 40px", background: "#fff", minHeight: "100%", fontFamily: FONT_BODY }}>
+    <div style={{ padding: "20px 16px 40px", background: C.parchment, minHeight: "100%", fontFamily: FONT_BODY }}>
       <div style={{ maxWidth: 560, margin: "0 auto", display: "flex", flexDirection: "column", gap: 16 }}>
 
         {/* Header */}
@@ -7398,7 +7401,7 @@ function PromoteMe({ myProfile, authUser }) {
                 style={{
                   display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
                   width: "100%", textAlign: "left", padding: "18px 20px", borderRadius: 999,
-                  border: `1px solid ${C.inkLine}`, background: "#fff", cursor: "pointer",
+                  border: `1px solid ${C.inkLine}`, background: C.parchment, cursor: "pointer",
                   font: "inherit", boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
                 }}
               >
@@ -7466,7 +7469,7 @@ function PromoteMe({ myProfile, authUser }) {
             <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
               {[{ v: "bio", t: "Use my bio" }, { v: "custom", t: "Custom text" }].map(({ v, t }) => (
                 <button key={v} onClick={() => setCaptionPref(v)}
-                  style={{ padding: "7px 14px", borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: "pointer", background: "#fff", color: captionPref === v ? C.ivory : C.ivoryDim, border: captionPref === v ? `2px solid ${C.brass}` : `1px solid ${C.inkLine}` }}>{t}</button>
+                  style={{ padding: "7px 14px", borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: "pointer", background: C.parchment, color: captionPref === v ? C.ivory : C.ivoryDim, border: captionPref === v ? `2px solid ${C.brass}` : `1px solid ${C.inkLine}` }}>{t}</button>
               ))}
             </div>
             {captionPref === "custom" && (
@@ -7569,11 +7572,11 @@ function AdminScreen({ authUser, onlineCount }) {
   const pending = rows.filter((r) => r.status === "pending");
   const decided = rows.filter((r) => r.status !== "pending");
   const shown = tab === "pending" ? pending : decided;
-  const card = { background: "#fff", borderRadius: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06)", padding: "16px 16px" };
+  const card = { background: C.parchment, borderRadius: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06)", padding: "16px 16px" };
   const STATUS_COLOR = { approved: "#1A9E6E", rejected: C.burgundy, pending: C.brassLabel };
 
   return (
-    <div style={{ padding: "20px 16px 40px", background: "#fff", minHeight: "100%", fontFamily: FONT_BODY }}>
+    <div style={{ padding: "20px 16px 40px", background: C.parchment, minHeight: "100%", fontFamily: FONT_BODY }}>
       <div style={{ maxWidth: 560, margin: "0 auto", display: "flex", flexDirection: "column", gap: 14 }}>
         <div style={{ textAlign: "center" }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
@@ -7608,7 +7611,7 @@ function AdminScreen({ authUser, onlineCount }) {
         <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
           {[{ v: "pending", t: `Pending (${pending.length})` }, { v: "history", t: `History (${decided.length})` }].map(({ v, t }) => (
             <button key={v} onClick={() => setTab(v)}
-              style={{ padding: "8px 16px", borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: "pointer", background: "#fff", color: tab === v ? C.ivory : C.ivoryDim, border: tab === v ? `2px solid ${C.brass}` : `1px solid ${C.inkLine}` }}>{t}</button>
+              style={{ padding: "8px 16px", borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: "pointer", background: C.parchment, color: tab === v ? C.ivory : C.ivoryDim, border: tab === v ? `2px solid ${C.brass}` : `1px solid ${C.inkLine}` }}>{t}</button>
           ))}
         </div>
 
@@ -7630,11 +7633,11 @@ function AdminScreen({ authUser, onlineCount }) {
             {p.status === "pending" && (
               <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
                 <button onClick={() => setStatus(p, "approved")} style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "none", background: "#1A9E6E", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Approve</button>
-                <button onClick={() => setStatus(p, "rejected")} style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: `1px solid ${C.inkLine}`, background: "#fff", color: C.burgundy, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Reject</button>
+                <button onClick={() => setStatus(p, "rejected")} style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: `1px solid ${C.inkLine}`, background: C.parchment, color: C.burgundy, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Reject</button>
               </div>
             )}
             {p.status !== "pending" && (
-              <button onClick={() => setStatus(p, "pending")} style={{ marginTop: 12, padding: "7px 14px", borderRadius: 9, border: `1px solid ${C.inkLine}`, background: "#fff", color: C.ivoryDim, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Reset to pending</button>
+              <button onClick={() => setStatus(p, "pending")} style={{ marginTop: 12, padding: "7px 14px", borderRadius: 9, border: `1px solid ${C.inkLine}`, background: C.parchment, color: C.ivoryDim, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Reset to pending</button>
             )}
           </div>
         ))}
@@ -7737,13 +7740,13 @@ function AdminTracks({ card, STATUS_COLOR }) {
                     Approve
                   </button>
                   <button disabled={busy === r.id} onClick={() => decide(r, "rejected")}
-                    style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "#fff", color: C.burgundy, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                    style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: C.parchment, color: C.burgundy, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
                     Reject
                   </button>
                 </>
               ) : (
                 <button onClick={() => decide(r, "pending")}
-                  style={{ padding: "7px 12px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "#fff", color: C.ivoryDim, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
+                  style={{ padding: "7px 12px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: C.parchment, color: C.ivoryDim, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
                   Reset
                 </button>
               )}
@@ -7995,12 +7998,12 @@ function AdminVerifications({ card, STATUS_COLOR }) {
                   {editable ? (
                     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                       <button disabled={busy === r.id} onClick={() => decide(r, "approved")} style={{ padding: "8px 10px", borderRadius: 8, border: "none", background: "#1A9E6E", color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Approve</button>
-                      <button disabled={busy === r.id} onClick={() => decide(r, "rejected")} style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "#fff", color: C.burgundy, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Reject</button>
+                      <button disabled={busy === r.id} onClick={() => decide(r, "rejected")} style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: C.parchment, color: C.burgundy, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Reject</button>
                     </div>
                   ) : (
                     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                       <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: STATUS_COLOR[r.status] || C.ivoryDim }}>{r.status}</span>
-                      <button onClick={() => decide(r, "pending")} style={{ padding: "6px 8px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "#fff", color: C.ivoryDim, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Reset</button>
+                      <button onClick={() => decide(r, "pending")} style={{ padding: "6px 8px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: C.parchment, color: C.ivoryDim, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Reset</button>
                     </div>
                   )}
                 </td>
@@ -8263,7 +8266,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
   const nextSession = upcomingSessions[0];
 
   return (
-    <div style={{ padding: "0 0 32px", fontFamily: FONT_BODY, background: "#fff", minHeight: "100%" }}>
+    <div style={{ padding: "0 0 32px", fontFamily: FONT_BODY, background: C.parchment, minHeight: "100%" }}>
       {/* Pending requests banner */}
       <LearnerProfileModal learner={viewingLearner} onClose={() => setViewingLearner(null)} />
 
@@ -8271,7 +8274,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
       {confirmRemoveId && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 600, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}
           onClick={() => setConfirmRemoveId(null)}>
-          <div style={{ background: "#fff", borderRadius: 16, padding: 24, maxWidth: 340, width: "100%" }} onClick={e => e.stopPropagation()}>
+          <div style={{ background: C.parchment, borderRadius: 16, padding: 24, maxWidth: 340, width: "100%" }} onClick={e => e.stopPropagation()}>
             <p style={{ fontSize: 15, fontWeight: 700, color: C.ivory, margin: "0 0 10px" }}>Remove student?</p>
             <p style={{ fontSize: 13, color: C.ivoryDim, lineHeight: 1.6, margin: "0 0 20px" }}>
               Are you sure you want to remove this student? They will need to send you a new teaching request in order to connect again.
@@ -8316,7 +8319,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
         </div>
       )}
       {/* Header */}
-      <div style={{ padding: "20px 20px 0", background: "#fff" }}>
+      <div style={{ padding: "20px 20px 0", background: C.parchment }}>
         <p style={{ fontSize: 13, color: C.ivoryDim, margin: "0 0 16px", textAlign: "center" }}>{allLearners.length} active student{allLearners.length !== 1 ? "s" : ""}</p>
         {roomView === "students" && (<>
         {/* Learner pill picker */}
@@ -8326,11 +8329,11 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
           const pageLearners = allLearners.slice(safePage * PILLS_PER_PAGE, (safePage + 1) * PILLS_PER_PAGE);
           return (
             <>
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 0, background: "#fff", padding: "12px 0 16px" }}>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 0, background: C.parchment, padding: "12px 0 16px" }}>
                 {pageLearners.map((l) => (
                   <div key={l.id} style={{ position: "relative", display: "inline-flex" }}>
                     <button onClick={() => { setActiveLearner(l); setSelectedSessionId(null); setTab("chat"); }}
-                      style={{ padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: activeLearner.id === l.id ? 700 : 500, border: activeLearner.id === l.id ? `2px solid ${C.brass}` : "none", background: "#fff", color: activeLearner.id === l.id ? C.ivory : C.ivoryDim, cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.06)" }}>
+                      style={{ padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: activeLearner.id === l.id ? 700 : 500, border: activeLearner.id === l.id ? `2px solid ${C.brass}` : "none", background: C.parchment, color: activeLearner.id === l.id ? C.ivory : C.ivoryDim, cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.06)" }}>
                       {l.name.split(" ")[0]}
                     </button>
                     <button onClick={(e) => { e.stopPropagation(); setConfirmRemoveId(l.id); }}
@@ -8358,7 +8361,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
           );
         })()}
         {/* Active learner info */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", background: "#fff", borderRadius: 12, border: "none", boxShadow: "0 1px 6px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04)", marginBottom: 16, marginTop: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", background: C.parchment, borderRadius: 12, border: "none", boxShadow: "0 1px 6px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04)", marginBottom: 16, marginTop: 0 }}>
           <Avatar name={activeLearner.name} id={activeLearner.id} size={40} online />
           <div>
             <p style={{ fontSize: 14, fontWeight: 700, color: C.ivory, margin: 0 }}>{activeLearner.name}</p>
@@ -8488,8 +8491,8 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
       {/* Inner tab bar — students view only */}
       {roomView === "students" && (
         <React.Fragment> {/* Inner tab bar */}
-      <div style={{ margin: "0 20px 20px", background: "#fff", borderRadius: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06)", overflow: "hidden", minHeight: 320 }}>
-      <div style={{ display: "flex", borderBottom: `1px solid ${C.inkLine}`, background: "#fff" }}>
+      <div style={{ margin: "0 20px 20px", background: C.parchment, borderRadius: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06)", overflow: "hidden", minHeight: 320 }}>
+      <div style={{ display: "flex", borderBottom: `1px solid ${C.inkLine}`, background: C.parchment }}>
         {tabs.map(({ id, label, Icon }) => (
           <button key={id} onClick={() => setTab(id)}
             style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "10px 4px", fontSize: 11, fontWeight: tab === id ? 700 : 400, color: tab === id ? C.ivory : C.ivoryDim, background: "none", border: "none", cursor: "pointer", borderBottom: tab === id ? `2px solid ${C.brass}` : "2px solid transparent" }}>
@@ -8540,7 +8543,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
                   <Plus size={14} /> Propose a session
                 </button>
               ) : (
-                <div style={{ background: "#fff", border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: 16, marginBottom: 14 }}>
+                <div style={{ background: C.parchment, border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: 16, marginBottom: 14 }}>
                   <p style={{ fontSize: 13, fontWeight: 600, color: C.ivory, margin: "0 0 10px" }}>Propose a time for {activeLearner.name.split(" ")[0]}</p>
                   <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
                     <input type="date" value={newDate} onChange={(e) => setNewDate(e.target.value)}
@@ -8793,7 +8796,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
 
       {/* Bottom nav — My Rules & My Planning */}
       {roomView === "students" && (
-        <div style={{ display: "flex", justifyContent: "center", gap: 40, padding: "20px 20px 12px", background: "#fff", borderTop: `1px solid ${C.inkLine}` }}>
+        <div style={{ display: "flex", justifyContent: "center", gap: 40, padding: "20px 20px 12px", background: C.parchment, borderTop: `1px solid ${C.inkLine}` }}>
           {[
             { v: "preferences", Icon: ListChecks, label: "My Rules" },
             { v: "planning",    Icon: LayoutList, label: "My Planning" },
@@ -8817,7 +8820,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
       {confirmCancelId !== null && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(10,20,40,0.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999 }}
           onClick={() => setConfirmCancelId(null)}>
-          <div style={{ background: "#fff", borderRadius: 16, padding: "28px 28px 24px", maxWidth: 320, width: "90%", boxShadow: "0 8px 32px rgba(0,0,0,0.18)", textAlign: "center" }}
+          <div style={{ background: C.parchment, borderRadius: 16, padding: "28px 28px 24px", maxWidth: 320, width: "90%", boxShadow: "0 8px 32px rgba(0,0,0,0.18)", textAlign: "center" }}
             onClick={(e) => e.stopPropagation()}>
             <p style={{ fontSize: 16, fontWeight: 700, color: C.inkText, margin: "0 0 8px" }}>Cancel this session?</p>
             <p style={{ fontSize: 13, color: C.ivoryDim, margin: "0 0 20px", lineHeight: 1.5 }}>Are you sure you want to cancel? This cannot be undone.</p>
@@ -8850,7 +8853,7 @@ function LearnerChat({ teacher, messages, onSend }) {
       </div>
       <div className="lg-scroll overflow-y-auto px-4 py-3 flex flex-col gap-2" style={{ maxHeight: 240 }}>
         {messages.map((m, i) => (
-          <div key={i} className="px-3.5 py-2 rounded-2xl text-sm" style={{ maxWidth: "80%", alignSelf: m.from === "me" ? "flex-end" : "flex-start", background: m.from === "me" ? C.brass : C.inkSoft, color: m.from === "me" ? C.inkText : C.ivory }}>
+          <div key={i} className="px-3.5 py-2 rounded-2xl text-sm" style={{ maxWidth: "80%", alignSelf: m.from === "me" ? "flex-end" : "flex-start", background: m.from === "me" ? C.brass : C.inkSoft, color: m.from === "me" ? C.brassText : C.ivory }}>
             {m.text}
           </div>
         ))}
