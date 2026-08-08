@@ -3923,7 +3923,8 @@ function PhotoUpload({ name, photoUrl, onChange }) {
           </button>
         )}
         <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
-        <p className="text-xs mt-2" style={{ color: C.ivoryDim, fontFamily: FONT_MONO }}>Optional — JPG or PNG.</p>
+        {/* No caption. "Upload photo" already reads as an offer rather than a
+            demand, and the file picker enforces the format itself. */}
       </div>
     </div>
   );
@@ -4133,12 +4134,27 @@ function StepIntro({ draft, update }) {
         )}
       </Field>
       <div className="mt-2">
-        <p className="text-xs mb-3" style={{ fontFamily: FONT_MONO, color: C.ivoryDim, letterSpacing: 0.5 }}>OPTIONAL</p>
-        <Field label="Link to a performance video">
-          <input style={inputStyle} value={draft.videoLink} onChange={(e) => update({ videoLink: e.target.value })} placeholder="https://instagram.com/... or https://facebook.com/... or https://youtube.com/..." />
+        {/* The OPTIONAL tag above this is gone: a monospace label shouting a
+            caveat before the invitation made the best part of the profile
+            sound like paperwork. The field asks for the thing it wants. */}
+        <Field label="Stand out with a performance video">
+          <input style={inputStyle} value={draft.videoLink} onChange={(e) => update({ videoLink: e.target.value })} placeholder="Paste an Instagram, Facebook or YouTube link" />
         </Field>
-        <p className="text-xs -mt-4" style={{ color: linkValid ? C.ivoryDim : C.burgundy, fontFamily: FONT_MONO }}>
-          {linkValid ? "Instagram, Facebook or YouTube links only." : "Only Instagram, Facebook or YouTube links are accepted."}
+        {/* Was monospace, letterspaced and grey — a terminal's error line under
+            a premium form. It reads as a hint now, and only becomes a warning
+            when the link is actually wrong, with the three marks doing the
+            explaining that a sentence had to before. */}
+        <p className="-mt-4" style={{
+          display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap",
+          fontFamily: FONT_BODY, fontSize: 12, fontWeight: 500, letterSpacing: 0,
+          color: linkValid ? "#7C7C7C" : C.burgundy,
+        }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 5, opacity: linkValid ? 0.9 : 1 }}>
+            <Instagram size={13} strokeWidth={1.9} />
+            <Facebook size={13} strokeWidth={1.9} />
+            <Youtube size={14} strokeWidth={1.9} />
+          </span>
+          {linkValid ? "Instagram, Facebook or YouTube" : "That link isn't one of these — try Instagram, Facebook or YouTube"}
         </p>
       </div>
     </div>
