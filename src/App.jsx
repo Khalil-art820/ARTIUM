@@ -388,6 +388,11 @@ const emptyDraft = () => ({
   // but the two document routes are not the same question, and the copy has to
   // know which: an enrolment certificate is not a diploma.
   applicant: "", // "" | "student_email" | "student_doc" | "graduate"
+  // The email route's other way through: rather than falling back to a
+  // document, a student whose school is missing — or whose domain has moved —
+  // sends the school and the address they already hold, for an admin to
+  // approve into the roster.
+  domainReq: null, // { name, address, email } | null
   verifyMethod: "otp", proofDocUrl: "", proofDocName: "",
   tastes: [],
   pieces: [],
@@ -1541,7 +1546,7 @@ export default function App() {
         supabase.from("profiles").insert(toDbProfile(pendingStudent, authUser.id)).then(async ({ error }) => {
           if (error) { setAuthError(error.message); return; }
           supabase.auth.updateUser({ data: { pendingProfile: null } });
-          const isDoc = pendingStudent.verifyMethod === "document";
+          const isDoc = needsReview(pendingStudent);
           if (isDoc) { await insertVerificationRequest(authUser.id, pendingStudent); }
           const me = { id: authUser.id, name: pendingStudent.name, instrument: pendingStudent.instrument, conservatoryId: pendingStudent.conservatoryId, year: pendingStudent.years, bio: pendingStudent.bio, tastes: pendingStudent.tastes, pieces: pendingStudent.pieces, videoLink: pendingStudent.videoLink, top: pendingStudent.top, flop: pendingStudent.flop, photoUrl: pendingStudent.photoUrl, teaching: pendingStudent.teaching, online: true };
           setMyProfile(me);
@@ -1814,6 +1819,11 @@ export default function App() {
   function toggleTaste(t) {
     setDraft((d) => ({ ...d, tastes: d.tastes.includes(t) ? d.tastes.filter((x) => x !== t) : [...d.tastes, t] }));
   }
+  // A domain request waits on an admin exactly as a document does — it just
+  // travels on the email route, where nothing used to need reviewing. Without
+  // this the row was never written and the student was let straight in.
+  const needsReview = (d) => d.verifyMethod === "document" || !!d.domainReq;
+
   async function insertVerificationRequest(userId, d) {
     // The id may come from either roster: the built-in list (if they reached
     // this route with one already picked) or the admin-approved one. Blank is
@@ -1824,15 +1834,21 @@ export default function App() {
         .select("name, address").eq("id", d.conservatoryId).maybeSingle();
       if (data) cons = { name: data.name, city: "", country: "", address: data.address };
     }
+    // Two shapes of request share this queue. A domain request carries no
+    // document and names its own school, so it takes the student's answers
+    // rather than a row from a roster they could not find.
+    const req = d.domainReq;
     await supabase.from("student_verifications").insert({
       user_id: userId,
       name: d.name,
       personal_email: d.email,
-      document_url: d.proofDocUrl,
-      document_name: d.proofDocName,
-      conservatory_id: d.conservatoryId,
-      conservatory_name: cons?.name || "",
-      conservatory_address: cons ? (cons.address ?? `${cons.city}, ${cons.country}`) : "",
+      kind: req ? "domain_request" : "document",
+      document_url: req ? "" : d.proofDocUrl,
+      document_name: req ? "" : d.proofDocName,
+      conservatory_id: req ? null : d.conservatoryId,
+      conservatory_email: req ? req.email : "",
+      conservatory_name: req ? req.name : (cons?.name || ""),
+      conservatory_address: req ? req.address : (cons ? (cons.address ?? `${cons.city}, ${cons.country}`) : ""),
       status: "pending",
     });
   }
@@ -1849,9 +1865,9 @@ export default function App() {
       // Google OAuth user completing profile for the first time
       const { error: insertError } = await supabase.from("profiles").insert(toDbProfile(draft, authUser.id));
       if (insertError) { setAuthError(insertError.message); return; }
-      if (draft.verifyMethod === "document") { await insertVerificationRequest(authUser.id, draft); }
+      if (needsReview(draft)) { await insertVerificationRequest(authUser.id, draft); }
       setDraft((d) => ({ ...d, id: authUser.id }));
-      finishSignup(authUser.id, authUser.email || draft.email, draft.verifyMethod);
+      finishSignup(authUser.id, authUser.email || draft.email, needsReview(draft) ? "document" : draft.verifyMethod);
     } else {
       const { data, error } = await supabase.auth.signUp({
         email: draft.email,
@@ -1864,9 +1880,9 @@ export default function App() {
         const { error: insertError } = await supabase.from("profiles").insert(toDbProfile(draft, data.user.id));
         if (insertError) { setAuthError(insertError.message); return; }
         await supabase.auth.updateUser({ data: { pendingProfile: null } });
-        if (draft.verifyMethod === "document") { await insertVerificationRequest(data.user.id, draft); }
+        if (needsReview(draft)) { await insertVerificationRequest(data.user.id, draft); }
         setDraft((d) => ({ ...d, id: data.user.id }));
-        finishSignup(data.user.id, data.user.email || draft.email, draft.verifyMethod);
+        finishSignup(data.user.id, data.user.email || draft.email, needsReview(draft) ? "document" : draft.verifyMethod);
       } else {
         // Email confirmation required — the draft is stored server-side in the
         // user's auth metadata, so it's picked up after confirming on any device.
@@ -3837,7 +3853,10 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
     // that point, not a form.
     (editing || !!draft.applicant) && (draft.verifyMethod === "document"
       ? (editing || !!draft.proofDocUrl)
-      : !!draft.conservatoryId && (editing || draft.password === "__google__" || draft.conservatoryVerified)),
+      // A sent domain request is a complete answer on the email route: they
+      // have given us a school and an address at it, and the rest is ours.
+      : !!draft.domainReq
+        || (!!draft.conservatoryId && (editing || draft.password === "__google__" || draft.conservatoryVerified))),
     draft.tastes.length >= 3,
     draft.pieces.length >= 1,
     true,
@@ -4272,6 +4291,16 @@ function emailMatchesConservatory(email, cons) {
   return cons.domains.some((d) => host === d.toLowerCase() || host.endsWith("." + d.toLowerCase()));
 }
 
+// The addresses people reach for when a form asks for an email, none of which
+// belong to an institution.
+const FREE_MAIL = new Set([
+  "gmail.com", "googlemail.com", "yahoo.com", "yahoo.co.uk", "hotmail.com",
+  "hotmail.fr", "outlook.com", "outlook.fr", "live.com", "icloud.com",
+  "me.com", "aol.com", "proton.me", "protonmail.com", "gmx.com", "gmx.de",
+  "mail.com", "yandex.com", "qq.com", "163.com", "orange.fr", "free.fr",
+  "wanadoo.fr", "web.de", "t-online.de",
+]);
+
 const DOOR_LABEL = {
   student_email: "Student, with a conservatory email",
   student_doc: "Student, without a conservatory email",
@@ -4299,6 +4328,15 @@ function StepConservatory({ draft, update, editing }) {
   // empty and the document itself establishes the school.
   // One pin, moving. A school every three seconds beats 110 at once: the
   // point of the globe here is reach, not a map you are meant to read.
+  const [showReq, setShowReq] = useState(false);
+  const [reqName, setReqName] = useState("");
+  const [reqAddress, setReqAddress] = useState("");
+  const [reqEmail, setReqEmail] = useState("");
+  const reqDomain = (String(reqEmail).trim().toLowerCase().match(/@([^@\s]+\.[^@\s]+)$/) || [])[1] || "";
+  // A gmail address proves nothing about a conservatory, and it is the most
+  // likely thing to be typed here by mistake.
+  const reqReady = reqName.trim().length > 1 && reqAddress.trim().length > 1 && !!reqDomain && !FREE_MAIL.has(reqDomain);
+
   const [roamAt, setRoamAt] = useState(0);
   useEffect(() => {
     const t = setInterval(() => setRoamAt((n) => n + 1), 3000);
@@ -4484,22 +4522,88 @@ function StepConservatory({ draft, update, editing }) {
           one of them. Said plainly, always. */}
       <div style={{ marginTop: 14, borderRadius: 14, border: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.025)", padding: "13px 15px" }}>
         <p className="text-sm" style={{ margin: 0, color: C.ivory, fontWeight: 600, fontSize: 13 }}>
-          Can't find your conservatory?
+          {isDoc ? "Can't find your conservatory?" : "Can't find your conservatory, or having trouble with your email?"}
         </p>
         <p className="text-sm" style={{ margin: "5px 0 0", color: C.ivoryDim, lineHeight: 1.55 }}>
           {isDoc
             ? "You don't have to pick one. The list only holds schools we've already confirmed — upload your document below and we'll add yours from it, and it appears on the map once approved."
-            : "It doesn't have to be on this list. Send us a document instead and we'll add your conservatory from it — it appears on the map once approved."}
+            : "Send us the name of your conservatory and the student email it gave you, and we'll approve it by hand. Schools change their email domain and this list can fall behind — no document needed."}
         </p>
-        {!isDoc && (
+        {!isDoc && !showReq && !draft.domainReq && (
           <button
-            onClick={() => chooseDoor("student_doc")}
+            onClick={() => setShowReq(true)}
             style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 9, padding: 0, background: "none", border: "none", cursor: "pointer", color: C.brassLabel, fontFamily: FONT_BODY, fontSize: 13, fontWeight: 700 }}
           >
-            Upload a document instead <ArrowRight size={14} />
+            Send your conservatory and email <ArrowRight size={14} />
           </button>
         )}
       </div>
+
+      {/* Sent, waiting on an admin. Kept in the draft rather than written
+          straight to the table: nothing about this student exists in the
+          database until the last step, and a request with no account behind
+          it is a row nobody can approve anyone from. */}
+      {!isDoc && draft.domainReq && (
+        <div className="mt-4" style={{ borderRadius: 16, border: "1px solid rgba(26,158,110,0.45)", background: "rgba(26,158,110,0.07)", padding: "15px 16px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <CheckIcon size={17} strokeWidth={2.4} color="#1A9E6E" style={{ flexShrink: 0 }} />
+            <p style={{ margin: 0, fontSize: 13.5, fontWeight: 700, color: C.ivory }}>We'll check this with you</p>
+            <button className="artium-su-change" onClick={() => { update({ domainReq: null }); setShowReq(true); }}>Edit</button>
+          </div>
+          <p className="text-sm" style={{ margin: "8px 0 0", color: C.ivoryDim, lineHeight: 1.55 }}>
+            <b style={{ color: C.ivory, fontWeight: 600 }}>{draft.domainReq.name}</b>
+            {draft.domainReq.address ? <> — {draft.domainReq.address}</> : null}
+            <br />{draft.domainReq.email}
+          </p>
+          <p className="text-sm" style={{ margin: "8px 0 0", color: C.ivoryDim, lineHeight: 1.55 }}>
+            Finish signing up and we'll review it. Once approved, your conservatory
+            joins the list and the map, and your account is approved with it.
+          </p>
+        </div>
+      )}
+
+      {/* The request. Name, address, and the address they already hold — the
+          three things an admin needs to add a school to the roster. */}
+      {!isDoc && showReq && !draft.domainReq && (
+        <div className="mt-4" style={{ borderRadius: 16, border: `1px solid ${C.brass}`, background: C.inkSoft, padding: "16px 16px" }}>
+          <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brassLabel, letterSpacing: 0.5, marginBottom: 8 }}>ASK US TO ADD YOUR CONSERVATORY</p>
+          <p className="text-sm" style={{ color: C.ivoryDim, marginBottom: 14, lineHeight: 1.55 }}>
+            Tell us the school and the student address you hold there. We check it by
+            hand — no document needed.
+          </p>
+          <Field label="Conservatory name">
+            <input style={inputStyle} value={reqName} onChange={(e) => setReqName(e.target.value)} placeholder="e.g. Royal Danish Academy of Music" />
+          </Field>
+          <Field label="Address or city">
+            <input style={inputStyle} value={reqAddress} onChange={(e) => setReqAddress(e.target.value)} placeholder="e.g. Rosenørns Allé 22, Copenhagen" />
+          </Field>
+          <Field label="Your student email at that conservatory">
+            <input style={inputStyle} type="email" value={reqEmail} onChange={(e) => setReqEmail(e.target.value)} placeholder="you@school.edu" autoComplete="off" />
+          </Field>
+          {reqEmail && !reqDomain && (
+            <p className="text-sm" style={{ color: C.burgundy, margin: "-8px 0 12px" }}>That doesn't look like an email address.</p>
+          )}
+          {reqDomain && FREE_MAIL.has(reqDomain) && (
+            <p className="text-sm" style={{ color: C.burgundy, margin: "-8px 0 12px" }}>
+              That's a personal address. We need the one your conservatory gave you.
+            </p>
+          )}
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <button
+              className="artium-su-next-btn"
+              style={{ flex: "0 0 auto", fontSize: 14, padding: "11px 20px" }}
+              disabled={!reqReady}
+              onClick={() => {
+                update({ domainReq: { name: reqName.trim(), address: reqAddress.trim(), email: reqEmail.trim() } });
+                setShowReq(false);
+              }}
+            >
+              Send for approval
+            </button>
+            <button className="artium-su-change" style={{ marginLeft: 0 }} onClick={() => setShowReq(false)}>Cancel</button>
+          </div>
+        </div>
+      )}
 
       {/* Document proof upload (no institutional email path). Deliberately not
           gated on a selection: with an empty approved list there would be
@@ -8266,7 +8370,7 @@ function AdminVerifications({ card, STATUS_COLOR }) {
     // seeing "your documents are under review". Check each one, and say which
     // step failed rather than reporting an approval that didn't happen.
     const { error: rowError } = await supabase.from("student_verifications")
-      .update({ status, conservatory_name: name, conservatory_address: address }).eq("id", r.id);
+      .update({ status, conservatory_name: name, conservatory_address: address, conservatory_email: fieldVal(r, "conservatory_email") }).eq("id", r.id);
     if (rowError) { setBusy(""); alert(`Could not update the request: ${rowError.message}`); return; }
 
     if (!r.user_id) {
@@ -8283,9 +8387,29 @@ function AdminVerifications({ card, STATUS_COLOR }) {
     if (approving && name.trim()) {
       const consName = name.trim();
       const consAddress = address.trim();
-      const { data: consRows, error: consError } = await supabase.from("approved_conservatories")
-        .upsert({ name: consName, address: consAddress }, { onConflict: "name" })
-        .select("id, lat, lng");
+      // A domain request carries the address the student holds, and approving
+      // it has to put that domain on the school — otherwise the request is
+      // granted and the very thing it asked for is dropped. The union happens
+      // in the database, so a school that already has one domain keeps it.
+      const reqDomain = r.kind === "domain_request"
+        ? (String(fieldVal(r, "conservatory_email")).toLowerCase().match(/@([^@\s]+\.[^@\s]+)$/) || [])[1] || ""
+        : "";
+      let consError = null, consRows = null;
+      if (reqDomain) {
+        const { data, error } = await supabase.rpc("approve_conservatory_domain", {
+          p_name: consName, p_address: consAddress, p_domain: reqDomain,
+        });
+        consError = error;
+        if (!error && data) {
+          const { data: got } = await supabase.from("approved_conservatories")
+            .select("id, lat, lng").eq("id", data).maybeSingle();
+          consRows = got ? [got] : null;
+        }
+      } else {
+        ({ data: consRows, error: consError } = await supabase.from("approved_conservatories")
+          .upsert({ name: consName, address: consAddress }, { onConflict: "name" })
+          .select("id, lat, lng"));
+      }
       if (consError) {
         alert(`Could not add "${consName}" to the conservatory list: ${consError.message}`);
       } else {
@@ -8418,15 +8542,34 @@ function AdminVerifications({ card, STATUS_COLOR }) {
                   <p style={{ margin: "2px 0 0", color: C.ivoryDim, wordBreak: "break-all" }}>{r.personal_email}</p>
                 </td>
                 <td style={td}>
-                  <button onClick={() => viewDoc(r.document_url)} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "none", border: `1px solid ${C.inkLine}`, borderRadius: 8, padding: "6px 10px", cursor: "pointer", color: C.brassLabel, fontSize: 12, fontWeight: 600 }}>
-                    <FileText size={13} /> View
-                  </button>
-                  <p style={{ margin: "4px 0 0", color: C.ivoryDim, fontSize: 11, wordBreak: "break-all" }}>{r.document_name}</p>
+                  {/* A domain request has no document — its evidence is the
+                      address itself, and offering a View button that opens
+                      nothing is worse than saying so. */}
+                  {r.kind === "domain_request" ? (
+                    <>
+                      <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: C.brassLabel, letterSpacing: "0.06em" }}>DOMAIN REQUEST</p>
+                      <p style={{ margin: "5px 0 0", fontWeight: 600, wordBreak: "break-all" }}>{r.conservatory_email}</p>
+                      <p style={{ margin: "3px 0 0", color: C.ivoryDim, fontSize: 11 }}>
+                        Approving adds{" "}
+                        <b style={{ color: C.ivory }}>
+                          @{(String(r.conservatory_email).toLowerCase().match(/@([^@\s]+\.[^@\s]+)$/) || [])[1] || "?"}
+                        </b>{" "}
+                        to this school.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <button onClick={() => viewDoc(r.document_url)} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "none", border: `1px solid ${C.inkLine}`, borderRadius: 8, padding: "6px 10px", cursor: "pointer", color: C.brassLabel, fontSize: 12, fontWeight: 600 }}>
+                        <FileText size={13} /> View
+                      </button>
+                      <p style={{ margin: "4px 0 0", color: C.ivoryDim, fontSize: 11, wordBreak: "break-all" }}>{r.document_name}</p>
+                    </>
+                  )}
                 </td>
                 <td style={td}>
                   {editable ? (
                     <>
-                      <Extraction r={r} />
+                      {r.kind !== "domain_request" && <Extraction r={r} />}
                       <input style={inp} value={fieldVal(r, "conservatory_name")} onChange={(e) => setField(r, "conservatory_name", e.target.value)} placeholder="Conservatory name" />
                       <input style={inp} value={fieldVal(r, "conservatory_address")} onChange={(e) => setField(r, "conservatory_address", e.target.value)} placeholder="Address" />
                     </>
