@@ -4343,26 +4343,53 @@ function StepConservatory({ draft, update, editing }) {
     return () => clearInterval(t);
   }, []);
 
+  // Loaded on both doors now, not just the document one. An approved school
+  // is a school: once an admin has confirmed it, it belongs on whichever
+  // route can actually check it.
   const [approvedCons, setApprovedCons] = useState([]);
   React.useEffect(() => {
-    if (!isDoc) return;
     let live = true;
-    supabase.from("approved_conservatories").select("id, name, address").order("name")
+    supabase.from("approved_conservatories").select("id, name, address, domains, lat, lng").order("name")
       .then(({ data }) => { if (live) setApprovedCons(data || []); });
     return () => { live = false; };
-  }, [isDoc]);
+  }, []);
 
-  // Always the built-in roster for the globe, whichever route is open: the
-  // approved list can be empty, and an empty globe reads as broken.
+  // The email route's roster: the built-in list, plus every approved school
+  // that carries a domain.
+  //
+  // The filter is the whole point, not tidiness. A school approved from a
+  // scanned certificate has no domain to check anyone against, so listing it
+  // here would let someone pick it and "verify" with any address at all.
+  // Having a domain is exactly the line between a school we can check and one
+  // we cannot — which is why the two lists were kept apart until there was a
+  // column to tell them apart by.
+  const emailPool = React.useMemo(() => {
+    const extra = (approvedCons || [])
+      .filter((c) => Array.isArray(c.domains) && c.domains.length > 0)
+      // Same shape as a built-in entry, so every reader downstream —
+      // emailMatchesConservatory, the placeholder, the roster row — keeps
+      // working without learning about a second kind of conservatory.
+      .map((c) => ({
+        id: c.id, name: c.name, short: c.name, domains: c.domains,
+        city: c.address || "", country: "", address: c.address || "",
+        lat: c.lat, lng: c.lng, approved: true,
+      }));
+    // A built-in wins on id collision; nothing else can collide.
+    const seen = new Set(CONSERVATORIES.map((c) => c.id));
+    return [...CONSERVATORIES, ...extra.filter((c) => !seen.has(c.id))];
+  }, [approvedCons]);
+
+  // The globe roams whatever the open door can offer, so a school approved
+  // yesterday has a pin today.
   const roamable = React.useMemo(
-    () => CONSERVATORIES.filter((c) => Number.isFinite(c.lat) && Number.isFinite(c.lng)),
-    [],
+    () => (isDoc ? approvedCons : emailPool).filter((c) => Number.isFinite(c.lat) && Number.isFinite(c.lng)),
+    [isDoc, approvedCons, emailPool],
   );
   const roamPin = roamable.length ? roamable[roamAt % roamable.length] : null;
 
-  const pool = isDoc ? approvedCons : CONSERVATORIES;
+  const pool = isDoc ? approvedCons : emailPool;
   const selectedCons = pool.find((c) => c.id === draft.conservatoryId);
-  const results = pool.filter((c) => (isDoc ? `${c.name} ${c.address || ""}` : `${c.name}${c.city}${c.country}`)
+  const results = pool.filter((c) => (isDoc ? `${c.name} ${c.address || ""}` : `${c.name} ${c.city || ""} ${c.country || ""}`)
     .toLowerCase().includes(q.toLowerCase()));
   const domainOk = selectedCons && emailMatchesConservatory(email, selectedCons);
   const verified = draft.conservatoryVerified;
@@ -4504,7 +4531,7 @@ function StepConservatory({ draft, update, editing }) {
                     <MapPin size={11} strokeWidth={2} />
                     {isDoc
                       ? (c.address || "Approved conservatory")
-                      : `${[c.city, c.country].filter(Boolean).join(", ")} · @${c.domains[0]}`}
+                      : `${[c.city, c.country].filter(Boolean).join(", ") || c.address || ""} · @${c.domains[0]}`}
                   </p>
                 </span>
                 {on
@@ -4652,7 +4679,7 @@ function StepConservatory({ draft, update, editing }) {
       {/* Conservatory email verification (OTP path) */}
       {selectedCons && !isGoogle && !editing && !isDoc && (
         <div className="mt-5 rounded-2xl" style={{ border: `1px solid ${verified ? "#1A9E6E" : C.brass}`, background: C.inkSoft, padding: "18px 18px" }}>
-          <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brassLabel, letterSpacing: 0.5, marginBottom: 8 }}>VERIFY YOUR {selectedCons.short.toUpperCase()} STUDENT EMAIL</p>
+          <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brassLabel, letterSpacing: 0.5, marginBottom: 8 }}>VERIFY YOUR {(selectedCons.short || selectedCons.name).toUpperCase()} STUDENT EMAIL</p>
           {verified ? (
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <CheckIcon size={18} color="#1A9E6E" />
