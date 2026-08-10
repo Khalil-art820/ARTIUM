@@ -4353,6 +4353,54 @@ function StepConservatory({ draft, update, editing }) {
   const reqFreeMail = FREE_MAIL.has(reqDomain);
   const reqReady = reqName.trim().length > 1 && reqAddress.trim().length > 1 && !!reqDomain && !reqFreeMail;
 
+  // A request used to be granted on an address the student merely typed, and
+  // approving it set conservatory_verified on their profile — so a human
+  // confirming a school also, silently, certified a person nobody had
+  // checked. Anyone could name a real conservatory, claim any address at it
+  // and be let in as a verified student of it.
+  //
+  // The two checks are different questions and both have to be asked. The
+  // code proves the address is theirs; the admin proves the address belongs
+  // to a conservatory. Neither alone is enough, and only the first can be
+  // done by machine — so it happens here, before the request is worth
+  // sending. The same one-time code as the main route, and the same
+  // throwaway session, discarded the moment it has served.
+  const [reqCode, setReqCode] = useState("");
+  const [reqCodeSent, setReqCodeSent] = useState(false);
+  const [reqSending, setReqSending] = useState(false);
+  const [reqVerifying, setReqVerifying] = useState(false);
+  const [reqVerified, setReqVerified] = useState(false);
+  const [reqErr, setReqErr] = useState("");
+
+  // Editing the address after a code has gone out invalidates everything that
+  // followed from it — otherwise you could verify one address and send
+  // another.
+  function editReqEmail(v) {
+    setReqEmail(v);
+    setReqCodeSent(false); setReqCode(""); setReqVerified(false); setReqErr("");
+  }
+
+  async function sendReqCode() {
+    setReqErr(""); setReqSending(true);
+    const { error } = await supabase.auth.signInWithOtp({ email: reqEmail.trim(), options: { shouldCreateUser: true } });
+    setReqSending(false);
+    if (error) { setReqErr(error.message); return; }
+    setReqCodeSent(true);
+  }
+
+  async function verifyReqCode() {
+    setReqErr(""); setReqVerifying(true);
+    let { error } = await supabase.auth.verifyOtp({ email: reqEmail.trim(), token: reqCode.trim(), type: "email" });
+    if (error) {
+      ({ error } = await supabase.auth.verifyOtp({ email: reqEmail.trim(), token: reqCode.trim(), type: "signup" }));
+    }
+    if (error) { setReqVerifying(false); setReqErr("That code didn't match. Please check and try again."); return; }
+    // Proof of the address, not a login. Same as the main route.
+    await supabase.auth.signOut();
+    setReqVerifying(false);
+    setReqVerified(true);
+  }
+
   const [roamAt, setRoamAt] = useState(0);
   useEffect(() => {
     const t = setInterval(() => setRoamAt((n) => n + 1), 3000);
@@ -4637,8 +4685,9 @@ function StepConservatory({ draft, update, editing }) {
         <div className="mt-4" style={{ borderRadius: 16, border: `1px solid ${C.brass}`, background: C.inkSoft, padding: "16px 16px" }}>
           <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brassLabel, letterSpacing: 0.5, marginBottom: 8 }}>ASK US TO ADD YOUR CONSERVATORY</p>
           <p className="text-sm" style={{ color: C.ivoryDim, marginBottom: 14, lineHeight: 1.55 }}>
-            Tell us the school and the student address you hold there. We check it by
-            hand — no document needed.
+            Tell us the school and the student address you hold there. We'll send that
+            address a code to confirm it's yours, then check the school by hand — no
+            document needed.
           </p>
           <Field label="Conservatory name">
             <input style={inputStyle} value={reqName} onChange={(e) => setReqName(e.target.value)} placeholder="e.g. Royal Danish Academy of Music" />
@@ -4647,7 +4696,7 @@ function StepConservatory({ draft, update, editing }) {
             <input style={inputStyle} value={reqAddress} onChange={(e) => setReqAddress(e.target.value)} placeholder="e.g. Rosenørns Allé 22, Copenhagen" />
           </Field>
           <Field label="Your student email at that conservatory">
-            <input style={inputStyle} type="email" value={reqEmail} onChange={(e) => setReqEmail(e.target.value)} placeholder="you@school.edu" autoComplete="off" />
+            <input style={inputStyle} type="email" value={reqEmail} onChange={(e) => editReqEmail(e.target.value)} placeholder="you@school.edu" autoComplete="off" disabled={reqVerified} />
           </Field>
           {reqEmail && !reqDomain && (
             <p className="text-sm" style={{ color: C.burgundy, margin: "-8px 0 12px" }}>That doesn't look like an email address.</p>
@@ -4657,20 +4706,64 @@ function StepConservatory({ draft, update, editing }) {
               That's a personal address. We need the one your conservatory gave you.
             </p>
           )}
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <button
-              className="artium-su-next-btn"
-              style={{ flex: "0 0 auto", fontSize: 14, padding: "11px 20px" }}
-              disabled={!reqReady}
-              onClick={() => {
-                update({ domainReq: { name: reqName.trim(), address: reqAddress.trim(), email: reqEmail.trim() } });
-                setShowReq(false);
-              }}
-            >
-              Send for approval
-            </button>
-            <button className="artium-su-change" style={{ marginLeft: 0 }} onClick={() => setShowReq(false)}>Cancel</button>
-          </div>
+          {/* Three phases, one at a time: prove the address, then send it.
+              The request is only worth a human's attention once we know the
+              person actually holds the address they are claiming. */}
+          {!reqCodeSent && !reqVerified && (
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <button
+                className="artium-su-next-btn"
+                style={{ flex: "0 0 auto", fontSize: 14, padding: "11px 20px" }}
+                disabled={!reqReady || reqSending}
+                onClick={sendReqCode}
+              >
+                {reqSending ? "Sending…" : "Send verification code"}
+              </button>
+              <button className="artium-su-change" style={{ marginLeft: 0 }} onClick={() => setShowReq(false)}>Cancel</button>
+            </div>
+          )}
+
+          {reqCodeSent && !reqVerified && (
+            <div>
+              <p className="text-sm" style={{ color: C.ivoryDim, marginBottom: 8 }}>Enter the code sent to <b>{reqEmail.trim()}</b>.</p>
+              <input
+                style={{ width: "100%", maxWidth: 260, padding: "12px 16px", borderRadius: 10, border: `1.5px solid ${C.inkLine}`, background: "rgba(255,255,255,0.05)", color: C.ivory, fontFamily: FONT_MONO, fontSize: 22, fontWeight: 600, letterSpacing: 8, textAlign: "center", outline: "none", boxSizing: "border-box" }}
+                value={reqCode}
+                onChange={(e) => { setReqCode(e.target.value.replace(/\D/g, "").slice(0, 10)); setReqErr(""); }}
+                placeholder="••••••••" inputMode="numeric" autoFocus />
+              <div className="flex items-center gap-3" style={{ marginTop: 12 }}>
+                <PrimaryBtn disabled={reqCode.length < 6 || reqVerifying} onClick={verifyReqCode}>{reqVerifying ? "Verifying…" : "Verify address"}</PrimaryBtn>
+                <button onClick={sendReqCode} disabled={reqSending} style={{ fontSize: 13, color: C.brassLabel, background: "none", border: "none", cursor: "pointer" }}>Resend code</button>
+              </div>
+            </div>
+          )}
+
+          {reqVerified && (
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                <CheckIcon size={18} color="#1A9E6E" />
+                <p style={{ fontSize: 14, color: "#1A9E6E", fontWeight: 600, margin: 0 }}>Address confirmed</p>
+              </div>
+              <p className="text-sm" style={{ color: C.ivoryDim, marginBottom: 12, lineHeight: 1.55 }}>
+                We know the address is yours. Now we check that it belongs to the conservatory you named — that part is done by hand.
+              </p>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <button
+                  className="artium-su-next-btn"
+                  style={{ flex: "0 0 auto", fontSize: 14, padding: "11px 20px" }}
+                  disabled={!reqReady}
+                  onClick={() => {
+                    update({ domainReq: { name: reqName.trim(), address: reqAddress.trim(), email: reqEmail.trim() } });
+                    setShowReq(false);
+                  }}
+                >
+                  Send for approval
+                </button>
+                <button className="artium-su-change" style={{ marginLeft: 0 }} onClick={() => setShowReq(false)}>Cancel</button>
+              </div>
+            </div>
+          )}
+          {reqErr && <p className="text-sm" style={{ color: C.burgundy, marginTop: 10 }}>{reqErr}</p>}
         </div>
       )}
 
