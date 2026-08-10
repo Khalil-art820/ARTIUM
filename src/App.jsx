@@ -4370,42 +4370,64 @@ function StepConservatory({ draft, update, editing }) {
     return () => { live = false; };
   }, []);
 
-  // The email route's roster: the built-in list, plus every approved school
-  // that carries a domain.
-  //
-  // The filter is the whole point, not tidiness. A school approved from a
-  // scanned certificate has no domain to check anyone against, so listing it
-  // here would let someone pick it and "verify" with any address at all.
-  // Having a domain is exactly the line between a school we can check and one
-  // we cannot — which is why the two lists were kept apart until there was a
-  // column to tell them apart by.
-  const emailPool = React.useMemo(() => {
-    const extra = (approvedCons || [])
-      .filter((c) => Array.isArray(c.domains) && c.domains.length > 0)
-      // Same shape as a built-in entry, so every reader downstream —
-      // emailMatchesConservatory, the placeholder, the roster row — keeps
-      // working without learning about a second kind of conservatory.
-      .map((c) => ({
-        id: c.id, name: c.name, short: c.name, domains: c.domains,
-        city: c.address || "", country: "", address: c.address || "",
-        lat: c.lat, lng: c.lng, approved: true,
-      }));
-    // A built-in wins on id collision; nothing else can collide.
+  // Approved rows in the shape of a built-in entry, so every reader
+  // downstream — emailMatchesConservatory, the placeholder, the roster row —
+  // keeps working without learning about a second kind of conservatory.
+  // A built-in wins on id collision; nothing else can collide.
+  const approvedShaped = React.useMemo(() => {
     const seen = new Set(CONSERVATORIES.map((c) => c.id));
-    return [...CONSERVATORIES, ...extra.filter((c) => !seen.has(c.id))];
+    return (approvedCons || []).filter((c) => !seen.has(c.id)).map((c) => ({
+      id: c.id, name: c.name, short: c.name,
+      domains: Array.isArray(c.domains) ? c.domains : [],
+      city: c.address || "", country: "", address: c.address || "",
+      lat: c.lat, lng: c.lng, approved: true,
+    }));
   }, [approvedCons]);
 
-  // The globe roams whatever the open door can offer, so a school approved
-  // yesterday has a pin today.
-  const roamable = React.useMemo(
-    () => (isDoc ? approvedCons : emailPool).filter((c) => Number.isFinite(c.lat) && Number.isFinite(c.lng)),
-    [isDoc, approvedCons, emailPool],
+  // Three doors, three rosters, and the line between them is the domain.
+  //
+  // A school arrives one of two ways, and how it arrived is what it can
+  // prove. Approved from a request — name, address, student email — it has a
+  // domain, so we can check an address against it. Approved from someone's
+  // scanned certificate, it has none, and listing it on the email route would
+  // let a student pick it and "verify" with any address at all.
+  //
+  // So the school follows its domain: with one it joins the email list, and
+  // it must NOT also sit on the without-an-email list, where it would offer a
+  // route we can check as though we could not. Graduates are the exception —
+  // they prove themselves with a diploma either way, so the domain decides
+  // nothing and they see every school we know of.
+  const withDomain = (c) => c.domains.length > 0;
+  const emailPool = React.useMemo(
+    () => [...CONSERVATORIES, ...approvedShaped.filter(withDomain)],
+    [approvedShaped],
   );
+  const docPool = React.useMemo(
+    () => approvedShaped.filter((c) => !withDomain(c)),
+    [approvedShaped],
+  );
+  const gradPool = React.useMemo(
+    () => [...CONSERVATORIES, ...approvedShaped],
+    [approvedShaped],
+  );
+
+  const pool = !isDoc ? emailPool : applicant === "graduate" ? gradPool : docPool;
+
+  // The globe roams whatever the open door can offer, so a school approved
+  // yesterday has a pin today. The without-an-email list is the one that can
+  // legitimately be empty — nobody has been approved from a document yet —
+  // and a globe with nothing on it reads as broken rather than as new, so it
+  // falls back to roaming everything.
+  const roamable = React.useMemo(() => {
+    const src = pool.length ? pool : gradPool;
+    return src.filter((c) => Number.isFinite(c.lat) && Number.isFinite(c.lng));
+  }, [pool, gradPool]);
   const roamPin = roamable.length ? roamable[roamAt % roamable.length] : null;
 
-  const pool = isDoc ? approvedCons : emailPool;
   const selectedCons = pool.find((c) => c.id === draft.conservatoryId);
-  const results = pool.filter((c) => (isDoc ? `${c.name} ${c.address || ""}` : `${c.name} ${c.city || ""} ${c.country || ""}`)
+  // One search string for every door: the graduate list mixes built-ins, which
+  // carry city and country, with approved rows, which carry a single address.
+  const results = pool.filter((c) => `${c.name} ${c.city || ""} ${c.country || ""} ${c.address || ""}`
     .toLowerCase().includes(q.toLowerCase()));
   const domainOk = selectedCons && emailMatchesConservatory(email, selectedCons);
   const verified = draft.conservatoryVerified;
@@ -4531,7 +4553,7 @@ function StepConservatory({ draft, update, editing }) {
 
       {results.length === 0 ? (
         <p className="artium-aw-empty">
-          {isDoc ? "No approved conservatory matches that search." : "No conservatory matches that search."}
+          {applicant === "student_doc" ? "No approved conservatory matches that search." : "No conservatory matches that search."}
         </p>
       ) : (
         <div className="artium-aw-list" style={{ maxHeight: 268, overflowY: "auto" }}>
@@ -4545,9 +4567,13 @@ function StepConservatory({ draft, update, editing }) {
                   <p className="artium-aw-row-t">{c.name}</p>
                   <p className="artium-aw-row-c">
                     <MapPin size={11} strokeWidth={2} />
-                    {isDoc
-                      ? (c.address || "Approved conservatory")
-                      : `${[c.city, c.country].filter(Boolean).join(", ") || c.address || ""} · @${c.domains[0]}`}
+                    {/* Keyed on the row, not the door: the graduate list holds
+                        both kinds, and a school approved from a document has
+                        no domain to show. */}
+                    {[
+                      [c.city, c.country].filter(Boolean).join(", ") || c.address || "Approved conservatory",
+                      c.domains.length ? "@" + c.domains[0] : "",
+                    ].filter(Boolean).join(" · ")}
                   </p>
                 </span>
                 {on
@@ -8434,9 +8460,17 @@ function AdminVerifications({ card, STATUS_COLOR }) {
       // it has to put that domain on the school — otherwise the request is
       // granted and the very thing it asked for is dropped. The union happens
       // in the database, so a school that already has one domain keeps it.
-      const reqDomain = r.kind === "domain_request"
+      // Never a free-mail domain, however it got this far. Attaching one
+      // would not add a school, it would hand every account at that provider
+      // the ability to verify as it — the blast radius of one careless
+      // approval is the whole of gmail.com. The request form refuses these,
+      // so this is the second lock, not the first. The school is still
+      // approved; it simply arrives without a domain, onto the list for
+      // students who have no institutional address.
+      const rawDomain = r.kind === "domain_request"
         ? (String(fieldVal(r, "conservatory_email")).toLowerCase().match(/@([^@\s]+\.[^@\s]+)$/) || [])[1] || ""
         : "";
+      const reqDomain = FREE_MAIL.has(rawDomain) ? "" : rawDomain;
       let consError = null, consRows = null;
       if (reqDomain) {
         const { data, error } = await supabase.rpc("approve_conservatory_domain", {
