@@ -1890,6 +1890,21 @@ export default function App() {
         options: { data: { pendingProfile: draft } },
       });
       if (error) { setAuthError(friendlyAuthError(error.message)); return; }
+      // Supabase will not say "that address is taken" — that would let anyone
+      // test whether a given person has an account — so it returns a
+      // user-shaped object, sends no mail, and looks exactly like success.
+      // Its own logs call this "User repeated signup"; an empty identities
+      // array is how the client sees the same thing.
+      //
+      // Reaching it is not an edge case, because we register the address
+      // ourselves twice over: the conservatory one-time code is sent with
+      // shouldCreateUser, and Google sign-in creates an account outright. Use
+      // either with the address you later sign up under and you arrive
+      // already registered, through a door we opened.
+      if (data.user && !data.session && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+        setAuthError("An account already exists for this email — from Google sign-in, or from verifying a conservatory address. Log in instead, or sign up with a different address.");
+        return;
+      }
       if (data.session && data.user) {
         // Email confirmation is off — we already have an active session, insert right away.
         const { error: insertError } = await supabase.from("profiles").insert(toDbProfile(draft, data.user.id));
