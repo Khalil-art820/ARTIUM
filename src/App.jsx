@@ -4313,6 +4313,46 @@ function asConservatory(row) {
   };
 }
 
+// Proving a conservatory address, without registering it as an account.
+//
+// This used to be supabase.auth.signInWithOtp — Supabase's own one-time code,
+// borrowed. It carries shouldCreateUser, so checking an address created an
+// Artium account under it, and anyone who then signed up with that address was
+// turned away as a repeat. It also signed the visitor in as the conservatory
+// address for a moment before signing them back out, mid-signup.
+//
+// Ours does neither. The code is a row with an expiry, checked server-side,
+// and the answer is a yes or a no.
+//
+// Both are called before the visitor has a session, so both edge functions are
+// deployed with --no-verify-jwt and reached with the anon key alone.
+async function sendConservatoryCode(email) {
+  const { data, error } = await supabase.functions.invoke("send-conservatory-code", {
+    body: { email: String(email).trim().toLowerCase() },
+  });
+  // invoke() reports a non-2xx as a generic FunctionsHttpError, and the useful
+  // sentence — the rate limit, the free-mail refusal — is in the body it
+  // carries. Read that first and fall back only if there is nothing there.
+  if (error) {
+    const detail = await error.context?.json?.().catch(() => null);
+    return { error: detail?.error || "Could not send the code. Please try again." };
+  }
+  if (data?.error) return { error: data.error };
+  return {};
+}
+
+async function verifyConservatoryCode(email, code) {
+  const { data, error } = await supabase.functions.invoke("verify-conservatory-code", {
+    body: { email: String(email).trim().toLowerCase(), code: String(code).trim() },
+  });
+  if (error) {
+    const detail = await error.context?.json?.().catch(() => null);
+    return { error: detail?.error || "That code didn't match. Please check and try again." };
+  }
+  if (data?.error) return { error: data.error };
+  return {};
+}
+
 function emailMatchesConservatory(email, cons) {
   if (!cons) return false;
   const m = String(email).trim().toLowerCase().match(/@(.+)$/);
@@ -4397,22 +4437,17 @@ function StepConservatory({ draft, update, editing }) {
 
   async function sendReqCode() {
     setReqErr(""); setReqSending(true);
-    const { error } = await supabase.auth.signInWithOtp({ email: reqEmail.trim(), options: { shouldCreateUser: true } });
+    const { error } = await sendConservatoryCode(reqEmail);
     setReqSending(false);
-    if (error) { setReqErr(error.message); return; }
+    if (error) { setReqErr(error); return; }
     setReqCodeSent(true);
   }
 
   async function verifyReqCode() {
     setReqErr(""); setReqVerifying(true);
-    let { error } = await supabase.auth.verifyOtp({ email: reqEmail.trim(), token: reqCode.trim(), type: "email" });
-    if (error) {
-      ({ error } = await supabase.auth.verifyOtp({ email: reqEmail.trim(), token: reqCode.trim(), type: "signup" }));
-    }
-    if (error) { setReqVerifying(false); setReqErr("That code didn't match. Please check and try again."); return; }
-    // Proof of the address, not a login. Same as the main route.
-    await supabase.auth.signOut();
+    const { error } = await verifyConservatoryCode(reqEmail, reqCode);
     setReqVerifying(false);
+    if (error) { setReqErr(error); return; }
     setReqVerified(true);
   }
 
@@ -4542,25 +4577,17 @@ function StepConservatory({ draft, update, editing }) {
 
   async function sendCode() {
     setErr(""); setSending(true);
-    const { error } = await supabase.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: true } });
+    const { error } = await sendConservatoryCode(email);
     setSending(false);
-    if (error) { setErr(error.message); return; }
+    if (error) { setErr(error); return; }
     setCodeSent(true);
   }
 
   async function verifyCode() {
     setErr(""); setVerifying(true);
-    // New emails arrive via the "Confirm signup" OTP (type "signup"); already-known
-    // emails via "Magic Link" (type "email"). Try both so either works.
-    let { error } = await supabase.auth.verifyOtp({ email: email.trim(), token: code.trim(), type: "email" });
-    if (error) {
-      ({ error } = await supabase.auth.verifyOtp({ email: email.trim(), token: code.trim(), type: "signup" }));
-    }
-    if (error) { setVerifying(false); setErr("That code didn't match. Please check and try again."); return; }
-    // The OTP proves they own the conservatory email. It is NOT their login —
-    // discard this throwaway session so the account stays on their personal email.
-    await supabase.auth.signOut();
+    const { error } = await verifyConservatoryCode(email, code);
     setVerifying(false);
+    if (error) { setErr(error); return; }
     update({ conservatoryEmail: email.trim(), conservatoryVerified: true });
   }
 
