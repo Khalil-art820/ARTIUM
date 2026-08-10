@@ -1890,21 +1890,6 @@ export default function App() {
         options: { data: { pendingProfile: draft } },
       });
       if (error) { setAuthError(friendlyAuthError(error.message)); return; }
-      // Signing up with an address that already has an account is not an
-      // error as far as Supabase is concerned: telling the caller "that email
-      // is taken" would let anyone test whether a given person has an
-      // account, so it returns a user-shaped object, sends no mail, and looks
-      // exactly like success. We then showed "check your inbox" for a link
-      // that was never sent, with no way forward and nothing to explain it.
-      //
-      // An empty identities array is the one signal it does give. It is easy
-      // to reach here by accident, too — the one-time code creates an auth
-      // user for whatever address it was sent to, so anyone who used their
-      // own address to verify a conservatory arrives already registered.
-      if (data.user && !data.session && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
-        setAuthError("An account already exists for this email. Log in instead, or sign up with a different address.");
-        return;
-      }
       if (data.session && data.user) {
         // Email confirmation is off — we already have an active session, insert right away.
         const { error: insertError } = await supabase.from("profiles").insert(toDbProfile(draft, data.user.id));
@@ -5109,7 +5094,34 @@ function PendingReview({ onHome, onLogout }) {
   );
 }
 
+// The dead end this screen used to be: no link arrives, and there is nothing
+// to do but wait for something that is never coming. The usual cause is that
+// the address already has an account — signing up again is not an error to
+// Supabase, because saying "that email is taken" would let anyone test
+// whether a given person has an account, so it sends nothing and returns
+// something that looks like success.
+//
+// Reading that from the response is guesswork and I got it wrong: keying off
+// an empty identities array rejected an address that had just been deleted
+// from Auth, and a false positive here blocks signup completely, which is far
+// worse than the silence it was meant to fix. So we no longer infer. Resend
+// asks the server to do the one thing in question, and the server's own
+// answer — including "already confirmed" — is the truth we could not deduce.
 function ConfirmEmail({ email, onLogin, onHome, pendingReview }) {
+  const [resending, setResending] = useState(false);
+  const [note, setNote] = useState(null);
+
+  async function resend() {
+    setNote(null); setResending(true);
+    const { error } = await supabase.auth.resend({ type: "signup", email });
+    setResending(false);
+    setNote(error
+      ? { bad: true, text: /already|confirmed/i.test(error.message)
+          ? "This address is already confirmed — log in instead."
+          : error.message }
+      : { bad: false, text: "Sent again. It can take a minute to arrive." });
+  }
+
   return (
     <div className="min-h-full flex flex-col" style={{ background: C.ink, color: C.ivory }}>
       <div className="px-6 py-4 flex items-center gap-5">
@@ -5135,6 +5147,12 @@ function ConfirmEmail({ email, onLogin, onHome, pendingReview }) {
             </p>
           )}
           <p className="mt-6 text-sm" style={{ color: C.ivoryDim }}>
+            Didn't get it? <button onClick={resend} disabled={resending} style={{ color: C.brassLabel, fontWeight: 600 }}>{resending ? "Sending…" : "Send it again"}</button>
+          </p>
+          {note && (
+            <p className="mt-2 text-sm" style={{ color: note.bad ? C.burgundy : "#1A9E6E", lineHeight: 1.55 }}>{note.text}</p>
+          )}
+          <p className="mt-4 text-sm" style={{ color: C.ivoryDim }}>
             Already confirmed? <button onClick={onLogin} style={{ color: C.brassLabel, fontWeight: 600 }}>Log in</button>
           </p>
         </div>
