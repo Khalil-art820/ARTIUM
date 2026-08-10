@@ -1890,6 +1890,21 @@ export default function App() {
         options: { data: { pendingProfile: draft } },
       });
       if (error) { setAuthError(friendlyAuthError(error.message)); return; }
+      // Signing up with an address that already has an account is not an
+      // error as far as Supabase is concerned: telling the caller "that email
+      // is taken" would let anyone test whether a given person has an
+      // account, so it returns a user-shaped object, sends no mail, and looks
+      // exactly like success. We then showed "check your inbox" for a link
+      // that was never sent, with no way forward and nothing to explain it.
+      //
+      // An empty identities array is the one signal it does give. It is easy
+      // to reach here by accident, too — the one-time code creates an auth
+      // user for whatever address it was sent to, so anyone who used their
+      // own address to verify a conservatory arrives already registered.
+      if (data.user && !data.session && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+        setAuthError("An account already exists for this email. Log in instead, or sign up with a different address.");
+        return;
+      }
       if (data.session && data.user) {
         // Email confirmation is off — we already have an active session, insert right away.
         const { error: insertError } = await supabase.from("profiles").insert(toDbProfile(draft, data.user.id));
@@ -3123,7 +3138,7 @@ export default function App() {
           onHome={goHome}
         />
       )}
-      {screen === "confirmEmail" && <ConfirmEmail email={pendingEmail} onLogin={startLogin} onHome={goHome} />}
+      {screen === "confirmEmail" && <ConfirmEmail email={pendingEmail} onLogin={startLogin} onHome={goHome} pendingReview={needsReview(draft)} />}
       {/* Wrapped, not passed by reference: simulateApproval takes a user id
           now, and onClick would hand it a click event. */}
       {screen === "pending" && <Pending name={draft.name} onApprove={() => simulateApproval()} onHome={goHome} />}
@@ -5094,7 +5109,7 @@ function PendingReview({ onHome, onLogout }) {
   );
 }
 
-function ConfirmEmail({ email, onLogin, onHome }) {
+function ConfirmEmail({ email, onLogin, onHome, pendingReview }) {
   return (
     <div className="min-h-full flex flex-col" style={{ background: C.ink, color: C.ivory }}>
       <div className="px-6 py-4 flex items-center gap-5">
@@ -5110,6 +5125,15 @@ function ConfirmEmail({ email, onLogin, onHome }) {
           <p className="mt-3 text-sm" style={{ color: C.ivoryDim, lineHeight: 1.6 }}>
             We sent a confirmation link to <strong style={{ color: C.ivory }}>{email}</strong>. Click it to activate your account — your profile will be created automatically as soon as you do.
           </p>
+          {/* Someone who sent a document or a domain request has one more step
+              after this one, and the line above reads like the last. Said here
+              rather than left as a surprise on the next screen — and it is
+              also the honest answer to "why am I not in yet". */}
+          {pendingReview && (
+            <p className="mt-3 text-sm" style={{ color: C.ivoryDim, lineHeight: 1.6 }}>
+              After that, we check the conservatory you gave us by hand. You'll be on the map once that's done — usually 1–2 days.
+            </p>
+          )}
           <p className="mt-6 text-sm" style={{ color: C.ivoryDim }}>
             Already confirmed? <button onClick={onLogin} style={{ color: C.brassLabel, fontWeight: 600 }}>Log in</button>
           </p>
