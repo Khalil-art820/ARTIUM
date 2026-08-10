@@ -4298,17 +4298,8 @@ function asConservatory(row) {
   };
 }
 
-// TEMPORARY — walkthrough only. One address waved past every check that would
-// otherwise turn it away for being a personal one, so the flow can be walked
-// end to end without an institutional inbox. Three call sites, all marked
-// TEST_EMAIL: delete this pair and follow the name to remove the exception
-// whole. Nothing else in the app reads it.
-const TEST_EMAIL = "classiccmusic88@gmail.com";
-const isTestEmail = (v) => String(v).trim().toLowerCase() === TEST_EMAIL;
-
 function emailMatchesConservatory(email, cons) {
   if (!cons) return false;
-  if (isTestEmail(email)) return true;  // TEST_EMAIL
   const m = String(email).trim().toLowerCase().match(/@(.+)$/);
   if (!m) return false;
   const host = m[1];
@@ -4359,7 +4350,7 @@ function StepConservatory({ draft, update, editing }) {
   const reqDomain = (String(reqEmail).trim().toLowerCase().match(/@([^@\s]+\.[^@\s]+)$/) || [])[1] || "";
   // A gmail address proves nothing about a conservatory, and it is the most
   // likely thing to be typed here by mistake.
-  const reqFreeMail = FREE_MAIL.has(reqDomain) && !isTestEmail(reqEmail);  // TEST_EMAIL
+  const reqFreeMail = FREE_MAIL.has(reqDomain);
   const reqReady = reqName.trim().length > 1 && reqAddress.trim().length > 1 && !!reqDomain && !reqFreeMail;
 
   const [roamAt, setRoamAt] = useState(0);
