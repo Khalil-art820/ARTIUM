@@ -4981,9 +4981,16 @@ function PendingReview({ onHome, onLogout }) {
           <div className="mx-auto mb-6 rounded-full flex items-center justify-center" style={{ width: 64, height: 64, border: `1px solid ${C.brass}` }}>
             <FileText color={C.brass} size={26} />
           </div>
-          <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600 }}>Your documents are under review</h2>
+          {/* Three kinds of application land here and the old copy described
+              only one of them: a graduate is not enrolled anywhere, and a
+              domain request uploads nothing at all, so "the proof you
+              uploaded" was simply untrue for two of the three. Written to be
+              true of all three instead of threading the kind down — the
+              screen is also reached on session restore, where the draft is
+              gone and there would be nothing to thread. */}
+          <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600 }}>Your application is under review</h2>
           <p className="mt-3 text-sm" style={{ color: C.ivoryDim, lineHeight: 1.6 }}>
-            Thanks! Our team is reviewing the proof you uploaded to confirm your conservatory enrolment. Once approved, your student profile goes live and you'll get full access. This usually takes 1–2 days.
+            Thanks! We're checking what you sent us to confirm your conservatory. Once approved, your student profile goes live and you'll get full access. This usually takes 1–2 days.
           </p>
           <div className="mt-8">
             <button onClick={onLogout} style={{ fontSize: 13, fontWeight: 600, color: C.ivoryDim, background: "none", border: `1px solid ${C.inkLine}`, borderRadius: 8, padding: "8px 18px", cursor: "pointer" }}>Log out</button>
