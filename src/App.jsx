@@ -1484,7 +1484,7 @@ function AccessGate({ onUnlock }) {
 export default function App() {
   const [unlocked, setUnlocked] = useState(() => localStorage.getItem(ACCESS_KEY) === "1");
   const [onlineCount, setOnlineCount] = useState(1);
-  const { user: authUser, profile: authProfile, loading: authLoading } = useAuth();
+  const { user: authUser, profile: authProfile, loading: authLoading, setProfile: setAuthProfile } = useAuth();
   // Signed in, and a human has not yet said yes. Read from the row the server
   // returned rather than from anything signup assembled, so it cannot be
   // talked out of by the client. `=== false` on purpose: a profile still
@@ -1594,8 +1594,11 @@ export default function App() {
       const pendingStudent = authUser.user_metadata?.pendingProfile;
       const pendingLearner = authUser.user_metadata?.pendingLearner;
       if (pendingStudent) {
-        supabase.from("profiles").insert(toDbProfile(pendingStudent, authUser.id)).then(async ({ error }) => {
+        supabase.from("profiles").insert(toDbProfile(pendingStudent, authUser.id)).select().single().then(async ({ data: insertedProfile, error }) => {
           if (error) { setAuthError(error.message); return; }
+          // Same reason as the other two inserts: the context fetched a
+          // profile that did not exist yet, so it must be told about this one.
+          if (insertedProfile) setAuthProfile(insertedProfile);
           supabase.auth.updateUser({ data: { pendingProfile: null } });
           const isDoc = needsReview(pendingStudent);
           if (isDoc) { await insertVerificationRequest(authUser.id, pendingStudent); }
@@ -1910,8 +1913,17 @@ export default function App() {
       setScreen("app"); setAppTabPersist("profile");
     } else if (authUser && draft.password === "__google__") {
       // Google OAuth user completing profile for the first time
-      const { error: insertError } = await supabase.from("profiles").insert(toDbProfile(draft, authUser.id));
+      // .select() and hand the row to the auth context. It fetches a profile
+      // only when the session changes, and a Google account is signed in
+      // before its profile exists — so the fetch finds nothing, authProfile
+      // stays null for the rest of the session, and anything reading it for
+      // the truth about approval reads null instead of false. That is what
+      // let a Google signup walk past the review gate while the row in the
+      // database plainly said approved: false.
+      const { data: insertedProfile, error: insertError } = await supabase
+        .from("profiles").insert(toDbProfile(draft, authUser.id)).select().single();
       if (insertError) { setAuthError(await friendlyProfileError(insertError)); return; }
+      if (insertedProfile) setAuthProfile(insertedProfile);
       if (needsReview(draft)) { await insertVerificationRequest(authUser.id, draft); }
       setDraft((d) => ({ ...d, id: authUser.id }));
       finishSignup(authUser.id, authUser.email || draft.email, needsReview(draft) ? "document" : draft.verifyMethod);
@@ -1939,8 +1951,10 @@ export default function App() {
       }
       if (data.session && data.user) {
         // Email confirmation is off — we already have an active session, insert right away.
-        const { error: insertError } = await supabase.from("profiles").insert(toDbProfile(draft, data.user.id));
+        const { data: insertedProfile, error: insertError } = await supabase
+          .from("profiles").insert(toDbProfile(draft, data.user.id)).select().single();
         if (insertError) { setAuthError(await friendlyProfileError(insertError)); return; }
+        if (insertedProfile) setAuthProfile(insertedProfile);
         await supabase.auth.updateUser({ data: { pendingProfile: null } });
         if (needsReview(draft)) { await insertVerificationRequest(data.user.id, draft); }
         setDraft((d) => ({ ...d, id: data.user.id }));
