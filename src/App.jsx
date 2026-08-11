@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "./contexts/AuthContext";
 import { supabase } from "./lib/supabase";
-import { toDbProfile, fromDbProfile } from "./lib/profiles";
+import { toDbProfile, fromDbProfile, needsReview } from "./lib/profiles";
 import L from "leaflet";
 import { MapContainer, TileLayer, Marker, Tooltip, Popup, useMap } from "react-leaflet";
 // three.js is ~1.9MB of the bundle. Loading it lazily keeps it out of the
@@ -1834,10 +1834,6 @@ export default function App() {
   function toggleTaste(t) {
     setDraft((d) => ({ ...d, tastes: d.tastes.includes(t) ? d.tastes.filter((x) => x !== t) : [...d.tastes, t] }));
   }
-  // A domain request waits on an admin exactly as a document does — it just
-  // travels on the email route, where nothing used to need reviewing. Without
-  // this the row was never written and the student was let straight in.
-  const needsReview = (d) => d.verifyMethod === "document" || !!d.domainReq;
 
   async function insertVerificationRequest(userId, d) {
     // The id may come from either roster: the built-in list (if they reached

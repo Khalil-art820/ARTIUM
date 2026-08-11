@@ -1,3 +1,22 @@
+/**
+ * Whether this application has to wait for a human.
+ *
+ * Two kinds do. A document names a school we cannot check by machine, and a
+ * domain request names one that is not on the roster at all — in both cases
+ * the only thing that can settle it is somebody looking.
+ *
+ * It lives here, next to the row it decides, because it used to live only in
+ * App.jsx while toDbProfile carried its own half-version of the same rule:
+ * `verifyMethod === "document"`. A domain request comes through the email
+ * door, so its verifyMethod is "otp", and the row went in already approved.
+ * Signup still showed "under review" — that part read the full rule — so the
+ * screen said one thing and the database another, and logging out and back in
+ * let the applicant straight in.
+ */
+export function needsReview(draft) {
+  return draft.verifyMethod === "document" || !!draft.domainReq;
+}
+
 export function toDbProfile(draft, id) {
   return {
     id,
@@ -18,9 +37,10 @@ export function toDbProfile(draft, id) {
     conservatory_email: draft.conservatoryEmail || null,
     conservatory_verified: !!draft.conservatoryVerified,
     is_online: true,
-    // Document-proof signups stay unapproved (hidden from the map) until an
-    // admin manually reviews the uploaded proof.
-    approved: draft.verifyMethod === "document" ? false : true,
+    // Anything awaiting a human stays unapproved, and so hidden from the map,
+    // until that human clicks. One rule, shared with the screen that tells the
+    // applicant they are waiting.
+    approved: !needsReview(draft),
     teaching_open: draft.teaching.open,
     teaching_mode: draft.teaching.mode,
     teaching_price: draft.teaching.price,
