@@ -8850,6 +8850,21 @@ function AdminVerifications({ card, STATUS_COLOR }) {
     );
   }
 
+  // Called, not rendered: {Table({...})}, never <Table />.
+  //
+  // Both of these are declared inside the screen, so every render makes a new
+  // function object. React compares element types by identity, sees a
+  // different component, and throws the old subtree away — unmounting and
+  // remounting the table rather than updating it. The list reloads every five
+  // seconds, so that happened on a timer: scrolling right to reach Approve
+  // snapped back to the left, and typing in a conservatory name lost the
+  // cursor, both within five seconds of starting.
+  //
+  // Calling them inlines the JSX into this component's own output, so there
+  // is no child instance to replace and the DOM nodes — with their scroll
+  // position and focus — survive. Safe precisely because neither holds hooks
+  // or state of its own; if either ever needs some, it has to move to module
+  // scope instead.
   function Table({ list, editable }) {
     if (list.length === 0) return <div style={{ ...card, textAlign: "center" }}><p style={{ fontSize: 14, color: C.ivoryDim, margin: 0 }}>{editable ? "No pending student verifications." : "No reviewed verifications yet."}</p></div>;
     return (
@@ -8898,7 +8913,7 @@ function AdminVerifications({ card, STATUS_COLOR }) {
                 <td style={td}>
                   {editable ? (
                     <>
-                      {r.kind !== "domain_request" && <Extraction r={r} />}
+                      {r.kind !== "domain_request" && Extraction({ r })}
                       <input style={inp} value={fieldVal(r, "conservatory_name")} onChange={(e) => setField(r, "conservatory_name", e.target.value)} placeholder="Conservatory name" />
                       <input style={inp} value={fieldVal(r, "conservatory_address")} onChange={(e) => setField(r, "conservatory_address", e.target.value)} placeholder="Address" />
                     </>
@@ -8933,10 +8948,10 @@ function AdminVerifications({ card, STATUS_COLOR }) {
   return (
     <>
       <p style={{ fontSize: 12, fontWeight: 700, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.06em", margin: "4px 0 0" }}>Pending ({pending.length})</p>
-      <Table list={pending} editable />
+      {Table({ list: pending, editable: true })}
       {decided.length > 0 && <>
         <p style={{ fontSize: 12, fontWeight: 700, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.06em", margin: "8px 0 0" }}>History ({decided.length})</p>
-        <Table list={decided} editable={false} />
+        {Table({ list: decided, editable: false })}
       </>}
     </>
   );
