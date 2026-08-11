@@ -1485,6 +1485,12 @@ export default function App() {
   const [unlocked, setUnlocked] = useState(() => localStorage.getItem(ACCESS_KEY) === "1");
   const [onlineCount, setOnlineCount] = useState(1);
   const { user: authUser, profile: authProfile, loading: authLoading } = useAuth();
+  // Signed in, and a human has not yet said yes. Read from the row the server
+  // returned rather than from anything signup assembled, so it cannot be
+  // talked out of by the client. `=== false` on purpose: a profile still
+  // loading, or a learner with no such column, is not someone being made to
+  // wait.
+  const awaitingReview = authProfile?.approved === false;
   const [screen, setScreen] = useState("entry");
   // The document's own colour is set in index.css now that every screen is
   // dark; this used to flip it per screen and no longer has anything to say.
@@ -3158,8 +3164,24 @@ export default function App() {
       {/* Wrapped, not passed by reference: simulateApproval takes a user id
           now, and onClick would hand it a click event. */}
       {screen === "pending" && <Pending name={draft.name} onApprove={() => simulateApproval()} onHome={goHome} />}
-      {screen === "pendingReview" && <PendingReview onHome={goHome} onLogout={handleLogout} />}
-      {screen === "app" && (
+      {/* An account still waiting on a human cannot render the app, whatever
+          screen state says.
+
+          Routing to pendingReview on sign-in was never enough. That effect
+          runs when the session changes, and every way back out of this screen
+          changes the screen instead: Home sets "landing", and chooseStudent
+          then sees a myProfile and sends them to "app" without asking whether
+          it was approved. So the wait was a screen you were put on, not a
+          state you were in, and any button that moved you was a way through.
+
+          Deciding it here — from the profile the server sent, at the moment
+          of drawing — means there is one answer and nothing to route around.
+          Note it reads authProfile, not myProfile: myProfile is assembled
+          locally during signup and says what the applicant claimed. */}
+      {(screen === "pendingReview" || (screen === "app" && awaitingReview)) && (
+        <PendingReview onHome={goHome} onLogout={handleLogout} />
+      )}
+      {screen === "app" && !awaitingReview && (
         <AppShell
           appTab={appTab} setAppTab={setAppTab} myProfile={myProfile}
           onApply={startApply} onHome={goHome} musicOn={musicPlaying} onMusicToggle={toggleMusic}
