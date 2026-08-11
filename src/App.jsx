@@ -1491,7 +1491,17 @@ export default function App() {
   // loading, or a learner with no such column, is not someone being made to
   // wait.
   const awaitingReview = authProfile?.approved === false;
+  // What is actually on screen, as opposed to where the app last decided to
+  // put you. Every branch below reads this rather than `screen`, so an
+  // account still waiting on a human sees one thing and only one thing.
+  //
+  // Guarding screens one at a time did not work and was never going to: I
+  // blocked "app", so Home went to "landing" instead, which draws a
+  // signed-in header and a card leading back in. Every screen is a door and
+  // the list only grows. Collapsing them to a single expression means a new
+  // screen is covered the day it is written, by nobody remembering anything.
   const [screen, setScreen] = useState("entry");
+  const view = awaitingReview ? "pendingReview" : screen;
   // The document's own colour is set in index.css now that every screen is
   // dark; this used to flip it per screen and no longer has anything to say.
   const [appTab, setAppTab] = useState(() => localStorage.getItem("artium_app_tab") || "map");
@@ -3116,9 +3126,9 @@ export default function App() {
         />
       )}
 
-      {screen === "entry" && <EntryGate onLearner={chooseLearner} onStudent={() => chooseStudent("otp")} onPianist={choosePianist} onLogin={startLogin} learnerProfile={learnerProfile} learnerLoggedOut={learnerLoggedOut} studentLoggedIn={!!myProfile} musicOn={musicPlaying} onMusicToggle={toggleMusic} memberCount={Object.values(studentsByCons).flat().length} />}
-      {screen === "learnerSignup" && <LearnerSignup onSubmit={submitLearner} onBack={backToEntry} onLogin={startLogin} error={authError} googleName={learnerGoogleName} />}
-      {screen === "learnerMap" && (
+      {view === "entry" && <EntryGate onLearner={chooseLearner} onStudent={() => chooseStudent("otp")} onPianist={choosePianist} onLogin={startLogin} learnerProfile={learnerProfile} learnerLoggedOut={learnerLoggedOut} studentLoggedIn={!!myProfile} musicOn={musicPlaying} onMusicToggle={toggleMusic} memberCount={Object.values(studentsByCons).flat().length} />}
+      {view === "learnerSignup" && <LearnerSignup onSubmit={submitLearner} onBack={backToEntry} onLogin={startLogin} error={authError} googleName={learnerGoogleName} />}
+      {view === "learnerMap" && (
         <LearnerScreen
           learner={learnerProfile}
           teachers={students.filter((s) => s.teaching && s.teaching.open)}
@@ -3144,15 +3154,15 @@ export default function App() {
         />
       )}
 
-      {screen === "landing" && <Landing onApply={pianistEntry ? () => { setAuthError(""); setScreen("hirerSignup"); } : startApply} onBack={backToEntry} onPreview={startPreview} onProfile={goToProfile} onLogin={startLogin} myProfile={myProfile} studentLoggedOut={studentLoggedOut} musicOn={musicPlaying} onMusicToggle={toggleMusic} error={authError} onGoToLessonRoom={() => { setScreen("app"); setAppTabPersist("lessons"); }} studentsByCons={studentsByCons} />}
-      {screen === "hirerSignup" && (
+      {view === "landing" && <Landing onApply={pianistEntry ? () => { setAuthError(""); setScreen("hirerSignup"); } : startApply} onBack={backToEntry} onPreview={startPreview} onProfile={goToProfile} onLogin={startLogin} myProfile={myProfile} studentLoggedOut={studentLoggedOut} musicOn={musicPlaying} onMusicToggle={toggleMusic} error={authError} onGoToLessonRoom={() => { setScreen("app"); setAppTabPersist("lessons"); }} studentsByCons={studentsByCons} />}
+      {view === "hirerSignup" && (
         <HirerSignup
           onBack={() => setScreen("landing")}
           onDone={() => { setPianistEntry(false); setScreen("entry"); }}
         />
       )}
-      {screen === "login" && <LoginScreen onSubmit={handleLogin} onBack={goHome} error={authError} />}
-      {screen === "signup" && (
+      {view === "login" && <LoginScreen onSubmit={handleLogin} onBack={goHome} error={authError} />}
+      {view === "signup" && (
         <SignupFlow
           draft={draft} update={update} toggleTaste={toggleTaste} step={step} setStep={setStep}
           editing={editingProfile} onSubmit={submitApplication} authError={authError}
@@ -3160,10 +3170,10 @@ export default function App() {
           onHome={goHome}
         />
       )}
-      {screen === "confirmEmail" && <ConfirmEmail email={pendingEmail} onLogin={startLogin} onHome={goHome} pendingReview={needsReview(draft)} />}
+      {view === "confirmEmail" && <ConfirmEmail email={pendingEmail} onLogin={startLogin} onHome={goHome} pendingReview={needsReview(draft)} />}
       {/* Wrapped, not passed by reference: simulateApproval takes a user id
           now, and onClick would hand it a click event. */}
-      {screen === "pending" && <Pending name={draft.name} onApprove={() => simulateApproval()} onHome={goHome} />}
+      {view === "pending" && <Pending name={draft.name} onApprove={() => simulateApproval()} onHome={goHome} />}
       {/* An account still waiting on a human cannot render the app, whatever
           screen state says.
 
@@ -3178,10 +3188,10 @@ export default function App() {
           of drawing — means there is one answer and nothing to route around.
           Note it reads authProfile, not myProfile: myProfile is assembled
           locally during signup and says what the applicant claimed. */}
-      {(screen === "pendingReview" || (screen === "app" && awaitingReview)) && (
-        <PendingReview onHome={goHome} onLogout={handleLogout} />
+      {view === "pendingReview" && (
+        <PendingReview onHome={awaitingReview ? undefined : goHome} onLogout={handleLogout} />
       )}
-      {screen === "app" && !awaitingReview && (
+      {view === "app" && (
         <AppShell
           appTab={appTab} setAppTab={setAppTab} myProfile={myProfile}
           onApply={startApply} onHome={goHome} musicOn={musicPlaying} onMusicToggle={toggleMusic}
@@ -5147,7 +5157,13 @@ function PendingReview({ onHome, onLogout }) {
     <div className="min-h-full flex flex-col" style={{ background: C.ink, color: C.ivory }}>
       <div className="px-6 py-4 flex items-center gap-5">
         <Logo size={18} />
-        <HomeBtn onClick={onHome} />
+        {/* No way home while an application is open. Home was the bypass:
+            it dropped you on the landing page, which draws a signed-in header
+            and offers a card that walks back into the app. There is nowhere
+            for this button to go that is not either this screen again or a
+            hole, so it is only drawn when a caller has somewhere to send it.
+            Log out, below, is the way out. */}
+        {onHome && <HomeBtn onClick={onHome} />}
       </div>
       <div className="flex-1 flex items-center justify-center px-6">
         <div className="max-w-md text-center lg-fade">
