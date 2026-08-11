@@ -393,6 +393,26 @@ function friendlyAuthError(message) {
   return message;
 }
 
+// profiles.id is a foreign key onto auth.users, so a profile can only be
+// written for an account that exists. A browser holding a session for an
+// account that has since been deleted fails that check, and Postgres reports
+// it the only way it can: insert or update on table "profiles" violates
+// foreign key constraint "profiles_id_fkey". Accurate, and no help at all to
+// someone at the end of an eight-step signup.
+//
+// Easy to hit while testing, and it will happen in the wild too — anyone
+// logged in on a second device when their account is removed. The session is
+// the thing that is wrong, so it goes; retrying without dropping it just
+// walks into the same constraint.
+async function friendlyProfileError(error) {
+  const message = String(error?.message || "");
+  if (error?.code === "23503" || /profiles_id_fkey/i.test(message)) {
+    await supabase.auth.signOut().catch(() => {});
+    return "You were signed in as an account that no longer exists, so we've signed you out. Please start the signup again.";
+  }
+  return message;
+}
+
 const emptyDraft = () => ({
   id: null,
   email: "", password: "", confirmPassword: "",
@@ -1780,7 +1800,7 @@ export default function App() {
       const { data: { user: authUser } } = await supabase.auth.getUser();
       if (!authUser) { setAuthError("Session expired. Please try again."); return; }
       const { error: insertError } = await supabase.from("profiles").insert({ id: authUser.id, role: "learner", name, location, instrument, bio: motivation, approved: true });
-      if (insertError) { setAuthError(insertError.message); return; }
+      if (insertError) { setAuthError(await friendlyProfileError(insertError)); return; }
       setLearnerGoogleName("");
       setLearnerProfile({ name, location, instrument, bio: motivation });
       setLearnerLoggedOut(false);
@@ -1795,7 +1815,7 @@ export default function App() {
     if (error) { setAuthError(friendlyAuthError(error.message)); return; }
     if (data.session && data.user) {
       const { error: insertError } = await supabase.from("profiles").insert({ id: data.user.id, role: "learner", name, location, instrument, bio: motivation, approved: true });
-      if (insertError) { setAuthError(insertError.message); return; }
+      if (insertError) { setAuthError(await friendlyProfileError(insertError)); return; }
       await supabase.auth.updateUser({ data: { pendingLearner: null } });
       setLearnerProfile({ name, location, instrument, bio: motivation });
       setLearnerLoggedOut(false);
@@ -1875,7 +1895,7 @@ export default function App() {
     } else if (authUser && draft.password === "__google__") {
       // Google OAuth user completing profile for the first time
       const { error: insertError } = await supabase.from("profiles").insert(toDbProfile(draft, authUser.id));
-      if (insertError) { setAuthError(insertError.message); return; }
+      if (insertError) { setAuthError(await friendlyProfileError(insertError)); return; }
       if (needsReview(draft)) { await insertVerificationRequest(authUser.id, draft); }
       setDraft((d) => ({ ...d, id: authUser.id }));
       finishSignup(authUser.id, authUser.email || draft.email, needsReview(draft) ? "document" : draft.verifyMethod);
@@ -1904,7 +1924,7 @@ export default function App() {
       if (data.session && data.user) {
         // Email confirmation is off — we already have an active session, insert right away.
         const { error: insertError } = await supabase.from("profiles").insert(toDbProfile(draft, data.user.id));
-        if (insertError) { setAuthError(insertError.message); return; }
+        if (insertError) { setAuthError(await friendlyProfileError(insertError)); return; }
         await supabase.auth.updateUser({ data: { pendingProfile: null } });
         if (needsReview(draft)) { await insertVerificationRequest(data.user.id, draft); }
         setDraft((d) => ({ ...d, id: data.user.id }));
