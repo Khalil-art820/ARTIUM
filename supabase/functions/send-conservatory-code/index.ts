@@ -69,10 +69,13 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
-  let email = "";
+  let email = "", conservatoryId = "";
   try {
     const body = await req.json();
     email = String(body?.email ?? "").trim().toLowerCase();
+    // Which school the applicant picked. Absent on the domain-request route,
+    // where the school is not on any list yet and a human decides later.
+    conservatoryId = String(body?.conservatory_id ?? "").trim();
   } catch {
     return json({ error: "Expected a JSON body." }, 400);
   }
@@ -87,6 +90,26 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
+
+  // The domain check, done here rather than only in the browser.
+  //
+  // The roster used to be a JavaScript array in the bundle, so this was the
+  // one question the server could not ask: does this address belong to the
+  // school they picked? It lives in a table now, and a mismatch is refused
+  // before any mail is sent — so an address at one conservatory can never be
+  // turned into a code for another.
+  //
+  // No conservatory_id means the domain-request route, where the school is not
+  // on any list yet. Those codes are recorded with a null school, and the
+  // approval trigger requires a match, so they never stand as proof of one.
+  if (conservatoryId) {
+    const { data: ok, error: matchError } = await admin
+      .rpc("email_matches_conservatory", { p_email: email, p_id: conservatoryId });
+    if (matchError) return json({ error: matchError.message }, 500);
+    if (!ok) {
+      return json({ error: "That address doesn't belong to the conservatory you selected." }, 400);
+    }
+  }
 
   // Cheap to run, and it keeps the table to roughly a day of traffic.
   await admin.rpc("prune_conservatory_email_codes");
@@ -108,6 +131,10 @@ Deno.serve(async (req) => {
     email,
     code_hash: await sha256(code),
     expires_at: expires,
+    // Bound to the school it was issued for. Without this the code proves an
+    // address and nothing more, and the applicant could prove their own and
+    // then select somewhere else.
+    conservatory_id: conservatoryId || null,
   });
   if (insertError) return json({ error: insertError.message }, 500);
 

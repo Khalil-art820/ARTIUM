@@ -4435,9 +4435,12 @@ function asConservatory(row) {
 //
 // Both are called before the visitor has a session, so both edge functions are
 // deployed with --no-verify-jwt and reached with the anon key alone.
-async function sendConservatoryCode(email) {
+// conservatoryId is which school the applicant picked, and the server refuses
+// to send a code to an address that does not belong to it. Omitted on the
+// domain-request route, where the school is not on any list yet.
+async function sendConservatoryCode(email, conservatoryId) {
   const { data, error } = await supabase.functions.invoke("send-conservatory-code", {
-    body: { email: String(email).trim().toLowerCase() },
+    body: { email: String(email).trim().toLowerCase(), conservatory_id: conservatoryId || null },
   });
   // invoke() reports a non-2xx as a generic FunctionsHttpError, and the useful
   // sentence — the rate limit, the free-mail refusal — is in the body it
@@ -4675,6 +4678,32 @@ function StepConservatory({ draft, update, editing }) {
     return () => { live = false; };
   }, []);
 
+  // The roster, from the database rather than the copy compiled into this
+  // bundle.
+  //
+  // The server refuses to send a code to an address that does not belong to
+  // the chosen school, and it reads the table to decide. If this screen kept
+  // deciding from the bundled array the two would drift the moment a domain
+  // was corrected — the correction would take effect server-side while the
+  // browser went on greying out the button for an address the server would
+  // have accepted, and the student would be stuck with no way to tell why.
+  //
+  // The bundled array stays as the fallback. It is what the app has always
+  // used, so an unreachable table costs the newest domain corrections rather
+  // than the whole signup.
+  const [dbRoster, setDbRoster] = useState(null);
+  React.useEffect(() => {
+    let live = true;
+    supabase.from("conservatories").select("id, name, short, city, country, lat, lng, domains").order("name")
+      .then(({ data, error }) => {
+        if (!live) return;
+        if (error || !data || data.length === 0) { setDbRoster(null); return; }
+        setDbRoster(data.map((c) => ({ ...c, domains: Array.isArray(c.domains) ? c.domains : [] })));
+      });
+    return () => { live = false; };
+  }, []);
+  const roster = dbRoster || CONSERVATORIES;
+
   // Approved rows in the shape of a built-in entry, so every reader
   // downstream — emailMatchesConservatory, the placeholder, the roster row —
   // keeps working without learning about a second kind of conservatory.
@@ -4701,9 +4730,9 @@ function StepConservatory({ draft, update, editing }) {
     // Plain objects rather than Map: this file imports lucide's Map icon at
     // the top, which shadows the global, so `new Map()` constructs an icon and
     // the screen dies with "Map is not a constructor".
-    const byId = new Set(CONSERVATORIES.map((c) => c.id));
+    const byId = new Set(roster.map((c) => c.id));
     const byName = Object.create(null);
-    for (const c of CONSERVATORIES) byName[normalizeName(c.name)] = c.id;
+    for (const c of roster) byName[normalizeName(c.name)] = c.id;
     const extraDomains = Object.create(null);   // built-in id -> domains from approved rows
     const shaped = [];
 
@@ -4726,14 +4755,14 @@ function StepConservatory({ draft, update, editing }) {
     }
 
     const touched = Object.keys(extraDomains);
-    const merged = touched.length === 0 ? CONSERVATORIES : CONSERVATORIES.map((c) => {
+    const merged = touched.length === 0 ? roster : roster.map((c) => {
       const extra = extraDomains[c.id];
       if (!extra || extra.length === 0) return c;
       return { ...c, domains: [...new Set([...c.domains.map((d) => d.toLowerCase()), ...extra])] };
     });
 
     return { approvedShaped: shaped, conservatories: merged };
-  }, [approvedCons]);
+  }, [approvedCons, roster]);
 
   // Three doors, three rosters, and the line between them is the domain.
   //
@@ -4853,7 +4882,7 @@ function StepConservatory({ draft, update, editing }) {
 
   async function sendCode() {
     setErr(""); setSending(true);
-    const { error } = await sendConservatoryCode(email);
+    const { error } = await sendConservatoryCode(email, draft.conservatoryId);
     setSending(false);
     if (error) { setErr(error); return; }
     setCodeSent(true);
