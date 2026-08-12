@@ -4795,12 +4795,53 @@ function StepConservatory({ draft, update, editing }) {
         <WorldGlobe pins={roamPin ? [roamPin] : []} selectedId={null} onSelect={() => {}} height={230} roaming />
       </div>
 
-      {/* Three doors, asked before anything else. The old step opened straight
-          onto a list of 110 schools and left the visitor to work out whether
-          the list even applied to them; a graduate had no reason to think it
-          did. Each door is a fact they already know about themselves, and
-          each says what it will ask for. */}
-      {!applicant ? (
+      {/* Editing a profile is not re-applying to a conservatory.
+
+          The step used to offer the whole list here, so a member could change
+          school from the edit screen. Since approval moved into the database
+          that no longer grants anything — the trigger sees conservatory_id
+          change, finds no code verified for the new school, and drops them to
+          unapproved — but it would drop them silently, off the map and into
+          the review queue, for what looked like editing a field.
+
+          Nobody transfers conservatory often enough to want a self-service
+          button that costs them their verification. It is a conversation, and
+          the admin screen is where it happens. */}
+      {editing && selectedCons ? (
+        <div className="mt-2 rounded-2xl" style={{ border: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.025)", padding: "16px 18px" }}>
+          {/* The tick rides with the label rather than the name: beside a
+              school called "The Juilliard School" it was taking the width the
+              name needed and pushing it onto a third line. */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+            <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brassLabel, letterSpacing: 0.5, margin: 0 }}>YOUR CONSERVATORY</p>
+            {verified ? <CheckIcon size={15} strokeWidth={2.6} color="#1A9E6E" /> : null}
+          </div>
+          {/* The school name and a long institutional address do not fit
+              beside a monogram at phone width — "The Juilliard School" broke
+              over three lines and the email ran past the card. The monogram
+              keeps the top row with the tick; everything textual gets the
+              full width underneath. */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
+            <span className="artium-aw-mono">{consMonogram(selectedCons)}</span>
+            <p style={{ flex: 1, minWidth: 0, margin: 0, fontFamily: FONT_DISPLAY, fontSize: 17, fontWeight: 600, color: C.ivory, lineHeight: 1.25 }}>
+              {selectedCons.name}
+            </p>
+          </div>
+          <p className="text-sm" style={{ margin: 0, color: C.ivoryDim, lineHeight: 1.5, overflowWrap: "anywhere" }}>
+            <MapPin size={11} strokeWidth={2} style={{ display: "inline", verticalAlign: "-1px", marginRight: 4 }} />
+            {[selectedCons.city, selectedCons.country].filter(Boolean).join(", ") || selectedCons.address || ""}
+          </p>
+          {draft.conservatoryEmail && (
+            <p className="text-sm" style={{ margin: "3px 0 0", color: C.ivoryDim, overflowWrap: "anywhere" }}>
+              {draft.conservatoryEmail}
+            </p>
+          )}
+          <p className="text-sm" style={{ margin: "12px 0 0", color: C.ivoryDim, lineHeight: 1.55 }}>
+            This is the school you verified, so it isn't editable here. If you've
+            transferred or this is wrong, write to us and we'll move it for you.
+          </p>
+        </div>
+      ) : !applicant ? (
         <div className="artium-su-doors">
           {[
             { k: "student_email", Icon: ScanLine, t: "I'm a student with a conservatory email",
