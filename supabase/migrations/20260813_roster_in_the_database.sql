@@ -29,6 +29,26 @@ create table if not exists conservatories (
   domains  text[] not null default '{}'
 );
 
+-- `create table if not exists` says nothing about the shape of a table that
+-- already exists, and something called conservatories was already here — the
+-- first run failed on the index below with: column "domains" does not exist.
+-- Named columns, added only if missing, so this lands on an empty database and
+-- on whatever is already there.
+alter table conservatories add column if not exists name    text;
+alter table conservatories add column if not exists short   text;
+alter table conservatories add column if not exists city    text;
+alter table conservatories add column if not exists country text;
+alter table conservatories add column if not exists lat     double precision;
+alter table conservatories add column if not exists lng     double precision;
+alter table conservatories add column if not exists domains text[];
+
+update conservatories set domains = '{}' where domains is null;
+update conservatories set short = coalesce(short, ''), city = coalesce(city, ''),
+                          country = coalesce(country, '') where true;
+
+alter table conservatories alter column domains set default '{}';
+alter table conservatories alter column domains set not null;
+
 alter table conservatories enable row level security;
 
 -- The list is public — the signup screen shows all of it before anyone has an
