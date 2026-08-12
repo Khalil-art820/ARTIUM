@@ -428,6 +428,9 @@ const emptyDraft = () => ({
   // sends the school and the address they already hold, for an admin to
   // approve into the roster.
   domainReq: null, // { name, address, email } | null
+  // A transfer in progress: the old school is still on the profile and the new
+  // one is not proved yet, so the step is not finished and Next stays shut.
+  transferPending: false,
   verifyMethod: "otp", proofDocUrl: "", proofDocName: "",
   tastes: [],
   pieces: [],
@@ -3956,8 +3959,14 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
       // through anyone who reached step 4 regardless of what step 3 showed.
       // A Google address that does belong to the school now sets
       // conservatoryVerified itself, so this only has to ask the one question.
-      : !!draft.domainReq
-        || (!!draft.conservatoryId && (editing || draft.conservatoryVerified))),
+      // `editing` normally waves this step through, because an existing member
+      // already proved their school. A transfer in progress is the exception:
+      // they have asked to move and not yet proved the new one, so saving now
+      // would send them to a school they never confirmed — and the database
+      // would unapprove them for it.
+      : !draft.transferPending
+        && (!!draft.domainReq
+          || (!!draft.conservatoryId && (editing || draft.conservatoryVerified)))),
     draft.tastes.length >= 3,
     draft.pieces.length >= 1,
     true,
@@ -4512,9 +4521,44 @@ function StepConservatory({ draft, update, editing }) {
   const [err, setErr] = useState("");
 
   const [uploading, setUploading] = useState(false);
+
+  // Transferring is re-applying, not editing a field. The whole verification
+  // step reopens — doors, list, code — and the school only moves once the new
+  // one is proved. Abandoning halfway leaves the member exactly as they were,
+  // which is why the old answers are kept rather than cleared.
+  const [priorSchool, setPriorSchool] = useState(null);
+  const changingSchool = priorSchool !== null;
+
+  function startTransfer() {
+    setPriorSchool({
+      applicant: draft.applicant, verifyMethod: draft.verifyMethod,
+      conservatoryId: draft.conservatoryId, conservatoryEmail: draft.conservatoryEmail,
+      conservatoryVerified: draft.conservatoryVerified, domainReq: draft.domainReq,
+      proofDocUrl: draft.proofDocUrl, proofDocName: draft.proofDocName,
+    });
+    setQ(""); setEmail(""); setCode(""); setCodeSent(false); setErr("");
+    // transferPending holds the Next button until the new school is proved.
+    // Without it an unfinished transfer could be saved, and the database would
+    // then unapprove them for a school they never confirmed.
+    update({
+      applicant: "", verifyMethod: "otp", conservatoryId: "", conservatoryEmail: "",
+      conservatoryVerified: false, domainReq: null, proofDocUrl: "", proofDocName: "",
+      transferPending: true,
+    });
+  }
+
+  function cancelTransfer() {
+    update({ ...priorSchool, transferPending: false });
+    setPriorSchool(null);
+    setQ(""); setEmail(priorSchool.conservatoryEmail || ""); setCode(""); setCodeSent(false); setErr("");
+  }
+
   const isGoogle = draft.password === "__google__";
   const isDoc = draft.verifyMethod === "document";
-  const applicant = draft.applicant || (editing ? (isDoc ? "student_doc" : "student_email") : "");
+  // Mid-transfer the doors have to be askable again — someone who has since
+  // graduated is not on the route they arrived by — so the edit-mode default
+  // steps aside until a door is chosen.
+  const applicant = draft.applicant || (editing && !changingSchool ? (isDoc ? "student_doc" : "student_email") : "");
 
   // The document route gets its own roster. The built-in CONSERVATORIES list
   // exists because each entry has an email domain we can send a code to —
@@ -4718,7 +4762,7 @@ function StepConservatory({ draft, update, editing }) {
   // which route was taken or remember to make an exception for this one.
   useEffect(() => {
     if (googleProvesSchool && !draft.conservatoryVerified) {
-      update({ conservatoryEmail: draft.email, conservatoryVerified: true });
+      update({ conservatoryEmail: draft.email, conservatoryVerified: true, transferPending: false });
     }
   }, [googleProvesSchool, draft.conservatoryVerified, draft.email]);
 
@@ -4764,7 +4808,9 @@ function StepConservatory({ draft, update, editing }) {
     const { error } = await supabase.storage.from("student-proofs").upload(path, file, { upsert: false, contentType: file.type || undefined });
     setUploading(false);
     if (error) { setErr("Upload failed: " + error.message); return; }
-    update({ proofDocUrl: path, proofDocName: file.name });
+    // A document is the applicant's part done, even though approval waits on
+    // a human — so the step is finished and Next opens.
+    update({ proofDocUrl: path, proofDocName: file.name, transferPending: false });
   }
 
   async function sendCode() {
@@ -4780,7 +4826,7 @@ function StepConservatory({ draft, update, editing }) {
     const { error } = await verifyConservatoryCode(email, code);
     setVerifying(false);
     if (error) { setErr(error); return; }
-    update({ conservatoryEmail: email.trim(), conservatoryVerified: true });
+    update({ conservatoryEmail: email.trim(), conservatoryVerified: true, transferPending: false });
   }
 
   return (
@@ -4807,7 +4853,26 @@ function StepConservatory({ draft, update, editing }) {
           Nobody transfers conservatory often enough to want a self-service
           button that costs them their verification. It is a conversation, and
           the admin screen is where it happens. */}
-      {editing && selectedCons ? (
+      {changingSchool && (
+        <div className="mt-2 mb-3 rounded-2xl" style={{ border: `1px solid ${C.brass}`, background: C.inkSoft, padding: "14px 16px" }}>
+          <p className="text-sm" style={{ margin: 0, color: C.ivory, fontWeight: 600 }}>
+            Moving from {priorSchool.conservatoryId ? (pool.find((c) => c.id === priorSchool.conservatoryId)?.name || "your conservatory") : "your conservatory"}
+          </p>
+          <p className="text-sm" style={{ margin: "5px 0 0", color: C.ivoryDim, lineHeight: 1.55 }}>
+            Nothing changes until you've proved the new school. If you upload a
+            document instead of verifying by code, you'll be off the map until we
+            confirm it.
+          </p>
+          <button
+            onClick={cancelTransfer}
+            style={{ marginTop: 9, padding: 0, background: "none", border: "none", cursor: "pointer", color: C.brassLabel, fontFamily: FONT_BODY, fontSize: 13, fontWeight: 700 }}
+          >
+            Keep my current conservatory
+          </button>
+        </div>
+      )}
+
+      {editing && selectedCons && !changingSchool ? (
         <div className="mt-2 rounded-2xl" style={{ border: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.025)", padding: "16px 18px" }}>
           {/* The tick rides with the label rather than the name: beside a
               school called "The Juilliard School" it was taking the width the
@@ -4837,9 +4902,15 @@ function StepConservatory({ draft, update, editing }) {
             </p>
           )}
           <p className="text-sm" style={{ margin: "12px 0 0", color: C.ivoryDim, lineHeight: 1.55 }}>
-            This is the school you verified, so it isn't editable here. If you've
-            transferred or this is wrong, write to us and we'll move it for you.
+            This is the school you verified. Changing it means proving the new one,
+            the same way you proved this one.
           </p>
+          <button
+            onClick={startTransfer}
+            style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 10, padding: 0, background: "none", border: "none", cursor: "pointer", color: C.brassLabel, fontFamily: FONT_BODY, fontSize: 13, fontWeight: 700 }}
+          >
+            I've transferred to another conservatory <ArrowRight size={14} />
+          </button>
         </div>
       ) : !applicant ? (
         <div className="artium-su-doors">
@@ -5028,7 +5099,7 @@ function StepConservatory({ draft, update, editing }) {
                   style={{ flex: "0 0 auto", fontSize: 14, padding: "11px 20px" }}
                   disabled={!reqReady}
                   onClick={() => {
-                    update({ domainReq: { name: reqName.trim(), address: reqAddress.trim(), email: reqEmail.trim() } });
+                    update({ domainReq: { name: reqName.trim(), address: reqAddress.trim(), email: reqEmail.trim() }, transferPending: false });
                     setShowReq(false);
                   }}
                 >
