@@ -1968,18 +1968,24 @@ export default function App() {
     }
   }
   /**
-   * Where a finished signup lands. Document-proof students wait for a human,
-   * everyone else meets the prototype's audition gate — except the owner, who
-   * would otherwise have to click through a fake review to reach their own
-   * admin screens. The id is passed rather than read from draft: setDraft has
-   * only just been queued, so draft.id is still undefined at this point.
+   * Where a finished signup lands: waiting for a human, or straight in.
+   *
+   * "Straight in" used to mean the prototype's audition gate — "Your audition
+   * is under review", with a Simulate acceptance button underneath admitting
+   * it was scaffolding. Only the owner skipped it. But a student who has just
+   * had a code delivered to their conservatory address is verified, and the
+   * row written a moment ago says approved: true, so there was nothing left to
+   * review. The screen invented a wait that no longer existed and then offered
+   * a button to end it.
+   *
+   * The id is passed rather than read from draft: setDraft has only just been
+   * queued, so draft.id is still undefined at this point.
    */
   function finishSignup(userId, email, verifyMethod) {
     if (verifyMethod === "document") { setScreen("pendingReview"); return; }
-    if (isAdminEmail(email)) { simulateApproval(userId, email); return; }
-    setScreen("pending");
+    enterApp(userId, email);
   }
-  function simulateApproval(userId, email) {
+  function enterApp(userId, email) {
     const me = { id: userId || draft.id, name: draft.name || "Your name", instrument: draft.instrument, conservatoryId: draft.conservatoryId, year: draft.years || "Current student", bio: draft.bio, tastes: draft.tastes, pieces: draft.pieces, videoLink: draft.videoLink, top: draft.top, flop: draft.flop, photoUrl: draft.photoUrl, teaching: draft.teaching, online: true };
     setMyProfile(me);
     // Same reason as the roster add in the auth effect: the owner does not
@@ -3185,9 +3191,6 @@ export default function App() {
         />
       )}
       {view === "confirmEmail" && <ConfirmEmail email={pendingEmail} onLogin={startLogin} onHome={goHome} pendingReview={needsReview(draft)} />}
-      {/* Wrapped, not passed by reference: simulateApproval takes a user id
-          now, and onClick would hand it a click event. */}
-      {view === "pending" && <Pending name={draft.name} onApprove={() => simulateApproval()} onHome={goHome} />}
       {/* An account still waiting on a human cannot render the app, whatever
           screen state says.
 
@@ -5200,35 +5203,6 @@ function StepReview({ draft }) {
         {draft.flop && <Card label="Current challenge">{draft.flop}</Card>}
         <Card label="Teaching">{teachingText}</Card>
         {draft.composerDay && <Card label="A day with a composer">{draft.composerDay}</Card>}
-      </div>
-    </div>
-  );
-}
-
-/* ---------------------------------------------------------------- */
-/* PENDING                                                             */
-/* ---------------------------------------------------------------- */
-function Pending({ name, onApprove, onHome }) {
-  return (
-    <div className="min-h-full flex flex-col" style={{ background: C.ink, color: C.ivory }}>
-      <div className="px-6 py-4 flex items-center gap-5">
-        <Logo size={18} />
-        <HomeBtn onClick={onHome} />
-      </div>
-      <div className="flex-1 flex items-center justify-center px-6">
-      <div className="max-w-md text-center lg-fade">
-        <div className="mx-auto mb-6 rounded-full flex items-center justify-center lg-blink" style={{ width: 64, height: 64, border: `1px solid ${C.brass}` }}>
-          <Music2 color={C.brass} size={26} />
-        </div>
-        <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600 }}>Your audition is under review</h2>
-        <p className="mt-3 text-sm" style={{ color: C.ivoryDim, lineHeight: 1.6 }}>
-          Thank you, {name || "friend"}. A few faculty reviewers check every new profile before a seat is confirmed. This usually takes 1–2 days.
-        </p>
-        <div className="mt-10 pt-6" style={{ borderTop: `1px dashed ${C.inkLine}` }}>
-          <p className="text-xs mb-3" style={{ fontFamily: FONT_MONO, color: C.ivoryDim }}>PROTOTYPE CONTROL — not part of the real product</p>
-          <PrimaryBtn onClick={onApprove} icon={ArrowRight}>Simulate acceptance</PrimaryBtn>
-        </div>
-      </div>
       </div>
     </div>
   );
