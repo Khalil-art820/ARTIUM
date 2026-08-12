@@ -4694,7 +4694,7 @@ function StepConservatory({ draft, update, editing }) {
   const [dbRoster, setDbRoster] = useState(null);
   React.useEffect(() => {
     let live = true;
-    supabase.from("conservatories").select("id, name, short, city, country, lat, lng, domains").order("name")
+    supabase.from("conservatory_roster").select("id, name, short, city, country, lat, lng, domains").order("name")
       .then(({ data, error }) => {
         if (!live) return;
         if (error || !data || data.length === 0) { setDbRoster(null); return; }

@@ -18,7 +18,7 @@
 -- ---------------------------------------------------------------------------
 -- 1. The roster
 -- ---------------------------------------------------------------------------
-create table if not exists conservatories (
+create table if not exists conservatory_roster (
   id       text primary key,
   name     text not null,
   short    text not null default '',
@@ -29,43 +29,32 @@ create table if not exists conservatories (
   domains  text[] not null default '{}'
 );
 
--- `create table if not exists` says nothing about the shape of a table that
--- already exists, and something called conservatories was already here — the
--- first run failed on the index below with: column "domains" does not exist.
--- Named columns, added only if missing, so this lands on an empty database and
--- on whatever is already there.
-alter table conservatories add column if not exists name    text;
-alter table conservatories add column if not exists short   text;
-alter table conservatories add column if not exists city    text;
-alter table conservatories add column if not exists country text;
-alter table conservatories add column if not exists lat     double precision;
-alter table conservatories add column if not exists lng     double precision;
-alter table conservatories add column if not exists domains text[];
+-- A separate table on purpose. Something called `conservatories` already
+-- exists in this database — columns x, y, founded, code — created outside
+-- these migrations, long before any of this, and nothing in the app reads it.
+-- The first run of this file died on it: `create table if not exists` skipped
+-- the create, and the index below then had no domains column to index.
+--
+-- Seeding 109 rows into a table whose purpose I do not know is not a repair,
+-- so the roster gets its own name and leaves that one alone.
 
-update conservatories set domains = '{}' where domains is null;
-update conservatories set short = coalesce(short, ''), city = coalesce(city, ''),
-                          country = coalesce(country, '') where true;
-
-alter table conservatories alter column domains set default '{}';
-alter table conservatories alter column domains set not null;
-
-alter table conservatories enable row level security;
+alter table conservatory_roster enable row level security;
 
 -- The list is public — the signup screen shows all of it before anyone has an
 -- account. Reading it proves nothing; only writes matter.
-drop policy if exists "conservatories read all" on conservatories;
-create policy "conservatories read all" on conservatories for select using (true);
+drop policy if exists "conservatory_roster read all" on conservatory_roster;
+create policy "conservatory_roster read all" on conservatory_roster for select using (true);
 
-drop policy if exists "conservatories admin write" on conservatories;
-create policy "conservatories admin write" on conservatories
+drop policy if exists "conservatory_roster admin write" on conservatory_roster;
+create policy "conservatory_roster admin write" on conservatory_roster
   for all using (public.is_admin()) with check (public.is_admin());
 
-create index if not exists conservatories_domains_idx on conservatories using gin (domains);
+create index if not exists conservatory_roster_domains_idx on conservatory_roster using gin (domains);
 
 -- Seeded from the array that used to be the only copy. on conflict so this
 -- migration can be re-run, and so a domain corrected by hand is not silently
 -- reverted by re-running it — name and place refresh, domains do not.
-insert into conservatories (id, name, short, city, country, lat, lng, domains) values
+insert into conservatory_roster (id, name, short, city, country, lat, lng, domains) values
   ('juilliard', 'The Juilliard School', 'Juilliard', 'New York', 'USA', 40.7736, -73.9827, array['juilliard.edu']::text[]),
   ('curtis', 'Curtis Institute of Music', 'Curtis', 'Philadelphia', 'USA', 39.9496, -75.1717, array['curtis.edu']::text[]),
   ('nec', 'New England Conservatory', 'NEC', 'Boston', 'USA', 42.3428, -71.0857, array['necmusic.edu']::text[]),
@@ -228,7 +217,7 @@ as $$
       from (
         -- the roster's own domains
         select lower(unnest(c.domains)) as d
-          from conservatories c
+          from conservatory_roster c
          where c.id = p_id
 
         union all
@@ -236,7 +225,7 @@ as $$
         -- domains an admin approved for the same school, matched by name
         select lower(unnest(a.domains)) as d
           from approved_conservatories a
-          join conservatories c
+          join conservatory_roster c
             on public.normalize_conservatory_name(a.name)
              = public.normalize_conservatory_name(c.name)
          where c.id = p_id
