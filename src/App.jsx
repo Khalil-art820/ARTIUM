@@ -4555,6 +4555,15 @@ function StepConservatory({ draft, update, editing }) {
 
   const isGoogle = draft.password === "__google__";
   const isDoc = draft.verifyMethod === "document";
+
+  // Whether this step is actually asking for proof.
+  //
+  // Every panel below was written as `!editing`, because an existing member
+  // re-treading signup had already proved their school and being asked again
+  // would be noise. A transfer breaks that: they pick the new school and then
+  // nothing appears — no code panel, no upload, no way to prove anything —
+  // because the screen still believes proof is behind them.
+  const proving = !editing || changingSchool;
   // Mid-transfer the doors have to be askable again — someone who has since
   // graduated is not on the route they arrived by — so the edit-mode default
   // steps aside until a door is chosen.
@@ -5118,7 +5127,7 @@ function StepConservatory({ draft, update, editing }) {
           nothing to select, and the document is what establishes the school.
           Nor on !isGoogle — a Google account proves an email address, not
           enrolment, so the Google shortcut that skips OTP doesn't apply. */}
-      {!editing && isDoc && (
+      {proving && isDoc && (
         <div className="mt-5 rounded-2xl" style={{ border: `1px solid ${draft.proofDocUrl ? "#1A9E6E" : C.brass}`, background: C.inkSoft, padding: "18px 18px" }}>
           <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brassLabel, letterSpacing: 0.5, marginBottom: 8 }}>{applicant === "graduate" ? "UPLOAD YOUR DIPLOMA" : "UPLOAD YOUR PROOF"}</p>
           {/* Split by where the person is, not by document type. A graduate
@@ -5158,7 +5167,7 @@ function StepConservatory({ draft, update, editing }) {
       )}
 
       {/* Conservatory email verification (OTP path) */}
-      {selectedCons && !googleProvesSchool && !editing && !isDoc && (
+      {selectedCons && !googleProvesSchool && proving && !isDoc && (
         <div className="mt-5 rounded-2xl" style={{ border: `1px solid ${verified ? "#1A9E6E" : C.brass}`, background: C.inkSoft, padding: "18px 18px" }}>
           <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brassLabel, letterSpacing: 0.5, marginBottom: 8 }}>VERIFY YOUR {(selectedCons.short || selectedCons.name).toUpperCase()} STUDENT EMAIL</p>
           {verified ? (
@@ -5203,7 +5212,7 @@ function StepConservatory({ draft, update, editing }) {
           )}
         </div>
       )}
-      {selectedCons && googleProvesSchool && !editing && (
+      {selectedCons && googleProvesSchool && proving && (
         <div className="mt-5 rounded-2xl" style={{ border: `1px solid #1A9E6E`, background: C.inkSoft, padding: "14px 18px", display: "flex", alignItems: "center", gap: 8 }}>
           <CheckIcon size={18} color="#1A9E6E" />
           <p style={{ fontSize: 14, color: "#1A9E6E", fontWeight: 600, margin: 0 }}>Verified via Google ({draft.email})</p>
