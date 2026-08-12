@@ -4465,24 +4465,6 @@ async function verifyConservatoryCode(email, code) {
   return {};
 }
 
-// TEMPORARY — walkthrough only. Delete this block and the one line that reads
-// it in emailMatchesConservatory.
-//
-// Deliberately one address at one school, not a domain on a roster row. The
-// last exception of this kind was `gmail.com` on Juilliard's entry, which made
-// every Google account on earth a verified Juilliard student and shipped
-// behind a comment saying TEMP, remove. A single address can only ever be one
-// person, and that person owns art-ium.com.
-//
-// It announces itself on every load, in production too. The comment on the
-// last one was invisible precisely because nothing ever said it out loud.
-const TEST_EMAIL = "khalil@art-ium.com";
-const TEST_EMAIL_CONSERVATORY = "juilliard";
-console.warn(
-  `[artium] TEMPORARY: ${TEST_EMAIL} is accepted as a ${TEST_EMAIL_CONSERVATORY} address ` +
-  `for walkthrough testing. Remove TEST_EMAIL from App.jsx before launch.`,
-);
-
 // Two names for the same school, as typed by two different people.
 //
 // Used to decide whether an approved row is a school we already know. Accents
@@ -4501,8 +4483,6 @@ function emailMatchesConservatory(email, cons) {
   const m = String(email).trim().toLowerCase().match(/@(.+)$/);
   if (!m) return false;
   const host = m[1];
-  // TEST_EMAIL
-  if (cons.id === TEST_EMAIL_CONSERVATORY && String(email).trim().toLowerCase() === TEST_EMAIL) return true;
   return cons.domains.some((d) => host === d.toLowerCase() || host.endsWith("." + d.toLowerCase()));
 }
 
