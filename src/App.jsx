@@ -4442,6 +4442,19 @@ console.warn(
   `for walkthrough testing. Remove TEST_EMAIL from App.jsx before launch.`,
 );
 
+// Two names for the same school, as typed by two different people.
+//
+// Used to decide whether an approved row is a school we already know. Accents
+// and case are the whole point: an admin approving "Ecole Normale" for a
+// built-in "École Normale" would otherwise create a second entry, and the
+// student would be shown both with no way to tell which one accepts them.
+// NFD splits a letter from its accent so the accent can be dropped.
+function normalizeName(s) {
+  return String(s || "")
+    .normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .toLowerCase().replace(/\s+/g, " ").trim();
+}
+
 function emailMatchesConservatory(email, cons) {
   if (!cons) return false;
   const m = String(email).trim().toLowerCase().match(/@(.+)$/);
@@ -4584,14 +4597,60 @@ function StepConservatory({ draft, update, editing }) {
   // downstream — emailMatchesConservatory, the placeholder, the roster row —
   // keeps working without learning about a second kind of conservatory.
   // A built-in wins on id collision; nothing else can collide.
-  const approvedShaped = React.useMemo(() => {
-    const seen = new Set(CONSERVATORIES.map((c) => c.id));
-    return (approvedCons || []).filter((c) => !seen.has(c.id)).map((c) => ({
-      id: c.id, name: c.name, short: c.name,
-      domains: Array.isArray(c.domains) ? c.domains : [],
-      city: c.address || "", country: "", address: c.address || "",
-      lat: c.lat, lng: c.lng, approved: true,
-    }));
+  // The built-in list is the base; approved rows are patches on top of it, not
+  // a second list stapled to the end.
+  //
+  // Concatenating them duplicated any school that already existed. A student
+  // whose conservatory changed its email domain sends the new one, an admin
+  // approves it, and a row appears named "Curtis Institute of Music" — while
+  // Curtis is a built-in, living in a JavaScript array the database has never
+  // heard of. Nothing could catch it: the approve function merges on conflict
+  // (name), which only sees other approved rows, and the filter below skipped
+  // rows by *id*, so a UUID never matched the string "curtis".
+  //
+  // The student then saw Curtis twice, and the one listed first was the old
+  // entry that rejects their address — the exact problem the request form is
+  // there to solve, appearing not to have worked.
+  //
+  // So a matching row folds its domains into the school instead of adding
+  // another. Both addresses verify, which is also what a school running two
+  // domains through a migration needs.
+  const { approvedShaped, conservatories } = React.useMemo(() => {
+    // Plain objects rather than Map: this file imports lucide's Map icon at
+    // the top, which shadows the global, so `new Map()` constructs an icon and
+    // the screen dies with "Map is not a constructor".
+    const byId = new Set(CONSERVATORIES.map((c) => c.id));
+    const byName = Object.create(null);
+    for (const c of CONSERVATORIES) byName[normalizeName(c.name)] = c.id;
+    const extraDomains = Object.create(null);   // built-in id -> domains from approved rows
+    const shaped = [];
+
+    for (const row of approvedCons || []) {
+      if (byId.has(row.id)) continue;
+      const domains = (Array.isArray(row.domains) ? row.domains : []).map((d) => String(d).toLowerCase());
+      const builtInId = byName[normalizeName(row.name)];
+      if (builtInId) {
+        // Only the domains are taken. Name, city and coordinates on the
+        // built-in are curated; a request form's free text is not an
+        // improvement on them.
+        extraDomains[builtInId] = [...(extraDomains[builtInId] || []), ...domains];
+        continue;
+      }
+      shaped.push({
+        id: row.id, name: row.name, short: row.name, domains,
+        city: row.address || "", country: "", address: row.address || "",
+        lat: row.lat, lng: row.lng, approved: true,
+      });
+    }
+
+    const touched = Object.keys(extraDomains);
+    const merged = touched.length === 0 ? CONSERVATORIES : CONSERVATORIES.map((c) => {
+      const extra = extraDomains[c.id];
+      if (!extra || extra.length === 0) return c;
+      return { ...c, domains: [...new Set([...c.domains.map((d) => d.toLowerCase()), ...extra])] };
+    });
+
+    return { approvedShaped: shaped, conservatories: merged };
   }, [approvedCons]);
 
   // Three doors, three rosters, and the line between them is the domain.
@@ -4609,16 +4668,16 @@ function StepConservatory({ draft, update, editing }) {
   // nothing and they see every school we know of.
   const withDomain = (c) => c.domains.length > 0;
   const emailPool = React.useMemo(
-    () => [...CONSERVATORIES, ...approvedShaped.filter(withDomain)],
-    [approvedShaped],
+    () => [...conservatories, ...approvedShaped.filter(withDomain)],
+    [approvedShaped, conservatories],
   );
   const docPool = React.useMemo(
     () => approvedShaped.filter((c) => !withDomain(c)),
     [approvedShaped],
   );
   const gradPool = React.useMemo(
-    () => [...CONSERVATORIES, ...approvedShaped],
-    [approvedShaped],
+    () => [...conservatories, ...approvedShaped],
+    [approvedShaped, conservatories],
   );
 
   const pool = !isDoc ? emailPool : applicant === "graduate" ? gradPool : docPool;
