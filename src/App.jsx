@@ -3940,7 +3940,7 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
   const labels = editing ? STEP_LABELS : ["Create your account", ...STEP_LABELS];
   const lastStep = labels.length - 1;
   const idx = editing ? step : step - 1;
-  const canNext = [
+  const stepValid = [
     !editing ? draft.email.trim().length > 3 && draft.password.length >= 6 && draft.password === draft.confirmPassword : null,
     draft.name.trim().length > 1 && !!draft.instrument,
     // On the document route the upload is what gates the step — a conservatory
@@ -3972,7 +3972,13 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
     true,
     !draft.teaching.open || !!draft.teaching.mode,
     true,
-  ].filter((v) => v !== null)[step];
+  ].filter((v) => v !== null);
+  const canNext = stepValid[step];
+  // Saving from the header skips the remaining steps, so it has to answer for
+  // all of them rather than just the one on screen — otherwise the shortcut
+  // becomes a way to save a profile the long route would have refused, and an
+  // unfinished transfer is one of the things it would let through.
+  const canSaveAll = editing && stepValid.every(Boolean);
 
   async function handleSubmit() {
     setSubmitting(true);
@@ -3983,7 +3989,10 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
   return (
     <div className="artium-su">
       <div className="max-w-3xl mx-auto px-6" style={{ paddingTop: "calc(20px + env(safe-area-inset-top, 0px))" }}>
-        <div className="flex items-center gap-3">
+        {/* Wraps rather than clips: the back button, the wordmark and two
+            pills do not fit on one line on a small phone, and Save was
+            running off the right edge with nothing to scroll to. */}
+        <div className="flex items-center gap-3" style={{ flexWrap: "wrap", rowGap: 8 }}>
           <button onClick={step === 0 ? onCancel : () => setStep(step - 1)} className="artium-aw-round" aria-label="Back">
             <ChevronLeft size={17} strokeWidth={2} />
           </button>
@@ -3991,9 +4000,29 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
               visitor just came through rather than a form it handed them to. */}
           <GateLogo word={20} />
           {editing && (
-            <button onClick={onCancel} style={{ marginLeft: "auto", fontSize: 12.5, fontWeight: 600, color: C.ivoryDim, background: "rgba(255,255,255,0.04)", border: `1px solid ${C.inkLine}`, borderRadius: 999, padding: "7px 15px", cursor: "pointer" }}>
-              Cancel
-            </button>
+            <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
+              <button onClick={onCancel} style={{ fontSize: 12.5, fontWeight: 600, color: C.ivoryDim, background: "rgba(255,255,255,0.04)", border: `1px solid ${C.inkLine}`, borderRadius: 999, padding: "7px 15px", cursor: "pointer" }}>
+                Cancel
+              </button>
+              {/* Changing one line of a bio meant clicking Next through six
+                  steps to reach a save. This is the same submit the last step
+                  makes, just reachable from wherever they are. */}
+              <button
+                onClick={handleSubmit}
+                disabled={!canSaveAll || submitting}
+                title={canSaveAll ? undefined : "Finish the highlighted step before saving"}
+                style={{
+                  fontSize: 12.5, fontWeight: 700, borderRadius: 999, padding: "7px 15px",
+                  border: "none", whiteSpace: "nowrap",
+                  cursor: canSaveAll && !submitting ? "pointer" : "not-allowed",
+                  color: canSaveAll ? C.brassText : C.ivoryDim,
+                  background: canSaveAll ? "linear-gradient(180deg, #F3D9A6 0%, #D9AE66 100%)" : "rgba(255,255,255,0.05)",
+                  opacity: submitting ? 0.7 : 1,
+                }}
+              >
+                {submitting ? "Saving…" : "Save changes"}
+              </button>
+            </div>
           )}
         </div>
         <div className="artium-su-head">
