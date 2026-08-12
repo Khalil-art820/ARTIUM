@@ -3947,8 +3947,14 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
       ? (editing || !!draft.proofDocUrl)
       // A sent domain request is a complete answer on the email route: they
       // have given us a school and an address at it, and the rest is ours.
+      // `password === "__google__"` used to sit alongside conservatoryVerified
+      // here, which let any Google account past this step with any school
+      // selected — the same hole as the banner, and it would have waved
+      // through anyone who reached step 4 regardless of what step 3 showed.
+      // A Google address that does belong to the school now sets
+      // conservatoryVerified itself, so this only has to ask the one question.
       : !!draft.domainReq
-        || (!!draft.conservatoryId && (editing || draft.password === "__google__" || draft.conservatoryVerified))),
+        || (!!draft.conservatoryId && (editing || draft.conservatoryVerified))),
     draft.tastes.length >= 3,
     draft.pieces.length >= 1,
     true,
@@ -4592,6 +4598,27 @@ function StepConservatory({ draft, update, editing }) {
   const domainOk = selectedCons && emailMatchesConservatory(email, selectedCons);
   const verified = draft.conservatoryVerified;
 
+  // Signing in with Google proves one address: the Google account's own. It
+  // was being read as proof of whichever school you then picked, so a gmail
+  // account plus a tap on Juilliard produced "Verified via Google" and a
+  // verified Juilliard student. The account is real; the claim about the
+  // school was never checked.
+  //
+  // It is still proof when the address belongs to the school — a conservatory
+  // on Google Workspace is exactly the case worth keeping, and asking that
+  // student for a code sent to the address they just signed in with would be
+  // theatre. So the shortcut survives, but only against the same test any
+  // typed address has to pass.
+  const googleProvesSchool = isGoogle && emailMatchesConservatory(draft.email, selectedCons);
+
+  // Whatever proved it, one flag records it, so nothing downstream has to know
+  // which route was taken or remember to make an exception for this one.
+  useEffect(() => {
+    if (googleProvesSchool && !draft.conservatoryVerified) {
+      update({ conservatoryEmail: draft.email, conservatoryVerified: true });
+    }
+  }, [googleProvesSchool, draft.conservatoryVerified, draft.email]);
+
   function pickConservatory(id) {
     update({ conservatoryId: id, conservatoryVerified: false });
     setCodeSent(false); setCode(""); setErr("");
@@ -4916,7 +4943,7 @@ function StepConservatory({ draft, update, editing }) {
       )}
 
       {/* Conservatory email verification (OTP path) */}
-      {selectedCons && !isGoogle && !editing && !isDoc && (
+      {selectedCons && !googleProvesSchool && !editing && !isDoc && (
         <div className="mt-5 rounded-2xl" style={{ border: `1px solid ${verified ? "#1A9E6E" : C.brass}`, background: C.inkSoft, padding: "18px 18px" }}>
           <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brassLabel, letterSpacing: 0.5, marginBottom: 8 }}>VERIFY YOUR {(selectedCons.short || selectedCons.name).toUpperCase()} STUDENT EMAIL</p>
           {verified ? (
@@ -4961,7 +4988,7 @@ function StepConservatory({ draft, update, editing }) {
           )}
         </div>
       )}
-      {selectedCons && isGoogle && !editing && (
+      {selectedCons && googleProvesSchool && !editing && (
         <div className="mt-5 rounded-2xl" style={{ border: `1px solid #1A9E6E`, background: C.inkSoft, padding: "14px 18px", display: "flex", alignItems: "center", gap: 8 }}>
           <CheckIcon size={18} color="#1A9E6E" />
           <p style={{ fontSize: 14, color: "#1A9E6E", fontWeight: 600, margin: 0 }}>Verified via Google ({draft.email})</p>
