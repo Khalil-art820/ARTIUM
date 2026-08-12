@@ -182,7 +182,7 @@ const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII"];
 /* DATA                                                                */
 /* ---------------------------------------------------------------- */
 const CONSERVATORIES = [
-  { id: "juilliard", name: "The Juilliard School", short: "Juilliard", city: "New York", country: "USA", lat: 40.7736, lng: -73.9827, domains: ["juilliard.edu", "gmail.com"] }, /* TEMP: gmail.com for testing — remove */
+  { id: "juilliard", name: "The Juilliard School", short: "Juilliard", city: "New York", country: "USA", lat: 40.7736, lng: -73.9827, domains: ["juilliard.edu"] },
   { id: "curtis", name: "Curtis Institute of Music", short: "Curtis", city: "Philadelphia", country: "USA", lat: 39.9496, lng: -75.1717, domains: ["curtis.edu"] },
   { id: "nec", name: "New England Conservatory", short: "NEC", city: "Boston", country: "USA", lat: 42.3428, lng: -71.0857, domains: ["necmusic.edu"] },
   { id: "sfcm", name: "San Francisco Conservatory of Music", short: "SFCM", city: "San Francisco", country: "USA", lat: 37.7776, lng: -122.4196, domains: ["sfcm.edu"] },
@@ -4438,6 +4438,27 @@ const FREE_MAIL = new Set([
   "mail.com", "yandex.com", "qq.com", "163.com", "orange.fr", "free.fr",
   "wanadoo.fr", "web.de", "t-online.de",
 ]);
+
+// A personal-mail domain on a school's entry turns every account at that
+// provider into a verified student there — the check does exactly what it is
+// told, and what it was told was wrong. One of these shipped: the Juilliard
+// row carried "gmail.com" behind a comment reading TEMP, remove. It survived
+// the comment, a code review and a deploy, and it made every gmail address a
+// Juilliard student and every Google sign-in proof of studying there.
+//
+// The roster is a hundred-odd hand-written lines and the next one will be just
+// as invisible, so it is checked rather than watched for.
+if (import.meta.env.DEV) {
+  for (const c of CONSERVATORIES) {
+    const personal = (c.domains || []).filter((d) => FREE_MAIL.has(String(d).toLowerCase()));
+    if (personal.length) {
+      console.error(
+        `[artium] ${c.name} lists a personal-mail domain (${personal.join(", ")}). ` +
+        `Anyone with an address there would verify as a student of it. Remove it from CONSERVATORIES.`,
+      );
+    }
+  }
+}
 
 const DOOR_LABEL = {
   student_email: "Student, with a conservatory email",
