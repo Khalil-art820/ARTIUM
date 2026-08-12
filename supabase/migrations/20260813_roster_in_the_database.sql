@@ -177,22 +177,15 @@ on conflict (id) do update
 -- the request form, approved by hand — and it must count here too, or the
 -- server would refuse the very address an admin just accepted.
 --
--- Approved rows are matched to a built-in by name, accent- and case-folded,
+-- Approved rows are matched to a roster entry by name, accent- and case-folded,
 -- because that is how the client merges them and the two must not disagree.
 -- ---------------------------------------------------------------------------
-create or replace function public.normalize_conservatory_name(p text)
-returns text
-language sql
-immutable
-set search_path = public
-as $$
-  select btrim(regexp_replace(lower(unaccent_bytea_safe(p)), '\s+', ' ', 'g'));
-$$;
 
--- unaccent is an extension and may not be installed; this keeps the migration
--- self-contained and does the one thing needed — fold the Latin accents that
--- appear in conservatory names.
-create or replace function public.unaccent_bytea_safe(p text)
+-- Defined before the function that calls it: a `language sql` body is parsed
+-- when it is created, so the other order fails with "function does not exist".
+-- unaccent is an extension and may not be installed, so this does the one
+-- thing needed — fold the Latin accents that appear in conservatory names.
+create or replace function public.fold_accents(p text)
 returns text
 language sql
 immutable
@@ -204,6 +197,18 @@ as $$
   );
 $$;
 
+create or replace function public.normalize_conservatory_name(p text)
+returns text
+language sql
+immutable
+set search_path = public
+as $$
+  select btrim(regexp_replace(lower(public.fold_accents(p)), '\s+', ' ', 'g'));
+$$;
+
+-- unnest belongs in FROM, not wrapped in lower() in the select list: a
+-- set-returning function nested inside a call is rejected, and the error names
+-- the column rather than the cause. lateral is what that wants to be.
 create or replace function public.conservatory_domains(p_id text)
 returns text[]
 language sql
@@ -211,36 +216,34 @@ stable
 security definer
 set search_path = public
 as $$
-  select coalesce(
-    (
-      select array_agg(distinct d)
-      from (
-        -- the roster's own domains
-        select lower(unnest(c.domains)) as d
-          from conservatory_roster c
-         where c.id = p_id
+  select coalesce(array_agg(distinct lower(d)), '{}'::text[])
+  from (
+    -- the roster's own domains
+    select d
+      from conservatory_roster c
+      cross join lateral unnest(c.domains) as d
+     where c.id = p_id
 
-        union all
+    union all
 
-        -- domains an admin approved for the same school, matched by name
-        select lower(unnest(a.domains)) as d
-          from approved_conservatories a
-          join conservatory_roster c
-            on public.normalize_conservatory_name(a.name)
-             = public.normalize_conservatory_name(c.name)
-         where c.id = p_id
+    -- domains an admin approved for the same school, matched by name
+    select d
+      from approved_conservatories a
+      join conservatory_roster c
+        on public.normalize_conservatory_name(a.name)
+         = public.normalize_conservatory_name(c.name)
+      cross join lateral unnest(a.domains) as d
+     where c.id = p_id
 
-        union all
+    union all
 
-        -- a school that exists only as an approved row: its id is the uuid
-        select lower(unnest(a.domains)) as d
-          from approved_conservatories a
-         where a.id::text = p_id
-      ) all_domains
-      where d is not null and d <> ''
-    ),
-    '{}'::text[]
-  );
+    -- a school that exists only as an approved row: its id is the uuid
+    select d
+      from approved_conservatories a
+      cross join lateral unnest(a.domains) as d
+     where a.id::text = p_id
+  ) all_domains
+  where d is not null and btrim(d) <> '';
 $$;
 
 revoke all on function public.conservatory_domains(text) from public;
@@ -257,7 +260,7 @@ set search_path = public
 as $$
   select exists (
     select 1
-      from unnest(public.conservatory_domains(p_id)) d
+      from unnest(public.conservatory_domains(p_id)) as d
      where lower(split_part(btrim(p_email), '@', 2)) = d
         or lower(split_part(btrim(p_email), '@', 2)) like '%.' || d
   );
