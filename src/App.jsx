@@ -9137,6 +9137,22 @@ function AdminVerifications({ card, STATUS_COLOR }) {
     // .select() so the response carries the affected rows: RLS can refuse an
     // update by matching zero rows without raising an error at all.
     const patch = { approved: approving, conservatory_verified: approving };
+    // Record the address they proved.
+    //
+    // A domain request verifies an institutional address by code, and until
+    // now none of it reached the profile: conservatory_email stayed null,
+    // because the signup route deliberately does not set it — the school is
+    // not on any list yet, so there is nothing for it to belong to — and
+    // approving never filled it in either.
+    //
+    // That loses the only record of what was proved. It is what the approval
+    // trigger looks for if the row is ever touched again, so a student
+    // approved this way could not be re-verified; and the profile screen shows
+    // the address beside the school, which was simply blank.
+    const provenEmail = String(fieldVal(r, "conservatory_email") || "").trim();
+    if (approving && r.kind === "domain_request" && provenEmail) {
+      patch.conservatory_email = provenEmail.toLowerCase();
+    }
     // Which id the student is filed under.
     //
     // Approving still upserts approved_conservatories, because that row is
