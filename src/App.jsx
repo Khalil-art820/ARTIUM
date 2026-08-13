@@ -8911,6 +8911,52 @@ function AdminVerifications({ card, STATUS_COLOR }) {
   }
   React.useEffect(() => { load(); const id = setInterval(load, 5000); return () => clearInterval(id); /* eslint-disable-next-line */ }, []);
 
+  // Everything already on the map, so a request can be checked against it
+  // before it becomes a second copy of something.
+  const [known, setKnown] = useState([]);
+  React.useEffect(() => {
+    let live = true;
+    Promise.all([
+      supabase.from("conservatory_roster").select("id, name, city, country"),
+      supabase.from("approved_conservatories").select("id, name, address"),
+    ]).then(([a, b]) => {
+      if (!live) return;
+      setKnown([
+        ...(a.data || []).map((c) => ({ id: c.id, name: c.name, where: [c.city, c.country].filter(Boolean).join(", "), roster: true })),
+        ...(b.data || []).map((c) => ({ id: c.id, name: c.name, where: c.address || "", roster: false })),
+      ]);
+    });
+    return () => { live = false; };
+  }, []);
+
+  // Two Cortot rows reached the roster with the same street address under two
+  // different names — "ECOLE" and "ecole fredy cortot" — because the same
+  // school was requested twice and nothing compared them. The merge written
+  // for this only folds an approved row into a roster school by name, so two
+  // requests spelled differently never met.
+  //
+  // Matching addresses automatically would be worse than useless: "115 Rue
+  // Louis Guérin" and "115 rue Louis Guerin, Villeurbanne" are the same place
+  // and do not compare equal, while a shared campus address can belong to two
+  // genuinely different schools. So this suggests rather than decides. A human
+  // reading two names side by side is right immediately; code guessing quietly
+  // merges things that should not be.
+  function looksLike(name, address) {
+    const n = normalizeName(name), a = normalizeName(address);
+    if (!n && !a) return [];
+    const street = a.split(",")[0].trim();
+    return known.filter((k) => {
+      const kn = normalizeName(k.name), kw = normalizeName(k.where);
+      if (!kn) return false;
+      if (kn === n) return true;
+      // one name contained in the other: "ECOLE" inside "ecole fredy cortot"
+      if (n.length >= 4 && (kn.includes(n) || n.includes(kn))) return true;
+      // same street line, however the rest of the address was typed
+      if (street.length >= 6 && kw && kw.split(",")[0].trim() === street) return true;
+      return false;
+    }).slice(0, 3);
+  }
+
   function fieldVal(r, key) {
     return edits[r.id]?.[key] !== undefined ? edits[r.id][key] : (r[key] || "");
   }
@@ -9176,6 +9222,29 @@ function AdminVerifications({ card, STATUS_COLOR }) {
                       {r.kind !== "domain_request" && Extraction({ r })}
                       <input style={inp} value={fieldVal(r, "conservatory_name")} onChange={(e) => setField(r, "conservatory_name", e.target.value)} placeholder="Conservatory name" />
                       <input style={inp} value={fieldVal(r, "conservatory_address")} onChange={(e) => setField(r, "conservatory_address", e.target.value)} placeholder="Address" />
+                      {(() => {
+                        const hits = looksLike(fieldVal(r, "conservatory_name"), fieldVal(r, "conservatory_address"));
+                        if (!hits.length) return null;
+                        return (
+                          <div style={{ marginTop: 6, padding: "8px 10px", borderRadius: 10, border: "1px solid rgba(239,208,155,0.35)", background: "rgba(239,208,155,0.06)" }}>
+                            <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: C.brassLabel }}>
+                              Already on the map — approve under this name to avoid a duplicate:
+                            </p>
+                            {hits.map((k) => (
+                              <button
+                                key={k.id}
+                                onClick={() => setField(r, "conservatory_name", k.name)}
+                                title="Use this name"
+                                style={{ display: "block", width: "100%", textAlign: "left", marginTop: 5, padding: "5px 7px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.05)", color: C.ivory, fontSize: 11.5, cursor: "pointer" }}
+                              >
+                                {k.name}
+                                {k.where ? <span style={{ color: C.ivoryDim }}> · {k.where}</span> : null}
+                                {k.roster ? <span style={{ color: C.ivoryDim }}> · built in</span> : null}
+                              </button>
+                            ))}
+                          </div>
+                        );
+                      })()}
                     </>
                   ) : (
                     <>
