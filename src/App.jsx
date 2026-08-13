@@ -8993,7 +8993,7 @@ function AdminVerifications({ card, STATUS_COLOR }) {
   const pickOf = (r) => picks[r.id] || null;
 
   function choose(r, k) {
-    setPicks((p) => ({ ...p, [r.id]: { mode: "existing", id: k.id, name: k.name, where: k.where } }));
+    setPicks((p) => ({ ...p, [r.id]: { mode: "existing", id: k.id, name: k.name, where: k.where, roster: !!k.roster } }));
     // decide() reads these, and approving under the existing name is what
     // makes the database fold the domain into that school instead of adding a
     // row beside it.
@@ -9137,7 +9137,22 @@ function AdminVerifications({ card, STATUS_COLOR }) {
     // .select() so the response carries the affected rows: RLS can refuse an
     // update by matching zero rows without raising an error at all.
     const patch = { approved: approving, conservatory_verified: approving };
-    if (approving && consId) patch.conservatory_id = consId;
+    // Which id the student is filed under.
+    //
+    // Approving still upserts approved_conservatories, because that row is
+    // what carries the domain onto the school. But when the school picked was
+    // a roster one, its id is the roster id — and that is what the profile
+    // must hold. The upsert's uuid would be wrong: the signup screen folds an
+    // approved row into the roster school it matches by name, so that uuid is
+    // not a school anyone can be found under. The student would be approved,
+    // filed against nothing, and absent from the school's roster on the map.
+    //
+    // Caught by the first end-to-end run: the request landed with
+    // conservatory_id 65893f97… while the school it was approved as is
+    // 'artium-test'.
+    const picked = pickOf(r);
+    const filedUnder = picked?.mode === "existing" && picked.roster ? picked.id : consId;
+    if (approving && filedUnder) patch.conservatory_id = filedUnder;
     const { data: touched, error: profileError } = await supabase.from("profiles")
       .update(patch)
       .eq("id", r.user_id)
