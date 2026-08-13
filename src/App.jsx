@@ -8964,6 +8964,63 @@ function AdminVerifications({ card, STATUS_COLOR }) {
     setEdits((e) => ({ ...e, [r.id]: { ...e[r.id], [key]: val } }));
   }
 
+  // Which school this request is being approved as: an existing one, or a new
+  // one you are deliberately creating.
+  //
+  // It used to be two text boxes prefilled with whatever the student typed,
+  // and Approve took them as they stood. That is how the roster got "ECOLE"
+  // and "ecole fredy cortot" at one address: nothing had to be decided, so
+  // nothing was. Suggesting the existing entry helped, but a suggestion can be
+  // scrolled past, and a school with a different name at a different address —
+  // CNSMDP against Conservatoire de Paris — offers nothing to suggest from.
+  //
+  // So the choice is the step. Approve stays shut until one is made, and
+  // creating a second copy of something means saying so.
+  const [picks, setPicks] = useState({});   // request id -> { mode, id, name, where }
+  const [pickQ, setPickQ] = useState({});   // request id -> search text
+  const pickOf = (r) => picks[r.id] || null;
+
+  function choose(r, k) {
+    setPicks((p) => ({ ...p, [r.id]: { mode: "existing", id: k.id, name: k.name, where: k.where } }));
+    // decide() reads these, and approving under the existing name is what
+    // makes the database fold the domain into that school instead of adding a
+    // row beside it.
+    setField(r, "conservatory_name", k.name);
+    if (k.where && !k.roster) setField(r, "conservatory_address", k.where);
+  }
+
+  function chooseNew(r) {
+    setPicks((p) => ({ ...p, [r.id]: { mode: "new" } }));
+  }
+
+  function clearPick(r) {
+    setPicks((p) => { const n = { ...p }; delete n[r.id]; return n; });
+  }
+
+  // The search is over everything already on the map. Ranked so an exact or
+  // contained name comes before a loose word match, because the one you want
+  // is nearly always the one that looks most like what was typed.
+  function searchKnown(r) {
+    const typed = normalizeName(fieldVal(r, "conservatory_name"));
+    const q = normalizeName(pickQ[r.id] !== undefined ? pickQ[r.id] : fieldVal(r, "conservatory_name"));
+    if (!q) return known.slice(0, 6);
+    const scored = known
+      .map((k) => {
+        const kn = normalizeName(k.name);
+        let score = -1;
+        if (kn === q) score = 0;
+        else if (kn.startsWith(q) || q.startsWith(kn)) score = 1;
+        else if (kn.includes(q) || q.includes(kn)) score = 2;
+        else if (q.split(" ").some((w) => w.length >= 4 && kn.includes(w))) score = 3;
+        else if (normalizeName(k.where).includes(q)) score = 4;
+        if (score >= 0 && kn === typed) score -= 0.5;
+        return { k, score };
+      })
+      .filter((x) => x.score >= 0)
+      .sort((a, b) => a.score - b.score);
+    return scored.slice(0, 6).map((x) => x.k);
+  }
+
   async function viewDoc(path) {
     if (!path) return;
     const { data, error } = await supabase.storage.from("student-proofs").createSignedUrl(path, 300);
@@ -9220,28 +9277,71 @@ function AdminVerifications({ card, STATUS_COLOR }) {
                   {editable ? (
                     <>
                       {r.kind !== "domain_request" && Extraction({ r })}
-                      <input style={inp} value={fieldVal(r, "conservatory_name")} onChange={(e) => setField(r, "conservatory_name", e.target.value)} placeholder="Conservatory name" />
-                      <input style={inp} value={fieldVal(r, "conservatory_address")} onChange={(e) => setField(r, "conservatory_address", e.target.value)} placeholder="Address" />
                       {(() => {
-                        const hits = looksLike(fieldVal(r, "conservatory_name"), fieldVal(r, "conservatory_address"));
-                        if (!hits.length) return null;
-                        return (
-                          <div style={{ marginTop: 6, padding: "8px 10px", borderRadius: 10, border: "1px solid rgba(239,208,155,0.35)", background: "rgba(239,208,155,0.06)" }}>
-                            <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: C.brassLabel }}>
-                              Already on the map — approve under this name to avoid a duplicate:
-                            </p>
-                            {hits.map((k) => (
+                        const pick = pickOf(r);
+                        const hits = searchKnown(r);
+                        const suggested = looksLike(fieldVal(r, "conservatory_name"), fieldVal(r, "conservatory_address"));
+                        if (!pick) {
+                          return (
+                            <div style={{ padding: "9px 10px", borderRadius: 10, border: `1px solid ${suggested.length ? "rgba(239,208,155,0.35)" : C.inkLine}`, background: suggested.length ? "rgba(239,208,155,0.06)" : "rgba(255,255,255,0.03)" }}>
+                              <p style={{ margin: "0 0 3px", fontSize: 11, fontWeight: 700, color: C.brassLabel }}>
+                                {suggested.length ? "Looks like a school we already have" : "Which school is this?"}
+                              </p>
+                              <p style={{ margin: "0 0 7px", fontSize: 10.5, color: C.ivoryDim, lineHeight: 1.45 }}>
+                                They typed “{fieldVal(r, "conservatory_name") || "—"}”
+                                {fieldVal(r, "conservatory_address") ? <> · {fieldVal(r, "conservatory_address")}</> : null}
+                              </p>
+                              <input
+                                style={{ ...inp, marginBottom: 6 }}
+                                value={pickQ[r.id] !== undefined ? pickQ[r.id] : fieldVal(r, "conservatory_name")}
+                                onChange={(e) => setPickQ((q) => ({ ...q, [r.id]: e.target.value }))}
+                                placeholder="Search the schools we have…"
+                              />
+                              {hits.length === 0 && (
+                                <p style={{ margin: "0 0 6px", fontSize: 10.5, color: C.ivoryDim }}>Nothing matches that search.</p>
+                              )}
+                              {hits.map((k) => (
+                                <button
+                                  key={k.id}
+                                  onClick={() => choose(r, k)}
+                                  style={{ display: "block", width: "100%", textAlign: "left", marginBottom: 4, padding: "6px 8px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.05)", color: C.ivory, fontSize: 11.5, cursor: "pointer" }}
+                                >
+                                  {k.name}
+                                  {k.where ? <span style={{ color: C.ivoryDim }}> · {k.where}</span> : null}
+                                  {k.roster ? <span style={{ color: C.ivoryDim }}> · built in</span> : null}
+                                </button>
+                              ))}
                               <button
-                                key={k.id}
-                                onClick={() => setField(r, "conservatory_name", k.name)}
-                                title="Use this name"
-                                style={{ display: "block", width: "100%", textAlign: "left", marginTop: 5, padding: "5px 7px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.05)", color: C.ivory, fontSize: 11.5, cursor: "pointer" }}
+                                onClick={() => chooseNew(r)}
+                                style={{ display: "block", width: "100%", textAlign: "left", marginTop: 6, padding: "6px 8px", borderRadius: 8, border: `1px dashed ${C.inkLine}`, background: "none", color: C.ivoryDim, fontSize: 11.5, cursor: "pointer" }}
                               >
-                                {k.name}
-                                {k.where ? <span style={{ color: C.ivoryDim }}> · {k.where}</span> : null}
-                                {k.roster ? <span style={{ color: C.ivoryDim }}> · built in</span> : null}
+                                + None of these — add it as a new school
                               </button>
-                            ))}
+                            </div>
+                          );
+                        }
+                        if (pick.mode === "existing") {
+                          return (
+                            <div style={{ padding: "9px 10px", borderRadius: 10, border: "1px solid #1A9E6E", background: "rgba(26,158,110,0.08)" }}>
+                              <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: "#1A9E6E" }}>Approving as an existing school</p>
+                              <p style={{ margin: "3px 0 0", fontSize: 12, color: C.ivory, fontWeight: 600 }}>{pick.name}</p>
+                              {pick.where ? <p style={{ margin: "2px 0 0", fontSize: 10.5, color: C.ivoryDim }}>{pick.where}</p> : null}
+                              <p style={{ margin: "6px 0 0", fontSize: 10.5, color: C.ivoryDim, lineHeight: 1.45 }}>
+                                Its domain joins that school. No new row.
+                              </p>
+                              <button onClick={() => clearPick(r)} style={{ marginTop: 7, padding: "5px 9px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.05)", color: C.ivoryDim, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Change</button>
+                            </div>
+                          );
+                        }
+                        return (
+                          <div style={{ padding: "9px 10px", borderRadius: 10, border: `1px solid ${C.brass}`, background: "rgba(239,208,155,0.05)" }}>
+                            <p style={{ margin: "0 0 6px", fontSize: 11, fontWeight: 700, color: C.brassLabel }}>Adding a new school</p>
+                            <input style={inp} value={fieldVal(r, "conservatory_name")} onChange={(e) => setField(r, "conservatory_name", e.target.value)} placeholder="Conservatory name" />
+                            <input style={inp} value={fieldVal(r, "conservatory_address")} onChange={(e) => setField(r, "conservatory_address", e.target.value)} placeholder="Address — street, city, country" />
+                            <p style={{ margin: "2px 0 0", fontSize: 10.5, color: C.ivoryDim, lineHeight: 1.45 }}>
+                              Use the school's own spelling. Every later request is matched against this.
+                            </p>
+                            <button onClick={() => clearPick(r)} style={{ marginTop: 7, padding: "5px 9px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.05)", color: C.ivoryDim, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Change</button>
                           </div>
                         );
                       })()}
@@ -9256,7 +9356,19 @@ function AdminVerifications({ card, STATUS_COLOR }) {
                 <td style={td}>
                   {editable ? (
                     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                      <button disabled={busy === r.id} onClick={() => decide(r, "approved")} style={{ padding: "8px 10px", borderRadius: 8, border: "none", background: "#1A9E6E", color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Approve</button>
+                      {(() => {
+                        // Approve waits for the school to be decided. A
+                        // rejection does not — nothing is created by it.
+                        const ready = !!pickOf(r);
+                        return (
+                          <button
+                            disabled={busy === r.id || !ready}
+                            onClick={() => decide(r, "approved")}
+                            title={ready ? undefined : "Choose the school first"}
+                            style={{ padding: "8px 10px", borderRadius: 8, border: "none", background: ready ? "#1A9E6E" : "rgba(255,255,255,0.06)", color: ready ? "#fff" : C.ivoryDim, fontSize: 12, fontWeight: 700, cursor: ready ? "pointer" : "not-allowed" }}
+                          >Approve</button>
+                        );
+                      })()}
                       <button disabled={busy === r.id} onClick={() => decide(r, "rejected")} style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.05)", color: C.burgundy, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Reject</button>
                     </div>
                   ) : (
