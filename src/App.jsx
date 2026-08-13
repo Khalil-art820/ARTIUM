@@ -8921,10 +8921,22 @@ function AdminVerifications({ card, STATUS_COLOR }) {
       supabase.from("approved_conservatories").select("id, name, address"),
     ]).then(([a, b]) => {
       if (!live) return;
-      setKnown([
-        ...(a.data || []).map((c) => ({ id: c.id, name: c.name, where: [c.city, c.country].filter(Boolean).join(", "), roster: true })),
-        ...(b.data || []).map((c) => ({ id: c.id, name: c.name, where: c.address || "", roster: false })),
-      ]);
+      // Roster first, then approved rows that are not already the same school
+      // by name. A school lives in both once its domain has been approved —
+      // the roster entry and the approved row that patched it — and offering
+      // the same name twice invites picking the wrong one.
+      const merged = [];
+      const seenNames = new Set();
+      for (const c of a.data || []) {
+        merged.push({ id: c.id, name: c.name, where: [c.city, c.country].filter(Boolean).join(", "), roster: true });
+        seenNames.add(normalizeName(c.name));
+      }
+      for (const c of b.data || []) {
+        if (seenNames.has(normalizeName(c.name))) continue;
+        merged.push({ id: c.id, name: c.name, where: c.address || "", roster: false });
+        seenNames.add(normalizeName(c.name));
+      }
+      setKnown(merged);
     });
     return () => { live = false; };
   }, []);
