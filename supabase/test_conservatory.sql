@@ -43,10 +43,24 @@ on conflict (id) do update
 
 -- ---------------------------------------------------------------------------
 -- REMOVE — run this when testing is done
--- ---------------------------------------------------------------------------
--- delete from conservatory_roster where id = 'artium-test';
 --
--- Anyone who verified against it keeps their profile pointing at a school that
--- no longer exists, so delete the test accounts too rather than leaving them
--- on the map:
---   delete from profiles where conservatory_id = 'artium-test';
+-- Three statements, because approving a request through it leaves the school
+-- in two tables. decide() upserts approved_conservatories to carry the domain
+-- onto the school, so "Artium Test Conservatory" exists there as well as in
+-- the roster. Deleting only the roster row leaves the other behind, still
+-- offered in the admin picker and still accepting art-ium.com.
+--
+-- Profiles first: they reference the school, and a profile left pointing at a
+-- school that no longer exists sits on the map with nothing under it.
+-- ---------------------------------------------------------------------------
+-- delete from profiles                where conservatory_id = 'artium-test';
+-- delete from approved_conservatories where name = 'Artium Test Conservatory';
+-- delete from conservatory_roster     where id = 'artium-test';
+--
+-- Then the test accounts in Authentication → Users, or you are left with
+-- logins that have no profile.
+--
+-- Check nothing survived:
+--   select (select count(*) from conservatory_roster     where id = 'artium-test')                  as roster,
+--          (select count(*) from approved_conservatories where name = 'Artium Test Conservatory')   as approved,
+--          (select count(*) from profiles                where conservatory_id = 'artium-test')     as profiles;
