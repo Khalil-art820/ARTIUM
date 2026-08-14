@@ -94,6 +94,18 @@ Deno.serve(async (req) => {
     ? "You're in — welcome to Artium"
     : "About your Artium application";
 
+  // Where a reply goes.
+  //
+  // The From address sends and does not receive — Cloudflare Email Routing
+  // only carries the addresses configured on it, and verify@ is not one. So a
+  // rejection that ends "reply to this email if you'd like a hand" was an
+  // invitation into a black hole, offered at exactly the moment someone has a
+  // question. Set MAIL_REPLY_TO to an address that forwards to a real inbox.
+  //
+  // Unset, the offer is simply not made. Better to say nothing than to promise
+  // an answer nobody will ever see.
+  const replyTo = (Deno.env.get("MAIL_REPLY_TO") || "").trim();
+
   const lines = status === "approved"
     ? [
         `Hi ${firstName},`,
@@ -111,7 +123,9 @@ Deno.serve(async (req) => {
         ``,
         reason,
         ``,
-        `If that's something you can put right, you're welcome to apply again — reply to this email if you'd like a hand.`,
+        replyTo
+          ? `If that's something you can put right, you're welcome to apply again — just reply to this email if you'd like a hand.`
+          : `If that's something you can put right, you're welcome to apply again.`,
       ];
 
   const text = lines.join("\n");
@@ -122,7 +136,14 @@ Deno.serve(async (req) => {
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ from, to: [row.personal_email], subject, text, html }),
+    body: JSON.stringify({
+      from,
+      to: [row.personal_email],
+      subject,
+      text,
+      html,
+      ...(replyTo ? { reply_to: replyTo } : {}),
+    }),
   });
 
   if (!res.ok) {
