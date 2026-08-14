@@ -4785,10 +4785,16 @@ function StepConservatory({ draft, update, editing }) {
     }
 
     const touched = Object.keys(extraDomains);
+    // An approved row exists because someone told us the roster is out of
+    // date, so where one carries domains it replaces the roster's rather than
+    // adding to them — matching conservatory_domains() in the database. The
+    // two must agree: this decides whether the button is enabled, that decides
+    // whether the code is sent, and a disagreement is a student staring at a
+    // live button that fails.
     const merged = touched.length === 0 ? roster : roster.map((c) => {
       const extra = extraDomains[c.id];
       if (!extra || extra.length === 0) return c;
-      return { ...c, domains: [...new Set([...c.domains.map((d) => d.toLowerCase()), ...extra])] };
+      return { ...c, domains: [...new Set(extra.map((d) => d.toLowerCase()))] };
     });
 
     return { approvedShaped: shaped, conservatories: merged };
@@ -8967,23 +8973,42 @@ function AdminVerifications({ card, STATUS_COLOR }) {
   React.useEffect(() => {
     let live = true;
     Promise.all([
-      supabase.from("conservatory_roster").select("id, name, city, country"),
-      supabase.from("approved_conservatories").select("id, name, address"),
+      supabase.from("conservatory_roster").select("id, name, city, country, domains"),
+      supabase.from("approved_conservatories").select("id, name, address, domains"),
     ]).then(([a, b]) => {
       if (!live) return;
       // Roster first, then approved rows that are not already the same school
       // by name. A school lives in both once its domain has been approved —
       // the roster entry and the approved row that patched it — and offering
       // the same name twice invites picking the wrong one.
+      // Domains come along so the approve screen can say which address it is
+      // about to replace. An approved row wins over the roster's, the same
+      // rule the database uses when it answers the question for real.
+      const patched = Object.create(null);
+      for (const c of b.data || []) {
+        const d = (Array.isArray(c.domains) ? c.domains : []).map((x) => String(x).toLowerCase());
+        if (d.length) patched[normalizeName(c.name)] = d;
+      }
       const merged = [];
       const seenNames = new Set();
       for (const c of a.data || []) {
-        merged.push({ id: c.id, name: c.name, where: [c.city, c.country].filter(Boolean).join(", "), roster: true });
-        seenNames.add(normalizeName(c.name));
+        const key = normalizeName(c.name);
+        const own = (Array.isArray(c.domains) ? c.domains : []).map((x) => String(x).toLowerCase());
+        merged.push({
+          id: c.id, name: c.name,
+          where: [c.city, c.country].filter(Boolean).join(", "),
+          domains: patched[key] || own,
+          roster: true,
+        });
+        seenNames.add(key);
       }
       for (const c of b.data || []) {
         if (seenNames.has(normalizeName(c.name))) continue;
-        merged.push({ id: c.id, name: c.name, where: c.address || "", roster: false });
+        merged.push({
+          id: c.id, name: c.name, where: c.address || "",
+          domains: (Array.isArray(c.domains) ? c.domains : []).map((x) => String(x).toLowerCase()),
+          roster: false,
+        });
         seenNames.add(normalizeName(c.name));
       }
       setKnown(merged);
@@ -9041,6 +9066,12 @@ function AdminVerifications({ card, STATUS_COLOR }) {
   // What the applicant is told when turned down. Required, and stored on the
   // row, so the sentence they read and the sentence in the queue are the same
   // one — a rejection reconstructed from memory weeks later is worse than none.
+  // Whether a newly approved domain joins the school's existing ones or
+  // replaces them. Replacing is the default because a school that changed its
+  // address has changed it; keeping both is for the year or two of a migration
+  // when students are genuinely on either.
+  const [keepDomains, setKeepDomains] = useState({});
+
   const [reasons, setReasons] = useState({});
   const reasonOf = (r) => (reasons[r.id] || "").trim();
 
@@ -9160,6 +9191,7 @@ function AdminVerifications({ card, STATUS_COLOR }) {
       if (reqDomain) {
         const { data, error } = await supabase.rpc("approve_conservatory_domain", {
           p_name: consName, p_address: consAddress, p_domain: reqDomain,
+          p_keep_existing: !!keepDomains[r.id],
         });
         consError = error;
         if (!error && data) {
@@ -9497,6 +9529,33 @@ function AdminVerifications({ card, STATUS_COLOR }) {
                             title={has ? undefined : "Write a reason first — it is sent to the applicant"}
                             style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.05)", color: has ? C.burgundy : C.ivoryDim, fontSize: 12, fontWeight: 700, cursor: has ? "pointer" : "not-allowed" }}
                           >Reject</button>
+                        );
+                      })()}
+                      {(() => {
+                        // Only asked when it is a real question: a domain
+                        // request, against a school that already has one.
+                        // Everywhere else the answer cannot matter, and a
+                        // checkbox that never changes anything is noise that
+                        // teaches you to ignore checkboxes.
+                        const pick = pickOf(r);
+                        if (r.kind !== "domain_request") return null;
+                        if (!pick || pick.mode !== "existing") return null;
+                        const existing = (known.find((k) => k.id === pick.id)?.domains) || [];
+                        if (!existing.length) return null;
+                        return (
+                          <label style={{ display: "flex", gap: 7, alignItems: "flex-start", fontSize: 11, color: C.ivoryDim, lineHeight: 1.4, cursor: "pointer" }}>
+                            <input
+                              type="checkbox"
+                              checked={!!keepDomains[r.id]}
+                              onChange={(e) => setKeepDomains((x) => ({ ...x, [r.id]: e.target.checked }))}
+                              style={{ marginTop: 1, accentColor: "#EFD09B" }}
+                            />
+                            <span>
+                              Keep <b style={{ color: C.ivory }}>@{existing[0]}</b> working too
+                              <br />
+                              <span style={{ opacity: 0.75 }}>Tick only if the school still issues both — otherwise the new address replaces it.</span>
+                            </span>
+                          </label>
                         );
                       })()}
                       <textarea
