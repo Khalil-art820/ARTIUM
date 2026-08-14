@@ -9038,6 +9038,12 @@ function AdminVerifications({ card, STATUS_COLOR }) {
   //
   // So the choice is the step. Approve stays shut until one is made, and
   // creating a second copy of something means saying so.
+  // What the applicant is told when turned down. Required, and stored on the
+  // row, so the sentence they read and the sentence in the queue are the same
+  // one — a rejection reconstructed from memory weeks later is worse than none.
+  const [reasons, setReasons] = useState({});
+  const reasonOf = (r) => (reasons[r.id] || "").trim();
+
   const [picks, setPicks] = useState({});   // request id -> { mode, id, name, where }
   const [pickQ, setPickQ] = useState({});   // request id -> search text
   const pickOf = (r) => picks[r.id] || null;
@@ -9116,7 +9122,9 @@ function AdminVerifications({ card, STATUS_COLOR }) {
     // seeing "your documents are under review". Check each one, and say which
     // step failed rather than reporting an approval that didn't happen.
     const { error: rowError } = await supabase.from("student_verifications")
-      .update({ status, conservatory_name: name, conservatory_address: address, conservatory_email: fieldVal(r, "conservatory_email") }).eq("id", r.id);
+      .update({ status, conservatory_name: name, conservatory_address: address,
+                conservatory_email: fieldVal(r, "conservatory_email"),
+                decision_reason: status === "rejected" ? reasonOf(r) : null }).eq("id", r.id);
     if (rowError) { setBusy(""); alert(`Could not update the request: ${rowError.message}`); return; }
 
     if (!r.user_id) {
@@ -9230,7 +9238,22 @@ function AdminVerifications({ card, STATUS_COLOR }) {
       return;
     }
 
+    await notifyApplicant(r, status);
     setBusy(""); load();
+  }
+
+  // Told after the fact, deliberately. The decision is already written; if the
+  // mail fails, saying so is more useful than pretending the decision did not
+  // happen — and re-sending is a click, while undoing an approval is not.
+  async function notifyApplicant(r, status) {
+    if (status !== "approved" && status !== "rejected") return;
+    const { data, error } = await supabase.functions.invoke("notify-decision", {
+      body: { verification_id: r.id, status, reason: status === "rejected" ? reasonOf(r) : "" },
+    });
+    const detail = error ? (await error.context?.json?.().catch(() => null))?.error : data?.error;
+    if (error || data?.error) {
+      alert(`Decision saved, but the applicant was not emailed: ${detail || "unknown error"}`);
+    }
   }
 
   const pending = rows.filter((r) => r.status === "pending");
@@ -9462,7 +9485,27 @@ function AdminVerifications({ card, STATUS_COLOR }) {
                           >Approve</button>
                         );
                       })()}
-                      <button disabled={busy === r.id} onClick={() => decide(r, "rejected")} style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.05)", color: C.burgundy, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Reject</button>
+                      {(() => {
+                        // Reject waits for a reason, because the reason is the
+                        // email. A rejection with nothing to say leaves someone
+                        // rebuffed and none the wiser about what to fix.
+                        const has = reasonOf(r).length > 2;
+                        return (
+                          <button
+                            disabled={busy === r.id || !has}
+                            onClick={() => decide(r, "rejected")}
+                            title={has ? undefined : "Write a reason first — it is sent to the applicant"}
+                            style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.05)", color: has ? C.burgundy : C.ivoryDim, fontSize: 12, fontWeight: 700, cursor: has ? "pointer" : "not-allowed" }}
+                          >Reject</button>
+                        );
+                      })()}
+                      <textarea
+                        value={reasons[r.id] || ""}
+                        onChange={(e) => setReasons((x) => ({ ...x, [r.id]: e.target.value }))}
+                        placeholder="If rejecting: what should they fix? This is emailed to them."
+                        rows={2}
+                        style={{ ...inp, margin: 0, resize: "vertical", minHeight: 46, fontFamily: FONT_BODY }}
+                      />
                     </div>
                   ) : (
                     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
