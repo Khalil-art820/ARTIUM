@@ -1712,14 +1712,43 @@ export default function App() {
   const [selectedStudentId, setSelectedStudentId] = useState(null);
   const [profileBack, setProfileBack] = useState("map");
 
-  // Conservatories established from an approved document. They aren't in the
-  // built-in list — that one is keyed on email domains — so without this the
-  // globe has nowhere to put their students.
+  // Every school the map knows about beyond the bundled list: the roster in
+  // the database, and conservatories established from an approved document.
+  //
+  // The roster half is why a student could sit at a school showing zero
+  // students. Signup was moved onto conservatory_roster, so people are filed
+  // under roster ids like 'artium-test'; the map was still composing the
+  // bundled array with approved_conservatories, whose ids are uuids. The card
+  // on the map and the student on the profile were two different rows for the
+  // same school, and nothing matched.
+  //
+  // Composed the same way signup composes it — roster first, then approved
+  // rows that are not already the same school by name — so a school approved
+  // for a new domain patches the entry it belongs to rather than appearing
+  // beside it.
   const [docCons, setDocCons] = useState([]);
   React.useEffect(() => {
     let live = true;
-    supabase.from("approved_conservatories").select("id, name, address, lat, lng")
-      .then(({ data }) => { if (live) setDocCons((data || []).map(asConservatory)); });
+    Promise.all([
+      supabase.from("conservatory_roster").select("id, name, short, city, country, lat, lng, domains"),
+      supabase.from("approved_conservatories").select("id, name, address, lat, lng"),
+    ]).then(([rosterRes, approvedRes]) => {
+      if (!live) return;
+      const builtIn = new Set(CONSERVATORIES.map((c) => c.id));
+      const seen = new Set(CONSERVATORIES.map((c) => normalizeName(c.name)));
+      const out = [];
+      for (const c of rosterRes.data || []) {
+        if (builtIn.has(c.id)) continue;          // already in the bundle
+        out.push({ ...c, domains: Array.isArray(c.domains) ? c.domains : [] });
+        seen.add(normalizeName(c.name));
+      }
+      for (const c of approvedRes.data || []) {
+        if (seen.has(normalizeName(c.name))) continue;
+        out.push(asConservatory(c));
+        seen.add(normalizeName(c.name));
+      }
+      setDocCons(out);
+    });
     return () => { live = false; };
   }, []);
 
