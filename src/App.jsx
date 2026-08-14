@@ -1747,6 +1747,7 @@ export default function App() {
         out.push(asConservatory(c));
         seen.add(normalizeName(c.name));
       }
+      setExtraCons(out);
       setDocCons(out);
     });
     return () => { live = false; };
@@ -1910,7 +1911,7 @@ export default function App() {
     // The id may come from either roster: the built-in list (if they reached
     // this route with one already picked) or the admin-approved one. Blank is
     // the normal case now — the document establishes the school.
-    let cons = CONSERVATORIES.find((c) => c.id === d.conservatoryId);
+    let cons = findConservatory(d.conservatoryId);
     if (!cons && d.conservatoryId) {
       const { data } = await supabase.from("approved_conservatories")
         .select("name, address").eq("id", d.conservatoryId).maybeSingle();
@@ -3293,7 +3294,7 @@ export default function App() {
                   </h2>
                   <p className="mt-1 text-sm" style={{ color: C.ivoryDim }}>
                     {myProfile.conservatoryId
-                      ? `${CONSERVATORIES.find(c => c.id === myProfile.conservatoryId)?.name || "Conservatory"} · ${myProfile.year || "student"}`
+                      ? `${findConservatory(myProfile.conservatoryId)?.name || "Conservatory"} · ${myProfile.year || "student"}`
                       : "Conservatory student"}
                     {myProfile.teaching?.open ? ` · Open to teaching at €${myProfile.teaching.price}/session` : ""}
                   </p>
@@ -3362,7 +3363,7 @@ export default function App() {
           {selectedStudentId && myProfile && (
             <StudentProfile
               student={students.find((s) => s.id === selectedStudentId)}
-              conservatory={CONSERVATORIES.find((c) => c.id === students.find((s) => s.id === selectedStudentId)?.conservatoryId)}
+              conservatory={findConservatory(students.find((s) => s.id === selectedStudentId)?.conservatoryId)}
               onBack={backFromProfile}
               onMessage={myProfile?.id === selectedStudentId ? null : () => openChat(selectedStudentId)}
               locked={previewOnly && !myProfile}
@@ -4435,6 +4436,26 @@ async function geocodeConservatory(name, address) {
   return null;
 }
 
+// Schools the bundle has never heard of: the roster table, and rows approved
+// from a request. Kept here so a lookup by id finds them wherever a student's
+// school is drawn.
+//
+// Every one of these sites used CONSERVATORIES.find directly, so a student at
+// a database-only school rendered as the fallback word "Conservatory" — on
+// their own profile, on their card in a roster, in the lesson room. It was
+// already true of every approved school before the roster moved into Postgres;
+// moving it made it true of more of them.
+//
+// A module-level array rather than a context because two of the callers are
+// plain functions, not components, and a hook cannot reach them. App refreshes
+// it in the same tick as the state that re-renders everything below.
+let EXTRA_CONS = [];
+function setExtraCons(list) { EXTRA_CONS = list || []; }
+function findConservatory(id) {
+  if (!id) return undefined;
+  return CONSERVATORIES.find((c) => c.id === id) || EXTRA_CONS.find((c) => c.id === id);
+}
+
 /** An approved_conservatories row, shaped like a built-in CONSERVATORIES entry. */
 function asConservatory(row) {
   const [city = "", country = ""] = (row.address || "").split(",").map((s) => s.trim());
@@ -5407,7 +5428,7 @@ function StepTopFlop({ draft, update }) {
 }
 
 function StepReview({ draft }) {
-  const cons = CONSERVATORIES.find((c) => c.id === draft.conservatoryId);
+  const cons = findConservatory(draft.conservatoryId);
   const teachingText = draft.teaching.open
     ? `${draft.teaching.mode === "online" ? "Online" : draft.teaching.mode === "in-person" ? "In-person" : "Online & in-person"} · €${draft.teaching.price}/session`
     : "Not offering lessons";
@@ -6247,7 +6268,7 @@ function StudentProfile({ student, conservatory, onBack, onMessage, locked, onAp
 /* MY PROFILE                                                         */
 /* ---------------------------------------------------------------- */
 function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack, onUpdateCoverPhoto }) {
-  const cons = CONSERVATORIES.find((c) => c.id === profile.conservatoryId);
+  const cons = findConservatory(profile.conservatoryId);
   const [confirmDelete, setConfirmDelete] = React.useState(false);
   const [deleting, setDeleting] = React.useState(false);
   const teachingText = profile.teaching?.open
@@ -6527,7 +6548,7 @@ function seedTeaching(arr) {
 // Pin a teacher at their conservatory's location, nudged a little so people
 // at the same school don't land exactly on top of each other.
 function teacherPin(student) {
-  const cons = CONSERVATORIES.find((c) => c.id === student.conservatoryId);
+  const cons = findConservatory(student.conservatoryId);
   if (!cons) return { x: 500, y: 230, cons: null };
   const h = String(student.id).split("").reduce((a, ch) => a + ch.charCodeAt(0), 0);
   const jx = ((h % 7) - 3) * 4;
@@ -7282,7 +7303,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
   }, {});
 
   const consRoster = selectedConsId ? (teachersByCons[selectedConsId] || []) : [];
-  const cons = CONSERVATORIES.find((c) => c.id === selectedConsId);
+  const cons = findConservatory(selectedConsId);
 
   function selectTeacher(id) {
     setSelectedId(id);
@@ -7345,7 +7366,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
                   <p className="mt-2 text-sm" style={{ color: C.ivoryDim }}>Select a pin on the map to see who's teaching there.</p>
                   <div className="mt-5 flex flex-col gap-2">
                     {teachers.map((t) => {
-                      const c = CONSERVATORIES.find((c) => c.id === t.conservatoryId);
+                      const c = findConservatory(t.conservatoryId);
                       return (
                         <button key={t.id} onClick={() => selectTeacher(t.id)} className="text-left flex items-center gap-3 p-3 rounded-xl" style={{ border: `1px solid ${C.inkLine}` }}>
                           <Avatar name={t.name} id={t.id} size={40} photoUrl={t.photoUrl} online={t.online} />
@@ -7386,7 +7407,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
       )}
 
       {(appTab === "map" || (appTab === "lesson" && selectedId === activeLessonTeacher?.id)) && selectedId && selected && (() => {
-        const selCons = CONSERVATORIES.find((c) => c.id === selected.conservatoryId);
+        const selCons = findConservatory(selected.conservatoryId);
         const linkMeta = videoLinkMeta(selected.videoLink);
         const teachingText = selected.teaching?.open
           ? `${selected.teaching.mode === "online" ? "Online" : selected.teaching.mode === "in-person" ? "In-person" : "Online & in-person"} · €${selected.teaching.price}/session`
