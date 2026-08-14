@@ -4102,7 +4102,21 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
             pills do not fit on one line on a small phone, and Save was
             running off the right edge with nothing to scroll to. */}
         <div className="flex items-center gap-3" style={{ flexWrap: "wrap", rowGap: 8 }}>
-          <button onClick={step === 0 ? onCancel : () => setStep(step - 1)} className="artium-aw-round" aria-label="Back">
+          {/* Back walks the steps and stops at the first one. It used to leave
+              the flow from step one, so the same button that had meant "go
+              back a step" seven times suddenly meant "abandon this" — one tap
+              past the beginning and the signup was gone.
+
+              Editing keeps the old behaviour: Cancel sits beside it there, so
+              leaving is already spoken for and the first step is where you
+              came in. */}
+          <button
+            onClick={step === 0 ? (editing ? onCancel : undefined) : () => setStep(step - 1)}
+            disabled={step === 0 && !editing}
+            className="artium-aw-round"
+            aria-label={step === 0 ? "You're on the first step" : "Back a step"}
+            style={step === 0 && !editing ? { opacity: 0.35, cursor: "default" } : undefined}
+          >
             <ChevronLeft size={17} strokeWidth={2} />
           </button>
           {/* The gate's lockup, so the flow reads as the same product the
@@ -9140,7 +9154,11 @@ function AdminConservatories({ card }) {
           || normalizeName(c.where).includes(needle)
           || c.domains.some((d) => d.includes(needle)))
       : schools;
-    return list.slice(0, 40);
+    // All of them. The cap was there in case a hundred rows of inputs felt
+    // heavy, and it does not — what it actually did was hide two thirds of the
+    // list behind a search box, on the one screen whose job is to let you look
+    // at the list.
+    return list;
   }, [schools, q]);
 
   const draftOf = (c) => (drafts[c.id] !== undefined ? drafts[c.id] : c.domains);
@@ -9257,11 +9275,9 @@ function AdminConservatories({ card }) {
         })}
       </div>
 
-      {schools.length > shown.length && (
-        <p className="text-sm" style={{ margin: "12px 0 0", color: C.ivoryDim }}>
-          Showing {shown.length} of {schools.length} — search to narrow it down.
-        </p>
-      )}
+      <p className="text-sm" style={{ margin: "12px 0 0", color: C.ivoryDim }}>
+        {q ? `${shown.length} of ${schools.length} schools` : `${schools.length} schools`}
+      </p>
     </div>
   );
 }
