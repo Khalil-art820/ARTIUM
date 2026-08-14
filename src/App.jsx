@@ -1944,8 +1944,16 @@ export default function App() {
       setMyProfile(updated);
       setStudents((arr) => arr.map((s) => (s.id === myProfile.id ? updated : s)));
       setScreen("app"); setAppTabPersist("profile");
-    } else if (authUser && draft.password === "__google__") {
-      // Google OAuth user completing profile for the first time
+    } else if (authUser && (draft.password === "__google__" || !authProfile)) {
+      // Already signed in, no profile yet: finish by writing one.
+      //
+      // Written as the Google case, because that was the only way to arrive
+      // here authenticated. It is not: someone who submitted, confirmed their
+      // email and then came back to finish is signed in too, with a password.
+      // They fell through to signUp, which refused an email that already had
+      // an account and told them to log in — which they had just done. The
+      // last step of signup was a wall, reached only by people who had already
+      // got further than most.
       // .select() and hand the row to the auth context. It fetches a profile
       // only when the session changes, and a Google account is signed in
       // before its profile exists — so the fetch finds nothing, authProfile
