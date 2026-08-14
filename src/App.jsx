@@ -1781,12 +1781,59 @@ export default function App() {
 
   // Takes no argument on purpose: it is wired straight to onClick handlers in
   // several places, so a positional verifyMethod would receive a click event.
+  // Keeping an unfinished signup.
+  //
+  // Nothing is created until the last step, so closing the tab at step six
+  // threw away a photo, a video link, three composers and a repertoire, with
+  // no warning and no trace. Whoever that was, we never knew they tried.
+  //
+  // Two things are deliberately not kept. The password, because a plain-text
+  // password sitting in localStorage is a worse problem than the one being
+  // solved — they set it again on the first step, where they set it anyway.
+  // And the photo, if it is a data URL, because a few of those exhaust the
+  // quota and then nothing saves at all.
+  const DRAFT_KEY = "artium_signup_draft_v1";
+  const DRAFT_MAX_AGE_DAYS = 30;
+  const [resumed, setResumed] = useState(false);
+
+  function readSavedDraft() {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (!raw) return null;
+      const saved = JSON.parse(raw);
+      if (!saved?.draft) return null;
+      const age = (Date.now() - (saved.at || 0)) / 86400000;
+      if (age > DRAFT_MAX_AGE_DAYS) { localStorage.removeItem(DRAFT_KEY); return null; }
+      return saved;
+    } catch { return null; }
+  }
+  function clearSavedDraft() {
+    try { localStorage.removeItem(DRAFT_KEY); } catch {}
+    setResumed(false);
+  }
+
+  // Saved as they go, not on leaving: beforeunload is unreliable on phones,
+  // where the tab is closed by the operating system rather than the person.
+  useEffect(() => {
+    if (screen !== "signup" || editingProfile) return;
+    // An untouched form is not progress worth restoring.
+    if (!draft.email && !draft.name && !draft.instrument) return;
+    const { password, confirmPassword, photoUrl, ...rest } = draft;
+    const body = { at: Date.now(), step, draft: { ...rest, photoUrl: String(photoUrl || "").startsWith("data:") ? "" : photoUrl } };
+    try { localStorage.setItem(DRAFT_KEY, JSON.stringify(body)); } catch {}
+  }, [screen, editingProfile, draft, step]);
+
   function startApply() {
     if (authUser && authProfile?.role === "learner") {
       setAuthError("You're already registered as a piano enthusiast with this account. You can't also sign up as a conservatory student — log out first if you want to create a separate account with a different email.");
       return;
     }
-    setDraft({ ...emptyDraft(), verifyMethod });
+    const saved = readSavedDraft();
+    // Back to the first step even when resuming, because that is where the
+    // password is set and the password is the one thing not kept. Everything
+    // after it is already filled, so Next carries them through.
+    setDraft(saved ? { ...emptyDraft(), ...saved.draft, password: "", confirmPassword: "" } : { ...emptyDraft(), verifyMethod });
+    setResumed(!!saved);
     setStep(0);
     setEditingProfile(false);
     setAuthError("");
@@ -1965,6 +2012,7 @@ export default function App() {
         .from("profiles").insert(toDbProfile(draft, authUser.id)).select().single();
       if (insertError) { setAuthError(await friendlyProfileError(insertError)); return; }
       if (insertedProfile) setAuthProfile(insertedProfile);
+      clearSavedDraft();
       if (needsReview(draft)) { await insertVerificationRequest(authUser.id, draft); }
       setDraft((d) => ({ ...d, id: authUser.id }));
       finishSignup(authUser.id, authUser.email || draft.email, needsReview(draft) ? "document" : draft.verifyMethod);
@@ -1996,6 +2044,7 @@ export default function App() {
           .from("profiles").insert(toDbProfile(draft, data.user.id)).select().single();
         if (insertError) { setAuthError(await friendlyProfileError(insertError)); return; }
         if (insertedProfile) setAuthProfile(insertedProfile);
+        clearSavedDraft();
         await supabase.auth.updateUser({ data: { pendingProfile: null } });
         if (needsReview(draft)) { await insertVerificationRequest(data.user.id, draft); }
         setDraft((d) => ({ ...d, id: data.user.id }));
@@ -2003,6 +2052,10 @@ export default function App() {
       } else {
         // Email confirmation required — the draft is stored server-side in the
         // user's auth metadata, so it's picked up after confirming on any device.
+        // The account exists and the answers now live in its auth metadata, so
+        // the local copy has done its job; keeping it only risks restoring it
+        // over a signup that is already finished.
+        clearSavedDraft();
         setPendingEmail(draft.email);
         setScreen("confirmEmail");
       }
@@ -3227,6 +3280,7 @@ export default function App() {
         <SignupFlow
           draft={draft} update={update} toggleTaste={toggleTaste} step={step} setStep={setStep}
           editing={editingProfile} onSubmit={submitApplication} authError={authError}
+          resumed={resumed} onStartFresh={() => { clearSavedDraft(); setDraft({ ...emptyDraft(), verifyMethod }); setStep(0); }}
           onCancel={() => setScreen(editingProfile ? "app" : "landing")}
           onHome={goHome}
         />
@@ -3973,7 +4027,7 @@ function HirerSignup({ onBack, onDone }) {
 /* ---------------------------------------------------------------- */
 const STEP_LABELS = ["Introduce yourself", "Choose your conservatory", "Your musical voice", "Current repertoire", "Top | Flop | Composer", "Teaching", "Review and submit"];
 
-function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubmit, onCancel, onHome, authError }) {
+function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubmit, onCancel, onHome, authError, resumed, onStartFresh }) {
   const [submitting, setSubmitting] = useState(false);
   const labels = editing ? STEP_LABELS : ["Create your account", ...STEP_LABELS];
   const lastStep = labels.length - 1;
@@ -4063,6 +4117,20 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
             </div>
           )}
         </div>
+        {/* Said once, on the step they land on. Restoring someone's answers
+            without telling them is its own small unpleasantness — they wonder
+            where it came from, and whether it is really theirs. */}
+        {resumed && !editing && (
+          <div style={{ marginTop: 14, padding: "11px 13px", borderRadius: 12, border: "1px solid rgba(239,208,155,0.35)", background: "rgba(239,208,155,0.06)" }}>
+            <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: C.brassLabel }}>Picked up where you left off</p>
+            <p className="text-sm" style={{ margin: "4px 0 0", color: C.ivoryDim, lineHeight: 1.5 }}>
+              Everything you filled in is still here. Set your password again — it's the one thing we don't keep — and carry on.
+            </p>
+            <button onClick={onStartFresh} style={{ marginTop: 8, padding: 0, background: "none", border: "none", color: C.brassLabel, fontFamily: FONT_BODY, fontSize: 12.5, fontWeight: 700, cursor: "pointer", textDecoration: "underline" }}>
+              Start again from scratch
+            </button>
+          </div>
+        )}
         <div className="artium-su-head">
           <StepRing step={step} total={labels.length} />
           <span className="artium-su-head-text">
