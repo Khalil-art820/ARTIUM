@@ -3275,7 +3275,8 @@ export default function App() {
           onDone={() => { setPianistEntry(false); setScreen("entry"); }}
         />
       )}
-      {view === "login" && <LoginScreen onSubmit={handleLogin} onBack={goHome} error={authError} />}
+      {view === "login" && <LoginScreen onSubmit={handleLogin} onBack={goHome} error={authError}
+        unfinished={!!readSavedDraft()} onResume={startApply} />}
       {view === "signup" && (
         <SignupFlow
           draft={draft} update={update} toggleTaste={toggleTaste} step={step} setStep={setStep}
@@ -5663,7 +5664,7 @@ function ConfirmEmail({ email, onLogin, onHome, pendingReview }) {
   );
 }
 
-function LoginScreen({ onSubmit, onBack, error }) {
+function LoginScreen({ onSubmit, onBack, error, unfinished, onResume }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -5684,6 +5685,24 @@ function LoginScreen({ onSubmit, onBack, error }) {
         <div className="w-full max-w-md lg-fade" style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: 40, boxShadow: "0 4px 24px rgba(0,0,0,0.28)" }}>
           <h2 style={{ fontSize: 24, fontWeight: 700, letterSpacing: -0.3, marginBottom: 4 }}>Welcome back</h2>
           <p style={{ color: C.ivoryDim, fontSize: 15, marginBottom: 24 }}>Log in to your Artium account.</p>
+
+          {/* Someone who abandoned signup has no account, and no way of knowing
+              it: nothing is created until the last of eight steps. Log in is
+              the obvious button on the gate, so they press it, are told the
+              email is not registered, and conclude they signed up already and
+              something is broken. This is the one case where the person cannot
+              tell which door is theirs, so the door says so. */}
+          {unfinished && (
+            <div style={{ marginBottom: 22, padding: "13px 15px", borderRadius: 12, border: "1px solid rgba(239,208,155,0.35)", background: "rgba(239,208,155,0.06)" }}>
+              <p style={{ margin: 0, fontSize: 13.5, fontWeight: 700, color: C.brassLabel }}>You didn't finish signing up</p>
+              <p className="text-sm" style={{ margin: "4px 0 0", color: C.ivoryDim, lineHeight: 1.5 }}>
+                There's no account yet — it's only created at the last step. Everything you filled in is still here.
+              </p>
+              <button onClick={onResume} style={{ marginTop: 10, padding: "8px 16px", borderRadius: 999, border: "none", background: "linear-gradient(180deg, #F3D9A6 0%, #D9AE66 100%)", color: C.brassText, fontFamily: FONT_BODY, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                Carry on where you left off
+              </button>
+            </div>
+          )}
           <GoogleBtn />
           <Divider />
           <Field label="Email address">
