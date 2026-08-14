@@ -3910,6 +3910,40 @@ function HirerSignup({ onBack, onDone }) {
 
   return (
     <div className="artium-su">
+      {confirmLeave && (
+        <div
+          className="fixed z-50 flex items-center justify-center"
+          style={{ inset: 0, background: "rgba(0,0,0,0.7)" }}
+          onClick={() => setConfirmLeave(false)}
+        >
+          <div
+            className="rounded-2xl p-7 max-w-sm w-full mx-4 lg-fade"
+            style={{ background: C.inkSoft, border: `1px solid ${C.inkLine}`, color: C.ivory }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 style={{ margin: 0, fontFamily: FONT_DISPLAY, fontSize: 21, fontWeight: 600 }}>Are you sure you want to leave?</h3>
+            <p className="text-sm" style={{ margin: "8px 0 0", color: C.ivoryDim, lineHeight: 1.6 }}>
+              Everything you filled in is still here. You just have to sign up again, or log in, to carry on.
+            </p>
+            <div style={{ display: "flex", gap: 9, marginTop: 18 }}>
+              {/* Staying is the safe answer, so it is the easy one to hit and
+                  the one the eye lands on. Leaving is a choice, not a default. */}
+              <button
+                onClick={() => setConfirmLeave(false)}
+                style={{ flex: 1, padding: "10px 14px", borderRadius: 999, border: "none", background: "linear-gradient(180deg, #F3D9A6 0%, #D9AE66 100%)", color: C.brassText, fontFamily: FONT_BODY, fontSize: 13.5, fontWeight: 700, cursor: "pointer" }}
+              >
+                Keep filling it in
+              </button>
+              <button
+                onClick={() => { setConfirmLeave(false); onCancel(); }}
+                style={{ flex: "0 0 auto", padding: "10px 16px", borderRadius: 999, border: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.05)", color: C.ivoryDim, fontFamily: FONT_BODY, fontSize: 13.5, fontWeight: 600, cursor: "pointer" }}
+              >
+                Leave
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="max-w-3xl mx-auto px-6" style={{ paddingTop: "calc(20px + env(safe-area-inset-top, 0px))" }}>
         <div className="flex items-center gap-3">
           <button onClick={step === 0 ? onBack : () => setStep(step - 1)} className="artium-aw-round" aria-label="Back">
@@ -4046,6 +4080,10 @@ const STEP_LABELS = ["Introduce yourself", "Choose your conservatory", "Your mus
 
 function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubmit, onCancel, onHome, authError, resumed, onStartFresh }) {
   const [submitting, setSubmitting] = useState(false);
+  // Asked before leaving, because Leave is one tap from a form somebody has
+  // been filling for several minutes and the button gives no clue what it
+  // costs. The answer — nothing — is the whole reason to ask.
+  const [confirmLeave, setConfirmLeave] = useState(false);
   const labels = editing ? STEP_LABELS : ["Create your account", ...STEP_LABELS];
   const lastStep = labels.length - 1;
   const idx = editing ? step : step - 1;
@@ -4097,6 +4135,40 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
 
   return (
     <div className="artium-su">
+      {confirmLeave && (
+        <div
+          className="fixed z-50 flex items-center justify-center"
+          style={{ inset: 0, background: "rgba(0,0,0,0.7)" }}
+          onClick={() => setConfirmLeave(false)}
+        >
+          <div
+            className="rounded-2xl p-7 max-w-sm w-full mx-4 lg-fade"
+            style={{ background: C.inkSoft, border: `1px solid ${C.inkLine}`, color: C.ivory }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 style={{ margin: 0, fontFamily: FONT_DISPLAY, fontSize: 21, fontWeight: 600 }}>Are you sure you want to leave?</h3>
+            <p className="text-sm" style={{ margin: "8px 0 0", color: C.ivoryDim, lineHeight: 1.6 }}>
+              Everything you filled in is still here. You just have to sign up again, or log in, to carry on.
+            </p>
+            <div style={{ display: "flex", gap: 9, marginTop: 18 }}>
+              {/* Staying is the safe answer, so it is the easy one to hit and
+                  the one the eye lands on. Leaving is a choice, not a default. */}
+              <button
+                onClick={() => setConfirmLeave(false)}
+                style={{ flex: 1, padding: "10px 14px", borderRadius: 999, border: "none", background: "linear-gradient(180deg, #F3D9A6 0%, #D9AE66 100%)", color: C.brassText, fontFamily: FONT_BODY, fontSize: 13.5, fontWeight: 700, cursor: "pointer" }}
+              >
+                Keep filling it in
+              </button>
+              <button
+                onClick={() => { setConfirmLeave(false); onCancel(); }}
+                style={{ flex: "0 0 auto", padding: "10px 16px", borderRadius: 999, border: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.05)", color: C.ivoryDim, fontFamily: FONT_BODY, fontSize: 13.5, fontWeight: 600, cursor: "pointer" }}
+              >
+                Leave
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="max-w-3xl mx-auto px-6" style={{ paddingTop: "calc(20px + env(safe-area-inset-top, 0px))" }}>
         {/* Wraps rather than clips: the back button, the wordmark and two
             pills do not fit on one line on a small phone, and Save was
@@ -4129,7 +4201,7 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
               nothing, because the answers are kept. */}
           {!editing && (
             <button
-              onClick={onCancel}
+              onClick={() => setConfirmLeave(true)}
               title="Your answers are saved — you can pick this up later"
               style={{ marginLeft: "auto", fontSize: 12.5, fontWeight: 600, color: C.ivoryDim, background: "rgba(255,255,255,0.04)", border: `1px solid ${C.inkLine}`, borderRadius: 999, padding: "7px 15px", cursor: "pointer", whiteSpace: "nowrap" }}
             >
