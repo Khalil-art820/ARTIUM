@@ -9312,11 +9312,15 @@ function AdminVerifications({ card, STATUS_COLOR }) {
         else if (kn.includes(q) || q.includes(kn)) score = 2;
         else if (q.split(" ").some((w) => w.length >= 4 && kn.includes(w))) score = 3;
         else if (normalizeName(k.where).includes(q)) score = 4;
-        if (score >= 0 && kn === typed) score -= 0.5;
-        return { k, score };
+        // The nudge for "this is the name they typed" is kept apart from the
+        // score. Folded in, it took an exact match from 0 to -0.5, and the
+        // filter below — there to drop things that do not match at all —
+        // threw away the best match every time. Searching a school's full
+        // name found every other school and not that one.
+        return { k, score, exact: kn === typed };
       })
       .filter((x) => x.score >= 0)
-      .sort((a, b) => a.score - b.score);
+      .sort((a, b) => (a.score - b.score) || (b.exact - a.exact));
     return scored.slice(0, 6).map((x) => x.k);
   }
 
