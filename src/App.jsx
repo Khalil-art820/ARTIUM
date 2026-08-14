@@ -9471,6 +9471,21 @@ function AdminVerifications({ card, STATUS_COLOR }) {
     }
 
     await notifyApplicant(r, status);
+
+    // Forget what was chosen for this row.
+    //
+    // picks, the reason, the keep-domains tick and the search text all live
+    // keyed by request id and survived the decision. Resetting a request back
+    // to pending therefore handed it back still carrying the school picked
+    // last time — and since the confirmed panel replaces the list, the school
+    // suggestions simply were not there, which reads as the picker being
+    // broken rather than as a choice already made.
+    //
+    // A decision is the end of a row's editing. Whatever comes next starts
+    // from the request as the applicant sent it.
+    const forget = (setter) => setter((x) => { const n = { ...x }; delete n[r.id]; return n; });
+    forget(setPicks); forget(setPickQ); forget(setReasons); forget(setKeepDomains); forget(setEdits);
+
     setBusy(""); load();
   }
 
