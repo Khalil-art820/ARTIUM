@@ -9624,11 +9624,10 @@ function AdminVerifications({ card, STATUS_COLOR }) {
                       <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: C.brassLabel, letterSpacing: "0.06em" }}>DOMAIN REQUEST</p>
                       <p style={{ margin: "5px 0 0", fontWeight: 600, wordBreak: "break-all" }}>{r.conservatory_email}</p>
                       <p style={{ margin: "3px 0 0", color: C.ivoryDim, fontSize: 11 }}>
-                        Approving adds{" "}
+                        Approving makes this the school's address:{" "}
                         <b style={{ color: C.ivory }}>
                           @{(String(r.conservatory_email).toLowerCase().match(/@([^@\s]+\.[^@\s]+)$/) || [])[1] || "?"}
-                        </b>{" "}
-                        to this school.
+                        </b>
                       </p>
                     </>
                   ) : (
@@ -9759,7 +9758,15 @@ function AdminVerifications({ card, STATUS_COLOR }) {
                         const pick = pickOf(r);
                         if (r.kind !== "domain_request") return null;
                         if (!pick || pick.mode !== "existing") return null;
-                        const existing = (known.find((k) => k.id === pick.id)?.domains) || [];
+                        // What the school accepts *today*, minus the address
+                        // being approved. Listing everything named the new
+                        // domain back at you — "keep @art-ium.com working too"
+                        // while approving @art-ium.com — which is no question
+                        // at all, and hid the one domain actually at stake.
+                        const incoming = (String(fieldVal(r, "conservatory_email")).toLowerCase()
+                          .match(/@([^@\s]+\.[^@\s]+)$/) || [])[1] || "";
+                        const existing = ((known.find((k) => k.id === pick.id)?.domains) || [])
+                          .filter((d) => d !== incoming);
                         if (!existing.length) return null;
                         return (
                           <label style={{ display: "flex", gap: 7, alignItems: "flex-start", fontSize: 11, color: C.ivoryDim, lineHeight: 1.4, cursor: "pointer" }}>
@@ -9770,7 +9777,7 @@ function AdminVerifications({ card, STATUS_COLOR }) {
                               style={{ marginTop: 1, accentColor: "#EFD09B" }}
                             />
                             <span>
-                              Keep <b style={{ color: C.ivory }}>@{existing[0]}</b> working too
+                              Keep <b style={{ color: C.ivory }}>{existing.map((d) => "@" + d).join(", ")}</b> working too
                               <br />
                               <span style={{ opacity: 0.75 }}>Tick only if the school still issues both — otherwise the new address replaces it.</span>
                             </span>
