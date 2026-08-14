@@ -4122,6 +4122,20 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
           {/* The gate's lockup, so the flow reads as the same product the
               visitor just came through rather than a form it handed them to. */}
           <GateLogo word={20} />
+          {/* A way out, now that Back no longer is one.
+              Quiet on purpose: it sits opposite the step ring rather than
+              beside the wordmark, so it reads as an exit rather than an
+              invitation. And it says what happens next — leaving costs
+              nothing, because the answers are kept. */}
+          {!editing && (
+            <button
+              onClick={onCancel}
+              title="Your answers are saved — you can pick this up later"
+              style={{ marginLeft: "auto", fontSize: 12.5, fontWeight: 600, color: C.ivoryDim, background: "rgba(255,255,255,0.04)", border: `1px solid ${C.inkLine}`, borderRadius: 999, padding: "7px 15px", cursor: "pointer", whiteSpace: "nowrap" }}
+            >
+              Leave
+            </button>
+          )}
           {editing && (
             <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
               <button onClick={onCancel} style={{ fontSize: 12.5, fontWeight: 600, color: C.ivoryDim, background: "rgba(255,255,255,0.04)", border: `1px solid ${C.inkLine}`, borderRadius: 999, padding: "7px 15px", cursor: "pointer" }}>
