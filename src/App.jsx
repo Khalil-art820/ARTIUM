@@ -1640,7 +1640,23 @@ export default function App() {
             // explicitly rather than left to the spread.
             const savedMethod = sessionStorage.getItem("artium_verify_method") || "otp";
             setVerifyMethod(savedMethod);
-            setDraft((d) => ({ ...d, verifyMethod: savedMethod, name: googleName, email: authUser.email || "", password: "__google__", confirmPassword: "__google__" }));
+            // Signing in with Google leaves the site and comes back, so this
+            // runs on a fresh page: the draft in memory is empty, and
+            // spreading it kept nothing. Someone who filled six steps and then
+            // reached for the Google button lost all of it — the one path
+            // where the saved copy existed and nothing read it.
+            const saved = readSavedDraft();
+            setDraft((d) => ({
+              ...d,
+              ...(saved ? saved.draft : {}),
+              verifyMethod: savedMethod,
+              // Their own answer wins; Google's name is only a starting point.
+              name: (saved?.draft?.name || "").trim() || googleName,
+              // The account is the Google one, whatever they typed earlier.
+              email: authUser.email || "",
+              password: "__google__", confirmPassword: "__google__",
+            }));
+            setResumed(!!saved);
             setEditingProfile(false);
             setStep(1);
             setScreen("signup");
