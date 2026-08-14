@@ -8782,13 +8782,14 @@ function AdminScreen({ authUser, onlineCount }) {
 
         {/* Section toggle */}
         <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
-          {[{ v: "verifications", t: "Student verifications" }, { v: "tracks", t: "Recordings" }, { v: "promotions", t: "Promotions" }].map(({ v, t }) => (
+          {[{ v: "verifications", t: "Student verifications" }, { v: "conservatories", t: "Conservatories" }, { v: "tracks", t: "Recordings" }, { v: "promotions", t: "Promotions" }].map(({ v, t }) => (
             <button key={v} onClick={() => setSection(v)}
               style={{ padding: "9px 18px", borderRadius: 999, fontSize: 13, fontWeight: 700, cursor: "pointer", background: section === v ? "linear-gradient(160deg, #E9C88D, #C99A55)" : "rgba(255,255,255,0.04)", color: section === v ? C.brassText : C.ivoryDim, border: section === v ? "none" : `1px solid ${C.inkLine}` }}>{t}</button>
           ))}
         </div>
 
         {section === "verifications" && <AdminVerifications card={card} STATUS_COLOR={STATUS_COLOR} />}
+        {section === "conservatories" && <AdminConservatories card={card} />}
         {section === "tracks" && <AdminTracks card={card} STATUS_COLOR={STATUS_COLOR} />}
 
         {section === "promotions" && <>
@@ -8951,6 +8952,205 @@ function AdminTracks({ card, STATUS_COLOR }) {
         HISTORY ({decided.length})
       </p>
       <List list={decided} editable={false} />
+    </div>
+  );
+}
+
+// Which addresses each school accepts, and a way to change them.
+//
+// Until now this was a SQL edit. Fine for a one-off and wrong for something
+// that happens whenever a conservatory migrates — the person who knows the new
+// address is the one reading the request, and sending them to a query editor
+// to hand-write an array is how the wrong domain ends up on the wrong school.
+//
+// The screen edits approved_conservatories, which is the patch layer: the
+// roster carries what shipped, and an approved row overrides it. So clearing a
+// school's domains here does not leave it with none — it falls back to the
+// built-in, which is said out loud below rather than left to be discovered.
+function AdminConservatories({ card }) {
+  const [roster, setRoster] = useState([]);
+  const [approved, setApproved] = useState([]);
+  const [q, setQ] = useState("");
+  const [drafts, setDrafts] = useState({});   // school id -> string[]
+  const [adding, setAdding] = useState({});   // school id -> input text
+  const [busy, setBusy] = useState("");
+  const [note, setNote] = useState(null);
+
+  async function load() {
+    const [r, a] = await Promise.all([
+      supabase.from("conservatory_roster").select("id, name, short, city, country, domains").order("name"),
+      supabase.from("approved_conservatories").select("id, name, address, domains").order("name"),
+    ]);
+    setRoster(r.data || []);
+    setApproved(a.data || []);
+  }
+  React.useEffect(() => { load(); }, []);
+
+  // One row per school, the same composition the database uses: an approved
+  // row's domains win over the roster's; a school that exists only as an
+  // approved row stands on its own.
+  const schools = React.useMemo(() => {
+    const patch = Object.create(null);
+    for (const a of approved) {
+      const d = (Array.isArray(a.domains) ? a.domains : []).map((x) => String(x).toLowerCase());
+      patch[normalizeName(a.name)] = { domains: d, address: a.address || "" };
+    }
+    const out = [];
+    const seen = new Set();
+    for (const c of roster) {
+      const key = normalizeName(c.name);
+      const own = (Array.isArray(c.domains) ? c.domains : []).map((x) => String(x).toLowerCase());
+      const p = patch[key];
+      out.push({
+        id: c.id, name: c.name,
+        where: [c.city, c.country].filter(Boolean).join(", "),
+        builtIn: own,
+        domains: p && p.domains.length ? p.domains : own,
+        overridden: !!(p && p.domains.length),
+      });
+      seen.add(key);
+    }
+    for (const a of approved) {
+      const key = normalizeName(a.name);
+      if (seen.has(key)) continue;
+      out.push({
+        id: a.id, name: a.name, where: a.address || "",
+        builtIn: [], domains: (Array.isArray(a.domains) ? a.domains : []).map((x) => String(x).toLowerCase()),
+        overridden: true,
+      });
+    }
+    return out;
+  }, [roster, approved]);
+
+  const shown = React.useMemo(() => {
+    const needle = normalizeName(q);
+    const list = needle
+      ? schools.filter((c) => normalizeName(c.name).includes(needle)
+          || normalizeName(c.where).includes(needle)
+          || c.domains.some((d) => d.includes(needle)))
+      : schools;
+    return list.slice(0, 40);
+  }, [schools, q]);
+
+  const draftOf = (c) => (drafts[c.id] !== undefined ? drafts[c.id] : c.domains);
+  const dirty = (c) => JSON.stringify(draftOf(c)) !== JSON.stringify(c.domains);
+
+  function toggle(c, d) {
+    const cur = draftOf(c);
+    setDrafts((x) => ({ ...x, [c.id]: cur.includes(d) ? cur.filter((v) => v !== d) : [...cur, d] }));
+  }
+  function addDomain(c) {
+    const raw = (adding[c.id] || "").trim().toLowerCase().replace(/^@/, "");
+    if (!raw) return;
+    // The same refusal as signup. A personal-mail domain here would not add a
+    // school, it would hand every account at that provider the ability to
+    // verify as one — the mistake that put gmail.com on Juilliard.
+    if (FREE_MAIL.has(raw)) { setNote({ bad: true, text: `${raw} is a personal-mail provider — a school cannot use it.` }); return; }
+    if (!/^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(raw)) { setNote({ bad: true, text: `"${raw}" doesn't look like a domain.` }); return; }
+    const cur = draftOf(c);
+    if (!cur.includes(raw)) setDrafts((x) => ({ ...x, [c.id]: [...cur, raw] }));
+    setAdding((x) => ({ ...x, [c.id]: "" }));
+    setNote(null);
+  }
+
+  async function save(c) {
+    setBusy(c.id); setNote(null);
+    const next = draftOf(c);
+    const { error } = await supabase.from("approved_conservatories")
+      .upsert({ name: c.name, address: c.where || "", domains: next }, { onConflict: "name" });
+    setBusy("");
+    if (error) { setNote({ bad: true, text: error.message }); return; }
+    setDrafts((x) => { const n = { ...x }; delete n[c.id]; return n; });
+    setNote({ bad: false, text: next.length
+      ? `${c.name} now accepts ${next.map((d) => "@" + d).join(", ")}.`
+      : `${c.name} is back to its built-in ${c.builtIn.map((d) => "@" + d).join(", ") || "(none)"}.` });
+    load();
+  }
+
+  const chip = (on) => ({
+    display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 10px", borderRadius: 999,
+    border: `1px solid ${on ? "rgba(26,158,110,0.55)" : C.inkLine}`,
+    background: on ? "rgba(26,158,110,0.12)" : "rgba(255,255,255,0.04)",
+    color: on ? C.ivory : C.ivoryDim, fontSize: 12, fontWeight: 600, cursor: "pointer",
+  });
+
+  return (
+    <div style={{ ...card }}>
+      <p style={{ margin: "0 0 4px", fontFamily: FONT_DISPLAY, fontSize: 19, fontWeight: 600, color: C.ivory }}>Conservatories</p>
+      <p className="text-sm" style={{ margin: "0 0 14px", color: C.ivoryDim, lineHeight: 1.5 }}>
+        Which email addresses each school accepts. Untick one to stop it verifying anybody; add one when a school moves.
+      </p>
+
+      <span className="artium-aw-field" style={{ marginBottom: 12 }}>
+        <Search size={15} strokeWidth={2} />
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by school, place, or domain" />
+      </span>
+
+      {note && (
+        <p className="text-sm" style={{ margin: "0 0 10px", color: note.bad ? C.burgundy : "#1A9E6E" }}>{note.text}</p>
+      )}
+
+      {shown.length === 0 && <p className="text-sm" style={{ color: C.ivoryDim }}>No school matches that.</p>}
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {shown.map((c) => {
+          const d = draftOf(c);
+          // Everything ever associated with the school, so a domain removed a
+          // moment ago can be put back without retyping it.
+          const universe = [...new Set([...c.builtIn, ...c.domains, ...d])];
+          return (
+            <div key={c.id} style={{ border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: "11px 13px", background: "rgba(255,255,255,0.02)" }}>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
+                <p style={{ margin: 0, fontWeight: 700, color: C.ivory, fontSize: 14 }}>{c.name}</p>
+                {c.where && <p style={{ margin: 0, fontSize: 11.5, color: C.ivoryDim }}>{c.where}</p>}
+                {c.overridden && <span style={{ fontSize: 10, color: C.brassLabel, fontFamily: FONT_MONO }}>EDITED</span>}
+              </div>
+
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
+                {universe.map((dom) => {
+                  const on = d.includes(dom);
+                  return (
+                    <button key={dom} onClick={() => toggle(c, dom)} style={chip(on)} title={on ? "Accepted — click to stop accepting it" : "Not accepted — click to accept it"}>
+                      {on ? <CheckIcon size={12} strokeWidth={3} /> : null}@{dom}
+                    </button>
+                  );
+                })}
+                {universe.length === 0 && <span style={{ fontSize: 11.5, color: C.ivoryDim }}>No domain — this school verifies by document only.</span>}
+              </div>
+
+              <div style={{ display: "flex", gap: 6, marginTop: 9, flexWrap: "wrap", alignItems: "center" }}>
+                <input
+                  value={adding[c.id] || ""}
+                  onChange={(e) => setAdding((x) => ({ ...x, [c.id]: e.target.value }))}
+                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addDomain(c); } }}
+                  placeholder="add a domain, e.g. stud.school.edu"
+                  style={{ flex: "1 1 180px", minWidth: 150, padding: "7px 10px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.05)", color: C.ivory, fontSize: 12, outline: "none" }}
+                />
+                <button onClick={() => addDomain(c)} style={{ padding: "7px 12px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.05)", color: C.ivoryDim, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Add</button>
+                <button
+                  onClick={() => save(c)}
+                  disabled={!dirty(c) || busy === c.id}
+                  style={{ padding: "7px 14px", borderRadius: 8, border: "none", fontSize: 12, fontWeight: 700,
+                    background: dirty(c) ? "linear-gradient(180deg, #F3D9A6 0%, #D9AE66 100%)" : "rgba(255,255,255,0.05)",
+                    color: dirty(c) ? C.brassText : C.ivoryDim, cursor: dirty(c) ? "pointer" : "not-allowed" }}
+                >{busy === c.id ? "Saving…" : "Save"}</button>
+              </div>
+
+              {dirty(c) && d.length === 0 && c.builtIn.length > 0 && (
+                <p className="text-sm" style={{ margin: "7px 0 0", color: C.brassLabel, lineHeight: 1.45 }}>
+                  With none ticked this school goes back to its built-in {c.builtIn.map((x) => "@" + x).join(", ")}, not to none at all.
+                </p>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {schools.length > shown.length && (
+        <p className="text-sm" style={{ margin: "12px 0 0", color: C.ivoryDim }}>
+          Showing {shown.length} of {schools.length} — search to narrow it down.
+        </p>
+      )}
     </div>
   );
 }
