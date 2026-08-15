@@ -17,12 +17,35 @@ export function needsReview(draft) {
   return draft.verifyMethod === "document" || !!draft.domainReq;
 }
 
+/**
+ * Up to two instruments, kept in two columns rather than one array column.
+ *
+ * `instrument` stays exactly what it was — the principal study, the value
+ * every existing row already holds and every existing query already reads —
+ * and the second study goes in a nullable `instrument_2` beside it. Nothing
+ * has to be backfilled and nothing that reads only `instrument` breaks.
+ *
+ * Order is the student's, not ours: whichever tile they pressed first is the
+ * one their profile is headed by.
+ */
+export const MAX_INSTRUMENTS = 2;
+
+export function instrumentsOf(source) {
+  if (!source) return [];
+  const list = Array.isArray(source.instruments)
+    ? source.instruments
+    : [source.instrument, source.instrument2];
+  return list.filter(Boolean).slice(0, MAX_INSTRUMENTS);
+}
+
 export function toDbProfile(draft, id) {
+  const [instrument, instrument2] = instrumentsOf(draft);
   return {
     id,
     role: "student",
     name: draft.name,
-    instrument: draft.instrument,
+    instrument: instrument || null,
+    instrument_2: instrument2 || null,
     conservatory_id: draft.conservatoryId,
     year: draft.years,
     bio: draft.bio,
@@ -51,6 +74,10 @@ export function fromDbProfile(row) {
   return {
     id: row.id,
     name: row.name,
+    // Both shapes. `instruments` is what the app reads; `instrument` stays for
+    // the principal study alone, which is what a row written before this
+    // carried and what anything reading a single value still expects.
+    instruments: instrumentsOf({ instrument: row.instrument, instrument2: row.instrument_2 }),
     instrument: row.instrument,
     conservatoryId: row.conservatory_id,
     year: row.year,

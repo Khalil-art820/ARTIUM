@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "./contexts/AuthContext";
 import { supabase } from "./lib/supabase";
-import { toDbProfile, fromDbProfile, needsReview } from "./lib/profiles";
+import { toDbProfile, fromDbProfile, needsReview, instrumentsOf, MAX_INSTRUMENTS } from "./lib/profiles";
 import L from "leaflet";
 import { MapContainer, TileLayer, Marker, Tooltip, Popup, useMap } from "react-leaflet";
 // three.js is ~1.9MB of the bundle. Loading it lazily keeps it out of the
@@ -435,6 +435,24 @@ const INSTRUMENTS = [
 const INSTRUMENT_ICON = Object.fromEntries(INSTRUMENTS.map((i) => [i.name, i.icon]));
 const INSTRUMENT_OPTIONS = INSTRUMENTS.map((i) => i.name);
 
+// Two, because a conservatory student with a second study is ordinary — the
+// pianist who is also an organist, the clarinettist who plays bass clarinet in
+// the wind band — and because the first instrument is still the one they are
+// known by. A list of five is a CV, not a profile, and it makes every card in
+// the app a paragraph.
+//
+// MAX_INSTRUMENTS and instrumentsOf come from lib/profiles, next to the two
+// columns they map onto. instrumentsOf reads all three shapes a profile turns
+// up in: the array a signup writes now, the single `instrument` string on rows
+// written before this and on every sample student, and the column pair.
+
+// "Violin & Piano". Ampersand rather than the interpunct the profile lines use
+// between instrument and year, so that two instruments read as one answer to
+// one question instead of as two more facts in the row.
+function instrumentLabel(p) {
+  return instrumentsOf(p).join(" & ");
+}
+
 
 // Every account shares one email across both registration paths (Supabase
 // enforces this), so a duplicate-email signup error always means someone is
@@ -471,7 +489,7 @@ async function friendlyProfileError(error) {
 const emptyDraft = () => ({
   id: null,
   email: "", password: "", confirmPassword: "",
-  name: "", years: "", instrument: "",
+  name: "", years: "", instruments: [],
   conservatoryId: null, conservatoryEmail: "", conservatoryVerified: false,
   // Which of the three doors they took on the conservatory step. verifyMethod
   // follows from it — "student_email" is the OTP route, the other two upload —
@@ -1098,7 +1116,7 @@ function ConsRosterCard({ cons, roster, canViewRoster, onOpenStudent, onLockedCl
                   </p>
                   {s.teaching?.open ? (
                     <p style={{ margin: 0, display: "flex", alignItems: "center", gap: 6 }}>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: C.brassLabel }}>{s.instrument}</span>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: C.brassLabel }}>{instrumentLabel(s)}</span>
                       <span style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase", background: C.brass, color: C.brassText, padding: "1px 6px", borderRadius: 999 }}>
                         teaches
                       </span>
@@ -1107,7 +1125,7 @@ function ConsRosterCard({ cons, roster, canViewRoster, onOpenStudent, onLockedCl
                       )}
                     </p>
                   ) : (
-                    <p style={{ fontSize: 11, color: C.ivoryDim, fontWeight: 400, margin: 0 }}>{s.instrument}</p>
+                    <p style={{ fontSize: 11, color: C.ivoryDim, fontWeight: 400, margin: 0 }}>{instrumentLabel(s)}</p>
                   )}
                 </div>
               </button>
@@ -1660,7 +1678,7 @@ export default function App() {
           supabase.auth.updateUser({ data: { pendingProfile: null } });
           const isDoc = needsReview(pendingStudent);
           if (isDoc) { await insertVerificationRequest(authUser.id, pendingStudent); }
-          const me = { id: authUser.id, name: pendingStudent.name, instrument: pendingStudent.instrument, conservatoryId: pendingStudent.conservatoryId, year: pendingStudent.years, bio: pendingStudent.bio, tastes: pendingStudent.tastes, pieces: pendingStudent.pieces, videoLink: pendingStudent.videoLink, top: pendingStudent.top, flop: pendingStudent.flop, photoUrl: pendingStudent.photoUrl, teaching: pendingStudent.teaching, online: true };
+          const me = { id: authUser.id, name: pendingStudent.name, instruments: instrumentsOf(pendingStudent), conservatoryId: pendingStudent.conservatoryId, year: pendingStudent.years, bio: pendingStudent.bio, tastes: pendingStudent.tastes, pieces: pendingStudent.pieces, videoLink: pendingStudent.videoLink, top: pendingStudent.top, flop: pendingStudent.flop, photoUrl: pendingStudent.photoUrl, teaching: pendingStudent.teaching, online: true };
           setMyProfile(me);
           if (isDoc) { setScreen("pendingReview"); return; }
           if (!isAdminEmail(authUser.email)) {
@@ -1888,7 +1906,7 @@ export default function App() {
   useEffect(() => {
     if (screen !== "signup" || editingProfile) return;
     // An untouched form is not progress worth restoring.
-    if (!draft.email && !draft.name && !draft.instrument) return;
+    if (!draft.email && !draft.name && !instrumentsOf(draft).length) return;
     const { password, confirmPassword, photoUrl, ...rest } = draft;
     const body = { at: Date.now(), step, draft: { ...rest, photoUrl: String(photoUrl || "").startsWith("data:") ? "" : photoUrl } };
     try { localStorage.setItem(DRAFT_KEY, JSON.stringify(body)); } catch {}
@@ -1903,7 +1921,12 @@ export default function App() {
     // Back to the first step even when resuming, because that is where the
     // password is set and the password is the one thing not kept. Everything
     // after it is already filled, so Next carries them through.
-    setDraft(saved ? { ...emptyDraft(), ...saved.draft, password: "", confirmPassword: "" } : { ...emptyDraft(), verifyMethod });
+    // instruments last, and through the reader: a draft saved before the field
+    // became a list carries a bare `instrument` string that would otherwise
+    // spread straight past the empty array and lose their answer.
+    setDraft(saved
+      ? { ...emptyDraft(), ...saved.draft, instruments: instrumentsOf(saved.draft), password: "", confirmPassword: "" }
+      : { ...emptyDraft(), verifyMethod });
     setResumed(!!saved);
     setStep(0);
     setEditingProfile(false);
@@ -2151,7 +2174,7 @@ export default function App() {
     enterApp(userId, email);
   }
   function enterApp(userId, email) {
-    const me = { id: userId || draft.id, name: draft.name || "Your name", instrument: draft.instrument, conservatoryId: draft.conservatoryId, year: draft.years || "Current student", bio: draft.bio, tastes: draft.tastes, pieces: draft.pieces, videoLink: draft.videoLink, top: draft.top, flop: draft.flop, photoUrl: draft.photoUrl, teaching: draft.teaching, online: true };
+    const me = { id: userId || draft.id, name: draft.name || "Your name", instruments: instrumentsOf(draft), conservatoryId: draft.conservatoryId, year: draft.years || "Current student", bio: draft.bio, tastes: draft.tastes, pieces: draft.pieces, videoLink: draft.videoLink, top: draft.top, flop: draft.flop, photoUrl: draft.photoUrl, teaching: draft.teaching, online: true };
     setMyProfile(me);
     // Same reason as the roster add in the auth effect: the owner does not
     // appear on the map they administer. The email is passed in because this
@@ -2164,7 +2187,7 @@ export default function App() {
     setScreen("app"); setAppTabPersist("map");
   }
   function editProfile() {
-    setDraft({ ...emptyDraft(), ...myProfile, years: myProfile.year || "", pieces: myProfile.pieces || [], tastes: myProfile.tastes || [], composerDay: myProfile.composerDay || "" });
+    setDraft({ ...emptyDraft(), ...myProfile, instruments: instrumentsOf(myProfile), years: myProfile.year || "", pieces: myProfile.pieces || [], tastes: myProfile.tastes || [], composerDay: myProfile.composerDay || "" });
     setStep(0); setEditingProfile(true); setScreen("signup");
   }
   function openStudent(id, from) { setSelectedStudentId(id); setProfileBack(from); }
@@ -2731,8 +2754,12 @@ export default function App() {
           font-size: 10.5px; font-weight: 600; line-height: 1.25; text-align: center;
           color: #8B8B8B; transition: color .16s ease;
         }
-        .artium-inst:hover { border-color: rgba(239,208,155,0.32); background: rgba(255,255,255,0.05); }
-        .artium-inst:hover img { opacity: 0.9; }
+        .artium-inst:hover:not(:disabled) { border-color: rgba(239,208,155,0.32); background: rgba(255,255,255,0.05); }
+        .artium-inst:hover:not(:disabled) img { opacity: 0.9; }
+        /* Two already chosen. Faded rather than hidden — the sheet is the point
+           of this grid, and removing thirty-four drawings to say "not now"
+           would cost more than the greying does. */
+        .artium-inst:disabled { cursor: default; opacity: 0.34; }
         .artium-inst--on {
           border-color: rgba(239,208,155,0.65);
           background: rgba(239,208,155,0.09);
@@ -4190,7 +4217,7 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
   const idx = editing ? step : step - 1;
   const stepValid = [
     !editing ? draft.email.trim().length > 3 && draft.password.length >= 6 && draft.password === draft.confirmPassword : null,
-    draft.name.trim().length > 1 && !!draft.instrument,
+    draft.name.trim().length > 1 && instrumentsOf(draft).length > 0,
     // On the document route the upload is what gates the step — a conservatory
     // may not be selectable yet, since the approved list starts empty.
     // No Google bypass on the document route: signing in with Google says
@@ -4635,6 +4662,8 @@ function StepAccount({ draft, update, error }) {
 
 function StepIntro({ draft, update }) {
   const linkValid = !draft.videoLink || /instagram\.com|facebook\.com|fb\.com|fb\.watch|youtube\.com|youtu\.be/i.test(draft.videoLink);
+  const picked = instrumentsOf(draft);
+  const full = picked.length >= MAX_INSTRUMENTS;
   return (
     <div>
       <PhotoUpload name={draft.name} photoUrl={draft.photoUrl} onChange={(photoUrl) => update({ photoUrl })} />
@@ -4659,15 +4688,26 @@ function StepIntro({ draft, update }) {
           The icons are line art on transparent ground, so an unselected tile
           shows them at three-quarter strength and the chosen one at full, and
           nothing needs a second colour. */}
+      {/* Two allowed, and the second is opt-in rather than asked for: the label
+          stays a single question and the hint underneath is what changes as
+          they choose. Nobody is prompted to find a second instrument they do
+          not have.
+
+          At two, the remaining tiles are disabled rather than silently inert —
+          a tile that looks pressable and does nothing reads as a bug — and the
+          hint says which two are chosen, so the way out is deselecting one of
+          them and not hunting for a cleared state. */}
       <Field label="Which instrument do you play?">
         <div className="artium-inst-grid">
           {INSTRUMENTS.map(({ name, icon }) => {
-            const on = draft.instrument === name;
+            const on = picked.includes(name);
+            const blocked = !on && full;
             return (
               <button
                 key={name}
                 type="button"
-                onClick={() => update({ instrument: on ? "" : name })}
+                disabled={blocked}
+                onClick={() => update({ instruments: on ? picked.filter((n) => n !== name) : [...picked, name] })}
                 className={`artium-inst${on ? " artium-inst--on" : ""}`}
                 aria-pressed={on}
               >
@@ -4677,6 +4717,13 @@ function StepIntro({ draft, update }) {
             );
           })}
         </div>
+        <p style={{ fontFamily: FONT_BODY, fontSize: 12, color: C.ivoryDim, margin: "10px 0 0" }}>
+          {full
+            ? `${picked.join(" and ")} — deselect one to change it.`
+            : picked.length === 1
+              ? "Add a second if you play one, or carry on."
+              : "You can pick a second one too."}
+        </p>
       </Field>
       <div className="mt-2">
         {/* The OPTIONAL tag above this is gone: a monospace label shouting a
@@ -5752,7 +5799,7 @@ function StepReview({ draft }) {
         <div style={{ marginTop: 4 }}><Avatar name={draft.name || "?"} photoUrl={draft.photoUrl} size={60} /></div>
         <div>
           <p style={{ fontSize: 20, fontWeight: 700, color: C.ivory, margin: 0 }}>{draft.name || "—"}</p>
-          <p style={{ fontSize: 13, color: C.ivoryDim, margin: "3px 0 0" }}>{[draft.instrument, draft.years].filter(Boolean).join(" · ")}</p>
+          <p style={{ fontSize: 13, color: C.ivoryDim, margin: "3px 0 0" }}>{[instrumentLabel(draft), draft.years].filter(Boolean).join(" · ")}</p>
           {cons && <p style={{ fontSize: 13, color: C.ivoryDim, margin: "1px 0 0" }}>{cons.name}, {cons.city}</p>}
         </div>
       </div>
@@ -6509,7 +6556,7 @@ function StudentProfile({ student, conservatory, onBack, onMessage, locked, onAp
         <div style={{ flex: 1 }}>
           <h2 style={{ fontSize: 20, fontWeight: 700, color: C.ivory, margin: 0, lineHeight: 1.3 }}>{student.name}</h2>
           <p style={{ fontSize: 13, color: C.ivoryDim, margin: "3px 0 0", lineHeight: 1.5 }}>
-            {[student.instrument, student.year].filter(Boolean).join(" · ")}
+            {[instrumentLabel(student), student.year].filter(Boolean).join(" · ")}
           </p>
           {conservatory && <p style={{ fontSize: 13, color: C.ivoryDim, margin: "1px 0 0" }}>{conservatory.name}, {conservatory.city}</p>}
         </div>
@@ -6620,7 +6667,7 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack, onUpdat
           <div style={{ flex: 1 }}>
             <h2 style={{ fontSize: 20, fontWeight: 700, color: C.ivory, margin: 0, lineHeight: 1.3 }}>{profile.name}</h2>
             <p style={{ fontSize: 13, color: C.ivoryDim, margin: "3px 0 0", lineHeight: 1.5 }}>
-              {[profile.instrument, profile.year].filter(Boolean).join(" · ")}
+              {[instrumentLabel(profile), profile.year].filter(Boolean).join(" · ")}
             </p>
             {cons && <p style={{ fontSize: 13, color: C.ivoryDim, margin: "1px 0 0" }}>{cons.name}, {cons.city}</p>}
           </div>
@@ -7752,7 +7799,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
               <div style={{ flex: 1 }}>
                 <h2 style={{ fontSize: 20, fontWeight: 700, color: C.inkText, margin: 0, lineHeight: 1.3 }}>{selected.name}</h2>
                 <p style={{ fontSize: 13, color: C.ivoryDim, margin: "3px 0 0", lineHeight: 1.5 }}>
-                  {[selected.instrument, selected.year].filter(Boolean).join(" · ")}
+                  {[instrumentLabel(selected), selected.year].filter(Boolean).join(" · ")}
                 </p>
                 {selCons && <p style={{ fontSize: 13, color: C.ivoryDim, margin: "1px 0 0" }}>{selCons.name}, {selCons.city}</p>}
               </div>
@@ -7837,7 +7884,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
         // ── My Planning view ──
         if (learnerRoomView === "planning") {
           const MOCK_LEARNER_PLANNING = acceptedTeachers.map((t) => ({
-            teacher: { id: t.id, name: t.name, instrument: t.instrument, price: parseFloat(String(t.teaching?.price).replace(/[^0-9.]/g, "")) || 60 },
+            teacher: { id: t.id, name: t.name, instrument: instrumentLabel(t), price: parseFloat(String(t.teaching?.price).replace(/[^0-9.]/g, "")) || 60 },
             sessions: [
               { id: `s1-${t.id}`, date: "2026-07-20", time: "10:00", status: "confirmed", paid: true },
               { id: `s2-${t.id}`, date: "2026-08-05", time: "14:00", status: "teacher_proposed", paid: false },
@@ -7931,7 +7978,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
                 <Avatar name={activeLessonTeacher.name} id={activeLessonTeacher.id} size={40} photoUrl={activeLessonTeacher.photoUrl} online={activeLessonTeacher.online} />
                 <div style={{ flex: 1 }}>
                   <p style={{ fontSize: 14, fontWeight: 700, color: C.ivory, margin: 0 }}>{activeLessonTeacher.name}</p>
-                  <p style={{ fontSize: 12, color: C.ivoryDim, margin: "2px 0 0" }}>{activeLessonTeacher.instrument} · {activeLessonTeacher.year}</p>
+                  <p style={{ fontSize: 12, color: C.ivoryDim, margin: "2px 0 0" }}>{instrumentLabel(activeLessonTeacher)} · {activeLessonTeacher.year}</p>
                 </div>
                 <ChevronRight size={16} color={C.ivoryDim} />
               </button>
