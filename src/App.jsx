@@ -478,6 +478,20 @@ const INSTRUMENT_OPTIONS = INSTRUMENTS.map((i) => i.name);
 // up in: the array a signup writes now, the single `instrument` string on rows
 // written before this and on every sample student, and the column pair.
 
+// Guitar, mandolin and lute left the picker, but their drawings are still cut
+// from the sheet and still shipped, and a profile that named one before then
+// still deserves its symbol rather than a gap where everyone else has a mark.
+const RETIRED_INSTRUMENT_ICONS = { Guitar: "guitar", Mandolin: "mandolin", Lute: "lute" };
+
+// Every drawing the app can put on screen, by the name a profile stores. Only
+// what is in here renders: an unrecognised instrument gets no symbol, which is
+// a quiet row, where guessing at a filename would be a broken image.
+const ICON_FOR = { ...RETIRED_INSTRUMENT_ICONS, ...INSTRUMENT_ICON };
+
+function instrumentIcons(p) {
+  return instrumentsOf(p).map((name) => ICON_FOR[name]).filter(Boolean);
+}
+
 // "Violin & Piano". Ampersand rather than the interpunct the profile lines use
 // between instrument and year, so that two instruments read as one answer to
 // one question instead of as two more facts in the row.
@@ -3105,6 +3119,23 @@ export default function App() {
         .artium-aw-badge b { display: block; font-size: 15px; font-weight: 700; color: #FFFFFF; line-height: 1; }
         .artium-aw-badge span { display: block; margin-top: 3px; font-size: 9.5px; color: #8B8B8B; }
         .artium-aw-row > svg:last-child { color: #6E6E6E; flex-shrink: 0; }
+        /* The instrument, drawn. It sits between the name and the chevron, and
+           it is the one gold thing in the row, so it needs no label. */
+        .artium-aw-inst {
+          flex-shrink: 0; display: flex; align-items: center; gap: 6px;
+        }
+        .artium-aw-inst img {
+          width: 46px; height: 46px; object-fit: contain; display: block;
+          opacity: 0.92;
+        }
+        /* Two fit in the width of one and a half rather than pushing the row
+           wider — the name is what must not be squeezed. */
+        .artium-aw-inst[data-two="1"] { gap: 2px; }
+        .artium-aw-inst[data-two="1"] img { width: 34px; height: 34px; }
+        @media (max-width: 380px) {
+          .artium-aw-inst img { width: 38px; height: 38px; }
+          .artium-aw-inst[data-two="1"] img { width: 28px; height: 28px; }
+        }
         .artium-aw-empty { padding: 26px 4px; text-align: center; font-size: 12.5px; color: #7C7C7C; }
 
         /* Bottom bar. Fixed, because the reference has it pinned and this page
@@ -6532,6 +6563,21 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
                       {[st.year, (st.tastes || []).slice(0, 2).join(", ")].filter(Boolean).join(" · ")}
                     </p>
                   </span>
+                  {/* The drawing, not the word: at a glance down the roster the
+                      instrument is what you are scanning for, and the sheet
+                      already draws all of them. The name stays on the profile
+                      the row opens.
+
+                      Two shrink to sit side by side rather than one being
+                      chosen over the other — data-two is what does it, so a
+                      single instrument keeps the size it has here today. */}
+                  {instrumentIcons(st).length > 0 && (
+                    <span className="artium-aw-inst" data-two={instrumentIcons(st).length > 1 ? "1" : "0"} aria-hidden="true">
+                      {instrumentIcons(st).map((icon) => (
+                        <img key={icon} src={`/instruments/${icon}.webp`} alt="" loading="lazy" />
+                      ))}
+                    </span>
+                  )}
                   <ChevronRight size={17} strokeWidth={2} />
                 </button>
               ))}
