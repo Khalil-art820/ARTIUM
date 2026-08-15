@@ -376,9 +376,14 @@ const SAMPLE_CONVERSATIONS = {
 const YEAR_OPTIONS = ["1st year", "2nd year", "3rd year", "4th year", "4+ years", "Graduated"];
 
 // The orchestra as the icon sheet draws it, in score order — strings, wind,
-// brass, percussion, keyboard, plucked — rather than the shorter list that
-// came before, which offered "Percussion" and "Horn" as though a timpanist and
-// a marimba player were the same applicant.
+// brass, percussion, keyboard — rather than the shorter list that came before,
+// which offered "Percussion" and "Horn" as though a timpanist and a marimba
+// player were the same applicant.
+//
+// The sheet also draws guitar, mandolin and lute, and they are deliberately
+// not here: this is the orchestra, and a conservatory's guitarists sit in a
+// different department. Their drawings stay cut in public/instruments in case
+// that changes.
 //
 // Icons are cut from public/INSTRUMENTS.png by tools/cut-instruments.py and
 // live in public/instruments as transparent webp, so they sit on any
@@ -394,9 +399,6 @@ const INSTRUMENTS = [
   { name: "Cello",         icon: "cello" },
   { name: "Double Bass",   icon: "double-bass" },
   { name: "Harp",          icon: "harp" },
-  { name: "Guitar",        icon: "guitar" },
-  { name: "Mandolin",      icon: "mandolin" },
-  { name: "Lute",          icon: "lute" },
   { name: "Flute",         icon: "flute" },
   { name: "Piccolo",       icon: "piccolo" },
   { name: "Oboe",          icon: "oboe" },
@@ -4650,7 +4652,7 @@ function StepIntro({ draft, update }) {
           ))}
         </div>
       </Field>
-      {/* Thirty-nine instruments read as a wall of words; the drawings are what
+      {/* Thirty-six instruments read as a wall of words; the drawings are what
           the eye finds first, so a cellist stops scanning at the cello. Tiles
           rather than chips for the same reason — a chip is sized for a word.
 
