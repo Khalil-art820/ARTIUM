@@ -340,10 +340,10 @@ const CURTIS_MOCK_STUDENTS = [
   { id: "curtis-idris", name: "Idris Rahman", instrument: "Oboe", conservatoryId: "curtis", year: "2nd year", bio: "Half my practice time is making reeds. The other half is regret.", tastes: ["Bach", "Baroque", "Mozart"], pieces: [{ title: "Oboe Concerto in D minor", composer: "Marcello" }], videoLink: "", top: "The Adagio finally sings instead of just sounding.", flop: "Reed making. Always the reed making.", online: false },
   { id: "curtis-chiara", name: "Chiara Bellini", instrument: "Bassoon", conservatoryId: "curtis", year: "Masters, 2nd year", bio: "The bassoon is a tenor, not a punchline.", tastes: ["Mozart", "Prokofiev", "20th Century"], pieces: [{ title: "Bassoon Concerto, K. 191", composer: "Mozart" }], videoLink: "", top: "Got through the whole concerto without a single cracked note.", flop: "Low register response is sluggish in a cold hall.", online: true, teaching: { open: true, mode: "both", price: "36" } },
   { id: "curtis-tomas", name: "Tomás Silva", instrument: "Trumpet", conservatoryId: "curtis", year: "1st year", bio: "Working on playing quietly, which nobody warned me was the hard part.", tastes: ["Bach", "20th Century"], pieces: [{ title: "Brandenburg Concerto No. 2", composer: "Bach" }], videoLink: "", top: "Hit the high register cleanly three days running.", flop: "Endurance drops off badly in the last movement.", online: true },
-  { id: "curtis-annika", name: "Annika Hoffmann", instrument: "Horn", conservatoryId: "curtis", year: "4th year", bio: "Chasing a warm sound that still carries over an orchestra.", tastes: ["Brahms", "Schumann", "Romantic Era"], pieces: [{ title: "Horn Trio, Op. 40", composer: "Brahms" }], videoLink: "", top: "The Adagio mesto came together in rehearsal last night.", flop: "Still cracking the exposed entrance in the finale.", online: false, teaching: { open: true, mode: "physical", price: "44" } },
+  { id: "curtis-annika", name: "Annika Hoffmann", instrument: "French Horn", conservatoryId: "curtis", year: "4th year", bio: "Chasing a warm sound that still carries over an orchestra.", tastes: ["Brahms", "Schumann", "Romantic Era"], pieces: [{ title: "Horn Trio, Op. 40", composer: "Brahms" }], videoLink: "", top: "The Adagio mesto came together in rehearsal last night.", flop: "Still cracking the exposed entrance in the finale.", online: false, teaching: { open: true, mode: "physical", price: "44" } },
   { id: "curtis-diego", name: "Diego Fernández", instrument: "Trombone", conservatoryId: "curtis", year: "3rd year", bio: "Legato on a slide instrument is a lifelong argument.", tastes: ["Mozart", "20th Century"], pieces: [{ title: "Tuba mirum, from Requiem", composer: "Mozart" }], videoLink: "", top: "My slide legato is finally starting to sound like a wind player.", flop: "Soft high entrances are still a coin flip.", online: true },
   { id: "curtis-leila", name: "Leila Haddad", instrument: "Harp", conservatoryId: "curtis", year: "2nd year", bio: "Yes, I have to carry it. No, it does not fit in an elevator.", tastes: ["Debussy", "Ravel", "Impressionism"], pieces: [{ title: "Danses sacrée et profane", composer: "Debussy" }], videoLink: "", top: "Pedal changes in the Danse profane are finally automatic.", flop: "Buzzing strings in the low register are driving me mad.", online: true, teaching: { open: true, mode: "both", price: "55" } },
-  { id: "curtis-ruth", name: "Ruth Adeyemi", instrument: "Percussion", conservatoryId: "curtis", year: "1st year", bio: "Four mallets, endless patience, one very tired practice room.", tastes: ["Messiaen", "20th Century"], pieces: [{ title: "Rebonds B", composer: "Xenakis" }], videoLink: "", top: "Memorised the whole of Rebonds B this month.", flop: "My roll is still uneven on the softest dynamics.", online: false },
+  { id: "curtis-ruth", name: "Ruth Adeyemi", instrument: "Marimba", conservatoryId: "curtis", year: "1st year", bio: "Four mallets, endless patience, one very tired practice room.", tastes: ["Messiaen", "20th Century"], pieces: [{ title: "Rebonds B", composer: "Xenakis" }], videoLink: "", top: "Memorised the whole of Rebonds B this month.", flop: "My roll is still uneven on the softest dynamics.", online: false },
   { id: "curtis-jonas", name: "Jonas Berg", instrument: "Organ", conservatoryId: "curtis", year: "Masters, 1st year", bio: "Registration is composition. I will not be taking questions.", tastes: ["Bach", "Messiaen", "Baroque"], pieces: [{ title: "Passacaglia in C minor, BWV 582", composer: "Bach" }], videoLink: "", top: "Found a registration for the Passacaglia that finally builds properly.", flop: "Pedal accuracy falls apart in the final variations.", online: true },
   { id: "curtis-sofia", name: "Sofia Papadopoulos", instrument: "Voice", conservatoryId: "curtis", year: "3rd year", bio: "Lieder over opera, quietly and unfashionably.", tastes: ["Schubert", "Schumann", "Romantic Era"], pieces: [{ title: "Frauenliebe und -leben", composer: "Schumann" }], videoLink: "", top: "The last song finally sits in the voice without pushing.", flop: "German diction still slows my line down.", online: true, teaching: { open: true, mode: "online", price: "50" } },
   { id: "curtis-hector", name: "Héctor Álvarez", instrument: "Guitar", conservatoryId: "curtis", year: "2nd year", bio: "Transcribing lute music until somebody stops me.", tastes: ["Bach", "Baroque"], pieces: [{ title: "Lute Suite No. 4, BWV 1006a", composer: "Bach" }], videoLink: "", top: "The Prelude is up to tempo and still clean.", flop: "Nail shape is a constant, tedious science experiment.", online: false, teaching: { open: true, mode: "both", price: "33" } },
@@ -355,7 +355,7 @@ const CURTIS_MOCK_STUDENTS = [
   { id: "curtis-nikolai", name: "Nikolai Petrov", instrument: "Clarinet", conservatoryId: "curtis", year: "4th year", bio: "Orchestral auditions are the whole year, apparently.", tastes: ["Prokofiev", "Beethoven", "20th Century"], pieces: [{ title: "Symphony No. 5, clarinet excerpts", composer: "Prokofiev" }], videoLink: "", top: "Got a trial week with a regional orchestra.", flop: "My tone thins out at the very top of the register.", online: true, teaching: { open: true, mode: "online", price: "41" } },
   { id: "curtis-elena", name: "Elena Rossi", instrument: "Voice", conservatoryId: "curtis", year: "1st year", bio: "Learning that singing quietly is far harder than singing loudly.", tastes: ["Mozart", "Classical Era"], pieces: [{ title: "Le nozze di Figaro, 'Porgi amor'", composer: "Mozart" }], videoLink: "", top: "Held the opening phrase in one breath at last.", flop: "The passaggio is still an obvious seam.", online: true },
   { id: "curtis-samuel", name: "Samuel Adeleke", instrument: "Trumpet", conservatoryId: "curtis", year: "2nd year", bio: "Piccolo trumpet enthusiast, to everyone else's dismay.", tastes: ["Bach", "Baroque"], pieces: [{ title: "Cantata BWV 51", composer: "Bach" }], videoLink: "", top: "Made it through the whole cantata without splitting a note.", flop: "Piccolo intonation is unforgiving when I'm tired.", online: false },
-  { id: "curtis-hanne", name: "Hanne Voss", instrument: "Percussion", conservatoryId: "curtis", year: "3rd year", bio: "Timpani principally, marimba when nobody is looking.", tastes: ["Beethoven", "Brahms", "Classical Era"], pieces: [{ title: "Symphony No. 9, timpani excerpts", composer: "Beethoven" }], videoLink: "", top: "My tuning between movements is quick and accurate now.", flop: "Still over-playing in the loud tutti passages.", online: true, teaching: { open: true, mode: "physical", price: "37" } },
+  { id: "curtis-hanne", name: "Hanne Voss", instrument: "Timpani", conservatoryId: "curtis", year: "3rd year", bio: "Timpani principally, marimba when nobody is looking.", tastes: ["Beethoven", "Brahms", "Classical Era"], pieces: [{ title: "Symphony No. 9, timpani excerpts", composer: "Beethoven" }], videoLink: "", top: "My tuning between movements is quick and accurate now.", flop: "Still over-playing in the loud tutti passages.", online: true, teaching: { open: true, mode: "physical", price: "37" } },
 ];
 
 const SAMPLE_CONVERSATIONS = {
@@ -375,10 +375,63 @@ const SAMPLE_CONVERSATIONS = {
 // phrases themselves rather than numbers needing a suffix at each call site.
 const YEAR_OPTIONS = ["1st year", "2nd year", "3rd year", "4th year", "4+ years", "Graduated"];
 
-const INSTRUMENT_OPTIONS = [
-  "Piano", "Violin", "Viola", "Cello", "Double Bass", "Voice", "Flute", "Clarinet",
-  "Oboe", "Bassoon", "Trumpet", "Horn", "Trombone", "Guitar", "Harp", "Percussion", "Organ", "Cimbalom",
+// The orchestra as the icon sheet draws it, in score order — strings, wind,
+// brass, percussion, keyboard, plucked — rather than the shorter list that
+// came before, which offered "Percussion" and "Horn" as though a timpanist and
+// a marimba player were the same applicant.
+//
+// Icons are cut from public/INSTRUMENTS.png by tools/cut-instruments.py and
+// live in public/instruments as transparent webp, so they sit on any
+// background and the sheet stays the single source of the drawings.
+//
+// "Other" is gone. It was the escape hatch for a list that was missing things;
+// with the full sheet the honest answer is here, and a free-text field on a
+// value read back in half a dozen places only produced spellings nothing could
+// group by.
+const INSTRUMENTS = [
+  { name: "Violin",        icon: "violin" },
+  { name: "Viola",         icon: "viola" },
+  { name: "Cello",         icon: "cello" },
+  { name: "Double Bass",   icon: "double-bass" },
+  { name: "Harp",          icon: "harp" },
+  { name: "Guitar",        icon: "guitar" },
+  { name: "Mandolin",      icon: "mandolin" },
+  { name: "Lute",          icon: "lute" },
+  { name: "Flute",         icon: "flute" },
+  { name: "Piccolo",       icon: "piccolo" },
+  { name: "Oboe",          icon: "oboe" },
+  { name: "English Horn",  icon: "english-horn" },
+  { name: "Clarinet",      icon: "clarinet" },
+  { name: "Bass Clarinet", icon: "bass-clarinet" },
+  { name: "Bassoon",       icon: "bassoon" },
+  { name: "Contrabassoon", icon: "contrabassoon" },
+  { name: "French Horn",   icon: "french-horn" },
+  { name: "Trumpet",       icon: "trumpet" },
+  { name: "Cornet",        icon: "cornet" },
+  { name: "Trombone",      icon: "trombone" },
+  { name: "Euphonium",     icon: "euphonium" },
+  { name: "Tuba",          icon: "tuba" },
+  { name: "Timpani",       icon: "timpani" },
+  { name: "Snare Drum",    icon: "snare-drum" },
+  { name: "Bass Drum",     icon: "bass-drum" },
+  { name: "Cymbals",       icon: "cymbals" },
+  { name: "Triangle",      icon: "triangle" },
+  { name: "Tambourine",    icon: "tambourine" },
+  { name: "Glockenspiel",  icon: "glockenspiel" },
+  { name: "Xylophone",     icon: "xylophone" },
+  { name: "Marimba",       icon: "marimba" },
+  { name: "Vibraphone",    icon: "vibraphone" },
+  { name: "Tubular Bells", icon: "tubular-bells" },
+  { name: "Celesta",       icon: "celesta" },
+  { name: "Cimbalom",      icon: "cimbalom" },
+  { name: "Piano",         icon: "piano" },
+  { name: "Harpsichord",   icon: "harpsichord" },
+  { name: "Organ",         icon: "organ" },
+  { name: "Voice",         icon: "voice" },
 ];
+
+const INSTRUMENT_ICON = Object.fromEntries(INSTRUMENTS.map((i) => [i.name, i.icon]));
+const INSTRUMENT_OPTIONS = INSTRUMENTS.map((i) => i.name);
 
 
 // Every account shares one email across both registration paths (Supabase
@@ -2651,6 +2704,44 @@ export default function App() {
            the step after this one named underneath — so the flow answers
            "where am I", "what is this" and "what is coming" in one glance,
            which a bare rail of segments could only answer the first of. */
+        /* Instrument tiles. auto-fill rather than a fixed column count, so the
+           grid keeps roughly 84px cells and simply fits more per row as the
+           screen widens — three on a small phone, eight on a laptop, without a
+           breakpoint for each. */
+        .artium-inst-grid {
+          display: grid; gap: 8px;
+          grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+        }
+        .artium-inst {
+          display: flex; flex-direction: column; align-items: center; gap: 6px;
+          padding: 10px 6px 8px; border-radius: 14px; cursor: pointer;
+          border: 1px solid rgba(255,255,255,0.09);
+          background: rgba(255,255,255,0.03);
+          transition: border-color .16s ease, background .16s ease, transform .16s ease;
+        }
+        .artium-inst img {
+          width: 38px; height: 38px; object-fit: contain;
+          opacity: 0.72; transition: opacity .16s ease;
+          /* The drawings are gold already; unselected they simply sit back. */
+        }
+        .artium-inst span {
+          font-family: 'Manrope', -apple-system, sans-serif;
+          font-size: 10.5px; font-weight: 600; line-height: 1.25; text-align: center;
+          color: #8B8B8B; transition: color .16s ease;
+        }
+        .artium-inst:hover { border-color: rgba(239,208,155,0.32); background: rgba(255,255,255,0.05); }
+        .artium-inst:hover img { opacity: 0.9; }
+        .artium-inst--on {
+          border-color: rgba(239,208,155,0.65);
+          background: rgba(239,208,155,0.09);
+          box-shadow: 0 0 0 1px rgba(239,208,155,0.18) inset;
+        }
+        .artium-inst--on img { opacity: 1; }
+        .artium-inst--on span { color: #FFFFFF; }
+        @media (max-width: 380px) {
+          .artium-inst-grid { grid-template-columns: repeat(auto-fill, minmax(74px, 1fr)); }
+          .artium-inst img { width: 32px; height: 32px; }
+        }
         .artium-su-head { display: flex; align-items: center; gap: 15px; margin-top: 22px; }
         .artium-su-ring { position: relative; width: 62px; height: 62px; flex-shrink: 0; }
         .artium-su-ring svg { width: 100%; height: 100%; display: block; }
@@ -4542,8 +4633,6 @@ function StepAccount({ draft, update, error }) {
 
 function StepIntro({ draft, update }) {
   const linkValid = !draft.videoLink || /instagram\.com|facebook\.com|fb\.com|fb\.watch|youtube\.com|youtu\.be/i.test(draft.videoLink);
-  const instrumentIsOther = draft.instrument && !INSTRUMENT_OPTIONS.includes(draft.instrument);
-  const [otherInstrument, setOtherInstrument] = useState(instrumentIsOther);
   return (
     <div>
       <PhotoUpload name={draft.name} photoUrl={draft.photoUrl} onChange={(photoUrl) => update({ photoUrl })} />
@@ -4561,23 +4650,31 @@ function StepIntro({ draft, update }) {
           ))}
         </div>
       </Field>
+      {/* Thirty-nine instruments read as a wall of words; the drawings are what
+          the eye finds first, so a cellist stops scanning at the cello. Tiles
+          rather than chips for the same reason — a chip is sized for a word.
+
+          The icons are line art on transparent ground, so an unselected tile
+          shows them at three-quarter strength and the chosen one at full, and
+          nothing needs a second colour. */}
       <Field label="Which instrument do you play?">
-        <div className="flex flex-wrap gap-2">
-          {INSTRUMENT_OPTIONS.map((i) => (
-            <Chip key={i} active={!otherInstrument && draft.instrument === i} onClick={() => { setOtherInstrument(false); update({ instrument: i }); }}>{i}</Chip>
-          ))}
-          <Chip active={otherInstrument} onClick={() => { setOtherInstrument(true); update({ instrument: instrumentIsOther ? draft.instrument : "" }); }}>Other</Chip>
+        <div className="artium-inst-grid">
+          {INSTRUMENTS.map(({ name, icon }) => {
+            const on = draft.instrument === name;
+            return (
+              <button
+                key={name}
+                type="button"
+                onClick={() => update({ instrument: on ? "" : name })}
+                className={`artium-inst${on ? " artium-inst--on" : ""}`}
+                aria-pressed={on}
+              >
+                <img src={`/instruments/${icon}.webp`} alt="" loading="lazy" />
+                <span>{name}</span>
+              </button>
+            );
+          })}
         </div>
-        {otherInstrument && (
-          <input
-            className="mt-3"
-            style={inputStyle}
-            value={draft.instrument}
-            onChange={(e) => update({ instrument: e.target.value })}
-            placeholder="Tell us what you play"
-            autoFocus
-          />
-        )}
       </Field>
       <div className="mt-2">
         {/* The OPTIONAL tag above this is gone: a monospace label shouting a
