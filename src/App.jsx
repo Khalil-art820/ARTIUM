@@ -4434,7 +4434,14 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
         </div>
       </div>
 
-      {step === lastStep && authError && (
+      {/* Shown wherever the submit that produced it can be pressed. It used to
+          be gated on the last step, which was true of signup and false of
+          editing — the header's Save changes is reachable from every step, so
+          a rejected save set this and rendered nothing. The button said
+          "Saving…", settled back, and the screen stayed put with no reason
+          given, which reads as a save that worked and a page that would not
+          leave. A write that fails has to say so from wherever it was made. */}
+      {(editing || step === lastStep) && authError && (
         <div className="max-w-3xl mx-auto px-6 pb-4">
           <p className="text-sm" style={{ color: C.burgundy }}>{authError}</p>
         </div>
