@@ -2012,6 +2012,32 @@ export default function App() {
     setSelectedStudentId(null);
     setAppTabPersist("map");
   }
+
+  /**
+   * Where the bottom bar sends you, from wherever you pressed it.
+   *
+   * Home is the landing page, not a tab — it is the way out of the app rather
+   * than a place inside it. Everything else is a tab of the app, so pressing
+   * one from the landing page has to open the app first; that is the case the
+   * old in-page bar could not handle, because it only existed once you were
+   * already there.
+   *
+   * A guest is only ever offered Home and Network, but the prompt stays for
+   * the case where a signed-out student's profile has not loaded yet.
+   */
+  function goToTab(k) {
+    if (k === "home") { goHome(); return; }
+    setSelectedStudentId(null);
+    if (k === "map") {
+      setSelectedConsId(null);
+      setAppTabPersist("map");
+      setScreen("app");
+      return;
+    }
+    if (!myProfile) { setShowGuestPrompt(true); return; }
+    setAppTabPersist(k);
+    setScreen("app");
+  }
   // Always "otp" from the gate now. The email route is the default and the
   // document route is the fallback offered inside the verification step, so
   // the gate no longer decides — but the argument stays, because this is also
@@ -3216,6 +3242,10 @@ export default function App() {
           width: 22px; height: 2px; border-radius: 2px; background: #E9C88D;
         }
         .artium-aw-tabs button { position: relative; }
+        /* Anything the fixed bar can cover reserves its height. One number,
+           one place, so a screen added later inherits the clearance by taking
+           the class rather than by remembering the arithmetic. */
+        .artium-has-tabs { padding-bottom: calc(62px + env(safe-area-inset-bottom, 0px)); }
 
         /* ---- entrance ---- */
         /* The hero settles, then the cards arrive in order. Short distances and
@@ -3594,18 +3624,18 @@ export default function App() {
           }
           backLabel={null}
         >
-          {/* Teacher sub-tab bar (hidden when viewing a student profile, and
-              on the Network page — that one carries the reference's own
-              bottom bar, and two navigations on one screen is one too many.
-              This bar still shows on every other tab, so Promote Me, Lesson
-              Room and Admin are a single hop away rather than stranded). */}
-          {myProfile && !selectedStudentId && appTab !== "map" && (
+          {/* Only Admin survives here. Map, Promote Me and Lesson Room were
+              this strip's reason to exist, and they are in the bottom bar now
+              — leaving them would be the same three destinations twice on one
+              screen, disagreeing about which is current.
+
+              Admin stays off the bar deliberately: it belongs to two people,
+              and a tab everybody sees for a room almost nobody can open is
+              worse than a strip the two of them learn. */}
+          {myProfile && !selectedStudentId && isAdmin && (
             <div className="flex" style={{ borderBottom: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.05)" }}>
               {[
-                { key: "map", label: "Map", Icon: Map },
-                { key: "promote", label: "Promote Me", Icon: Megaphone },
-                { key: "lessons", label: "Lesson Room", Icon: BookOpen },
-                ...(isAdmin ? [{ key: "admin", label: "Admin", Icon: ShieldCheck }] : []),
+                { key: "admin", label: "Admin", Icon: ShieldCheck },
               ].map(({ key, label, Icon }) => (
                 <button key={key} onClick={() => setAppTabPersist(key)}
                   style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2, padding: "8px 4px 6px", fontWeight: appTab === key ? 600 : 400, fontSize: 12, color: appTab === key ? C.ivory : C.ivoryDim, borderBottom: appTab === key ? `2px solid ${C.brass}` : "2px solid transparent", background: "transparent", border: "none", cursor: "pointer" }}>
@@ -3637,13 +3667,6 @@ export default function App() {
                 isGuest={!myProfile}
                 onGuestClick={() => setShowGuestPrompt(true)}
                 onBack={goHome}
-                appTab={appTab}
-                onTab={(k) => {
-                  if (k === "home") { goHome(); return; }
-                  if (k === "saved") return;   // no feature behind it yet
-                  if (k === "map") { setSelectedConsId(null); return; }
-                  setAppTabPersist(k);
-                }}
                 // Unapproved students are routed to the pendingReview screen and
                 // never reach the map at all, so the approved check here is
                 // belt-and-braces — the popup's locked state shouldn't normally
@@ -3701,6 +3724,23 @@ export default function App() {
             />
           )}
         </AppShell>
+      )}
+      {/* One bar, drawn last so it sits over whatever screen is beneath it.
+          Not on the gate. Not on signup, login or confirm-email either: those
+          carry their own Back/Next footer, and stacking a tab bar under it
+          would be two answers to "what now" in the same eighty pixels.
+          Not on pendingReview, whose whole point is that nothing is reachable
+          yet — a bar there would be five buttons that bounce off the approval
+          check, which is the Saved problem again. */}
+      {(view === "landing" || view === "app") && (
+        <BottomTabs
+          items={myProfile ? STUDENT_TABS : GUEST_TABS}
+          // Nothing is lit on the landing page but Home, and nothing at all
+          // while a student profile is open over the app — that is a page you
+          // reached from a tab, not a tab.
+          active={view === "landing" ? "home" : selectedStudentId ? "" : appTab}
+          onTab={goToTab}
+        />
       )}
     </div>
   );
@@ -3874,7 +3914,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
     // palette and type — this is the screen immediately after the gate, and
     // the two reading as one product matters more than either reading well
     // alone.
-    <div className="artium-lp">
+    <div className="artium-lp artium-has-tabs">
       {/* The landing's own frame of the hall — the one with the lit floor.
           The gate's has the conductor high on the left and nothing beneath;
           this one puts the light on the ground, which is what the pin stands
@@ -6313,7 +6353,9 @@ function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, mus
   // shell's white chrome would sit on it as a second, lighter header.
   if (bare) return <div className="min-h-full flex flex-col">{children}</div>;
   return (
-    <div className="min-h-full flex flex-col" style={{ background: C.inkSoft, color: C.ivory }}>
+    // Room for the fixed bottom bar. The bare branch needs none: the page it
+    // wraps is the Network screen, which already reserves the same height.
+    <div className="min-h-full flex flex-col artium-has-tabs" style={{ background: C.inkSoft, color: C.ivory }}>
       <div className="px-6 flex items-center gap-4" style={{ height: 60, background: "rgba(255,255,255,0.05)", borderBottom: `1px solid ${C.inkLine}` }}>
         <div className="flex items-center gap-3">
           {(previewOnly || onBack) && (
@@ -6484,7 +6526,7 @@ function consMonogram(c) {
   return initials || "—";
 }
 
-function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId, onOpenStudent, isGuest, onGuestClick, onBack, canViewRoster, extraCons = [], onTab, appTab }) {
+function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId, onOpenStudent, isGuest, onGuestClick, onBack, canViewRoster, extraCons = [] }) {
   const ALL_CONS = React.useMemo(() => [...CONSERVATORIES, ...extraCons], [extraCons]);
   const cons = ALL_CONS.find((c) => c.id === selectedConsId);
   const roster = selectedConsId ? studentsByCons[selectedConsId] || [] : [];
@@ -6690,30 +6732,63 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
         )}
       </div>
 
-      {/* The reference's bottom bar. Home, Messages and Profile go where they
-          say; Saved has no feature behind it yet, so it does nothing rather
-          than pretending. Promote Me, Lesson Room and Admin have no slot here
-          and stay on the app's own tab bar, which still shows on every other
-          screen. */}
-      {onTab && (
-        <nav className="artium-aw-tabs">
-          {[
-            { k: "home", label: "Home", Icon: Home },
-            { k: "map", label: "Network", Icon: Globe2 },
-            { k: "messages", label: "Messages", Icon: MessageCircle },
-            { k: "saved", label: "Saved", Icon: BookOpen },
-            { k: "profile", label: "Profile", Icon: User },
-          ].map(({ k, label, Icon }) => (
-            <button key={k} data-on={k === "map" ? "1" : "0"} onClick={() => onTab(k)} aria-label={label}>
-              <Icon size={19} strokeWidth={1.7} />
-              {label}
-            </button>
-          ))}
-        </nav>
-      )}
     </div>
   );
 }
+
+/* ---------------------------------------------------------------- */
+/* BOTTOM TABS                                                         */
+/* ---------------------------------------------------------------- */
+/**
+ * The app's one navigation, drawn on every screen but the entry gate.
+ *
+ * It began inside the Network page as that page's own bottom bar, which meant
+ * the rest of the app navigated by a strip of text tabs under the header and
+ * the two never agreed on where you were. Lifting it out is the whole point:
+ * one bar, one active state, in the same place on every screen.
+ *
+ * Not on the gate, and not in the signup flow or the login screen — those are
+ * one-way funnels that carry their own Back/Next footer at the bottom of the
+ * screen, and a second bar under it would be two answers to "what now".
+ *
+ * Saved is gone. It was drawn from the reference and never had a feature
+ * behind it, so it was a fifth of the bar that did nothing when pressed.
+ * Promote and Lessons take the space, since those were reachable only from
+ * the strip that this replaces.
+ */
+function BottomTabs({ items, active, onTab }) {
+  return (
+    <nav className="artium-aw-tabs">
+      {items.map(({ k, label, Icon }) => (
+        <button key={k} data-on={k === active ? "1" : "0"} onClick={() => onTab(k)} aria-label={label}>
+          <Icon size={19} strokeWidth={1.7} />
+          {label}
+        </button>
+      ))}
+    </nav>
+  );
+}
+
+// Short labels deliberately. Six tabs share 375px on a narrow phone, so
+// "Promote Me" and "Lesson Room" would wrap to two lines and make the bar
+// taller than the content it sits under. Admin stays on the header strip:
+// it belongs to two people, not to the bar everybody sees.
+const STUDENT_TABS = [
+  { k: "home", label: "Home", Icon: Home },
+  { k: "map", label: "Network", Icon: Globe2 },
+  { k: "messages", label: "Messages", Icon: MessageCircle },
+  { k: "promote", label: "Promote", Icon: Megaphone },
+  { k: "lessons", label: "Lessons", Icon: BookOpen },
+  { k: "profile", label: "Profile", Icon: User },
+];
+
+// A guest has no messages and no profile, so the bar does not offer them.
+// What is left is the two things they can actually do, which is also the
+// honest shape of the app before signing up.
+const GUEST_TABS = [
+  { k: "home", label: "Home", Icon: Home },
+  { k: "map", label: "Network", Icon: Globe2 },
+];
 
 /* ---------------------------------------------------------------- */
 /* STUDENT PROFILE                                                     */
@@ -7895,21 +7970,12 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
       onBack={selectedId ? () => setSelectedId(null) : appTab === "lesson" && learnerRoomView !== "teachers" ? () => setLearnerRoomView("teachers") : appTab !== "map" ? () => setAppTab("map") : onBack}
       hideTabs={!!selectedId}
     >
-      {/* Tab bar — hidden when viewing teacher profile from Lesson Room */}
-      {!(selectedId && appTab === "lesson") && (
-        <div className="flex" style={{ borderBottom: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.05)" }}>
-          {[
-            { key: "map", label: "Find a teacher", Icon: Map },
-            ...(Object.values(teachRequests).some((s) => s === "accepted") ? [{ key: "lesson", label: "Lesson Room", Icon: BookOpen }] : []),
-          ].map(({ key, label, Icon }) => (
-            <button key={key} onClick={() => { setAppTab(key); if (key === "lesson") setSelectedId(null); }}
-              style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2, padding: "8px 4px 6px", fontWeight: appTab === key ? 600 : 400, fontSize: 12, color: appTab === key ? C.ivory : C.ivoryDim, borderBottom: appTab === key ? `2px solid ${C.brass}` : "2px solid transparent", background: "transparent", border: "none", cursor: "pointer" }}>
-              <Icon size={16} />
-              {label}
-            </button>
-          ))}
-        </div>
-      )}
+      {/* The learner's own strip is gone the same way the student's went: its
+          two destinations are in the bottom bar at the foot of this screen,
+          and the same place on every screen is the point of having one bar.
+
+          Lesson Room still only appears once a teacher has accepted them —
+          before that it is a room with nothing in it. */}
 
       {appTab === "map" && !selectedId && (
         <>
@@ -8295,6 +8361,25 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
           </div>
         );
       })()}
+      {/* Hidden only while a teacher's profile is open over the Lesson Room —
+          that page has its own way back and no tab of its own to light. */}
+      {!(selectedId && appTab === "lesson") && (
+        <BottomTabs
+          items={[
+            { k: "home", label: "Home", Icon: Home },
+            { k: "map", label: "Teachers", Icon: Map },
+            ...(Object.values(teachRequests).some((s) => s === "accepted")
+              ? [{ k: "lesson", label: "Lessons", Icon: BookOpen }]
+              : []),
+          ]}
+          active={selectedId ? "" : appTab}
+          onTab={(k) => {
+            if (k === "home") { onBack(); return; }
+            setSelectedId(null);
+            setAppTab(k);
+          }}
+        />
+      )}
     </AppShell>
   );
 }
