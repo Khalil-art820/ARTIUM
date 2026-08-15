@@ -7259,32 +7259,32 @@ function LearnerSignup({ onSubmit, onBack, onLogin, error, googleName = "" }) {
           <Logo slogan />
         </div>
 
-        {/* Step indicator */}
-        <div style={{ display: "flex", gap: 6, marginTop: 28 }}>
-          {[1, 2].map((s) => (
-            <div key={s} style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
-              <div style={{ height: 3, borderRadius: 99, background: step >= s ? C.brass : "#333" }} />
-              <span style={{ fontSize: 11, fontWeight: 600, color: step >= s ? C.brass : "#555", letterSpacing: "0.06em" }}>Step {s}</span>
-            </div>
-          ))}
-        </div>
-
-        {step === 1 ? (
-          <>
-            <h2 className="mt-8" style={{ fontFamily: FONT_DISPLAY, fontSize: 30, fontWeight: 600 }}>Create your account</h2>
-            <p className="mt-3" style={{ color: C.ivoryDim, fontSize: 15, lineHeight: 1.6 }}>First, let's set up your account.</p>
-          </>
-        ) : isForOther ? (
-          <>
-            <h2 className="mt-8" style={{ fontFamily: FONT_DISPLAY, fontSize: 30, fontWeight: 600 }}>About the learner</h2>
-            <p className="mt-3" style={{ color: C.ivoryDim, fontSize: 15, lineHeight: 1.6 }}>Tell us about the person you're registering. This helps us find the right teacher for them.</p>
-          </>
-        ) : (
-          <>
-            <h2 className="mt-8" style={{ fontFamily: FONT_DISPLAY, fontSize: 30, fontWeight: 600 }}>Tell us about you</h2>
-            <p className="mt-3" style={{ color: C.ivoryDim, fontSize: 15, lineHeight: 1.6 }}>We'll show conservatory musicians who give lessons near you.</p>
-          </>
-        )}
+        {/* The same head the conservatory flow uses: the ring carries "1 of 2"
+            and what comes next, so both signups count the same way. Two bars
+            labelled Step 1 and Step 2 said where you were and not how far that
+            was, and read as a different product besides. StepRing is
+            zero-based, hence step - 1. */}
+        {(() => {
+          const titles = ["Create your account", isForOther ? "About the learner" : "Tell us about you"];
+          const blurbs = [
+            "First, let's set up your account.",
+            isForOther
+              ? "Tell us about the person you're registering. This helps us find the right teacher for them."
+              : "We'll show conservatory musicians who give lessons near you.",
+          ];
+          return (
+            <>
+              <div className="artium-su-head">
+                <StepRing step={step - 1} total={titles.length} />
+                <span className="artium-su-head-text">
+                  <h2 className="artium-su-title">{titles[step - 1]}</h2>
+                  {titles[step] && <p className="artium-su-next">Next: <b>{titles[step]}</b></p>}
+                </span>
+              </div>
+              <p className="mt-5" style={{ color: C.ivoryDim, fontSize: 15, lineHeight: 1.6 }}>{blurbs[step - 1]}</p>
+            </>
+          );
+        })()}
       </div>
 
       <div className="max-w-2xl mx-auto px-6 py-10">
