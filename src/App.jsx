@@ -3125,16 +3125,46 @@ export default function App() {
           flex-shrink: 0; display: flex; align-items: center; gap: 6px;
         }
         .artium-aw-inst img {
-          width: 46px; height: 46px; object-fit: contain; display: block;
-          opacity: 0.92;
+          width: 54px; height: 54px; object-fit: contain; display: block;
+          /* These read as faint for a reason that is not brightness: the
+             strokes are already gold at luminance ~195, but they cover only
+             five per cent of the tile, and a hairline drawn at 128px and shown
+             at 46 loses most of what is left to antialiasing. Turning it up
+             does nothing to a pixel that is already near the top.
+
+             So the weight is rebuilt instead. Two halos in the same champagne
+             as the strokes — one tight enough to thicken each line, one wide
+             enough to lift the whole mark off the black — and the drawing
+             gains presence without being redrawn. The small brightness and
+             saturation lift is the last few per cent, not the mechanism. */
+          opacity: 1;
+          /* Three halos, not one. The tight pair builds density right at the
+             line — that is what reads as a thicker stroke — and the wide one
+             lifts the whole mark off the black so it is findable before it is
+             legible. In the same champagne as the drawing, so it looks lit
+             rather than outlined. */
+          filter:
+            brightness(1.16) saturate(1.1)
+            drop-shadow(0 0 1px rgba(239,208,155,0.7))
+            drop-shadow(0 0 3px rgba(239,208,155,0.45))
+            drop-shadow(0 0 9px rgba(239,208,155,0.26));
+          transition: filter .25s ease, transform .25s ease;
+        }
+        .artium-aw-row:hover .artium-aw-inst img {
+          filter:
+            brightness(1.24) saturate(1.14)
+            drop-shadow(0 0 1px rgba(250,232,195,0.9))
+            drop-shadow(0 0 4px rgba(245,220,170,0.6))
+            drop-shadow(0 0 14px rgba(239,208,155,0.38));
+          transform: scale(1.04);
         }
         /* Two fit in the width of one and a half rather than pushing the row
            wider — the name is what must not be squeezed. */
-        .artium-aw-inst[data-two="1"] { gap: 2px; }
-        .artium-aw-inst[data-two="1"] img { width: 34px; height: 34px; }
+        .artium-aw-inst[data-two="1"] { gap: 1px; }
+        .artium-aw-inst[data-two="1"] img { width: 42px; height: 42px; }
         @media (max-width: 380px) {
-          .artium-aw-inst img { width: 38px; height: 38px; }
-          .artium-aw-inst[data-two="1"] img { width: 28px; height: 28px; }
+          .artium-aw-inst img { width: 46px; height: 46px; }
+          .artium-aw-inst[data-two="1"] img { width: 36px; height: 36px; }
         }
         .artium-aw-empty { padding: 26px 4px; text-align: center; font-size: 12.5px; color: #7C7C7C; }
 
