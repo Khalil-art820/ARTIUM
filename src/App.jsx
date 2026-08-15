@@ -376,7 +376,36 @@ const SAMPLE_CONVERSATIONS = {
 // "5th year+" rather than "4+ years", which sat next to "4th year" and asked
 // the fourth-years to decide which of two chips meant them. The plus now
 // starts where the numbered chips stop.
-const YEAR_OPTIONS = ["1st year", "2nd year", "3rd year", "4th year", "5th year+", "Graduated"];
+const YEAR_OPTIONS = ["1st year", "2nd year", "3rd year", "4th year", "5th year+"];
+
+// Level and year are two different questions that used to share one row of
+// chips, so a Masters student in their second year had to pick which half of
+// themselves to declare. They are separate now and combine freely — except
+// that Graduated and a year are the same fact told two ways, so choosing one
+// rules out the other. Graduated still takes a level: somebody who finished a
+// doctorate is a graduate of it.
+const LEVEL_OPTIONS = ["Masters", "Doctoral"];
+const GRADUATED = "Graduated";
+
+// Still one string, still the phrase read back verbatim wherever a student is
+// summarised — "Masters, 2nd year" is the shape the sample profiles already
+// used, and the shape a card wants. Structure lives in the form, not in the
+// column, so nothing downstream and no existing row has to change.
+function composeStudy({ levels = [], year = "", graduated = false }) {
+  return [...levels, graduated ? GRADUATED : year].filter(Boolean).join(", ");
+}
+
+// The inverse, for reopening a saved answer in the form. The vocabulary is
+// closed, so anything unrecognised — an older "4+ years", a sample student's
+// "Final year" — simply does not light a chip rather than lighting a wrong one.
+function parseStudy(years) {
+  const parts = String(years || "").split(",").map((s) => s.trim()).filter(Boolean);
+  return {
+    levels: LEVEL_OPTIONS.filter((l) => parts.includes(l)),
+    year: parts.find((p) => YEAR_OPTIONS.includes(p)) || "",
+    graduated: parts.includes(GRADUATED),
+  };
+}
 
 // The orchestra as the icon sheet draws it, in score order — strings, wind,
 // brass, percussion, keyboard — rather than the shorter list that came before,
@@ -669,10 +698,11 @@ function MemberCount({ count, mark = C.ivoryDim, figure = C.ivory }) {
   );
 }
 
-function Chip({ active, onClick, children }) {
+function Chip({ active, onClick, children, disabled = false }) {
   return (
     <button
       onClick={onClick}
+      disabled={disabled}
       className="px-3.5 py-2 rounded-full text-sm transition-colors"
       style={{
         fontFamily: FONT_BODY,
@@ -683,7 +713,10 @@ function Chip({ active, onClick, children }) {
         color: active ? C.brassText : C.ivoryDim,
         fontWeight: active ? 700 : 500,
         boxShadow: active ? "0 3px 14px rgba(233,200,141,0.20)" : "none",
-        cursor: "pointer",
+        // Ruled out by another choice, not broken. Faded and unpressable, and
+        // the chip that rules it out is lit right there to say why.
+        cursor: disabled ? "default" : "pointer",
+        opacity: disabled ? 0.34 : 1,
       }}
     >
       {children}
@@ -4667,6 +4700,12 @@ function StepIntro({ draft, update }) {
   const linkValid = !draft.videoLink || /instagram\.com|facebook\.com|fb\.com|fb\.watch|youtube\.com|youtu\.be/i.test(draft.videoLink);
   const picked = instrumentsOf(draft);
   const full = picked.length >= MAX_INSTRUMENTS;
+  // The chips are a view of draft.years, not a second copy of it. Parsing on
+  // every render rather than holding state means a restored draft, a profile
+  // opened for editing and a fresh form all light the same chips without
+  // anything having to remember to sync.
+  const study = parseStudy(draft.years);
+  const setStudy = (next) => update({ years: composeStudy(next) });
   return (
     <div>
       <PhotoUpload name={draft.name} photoUrl={draft.photoUrl} onChange={(photoUrl) => update({ photoUrl })} />
@@ -4677,11 +4716,41 @@ function StepIntro({ draft, update }) {
           places — rosters, profiles, the lesson room — so it is stored as the
           phrase that reads correctly there ("2nd year"), not as a bare digit
           that would come out as "2 · Chopin, Ravel". */}
-      <Field label="What is your current year of study?">
+      <Field label="What is your current level and year of study?">
+        {/* Two rows because they are two answers. Level is a free multi-select
+            — a Masters and a doctorate are both things a person can be partway
+            through — while the row beneath it holds the one mutually exclusive
+            set: a year, or Graduated, never both.
+
+            Graduated sits at the end of that second row rather than in a group
+            of its own, because that placement is the rule. It is the last stop
+            on the same line the years run along, and standing there greys the
+            years out. */}
         <div className="flex flex-wrap gap-2">
-          {YEAR_OPTIONS.map((y) => (
-            <Chip key={y} active={draft.years === y} onClick={() => update({ years: draft.years === y ? "" : y })}>{y}</Chip>
+          {LEVEL_OPTIONS.map((l) => (
+            <Chip
+              key={l}
+              active={study.levels.includes(l)}
+              onClick={() => setStudy({
+                ...study,
+                levels: study.levels.includes(l) ? study.levels.filter((x) => x !== l) : [...study.levels, l],
+              })}
+            >{l}</Chip>
           ))}
+        </div>
+        <div className="flex flex-wrap gap-2" style={{ marginTop: 8 }}>
+          {YEAR_OPTIONS.map((y) => (
+            <Chip
+              key={y}
+              active={study.year === y}
+              disabled={study.graduated}
+              onClick={() => setStudy({ ...study, year: study.year === y ? "" : y })}
+            >{y}</Chip>
+          ))}
+          <Chip
+            active={study.graduated}
+            onClick={() => setStudy({ ...study, graduated: !study.graduated, year: "" })}
+          >{GRADUATED}</Chip>
         </div>
       </Field>
       {/* Thirty-six instruments read as a wall of words; the drawings are what
