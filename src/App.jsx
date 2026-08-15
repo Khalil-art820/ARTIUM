@@ -373,7 +373,10 @@ const SAMPLE_CONVERSATIONS = {
 
 // Read back verbatim wherever a student is summarised, so these are the
 // phrases themselves rather than numbers needing a suffix at each call site.
-const YEAR_OPTIONS = ["1st year", "2nd year", "3rd year", "4th year", "4+ years", "Graduated"];
+// "5th year+" rather than "4+ years", which sat next to "4th year" and asked
+// the fourth-years to decide which of two chips meant them. The plus now
+// starts where the numbered chips stop.
+const YEAR_OPTIONS = ["1st year", "2nd year", "3rd year", "4th year", "5th year+", "Graduated"];
 
 // The orchestra as the icon sheet draws it, in score order — strings, wind,
 // brass, percussion, keyboard — rather than the shorter list that came before,
@@ -4674,7 +4677,7 @@ function StepIntro({ draft, update }) {
           places — rosters, profiles, the lesson room — so it is stored as the
           phrase that reads correctly there ("2nd year"), not as a bare digit
           that would come out as "2 · Chopin, Ravel". */}
-      <Field label="Years at your current conservatory">
+      <Field label="What is your current year of study?">
         <div className="flex flex-wrap gap-2">
           {YEAR_OPTIONS.map((y) => (
             <Chip key={y} active={draft.years === y} onClick={() => update({ years: draft.years === y ? "" : y })}>{y}</Chip>
