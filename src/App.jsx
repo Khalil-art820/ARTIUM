@@ -2502,7 +2502,15 @@ export default function App() {
         .artium-gx-trust {
           /* 870/995 of the trio in the reference, and the trio is 96vw. */
           --tb: min(83.9vw, 585px);
-          width: var(--tb); margin: 26px auto 0; border-radius: 20px;
+          /* Centred by the column's align-items, not by auto margins.
+             --tb is measured in vw, which counts the scrollbar, while this
+             sits in a box with 24px of padding either side — so on a phone the
+             bar is a few pixels wider than the space it occupies. Auto margins
+             cannot centre an over-wide box: with no free space they resolve to
+             zero and the whole overflow goes to the right, which is why it sat
+             a few pixels right of the trio above it. align-items overflows
+             evenly, which is how the trio has always centred. */
+          width: var(--tb); margin: 26px 0 0; border-radius: 20px;
           border: 1px solid rgba(239,208,155,0.16);
           background: rgba(255,255,255,0.03);
           -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
