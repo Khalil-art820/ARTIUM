@@ -6616,11 +6616,16 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
                       {st.name}{st.id === "me" && <span style={{ color: "#E6DAB0" }}> (you)</span>}
                     </p>
                     <p className="artium-aw-row-c" style={{ filter: isGuest && st.id !== "me" ? "blur(4px)" : "none" }}>
-                      {/* Ahead of the year and the composers, because it is the
-                          only thing in the line somebody might be scanning the
-                          roster to find. Teaching is an offer, not a detail. */}
+                      {/* Ahead of the year, because it is the only thing in the
+                          line somebody might be scanning the roster to find.
+                          Teaching is an offer, not a detail. */}
                       {st.teaching?.open && <span className="artium-aw-teach">Teaches</span>}
-                      {[st.year, (st.tastes || []).slice(0, 2).join(", ")].filter(Boolean).join(" · ")}
+                      {/* Where two favourite composers used to sit. They were
+                          the same handful of names down the whole roster —
+                          Chopin, Ravel, Debussy — so they separated nobody.
+                          Level and year do: it is how a student reads another
+                          student, and it is already one phrase. */}
+                      {st.year}
                     </p>
                   </span>
                   {/* The drawing, not the word: at a glance down the roster the
