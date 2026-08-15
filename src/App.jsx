@@ -3121,8 +3121,31 @@ export default function App() {
         .artium-aw-row > svg:last-child { color: #6E6E6E; flex-shrink: 0; }
         /* The instrument, drawn. It sits between the name and the chevron, and
            it is the one gold thing in the row, so it needs no label. */
+        /* A fixed width, not a shrink-to-fit one: it makes the drawings and
+           their captions line up as a column down the roster, so the eye runs
+           straight down the instruments instead of tracking a ragged edge. */
         .artium-aw-inst {
-          flex-shrink: 0; display: flex; align-items: center; gap: 6px;
+          flex-shrink: 0; width: 64px;
+          display: flex; flex-direction: column; align-items: center; gap: 3px;
+        }
+        .artium-aw-inst-art { display: flex; align-items: center; gap: 6px; }
+        .artium-aw-inst-name {
+          font-family: 'Manrope', -apple-system, sans-serif;
+          font-size: 9.5px; font-weight: 600; letter-spacing: 0.02em;
+          line-height: 1.2; text-align: center;
+          color: rgba(239,208,155,0.78);
+          /* Two lines, so "Double Bass" and "Tubular Bells" wrap inside the
+             column rather than widening it and stealing the name's room. */
+          display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+        /* Reads as an offer at a glance — the one filled, warm thing in a row
+           of outlines — without being the size of a button. */
+        .artium-aw-teach {
+          flex-shrink: 0; margin-right: 2px;
+          font-size: 8.5px; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase;
+          padding: 2px 7px; border-radius: 999px;
+          background: linear-gradient(160deg, #E9C88D, #C99A55); color: #241A0E;
         }
         .artium-aw-inst img {
           width: 54px; height: 54px; object-fit: contain; display: block;
@@ -3160,10 +3183,13 @@ export default function App() {
         }
         /* Two fit in the width of one and a half rather than pushing the row
            wider — the name is what must not be squeezed. */
-        .artium-aw-inst[data-two="1"] { gap: 1px; }
+        .artium-aw-inst[data-two="1"] { width: 94px; }
+        .artium-aw-inst[data-two="1"] .artium-aw-inst-art { gap: 1px; }
         .artium-aw-inst[data-two="1"] img { width: 42px; height: 42px; }
         @media (max-width: 380px) {
+          .artium-aw-inst { width: 56px; }
           .artium-aw-inst img { width: 46px; height: 46px; }
+          .artium-aw-inst[data-two="1"] { width: 78px; }
           .artium-aw-inst[data-two="1"] img { width: 36px; height: 36px; }
         }
         .artium-aw-empty { padding: 26px 4px; text-align: center; font-size: 12.5px; color: #7C7C7C; }
@@ -6590,6 +6616,10 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
                       {st.name}{st.id === "me" && <span style={{ color: "#E6DAB0" }}> (you)</span>}
                     </p>
                     <p className="artium-aw-row-c" style={{ filter: isGuest && st.id !== "me" ? "blur(4px)" : "none" }}>
+                      {/* Ahead of the year and the composers, because it is the
+                          only thing in the line somebody might be scanning the
+                          roster to find. Teaching is an offer, not a detail. */}
+                      {st.teaching?.open && <span className="artium-aw-teach">Teaches</span>}
                       {[st.year, (st.tastes || []).slice(0, 2).join(", ")].filter(Boolean).join(" · ")}
                     </p>
                   </span>
@@ -6602,10 +6632,17 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
                       chosen over the other — data-two is what does it, so a
                       single instrument keeps the size it has here today. */}
                   {instrumentIcons(st).length > 0 && (
-                    <span className="artium-aw-inst" data-two={instrumentIcons(st).length > 1 ? "1" : "0"} aria-hidden="true">
-                      {instrumentIcons(st).map((icon) => (
-                        <img key={icon} src={`/instruments/${icon}.webp`} alt="" loading="lazy" />
-                      ))}
+                    <span className="artium-aw-inst" data-two={instrumentIcons(st).length > 1 ? "1" : "0"}>
+                      <span className="artium-aw-inst-art" aria-hidden="true">
+                        {instrumentIcons(st).map((icon) => (
+                          <img key={icon} src={`/instruments/${icon}.webp`} alt="" loading="lazy" />
+                        ))}
+                      </span>
+                      {/* The drawing is what the eye lands on; the word is what
+                          settles it. A cornet and a trumpet are the same
+                          silhouette at this size, and a marimba and a xylophone
+                          are the same drawing twice. */}
+                      <span className="artium-aw-inst-name">{instrumentLabel(st)}</span>
                     </span>
                   )}
                   <ChevronRight size={17} strokeWidth={2} />
