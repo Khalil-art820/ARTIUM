@@ -3247,6 +3247,21 @@ export default function App() {
            the class rather than by remembering the arithmetic. */
         .artium-has-tabs { padding-bottom: calc(62px + env(safe-area-inset-bottom, 0px)); }
 
+        /* Profile top: identity left, cover video right, the video column
+           lined up with the repertoire card in the grid underneath. */
+        .artium-pf-top {
+          display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+          align-items: start; margin-bottom: 12px;
+        }
+        /* Nothing to put on the right — a public profile with no video — so
+           the identity block takes the width rather than leaving a hole. */
+        .artium-pf-top[data-solo="1"] { grid-template-columns: 1fr; }
+        /* One column under a laptop: side by side, the video is too small to
+           watch and the name too narrow to read. */
+        @media (max-width: 900px) {
+          .artium-pf-top { grid-template-columns: 1fr; }
+        }
+
         /* ---- entrance ---- */
         /* The hero settles, then the cards arrive in order. Short distances and
            a soft curve: at this weight of design, movement should be noticed
@@ -6919,6 +6934,10 @@ function StudentProfile({ student, conservatory, onBack, onMessage, locked, onAp
 
   const profileCards = (
     <>
+      {/* Same two columns as the owner's own view: who they are on the left,
+          the cover video on the right. One profile shape, whoever is reading. */}
+      <div className="artium-pf-top" data-solo={student.coverVideoUrl ? "0" : "1"}>
+      <div>
       {/* Header */}
       <div style={{ display: "flex", alignItems: "flex-start", gap: 16, marginBottom: 28 }}>
         <div style={{ marginTop: 4 }}>
@@ -6957,16 +6976,13 @@ function StudentProfile({ student, conservatory, onBack, onMessage, locked, onAp
       ) : (
         <p style={{ fontSize: 13, color: C.ivoryDim, marginBottom: 24 }}>No performance video shared.</p>
       )}
+      </div>
+      {student.coverVideoUrl && (
+        <Row label="Cover video"><CoverVideo url={student.coverVideoUrl} /></Row>
+      )}
+      </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-        {/* First in the grid, across both columns — the same slot the owner
-            sees the uploader in, so the profile does not rearrange itself
-            depending on who is looking. */}
-        {student.coverVideoUrl && (
-          <div style={{ gridColumn: "1 / -1" }}>
-            <Row label="Cover video"><CoverVideo url={student.coverVideoUrl} /></Row>
-          </div>
-        )}
         {(student.tastes || []).length > 0 && (
           <Row label="Musical preferences">
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 4 }}>
@@ -7027,6 +7043,12 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack, onUpdat
   /* ── Cards column (shared between both layout variants) ── */
   const cards = (
     <>
+      {/* The top of the page is two columns: who they are on the left, the
+          cover video on the right, its column lined up with the repertoire
+          card below it. The video is the largest thing on the profile and it
+          reads as a header rather than as another fact about them. */}
+      <div className="artium-pf-top">
+      <div>
       {/* Header */}
       <div style={{ marginBottom: 28 }}>
         <div style={{ display: "flex", alignItems: "flex-start", gap: 16, marginBottom: 16 }}>
@@ -7083,22 +7105,18 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack, onUpdat
       ) : (
         <p style={{ fontSize: 13, color: C.ivoryDim, marginBottom: 24 }}>No performance video shared.</p>
       )}
+      </div>
+      <Row label="Cover video">
+        <CoverVideoUpload
+          value={profile.coverVideoUrl}
+          onChange={(url) => onUpdateCoverVideo && onUpdateCoverVideo(url)}
+          uploader={uploadCoverVideo}
+        />
+      </Row>
+      </div>
 
       {/* Data grid */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-        {/* A card of its own, first in the grid and across both columns, so it
-            sits directly above the repertoire rather than floating over the
-            page as a banner. Full width because it is a video: half a column
-            is not a size anybody wants to watch something at. */}
-        <div style={{ gridColumn: "1 / -1" }}>
-          <Row label="Cover video">
-            <CoverVideoUpload
-              value={profile.coverVideoUrl}
-              onChange={(url) => onUpdateCoverVideo && onUpdateCoverVideo(url)}
-              uploader={uploadCoverVideo}
-            />
-          </Row>
-        </div>
         {(profile.tastes || []).length > 0 && (
           <Row label="Musical preferences">
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 4 }}>
