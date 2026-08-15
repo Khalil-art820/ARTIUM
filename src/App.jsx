@@ -4727,10 +4727,9 @@ function CoverVideoUpload({ value, onChange, uploader }) {
   }
 
   return (
-    <div className="mb-7">
-      <label className="block mb-2 text-xs" style={{ fontFamily: FONT_MONO, color: C.ivoryDim, letterSpacing: "0.06em" }}>COVER VIDEO</label>
+    <div>
       {value ? (
-        <div style={{ position: "relative", width: "100%", borderRadius: 12, overflow: "hidden", border: `1px solid ${C.inkLine}` }}>
+        <div style={{ position: "relative", width: "100%", borderRadius: 10, overflow: "hidden", background: "#000" }}>
           <video src={value} controls playsInline preload="metadata" style={{ width: "100%", display: "block", maxHeight: 260, background: "#000" }} />
           <div style={{ position: "absolute", top: 8, right: 8, display: "flex", gap: 6 }}>
             <button type="button" onClick={() => inputRef.current && inputRef.current.click()}
@@ -4807,7 +4806,7 @@ function TeachingCell({ teaching }) {
 function CoverVideo({ url }) {
   if (!url) return null;
   return (
-    <div style={{ marginBottom: 24, borderRadius: 16, overflow: "hidden", border: `1px solid ${C.inkLine}`, background: "#000" }}>
+    <div style={{ borderRadius: 10, overflow: "hidden", background: "#000" }}>
       <video src={url} controls playsInline preload="metadata"
         style={{ width: "100%", display: "block", maxHeight: 420, background: "#000" }} />
     </div>
@@ -6959,10 +6958,15 @@ function StudentProfile({ student, conservatory, onBack, onMessage, locked, onAp
         <p style={{ fontSize: 13, color: C.ivoryDim, marginBottom: 24 }}>No performance video shared.</p>
       )}
 
-      {/* Above the cards, so the first thing a profile does is play. */}
-      <CoverVideo url={student.coverVideoUrl} />
-
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        {/* First in the grid, across both columns — the same slot the owner
+            sees the uploader in, so the profile does not rearrange itself
+            depending on who is looking. */}
+        {student.coverVideoUrl && (
+          <div style={{ gridColumn: "1 / -1" }}>
+            <Row label="Cover video"><CoverVideo url={student.coverVideoUrl} /></Row>
+          </div>
+        )}
         {(student.tastes || []).length > 0 && (
           <Row label="Musical preferences">
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 4 }}>
@@ -7080,11 +7084,21 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack, onUpdat
         <p style={{ fontSize: 13, color: C.ivoryDim, marginBottom: 24 }}>No performance video shared.</p>
       )}
 
-      {/* Above the cards, so the first thing a profile does is play. */}
-      <CoverVideo url={profile.coverVideoUrl} />
-
       {/* Data grid */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        {/* A card of its own, first in the grid and across both columns, so it
+            sits directly above the repertoire rather than floating over the
+            page as a banner. Full width because it is a video: half a column
+            is not a size anybody wants to watch something at. */}
+        <div style={{ gridColumn: "1 / -1" }}>
+          <Row label="Cover video">
+            <CoverVideoUpload
+              value={profile.coverVideoUrl}
+              onChange={(url) => onUpdateCoverVideo && onUpdateCoverVideo(url)}
+              uploader={uploadCoverVideo}
+            />
+          </Row>
+        </div>
         {(profile.tastes || []).length > 0 && (
           <Row label="Musical preferences">
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 4 }}>
@@ -7116,15 +7130,10 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack, onUpdat
 
   // One column. The cover photo made this a split page — a tall image pinned
   // down the left and the cards crowded into what was left — and with the
-  // photo gone there is nothing to pin. The video reads better in the column
-  // anyway, at the width of the thing it introduces.
+  // photo gone there is nothing to pin. The video is a card in the grid now,
+  // not chrome around it.
   return (
     <div style={{ maxWidth: 900, margin: "0 auto", padding: "40px 24px" }}>
-      <CoverVideoUpload
-        value={profile.coverVideoUrl}
-        onChange={(url) => onUpdateCoverVideo && onUpdateCoverVideo(url)}
-        uploader={uploadCoverVideo}
-      />
       {cards}
     </div>
   );
