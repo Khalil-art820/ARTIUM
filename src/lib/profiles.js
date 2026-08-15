@@ -56,7 +56,9 @@ export function toDbProfile(draft, id) {
     flop: draft.flop,
     composer_day: draft.composerDay,
     photo_url: draft.photoUrl,
-    cover_photo_url: draft.coverPhotoUrl || null,
+    // A URL into the student-video bucket, not the file. The cover photo it
+    // replaces was a base64 data URI written straight into the row.
+    cover_video_url: draft.coverVideoUrl || null,
     conservatory_email: draft.conservatoryEmail || null,
     conservatory_verified: !!draft.conservatoryVerified,
     is_online: true,
@@ -67,6 +69,9 @@ export function toDbProfile(draft, id) {
     teaching_open: draft.teaching.open,
     teaching_mode: draft.teaching.mode,
     teaching_price: draft.teaching.price,
+    // Only meaningful while they are open to teaching, so closing the door
+    // clears what was said behind it rather than leaving it to reappear.
+    teaching_pitch: draft.teaching.open ? (draft.teaching.pitch || null) : null,
   };
 }
 
@@ -89,10 +94,10 @@ export function fromDbProfile(row) {
     flop: row.flop,
     composerDay: row.composer_day,
     photoUrl: row.photo_url,
-    coverPhotoUrl: row.cover_photo_url || "",
+    coverVideoUrl: row.cover_video_url || "",
     conservatoryEmail: row.conservatory_email || "",
     conservatoryVerified: !!row.conservatory_verified,
-    teaching: { open: !!row.teaching_open, mode: row.teaching_mode || "", price: row.teaching_price || "" },
+    teaching: { open: !!row.teaching_open, mode: row.teaching_mode || "", price: row.teaching_price || "", pitch: row.teaching_pitch || "" },
     online: row.is_online ?? true,
   };
 }

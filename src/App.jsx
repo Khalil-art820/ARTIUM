@@ -309,7 +309,7 @@ const colorFor = (seed) => {
 const initials = (name) => name.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
 
 const SAMPLE_STUDENTS = [
-  { id: "demo-teacher", name: "Marcus Feld", instrument: "Piano", conservatoryId: "juilliard", year: "Final year", bio: "Final-year pianist at Juilliard. Happiest inside a Chopin ballade.", tastes: ["Chopin", "Debussy"], pieces: [{ title: "Ballade No. 1", composer: "Chopin" }], videoLink: "", top: "", flop: "", photoUrl: null, coverPhotoUrl: null, teaching: { open: true, mode: "online", price: "60" }, status: "approved", online: true },
+  { id: "demo-teacher", name: "Marcus Feld", instrument: "Piano", conservatoryId: "juilliard", year: "Final year", bio: "Final-year pianist at Juilliard. Happiest inside a Chopin ballade.", tastes: ["Chopin", "Debussy"], pieces: [{ title: "Ballade No. 1", composer: "Chopin" }], videoLink: "", top: "", flop: "", photoUrl: null, coverVideoUrl: null, teaching: { open: true, mode: "online", price: "60", pitch: "Patient with beginners, blunt about fundamentals. We will spend the first lesson on how you sit before we play a note." }, status: "approved", online: true },
   { id: "elise", name: "Élise Marchand", instrument: "Piano", conservatoryId: "paris", year: "3rd year", bio: "Drawn to color and light at the keyboard — chasing the perfect pedal half-tone.", tastes: ["Debussy", "Ravel", "Impressionism", "Chopin"], pieces: [{ title: "Images, Book I", composer: "Debussy" }, { title: "Gaspard de la nuit", composer: "Ravel" }], videoLink: "https://instagram.com/elise.piano", top: "Just nailed the voicing in \"Reflets dans l'eau\" — finally sounds like water instead of notes.", flop: "Still wrestling with the tremolo passage in Gaspard, my wrist gives out after a few bars.", online: true },
   { id: "theo", name: "Théo Lambert", instrument: "Piano", conservatoryId: "paris", year: "1st year", bio: "Recovering organist, newly obsessed with counterpoint.", tastes: ["Bach", "Baroque", "Beethoven"], pieces: [{ title: "Goldberg Variations, BWV 988", composer: "Bach" }], videoLink: "", top: "Finished memorizing the Goldberg aria — it finally feels like home.", flop: "Variation 26 is destroying my left hand independence.", online: false },
   { id: "lukas", name: "Lukas Brunner", instrument: "Piano", conservatoryId: "vienna", year: "4th year", bio: "Viennese classicism is home turf, but I'm trying to loosen up rhythmically.", tastes: ["Beethoven", "Schubert", "Classical Era"], pieces: [{ title: "Sonata No. 23 'Appassionata'", composer: "Beethoven" }, { title: "Wanderer Fantasy", composer: "Schubert" }], videoLink: "https://instagram.com/lukas.keys", top: "Played the Appassionata finale up to tempo for the first time.", flop: "The Wanderer Fantasy's octave passages are still sloppy under pressure.", online: true },
@@ -556,8 +556,8 @@ const emptyDraft = () => ({
   videoLink: "",
   top: "", flop: "", composerDay: "",
   photoUrl: "",
-  coverPhotoUrl: "",
-  teaching: { open: false, mode: "", price: "" },
+  coverVideoUrl: "",
+  teaching: { open: false, mode: "", price: "", pitch: "" },
 });
 
 /* ---------------------------------------------------------------- */
@@ -3687,9 +3687,9 @@ export default function App() {
           )}
           {appTab === "profile" && !selectedStudentId && myProfile && (
             <MyProfile profile={myProfile} onEdit={editProfile} onLogout={handleLogout}
-              onUpdateCoverPhoto={async (coverPhotoUrl) => {
-                await supabase.from("profiles").update({ cover_photo_url: coverPhotoUrl || null }).eq("id", myProfile.id);
-                const updated = { ...myProfile, coverPhotoUrl };
+              onUpdateCoverVideo={async (coverVideoUrl) => {
+                await supabase.from("profiles").update({ cover_video_url: coverVideoUrl || null }).eq("id", myProfile.id);
+                const updated = { ...myProfile, coverVideoUrl };
                 setMyProfile(updated);
                 setStudents((arr) => arr.map((s) => (s.id === myProfile.id ? updated : s)));
               }}
@@ -4666,29 +4666,79 @@ function PhotoUpload({ name, photoUrl, onChange }) {
   );
 }
 
-function CoverPhotoUpload({ coverPhotoUrl, onChange }) {
+const COVER_VIDEO_MAX_SECONDS = 25;
+
+// Long enough for a real answer, short enough that a profile card can show it
+// whole. Past this it stops being a pitch and becomes a page.
+const TEACHING_PITCH_MAX = 400;
+
+/**
+ * Reads a video file's duration before anything is uploaded.
+ *
+ * Metadata only — the browser fetches the header, not the file — so a long
+ * video is refused in the moment it is chosen rather than after a minute of
+ * upload. NaN when the browser cannot decode it, which is treated as "let it
+ * through": a codec this browser cannot read is not evidence of length, and
+ * the storage limit will catch anything genuinely enormous.
+ */
+function videoDuration(file) {
+  return new Promise((resolve) => {
+    const el = document.createElement("video");
+    el.preload = "metadata";
+    el.onloadedmetadata = () => { URL.revokeObjectURL(el.src); resolve(el.duration); };
+    el.onerror = () => resolve(NaN);
+    el.src = URL.createObjectURL(file);
+  });
+}
+
+/**
+ * The cover video: twenty-five seconds at the top of a profile.
+ *
+ * It replaces a cover photo that was stored as a base64 data URI inside the
+ * profiles row. That was survivable for an image and impossible for video, so
+ * the file goes to the student-video bucket and the row keeps a URL.
+ *
+ * A second of tolerance on the limit, because a phone that was asked for
+ * twenty-five seconds hands back 25.04 and refusing that is arguing with the
+ * recording rather than with the person.
+ */
+function CoverVideoUpload({ value, onChange, uploader }) {
   const inputRef = useRef(null);
-  function handleFile(e) {
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+
+  async function handleFile(e) {
     const file = e.target.files && e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => onChange(reader.result);
-    reader.readAsDataURL(file);
     e.target.value = "";
+    if (!file) return;
+    setErr("");
+
+    const seconds = await videoDuration(file);
+    if (Number.isFinite(seconds) && seconds > COVER_VIDEO_MAX_SECONDS + 1) {
+      setErr(`That clip is ${Math.round(seconds)} seconds. Trim it to ${COVER_VIDEO_MAX_SECONDS} or under — pick the moment you would want seen first.`);
+      return;
+    }
+
+    setBusy(true);
+    const result = await uploader(file);
+    setBusy(false);
+    if (result.error) { setErr(result.error); return; }
+    onChange(result.url);
   }
+
   return (
     <div className="mb-7">
-      <label className="block mb-2 text-xs" style={{ fontFamily: FONT_MONO, color: C.ivoryDim, letterSpacing: "0.06em" }}>COVER PHOTO</label>
-      {coverPhotoUrl ? (
-        <div style={{ position: "relative", width: "100%", height: 160, borderRadius: 12, overflow: "hidden", border: `1px solid ${C.inkLine}` }}>
-          <img src={coverPhotoUrl} alt="Cover" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-          <div style={{ position: "absolute", bottom: 8, right: 8, display: "flex", gap: 6 }}>
+      <label className="block mb-2 text-xs" style={{ fontFamily: FONT_MONO, color: C.ivoryDim, letterSpacing: "0.06em" }}>COVER VIDEO</label>
+      {value ? (
+        <div style={{ position: "relative", width: "100%", borderRadius: 12, overflow: "hidden", border: `1px solid ${C.inkLine}` }}>
+          <video src={value} controls playsInline preload="metadata" style={{ width: "100%", display: "block", maxHeight: 260, background: "#000" }} />
+          <div style={{ position: "absolute", top: 8, right: 8, display: "flex", gap: 6 }}>
             <button type="button" onClick={() => inputRef.current && inputRef.current.click()}
               className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold"
               style={{ background: "rgba(0,0,0,0.55)", color: "#fff", border: "none", cursor: "pointer", backdropFilter: "blur(4px)" }}>
-              <Upload size={11} /> Change
+              <Upload size={11} /> Replace
             </button>
-            <button type="button" onClick={() => onChange("")}
+            <button type="button" onClick={() => { setErr(""); onChange(""); }}
               className="rounded-full px-3 py-1.5 text-xs font-semibold"
               style={{ background: "rgba(0,0,0,0.55)", color: "#fff", border: "none", cursor: "pointer", backdropFilter: "blur(4px)" }}>
               Remove
@@ -4696,14 +4746,70 @@ function CoverPhotoUpload({ coverPhotoUrl, onChange }) {
           </div>
         </div>
       ) : (
-        <button type="button" onClick={() => inputRef.current && inputRef.current.click()}
+        <button type="button" disabled={busy} onClick={() => inputRef.current && inputRef.current.click()}
           className="w-full inline-flex items-center justify-center gap-2 rounded-xl py-5 text-sm"
-          style={{ border: `1.5px dashed ${C.inkLine}`, color: C.ivoryDim, background: "transparent", cursor: "pointer" }}>
-          <Upload size={15} /> Upload cover photo
+          style={{ border: `1.5px dashed ${C.inkLine}`, color: C.ivoryDim, background: "transparent", cursor: busy ? "default" : "pointer", opacity: busy ? 0.6 : 1 }}>
+          <Upload size={15} /> {busy ? "Uploading…" : "Upload cover video"}
         </button>
       )}
-      <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
-      <p className="text-xs mt-1.5" style={{ color: C.ivoryDim, fontFamily: FONT_MONO }}>Optional — shown beside your profile cards.</p>
+      <input ref={inputRef} type="file" accept="video/*" className="hidden" onChange={handleFile} />
+      {err
+        ? <p className="text-xs mt-1.5" style={{ color: C.burgundy }}>{err}</p>
+        : <p className="text-xs mt-1.5" style={{ color: C.ivoryDim, fontFamily: FONT_MONO }}>Optional — up to {COVER_VIDEO_MAX_SECONDS} seconds, shown at the top of your profile.</p>}
+    </div>
+  );
+}
+
+/**
+ * Puts a cover video in the student-video bucket and returns its public URL.
+ *
+ * A random path, so one profile's video is not guessable from another's, and
+ * the bucket is public so playback needs no session and no URL that expires
+ * partway through a clip.
+ */
+async function uploadCoverVideo(file) {
+  const ext = (file.name.split(".").pop() || "mp4").toLowerCase();
+  const path = `covers/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+  const { error } = await supabase.storage.from("student-video")
+    .upload(path, file, { upsert: false, contentType: file.type || undefined });
+  if (error) return { error: "Upload failed: " + error.message };
+  return { url: supabase.storage.from("student-video").getPublicUrl(path).data.publicUrl };
+}
+
+/**
+ * The teaching cell: the terms, then the pitch under them.
+ *
+ * Mode and price say what a lesson costs and where it happens; neither says
+ * anything about the lesson. Two different questions, so two lines rather
+ * than one run-on — and the pitch is quieter than the terms, because a
+ * learner scanning for "€45 online" should still find it first.
+ */
+function TeachingCell({ teaching }) {
+  const terms = teaching?.open
+    ? `${teaching.mode === "online" ? "Online" : teaching.mode === "in-person" ? "In-person" : "Online & in-person"} · €${teaching.price}/session`
+    : "Not offering lessons";
+  return (
+    <>
+      <div>{terms}</div>
+      {teaching?.open && teaching.pitch && (
+        <p style={{ margin: "8px 0 0", fontSize: 13, lineHeight: 1.6, color: C.ivoryDim, whiteSpace: "pre-wrap" }}>
+          {teaching.pitch}
+        </p>
+      )}
+    </>
+  );
+}
+
+/**
+ * The video as a profile shows it. Muted and loopable but never autoplaying:
+ * a page that starts making noise on arrival is a page people close.
+ */
+function CoverVideo({ url }) {
+  if (!url) return null;
+  return (
+    <div style={{ marginBottom: 24, borderRadius: 16, overflow: "hidden", border: `1px solid ${C.inkLine}`, background: "#000" }}>
+      <video src={url} controls playsInline preload="metadata"
+        style={{ width: "100%", display: "block", maxHeight: 420, background: "#000" }} />
     </div>
   );
 }
@@ -5988,9 +6094,6 @@ function StepTopFlop({ draft, update }) {
 
 function StepReview({ draft }) {
   const cons = findConservatory(draft.conservatoryId);
-  const teachingText = draft.teaching.open
-    ? `${draft.teaching.mode === "online" ? "Online" : draft.teaching.mode === "in-person" ? "In-person" : "Online & in-person"} · €${draft.teaching.price}/session`
-    : "Not offering lessons";
 
   const Card = ({ label, children }) => (
     <div style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "14px 18px", display: "flex", flexDirection: "column", gap: 6 }}>
@@ -6028,7 +6131,7 @@ function StepReview({ draft }) {
         )}
         {draft.top && <Card label="Recent win">{draft.top}</Card>}
         {draft.flop && <Card label="Current challenge">{draft.flop}</Card>}
-        <Card label="Teaching">{teachingText}</Card>
+        <Card label="Teaching"><TeachingCell teaching={draft.teaching} /></Card>
         {draft.composerDay && <Card label="A day with a composer">{draft.composerDay}</Card>}
       </div>
     </div>
@@ -6807,9 +6910,6 @@ function videoLinkMeta(url) {
 function StudentProfile({ student, conservatory, onBack, onMessage, locked, onApply }) {
   if (!student) return null;
   const linkMeta = videoLinkMeta(student.videoLink);
-  const teachingText = student.teaching?.open
-    ? `${student.teaching.mode === "online" ? "Online" : student.teaching.mode === "in-person" ? "In-person" : "Online & in-person"} · €${student.teaching.price}/session`
-    : "Not offering lessons";
 
   const Row = ({ label, children }) => (
     <div style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
@@ -6859,6 +6959,9 @@ function StudentProfile({ student, conservatory, onBack, onMessage, locked, onAp
         <p style={{ fontSize: 13, color: C.ivoryDim, marginBottom: 24 }}>No performance video shared.</p>
       )}
 
+      {/* Above the cards, so the first thing a profile does is play. */}
+      <CoverVideo url={student.coverVideoUrl} />
+
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         {(student.tastes || []).length > 0 && (
           <Row label="Musical preferences">
@@ -6883,23 +6986,16 @@ function StudentProfile({ student, conservatory, onBack, onMessage, locked, onAp
         )}
         {student.top && <Row label="Recent win">{student.top}</Row>}
         {student.flop && <Row label="Current challenge">{student.flop}</Row>}
-        <Row label="Teaching">{teachingText}</Row>
+        <Row label="Teaching"><TeachingCell teaching={student.teaching} /></Row>
         {student.composerDay && <Row label="A day with a composer">{student.composerDay}</Row>}
       </div>
     </>
   );
 
-  if (student.coverPhotoUrl) {
-    return (
-      <div style={{ display: "flex", minHeight: "calc(100vh - 60px)" }}>
-        <div style={{ width: 320, flexShrink: 0, position: "sticky", top: 0, alignSelf: "flex-start", height: "calc(100vh - 60px)" }}>
-          <img src={student.coverPhotoUrl} alt="Cover" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-        </div>
-        <div style={{ flex: 1, overflowY: "auto", padding: "40px 32px" }}>{profileCards}</div>
-      </div>
-    );
-  }
-
+  // The cover photo used to make this a split page: a tall image pinned down
+  // one side and the cards squeezed into what was left. The video sits in the
+  // column instead, above the cards, so there is one profile layout rather
+  // than two depending on what somebody uploaded.
   return (
     <div style={{ maxWidth: 640, margin: "0 auto", padding: "40px 24px" }}>
       {profileCards}
@@ -6910,13 +7006,10 @@ function StudentProfile({ student, conservatory, onBack, onMessage, locked, onAp
 /* ---------------------------------------------------------------- */
 /* MY PROFILE                                                         */
 /* ---------------------------------------------------------------- */
-function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack, onUpdateCoverPhoto }) {
+function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack, onUpdateCoverVideo }) {
   const cons = findConservatory(profile.conservatoryId);
   const [confirmDelete, setConfirmDelete] = React.useState(false);
   const [deleting, setDeleting] = React.useState(false);
-  const teachingText = profile.teaching?.open
-    ? `${profile.teaching.mode === "online" ? "Online" : profile.teaching.mode === "in-person" ? "In-person" : "Online & in-person"} · €${profile.teaching.price}/session`
-    : "Not offering lessons";
 
   const Row = ({ label, children }) => (
     <div style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
@@ -6987,6 +7080,9 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack, onUpdat
         <p style={{ fontSize: 13, color: C.ivoryDim, marginBottom: 24 }}>No performance video shared.</p>
       )}
 
+      {/* Above the cards, so the first thing a profile does is play. */}
+      <CoverVideo url={profile.coverVideoUrl} />
+
       {/* Data grid */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         {(profile.tastes || []).length > 0 && (
@@ -7012,76 +7108,24 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack, onUpdat
         )}
         {profile.top && <Row label="Recent win">{profile.top}</Row>}
         {profile.flop && <Row label="Current challenge">{profile.flop}</Row>}
-        <Row label="Teaching">{teachingText}</Row>
+        <Row label="Teaching"><TeachingCell teaching={profile.teaching} /></Row>
         {profile.composerDay && <Row label="A day with a composer">{profile.composerDay}</Row>}
       </div>
     </>
   );
 
-  /* ── Always split: interactive cover panel on left ── */
-  const coverInputRef = useRef(null);
-  function handleCoverFile(e) {
-    const file = e.target.files && e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => { onUpdateCoverPhoto && onUpdateCoverPhoto(reader.result); };
-    reader.readAsDataURL(file);
-    e.target.value = "";
-  }
-
+  // One column. The cover photo made this a split page — a tall image pinned
+  // down the left and the cards crowded into what was left — and with the
+  // photo gone there is nothing to pin. The video reads better in the column
+  // anyway, at the width of the thing it introduces.
   return (
-    <div style={{ display: "flex", minHeight: "calc(100vh - 60px)" }}>
-      {/* Left: cover photo panel */}
-      <div style={{ width: 320, flexShrink: 0, position: "sticky", top: 0, alignSelf: "flex-start", height: "calc(100vh - 60px)", padding: "24px 0 24px 24px" }}>
-      <div
-        onClick={() => coverInputRef.current && coverInputRef.current.click()}
-        style={{
-          width: "100%", height: "100%", cursor: "pointer", overflow: "hidden", borderRadius: 16,
-          background: profile.coverPhotoUrl ? "transparent" : C.inkSoft,
-          border: profile.coverPhotoUrl ? "none" : `1.5px dashed ${C.inkLine}`,
-          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-        }}
-      >
-        {profile.coverPhotoUrl ? (
-          <>
-            <img src={profile.coverPhotoUrl} alt="Cover" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-            <div style={{
-              position: "absolute", inset: 0, background: "rgba(0,0,0,0)", transition: "background 0.2s",
-              display: "flex", alignItems: "center", justifyContent: "center",
-            }}
-              onMouseEnter={e => e.currentTarget.style.background = "rgba(0,0,0,0.35)"}
-              onMouseLeave={e => e.currentTarget.style.background = "rgba(0,0,0,0)"}
-            >
-              <span style={{ color: "#fff", fontSize: 12, fontWeight: 600, opacity: 0, transition: "opacity 0.2s", display: "flex", alignItems: "center", gap: 6 }}
-                onMouseEnter={e => { e.currentTarget.style.opacity = 1; }}
-                onMouseLeave={e => { e.currentTarget.style.opacity = 0; }}>
-                <Upload size={14} /> Change photo
-              </span>
-            </div>
-          </>
-        ) : (
-          <div style={{ textAlign: "center", padding: 32 }}>
-            <div style={{ width: 56, height: 56, borderRadius: "50%", background: C.inkLine, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}>
-              <Upload size={22} color={C.ivoryDim} />
-            </div>
-            <p style={{ fontSize: 13, fontWeight: 600, color: C.ivoryDim, margin: 0 }}>Add cover photo</p>
-            <p style={{ fontSize: 11, color: C.ivoryDim, marginTop: 4, opacity: 0.7 }}>Click to upload</p>
-          </div>
-        )}
-        <input ref={coverInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleCoverFile} />
-      </div>
-      </div>
-
-      {/* Right: cards */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "40px 32px" }}>
-        {cards}
-        {profile.coverPhotoUrl && (
-          <button onClick={() => onUpdateCoverPhoto && onUpdateCoverPhoto("")}
-            style={{ marginTop: 24, fontSize: 12, color: C.ivoryDim, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
-            Remove cover photo
-          </button>
-        )}
-      </div>
+    <div style={{ maxWidth: 900, margin: "0 auto", padding: "40px 24px" }}>
+      <CoverVideoUpload
+        value={profile.coverVideoUrl}
+        onChange={(url) => onUpdateCoverVideo && onUpdateCoverVideo(url)}
+        uploader={uploadCoverVideo}
+      />
+      {cards}
     </div>
   );
 }
@@ -7236,6 +7280,24 @@ function StepTeaching({ draft, update }) {
               />
               <span style={{ color: C.ivoryDim, fontSize: 13 }}>per session</span>
             </div>
+          </Field>
+          {/* Mode and price say what a lesson costs and where it happens.
+              Neither says anything about the lesson, and a learner choosing
+              between two pianists at €45 online has nothing to choose on.
+              This is that. Asked as a question rather than labelled "bio",
+              because "tell us about your teaching" produces a paragraph about
+              the teacher and this produces one about the student's hour. */}
+          <Field label="What would a first lesson with you be like?">
+            <textarea
+              style={{ ...inputStyle, resize: "vertical", minHeight: 96, lineHeight: 1.6 }}
+              value={t.pitch || ""}
+              maxLength={TEACHING_PITCH_MAX}
+              onChange={(e) => setT({ pitch: e.target.value })}
+              placeholder="How you teach, who you are good with, what you would start on. A learner is deciding whether to book you."
+            />
+            <p className="text-xs mt-1.5" style={{ color: C.ivoryDim, fontFamily: FONT_MONO }}>
+              Optional · {(t.pitch || "").length}/{TEACHING_PITCH_MAX}
+            </p>
           </Field>
         </>
       )}
@@ -8043,9 +8105,6 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
       {(appTab === "map" || (appTab === "lesson" && selectedId === activeLessonTeacher?.id)) && selectedId && selected && (() => {
         const selCons = findConservatory(selected.conservatoryId);
         const linkMeta = videoLinkMeta(selected.videoLink);
-        const teachingText = selected.teaching?.open
-          ? `${selected.teaching.mode === "online" ? "Online" : selected.teaching.mode === "in-person" ? "In-person" : "Online & in-person"} · €${selected.teaching.price}/session`
-          : "Not offering lessons";
         const Row = ({ label, children }) => (
           <div style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
             <span style={{ fontSize: 11, fontWeight: 600, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
@@ -8122,7 +8181,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
               )}
               {selected.top && <Row label="Recent win">{selected.top}</Row>}
               {selected.flop && <Row label="Current challenge">{selected.flop}</Row>}
-              <Row label="Teaching">{teachingText}</Row>
+              <Row label="Teaching"><TeachingCell teaching={selected.teaching} /></Row>
             </div>
 
             {status === "accepted" && (
