@@ -6932,6 +6932,45 @@ function WorldGlobe({ pins, selectedId, onSelect, onCluster, height = 320, pinSc
   );
 }
 
+/**
+ * A teacher, as a row. Deliberately the same object the conservatory roster
+ * uses — avatar, name, a line of facts, the instrument drawn, a chevron — so
+ * the two halves of the app do not each invent their own idea of what a
+ * person looks like in a list.
+ *
+ * What differs is the line: a student browsing the network wants the level
+ * and year, a learner choosing a teacher wants the price and whether it is
+ * online. That is the whole difference, so that is all that changes.
+ */
+function TeacherRow({ t, onOpen }) {
+  const c = findConservatory(t.conservatoryId);
+  const icons = instrumentIcons(t);
+  const terms = [teachingModeLabel(t.teaching?.mode), c ? c.city : ""].filter(Boolean).join(" · ");
+  return (
+    <button className="artium-aw-row" onClick={onOpen}>
+      <span style={{ flexShrink: 0 }}>
+        <Avatar name={t.name} id={t.id} size={42} photoUrl={t.photoUrl} online={t.online} />
+      </span>
+      <span className="artium-aw-row-body">
+        <p className="artium-aw-row-t" style={{ fontSize: 15 }}>{t.name}</p>
+        <p className="artium-aw-row-c">
+          {t.teaching?.price && <span className="artium-aw-teach">€{t.teaching.price}</span>}
+          {terms}
+        </p>
+      </span>
+      {icons.length > 0 && (
+        <span className="artium-aw-inst" data-two={icons.length > 1 ? "1" : "0"}>
+          <span className="artium-aw-inst-art" aria-hidden="true">
+            {icons.map((icon) => <img key={icon} src={`/instruments/${icon}.webp`} alt="" loading="lazy" />)}
+          </span>
+          <span className="artium-aw-inst-name">{instrumentLabel(t)}</span>
+        </span>
+      )}
+      <ChevronRight size={17} strokeWidth={2} />
+    </button>
+  );
+}
+
 // A monogram for the row tiles. "short" exists on the built-in schools; the
 // admin-approved ones carry only a full name, and slicing the first three
 // characters off "Conservatoire a rayonnement regional de Lyon" gives "Con"
@@ -8386,6 +8425,27 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
   const consRoster = selectedConsId ? (teachersByCons[selectedConsId] || []) : [];
   const cons = findConservatory(selectedConsId);
 
+  // One pin per conservatory that actually has somebody teaching, carrying the
+  // count — the same shape the network page feeds the globe, so clustering,
+  // the counted badges and the country names all work here unchanged.
+  const teacherPins = React.useMemo(() => Object.entries(teachersByCons)
+    .map(([id, list]) => {
+      const c = findConservatory(id);
+      if (!c || !Number.isFinite(c.lat) || !Number.isFinite(c.lng)) return null;
+      return { ...c, count: list.length };
+    })
+    .filter(Boolean), [teachersByCons]);
+
+  // Set by a cluster that zoom could not split, exactly as on the network map.
+  const [areaIds, setAreaIds] = useState(null);
+  const visibleTeachers = React.useMemo(() => {
+    if (!areaIds) return teachers;
+    const keep = new Set(areaIds);
+    return teachers.filter((t) => keep.has(t.conservatoryId));
+  }, [teachers, areaIds]);
+
+  const onlineTeacherCount = teachers.filter((t) => t.online).length;
+
   function selectTeacher(id) {
     setSelectedId(id);
     setActiveChatId(id);
@@ -8415,67 +8475,95 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
           Lesson Room still only appears once a teacher has accepted them —
           before that it is a room with nothing in it. */}
 
+      {/* The same screen the conservatory students get, because it is the same
+          world seen from the other side. It was a flat Leaflet tile map with
+          the library's own zoom buttons and a two-column split, next to a
+          globe — one product with two ideas of what a map is.
+
+          Everything here is the network page's: the stage and its rings, the
+          eyebrow and display heading, the counted stats, the rows. Which also
+          means the learner inherits the work done there — satellite imagery,
+          relief, borders, zoom, and pins that group instead of piling up. */}
       {appTab === "map" && !selectedId && (
-        <>
-          <div className="px-6 pt-6 pb-2">
-            <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600, color: C.inkText }}>
-              {learner ? `Welcome, ${learner.name.split(" ")[0]}` : "Find a teacher"}
-            </h2>
-            <p className="mt-1 text-sm" style={{ color: C.ivoryDim }}>
-              {teachers.length} conservatory student{teachers.length === 1 ? "" : "s"} offering lessons
-              {learner && learner.location ? ` · you're in ${learner.location}` : ""}.
-            </p>
+        <div className="artium-aw-in" style={{ paddingTop: 18, paddingBottom: 28 }}>
+          <p className="artium-aw-eyebrow"><i />Find a teacher<i /></p>
+          <h1 className="artium-aw-h1">{learner ? `Welcome, ${learner.name.split(" ")[0]}` : "Find a teacher"}</h1>
+          <p className="artium-aw-sub">
+            {teachers.length} conservatory student{teachers.length === 1 ? "" : "s"} offering lessons
+            {learner && learner.location ? ` · you're in ${learner.location}` : ""}.
+          </p>
+
+          <div className="artium-aw-stage">
+            <span className="artium-aw-glow" aria-hidden="true" />
+            <span className="artium-aw-ring artium-aw-ring--a" aria-hidden="true" />
+            <span className="artium-aw-ring artium-aw-ring--b" aria-hidden="true" />
+            <WorldGlobe
+              pins={teacherPins}
+              selectedId={selectedConsId}
+              onSelect={setSelectedConsId}
+              onCluster={(members) => { setSelectedConsId(null); setAreaIds(members.map((m) => m.id)); }}
+              height={300}
+            />
           </div>
-          <div className="px-6 pb-12 lg-split-map">
-            <div style={{ background: C.inkSoft }}>
-              <MapTitle />
-              <WorldMap selectedId={selectedConsId} onSelect={setSelectedConsId} studentsByCons={teachersByCons} height={520} interactive />
+
+          <div className="artium-aw-stats">
+            <div className="artium-aw-stat">
+              <span className="artium-aw-stat-n"><User size={15} strokeWidth={2} />{teachers.length}</span>
+              <p className="artium-aw-stat-l">Teachers</p>
             </div>
-            <div className="lg-scroll overflow-y-auto" style={{ borderLeft: `1px solid ${C.inkLine}`, maxHeight: 600 }}>
-              {!cons ? (
-                <div className="p-6">
-                  <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.ivoryDim }}>{teachers.length} TEACHERS</p>
-                  <p className="mt-2 text-sm" style={{ color: C.ivoryDim }}>Select a pin on the map to see who's teaching there.</p>
-                  <div className="mt-5 flex flex-col gap-2">
-                    {teachers.map((t) => {
-                      const c = findConservatory(t.conservatoryId);
-                      return (
-                        <button key={t.id} onClick={() => selectTeacher(t.id)} className="text-left flex items-center gap-3 p-3 rounded-xl" style={{ border: `1px solid ${C.inkLine}` }}>
-                          <Avatar name={t.name} id={t.id} size={40} photoUrl={t.photoUrl} online={t.online} />
-                          <div className="min-w-0">
-                            <p style={{ fontSize: 13, fontWeight: 600, color: C.inkText }}>{t.name}</p>
-                            <p style={{ fontSize: 11, color: C.ivoryDim }}>
-                              {c ? c.city : ""} · {teachingModeLabel(t.teaching.mode)}{t.teaching.price ? ` · €${t.teaching.price}` : ""}
-                            </p>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              ) : (
-                <div className="p-6">
-                  <button onClick={() => setSelectedConsId(null)} className="text-xs flex items-center gap-1 mb-4" style={{ color: C.ivoryDim }}><ArrowLeft size={13} /> All teachers</button>
-                  <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brassLabel }}>{cons.city.toUpperCase()}, {cons.country.toUpperCase()} · @{cons.domains?.[0]}</p>
-                  <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600, marginTop: 4, color: C.inkText }}>{cons.name}</h3>
-                  <p className="mt-1 text-xs" style={{ color: C.ivoryDim }}>{consRoster.length} teacher{consRoster.length === 1 ? "" : "s"} on Artium</p>
-                  <div className="mt-5 flex flex-col gap-2">
-                    {consRoster.length === 0 && <p className="text-sm" style={{ color: C.ivoryDim }}>No teachers from this conservatory yet.</p>}
-                    {consRoster.map((t) => (
-                      <button key={t.id} onClick={() => selectTeacher(t.id)} className="text-left flex items-center gap-3 p-3 rounded-xl" style={{ border: `1px solid ${C.inkLine}` }}>
-                        <Avatar name={t.name} id={t.id} size={40} photoUrl={t.photoUrl} online={t.online} />
-                        <div className="min-w-0">
-                          <p style={{ fontSize: 13, fontWeight: 600, color: C.inkText }}>{t.name}</p>
-                          <p style={{ fontSize: 11, color: C.ivoryDim }}>{t.year} · {t.tastes.slice(0, 2).join(", ")}</p>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
+            <div className="artium-aw-stat">
+              <span className="artium-aw-stat-n"><MapPin size={15} strokeWidth={2} />{teacherPins.length}</span>
+              <p className="artium-aw-stat-l">Conservatories</p>
+            </div>
+            <div className="artium-aw-stat">
+              <span className="artium-aw-stat-n"><Globe2 size={15} strokeWidth={2} />{onlineTeacherCount}</span>
+              <p className="artium-aw-stat-l">Online now</p>
+            </div>
+          </div>
+
+          <p className="artium-aw-hint">Explore the world map and pick a pin to see who teaches there.</p>
+
+          {cons ? (
+            <>
+              <div className="artium-aw-listhead">
+                <button className="artium-aw-sort" style={{ marginLeft: 0 }} onClick={() => setSelectedConsId(null)}>
+                  <ArrowLeft size={13} /> All teachers
+                </button>
+              </div>
+              <div className="artium-aw-row" style={{ cursor: "default", marginBottom: 12 }}>
+                <span className="artium-aw-mono">{consMonogram(cons)}</span>
+                <span className="artium-aw-row-body">
+                  <p className="artium-aw-row-t">{cons.name}</p>
+                  <p className="artium-aw-row-c"><MapPin size={11} strokeWidth={2} />{[cons.city, cons.country].filter(Boolean).join(", ")}</p>
+                </span>
+                <span className="artium-aw-badge"><b>{consRoster.length}</b><span>teacher{consRoster.length === 1 ? "" : "s"}</span></span>
+              </div>
+              <div className="artium-aw-list">
+                {consRoster.length === 0 && <p className="artium-aw-empty">No teachers from this conservatory yet.</p>}
+                {consRoster.map((t) => <TeacherRow key={t.id} t={t} onOpen={() => selectTeacher(t.id)} />)}
+              </div>
+            </>
+          ) : (
+            <>
+              {areaIds && (
+                <div className="artium-aw-listhead">
+                  <button className="artium-aw-sort" style={{ marginLeft: 0 }} onClick={() => setAreaIds(null)}>
+                    <ArrowLeft size={13} /> All teachers
+                  </button>
+                  <span>{areaIds.length} in this area</span>
                 </div>
               )}
-            </div>
-          </div>
-        </>
+              <div className="artium-aw-listhead">
+                <h2>Teaching</h2>
+                <span>{visibleTeachers.length} result{visibleTeachers.length === 1 ? "" : "s"}</span>
+              </div>
+              <div className="artium-aw-list">
+                {visibleTeachers.length === 0 && <p className="artium-aw-empty">No one is teaching here yet.</p>}
+                {visibleTeachers.map((t) => <TeacherRow key={t.id} t={t} onOpen={() => selectTeacher(t.id)} />)}
+              </div>
+            </>
+          )}
+        </div>
       )}
 
       {(appTab === "map" || (appTab === "lesson" && selectedId === activeLessonTeacher?.id)) && selectedId && selected && (() => {
