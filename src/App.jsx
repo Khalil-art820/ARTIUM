@@ -6781,16 +6781,21 @@ function WorldGlobe({ pins, selectedId, onSelect, onCluster, height = 320, pinSc
     return placed;
   }, [countries, pins, altitude, pov]);
 
-  // Label size is in degrees of surface arc, not pixels, and the difference
-  // matters: this globe has radius 100, so one degree is 1.75 world units,
-  // and on a 300px stage that is about 2px. A name at "0.6" was rendering
-  // under two pixels tall — present in the scene, invisible on the screen.
+  // Fixed degrees of surface arc: the name is painted on the map, so it grows
+  // as you come in and shrinks as you pull back, the way the coastline under
+  // it does.
   //
-  // Scaling with altitude keeps a name roughly constant on screen, because
-  // halving the altitude roughly doubles what a degree covers. 1.6 puts world
-  // zoom at ~11px, which is where it stops being decoration and starts being
-  // readable.
-  const labelSize = Math.max(0.7, Math.min(4.2, altitude * 1.6));
+  // It used to scale with altitude, on the reasoning that halving the height
+  // doubles what a degree covers on screen. That is wrong — screen size goes
+  // as 1/(1+altitude), not 1/altitude — so scaling the degrees as well made
+  // names grow the further out you went: 10.9px pulled back and 4.9px up
+  // close, which is backwards, and it was the far view that ended up crowded.
+  //
+  // Held constant instead, the same name measures ~7px at the point they
+  // start appearing and ~16px fully zoomed. Thinning comes from minSep, which
+  // does scale with altitude, so pulling back drops names rather than
+  // enlarging the ones that remain.
+  const labelSize = 2.4;
 
   /**
    * Zoom into a group — or, when zoom cannot help, hand it to the list.
