@@ -6637,6 +6637,17 @@ function clusterPins(pins, altitude, selectedId) {
   return out;
 }
 
+// The roster writes country names the way people say them; Natural Earth
+// writes them the way an atlas does. Five disagree, and an unmatched name is
+// a country that silently never gets labelled.
+const COUNTRY_ALIASES = {
+  "UK": "United Kingdom",
+  "USA": "United States of America",
+  "Czech Republic": "Czechia",
+  "Hong Kong": "China",       // no separate admin-0 feature; the label reads China
+  "Singapore": null,          // a city state, too small to carry a name at this scale
+};
+
 // How close the camera may come. Nearer than this and the earth texture is a
 // brown blur — there is no more detail in the image to reveal, so the zoom
 // would only be showing its own limits.
@@ -6650,6 +6661,9 @@ function WorldGlobe({ pins, selectedId, onSelect, onCluster, height = 320, pinSc
   // the marks have to be recomputed when it changes, and rounded so a slow
   // pinch does not rebuild every pin on every frame it moves a hair.
   const [altitude, setAltitude] = useState(2.3);
+  // Where the camera is over. Needed to drop names behind the horizon, which
+  // otherwise bleed around the limb and sit on the back of the sphere.
+  const [pov, setPov] = useState({ lat: 22, lng: 12 });
 
   useEffect(() => {
     if (!ready || !globeRef.current) return;
@@ -6693,16 +6707,79 @@ function WorldGlobe({ pins, selectedId, onSelect, onCluster, height = 320, pinSc
     return () => { alive = false; };
   }, []);
 
-  // How many names, and how big. All 177 at world zoom is a wall of type on a
-  // 300px sphere, and half of them would be sitting on countries too small to
-  // see. They arrive biggest-first as the camera comes down, which is also the
-  // order somebody reading a globe finds them in.
+  /**
+   * The names, and the two rules that keep them from becoming a thicket.
+   *
+   * First: this is a network map, not an atlas. Naming all 177 countries put
+   * type over places with nothing in them and crowded out the pins, which are
+   * the only reason anybody opened the screen. Only countries the network is
+   * actually in get named — at full roster that is 36, not 177, and every one
+   * of them says something.
+   *
+   * Second: even 36 collide, because nineteen of them are in Europe. So they
+   * are placed in order of how much of the network they hold, and a name is
+   * dropped if it lands within `minSep` of one already placed. Greedy, one
+   * pass, the way a cartographer resolves the same problem: the important
+   * label wins the space and the crowded-out one simply waits for a zoom
+   * level where it fits.
+   *
+   * Labels behind the horizon are dropped too. They were bleeding around the
+   * limb and sitting on the far side of the sphere, which read as clutter with
+   * no cause.
+   */
   const labels = React.useMemo(() => {
-    const n = altitude > 1.9 ? 10 : altitude > 1.4 ? 20 : altitude > 1.0 ? 38 : altitude > 0.7 ? 75 : 177;
-    return countries
-      .filter((f) => f.properties.rank < n)
-      .map((f) => ({ lat: f.properties.lat, lng: f.properties.lng, text: f.properties.name }));
-  }, [countries, altitude]);
+    if (!countries.length || !pins.length) return [];
+    // Nothing at all from far out. At world zoom the pins and their counts are
+    // the story, a name would have to be twenty degrees from its neighbour to
+    // fit, and the handful that survived that read as an arbitrary five. Names
+    // are for when somebody has come down to look at a region.
+    if (altitude > 1.7) return [];
+
+    const anchors = Object.create(null);
+    for (const f of countries) anchors[f.properties.name] = f.properties;
+
+    // Weight each country by the students behind it, so the label that
+    // survives a collision is the one carrying more of the network.
+    const weight = Object.create(null);
+    for (const p of pins) {
+      const name = COUNTRY_ALIASES[p.country] || p.country;
+      if (!name || !anchors[name]) continue;
+      weight[name] = (weight[name] || 0) + (p.count || 1);
+    }
+
+    const rad = Math.PI / 180;
+    const centre = { lat: pov.lat * rad, lng: pov.lng * rad };
+    // How far apart two names must sit. Wider when far out, where a degree is
+    // worth few pixels and everything bunches toward the limb.
+    const minSep = Math.max(4, Math.min(26, altitude * 9));
+
+    const placed = [];
+    const candidates = Object.keys(weight).sort((a, b) => weight[b] - weight[a]);
+
+    for (const name of candidates) {
+      const a = anchors[name];
+      // Front of the sphere only, against the real horizon rather than a
+      // guessed constant. From altitude h above a unit sphere the visible cap
+      // ends where cos(angle) = 1/(1+h) — 72° out at world zoom, 46° when
+      // close. A fixed cutoff was labelling the United States and China while
+      // the camera was over Europe, because at that altitude they are behind
+      // the edge of the world.
+      const cosAngle =
+        Math.sin(centre.lat) * Math.sin(a.lat * rad) +
+        Math.cos(centre.lat) * Math.cos(a.lat * rad) * Math.cos((a.lng - pov.lng) * rad);
+      if (cosAngle < 1 / (1 + altitude)) continue;
+
+      const clash = placed.some((q) => {
+        const dLat = q.lat - a.lat;
+        const dLng = (q.lng - a.lng) * Math.cos(a.lat * rad);
+        return Math.hypot(dLat, dLng) < minSep;
+      });
+      if (clash) continue;
+
+      placed.push({ lat: a.lat, lng: a.lng, text: name });
+    }
+    return placed;
+  }, [countries, pins, altitude, pov]);
 
   // Label size is in degrees of surface arc, not pixels, and the difference
   // matters: this globe has radius 100, so one degree is 1.75 world units,
@@ -6754,6 +6831,9 @@ function WorldGlobe({ pins, selectedId, onSelect, onCluster, height = 320, pinSc
               // changes, coarse enough not to thrash React while dragging.
               const a = Math.round(pov.altitude * 100) / 100;
               setAltitude((prev) => (Math.abs(prev - a) > 0.005 ? a : prev));
+              const lat = Math.round(pov.lat * 10) / 10;
+              const lng = Math.round(pov.lng * 10) / 10;
+              setPov((prev) => (prev.lat !== lat || prev.lng !== lng ? { lat, lng } : prev));
             }}
             // 4096x2048 Blue Marble against the 2048x1024 that was here: at
             // the altitudes zoom now reaches, the old one ran out of pixels
