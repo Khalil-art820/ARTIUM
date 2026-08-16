@@ -6679,6 +6679,42 @@ function WorldGlobe({ pins, selectedId, onSelect, onCluster, height = 320, pinSc
     [pins, altitude, selectedId]
   );
 
+  // Borders and names, fetched rather than imported: 174KB of geometry in the
+  // bundle would be paid for by every screen in the app, and only this one
+  // draws a globe. It arrives a beat after the earth does, which is the right
+  // order — the sphere is what somebody is waiting for.
+  const [countries, setCountries] = useState([]);
+  useEffect(() => {
+    let alive = true;
+    fetch("/countries.geo.json")
+      .then((r) => r.json())
+      .then((d) => { if (alive) setCountries(d.features || []); })
+      .catch(() => {});   // borders are a nicety; a failed fetch leaves a working globe
+    return () => { alive = false; };
+  }, []);
+
+  // How many names, and how big. All 177 at world zoom is a wall of type on a
+  // 300px sphere, and half of them would be sitting on countries too small to
+  // see. They arrive biggest-first as the camera comes down, which is also the
+  // order somebody reading a globe finds them in.
+  const labels = React.useMemo(() => {
+    const n = altitude > 1.9 ? 10 : altitude > 1.4 ? 20 : altitude > 1.0 ? 38 : altitude > 0.7 ? 75 : 177;
+    return countries
+      .filter((f) => f.properties.rank < n)
+      .map((f) => ({ lat: f.properties.lat, lng: f.properties.lng, text: f.properties.name }));
+  }, [countries, altitude]);
+
+  // Label size is in degrees of surface arc, not pixels, and the difference
+  // matters: this globe has radius 100, so one degree is 1.75 world units,
+  // and on a 300px stage that is about 2px. A name at "0.6" was rendering
+  // under two pixels tall — present in the scene, invisible on the screen.
+  //
+  // Scaling with altitude keeps a name roughly constant on screen, because
+  // halving the altitude roughly doubles what a degree covers. 1.6 puts world
+  // zoom at ~11px, which is where it stops being decoration and starts being
+  // readable.
+  const labelSize = Math.max(0.7, Math.min(4.2, altitude * 1.6));
+
   /**
    * Zoom into a group — or, when zoom cannot help, hand it to the list.
    *
@@ -6719,10 +6755,40 @@ function WorldGlobe({ pins, selectedId, onSelect, onCluster, height = 320, pinSc
               const a = Math.round(pov.altitude * 100) / 100;
               setAltitude((prev) => (Math.abs(prev - a) > 0.005 ? a : prev));
             }}
-            globeImageUrl="/earth-artium.jpg"
+            // 4096x2048 Blue Marble against the 2048x1024 that was here: at
+            // the altitudes zoom now reaches, the old one ran out of pixels
+            // before the camera ran out of travel, and the earth went soft
+            // exactly where somebody had gone looking for detail.
+            globeImageUrl="/earth-blue-marble.jpg"
+            // Relief. A height map costs one texture and does what no amount
+            // of resolution does on its own — the Andes, the Himalaya and the
+            // Atlas catch the light and the sphere stops reading as a printed
+            // ball.
+            bumpImageUrl="/earth-topology.png"
             backgroundColor="rgba(0,0,0,0)"
             atmosphereColor="#EFD09B"
             atmosphereAltitude={0.17}
+            // Borders in the same champagne as everything else, and no fill:
+            // a filled country would sit over the satellite image, which is
+            // the thing worth looking at.
+            polygonsData={countries}
+            polygonAltitude={0.004}
+            polygonCapColor={() => "rgba(0,0,0,0)"}
+            polygonSideColor={() => "rgba(0,0,0,0)"}
+            polygonStrokeColor={() => "rgba(239,208,155,0.55)"}
+            polygonsTransitionDuration={0}
+            // Names, biggest country first, more of them the closer you get.
+            labelsData={labels}
+            labelLat="lat"
+            labelLng="lng"
+            labelText="text"
+            labelSize={labelSize}
+            labelDotRadius={0}
+            labelIncludeDot={false}
+            labelColor={() => "rgba(255,247,230,0.82)"}
+            labelResolution={2}
+            labelAltitude={0.008}
+            labelsTransitionDuration={0}
             htmlElementsData={marks}
             htmlLat="lat"
             htmlLng="lng"
