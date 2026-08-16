@@ -6733,7 +6733,7 @@ function WorldGlobe({ pins, selectedId, onSelect, onCluster, height = 320, pinSc
     // the story, a name would have to be twenty degrees from its neighbour to
     // fit, and the handful that survived that read as an arbitrary five. Names
     // are for when somebody has come down to look at a region.
-    if (altitude > 1.7) return [];
+    if (altitude > 1.2) return [];
 
     const anchors = Object.create(null);
     for (const f of countries) anchors[f.properties.name] = f.properties;
@@ -6791,11 +6791,19 @@ function WorldGlobe({ pins, selectedId, onSelect, onCluster, height = 320, pinSc
   // names grow the further out you went: 10.9px pulled back and 4.9px up
   // close, which is backwards, and it was the far view that ended up crowded.
   //
-  // Held constant instead, the same name measures ~7px at the point they
-  // start appearing and ~16px fully zoomed. Thinning comes from minSep, which
-  // does scale with altitude, so pulling back drops names rather than
-  // enlarging the ones that remain.
-  const labelSize = 2.4;
+  // Held constant, and calibrated against the screen rather than guessed at.
+  //
+  // Rendered height in pixels is 0.070 * labelSize * stageHeight / (1+alt) —
+  // fitted to two measured renders, one at 0.62 on a world view and one at
+  // 1.6 zoomed in, which agree on the constant to within 2%. My arithmetic
+  // before that was out by a factor of two in the same direction both times,
+  // which is why each "smaller" pass still came back too big: 1.6 was not the
+  // 11px I claimed, it was 23px, larger than any type on the page.
+  //
+  // 0.75 puts a name at ~7px where names first appear and ~11px at the
+  // closest the camera goes. Small enough to be scenery on arrival, ordinary
+  // by the time somebody is actually reading a region.
+  const labelSize = 0.75;
 
   /**
    * Zoom into a group — or, when zoom cannot help, hand it to the list.
