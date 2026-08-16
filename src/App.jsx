@@ -6588,10 +6588,68 @@ function SignupPromptModal({ onClose, onSignup }) {
 // pinScale: the network page pins a handful of schools that actually have
 // students; the signup step pins every one that can be placed, and 110 pins
 // at the same size is a pile rather than a constellation.
-function WorldGlobe({ pins, selectedId, onSelect, height = 320, pinScale = 1, roaming = false }) {
+/**
+ * Groups pins that would land on top of each other at the current altitude.
+ *
+ * Measured against the real list: 109 conservatories carry coordinates, and at
+ * world zoom 96 of them overlap something — the European cell alone stacks 41.
+ * Drawn as individual pins that is not a map, it is a smear, and the school
+ * underneath is unreachable however carefully you aim.
+ *
+ * The cell grows and shrinks with altitude, so zooming in splits groups apart
+ * rather than revealing a fixed, arbitrary set. Longitude cells widen away
+ * from the equator because meridians converge: a fixed degree width would
+ * group Oslo and Helsinki far more eagerly than Nairobi and Kampala.
+ *
+ * The selected school is never folded into a group. Whatever else the map is
+ * doing, the thing you just chose stays visible and stays clickable.
+ */
+function clusterPins(pins, altitude, selectedId) {
+  const cell = Math.min(18, Math.max(0.35, altitude * 5));
+  // A plain object, not a Map: this module imports lucide-react's Map icon,
+  // which shadows the global and turns `new Map()` into "Map is not a
+  // constructor" at render. Null-prototype so a school id can never collide
+  // with something inherited from Object.
+  const groups = Object.create(null);
+  const out = [];
+
+  for (const p of pins) {
+    if (p.id === selectedId) { out.push({ kind: "pin", ...p }); continue; }
+    const cosLat = Math.max(0.15, Math.cos((p.lat * Math.PI) / 180));
+    const lngCell = Math.min(60, cell / cosLat);
+    const key = `${Math.floor(p.lat / cell)}:${Math.floor(p.lng / lngCell)}`;
+    if (groups[key]) groups[key].push(p); else groups[key] = [p];
+  }
+
+  for (const members of Object.values(groups)) {
+    if (members.length === 1) { out.push({ kind: "pin", ...members[0] }); continue; }
+    const n = members.length;
+    out.push({
+      kind: "cluster",
+      id: `cluster:${members.map((m) => m.id).sort().join(",")}`,
+      lat: members.reduce((a, m) => a + m.lat, 0) / n,
+      lng: members.reduce((a, m) => a + m.lng, 0) / n,
+      schools: n,
+      count: members.reduce((a, m) => a + (m.count || 0), 0),
+      members,
+    });
+  }
+  return out;
+}
+
+// How close the camera may come. Nearer than this and the earth texture is a
+// brown blur — there is no more detail in the image to reveal, so the zoom
+// would only be showing its own limits.
+const GLOBE_MIN_ALTITUDE = 0.45;
+
+function WorldGlobe({ pins, selectedId, onSelect, onCluster, height = 320, pinScale = 1, roaming = false }) {
   const [wrapRef, { w, h }] = useMeasured();
   const globeRef = useRef(null);
   const [ready, setReady] = useState(false);
+  // Drives the clustering. Kept in state rather than read on demand because
+  // the marks have to be recomputed when it changes, and rounded so a slow
+  // pinch does not rebuild every pin on every frame it moves a hair.
+  const [altitude, setAltitude] = useState(2.3);
 
   useEffect(() => {
     if (!ready || !globeRef.current) return;
@@ -6600,12 +6658,51 @@ function WorldGlobe({ pins, selectedId, onSelect, height = 320, pinScale = 1, ro
     // globe reads as a sphere rather than a disc.
     g.pointOfView({ lat: 22, lng: 12, altitude: 2.3 }, 0);
     const c = g.controls();
-    if (c) {
-      c.autoRotate = true;
-      c.autoRotateSpeed = 0.28;
-      c.enableZoom = false;
-    }
+    if (!c) return;
+    c.autoRotate = true;
+    c.autoRotateSpeed = 0.28;
+    // Zoom, within bounds. The globe's radius is 100, so distance is
+    // (altitude + 1) * 100.
+    c.enableZoom = true;
+    c.minDistance = (1 + GLOBE_MIN_ALTITUDE) * 100;
+    c.maxDistance = 440;
+    c.zoomSpeed = 0.7;
+    // Once somebody takes hold of it, stop turning. A globe that keeps
+    // rotating under the hand is one you have to fight to read.
+    const stop = () => { c.autoRotate = false; };
+    c.addEventListener("start", stop);
+    return () => c.removeEventListener("start", stop);
   }, [ready]);
+
+  const marks = React.useMemo(
+    () => clusterPins(pins, altitude, selectedId),
+    [pins, altitude, selectedId]
+  );
+
+  /**
+   * Zoom into a group — or, when zoom cannot help, hand it to the list.
+   *
+   * Zoom alone is not an answer to congestion. Measured on the real roster,
+   * the two Brussels conservatories are 0.001° apart, about a hundred metres;
+   * NEC and Berklee 0.004°; the three London schools inside 0.04°. No altitude
+   * this globe can reach separates those, so a badge that only ever zoomed
+   * would eventually stop responding and look broken.
+   *
+   * So it asks first: re-cluster these members at the altitude the zoom would
+   * arrive at, and only fly there if that actually breaks them apart. When it
+   * would not, the group opens in the list below the map, which can show
+   * schools sharing a street as easily as schools sharing a continent.
+   */
+  function handleCluster(d) {
+    const g = globeRef.current;
+    if (!g) return;
+    const target = Math.max(GLOBE_MIN_ALTITUDE, altitude * 0.42);
+    const wouldSplit = clusterPins(d.members, target, null).length > 1;
+    if (!wouldSplit) { onCluster && onCluster(d.members); return; }
+    const c = g.controls();
+    if (c) c.autoRotate = false;
+    g.pointOfView({ lat: d.lat, lng: d.lng, altitude: target }, 700);
+  }
 
   return (
     <div ref={wrapRef} style={{ width: "100%", height, position: "relative" }}>
@@ -6616,11 +6713,17 @@ function WorldGlobe({ pins, selectedId, onSelect, height = 320, pinScale = 1, ro
             width={w}
             height={h}
             onGlobeReady={() => setReady(true)}
+            onZoom={(pov) => {
+              // Two decimal places: enough to re-cluster when the view really
+              // changes, coarse enough not to thrash React while dragging.
+              const a = Math.round(pov.altitude * 100) / 100;
+              setAltitude((prev) => (Math.abs(prev - a) > 0.005 ? a : prev));
+            }}
             globeImageUrl="/earth-artium.jpg"
             backgroundColor="rgba(0,0,0,0)"
             atmosphereColor="#EFD09B"
             atmosphereAltitude={0.17}
-            htmlElementsData={pins}
+            htmlElementsData={marks}
             htmlLat="lat"
             htmlLng="lng"
             htmlAltitude={0.012}
@@ -6629,6 +6732,27 @@ function WorldGlobe({ pins, selectedId, onSelect, height = 320, pinScale = 1, ro
               const el = document.createElement("div");
               el.style.cssText = "cursor:pointer;pointer-events:auto;transform:translate(-50%,-100%);";
               if (roaming) el.className = "artium-roampin";
+
+              if (d.kind === "cluster") {
+                // A disc, not a pin: it marks an area rather than a place, and
+                // a pin's point would be claiming a precision it does not have.
+                const size = Math.round(Math.min(40, 24 + d.schools * 0.7) * pinScale);
+                el.title = `${d.schools} conservatories, ${d.count} student${d.count === 1 ? "" : "s"} — click to open`;
+                el.style.transform = "translate(-50%,-50%)";
+                el.innerHTML = `
+                  <div style="
+                    width:${size}px;height:${size}px;border-radius:50%;
+                    display:flex;align-items:center;justify-content:center;
+                    background:radial-gradient(circle at 38% 32%, #F6E3BC, #D5A860);
+                    border:1.5px solid rgba(255,255,255,0.55);
+                    box-shadow:0 0 0 ${Math.round(size * 0.16)}px rgba(239,208,155,0.16), 0 3px 10px rgba(0,0,0,0.55);
+                    color:#241A0E;font-family:'Manrope',sans-serif;
+                    font-size:${Math.round(size * 0.38)}px;font-weight:800;line-height:1;
+                  ">${d.schools}</div>`;
+                el.onclick = () => handleCluster(d);
+                return el;
+              }
+
               el.title = d.count == null ? d.name : `${d.name} — ${d.count} student${d.count === 1 ? "" : "s"}`;
               const on = d.id === selectedId;
               const size = Math.round((on ? 26 : 21) * pinScale);
@@ -6674,6 +6798,10 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
   // sorting alphabetically by country buries the well-known ones behind
   // whichever country happens to start with an A.
   const [sortByCountry, setSortByCountry] = useState(false);
+  // The schools behind one badge on the globe, when zooming could not tell
+  // them apart. Brussels' two conservatories are a hundred metres from each
+  // other; no altitude separates them, but a list has no trouble at all.
+  const [areaIds, setAreaIds] = useState(null);
 
   const allStudents = Object.values(studentsByCons).flat();
   const teacherCount = allStudents.filter((s) => s.teaching && s.teaching.open).length;
@@ -6692,13 +6820,17 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
       }
       return true;
     });
+    if (areaIds) {
+      const keep = new Set(areaIds);
+      list = list.filter((c) => keep.has(c.id));
+    }
     if (needle) {
       list = list.filter((c) => `${c.name} ${c.city || ""} ${c.country || ""}`.toLowerCase().includes(needle));
     }
     return sortByCountry
       ? [...list].sort((x, y) => (x.country || "").localeCompare(y.country || "") || (x.name || "").localeCompare(y.name || ""))
       : list;
-  }, [ALL_CONS, studentsByCons, mode, q, sortByCountry]);
+  }, [ALL_CONS, studentsByCons, mode, q, sortByCountry, areaIds]);
 
   const nf = (n) => n.toLocaleString();
 
@@ -6734,7 +6866,9 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
           <span className="artium-aw-glow" aria-hidden="true" />
           <span className="artium-aw-ring artium-aw-ring--a" aria-hidden="true" />
           <span className="artium-aw-ring artium-aw-ring--b" aria-hidden="true" />
-          <WorldGlobe pins={pins} selectedId={selectedConsId} onSelect={setSelectedConsId} height={300} />
+          <WorldGlobe pins={pins} selectedId={selectedConsId} onSelect={setSelectedConsId}
+            onCluster={(members) => { setSelectedConsId(null); setAreaIds(members.map((m) => m.id)); }}
+            height={300} />
         </div>
 
         <div className="artium-aw-stats">
@@ -6837,6 +6971,14 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
           </>
         ) : (
           <>
+            {areaIds && (
+              <div className="artium-aw-listhead">
+                <button className="artium-aw-sort" style={{ marginLeft: 0 }} onClick={() => setAreaIds(null)}>
+                  <ArrowLeft size={13} /> All conservatories
+                </button>
+                <span>{areaIds.length} in this area</span>
+              </div>
+            )}
             <div className="artium-aw-listhead">
               <h2>{mode === "cons" ? "Conservatories" : "Teaching"}</h2>
               <span>{rows.length} result{rows.length === 1 ? "" : "s"}</span>
