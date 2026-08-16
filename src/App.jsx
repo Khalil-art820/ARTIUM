@@ -8438,11 +8438,23 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
 
   // Set by a cluster that zoom could not split, exactly as on the network map.
   const [areaIds, setAreaIds] = useState(null);
-  const visibleTeachers = React.useMemo(() => {
-    if (!areaIds) return teachers;
-    const keep = new Set(areaIds);
-    return teachers.filter((t) => keep.has(t.conservatoryId));
-  }, [teachers, areaIds]);
+
+  // The schools that have somebody teaching, each carrying its count. This is
+  // what the list shows first — the teachers themselves are one level down,
+  // behind whichever school you choose, which is also what the pins do.
+  const teacherCons = React.useMemo(() => {
+    const keep = areaIds ? new Set(areaIds) : null;
+    return Object.entries(teachersByCons)
+      .filter(([id, list]) => list.length > 0 && (!keep || keep.has(id)))
+      .map(([id, list]) => {
+        const c = findConservatory(id);
+        return c ? { ...c, teacherCount: list.length } : null;
+      })
+      .filter(Boolean)
+      // Most teachers first: the school a learner is likeliest to find
+      // somebody at is the one worth reading first.
+      .sort((a, b) => b.teacherCount - a.teacherCount || (a.name || "").localeCompare(b.name || ""));
+  }, [teachersByCons, areaIds]);
 
   const onlineTeacherCount = teachers.filter((t) => t.online).length;
 
@@ -8548,18 +8560,36 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
               {areaIds && (
                 <div className="artium-aw-listhead">
                   <button className="artium-aw-sort" style={{ marginLeft: 0 }} onClick={() => setAreaIds(null)}>
-                    <ArrowLeft size={13} /> All teachers
+                    <ArrowLeft size={13} /> All conservatories
                   </button>
                   <span>{areaIds.length} in this area</span>
                 </div>
               )}
+              {/* Schools first, teachers second. A flat list of everyone
+                  teaching is a list of strangers in no order — twenty-two now
+                  and hundreds later — while the school is the thing a learner
+                  already has an opinion about, and the thing the pins on the
+                  globe are. It also makes the list and the map agree: both are
+                  places, and clicking either one opens the same roster. */}
               <div className="artium-aw-listhead">
-                <h2>Teaching</h2>
-                <span>{visibleTeachers.length} result{visibleTeachers.length === 1 ? "" : "s"}</span>
+                <h2>Conservatories</h2>
+                <span>{teacherCons.length} result{teacherCons.length === 1 ? "" : "s"}</span>
               </div>
               <div className="artium-aw-list">
-                {visibleTeachers.length === 0 && <p className="artium-aw-empty">No one is teaching here yet.</p>}
-                {visibleTeachers.map((t) => <TeacherRow key={t.id} t={t} onOpen={() => selectTeacher(t.id)} />)}
+                {teacherCons.length === 0 && <p className="artium-aw-empty">No one is teaching here yet.</p>}
+                {teacherCons.map((c) => (
+                  <button key={c.id} className="artium-aw-row" onClick={() => setSelectedConsId(c.id)}>
+                    <span className="artium-aw-mono">{consMonogram(c)}</span>
+                    <span className="artium-aw-row-body">
+                      <p className="artium-aw-row-t">{c.name}</p>
+                      <p className="artium-aw-row-c"><MapPin size={11} strokeWidth={2} />{[c.city, c.country].filter(Boolean).join(", ")}</p>
+                    </span>
+                    <span className="artium-aw-badge">
+                      <b>{c.teacherCount}</b><span>teacher{c.teacherCount === 1 ? "" : "s"}</span>
+                    </span>
+                    <ChevronRight size={17} strokeWidth={2} />
+                  </button>
+                ))}
               </div>
             </>
           )}
