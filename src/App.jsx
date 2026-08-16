@@ -1,3 +1,7 @@
+      {/* The bottom strip of circles is gone. My Rules and My Planning are on
+          the tab bar above, which is where the room's other destinations
+          already were. */}
+
 import React, { useState, useEffect, useRef, lazy, Suspense } from "react";
 import {
   Search, Send,
@@ -11235,11 +11239,53 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
     });
   }
 
+  // One bar for five destinations. My Rules and My Planning used to be two
+  // circles stranded under the card, in a strip of their own, visible only
+  // while you were already in the students view — so the room had two
+  // navigations and the second one disappeared exactly when you were in the
+  // place it could take you back from.
+  //
+  // The last two switch roomView rather than the card's tab, which is why
+  // they carry `view`. Everything else about them is a tab, so they look like
+  // tabs and sit on the same line, to the right of Video Session.
   const tabs = [
     { id: "chat", label: "Chat", Icon: MessageCircle },
     { id: "schedule", label: "Schedule & Payments", Icon: Calendar },
     { id: "video", label: "Video Session", Icon: Video },
+    { id: "preferences", label: "My Rules", Icon: ListChecks, view: "preferences" },
+    { id: "planning", label: "My Planning", Icon: LayoutList, view: "planning" },
   ];
+
+  // What is lit: inside the card it is the card's tab, otherwise it is the
+  // room view standing in for one.
+  const activeTab = roomView === "students" ? tab : roomView;
+
+  function openTab(t) {
+    if (t.view) { setRoomView(t.view); return; }
+    setRoomView("students");
+    setTab(t.id);
+  }
+
+  const RoomTabs = () => (
+    <div style={{ display: "flex", borderBottom: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.05)" }}>
+      {tabs.map((t) => {
+        const { id, label, Icon } = t;
+        const on = activeTab === id;
+        return (
+          <button key={id} onClick={() => openTab(t)}
+            style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "10px 4px", fontSize: 11, fontWeight: on ? 700 : 400, color: on ? C.ivory : C.ivoryDim, background: "none", border: "none", cursor: "pointer", borderBottom: on ? `2px solid ${C.brass}` : "2px solid transparent" }}>
+            <div style={{ position: "relative", display: "inline-flex" }}>
+              <Icon size={15} />
+              {id === "chat" && teacherUnread > 0 && (
+                <span style={{ position: "absolute", top: -6, right: -6, minWidth: 14, height: 14, borderRadius: 7, background: C.brass, color: C.brassText, fontSize: 9, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 3px" }}>{teacherUnread}</span>
+              )}
+            </div>
+            {label}
+          </button>
+        );
+      })}
+    </div>
+  );
 
   const upcomingSessions = sessions
     .filter((s) => s.status === "confirmed" && s.paid && timeUntil(s) > 0)
@@ -11354,6 +11400,9 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
 
       {/* ── Teaching Preferences ── */}
       {roomView === "preferences" && (
+        <div>
+        <div style={{ margin: "0 20px 20px", background: "rgba(255,255,255,0.05)", borderRadius: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06)", overflow: "hidden" }}>
+          <RoomTabs />
         <div style={{ padding: "24px 20px" }}>
           {[
             { label: "Cancellation lock", sublabel: "Students cannot cancel within this window", value: cancelLockH, set: setCancelLockH, min: 1, max: 72, unit: "h" },
@@ -11377,6 +11426,8 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
           <div style={{ padding: "14px 16px", background: "#FFF8E7", borderRadius: 12, border: `1px solid ${C.brass}`, fontSize: 12, color: C.ivory, lineHeight: 1.6 }}>
             <strong>Summary:</strong> Students must cancel ≥{cancelLockH}h before the session, modify ≥{modifyLockH}h before. Late cancellations are charged {cancelFeesPct}% of the lesson price.
           </div>
+        </div>
+        </div>
         </div>
       )}
 
@@ -11403,7 +11454,11 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
         const STATUS_LABEL = { confirmed: "Confirmed", teacher_proposed: "Awaiting student", student_proposed: "Counter-proposal", cancelled: "Cancelled" };
         const STATUS_COLOR = { confirmed: "#1A9E6E", teacher_proposed: C.brass, student_proposed: "#E07B00", cancelled: "#c0392b" };
         return (
-          <div style={{ padding: "16px 20px 32px" }}>
+          <div>
+          <div style={{ margin: "0 20px 20px", background: "rgba(255,255,255,0.05)", borderRadius: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06)", overflow: "hidden" }}>
+            <RoomTabs />
+          </div>
+          <div style={{ padding: "0 20px 32px" }}>
             {Object.entries(byMonth).map(([monthKey, sessions]) => {
               const earned = sessions.filter(s => s.status === "confirmed" && s.paid).reduce((sum, s) => sum + s.student.price, 0);
               const [y, m] = monthKey.split("-");
@@ -11466,6 +11521,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
               );
             })}
           </div>
+          </div>
         );
       })()}
 
@@ -11473,20 +11529,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
       {roomView === "students" && (
         <React.Fragment> {/* Inner tab bar */}
       <div style={{ margin: "0 20px 20px", background: "rgba(255,255,255,0.05)", borderRadius: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06)", overflow: "hidden", minHeight: 320 }}>
-      <div style={{ display: "flex", borderBottom: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.05)" }}>
-        {tabs.map(({ id, label, Icon }) => (
-          <button key={id} onClick={() => setTab(id)}
-            style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "10px 4px", fontSize: 11, fontWeight: tab === id ? 700 : 400, color: tab === id ? C.ivory : C.ivoryDim, background: "none", border: "none", cursor: "pointer", borderBottom: tab === id ? `2px solid ${C.brass}` : "2px solid transparent" }}>
-            <div style={{ position: "relative", display: "inline-flex" }}>
-              <Icon size={15} />
-              {id === "chat" && teacherUnread > 0 && (
-                <span style={{ position: "absolute", top: -6, right: -6, minWidth: 14, height: 14, borderRadius: 7, background: C.brass, color: C.brassText, fontSize: 9, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 3px" }}>{teacherUnread}</span>
-              )}
-            </div>
-            {label}
-          </button>
-        ))}
-      </div>
+      <RoomTabs />
 
       {/* Chat */}
       {tab === "chat" && (
@@ -11775,27 +11818,9 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
       </div>{/* end card */}
       </React.Fragment> )}
 
-      {/* Bottom nav — My Rules & My Planning */}
-      {roomView === "students" && (
-        <div style={{ display: "flex", justifyContent: "center", gap: 40, padding: "20px 20px 12px", background: "rgba(255,255,255,0.05)", borderTop: `1px solid ${C.inkLine}` }}>
-          {[
-            { v: "preferences", Icon: ListChecks, label: "My Rules" },
-            { v: "planning",    Icon: LayoutList, label: "My Planning" },
-          ].map(({ v, Icon, label }) => (
-            <button key={v} onClick={() => setRoomView(v)}
-              style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5, background: "none", border: "none", cursor: "pointer",
-                color: roomView === v ? C.brassLabel : C.ivoryDim }}>
-              <div style={{ width: 52, height: 52, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
-                background: roomView === v ? C.brassDim : "rgba(255,255,255,0.05)",
-                border: roomView === v ? `2px solid ${C.brass}` : "2px solid transparent",
-                boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
-                <Icon size={22} color={roomView === v ? C.brassLabel : C.ivoryDim} />
-              </div>
-              <span style={{ fontSize: 11, fontWeight: 600 }}>{label}</span>
-            </button>
-          ))}
-        </div>
-      )}
+      {/* The strip of two circles that used to sit here is gone. My Rules and
+          My Planning are on the tab bar above, beside the room's three other
+          destinations, which is where somebody looks for them. */}
 
       {/* Cancel confirmation modal */}
       {confirmCancelId !== null && (
