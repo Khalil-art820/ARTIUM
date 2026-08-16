@@ -51,7 +51,9 @@ export function toDbProfile(draft, id) {
     bio: draft.bio,
     tastes: draft.tastes,
     pieces: draft.pieces,
-    video_link: draft.videoLink,
+    // Where to find them, as one object. video_link is left unwritten: it
+    // held a single performance-video URL and has been backfilled into this.
+    links: draft.links || {},
     top: draft.top,
     flop: draft.flop,
     composer_day: draft.composerDay,
@@ -89,7 +91,7 @@ export function fromDbProfile(row) {
     bio: row.bio,
     tastes: row.tastes || [],
     pieces: row.pieces || [],
-    videoLink: row.video_link,
+    links: row.links || {},
     top: row.top,
     flop: row.flop,
     composerDay: row.composer_day,

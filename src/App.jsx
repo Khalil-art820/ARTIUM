@@ -309,20 +309,20 @@ const colorFor = (seed) => {
 const initials = (name) => name.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
 
 const SAMPLE_STUDENTS = [
-  { id: "demo-teacher", name: "Marcus Feld", instrument: "Piano", conservatoryId: "juilliard", year: "Final year", bio: "Final-year pianist at Juilliard. Happiest inside a Chopin ballade.", tastes: ["Chopin", "Debussy"], pieces: [{ title: "Ballade No. 1", composer: "Chopin" }], videoLink: "", top: "", flop: "", photoUrl: null, coverVideoUrl: null, teaching: { open: true, mode: "online", price: "60", pitch: "Patient with beginners, blunt about fundamentals. We will spend the first lesson on how you sit before we play a note." }, status: "approved", online: true },
-  { id: "elise", name: "Élise Marchand", instrument: "Piano", conservatoryId: "paris", year: "3rd year", bio: "Drawn to color and light at the keyboard — chasing the perfect pedal half-tone.", tastes: ["Debussy", "Ravel", "Impressionism", "Chopin"], pieces: [{ title: "Images, Book I", composer: "Debussy" }, { title: "Gaspard de la nuit", composer: "Ravel" }], videoLink: "https://instagram.com/elise.piano", top: "Just nailed the voicing in \"Reflets dans l'eau\" — finally sounds like water instead of notes.", flop: "Still wrestling with the tremolo passage in Gaspard, my wrist gives out after a few bars.", online: true },
-  { id: "theo", name: "Théo Lambert", instrument: "Piano", conservatoryId: "paris", year: "1st year", bio: "Recovering organist, newly obsessed with counterpoint.", tastes: ["Bach", "Baroque", "Beethoven"], pieces: [{ title: "Goldberg Variations, BWV 988", composer: "Bach" }], videoLink: "", top: "Finished memorizing the Goldberg aria — it finally feels like home.", flop: "Variation 26 is destroying my left hand independence.", online: false },
-  { id: "lukas", name: "Lukas Brunner", instrument: "Piano", conservatoryId: "vienna", year: "4th year", bio: "Viennese classicism is home turf, but I'm trying to loosen up rhythmically.", tastes: ["Beethoven", "Schubert", "Classical Era"], pieces: [{ title: "Sonata No. 23 'Appassionata'", composer: "Beethoven" }, { title: "Wanderer Fantasy", composer: "Schubert" }], videoLink: "https://instagram.com/lukas.keys", top: "Played the Appassionata finale up to tempo for the first time.", flop: "The Wanderer Fantasy's octave passages are still sloppy under pressure.", online: true },
-  { id: "polina", name: "Polina Sokolova", instrument: "Piano", conservatoryId: "moscow", year: "Masters, 2nd year", bio: "Big hands, bigger chords. Competition season starts in March.", tastes: ["Rachmaninoff", "Scriabin", "Romantic Era"], pieces: [{ title: "Piano Concerto No. 3", composer: "Rachmaninoff" }, { title: "Sonata No. 5", composer: "Scriabin" }], videoLink: "", top: "Got through the first movement cadenza without cracking, for once.", flop: "Stamina is the real issue — my arms give out by the development section.", online: true },
-  { id: "maya", name: "Maya Chen", instrument: "Piano", conservatoryId: "juilliard", year: "Final year", bio: "Trying to make Liszt sound inevitable instead of just difficult.", tastes: ["Liszt", "Prokofiev", "Romantic Era", "20th Century"], pieces: [{ title: "Mephisto Waltz No. 1", composer: "Liszt" }, { title: "Sonata No. 7", composer: "Prokofiev" }], videoLink: "https://instagram.com/mayachen.music", top: "Mephisto Waltz finally sounds dangerous instead of just difficult.", flop: "The Prokofiev's toccata movement keeps falling apart past a certain speed.", online: false },
-  { id: "daniel", name: "Daniel Osei", instrument: "Piano", conservatoryId: "curtis", year: "2nd year", bio: "Chopin is the reason I started, Brahms is the reason I stayed.", tastes: ["Chopin", "Brahms"], pieces: [{ title: "Ballade No. 1, Op. 23", composer: "Chopin" }, { title: "Handel Variations, Op. 24", composer: "Brahms" }], videoLink: "https://instagram.com/daniel.plays", top: "Played the Ballade in masterclass and it actually went well.", flop: "The fugue at the end of the Handel Variations keeps tripping up my voicing.", online: true },
-  { id: "freya", name: "Freya Whitlock", instrument: "Piano", conservatoryId: "rcm", year: "3rd year", bio: "Slowly working my way through Messiaen's bestiary of birdsong.", tastes: ["Debussy", "Messiaen", "Impressionism"], pieces: [{ title: "Vingt Regards (No. 6)", composer: "Messiaen" }], videoLink: "", top: "Cracked the bird calls in 'Regard des oiseaux' — they finally sound free, not mechanical.", flop: "The huge chord clusters are still bruising my hands.", online: false },
-  { id: "wei", name: "Wei Zhang", instrument: "Piano", conservatoryId: "shanghai", year: "Masters, 1st year", bio: "Bach in the morning keeps the rest of the day honest.", tastes: ["Bach", "Chopin", "Baroque"], pieces: [{ title: "Italian Concerto, BWV 971", composer: "Bach" }], videoLink: "https://instagram.com/wei.z.piano", top: "Recorded a take of the Italian Concerto I'm actually proud of.", flop: "The third movement's perpetual motion still falls apart past 120bpm.", online: true },
-  { id: "haruto", name: "Haruto Sato", instrument: "Piano", conservatoryId: "geidai", year: "4th year", bio: "Looking for practice partners who also hear color in sound.", tastes: ["Debussy", "Ravel", "Liszt"], pieces: [{ title: "Miroirs", composer: "Ravel" }], videoLink: "", top: "Just finished learning all five movements of Miroirs.", flop: "'Une barque sur l'ocean' still feels murky instead of fluid.", online: true },
-  { id: "jiwoo", name: "Ji-woo Kang", instrument: "Piano", conservatoryId: "snu", year: "2nd year", bio: "Slow practice evangelist. Ask me about metronome marks.", tastes: ["Rachmaninoff", "Chopin", "Romantic Era"], pieces: [{ title: "24 Preludes, Op. 28", composer: "Chopin" }], videoLink: "https://instagram.com/jiwoo.kg", top: "Performed all 24 Preludes in one sitting for the first time.", flop: "No. 16 in B-flat minor is still too fast for my fingers to stay clean.", online: false },
-  { id: "anneliese", name: "Anneliese Voss", instrument: "Piano", conservatoryId: "eisler", year: "3rd year", bio: "The Hammerklavier has humbled me twice now. Third time's the charm.", tastes: ["Bach", "Beethoven", "Brahms", "Baroque"], pieces: [{ title: "Sonata No. 29 'Hammerklavier'", composer: "Beethoven" }], videoLink: "", top: "Made it through the Hammerklavier fugue without stopping, for the first time ever.", flop: "The opening leap still misses about half the time.", online: true },
-  { id: "nathan", name: "Nathan Boucher", instrument: "Piano", conservatoryId: "rcmt", year: "1st year", bio: "New to conservatory life, very open to repertoire suggestions.", tastes: ["Chopin", "Schumann", "Romantic Era"], pieces: [{ title: "Carnaval, Op. 9", composer: "Schumann" }], videoLink: "https://instagram.com/nateplayspiano", top: "Just started Carnaval and having a blast with the character pieces.", flop: "Eusebius vs. Florestan — I can't find the right contrast yet.", online: false },
-  { id: "isla", name: "Isla Cooper", instrument: "Piano", conservatoryId: "sydney", year: "2nd year", bio: "Trying to find the line between precision and feel.", tastes: ["Ravel", "Debussy", "Prokofiev", "20th Century"], pieces: [{ title: "Sonatine", composer: "Ravel" }], videoLink: "https://instagram.com/isla.c.piano", top: "Finished my end-of-year recital and the Sonatine went better than I'd hoped.", flop: "Still chasing the right touch for the second movement's habanera rhythm.", online: true },
+  { id: "demo-teacher", name: "Marcus Feld", instrument: "Piano", conservatoryId: "juilliard", year: "Final year", bio: "Final-year pianist at Juilliard. Happiest inside a Chopin ballade.", tastes: ["Chopin", "Debussy"], pieces: [{ title: "Ballade No. 1", composer: "Chopin" }], links: {}, top: "", flop: "", photoUrl: null, coverVideoUrl: null, teaching: { open: true, mode: "online", price: "60", pitch: "Patient with beginners, blunt about fundamentals. We will spend the first lesson on how you sit before we play a note." }, status: "approved", online: true },
+  { id: "elise", name: "Élise Marchand", instrument: "Piano", conservatoryId: "paris", year: "3rd year", bio: "Drawn to color and light at the keyboard — chasing the perfect pedal half-tone.", tastes: ["Debussy", "Ravel", "Impressionism", "Chopin"], pieces: [{ title: "Images, Book I", composer: "Debussy" }, { title: "Gaspard de la nuit", composer: "Ravel" }], links: { instagram: "https://instagram.com/elise.piano" }, top: "Just nailed the voicing in \"Reflets dans l'eau\" — finally sounds like water instead of notes.", flop: "Still wrestling with the tremolo passage in Gaspard, my wrist gives out after a few bars.", online: true },
+  { id: "theo", name: "Théo Lambert", instrument: "Piano", conservatoryId: "paris", year: "1st year", bio: "Recovering organist, newly obsessed with counterpoint.", tastes: ["Bach", "Baroque", "Beethoven"], pieces: [{ title: "Goldberg Variations, BWV 988", composer: "Bach" }], links: {}, top: "Finished memorizing the Goldberg aria — it finally feels like home.", flop: "Variation 26 is destroying my left hand independence.", online: false },
+  { id: "lukas", name: "Lukas Brunner", instrument: "Piano", conservatoryId: "vienna", year: "4th year", bio: "Viennese classicism is home turf, but I'm trying to loosen up rhythmically.", tastes: ["Beethoven", "Schubert", "Classical Era"], pieces: [{ title: "Sonata No. 23 'Appassionata'", composer: "Beethoven" }, { title: "Wanderer Fantasy", composer: "Schubert" }], links: { instagram: "https://instagram.com/lukas.keys" }, top: "Played the Appassionata finale up to tempo for the first time.", flop: "The Wanderer Fantasy's octave passages are still sloppy under pressure.", online: true },
+  { id: "polina", name: "Polina Sokolova", instrument: "Piano", conservatoryId: "moscow", year: "Masters, 2nd year", bio: "Big hands, bigger chords. Competition season starts in March.", tastes: ["Rachmaninoff", "Scriabin", "Romantic Era"], pieces: [{ title: "Piano Concerto No. 3", composer: "Rachmaninoff" }, { title: "Sonata No. 5", composer: "Scriabin" }], links: {}, top: "Got through the first movement cadenza without cracking, for once.", flop: "Stamina is the real issue — my arms give out by the development section.", online: true },
+  { id: "maya", name: "Maya Chen", instrument: "Piano", conservatoryId: "juilliard", year: "Final year", bio: "Trying to make Liszt sound inevitable instead of just difficult.", tastes: ["Liszt", "Prokofiev", "Romantic Era", "20th Century"], pieces: [{ title: "Mephisto Waltz No. 1", composer: "Liszt" }, { title: "Sonata No. 7", composer: "Prokofiev" }], links: { instagram: "https://instagram.com/mayachen.music" }, top: "Mephisto Waltz finally sounds dangerous instead of just difficult.", flop: "The Prokofiev's toccata movement keeps falling apart past a certain speed.", online: false },
+  { id: "daniel", name: "Daniel Osei", instrument: "Piano", conservatoryId: "curtis", year: "2nd year", bio: "Chopin is the reason I started, Brahms is the reason I stayed.", tastes: ["Chopin", "Brahms"], pieces: [{ title: "Ballade No. 1, Op. 23", composer: "Chopin" }, { title: "Handel Variations, Op. 24", composer: "Brahms" }], links: { instagram: "https://instagram.com/daniel.plays" }, top: "Played the Ballade in masterclass and it actually went well.", flop: "The fugue at the end of the Handel Variations keeps tripping up my voicing.", online: true },
+  { id: "freya", name: "Freya Whitlock", instrument: "Piano", conservatoryId: "rcm", year: "3rd year", bio: "Slowly working my way through Messiaen's bestiary of birdsong.", tastes: ["Debussy", "Messiaen", "Impressionism"], pieces: [{ title: "Vingt Regards (No. 6)", composer: "Messiaen" }], links: {}, top: "Cracked the bird calls in 'Regard des oiseaux' — they finally sound free, not mechanical.", flop: "The huge chord clusters are still bruising my hands.", online: false },
+  { id: "wei", name: "Wei Zhang", instrument: "Piano", conservatoryId: "shanghai", year: "Masters, 1st year", bio: "Bach in the morning keeps the rest of the day honest.", tastes: ["Bach", "Chopin", "Baroque"], pieces: [{ title: "Italian Concerto, BWV 971", composer: "Bach" }], links: { instagram: "https://instagram.com/wei.z.piano" }, top: "Recorded a take of the Italian Concerto I'm actually proud of.", flop: "The third movement's perpetual motion still falls apart past 120bpm.", online: true },
+  { id: "haruto", name: "Haruto Sato", instrument: "Piano", conservatoryId: "geidai", year: "4th year", bio: "Looking for practice partners who also hear color in sound.", tastes: ["Debussy", "Ravel", "Liszt"], pieces: [{ title: "Miroirs", composer: "Ravel" }], links: {}, top: "Just finished learning all five movements of Miroirs.", flop: "'Une barque sur l'ocean' still feels murky instead of fluid.", online: true },
+  { id: "jiwoo", name: "Ji-woo Kang", instrument: "Piano", conservatoryId: "snu", year: "2nd year", bio: "Slow practice evangelist. Ask me about metronome marks.", tastes: ["Rachmaninoff", "Chopin", "Romantic Era"], pieces: [{ title: "24 Preludes, Op. 28", composer: "Chopin" }], links: { instagram: "https://instagram.com/jiwoo.kg" }, top: "Performed all 24 Preludes in one sitting for the first time.", flop: "No. 16 in B-flat minor is still too fast for my fingers to stay clean.", online: false },
+  { id: "anneliese", name: "Anneliese Voss", instrument: "Piano", conservatoryId: "eisler", year: "3rd year", bio: "The Hammerklavier has humbled me twice now. Third time's the charm.", tastes: ["Bach", "Beethoven", "Brahms", "Baroque"], pieces: [{ title: "Sonata No. 29 'Hammerklavier'", composer: "Beethoven" }], links: {}, top: "Made it through the Hammerklavier fugue without stopping, for the first time ever.", flop: "The opening leap still misses about half the time.", online: true },
+  { id: "nathan", name: "Nathan Boucher", instrument: "Piano", conservatoryId: "rcmt", year: "1st year", bio: "New to conservatory life, very open to repertoire suggestions.", tastes: ["Chopin", "Schumann", "Romantic Era"], pieces: [{ title: "Carnaval, Op. 9", composer: "Schumann" }], links: { instagram: "https://instagram.com/nateplayspiano" }, top: "Just started Carnaval and having a blast with the character pieces.", flop: "Eusebius vs. Florestan — I can't find the right contrast yet.", online: false },
+  { id: "isla", name: "Isla Cooper", instrument: "Piano", conservatoryId: "sydney", year: "2nd year", bio: "Trying to find the line between precision and feel.", tastes: ["Ravel", "Debussy", "Prokofiev", "20th Century"], pieces: [{ title: "Sonatine", composer: "Ravel" }], links: { instagram: "https://instagram.com/isla.c.piano" }, top: "Finished my end-of-year recital and the Sonatine went better than I'd hoped.", flop: "Still chasing the right touch for the second movement's habanera rhythm.", online: true },
 ];
 
 /* ---------------------------------------------------------------- */
@@ -331,31 +331,31 @@ const SAMPLE_STUDENTS = [
 /* this array and its spread in the students useState to remove.     */
 /* ---------------------------------------------------------------- */
 const CURTIS_MOCK_STUDENTS = [
-  { id: "curtis-amara", name: "Amara Okafor", instrument: "Violin", conservatoryId: "curtis", year: "3rd year", bio: "Chasing a bigger sound without losing the sweetness up high.", tastes: ["Brahms", "Bach", "Romantic Era"], pieces: [{ title: "Violin Concerto in D, Op. 77", composer: "Brahms" }], videoLink: "", top: "The double stops in the first movement finally ring instead of scratch.", flop: "Intonation in the cadenza still drifts when I get nervous.", online: true, teaching: { open: true, mode: "both", price: "42" } },
-  { id: "curtis-sebastian", name: "Sebastián Ruiz", instrument: "Cello", conservatoryId: "curtis", year: "Masters, 1st year", bio: "Bach suites every morning, everything else after.", tastes: ["Bach", "Baroque", "Schumann"], pieces: [{ title: "Cello Suite No. 5, BWV 1011", composer: "Bach" }], videoLink: "", top: "Played the Sarabande from memory in class and nobody breathed.", flop: "The gigue keeps running away from me.", online: false, teaching: { open: true, mode: "online", price: "48" } },
-  { id: "curtis-nora", name: "Nora Lindqvist", instrument: "Viola", conservatoryId: "curtis", year: "2nd year", bio: "Viola jokes welcome, I have better ones.", tastes: ["Brahms", "Schubert", "Romantic Era"], pieces: [{ title: "Sonata in F minor, Op. 120 No. 1", composer: "Brahms" }], videoLink: "", top: "Found a bow that finally suits my instrument.", flop: "Shifting into the top register still feels like guesswork.", online: true },
-  { id: "curtis-kwame", name: "Kwame Boateng", instrument: "Double Bass", conservatoryId: "curtis", year: "4th year", bio: "Orchestral excerpts by day, jazz basement by night.", tastes: ["Beethoven", "Prokofiev", "20th Century"], pieces: [{ title: "Symphony No. 5, bass excerpts", composer: "Beethoven" }], videoLink: "", top: "Nailed the trio section from the Scherzo at audition tempo.", flop: "My thumb position work is still inconsistent.", online: true, teaching: { open: true, mode: "physical", price: "35" } },
-  { id: "curtis-yuki", name: "Yuki Tanaka", instrument: "Flute", conservatoryId: "curtis", year: "1st year", bio: "Long tones are the whole personality, apparently.", tastes: ["Debussy", "Ravel", "Impressionism"], pieces: [{ title: "Syrinx", composer: "Debussy" }], videoLink: "", top: "Syrinx felt genuinely free for the first time this week.", flop: "Running out of air in the long phrases.", online: false, teaching: { open: true, mode: "online", price: "40" } },
-  { id: "curtis-marta", name: "Marta Kowalczyk", instrument: "Clarinet", conservatoryId: "curtis", year: "3rd year", bio: "Reed hoarder. Ask me about cane, at your peril.", tastes: ["Mozart", "Brahms", "Classical Era"], pieces: [{ title: "Clarinet Concerto, K. 622", composer: "Mozart" }], videoLink: "", top: "Finally have a reed that survives more than one rehearsal.", flop: "The Adagio still sounds careful rather than simple.", online: true },
-  { id: "curtis-idris", name: "Idris Rahman", instrument: "Oboe", conservatoryId: "curtis", year: "2nd year", bio: "Half my practice time is making reeds. The other half is regret.", tastes: ["Bach", "Baroque", "Mozart"], pieces: [{ title: "Oboe Concerto in D minor", composer: "Marcello" }], videoLink: "", top: "The Adagio finally sings instead of just sounding.", flop: "Reed making. Always the reed making.", online: false },
-  { id: "curtis-chiara", name: "Chiara Bellini", instrument: "Bassoon", conservatoryId: "curtis", year: "Masters, 2nd year", bio: "The bassoon is a tenor, not a punchline.", tastes: ["Mozart", "Prokofiev", "20th Century"], pieces: [{ title: "Bassoon Concerto, K. 191", composer: "Mozart" }], videoLink: "", top: "Got through the whole concerto without a single cracked note.", flop: "Low register response is sluggish in a cold hall.", online: true, teaching: { open: true, mode: "both", price: "36" } },
-  { id: "curtis-tomas", name: "Tomás Silva", instrument: "Trumpet", conservatoryId: "curtis", year: "1st year", bio: "Working on playing quietly, which nobody warned me was the hard part.", tastes: ["Bach", "20th Century"], pieces: [{ title: "Brandenburg Concerto No. 2", composer: "Bach" }], videoLink: "", top: "Hit the high register cleanly three days running.", flop: "Endurance drops off badly in the last movement.", online: true },
-  { id: "curtis-annika", name: "Annika Hoffmann", instrument: "French Horn", conservatoryId: "curtis", year: "4th year", bio: "Chasing a warm sound that still carries over an orchestra.", tastes: ["Brahms", "Schumann", "Romantic Era"], pieces: [{ title: "Horn Trio, Op. 40", composer: "Brahms" }], videoLink: "", top: "The Adagio mesto came together in rehearsal last night.", flop: "Still cracking the exposed entrance in the finale.", online: false, teaching: { open: true, mode: "physical", price: "44" } },
-  { id: "curtis-diego", name: "Diego Fernández", instrument: "Trombone", conservatoryId: "curtis", year: "3rd year", bio: "Legato on a slide instrument is a lifelong argument.", tastes: ["Mozart", "20th Century"], pieces: [{ title: "Tuba mirum, from Requiem", composer: "Mozart" }], videoLink: "", top: "My slide legato is finally starting to sound like a wind player.", flop: "Soft high entrances are still a coin flip.", online: true },
-  { id: "curtis-leila", name: "Leila Haddad", instrument: "Harp", conservatoryId: "curtis", year: "2nd year", bio: "Yes, I have to carry it. No, it does not fit in an elevator.", tastes: ["Debussy", "Ravel", "Impressionism"], pieces: [{ title: "Danses sacrée et profane", composer: "Debussy" }], videoLink: "", top: "Pedal changes in the Danse profane are finally automatic.", flop: "Buzzing strings in the low register are driving me mad.", online: true, teaching: { open: true, mode: "both", price: "55" } },
-  { id: "curtis-ruth", name: "Ruth Adeyemi", instrument: "Marimba", conservatoryId: "curtis", year: "1st year", bio: "Four mallets, endless patience, one very tired practice room.", tastes: ["Messiaen", "20th Century"], pieces: [{ title: "Rebonds B", composer: "Xenakis" }], videoLink: "", top: "Memorised the whole of Rebonds B this month.", flop: "My roll is still uneven on the softest dynamics.", online: false },
-  { id: "curtis-jonas", name: "Jonas Berg", instrument: "Organ", conservatoryId: "curtis", year: "Masters, 1st year", bio: "Registration is composition. I will not be taking questions.", tastes: ["Bach", "Messiaen", "Baroque"], pieces: [{ title: "Passacaglia in C minor, BWV 582", composer: "Bach" }], videoLink: "", top: "Found a registration for the Passacaglia that finally builds properly.", flop: "Pedal accuracy falls apart in the final variations.", online: true },
-  { id: "curtis-sofia", name: "Sofia Papadopoulos", instrument: "Voice", conservatoryId: "curtis", year: "3rd year", bio: "Lieder over opera, quietly and unfashionably.", tastes: ["Schubert", "Schumann", "Romantic Era"], pieces: [{ title: "Frauenliebe und -leben", composer: "Schumann" }], videoLink: "", top: "The last song finally sits in the voice without pushing.", flop: "German diction still slows my line down.", online: true, teaching: { open: true, mode: "online", price: "50" } },
-  { id: "curtis-hector", name: "Héctor Álvarez", instrument: "Guitar", conservatoryId: "curtis", year: "2nd year", bio: "Transcribing lute music until somebody stops me.", tastes: ["Bach", "Baroque"], pieces: [{ title: "Lute Suite No. 4, BWV 1006a", composer: "Bach" }], videoLink: "", top: "The Prelude is up to tempo and still clean.", flop: "Nail shape is a constant, tedious science experiment.", online: false, teaching: { open: true, mode: "both", price: "33" } },
-  { id: "curtis-mei", name: "Mei Lin", instrument: "Piano", conservatoryId: "curtis", year: "4th year", bio: "Accompanying half the school, which is the best ear training there is.", tastes: ["Schubert", "Brahms", "Romantic Era"], pieces: [{ title: "Four Impromptus, D. 899", composer: "Schubert" }], videoLink: "", top: "Sight-read an entire song recital and survived.", flop: "The third Impromptu still sounds rushed under pressure.", online: true, teaching: { open: true, mode: "both", price: "46" } },
-  { id: "curtis-oscar", name: "Oscar Dubois", instrument: "Violin", conservatoryId: "curtis", year: "1st year", bio: "Scales, then Ysaÿe, then more scales.", tastes: ["Bach", "20th Century"], pieces: [{ title: "Sonata No. 3 'Ballade'", composer: "Ysaÿe" }], videoLink: "", top: "The Ballade's opening recitative finally has shape.", flop: "My left hand tenses up the moment anyone listens.", online: false },
-  { id: "curtis-priya", name: "Priya Nair", instrument: "Cello", conservatoryId: "curtis", year: "2nd year", bio: "Chamber music is the reason I practise at all.", tastes: ["Schubert", "Brahms", "Romantic Era"], pieces: [{ title: "String Quintet in C, D. 956", composer: "Schubert" }], videoLink: "", top: "Our quartet got through the Adagio without anyone rushing.", flop: "Vibrato still narrows when the writing gets high.", online: true },
-  { id: "curtis-finn", name: "Finn O'Sullivan", instrument: "Viola", conservatoryId: "curtis", year: "3rd year", bio: "Inner voices are where the harmony actually happens.", tastes: ["Bach", "Brahms", "Baroque"], pieces: [{ title: "Cello Suite No. 1 (viola transcription)", composer: "Bach" }], videoLink: "", top: "Transcribed the whole first suite and it suits the viola better.", flop: "String crossings in the Courante are still uneven.", online: true, teaching: { open: true, mode: "physical", price: "38" } },
-  { id: "curtis-zara", name: "Zara Mahmood", instrument: "Flute", conservatoryId: "curtis", year: "Masters, 2nd year", bio: "Contemporary repertoire and extended techniques, mostly.", tastes: ["Messiaen", "20th Century", "Debussy"], pieces: [{ title: "Le merle noir", composer: "Messiaen" }], videoLink: "", top: "Multiphonics are finally reliable rather than lucky.", flop: "The fast final section is still a blur.", online: false },
-  { id: "curtis-nikolai", name: "Nikolai Petrov", instrument: "Clarinet", conservatoryId: "curtis", year: "4th year", bio: "Orchestral auditions are the whole year, apparently.", tastes: ["Prokofiev", "Beethoven", "20th Century"], pieces: [{ title: "Symphony No. 5, clarinet excerpts", composer: "Prokofiev" }], videoLink: "", top: "Got a trial week with a regional orchestra.", flop: "My tone thins out at the very top of the register.", online: true, teaching: { open: true, mode: "online", price: "41" } },
-  { id: "curtis-elena", name: "Elena Rossi", instrument: "Voice", conservatoryId: "curtis", year: "1st year", bio: "Learning that singing quietly is far harder than singing loudly.", tastes: ["Mozart", "Classical Era"], pieces: [{ title: "Le nozze di Figaro, 'Porgi amor'", composer: "Mozart" }], videoLink: "", top: "Held the opening phrase in one breath at last.", flop: "The passaggio is still an obvious seam.", online: true },
-  { id: "curtis-samuel", name: "Samuel Adeleke", instrument: "Trumpet", conservatoryId: "curtis", year: "2nd year", bio: "Piccolo trumpet enthusiast, to everyone else's dismay.", tastes: ["Bach", "Baroque"], pieces: [{ title: "Cantata BWV 51", composer: "Bach" }], videoLink: "", top: "Made it through the whole cantata without splitting a note.", flop: "Piccolo intonation is unforgiving when I'm tired.", online: false },
-  { id: "curtis-hanne", name: "Hanne Voss", instrument: "Timpani", conservatoryId: "curtis", year: "3rd year", bio: "Timpani principally, marimba when nobody is looking.", tastes: ["Beethoven", "Brahms", "Classical Era"], pieces: [{ title: "Symphony No. 9, timpani excerpts", composer: "Beethoven" }], videoLink: "", top: "My tuning between movements is quick and accurate now.", flop: "Still over-playing in the loud tutti passages.", online: true, teaching: { open: true, mode: "physical", price: "37" } },
+  { id: "curtis-amara", name: "Amara Okafor", instrument: "Violin", conservatoryId: "curtis", year: "3rd year", bio: "Chasing a bigger sound without losing the sweetness up high.", tastes: ["Brahms", "Bach", "Romantic Era"], pieces: [{ title: "Violin Concerto in D, Op. 77", composer: "Brahms" }], links: {}, top: "The double stops in the first movement finally ring instead of scratch.", flop: "Intonation in the cadenza still drifts when I get nervous.", online: true, teaching: { open: true, mode: "both", price: "42" } },
+  { id: "curtis-sebastian", name: "Sebastián Ruiz", instrument: "Cello", conservatoryId: "curtis", year: "Masters, 1st year", bio: "Bach suites every morning, everything else after.", tastes: ["Bach", "Baroque", "Schumann"], pieces: [{ title: "Cello Suite No. 5, BWV 1011", composer: "Bach" }], links: {}, top: "Played the Sarabande from memory in class and nobody breathed.", flop: "The gigue keeps running away from me.", online: false, teaching: { open: true, mode: "online", price: "48" } },
+  { id: "curtis-nora", name: "Nora Lindqvist", instrument: "Viola", conservatoryId: "curtis", year: "2nd year", bio: "Viola jokes welcome, I have better ones.", tastes: ["Brahms", "Schubert", "Romantic Era"], pieces: [{ title: "Sonata in F minor, Op. 120 No. 1", composer: "Brahms" }], links: {}, top: "Found a bow that finally suits my instrument.", flop: "Shifting into the top register still feels like guesswork.", online: true },
+  { id: "curtis-kwame", name: "Kwame Boateng", instrument: "Double Bass", conservatoryId: "curtis", year: "4th year", bio: "Orchestral excerpts by day, jazz basement by night.", tastes: ["Beethoven", "Prokofiev", "20th Century"], pieces: [{ title: "Symphony No. 5, bass excerpts", composer: "Beethoven" }], links: {}, top: "Nailed the trio section from the Scherzo at audition tempo.", flop: "My thumb position work is still inconsistent.", online: true, teaching: { open: true, mode: "physical", price: "35" } },
+  { id: "curtis-yuki", name: "Yuki Tanaka", instrument: "Flute", conservatoryId: "curtis", year: "1st year", bio: "Long tones are the whole personality, apparently.", tastes: ["Debussy", "Ravel", "Impressionism"], pieces: [{ title: "Syrinx", composer: "Debussy" }], links: {}, top: "Syrinx felt genuinely free for the first time this week.", flop: "Running out of air in the long phrases.", online: false, teaching: { open: true, mode: "online", price: "40" } },
+  { id: "curtis-marta", name: "Marta Kowalczyk", instrument: "Clarinet", conservatoryId: "curtis", year: "3rd year", bio: "Reed hoarder. Ask me about cane, at your peril.", tastes: ["Mozart", "Brahms", "Classical Era"], pieces: [{ title: "Clarinet Concerto, K. 622", composer: "Mozart" }], links: {}, top: "Finally have a reed that survives more than one rehearsal.", flop: "The Adagio still sounds careful rather than simple.", online: true },
+  { id: "curtis-idris", name: "Idris Rahman", instrument: "Oboe", conservatoryId: "curtis", year: "2nd year", bio: "Half my practice time is making reeds. The other half is regret.", tastes: ["Bach", "Baroque", "Mozart"], pieces: [{ title: "Oboe Concerto in D minor", composer: "Marcello" }], links: {}, top: "The Adagio finally sings instead of just sounding.", flop: "Reed making. Always the reed making.", online: false },
+  { id: "curtis-chiara", name: "Chiara Bellini", instrument: "Bassoon", conservatoryId: "curtis", year: "Masters, 2nd year", bio: "The bassoon is a tenor, not a punchline.", tastes: ["Mozart", "Prokofiev", "20th Century"], pieces: [{ title: "Bassoon Concerto, K. 191", composer: "Mozart" }], links: {}, top: "Got through the whole concerto without a single cracked note.", flop: "Low register response is sluggish in a cold hall.", online: true, teaching: { open: true, mode: "both", price: "36" } },
+  { id: "curtis-tomas", name: "Tomás Silva", instrument: "Trumpet", conservatoryId: "curtis", year: "1st year", bio: "Working on playing quietly, which nobody warned me was the hard part.", tastes: ["Bach", "20th Century"], pieces: [{ title: "Brandenburg Concerto No. 2", composer: "Bach" }], links: {}, top: "Hit the high register cleanly three days running.", flop: "Endurance drops off badly in the last movement.", online: true },
+  { id: "curtis-annika", name: "Annika Hoffmann", instrument: "French Horn", conservatoryId: "curtis", year: "4th year", bio: "Chasing a warm sound that still carries over an orchestra.", tastes: ["Brahms", "Schumann", "Romantic Era"], pieces: [{ title: "Horn Trio, Op. 40", composer: "Brahms" }], links: {}, top: "The Adagio mesto came together in rehearsal last night.", flop: "Still cracking the exposed entrance in the finale.", online: false, teaching: { open: true, mode: "physical", price: "44" } },
+  { id: "curtis-diego", name: "Diego Fernández", instrument: "Trombone", conservatoryId: "curtis", year: "3rd year", bio: "Legato on a slide instrument is a lifelong argument.", tastes: ["Mozart", "20th Century"], pieces: [{ title: "Tuba mirum, from Requiem", composer: "Mozart" }], links: {}, top: "My slide legato is finally starting to sound like a wind player.", flop: "Soft high entrances are still a coin flip.", online: true },
+  { id: "curtis-leila", name: "Leila Haddad", instrument: "Harp", conservatoryId: "curtis", year: "2nd year", bio: "Yes, I have to carry it. No, it does not fit in an elevator.", tastes: ["Debussy", "Ravel", "Impressionism"], pieces: [{ title: "Danses sacrée et profane", composer: "Debussy" }], links: {}, top: "Pedal changes in the Danse profane are finally automatic.", flop: "Buzzing strings in the low register are driving me mad.", online: true, teaching: { open: true, mode: "both", price: "55" } },
+  { id: "curtis-ruth", name: "Ruth Adeyemi", instrument: "Marimba", conservatoryId: "curtis", year: "1st year", bio: "Four mallets, endless patience, one very tired practice room.", tastes: ["Messiaen", "20th Century"], pieces: [{ title: "Rebonds B", composer: "Xenakis" }], links: {}, top: "Memorised the whole of Rebonds B this month.", flop: "My roll is still uneven on the softest dynamics.", online: false },
+  { id: "curtis-jonas", name: "Jonas Berg", instrument: "Organ", conservatoryId: "curtis", year: "Masters, 1st year", bio: "Registration is composition. I will not be taking questions.", tastes: ["Bach", "Messiaen", "Baroque"], pieces: [{ title: "Passacaglia in C minor, BWV 582", composer: "Bach" }], links: {}, top: "Found a registration for the Passacaglia that finally builds properly.", flop: "Pedal accuracy falls apart in the final variations.", online: true },
+  { id: "curtis-sofia", name: "Sofia Papadopoulos", instrument: "Voice", conservatoryId: "curtis", year: "3rd year", bio: "Lieder over opera, quietly and unfashionably.", tastes: ["Schubert", "Schumann", "Romantic Era"], pieces: [{ title: "Frauenliebe und -leben", composer: "Schumann" }], links: {}, top: "The last song finally sits in the voice without pushing.", flop: "German diction still slows my line down.", online: true, teaching: { open: true, mode: "online", price: "50" } },
+  { id: "curtis-hector", name: "Héctor Álvarez", instrument: "Guitar", conservatoryId: "curtis", year: "2nd year", bio: "Transcribing lute music until somebody stops me.", tastes: ["Bach", "Baroque"], pieces: [{ title: "Lute Suite No. 4, BWV 1006a", composer: "Bach" }], links: {}, top: "The Prelude is up to tempo and still clean.", flop: "Nail shape is a constant, tedious science experiment.", online: false, teaching: { open: true, mode: "both", price: "33" } },
+  { id: "curtis-mei", name: "Mei Lin", instrument: "Piano", conservatoryId: "curtis", year: "4th year", bio: "Accompanying half the school, which is the best ear training there is.", tastes: ["Schubert", "Brahms", "Romantic Era"], pieces: [{ title: "Four Impromptus, D. 899", composer: "Schubert" }], links: {}, top: "Sight-read an entire song recital and survived.", flop: "The third Impromptu still sounds rushed under pressure.", online: true, teaching: { open: true, mode: "both", price: "46" } },
+  { id: "curtis-oscar", name: "Oscar Dubois", instrument: "Violin", conservatoryId: "curtis", year: "1st year", bio: "Scales, then Ysaÿe, then more scales.", tastes: ["Bach", "20th Century"], pieces: [{ title: "Sonata No. 3 'Ballade'", composer: "Ysaÿe" }], links: {}, top: "The Ballade's opening recitative finally has shape.", flop: "My left hand tenses up the moment anyone listens.", online: false },
+  { id: "curtis-priya", name: "Priya Nair", instrument: "Cello", conservatoryId: "curtis", year: "2nd year", bio: "Chamber music is the reason I practise at all.", tastes: ["Schubert", "Brahms", "Romantic Era"], pieces: [{ title: "String Quintet in C, D. 956", composer: "Schubert" }], links: {}, top: "Our quartet got through the Adagio without anyone rushing.", flop: "Vibrato still narrows when the writing gets high.", online: true },
+  { id: "curtis-finn", name: "Finn O'Sullivan", instrument: "Viola", conservatoryId: "curtis", year: "3rd year", bio: "Inner voices are where the harmony actually happens.", tastes: ["Bach", "Brahms", "Baroque"], pieces: [{ title: "Cello Suite No. 1 (viola transcription)", composer: "Bach" }], links: {}, top: "Transcribed the whole first suite and it suits the viola better.", flop: "String crossings in the Courante are still uneven.", online: true, teaching: { open: true, mode: "physical", price: "38" } },
+  { id: "curtis-zara", name: "Zara Mahmood", instrument: "Flute", conservatoryId: "curtis", year: "Masters, 2nd year", bio: "Contemporary repertoire and extended techniques, mostly.", tastes: ["Messiaen", "20th Century", "Debussy"], pieces: [{ title: "Le merle noir", composer: "Messiaen" }], links: {}, top: "Multiphonics are finally reliable rather than lucky.", flop: "The fast final section is still a blur.", online: false },
+  { id: "curtis-nikolai", name: "Nikolai Petrov", instrument: "Clarinet", conservatoryId: "curtis", year: "4th year", bio: "Orchestral auditions are the whole year, apparently.", tastes: ["Prokofiev", "Beethoven", "20th Century"], pieces: [{ title: "Symphony No. 5, clarinet excerpts", composer: "Prokofiev" }], links: {}, top: "Got a trial week with a regional orchestra.", flop: "My tone thins out at the very top of the register.", online: true, teaching: { open: true, mode: "online", price: "41" } },
+  { id: "curtis-elena", name: "Elena Rossi", instrument: "Voice", conservatoryId: "curtis", year: "1st year", bio: "Learning that singing quietly is far harder than singing loudly.", tastes: ["Mozart", "Classical Era"], pieces: [{ title: "Le nozze di Figaro, 'Porgi amor'", composer: "Mozart" }], links: {}, top: "Held the opening phrase in one breath at last.", flop: "The passaggio is still an obvious seam.", online: true },
+  { id: "curtis-samuel", name: "Samuel Adeleke", instrument: "Trumpet", conservatoryId: "curtis", year: "2nd year", bio: "Piccolo trumpet enthusiast, to everyone else's dismay.", tastes: ["Bach", "Baroque"], pieces: [{ title: "Cantata BWV 51", composer: "Bach" }], links: {}, top: "Made it through the whole cantata without splitting a note.", flop: "Piccolo intonation is unforgiving when I'm tired.", online: false },
+  { id: "curtis-hanne", name: "Hanne Voss", instrument: "Timpani", conservatoryId: "curtis", year: "3rd year", bio: "Timpani principally, marimba when nobody is looking.", tastes: ["Beethoven", "Brahms", "Classical Era"], pieces: [{ title: "Symphony No. 9, timpani excerpts", composer: "Beethoven" }], links: {}, top: "My tuning between movements is quick and accurate now.", flop: "Still over-playing in the loud tutti passages.", online: true, teaching: { open: true, mode: "physical", price: "37" } },
 ];
 
 const SAMPLE_CONVERSATIONS = {
@@ -553,7 +553,7 @@ const emptyDraft = () => ({
   verifyMethod: "otp", proofDocUrl: "", proofDocName: "",
   tastes: [],
   pieces: [],
-  videoLink: "",
+  links: { instagram: "", facebook: "", youtube: "", website: "" },
   top: "", flop: "", composerDay: "",
   photoUrl: "",
   coverVideoUrl: "",
@@ -1728,7 +1728,7 @@ export default function App() {
           supabase.auth.updateUser({ data: { pendingProfile: null } });
           const isDoc = needsReview(pendingStudent);
           if (isDoc) { await insertVerificationRequest(authUser.id, pendingStudent); }
-          const me = { id: authUser.id, name: pendingStudent.name, instruments: instrumentsOf(pendingStudent), conservatoryId: pendingStudent.conservatoryId, year: pendingStudent.years, bio: pendingStudent.bio, tastes: pendingStudent.tastes, pieces: pendingStudent.pieces, videoLink: pendingStudent.videoLink, top: pendingStudent.top, flop: pendingStudent.flop, photoUrl: pendingStudent.photoUrl, teaching: pendingStudent.teaching, online: true };
+          const me = { id: authUser.id, name: pendingStudent.name, instruments: instrumentsOf(pendingStudent), conservatoryId: pendingStudent.conservatoryId, year: pendingStudent.years, bio: pendingStudent.bio, tastes: pendingStudent.tastes, pieces: pendingStudent.pieces, links: pendingStudent.links || {}, top: pendingStudent.top, flop: pendingStudent.flop, photoUrl: pendingStudent.photoUrl, teaching: pendingStudent.teaching, online: true };
           setMyProfile(me);
           if (isDoc) { setScreen("pendingReview"); return; }
           if (!isAdminEmail(authUser.email)) {
@@ -2250,7 +2250,7 @@ export default function App() {
     enterApp(userId, email);
   }
   function enterApp(userId, email) {
-    const me = { id: userId || draft.id, name: draft.name || "Your name", instruments: instrumentsOf(draft), conservatoryId: draft.conservatoryId, year: draft.years || "Current student", bio: draft.bio, tastes: draft.tastes, pieces: draft.pieces, videoLink: draft.videoLink, top: draft.top, flop: draft.flop, photoUrl: draft.photoUrl, teaching: draft.teaching, online: true };
+    const me = { id: userId || draft.id, name: draft.name || "Your name", instruments: instrumentsOf(draft), conservatoryId: draft.conservatoryId, year: draft.years || "Current student", bio: draft.bio, tastes: draft.tastes, pieces: draft.pieces, links: draft.links || {}, top: draft.top, flop: draft.flop, photoUrl: draft.photoUrl, teaching: draft.teaching, online: true };
     setMyProfile(me);
     // Same reason as the roster add in the auth effect: the owner does not
     // appear on the map they administer. The email is passed in because this
@@ -4951,7 +4951,6 @@ function StepAccount({ draft, update, error }) {
 }
 
 function StepIntro({ draft, update }) {
-  const linkValid = !draft.videoLink || /instagram\.com|facebook\.com|fb\.com|fb\.watch|youtube\.com|youtu\.be/i.test(draft.videoLink);
   const picked = instrumentsOf(draft);
   const full = picked.length >= MAX_INSTRUMENTS;
   // The chips are a view of draft.years, not a second copy of it. Parsing on
@@ -5052,27 +5051,49 @@ function StepIntro({ draft, update }) {
         </p>
       </Field>
       <div className="mt-2">
-        {/* The OPTIONAL tag above this is gone: a monospace label shouting a
-            caveat before the invitation made the best part of the profile
-            sound like paperwork. The field asks for the thing it wants. */}
-        <Field label="Stand out with a performance video">
-          <input style={inputStyle} value={draft.videoLink} onChange={(e) => update({ videoLink: e.target.value })} placeholder="Paste an Instagram, Facebook or YouTube link" />
+        {/* Four fields, not one. The old single field asked for a performance
+            video and took only Instagram, Facebook or YouTube — so a student
+            with an Instagram account and a YouTube channel had to choose one,
+            and a website had nowhere to go at all.
+
+            Each is checked against its own host as it is typed, because a
+            YouTube URL in the Instagram row is a link that quietly sends
+            visitors somewhere they did not ask to go. All four optional: this
+            is where to find them, and some are found in one place. */}
+        <Field label="Where can people find you?">
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {LINK_FIELDS.map((f) => {
+              const value = (draft.links || {})[f.key] || "";
+              const ok = linkFieldValid(f, value);
+              return (
+                <div key={f.key}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <span title={f.label} style={{ color: ok ? C.ivoryDim : C.burgundy, display: "flex", flexShrink: 0, width: 18, justifyContent: "center" }}>
+                      <f.Icon size={16} strokeWidth={1.9} />
+                    </span>
+                    <input
+                      style={{ ...inputStyle, borderColor: ok ? undefined : C.burgundy }}
+                      value={value}
+                      onChange={(e) => update({ links: { ...(draft.links || {}), [f.key]: e.target.value } })}
+                      placeholder={f.placeholder}
+                      inputMode="url"
+                      aria-label={f.label}
+                    />
+                  </div>
+                  {!ok && (
+                    <p style={{ margin: "4px 0 0 28px", fontFamily: FONT_BODY, fontSize: 12, color: C.burgundy }}>
+                      {f.key === "website"
+                        ? "That doesn't look like a web address."
+                        : `That isn't a ${f.label} link.`}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </Field>
-        {/* Was monospace, letterspaced and grey — a terminal's error line under
-            a premium form. It reads as a hint now, and only becomes a warning
-            when the link is actually wrong, with the three marks doing the
-            explaining that a sentence had to before. */}
-        <p className="-mt-4" style={{
-          display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap",
-          fontFamily: FONT_BODY, fontSize: 12, fontWeight: 500, letterSpacing: 0,
-          color: linkValid ? "#7C7C7C" : C.burgundy,
-        }}>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 5, opacity: linkValid ? 0.9 : 1 }}>
-            <Instagram size={13} strokeWidth={1.9} />
-            <Facebook size={13} strokeWidth={1.9} />
-            <Youtube size={14} strokeWidth={1.9} />
-          </span>
-          {linkValid ? "Instagram, Facebook or YouTube" : "That link isn't one of these — try Instagram, Facebook or YouTube"}
+        <p className="-mt-4" style={{ fontFamily: FONT_BODY, fontSize: 12, fontWeight: 500, color: "#7C7C7C" }}>
+          All optional — add the ones you use.
         </p>
       </div>
     </div>
@@ -6910,20 +6931,73 @@ const GUEST_TABS = [
 /* ---------------------------------------------------------------- */
 /* STUDENT PROFILE                                                     */
 /* ---------------------------------------------------------------- */
-function videoLinkMeta(url) {
-  if (!url) return null;
-  const isInstagram = /instagram\.com/i.test(url);
-  const isFacebook = /facebook\.com|fb\.com|fb\.watch/i.test(url);
-  const isYoutube = /youtube\.com|youtu\.be/i.test(url);
-  if (!isInstagram && !isFacebook && !isYoutube) return null;
-  return isInstagram ? { Icon: Instagram, label: "Instagram" }
-    : isYoutube ? { Icon: Youtube, label: "YouTube" }
-    : { Icon: Facebook, label: "Facebook" };
+/**
+ * The four places a student can be found.
+ *
+ * It used to be one field asking for a performance video, which accepted only
+ * Instagram, Facebook or YouTube — so somebody with an Instagram account and
+ * a YouTube channel had to pick one, and somebody with a website had nowhere
+ * to put it. And it asked for a video, which is a post; these ask for the
+ * person.
+ *
+ * `host` is what the value must contain to be that platform, so a YouTube URL
+ * pasted into the Instagram field is caught where it is typed rather than
+ * silently sending visitors somewhere unexpected. Website takes anything that
+ * looks like a domain, because that is the whole point of it.
+ */
+const LINK_FIELDS = [
+  { key: "instagram", label: "Instagram", Icon: Instagram, placeholder: "instagram.com/yourhandle",   host: /instagram\.com/i },
+  { key: "facebook",  label: "Facebook",  Icon: Facebook,  placeholder: "facebook.com/yourpage",      host: /facebook\.com|fb\.(com|watch|me)/i },
+  { key: "youtube",   label: "YouTube",   Icon: Youtube,   placeholder: "youtube.com/@yourchannel",   host: /youtube\.com|youtu\.be/i },
+  { key: "website",   label: "Website",   Icon: Globe2,    placeholder: "yourname.com",               host: /^[^\s]+\.[a-z]{2,}/i },
+];
+
+// People type "instagram.com/x", not "https://instagram.com/x". Without a
+// scheme the browser reads it as a path and sends them to a page on artium.
+function href(url) {
+  const v = String(url || "").trim();
+  if (!v) return "";
+  return /^https?:\/\//i.test(v) ? v : `https://${v}`;
 }
+
+function linkFieldValid(field, value) {
+  const v = String(value || "").trim();
+  if (!v) return true;
+  return field.host.test(v.replace(/^https?:\/\//i, ""));
+}
+
+/**
+ * The links as a profile shows them: one row of named buttons, only for the
+ * ones given. Named rather than bare icons — a row of glyphs makes the reader
+ * decode four marks to find the one they want.
+ */
+function ProfileLinks({ links }) {
+  const given = LINK_FIELDS.filter((f) => (links || {})[f.key]);
+  if (given.length === 0) {
+    return <p style={{ fontSize: 13, color: C.ivoryDim, marginBottom: 24 }}>No links shared.</p>;
+  }
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 24 }}>
+      {given.map(({ key, label, Icon }) => (
+        <a key={key} href={href(links[key])} target="_blank" rel="noreferrer"
+          style={{
+            display: "inline-flex", alignItems: "center", gap: 7,
+            padding: "8px 13px", borderRadius: 999,
+            border: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.03)",
+            color: C.ivory, textDecoration: "none",
+            fontFamily: FONT_BODY, fontSize: 13, fontWeight: 500,
+          }}>
+          <Icon size={14} strokeWidth={1.8} />
+          {label}
+        </a>
+      ))}
+    </div>
+  );
+}
+
 
 function StudentProfile({ student, conservatory, onBack, onMessage, locked, onApply }) {
   if (!student) return null;
-  const linkMeta = videoLinkMeta(student.videoLink);
 
   const Row = ({ label, children }) => (
     <div style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
@@ -6963,19 +7037,7 @@ function StudentProfile({ student, conservatory, onBack, onMessage, locked, onAp
         <p style={{ fontSize: 15, color: C.ivoryDim, lineHeight: 1.75, marginBottom: 24 }}>{student.bio}</p>
       )}
 
-      {linkMeta ? (
-        <a href={student.videoLink} target="_blank" rel="noreferrer" style={{ border: `1px solid ${C.inkLine}`, textDecoration: "none", color: "inherit", display: "flex", alignItems: "center", gap: 16, padding: 16, borderRadius: 16, marginBottom: 24 }}>
-          <div style={{ width: 52, height: 52, background: colorFor(student.id), borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            <Play size={20} color={C.ivory} />
-          </div>
-          <div>
-            <p style={{ fontSize: 13, fontWeight: 600 }}>Watch performance on {linkMeta.label}</p>
-            <p style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: C.ivoryDim }}><linkMeta.Icon size={12} /> Opens in a new tab</p>
-          </div>
-        </a>
-      ) : (
-        <p style={{ fontSize: 13, color: C.ivoryDim, marginBottom: 24 }}>No performance video shared.</p>
-      )}
+      <ProfileLinks links={student.links} />
       </div>
       {student.coverVideoUrl && (
         <Row label="Cover video"><CoverVideo url={student.coverVideoUrl} /></Row>
@@ -7038,7 +7100,6 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack, onUpdat
     </div>
   );
 
-  const linkMeta = videoLinkMeta(profile.videoLink);
 
   /* ── Cards column (shared between both layout variants) ── */
   const cards = (
@@ -7091,20 +7152,7 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack, onUpdat
       )}
 
       {/* Video link */}
-      {linkMeta ? (
-        <a href={profile.videoLink} target="_blank" rel="noreferrer"
-          style={{ display: "flex", alignItems: "center", gap: 16, padding: 16, borderRadius: 16, border: `1px solid ${C.inkLine}`, textDecoration: "none", color: "inherit", marginBottom: 24 }}>
-          <div style={{ width: 52, height: 52, background: colorFor("me"), borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            <Play size={20} color={C.ivory} />
-          </div>
-          <div>
-            <p style={{ fontSize: 13, fontWeight: 600 }}>Watch performance on {linkMeta.label}</p>
-            <p style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: C.ivoryDim }}><linkMeta.Icon size={12} /> Opens in a new tab</p>
-          </div>
-        </a>
-      ) : (
-        <p style={{ fontSize: 13, color: C.ivoryDim, marginBottom: 24 }}>No performance video shared.</p>
-      )}
+      <ProfileLinks links={profile.links} />
       </div>
       <Row label="Cover video">
         <CoverVideoUpload
@@ -8131,7 +8179,6 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
 
       {(appTab === "map" || (appTab === "lesson" && selectedId === activeLessonTeacher?.id)) && selectedId && selected && (() => {
         const selCons = findConservatory(selected.conservatoryId);
-        const linkMeta = videoLinkMeta(selected.videoLink);
         const Row = ({ label, children }) => (
           <div style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
             <span style={{ fontSize: 11, fontWeight: 600, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
@@ -8169,19 +8216,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
             )}
 
             {/* Video link card */}
-            {linkMeta ? (
-              <a href={selected.videoLink} target="_blank" rel="noreferrer" style={{ border: `1px solid ${C.inkLine}`, textDecoration: "none", color: "inherit", display: "flex", alignItems: "center", gap: 16, padding: 16, borderRadius: 16, marginBottom: 24 }}>
-                <div style={{ width: 52, height: 52, background: colorFor(selected.id), borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <Play size={20} color={C.ivory} />
-                </div>
-                <div>
-                  <p style={{ fontSize: 13, fontWeight: 600, color: C.inkText }}>Watch performance on {linkMeta.label}</p>
-                  <p style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: C.ivoryDim }}><linkMeta.Icon size={12} /> Opens in a new tab</p>
-                </div>
-              </a>
-            ) : (
-              <p style={{ fontSize: 13, color: C.ivoryDim, marginBottom: 24 }}>No performance video shared.</p>
-            )}
+            <ProfileLinks links={selected.links} />
 
             {/* Data grid */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
