@@ -4270,7 +4270,12 @@ function HirerSignup({ onBack, onDone }) {
   const [submitting, setSubmitting] = useState(false);
   const [err, setErr] = useState("");
   const [done, setDone] = useState(false);
+  // The leave-confirm modal below was carried over from the student flow —
+  // without this state or the onCancel prop it expected, so the component
+  // crashed on its very first render and the concert door never opened.
+  const [confirmLeave, setConfirmLeave] = useState(false);
   const up = (patch) => setD((v) => ({ ...v, ...patch }));
+  const anythingFilled = Object.values(d).some((v) => String(v).trim() !== "");
 
   const canNext = [
     d.email.trim().length > 3 && d.password.length >= 6 && d.password === d.confirm,
@@ -4334,7 +4339,7 @@ function HirerSignup({ onBack, onDone }) {
           >
             <h3 style={{ margin: 0, fontFamily: FONT_DISPLAY, fontSize: 21, fontWeight: 600 }}>Are you sure you want to leave?</h3>
             <p className="text-sm" style={{ margin: "8px 0 0", color: C.ivoryDim, lineHeight: 1.6 }}>
-              Everything you filled in is still here. You just have to sign up again, or log in, to carry on.
+              What you've filled in here isn't saved yet — leaving now means starting the form again.
             </p>
             <div style={{ display: "flex", gap: 9, marginTop: 18 }}>
               {/* Staying is the safe answer, so it is the easy one to hit and
@@ -4346,7 +4351,7 @@ function HirerSignup({ onBack, onDone }) {
                 Keep filling it in
               </button>
               <button
-                onClick={() => { setConfirmLeave(false); onCancel(); }}
+                onClick={() => { setConfirmLeave(false); onBack(); }}
                 style={{ flex: "0 0 auto", padding: "10px 16px", borderRadius: 999, border: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.05)", color: C.ivoryDim, fontFamily: FONT_BODY, fontSize: 13.5, fontWeight: 600, cursor: "pointer" }}
               >
                 Leave
@@ -4357,7 +4362,7 @@ function HirerSignup({ onBack, onDone }) {
       )}
       <div className="max-w-3xl mx-auto px-6" style={{ paddingTop: "calc(20px + env(safe-area-inset-top, 0px))" }}>
         <div className="flex items-center gap-3">
-          <button onClick={step === 0 ? onBack : () => setStep(step - 1)} className="artium-aw-round" aria-label="Back">
+          <button onClick={step === 0 ? (anythingFilled ? () => setConfirmLeave(true) : onBack) : () => setStep(step - 1)} className="artium-aw-round" aria-label="Back">
             <ChevronLeft size={17} strokeWidth={2} />
           </button>
           <GateLogo word={20} />
