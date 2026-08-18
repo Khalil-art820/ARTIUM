@@ -386,9 +386,16 @@ comment on column public.profiles.concert_fee is
 -- so a file isn't discoverable by guessing.
 -- ---------------------------------------------------------------------------
 
+-- Private, unlike student-video, and the difference is not the policy below
+-- — it is this flag. A public bucket serves /object/public/ URLs without
+-- consulting RLS at all, so an authenticated-only select policy on a public
+-- bucket protects nothing. Riders and contracts are fetched through signed
+-- URLs minted at render time instead: every open of the conversation signs
+-- afresh, so nothing expires mid-negotiation and nothing leaks past a
+-- forwarded link.
 insert into storage.buckets (id, name, public)
-  values ('concert-files', 'concert-files', true)
-  on conflict (id) do nothing;
+  values ('concert-files', 'concert-files', false)
+  on conflict (id) do update set public = false;
 
 do $$ begin
   create policy "concert files upload own" on storage.objects

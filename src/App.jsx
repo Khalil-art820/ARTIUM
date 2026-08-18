@@ -19,6 +19,7 @@ import {
   INQUIRY_STATUS, createInquiry, listInquiries, getInquiry, setInquiryStatus,
   listMessages, sendMessage as sendConcertMessage, uploadConcertFile,
   listOffers, createOffer, respondToOffer, signAgreement,
+  getAttachmentUrl,
 } from "./lib/concerts";
 import L from "leaflet";
 import { MapContainer, TileLayer, Marker, Tooltip, Popup, useMap } from "react-leaflet";
@@ -4549,10 +4550,21 @@ function EventSummaryCard({ inquiry }) {
 
 function ConcertMessageBubble({ m, mine }) {
   const isImage = /\.(png|jpe?g|gif|webp)(\?|$)/i.test(m.attachmentName || m.attachmentUrl || "");
-  // The URL column is text either party can write through the API, and this
-  // component puts it in an href for the OTHER party to click — the one place
-  // a javascript: scheme would run as them. https or nothing.
-  const attachmentHref = /^https:\/\//i.test(m.attachmentUrl || "") ? m.attachmentUrl : null;
+  // The row stores a storage PATH, not a URL — the bucket is private, so the
+  // path is exchanged for a short-lived signed URL here, at render. That also
+  // keeps the injection door shut: the column is text either party can write
+  // through the API, and what lands in the href is only ever what Supabase
+  // signed (or, for rows written while the bucket was public, an https URL —
+  // anything else stays null and renders nothing).
+  const [attachmentHref, setAttachmentHref] = useState(null);
+  useEffect(() => {
+    let live = true;
+    if (!m.attachmentUrl) { setAttachmentHref(null); return; }
+    getAttachmentUrl(m.attachmentUrl).then(({ url }) => {
+      if (live) setAttachmentHref(url && /^https:\/\//i.test(url) ? url : null);
+    });
+    return () => { live = false; };
+  }, [m.attachmentUrl]);
   return (
     <div style={{ maxWidth: "78%", alignSelf: mine ? "flex-end" : "flex-start", display: "flex", flexDirection: "column", gap: 6 }}>
       {m.body && (

@@ -135,10 +135,32 @@ export async function uploadConcertFile(file) {
     .from("concert-files")
     .upload(path, file, { upsert: false, contentType: file.type || undefined });
   if (error) return { error: "Upload failed: " + error.message };
-  return {
-    url: supabase.storage.from("concert-files").getPublicUrl(path).data.publicUrl,
-    name: file.name,
-  };
+  // The PATH, not a URL. The bucket is private — a public URL for it serves
+  // nothing — so the message row records where the file lives and the reader
+  // exchanges that for a short-lived signed URL at render time.
+  return { url: path, name: file.name };
+}
+
+/**
+ * A path from a message row becomes something a browser can fetch.
+ *
+ * Signed rather than public because the bucket is private: rider PDFs and
+ * contracts should not be fetchable by whoever holds a forwarded link, and a
+ * public bucket serves its /object/public/ URLs without consulting RLS at
+ * all — the flag, not the policy, is what decides. An hour of validity is
+ * plenty: the conversation re-signs every time it renders, so expiry can
+ * never strand a file mid-negotiation.
+ *
+ * Rows written before the bucket went private hold full https URLs; those
+ * pass through untouched so old attachments keep rendering.
+ */
+export async function getAttachmentUrl(path) {
+  if (!path) return { url: null, error: null };
+  if (/^https:\/\//i.test(path)) return { url: path, error: null };
+  const { data, error } = await supabase.storage
+    .from("concert-files")
+    .createSignedUrl(path, 3600);
+  return { url: data?.signedUrl || null, error: error ? error.message : null };
 }
 
 export async function listOffers(inquiryId) {
