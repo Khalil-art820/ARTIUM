@@ -10,11 +10,16 @@ import {
   Pencil, Plus, Trash2, Home, Upload, Eye, EyeOff, ChevronLeft,
   Calendar, CreditCard, Video, Link2, Clock, Bell,
   Map, BookOpen, ListChecks, LayoutList, Megaphone, Check as CheckIcon, ShieldCheck, FileText, Lock,
-  ScanLine, ArrowUpRight, Globe2, MapPin, GraduationCap, User,
+  ScanLine, ArrowUpRight, Globe2, MapPin, GraduationCap, User, Paperclip,
 } from "lucide-react";
 import { useAuth } from "./contexts/AuthContext";
 import { supabase } from "./lib/supabase";
 import { toDbProfile, fromDbProfile, needsReview, instrumentsOf, MAX_INSTRUMENTS } from "./lib/profiles";
+import {
+  INQUIRY_STATUS, createInquiry, listInquiries, getInquiry, setInquiryStatus,
+  listMessages, sendMessage as sendConcertMessage, uploadConcertFile,
+  listOffers, createOffer, respondToOffer, signAgreement,
+} from "./lib/concerts";
 import L from "leaflet";
 import { MapContainer, TileLayer, Marker, Tooltip, Popup, useMap } from "react-leaflet";
 // three.js is ~1.9MB of the bundle. Loading it lazily keeps it out of the
@@ -1645,6 +1650,12 @@ export default function App() {
   const [appTab, setAppTab] = useState(() => localStorage.getItem("artium_app_tab") || "map");
   const setAppTabPersist = (tab) => { localStorage.setItem("artium_app_tab", tab); setAppTab(tab); };
   const [teacherRoomView, setTeacherRoomView] = useState("students");
+  // The pianist's side of "Find a Concert Pianist" — a booking inbox that
+  // only ever exists for someone who plays piano, mirroring how Lessons only
+  // shows up for someone who teaches.
+  const [pianistInquiries, setPianistInquiries] = useState([]);
+  const [pianistOfferAttention, setPianistOfferAttention] = useState({});
+  const [activeConcertInquiryId, setActiveConcertInquiryId] = useState(null);
   const [editingProfile, setEditingProfile] = useState(false);
   const [previewOnly, setPreviewOnly] = useState(false);
   const [authError, setAuthError] = useState("");
@@ -1693,6 +1704,16 @@ export default function App() {
   // being opened in a different browser/device than the one used to sign up).
   useEffect(() => {
     if (authLoading) return;
+    // The hirer's whole account lives in auth metadata — no profiles row, so
+    // authProfile never resolves for them and the branches below would never
+    // fire. Caught here, first, the same way the learner and student routes
+    // are caught by what did load.
+    if (authUser?.user_metadata?.role === "concert_hirer") {
+      if (["entry", "landing", "login", "confirmEmail", "hirerSignup"].includes(screen)) {
+        setScreen("hirerApp");
+      }
+      return;
+    }
     if (authProfile) {
       if (authProfile.role === "learner") {
         setLearnerProfile({ name: authProfile.name, location: authProfile.location, instrument: authProfile.instrument, bio: authProfile.bio });
@@ -1924,6 +1945,42 @@ export default function App() {
     (acc[s.conservatoryId] = acc[s.conservatoryId] || []).push(s);
     return acc;
   }, {});
+
+  // Seven tabs only ever exist for a pianist — the same rule that already
+  // governs Lessons.
+  const isPianistUser = !!myProfile && instrumentsOf(myProfile).includes("Piano");
+
+  useEffect(() => {
+    if (!isPianistUser) return;
+    let live = true;
+    const refresh = () => listInquiries("pianist").then(({ data }) => { if (live && data) setPianistInquiries(data); });
+    refresh();
+    const id = setInterval(refresh, 15000);
+    return () => { live = false; clearInterval(id); };
+  }, [isPianistUser]);
+
+  // Same shape as the hirer's dot: a proposed offer the pianist did not
+  // create is theirs to answer.
+  useEffect(() => {
+    if (!isPianistUser) { setPianistOfferAttention({}); return; }
+    const negotiating = pianistInquiries.filter((q) => q.status === "negotiating");
+    if (!negotiating.length) { setPianistOfferAttention({}); return; }
+    let live = true;
+    Promise.all(negotiating.map((q) => listOffers(q.id).then(({ data }) => [q.id, data || []])))
+      .then((pairs) => {
+        if (!live) return;
+        const map = {};
+        for (const [id, list] of pairs) {
+          const latest = [...list].reverse().find((o) => o.status === "proposed");
+          map[id] = !!(latest && latest.createdBy !== myProfile?.id);
+        }
+        setPianistOfferAttention(map);
+      });
+    return () => { live = false; };
+  }, [isPianistUser, pianistInquiries, myProfile?.id]);
+
+  const pianistNeedsAttention = pianistInquiries.some((q) =>
+    (q.status === "agreed" && !q.pianistSignedAt) || pianistOfferAttention[q.id]);
 
   // Admin is now strictly profiles.is_admin — a real, signed-in account. The
   // demo teacher used to count too, which put the tab on screen while every
@@ -3596,7 +3653,17 @@ export default function App() {
       {view === "hirerSignup" && (
         <HirerSignup
           onBack={() => setScreen("landing")}
-          onDone={() => { setPianistEntry(false); setScreen("entry"); }}
+          onDone={() => { setPianistEntry(false); setScreen("hirerApp"); }}
+        />
+      )}
+      {view === "hirerApp" && (
+        <HirerApp
+          authUser={authUser}
+          students={students}
+          onHome={goHome}
+          onLogout={handleLogout}
+          musicOn={musicPlaying}
+          onMusicToggle={toggleMusic}
         />
       )}
       {view === "login" && <LoginScreen onSubmit={handleLogin} onBack={goHome} error={authError}
@@ -3633,7 +3700,7 @@ export default function App() {
           appTab={appTab} setAppTab={setAppTab} myProfile={myProfile}
           onApply={startApply} onHome={goHome} musicOn={musicPlaying} onMusicToggle={toggleMusic}
           onGuestTabClick={() => setShowGuestPrompt(true)} memberCount={Object.values(studentsByCons).flat().length} previewOnly={previewOnly}
-          hideTabs={!!selectedStudentId}
+          hideTabs={!!selectedStudentId || !!activeConcertInquiryId}
           bare={appTab === "map" && !selectedStudentId}
           authUser={authUser}
           isAdmin={isAdmin}
@@ -3641,8 +3708,10 @@ export default function App() {
           onGoToLessonRoom={() => { setSelectedStudentId(null); setAppTabPersist("lessons"); }}
           onBack={
             selectedStudentId ? backFromProfile :
+            appTab === "concerts" && activeConcertInquiryId ? () => setActiveConcertInquiryId(null) :
             appTab === "messages" ? () => setAppTabPersist("map") :
             appTab === "profile" ? () => setAppTabPersist("map") :
+            appTab === "concerts" ? () => setAppTabPersist("map") :
             appTab === "lessons" && teacherRoomView !== "students" ? () => setTeacherRoomView("students") :
             appTab === "lessons" ? () => setAppTabPersist("map") :
             appTab === "promote" ? () => setAppTabPersist("map") :
@@ -3740,6 +3809,24 @@ export default function App() {
           {appTab === "lessons" && !selectedStudentId && myProfile && (
             <TeacherLessonRoom teacherId={myProfile.id} roomView={teacherRoomView} setRoomView={setTeacherRoomView} />
           )}
+          {appTab === "concerts" && !selectedStudentId && myProfile && isPianistUser && (
+            activeConcertInquiryId ? (
+              <ConcertConversation
+                inquiryId={activeConcertInquiryId} role="pianist" myId={myProfile.id} myName={myProfile.name}
+                otherName={pianistInquiries.find((q) => q.id === activeConcertInquiryId)?.hirerName}
+                students={students}
+                onBack={() => setActiveConcertInquiryId(null)}
+              />
+            ) : (
+              <div style={{ padding: "24px 0 0" }}>
+                <div className="px-6 pb-2">
+                  <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 600, color: C.ivory, margin: 0 }}>Concerts</h2>
+                  <p style={{ fontSize: 13, color: C.ivoryDim, marginTop: 4 }}>Hirers who have reached out about a booking.</p>
+                </div>
+                <BookingsList inquiries={pianistInquiries} role="pianist" students={students} onOpen={setActiveConcertInquiryId} />
+              </div>
+            )
+          )}
           {selectedStudentId && myProfile && (
             <StudentProfile
               student={students.find((s) => s.id === selectedStudentId)}
@@ -3761,7 +3848,14 @@ export default function App() {
           check, which is the Saved problem again. */}
       {(view === "landing" || view === "app") && (
         <BottomTabs
-          items={myProfile ? STUDENT_TABS : GUEST_TABS}
+          items={
+            !myProfile ? GUEST_TABS :
+            isPianistUser
+              // Concerts sits after Lessons and before Profile — one more
+              // room off the same corridor, not a second app bolted on.
+              ? [...STUDENT_TABS.slice(0, 5), { k: "concerts", label: "Concerts", Icon: Music2, attention: pianistNeedsAttention }, STUDENT_TABS[5]]
+              : STUDENT_TABS
+          }
           // Nothing is lit on the landing page but Home, and nothing at all
           // while a student profile is open over the app — that is a page you
           // reached from a tab, not a tab.
@@ -4211,15 +4305,13 @@ function HirerSignup({ onBack, onDone }) {
           <div style={{ width: 58, height: 58, margin: "0 auto 20px", borderRadius: "50%", border: `1.5px solid ${C.brass}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <CheckIcon size={26} color={C.brass} />
           </div>
-          <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 28, fontWeight: 600, margin: 0 }}>Request received</h2>
+          <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 28, fontWeight: 600, margin: 0 }}>You're in</h2>
           <p className="text-sm" style={{ color: C.ivoryDim, lineHeight: 1.6, marginTop: 14 }}>
-            Your account is created and your engagement is with us — <b>{d.occasion || "your event"}</b>
-            {d.city ? <> in <b>{d.city}</b></> : null}. We match every request against the
-            conservatory pianists on the network and come back to you with a shortlist by email.
-            Check your inbox to confirm your address.
+            Your account is ready — browse the pianists on the network and contact the ones
+            who fit <b>{d.occasion || "your event"}</b>{d.city ? <> in <b>{d.city}</b></> : null}.
           </p>
           <div style={{ marginTop: 26 }}>
-            <PrimaryBtn onClick={onDone}>Back to Artium</PrimaryBtn>
+            <PrimaryBtn onClick={onDone}>Browse pianists</PrimaryBtn>
           </div>
         </div>
       </div>
@@ -4387,6 +4479,840 @@ function HirerSignup({ onBack, onDone }) {
           </button>
         )}
       </div>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------- */
+/* FIND A CONCERT PIANIST — Discover, Contact, Negotiate, Book        */
+/* ---------------------------------------------------------------- */
+/**
+ * The whole booking runs on one idea: the Deal and the Chat are different
+ * things. Messages are conversation — cheap, ordered, disposable in spirit.
+ * Offers are the record — versioned, structured, never edited once sent.
+ * They share a timeline on screen because that is how the two actually
+ * unfold together, but an offer is never a chat bubble with a fee inside it.
+ * That is what would let two people disagree about what they agreed to.
+ */
+const CONCERT_EVENT_TYPES = ["Concert", "Recital", "Wedding", "Corporate event", "Festival", "Other"];
+
+const INQUIRY_STATUS_LABEL = {
+  open: "Open", negotiating: "Negotiating", agreed: "Agreed",
+  confirmed: "Confirmed", declined: "Declined", cancelled: "Cancelled",
+};
+const INQUIRY_STATUS_COLOR = {
+  open: C.brassLabel, negotiating: C.brassLabel, agreed: C.forest,
+  confirmed: "#1A9E6E", declined: C.burgundy, cancelled: C.ivoryDim,
+};
+
+function StatusPill({ status }) {
+  const label = INQUIRY_STATUS_LABEL[status] || status || "Open";
+  const color = INQUIRY_STATUS_COLOR[status] || C.ivoryDim;
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 10.5, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", padding: "4px 10px", borderRadius: 999, border: `1px solid ${color}`, color, flexShrink: 0 }}>
+      <span style={{ width: 6, height: 6, borderRadius: "50%", background: color }} />
+      {label}
+    </span>
+  );
+}
+
+function fmtConcertDate(d) {
+  if (!d) return "";
+  try { return new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }); }
+  catch { return d; }
+}
+function fmtEUR(n) {
+  const v = Number(n);
+  return Number.isFinite(v) ? `€${v.toLocaleString()}` : null;
+}
+
+/**
+ * Pinned above the chat for the life of the conversation. Whoever opens this
+ * thread a week later — hirer, pianist, either — reads the engagement before
+ * they read a single message, because the messages assume it.
+ */
+function EventSummaryCard({ inquiry }) {
+  const bits = [
+    fmtConcertDate(inquiry.eventDate), inquiry.location, inquiry.venue,
+    inquiry.audience ? `${inquiry.audience} guests` : null, inquiry.budget,
+  ].filter(Boolean);
+  return (
+    <div style={{ position: "sticky", top: 0, zIndex: 5, background: C.parchment, borderBottom: `1px solid ${C.inkLine}`, padding: "14px 18px", display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+      <div style={{ minWidth: 0 }}>
+        <p style={{ margin: 0, fontFamily: FONT_DISPLAY, fontSize: 17, fontWeight: 600, color: C.ivory }}>{inquiry.eventType || "Concert engagement"}</p>
+        <p style={{ margin: "3px 0 0", fontSize: 12.5, color: C.ivoryDim }}>{bits.join(" · ") || "Details to follow"}</p>
+      </div>
+      <StatusPill status={inquiry.status} />
+    </div>
+  );
+}
+
+function ConcertMessageBubble({ m, mine }) {
+  const isImage = /\.(png|jpe?g|gif|webp)(\?|$)/i.test(m.attachmentName || m.attachmentUrl || "");
+  // The URL column is text either party can write through the API, and this
+  // component puts it in an href for the OTHER party to click — the one place
+  // a javascript: scheme would run as them. https or nothing.
+  const attachmentHref = /^https:\/\//i.test(m.attachmentUrl || "") ? m.attachmentUrl : null;
+  return (
+    <div style={{ maxWidth: "78%", alignSelf: mine ? "flex-end" : "flex-start", display: "flex", flexDirection: "column", gap: 6 }}>
+      {m.body && (
+        <div className="px-3.5 py-2 rounded-2xl text-sm" style={{ background: mine ? C.brass : C.inkSoft, color: mine ? C.brassText : C.ivory, fontWeight: mine ? 500 : 400 }}>
+          {m.body}
+        </div>
+      )}
+      {attachmentHref && (
+        isImage ? (
+          <a href={attachmentHref} target="_blank" rel="noreferrer">
+            <img src={attachmentHref} alt={m.attachmentName || ""} style={{ maxWidth: 220, borderRadius: 12, border: `1px solid ${C.inkLine}`, display: "block" }} />
+          </a>
+        ) : (
+          <a href={attachmentHref} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 12px", borderRadius: 10, border: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.04)", color: C.ivory, textDecoration: "none", fontSize: 12.5 }}>
+            <FileText size={14} /> {m.attachmentName || "Attachment"}
+          </a>
+        )
+      )}
+    </div>
+  );
+}
+
+const OFFER_FIELDS = [
+  ["eventDate", "Date"], ["startTime", "Time"], ["venue", "Venue"],
+  ["durationMinutes", "Duration"], ["program", "Program"], ["travel", "Travel"],
+  ["equipment", "Equipment"], ["cancellation", "Cancellation"], ["paymentSchedule", "Payment schedule"],
+  ["notes", "Notes"],
+];
+
+/**
+ * An offer in the timeline, structured rather than typed — the terms are
+ * data, not prose, so nobody has to re-read three paragraphs to find out
+ * what changed between v2 and v3. Every version stays on screen: superseded
+ * ones collapse to a line rather than disappearing, because the record of
+ * who proposed what, in what order, is the whole point of keeping it apart
+ * from the chat.
+ */
+function OfferCard({ offer, isMine, expanded, onToggle, onAccept, onDecline, onCounter }) {
+  const superseded = offer.status === "superseded";
+  if (superseded && !expanded) {
+    return (
+      <button onClick={onToggle} style={{ alignSelf: "center", textAlign: "left", background: "transparent", border: `1px dashed ${C.inkLine}`, borderRadius: 999, padding: "7px 16px", color: C.ivoryDim, fontFamily: FONT_MONO, fontSize: 11.5, cursor: "pointer" }}>
+        v{offer.version} · superseded — view
+      </button>
+    );
+  }
+  const rows = OFFER_FIELDS
+    .map(([k, label]) => [label, k === "durationMinutes" ? (offer[k] ? `${offer[k]} min` : null) : offer[k]])
+    .filter(([, v]) => v);
+  const fee = fmtEUR(offer.feeEur);
+  const statusColor = offer.status === "accepted" ? "#1A9E6E" : offer.status === "declined" ? C.burgundy : offer.status === "superseded" ? C.ivoryDim : C.brassLabel;
+  return (
+    <div style={{ alignSelf: "stretch", border: `1px solid ${offer.status === "proposed" ? C.brass : C.inkLine}`, borderRadius: 14, padding: "16px 18px", background: C.parchment, opacity: superseded ? 0.6 : 1 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+        <span style={{ fontFamily: FONT_MONO, fontSize: 11, letterSpacing: "0.06em", color: C.brassLabel }}>OFFER · V{offer.version}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 10.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", color: statusColor }}>{offer.status}</span>
+          {superseded && <button onClick={onToggle} style={{ background: "none", border: "none", color: C.ivoryDim, fontSize: 11, cursor: "pointer", padding: 0 }}>Collapse</button>}
+        </div>
+      </div>
+      {fee && (
+        <div style={{ display: "flex", alignItems: "baseline", gap: 14, marginBottom: 10 }}>
+          <span style={{ fontFamily: FONT_MONO, fontSize: 10.5, color: C.ivoryDim, letterSpacing: "0.04em", width: 116, flexShrink: 0, textTransform: "uppercase" }}>Fee</span>
+          <span style={{ fontFamily: FONT_DISPLAY, fontSize: 27, fontWeight: 700, color: C.brassLabel, lineHeight: 1 }}>{fee}</span>
+        </div>
+      )}
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {rows.map(([label, v]) => (
+          <div key={label} style={{ display: "flex", gap: 14 }}>
+            <span style={{ fontFamily: FONT_MONO, fontSize: 10.5, color: C.ivoryDim, letterSpacing: "0.04em", width: 116, flexShrink: 0, textTransform: "uppercase", paddingTop: 2 }}>{label}</span>
+            <span style={{ fontSize: 14, color: C.ivory, lineHeight: 1.5, whiteSpace: "pre-wrap" }}>{v}</span>
+          </div>
+        ))}
+      </div>
+      {offer.status === "proposed" && !isMine && (
+        <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
+          <PrimaryBtn onClick={onAccept}>Accept</PrimaryBtn>
+          <GhostBtn onClick={onDecline}>Decline</GhostBtn>
+          <GhostBtn onClick={onCounter}>Counter</GhostBtn>
+        </div>
+      )}
+      {offer.status === "proposed" && isMine && (
+        <p style={{ marginTop: 12, marginBottom: 0, fontSize: 12, color: C.ivoryDim }}>Sent — waiting on their response.</p>
+      )}
+    </div>
+  );
+}
+
+/** Same fields createOffer expects, camelCase, the fee reusing the € prefix
+ * pattern from the teaching-price field elsewhere in signup. */
+function OfferForm({ initial, onSubmit, onCancel, submitting }) {
+  const [f, setF] = useState(() => ({
+    eventDate: initial?.eventDate || "", startTime: initial?.startTime || "", venue: initial?.venue || "",
+    durationMinutes: initial?.durationMinutes || "", program: initial?.program || "", feeEur: initial?.feeEur || "",
+    travel: initial?.travel || "", equipment: initial?.equipment || "", cancellation: initial?.cancellation || "",
+    paymentSchedule: initial?.paymentSchedule || "", notes: initial?.notes || "",
+  }));
+  const up = (patch) => setF((v) => ({ ...v, ...patch }));
+  const canSubmit = f.eventDate.trim() && f.venue.trim() && f.feeEur;
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <div className="grid sm:grid-cols-2 gap-4">
+        <Field label="Date"><input type="date" style={inputStyle} value={f.eventDate} onChange={(e) => up({ eventDate: e.target.value })} /></Field>
+        <Field label="Start time"><input type="time" style={inputStyle} value={f.startTime} onChange={(e) => up({ startTime: e.target.value })} /></Field>
+      </div>
+      <Field label="Venue"><input style={inputStyle} value={f.venue} onChange={(e) => up({ venue: e.target.value })} placeholder="Concert hall, address…" /></Field>
+      <div className="grid sm:grid-cols-2 gap-4">
+        <Field label="Duration (minutes)">
+          <input style={inputStyle} value={f.durationMinutes} inputMode="numeric" placeholder="e.g. 90"
+            onChange={(e) => up({ durationMinutes: e.target.value.replace(/[^0-9]/g, "") })} />
+        </Field>
+        <Field label="Fee">
+          <div className="flex items-center gap-2">
+            <span style={{ color: C.ivoryDim, fontSize: 16 }}>€</span>
+            <input style={{ ...inputStyle, maxWidth: 160 }} value={f.feeEur} inputMode="numeric" placeholder="e.g. 1200"
+              onChange={(e) => up({ feeEur: e.target.value.replace(/[^0-9]/g, "") })} />
+          </div>
+        </Field>
+      </div>
+      <Field label="Program"><textarea style={{ ...inputStyle, resize: "vertical", minHeight: 70, lineHeight: 1.6 }} value={f.program} onChange={(e) => up({ program: e.target.value })} placeholder="Repertoire for the evening…" /></Field>
+      <div className="grid sm:grid-cols-2 gap-4">
+        <Field label="Travel (optional)"><input style={inputStyle} value={f.travel} onChange={(e) => up({ travel: e.target.value })} placeholder="Covered, self-arranged…" /></Field>
+        <Field label="Equipment (optional)"><input style={inputStyle} value={f.equipment} onChange={(e) => up({ equipment: e.target.value })} placeholder="Grand piano provided…" /></Field>
+      </div>
+      <Field label="Cancellation policy (optional)"><input style={inputStyle} value={f.cancellation} onChange={(e) => up({ cancellation: e.target.value })} placeholder="e.g. 50% refundable up to 14 days before" /></Field>
+      <Field label="Payment schedule (optional)"><input style={inputStyle} value={f.paymentSchedule} onChange={(e) => up({ paymentSchedule: e.target.value })} placeholder="e.g. 30% deposit, balance on the day" /></Field>
+      <Field label="Notes (optional)"><textarea style={{ ...inputStyle, resize: "vertical", minHeight: 60, lineHeight: 1.6 }} value={f.notes} onChange={(e) => up({ notes: e.target.value })} /></Field>
+      <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+        <PrimaryBtn onClick={() => canSubmit && onSubmit(f)} disabled={!canSubmit || submitting}>{submitting ? "Sending…" : "Send offer"}</PrimaryBtn>
+        <GhostBtn onClick={onCancel}>Cancel</GhostBtn>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Once an offer is accepted, this replaces the Make-offer button. The
+ * document card is the review step's aesthetic carried over — a key/value
+ * block on a slightly raised surface — because signing is that same kind of
+ * moment: read it once, plainly, before you commit to it.
+ */
+function AgreementPanel({ inquiry, role, myName, onSign, signing, acceptedOffer }) {
+  const [name, setName] = useState(myName || "");
+  if (inquiry.status !== "agreed" && inquiry.status !== "confirmed") return null;
+
+  const mySignedAt = role === "hirer" ? inquiry.hirerSignedAt : inquiry.pianistSignedAt;
+  const mySignedName = role === "hirer" ? inquiry.hirerSignedName : inquiry.pianistSignedName;
+  const theirSignedAt = role === "hirer" ? inquiry.pianistSignedAt : inquiry.hirerSignedAt;
+  const theirSignedName = role === "hirer" ? inquiry.pianistSignedName : inquiry.hirerSignedName;
+  const theirPossessive = role === "hirer" ? "the pianist's" : "the hirer's";
+  const fee = fmtEUR(acceptedOffer?.feeEur) || inquiry.budget;
+  const dateStr = (d) => d ? new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }) : "";
+
+  if (inquiry.status === "confirmed") {
+    return (
+      <div style={{ background: "#0B0C0E", border: `1px solid ${C.brass}`, borderRadius: 16, padding: "22px", margin: 16 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+          <span style={{ width: 30, height: 30, borderRadius: "50%", border: `1.5px solid ${C.brass}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <CheckIcon size={15} color={C.brass} />
+          </span>
+          <p style={{ margin: 0, fontFamily: FONT_DISPLAY, fontSize: 19, fontWeight: 600, color: C.ivory }}>Booking confirmed</p>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {[["Date", fmtConcertDate(inquiry.eventDate || acceptedOffer?.eventDate)], ["Location", inquiry.location], ["Fee", fee], ["Status", "Confirmed"]]
+            .filter(([, v]) => v)
+            .map(([k, v]) => (
+              <div key={k} style={{ display: "flex", gap: 14 }}>
+                <span style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brassLabel, letterSpacing: "0.04em", width: 78, flexShrink: 0 }}>{k.toUpperCase()}</span>
+                <span style={{ fontSize: 14, color: C.ivory }}>{v}</span>
+              </div>
+            ))}
+        </div>
+        <p style={{ marginTop: 14, marginBottom: 0, fontSize: 12.5, color: C.ivoryDim, lineHeight: 1.6 }}>You will receive a confirmation email with the details.</p>
+        <p style={{ marginTop: 6, marginBottom: 0, fontSize: 11.5, color: C.ivoryDim }}>Deposit and payment are arranged per the payment schedule above.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ background: C.parchment, border: `1px solid ${C.brass}`, borderRadius: 16, padding: "20px 22px", margin: 16 }}>
+      <p style={{ margin: 0, fontFamily: FONT_MONO, fontSize: 11, letterSpacing: "0.06em", color: C.brassLabel }}>AGREEMENT</p>
+      <p style={{ margin: "10px 0 0", fontSize: 14, color: C.ivory, lineHeight: 1.7 }}>
+        I agree to the terms above and wish to proceed with the booking.
+      </p>
+      {mySignedAt ? (
+        <p style={{ marginTop: 14, marginBottom: 0, fontSize: 13, color: "#1A9E6E", fontWeight: 600 }}>
+          Signed — {mySignedName}, {dateStr(mySignedAt)}
+        </p>
+      ) : (
+        <div style={{ marginTop: 14, display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <input style={{ ...inputStyle, maxWidth: 280 }} value={name} onChange={(e) => setName(e.target.value)} placeholder="Type your full name to sign" />
+          <PrimaryBtn onClick={() => name.trim() && onSign(name.trim())} disabled={!name.trim() || signing}>{signing ? "Signing…" : "Confirm & Sign"}</PrimaryBtn>
+        </div>
+      )}
+      <p style={{ marginTop: 12, marginBottom: 0, fontSize: 12.5, color: C.ivoryDim }}>
+        {theirSignedAt ? `Signed — ${theirSignedName}, ${dateStr(theirSignedAt)}` : `Awaiting ${theirPossessive} signature`}
+      </p>
+    </div>
+  );
+}
+
+/**
+ * The heart of the booking. One thread per inquiry, the event summary pinned
+ * above it, offers and messages interleaved in one timeline below it, and
+ * whichever of Make-an-offer or the Agreement panel is live pinned beneath
+ * that. Polled every five seconds — there is no realtime channel for this
+ * table, and a booking conversation tolerates a five-second lag in a way a
+ * lesson chat would not.
+ */
+function ConcertConversation({ inquiryId, role, myId, myName, otherName, students, onBack }) {
+  const [inquiry, setInquiry] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [offers, setOffers] = useState([]);
+  const [text, setText] = useState("");
+  const [sending, setSending] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [showOfferForm, setShowOfferForm] = useState(false);
+  const [counterFrom, setCounterFrom] = useState(null);
+  const [signing, setSigning] = useState(false);
+  const [expandedOffers, setExpandedOffers] = useState({});
+  const [submittingOffer, setSubmittingOffer] = useState(false);
+  const fileRef = useRef(null);
+  const endRef = useRef(null);
+
+  const refresh = React.useCallback(async () => {
+    const [{ data: inq }, { data: msgs }, { data: offs }] = await Promise.all([
+      getInquiry(inquiryId), listMessages(inquiryId), listOffers(inquiryId),
+    ]);
+    if (inq) setInquiry(inq);
+    if (msgs) setMessages(msgs);
+    if (offs) setOffers(offs);
+  }, [inquiryId]);
+
+  useEffect(() => {
+    refresh();
+    const id = setInterval(refresh, 5000);
+    return () => clearInterval(id);
+  }, [refresh]);
+
+  useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages.length, offers.length]);
+
+  async function handleSend() {
+    if (!text.trim() || sending) return;
+    setSending(true);
+    await sendConcertMessage(inquiryId, { body: text.trim() });
+    setText("");
+    setSending(false);
+    refresh();
+  }
+
+  // Every write in this room can be refused by a trigger — that is the whole
+  // point of the triggers — so a refusal has to say so. Before this, a
+  // rejected click just refreshed and looked identical to nothing happening,
+  // which teaches people the button is broken rather than the action illegal.
+  const [actionErr, setActionErr] = useState("");
+
+  async function handleAttach(e) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setUploading(true);
+    const { url, name, error } = await uploadConcertFile(file);
+    setUploading(false);
+    if (error || !url) { setActionErr(error || "Upload failed."); return; }
+    const { error: sendErr } = await sendConcertMessage(inquiryId, { body: "", attachmentUrl: url, attachmentName: name || file.name });
+    setActionErr(sendErr || "");
+    refresh();
+  }
+
+  // No status write here: the after-insert trigger flips open -> negotiating
+  // itself, and a second manual write was one more thing able to drift.
+  async function submitOffer(fields) {
+    setSubmittingOffer(true);
+    const { error } = await createOffer(inquiryId, fields);
+    setSubmittingOffer(false);
+    if (error) { setActionErr(error); return; }
+    setActionErr("");
+    setShowOfferForm(false);
+    setCounterFrom(null);
+    refresh();
+  }
+
+  async function respond(offerId, status) {
+    const { error } = await respondToOffer(offerId, status);
+    setActionErr(error || "");
+    refresh();
+  }
+
+  async function sign(signedName) {
+    setSigning(true);
+    const { data, error } = await signAgreement(inquiryId, role, signedName);
+    setSigning(false);
+    setActionErr(error || "");
+    if (data) setInquiry(data);
+    refresh();
+  }
+
+  // Walking away. Declining is the pianist's word, withdrawing the hirer's —
+  // same column, different verb, and the difference is what the other party
+  // reads into it. Two clicks, because one click next to a chat box is how a
+  // negotiation ends by accident.
+  const [confirmLeaveDeal, setConfirmLeaveDeal] = useState(false);
+  async function leaveDeal() {
+    const status = role === "pianist" ? INQUIRY_STATUS.declined : INQUIRY_STATUS.cancelled;
+    const { error } = await setInquiryStatus(inquiryId, status);
+    setActionErr(error || "");
+    setConfirmLeaveDeal(false);
+    refresh();
+  }
+
+  if (!inquiry) return <div style={{ padding: 48, textAlign: "center", color: C.ivoryDim, fontSize: 13 }}>Loading…</div>;
+
+  const currentProposed = [...offers].reverse().find((o) => o.status === "proposed");
+  const acceptedOffer = [...offers].reverse().find((o) => o.status === "accepted");
+  const timeline = [
+    ...messages.map((m) => ({ type: "message", at: m.createdAt, key: `m${m.id}`, data: m })),
+    ...offers.map((o) => ({ type: "offer", at: o.createdAt, key: `o${o.id}`, data: o })),
+  ].sort((a, b) => new Date(a.at) - new Date(b.at));
+
+  const closed = ["confirmed", "declined", "cancelled"].includes(inquiry.status);
+  // Once either name is down the terms are no longer negotiable — the
+  // database refuses new versions — so the button that would try disappears
+  // rather than offering an action the trigger will bounce.
+  const signingStarted = !!(inquiry.hirerSignedAt || inquiry.pianistSignedAt);
+  const offerBtnLabel = currentProposed && currentProposed.createdBy !== myId ? "Make a counter-offer" : "Make an offer";
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", background: C.ink }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", borderBottom: `1px solid ${C.inkLine}`, flexShrink: 0 }}>
+        <button onClick={onBack} className="artium-aw-round" aria-label="Back"><ChevronLeft size={17} strokeWidth={2} /></button>
+        <p style={{ margin: 0, flex: 1, fontSize: 14, fontWeight: 600, color: C.ivory }}>{otherName || (role === "hirer" ? "The pianist" : "The hirer")}</p>
+        {!closed && !confirmLeaveDeal && (
+          <button onClick={() => setConfirmLeaveDeal(true)}
+            style={{ background: "none", border: "none", cursor: "pointer", color: C.ivoryDim, fontFamily: FONT_BODY, fontSize: 12, fontWeight: 600, padding: 0 }}>
+            {role === "pianist" ? "Decline inquiry" : "Withdraw inquiry"}
+          </button>
+        )}
+        {!closed && confirmLeaveDeal && (
+          <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: 12, color: C.ivoryDim }}>Are you sure?</span>
+            <button onClick={leaveDeal}
+              style={{ fontSize: 12, fontWeight: 700, padding: "5px 10px", borderRadius: 999, border: "none", background: "#c0392b", color: "#fff", cursor: "pointer" }}>
+              Yes, {role === "pianist" ? "decline" : "withdraw"}
+            </button>
+            <button onClick={() => setConfirmLeaveDeal(false)}
+              style={{ fontSize: 12, fontWeight: 600, padding: "5px 10px", borderRadius: 999, border: `1px solid ${C.inkLine}`, background: "none", color: C.ivoryDim, cursor: "pointer" }}>
+              Keep talking
+            </button>
+          </span>
+        )}
+      </div>
+
+      <div className="lg-scroll" style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
+        <EventSummaryCard inquiry={inquiry} />
+        <div style={{ padding: "16px 16px 8px", display: "flex", flexDirection: "column", gap: 14 }}>
+          {timeline.length === 0 && <p style={{ textAlign: "center", color: C.ivoryDim, fontSize: 13, marginTop: 24 }}>Say hello and introduce the engagement.</p>}
+          {timeline.map((item) => item.type === "message" ? (
+            <ConcertMessageBubble key={item.key} m={item.data} mine={item.data.senderId === myId} />
+          ) : (
+            <OfferCard
+              key={item.key}
+              offer={item.data}
+              isMine={item.data.createdBy === myId}
+              expanded={!!expandedOffers[item.data.id]}
+              onToggle={() => setExpandedOffers((v) => ({ ...v, [item.data.id]: !v[item.data.id] }))}
+              onAccept={() => respond(item.data.id, "accepted")}
+              onDecline={() => respond(item.data.id, "declined")}
+              onCounter={() => { setCounterFrom(item.data); setShowOfferForm(true); }}
+            />
+          ))}
+          <div ref={endRef} />
+        </div>
+        <AgreementPanel inquiry={inquiry} role={role} myName={myName} onSign={sign} signing={signing} acceptedOffer={acceptedOffer} />
+      </div>
+
+      {showOfferForm && (
+        <div style={{ borderTop: `1px solid ${C.inkLine}`, padding: 16, maxHeight: "62vh", overflowY: "auto", flexShrink: 0 }}>
+          <p style={{ margin: "0 0 12px", fontFamily: FONT_DISPLAY, fontSize: 17, fontWeight: 600, color: C.ivory }}>{counterFrom ? "Counter-offer" : "Make an offer"}</p>
+          <OfferForm
+            initial={counterFrom || { eventDate: inquiry.eventDate, venue: inquiry.venue }}
+            submitting={submittingOffer}
+            onSubmit={submitOffer}
+            onCancel={() => { setShowOfferForm(false); setCounterFrom(null); }}
+          />
+        </div>
+      )}
+
+      {actionErr && (
+        <p style={{ margin: 0, padding: "10px 16px", borderTop: `1px solid ${C.inkLine}`, fontSize: 12.5, color: C.burgundy, flexShrink: 0 }}>{actionErr}</p>
+      )}
+
+      {!showOfferForm && !closed && !signingStarted && (
+        <div style={{ padding: "12px 16px", borderTop: `1px solid ${C.inkLine}`, flexShrink: 0 }}>
+          <PrimaryBtn full onClick={() => setShowOfferForm(true)}>{offerBtnLabel}</PrimaryBtn>
+        </div>
+      )}
+
+      {!closed && (
+        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 16px", borderTop: `1px solid ${C.inkLine}`, flexShrink: 0 }}>
+          <button onClick={() => fileRef.current?.click()} disabled={uploading} className="artium-aw-round" aria-label="Attach file">
+            <Paperclip size={16} strokeWidth={2} />
+          </button>
+          <input ref={fileRef} type="file" style={{ display: "none" }} onChange={handleAttach} />
+          <input style={{ ...inputStyle, flex: 1 }} value={text} onChange={(e) => setText(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") handleSend(); }} placeholder="Write a message…" />
+          <button onClick={handleSend} disabled={sending || !text.trim()} className="rounded-full p-3" style={{ background: C.brass, opacity: sending || !text.trim() ? 0.6 : 1 }}>
+            <Send size={16} color={C.brassText} />
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Same row component either side of the deal — a hirer scanning who they've
+ * contacted and a pianist scanning who's contacted them are reading the same
+ * shape of fact: a person, an event, where it stands. */
+function BookingsList({ inquiries, role, students, onOpen }) {
+  if (!inquiries.length) {
+    return (
+      <div style={{ padding: "60px 24px", textAlign: "center" }}>
+        <p style={{ color: C.ivoryDim, fontSize: 14 }}>
+          {role === "hirer" ? "No inquiries yet — contact a pianist from the Pianists tab." : "No concert inquiries yet."}
+        </p>
+      </div>
+    );
+  }
+  return (
+    <div className="artium-aw-list" style={{ padding: "16px 16px 32px" }}>
+      {inquiries.map((inq) => {
+        const other = role === "hirer" ? students.find((s) => s.id === inq.pianistId) : null;
+        const otherName = role === "hirer" ? (other?.name || "Pianist") : (inq.hirerName || "Hirer");
+        return (
+          <button key={inq.id} className="artium-aw-row" onClick={() => onOpen(inq.id)}>
+            <Avatar name={otherName} id={inq.id} size={42} photoUrl={other?.photoUrl} />
+            <span className="artium-aw-row-body">
+              <p className="artium-aw-row-t">{otherName}</p>
+              <p className="artium-aw-row-c">{[inq.eventType, fmtConcertDate(inq.eventDate)].filter(Boolean).join(" · ") || "Details pending"}</p>
+            </span>
+            <StatusPill status={inq.status} />
+            <ChevronRight size={17} strokeWidth={2} />
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/**
+ * The hirer's Pianists tab — the network page's language (eyebrow, display
+ * heading, stats row, rows) without the globe, because a hirer is not
+ * browsing conservatories, they're browsing pianists.
+ */
+function PianistDiscover({ students, onOpen }) {
+  const [q, setQ] = useState("");
+  const consCount = new Set(students.map((p) => p.conservatoryId).filter(Boolean)).size;
+  const availableCount = students.filter((p) => p.online).length;
+  const needle = q.trim().toLowerCase();
+  const rows = students.filter((p) => {
+    if (!needle) return true;
+    const cons = findConservatory(p.conservatoryId);
+    return `${p.name} ${cons?.name || ""} ${cons?.city || ""}`.toLowerCase().includes(needle);
+  });
+
+  return (
+    <div className="artium-aw">
+      <header className="artium-aw-bar">
+        <span />
+        <GateLogo word={21} />
+        <span className="artium-aw-bar-right">
+          <span className="artium-aw-count"><Users size={16} strokeWidth={1.8} />{students.length}</span>
+        </span>
+      </header>
+
+      <div className="artium-aw-in">
+        <p className="artium-aw-eyebrow"><i />Find a Concert Pianist<i /></p>
+        <h1 className="artium-aw-h1">Book a Pianist for Your Stage</h1>
+        <p className="artium-aw-sub">Conservatory pianists, ready to perform.</p>
+
+        <div className="artium-aw-stats">
+          <div className="artium-aw-stat">
+            <span className="artium-aw-stat-n"><User size={15} strokeWidth={2} />{students.length}</span>
+            <p className="artium-aw-stat-l">Pianists</p>
+          </div>
+          <div className="artium-aw-stat">
+            <span className="artium-aw-stat-n"><MapPin size={15} strokeWidth={2} />{consCount}</span>
+            <p className="artium-aw-stat-l">Conservatories</p>
+          </div>
+          <div className="artium-aw-stat">
+            <span className="artium-aw-stat-n"><span style={{ width: 8, height: 8, borderRadius: "50%", background: "#1A9E6E", display: "inline-block" }} />{availableCount}</span>
+            <p className="artium-aw-stat-l">Available now</p>
+          </div>
+        </div>
+
+        <div className="artium-aw-find">
+          <span className="artium-aw-field">
+            <Search size={15} strokeWidth={2} />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by name or conservatory…" />
+          </span>
+        </div>
+
+        <div className="artium-aw-listhead">
+          <h2>Pianists</h2>
+          <span>{rows.length} result{rows.length === 1 ? "" : "s"}</span>
+        </div>
+        <div className="artium-aw-list">
+          {rows.length === 0 && <p className="artium-aw-empty">{students.length === 0 ? "No pianists on the network yet — the conservatories are filling in." : "No pianist matches that search."}</p>}
+          {rows.map((p) => {
+            const cons = findConservatory(p.conservatoryId);
+            return (
+              <button key={p.id} className="artium-aw-row" onClick={() => onOpen(p.id)}>
+                <Avatar name={p.name} id={p.id} size={42} photoUrl={p.photoUrl} online={p.online} />
+                <span className="artium-aw-row-body">
+                  <p className="artium-aw-row-t">{p.name}</p>
+                  <p className="artium-aw-row-c"><MapPin size={11} strokeWidth={2} />{[cons?.name, cons?.city].filter(Boolean).join(", ") || "Conservatory pianist"}</p>
+                </span>
+                {p.concertFee ? <span className="artium-aw-teach">€{p.concertFee}</span> : <span style={{ fontSize: 11, color: C.ivoryDim, flexShrink: 0 }}>Fee on request</span>}
+                {instrumentIcons(p).length > 0 && (
+                  <span className="artium-aw-inst" data-two={instrumentIcons(p).length > 1 ? "1" : "0"}>
+                    <span className="artium-aw-inst-art" aria-hidden="true">
+                      {instrumentIcons(p).map((icon) => <img key={icon} src={`/instruments/${icon}.webp`} alt="" loading="lazy" />)}
+                    </span>
+                  </span>
+                )}
+                <ChevronRight size={17} strokeWidth={2} />
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The pianist's profile as a hirer reads it — same top-of-page shape as
+ * StudentProfile (identity left, cover video right), but no lesson or
+ * teaching UI: a hirer is looking at the concert stage, not the practice
+ * room, and the CTA says so.
+ */
+function HirerPianistProfile({ student, conservatory, onBack, onContact }) {
+  if (!student) return null;
+  const Row = ({ label, children }) => (
+    <div style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
+      <span style={{ fontSize: 11, fontWeight: 600, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
+      <div style={{ fontSize: 15, color: C.ivory, lineHeight: 1.6 }}>{children}</div>
+    </div>
+  );
+  return (
+    <div style={{ maxWidth: 640, margin: "0 auto", padding: "40px 24px" }}>
+      <button onClick={onBack} className="artium-aw-round" style={{ marginBottom: 20 }} aria-label="Back"><ChevronLeft size={17} strokeWidth={2} /></button>
+      <div className="artium-pf-top" data-solo={student.coverVideoUrl ? "0" : "1"}>
+        <div>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 16, marginBottom: 28 }}>
+            <div style={{ marginTop: 4 }}><Avatar name={student.name} id={student.id} size={64} photoUrl={student.photoUrl} online={student.online} /></div>
+            <div style={{ flex: 1 }}>
+              <h2 style={{ fontSize: 20, fontWeight: 700, color: C.ivory, margin: 0, lineHeight: 1.3 }}>{student.name}</h2>
+              <p style={{ fontSize: 13, color: C.ivoryDim, margin: "3px 0 0" }}>Concert pianist</p>
+              {conservatory && <p style={{ fontSize: 13, color: C.ivoryDim, margin: "1px 0 0" }}>{conservatory.name}, {conservatory.city}</p>}
+            </div>
+            <div style={{ flexShrink: 0 }}>
+              <PrimaryBtn onClick={onContact} icon={ArrowRight}>Contact &amp; Book</PrimaryBtn>
+            </div>
+          </div>
+          {student.bio && <p style={{ fontSize: 15, color: C.ivoryDim, lineHeight: 1.75, marginBottom: 24 }}>{student.bio}</p>}
+          <ProfileLinks links={student.links} />
+        </div>
+        {student.coverVideoUrl && <Row label="Cover video"><CoverVideo url={student.coverVideoUrl} /></Row>}
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        {(student.pieces || []).length > 0 && (
+          <Row label="Current repertoire">
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
+              {student.pieces.map((p, i) => (
+                <div key={i} style={{ fontSize: 14, color: C.ivory }}>
+                  <span style={{ fontWeight: 600 }}>{p.title}</span>
+                  <span style={{ color: C.ivoryDim }}> — {p.composer}</span>
+                </div>
+              ))}
+            </div>
+          </Row>
+        )}
+        {(student.tastes || []).length > 0 && (
+          <Row label="Preferences">
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 4 }}>
+              {student.tastes.map((t) => <span key={t} style={{ fontSize: 12, padding: "3px 10px", borderRadius: 20, border: `1px solid ${C.inkLine}`, color: C.ivory, background: C.inkSoft }}>{t}</span>)}
+            </div>
+          </Row>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** One screen, prefilled from the auth metadata the hirer already gave at
+ * signup so the second ask is short. Submitting is where the Deal object
+ * begins — everything after this lives in createInquiry's row, not in state
+ * that could be lost on a refresh. */
+function ConcertInquiryForm({ pianist, hirerMeta, onSubmit, onCancel, submitting }) {
+  const [f, setF] = useState(() => ({
+    eventType: CONCERT_EVENT_TYPES.includes(hirerMeta?.occasion) ? hirerMeta.occasion : "",
+    eventDate: "", location: hirerMeta?.city || "", venue: "",
+    audience: "", repertoire: "", message: hirerMeta?.notes || "", budget: hirerMeta?.budget || "",
+  }));
+  const up = (patch) => setF((v) => ({ ...v, ...patch }));
+  const canSubmit = !!f.eventType && !!f.eventDate && f.location.trim().length > 0;
+  const firstName = pianist?.name?.split(" ")[0] || "the pianist";
+
+  return (
+    <div style={{ maxWidth: 560, margin: "0 auto", padding: "32px 24px 60px" }}>
+      <button onClick={onCancel} className="artium-aw-round" style={{ marginBottom: 20 }} aria-label="Back"><ChevronLeft size={17} strokeWidth={2} /></button>
+      <p style={{ fontFamily: FONT_MONO, fontSize: 11, letterSpacing: "0.06em", color: C.brassLabel, margin: "0 0 6px" }}>CONTACT {firstName.toUpperCase()}</p>
+      <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600, color: C.ivory, margin: "0 0 24px" }}>Tell us about the engagement</h2>
+      <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        <Field label="Event type">
+          <div className="flex flex-wrap gap-2">
+            {CONCERT_EVENT_TYPES.map((o) => <Chip key={o} active={f.eventType === o} onClick={() => up({ eventType: o })}>{o}</Chip>)}
+          </div>
+        </Field>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <Field label="Date"><input type="date" style={inputStyle} value={f.eventDate} onChange={(e) => up({ eventDate: e.target.value })} /></Field>
+          <Field label="Expected audience (optional)"><input style={inputStyle} value={f.audience} onChange={(e) => up({ audience: e.target.value.replace(/[^0-9]/g, "") })} placeholder="e.g. 200" inputMode="numeric" /></Field>
+        </div>
+        <Field label="Location — city, country"><input style={inputStyle} value={f.location} onChange={(e) => up({ location: e.target.value })} placeholder="e.g. Vienna, Austria" /></Field>
+        <Field label="Venue (optional)"><input style={inputStyle} value={f.venue} onChange={(e) => up({ venue: e.target.value })} placeholder="Concert hall, address…" /></Field>
+        <Field label="Desired repertoire (optional)"><textarea style={{ ...inputStyle, resize: "vertical", minHeight: 80, lineHeight: 1.6 }} value={f.repertoire} onChange={(e) => up({ repertoire: e.target.value })} placeholder="Anything specific you'd like performed…" /></Field>
+        <Field label="Message">
+          <textarea style={{ ...inputStyle, resize: "vertical", minHeight: 100, lineHeight: 1.6 }} value={f.message} onChange={(e) => up({ message: e.target.value })}
+            placeholder={`Introduce yourself and the occasion to ${firstName}…`} />
+        </Field>
+        <Field label="Budget (optional)">
+          <div className="flex flex-wrap gap-2">
+            {HIRER_BUDGET.map((o) => <Chip key={o} active={f.budget === o} onClick={() => up({ budget: f.budget === o ? "" : o })}>{o}</Chip>)}
+          </div>
+        </Field>
+        <div style={{ display: "flex", gap: 10, marginTop: 6 }}>
+          <PrimaryBtn onClick={() => canSubmit && onSubmit(f)} disabled={!canSubmit || submitting}>{submitting ? "Sending…" : "Send inquiry"}</PrimaryBtn>
+          <GhostBtn onClick={onCancel}>Cancel</GhostBtn>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The hirer's whole world: two tabs, Pianists and Bookings, plus Home. No
+ * Messages and no Profile — a hirer never messages anyone outside a booking
+ * thread, and their one fact worth editing (name, event) lives in the
+ * inquiry form each time, not behind a settings screen.
+ *
+ * Self-contained the way LearnerScreen is: its own tab state, its own
+ * bottom bar, reusing BottomTabs rather than the app-wide one so a hirer
+ * session never has to thread its screen through App()'s own routing.
+ */
+function HirerApp({ authUser, students, onHome }) {
+  const meta = authUser?.user_metadata || {};
+  const hirerName = meta.hirer_name || "";
+  const hirerEmail = authUser?.email || "";
+  const myId = authUser?.id;
+
+  const [tab, setTab] = useState("pianists");
+  const [selectedPianistId, setSelectedPianistId] = useState(null);
+  const [composing, setComposing] = useState(false);
+  const [activeInquiryId, setActiveInquiryId] = useState(null);
+  const [inquiries, setInquiries] = useState([]);
+  const [offerAttention, setOfferAttention] = useState({});
+  const [submitting, setSubmitting] = useState(false);
+
+  const pianists = React.useMemo(
+    () => students.filter((s) => instrumentsOf(s).includes("Piano") && s.concertOpen !== false),
+    [students]
+  );
+  const selectedPianist = students.find((s) => s.id === selectedPianistId);
+
+  const refreshInquiries = React.useCallback(() => {
+    listInquiries("hirer").then(({ data }) => { if (data) setInquiries(data); });
+  }, []);
+  useEffect(() => {
+    refreshInquiries();
+    const id = setInterval(refreshInquiries, 15000);
+    return () => clearInterval(id);
+  }, [refreshInquiries]);
+
+  // A proposed offer the pianist sent, not yet answered. Cheap enough to
+  // check on every poll: this only runs for threads actually in negotiation.
+  useEffect(() => {
+    const negotiating = inquiries.filter((q) => q.status === "negotiating");
+    if (!negotiating.length) { setOfferAttention({}); return; }
+    let live = true;
+    Promise.all(negotiating.map((q) => listOffers(q.id).then(({ data }) => [q.id, data || []])))
+      .then((pairs) => {
+        if (!live) return;
+        const map = {};
+        for (const [id, list] of pairs) {
+          const latest = [...list].reverse().find((o) => o.status === "proposed");
+          map[id] = !!(latest && latest.createdBy !== myId);
+        }
+        setOfferAttention(map);
+      });
+    return () => { live = false; };
+  }, [inquiries, myId]);
+
+  const needsAttention = inquiries.some((q) => (q.status === "agreed" && !q.hirerSignedAt) || offerAttention[q.id]);
+
+  async function submitInquiry(f) {
+    if (!selectedPianist) return;
+    setSubmitting(true);
+    const { data } = await createInquiry({
+      hirerName, hirerEmail, pianistId: selectedPianist.id,
+      eventType: f.eventType, eventDate: f.eventDate, location: f.location, venue: f.venue,
+      audience: f.audience, repertoire: f.repertoire, message: f.message, budget: f.budget,
+    });
+    setSubmitting(false);
+    if (!data) return;
+    setComposing(false);
+    setSelectedPianistId(null);
+    refreshInquiries();
+    setActiveInquiryId(data.id);
+    setTab("bookings");
+  }
+
+  const items = [
+    { k: "pianists", label: "Pianists", Icon: Music2 },
+    { k: "bookings", label: "Bookings", Icon: BookOpen, attention: needsAttention },
+    { k: "home", label: "Home", Icon: Home },
+  ];
+
+  const overlayOpen = !!activeInquiryId || composing || !!selectedPianistId;
+
+  return (
+    <div className="min-h-full flex flex-col artium-has-tabs" style={{ background: C.inkSoft, color: C.ivory }}>
+      <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+        {activeInquiryId ? (
+          <ConcertConversation
+            inquiryId={activeInquiryId} role="hirer" myId={myId} myName={hirerName}
+            otherName={students.find((s) => s.id === inquiries.find((q) => q.id === activeInquiryId)?.pianistId)?.name}
+            students={students}
+            onBack={() => { setActiveInquiryId(null); refreshInquiries(); }}
+          />
+        ) : composing && selectedPianist ? (
+          <ConcertInquiryForm pianist={selectedPianist} hirerMeta={meta} submitting={submitting}
+            onSubmit={submitInquiry} onCancel={() => setComposing(false)} />
+        ) : selectedPianistId ? (
+          <HirerPianistProfile student={selectedPianist} conservatory={findConservatory(selectedPianist?.conservatoryId)}
+            onBack={() => setSelectedPianistId(null)} onContact={() => setComposing(true)} />
+        ) : tab === "pianists" ? (
+          <PianistDiscover students={pianists} onOpen={setSelectedPianistId} />
+        ) : (
+          <div style={{ padding: "24px 0 0" }}>
+            <div className="px-6 pb-2">
+              <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 600, color: C.ivory, margin: 0 }}>Bookings</h2>
+              <p style={{ fontSize: 13, color: C.ivoryDim, marginTop: 4 }}>Every pianist you've reached out to.</p>
+            </div>
+            <BookingsList inquiries={inquiries} role="hirer" students={students} onOpen={setActiveInquiryId} />
+          </div>
+        )}
+      </div>
+      {!overlayOpen && (
+        <BottomTabs items={items} active={tab} onTab={(k) => { if (k === "home") { onHome(); return; } setTab(k); }} />
+      )}
     </div>
   );
 }
@@ -7290,9 +8216,17 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
 function BottomTabs({ items, active, onTab }) {
   return (
     <nav className="artium-aw-tabs">
-      {items.map(({ k, label, Icon }) => (
+      {items.map(({ k, label, Icon, attention }) => (
         <button key={k} data-on={k === active ? "1" : "0"} onClick={() => onTab(k)} aria-label={label}>
-          <Icon size={19} strokeWidth={1.7} />
+          <span style={{ position: "relative", display: "inline-flex" }}>
+            <Icon size={19} strokeWidth={1.7} />
+            {/* A booking waiting on a signature, or an offer waiting on a
+                response, is the one thing on this tab that costs something if
+                it sits — everything else can wait for a visit. */}
+            {attention && (
+              <span style={{ position: "absolute", top: -2, right: -3, width: 8, height: 8, borderRadius: "50%", background: C.brass, border: `1.5px solid ${C.ink}` }} />
+            )}
+          </span>
           {label}
         </button>
       ))}
@@ -7300,7 +8234,8 @@ function BottomTabs({ items, active, onTab }) {
   );
 }
 
-// Short labels deliberately. Six tabs share 375px on a narrow phone, so
+// Short labels deliberately. Six tabs share 375px on a narrow phone —
+// seven for a pianist, who also carries Concerts — so
 // "Promote Me" and "Lesson Room" would wrap to two lines and make the bar
 // taller than the content it sits under. Admin stays on the header strip:
 // it belongs to two people, not to the bar everybody sees.

@@ -100,6 +100,10 @@ export function fromDbProfile(row) {
     conservatoryEmail: row.conservatory_email || "",
     conservatoryVerified: !!row.conservatory_verified,
     teaching: { open: !!row.teaching_open, mode: row.teaching_mode || "", price: row.teaching_price || "", pitch: row.teaching_pitch || "" },
+    // The concert side. Default open: a pianist is bookable unless they said
+    // otherwise, and rows older than the column read as never having said it.
+    concertOpen: row.concert_open ?? true,
+    concertFee: row.concert_fee || "",
     online: row.is_online ?? true,
   };
 }
