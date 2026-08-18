@@ -47,7 +47,17 @@ export default defineConfig({
       },
       workbox: {
         cleanupOutdatedCaches: true,
-        globPatterns: ["**/*.{js,css,html,svg,png,ico,woff2}"],
+        // webp, jpg and json were missing, and between them they are most of
+        // what the app looks like: all 41 instrument drawings are webp, both
+        // hall photographs are webp, the globe's satellite texture is jpg and
+        // its country borders are json. None of it was ever cached, so an
+        // installed app on a bad connection drew a bare sphere and rows with
+        // broken-image marks where the instruments belong.
+        globPatterns: ["**/*.{js,css,html,svg,png,ico,woff2,webp,jpg,json}"],
+        // The satellite texture alone is 1.4MB and the default ceiling is 2MB;
+        // state it rather than leave the largest asset one edit away from
+        // silently dropping out of the precache again.
+        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/server\.arcgisonline\.com\/.*/i,
