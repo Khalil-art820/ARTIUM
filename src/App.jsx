@@ -6039,6 +6039,27 @@ function StepConservatory({ draft, update, editing }) {
         </div>
       )}
 
+      {/* The way out, at the bottom, where the dead end is.
+          "Keep my current conservatory" already existed — in the banner at the
+          top of a step that scrolls a long way, so by the time somebody is
+          staring at a disabled Next and a code they do not want to enter, the
+          only escape is off-screen behind everything they just read. An exit
+          is no use where the trouble is not. */}
+      {changingSchool && !draft.conservatoryVerified && !draft.proofDocUrl && !draft.domainReq && (
+        <div className="mt-5 rounded-2xl" style={{ border: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.025)", padding: "14px 16px" }}>
+          <p className="text-sm" style={{ margin: 0, color: C.ivoryDim, lineHeight: 1.55 }}>
+            Changed your mind? Nothing has moved yet — your conservatory is still
+            the one you had.
+          </p>
+          <button
+            onClick={cancelTransfer}
+            style={{ marginTop: 8, padding: 0, background: "none", border: "none", cursor: "pointer", color: C.brassLabel, fontFamily: FONT_BODY, fontSize: 13, fontWeight: 700 }}
+          >
+            Keep my current conservatory
+          </button>
+        </div>
+      )}
+
       </>
       )}
     </div>
