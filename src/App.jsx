@@ -558,6 +558,10 @@ const emptyDraft = () => ({
   // and not in component state: the verification step unmounts every time
   // somebody steps Back, and losing this stranded them — see startTransfer.
   priorSchool: null,
+  // A code that has actually been sent. Component state lost this on every
+  // Back, so returning showed an empty form and a dead Send button while a
+  // perfectly good code sat in the member's inbox.
+  otpEmail: "", otpSent: false,
   verifyMethod: "otp", proofDocUrl: "", proofDocName: "",
   tastes: [],
   pieces: [],
@@ -5277,8 +5281,8 @@ const DOOR_LABEL = {
 
 function StepConservatory({ draft, update, editing }) {
   const [q, setQ] = useState("");
-  const [email, setEmail] = useState(draft.conservatoryEmail || "");
-  const [codeSent, setCodeSent] = useState(false);
+  const [email, setEmail] = useState(draft.otpEmail || draft.conservatoryEmail || "");
+  const [codeSent, setCodeSent] = useState(!!draft.otpSent);
   const [code, setCode] = useState("");
   const [sending, setSending] = useState(false);
   const [verifying, setVerifying] = useState(false);
@@ -5313,12 +5317,13 @@ function StepConservatory({ draft, update, editing }) {
       },
       applicant: "", verifyMethod: "otp", conservatoryId: "", conservatoryEmail: "",
       conservatoryVerified: false, domainReq: null, proofDocUrl: "", proofDocName: "",
+      otpEmail: "", otpSent: false,
       transferPending: true,
     });
   }
 
   function cancelTransfer() {
-    update({ ...priorSchool, priorSchool: null, transferPending: false });
+    update({ ...priorSchool, priorSchool: null, transferPending: false, otpEmail: "", otpSent: false });
     setQ(""); setEmail(priorSchool.conservatoryEmail || ""); setCode(""); setCodeSent(false); setErr("");
   }
 
@@ -5599,14 +5604,15 @@ function StepConservatory({ draft, update, editing }) {
       verifyMethod: kind === "student_email" ? "otp" : "document",
       conservatoryId: "", conservatoryVerified: false, conservatoryEmail: "",
       proofDocUrl: "", proofDocName: "",
+      otpEmail: "", otpSent: false,
     });
   }
 
   function switchMethod(method) {
     setQ(""); setEmail(""); setCode(""); setCodeSent(false); setErr("");
     update(method === "document"
-      ? { verifyMethod: "document", conservatoryId: "", conservatoryVerified: false, conservatoryEmail: "" }
-      : { verifyMethod: "otp", conservatoryId: "", conservatoryVerified: false, proofDocUrl: "", proofDocName: "" });
+      ? { verifyMethod: "document", conservatoryId: "", conservatoryVerified: false, conservatoryEmail: "", otpEmail: "", otpSent: false }
+      : { verifyMethod: "otp", conservatoryId: "", conservatoryVerified: false, proofDocUrl: "", proofDocName: "", otpEmail: "", otpSent: false });
   }
 
   async function uploadProof(file) {
@@ -5629,6 +5635,7 @@ function StepConservatory({ draft, update, editing }) {
     setSending(false);
     if (error) { setErr(error); return; }
     setCodeSent(true);
+    update({ otpEmail: email.trim(), otpSent: true });
   }
 
   async function verifyCode() {
@@ -5636,7 +5643,7 @@ function StepConservatory({ draft, update, editing }) {
     const { error } = await verifyConservatoryCode(email, code);
     setVerifying(false);
     if (error) { setErr(error); return; }
-    update({ conservatoryEmail: email.trim(), conservatoryVerified: true, transferPending: false, priorSchool: null });
+    update({ conservatoryEmail: email.trim(), conservatoryVerified: true, transferPending: false, priorSchool: null, otpEmail: "", otpSent: false });
   }
 
   return (
@@ -5672,6 +5679,18 @@ function StepConservatory({ draft, update, editing }) {
             Nothing changes until you've proved the new school. If you upload a
             document instead of verifying by code, you'll be off the map until we
             confirm it.
+          </p>
+          {/* Next is held shut until the new school is proved, and a greyed
+              button with no reason beside it reads as a broken screen rather
+              than a rule. Say which. */}
+          <p className="text-sm" style={{ margin: "8px 0 0", color: C.brassLabel, fontWeight: 600, lineHeight: 1.55 }}>
+            {draft.conservatoryVerified || draft.proofDocUrl || draft.domainReq
+              ? "Proved — you can continue."
+              : !draft.conservatoryId
+                ? "Pick the new school below to continue."
+                : codeSent
+                  ? "Enter the code we emailed you to continue."
+                  : "Verify the new school below to continue."}
           </p>
           <button
             onClick={cancelTransfer}
