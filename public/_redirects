@@ -1,0 +1,20 @@
+# The old address, sent to the new one.
+#
+# Setting a primary domain in Netlify does not reliably redirect Netlify's own
+# *.netlify.app subdomain, so artiumm.netlify.app kept serving the whole app —
+# a second live copy of the site, on an origin whose localStorage, session and
+# service worker are all separate from the real one. Somebody could stay signed
+# in there indefinitely and never see the domain everyone else is using.
+#
+# The trailing ! forces the rule even though a file matches the path, which is
+# needed here: without it index.html is served for / before the rule is reached.
+#
+# Deploy previews (deploy-preview-N--artiumm.netlify.app) do not match this
+# host and keep working normally.
+https://artiumm.netlify.app/*   https://art-ium.com/:splat   301!
+http://artiumm.netlify.app/*    https://art-ium.com/:splat   301!
+
+# Everything else is the single-page app. Screens are state-based today, so
+# nothing depends on this yet — it is here so that the first real route added
+# does not 404 on a hard refresh.
+/*                              /index.html                  200
