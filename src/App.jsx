@@ -554,6 +554,10 @@ const emptyDraft = () => ({
   // A transfer in progress: the old school is still on the profile and the new
   // one is not proved yet, so the step is not finished and Next stays shut.
   transferPending: false,
+  // Where a transfer started from, so Cancel can put it back. In the draft
+  // and not in component state: the verification step unmounts every time
+  // somebody steps Back, and losing this stranded them — see startTransfer.
+  priorSchool: null,
   verifyMethod: "otp", proofDocUrl: "", proofDocName: "",
   tastes: [],
   pieces: [],
@@ -5286,21 +5290,27 @@ function StepConservatory({ draft, update, editing }) {
   // step reopens — doors, list, code — and the school only moves once the new
   // one is proved. Abandoning halfway leaves the member exactly as they were,
   // which is why the old answers are kept rather than cleared.
-  const [priorSchool, setPriorSchool] = useState(null);
+  // Both halves of a transfer now live in the draft. They used to disagree:
+  // transferPending persisted and priorSchool did not, so stepping Back and
+  // forward again left the flag set with nothing backing it — Next stayed
+  // blocked, the code panel vanished because `proving` went false, and Change
+  // did nothing because `applicant` fell back to the edit-mode default the
+  // moment chooseDoor cleared it. Three dead ends from one lost variable.
+  const priorSchool = draft.priorSchool || null;
   const changingSchool = priorSchool !== null;
 
   function startTransfer() {
-    setPriorSchool({
-      applicant: draft.applicant, verifyMethod: draft.verifyMethod,
-      conservatoryId: draft.conservatoryId, conservatoryEmail: draft.conservatoryEmail,
-      conservatoryVerified: draft.conservatoryVerified, domainReq: draft.domainReq,
-      proofDocUrl: draft.proofDocUrl, proofDocName: draft.proofDocName,
-    });
     setQ(""); setEmail(""); setCode(""); setCodeSent(false); setErr("");
     // transferPending holds the Next button until the new school is proved.
     // Without it an unfinished transfer could be saved, and the database would
     // then unapprove them for a school they never confirmed.
     update({
+      priorSchool: {
+        applicant: draft.applicant, verifyMethod: draft.verifyMethod,
+        conservatoryId: draft.conservatoryId, conservatoryEmail: draft.conservatoryEmail,
+        conservatoryVerified: draft.conservatoryVerified, domainReq: draft.domainReq,
+        proofDocUrl: draft.proofDocUrl, proofDocName: draft.proofDocName,
+      },
       applicant: "", verifyMethod: "otp", conservatoryId: "", conservatoryEmail: "",
       conservatoryVerified: false, domainReq: null, proofDocUrl: "", proofDocName: "",
       transferPending: true,
@@ -5308,8 +5318,7 @@ function StepConservatory({ draft, update, editing }) {
   }
 
   function cancelTransfer() {
-    update({ ...priorSchool, transferPending: false });
-    setPriorSchool(null);
+    update({ ...priorSchool, priorSchool: null, transferPending: false });
     setQ(""); setEmail(priorSchool.conservatoryEmail || ""); setCode(""); setCodeSent(false); setErr("");
   }
 
@@ -5563,7 +5572,7 @@ function StepConservatory({ draft, update, editing }) {
   // which route was taken or remember to make an exception for this one.
   useEffect(() => {
     if (googleProvesSchool && !draft.conservatoryVerified) {
-      update({ conservatoryEmail: draft.email, conservatoryVerified: true, transferPending: false });
+      update({ conservatoryEmail: draft.email, conservatoryVerified: true, transferPending: false, priorSchool: null });
     }
   }, [googleProvesSchool, draft.conservatoryVerified, draft.email]);
 
@@ -5611,7 +5620,7 @@ function StepConservatory({ draft, update, editing }) {
     if (error) { setErr("Upload failed: " + error.message); return; }
     // A document is the applicant's part done, even though approval waits on
     // a human — so the step is finished and Next opens.
-    update({ proofDocUrl: path, proofDocName: file.name, transferPending: false });
+    update({ proofDocUrl: path, proofDocName: file.name, transferPending: false, priorSchool: null });
   }
 
   async function sendCode() {
@@ -5627,7 +5636,7 @@ function StepConservatory({ draft, update, editing }) {
     const { error } = await verifyConservatoryCode(email, code);
     setVerifying(false);
     if (error) { setErr(error); return; }
-    update({ conservatoryEmail: email.trim(), conservatoryVerified: true, transferPending: false });
+    update({ conservatoryEmail: email.trim(), conservatoryVerified: true, transferPending: false, priorSchool: null });
   }
 
   return (
@@ -5900,7 +5909,7 @@ function StepConservatory({ draft, update, editing }) {
                   style={{ flex: "0 0 auto", fontSize: 14, padding: "11px 20px" }}
                   disabled={!reqReady}
                   onClick={() => {
-                    update({ domainReq: { name: reqName.trim(), address: reqAddress.trim(), email: reqEmail.trim() }, transferPending: false });
+                    update({ domainReq: { name: reqName.trim(), address: reqAddress.trim(), email: reqEmail.trim() }, transferPending: false, priorSchool: null });
                     setShowReq(false);
                   }}
                 >
