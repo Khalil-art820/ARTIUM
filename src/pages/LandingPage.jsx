@@ -28,7 +28,7 @@ export default function LandingPage({
   // editorial page. Own the body while mounted; put it back on the way out.
   React.useEffect(() => {
     const prev = document.body.style.backgroundColor;
-    document.body.style.backgroundColor = "#FFFFFF";
+    document.body.style.backgroundColor = "#F6F1E7";
     return () => { document.body.style.backgroundColor = prev; };
   }, []);
   // Mirrors EntryGate's own singleCard logic so "who is this visitor" reads
@@ -53,7 +53,7 @@ export default function LandingPage({
   }
 
   return (
-    <div className="min-h-screen bg-white" style={{ colorScheme: "light" }}>
+    <div className="min-h-screen bg-[#F6F1E7]" style={{ colorScheme: "light" }}>
       <ArtiumHeader musicOn={musicOn} onMusicToggle={onMusicToggle} memberCount={memberCount} />
 
       <HeroSection />

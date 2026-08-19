@@ -46,7 +46,7 @@ export default function ArtiumHeader({ musicOn, onMusicToggle, memberCount }) {
             onClick={() => setMenuOpen((v) => !v)}
             aria-label="Menu"
             aria-expanded={menuOpen}
-            className="flex h-[38px] w-[38px] items-center justify-center rounded-full border border-border bg-white text-gold transition-colors hover:border-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+            className="flex h-[38px] w-[38px] items-center justify-center rounded-full lp-disc text-gold transition-colors hover:border-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
           >
             <Menu size={17} strokeWidth={1.8} />
           </button>
@@ -55,7 +55,7 @@ export default function ArtiumHeader({ musicOn, onMusicToggle, memberCount }) {
               {/* A full-screen catcher rather than onBlur — onBlur closes
                   the menu before a click on one of its own links lands. */}
               <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
-              <div className="absolute right-0 top-[46px] z-20 w-44 overflow-hidden rounded-2xl border border-border bg-white py-2 shadow-[0_18px_40px_rgba(25,30,35,0.12)]">
+              <div className="absolute right-0 top-[46px] z-20 w-44 overflow-hidden rounded-2xl lp-disc py-2 shadow-[0_18px_40px_rgba(25,30,35,0.12)]">
                 {[
                   ["About Us", "#about"],
                   ["Help Center", "#help"],
@@ -76,7 +76,7 @@ export default function ArtiumHeader({ musicOn, onMusicToggle, memberCount }) {
           )}
         </div>
 
-        <div className="flex h-[38px] items-center gap-1.5 rounded-full border border-border bg-white px-3.5">
+        <div className="flex h-[38px] items-center gap-1.5 rounded-full lp-disc px-3.5">
           <MemberCount count={memberCount} mark="#C49339" figure="#111923" />
         </div>
       </div>

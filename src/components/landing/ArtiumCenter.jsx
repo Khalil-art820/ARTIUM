@@ -11,7 +11,7 @@ import React from "react";
  */
 export default function ArtiumCenter({ className = "" }) {
   return (
-    <div className={`artium-center flex h-[110px] w-[110px] shrink-0 flex-col items-center justify-center rounded-full border border-champagne/70 bg-white md:h-[130px] md:w-[130px] lg:h-[176px] lg:w-[176px] ${className}`}>
+    <div className={`artium-center flex h-[130px] w-[130px] shrink-0 flex-col items-center justify-center rounded-full border border-champagne/70 bg-white md:h-[160px] md:w-[160px] lg:h-[218px] lg:w-[218px] ${className}`}>
       <style>{`
         .artium-center {
           box-shadow: 0 14px 34px rgba(25,30,35,0.09), 0 0 0 1px rgba(196,147,57,0.08);
@@ -29,7 +29,7 @@ export default function ArtiumCenter({ className = "" }) {
           card's own border, which is what reads as "double ring" rather
           than "thick ring". */}
       <div className="flex h-[86%] w-[86%] flex-col items-center justify-center rounded-full border border-gold-pale">
-        <svg width="18" height="26" viewBox="0 0 28 40" aria-hidden="true" className="lg:w-[22px]" style={{ width: 16, height: 23 }}>
+        <svg viewBox="0 0 28 40" aria-hidden="true" style={{ width: 30, height: 43 }}>
           <path
             fillRule="evenodd"
             fill="#C49339"
@@ -37,7 +37,7 @@ export default function ArtiumCenter({ className = "" }) {
           />
         </svg>
         <span
-          className="mt-1.5 text-[13px] leading-none text-gold md:text-[15px]"
+          className="mt-2 text-[17px] leading-none text-gold md:text-[21px]"
           style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600 }}
         >
           artium

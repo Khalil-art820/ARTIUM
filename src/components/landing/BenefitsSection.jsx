@@ -28,10 +28,10 @@ const BENEFITS = [
 export default function BenefitsSection() {
   return (
     <section className="mx-auto max-w-5xl px-6 py-10 md:px-10 md:py-16">
-      <div className="flex flex-col divide-y divide-border rounded-[28px] border border-border bg-white shadow-[0_12px_35px_rgba(25,30,35,0.06)] md:flex-row md:divide-x md:divide-y-0">
+      <div className="flex flex-col divide-y divide-border rounded-[28px] border border-border bg-white shadow-[0_18px_40px_rgba(160,135,90,0.14)] md:flex-row md:divide-x md:divide-y-0">
         {BENEFITS.map(({ title, desc, icon: Icon }) => (
           <div key={title} className="flex flex-1 items-start gap-4 px-8 py-8 md:py-10">
-            <span className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-warm-white text-gold">
+            <span className="lp-disc flex h-[52px] w-[52px] flex-shrink-0 items-center justify-center rounded-full text-gold">
               <Icon size={20} strokeWidth={1.6} />
             </span>
             <span>

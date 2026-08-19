@@ -13,7 +13,7 @@ export default function HeroSection() {
         Welcome to Artium
       </p>
       <h1
-        className="mt-4 text-[40px] leading-[1.12] text-ink md:text-[54px]"
+        className="mt-4 text-[42px] leading-[1.1] text-ink md:text-[62px]"
         style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600 }}
       >
         Your Classical
