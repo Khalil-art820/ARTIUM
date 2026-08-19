@@ -1,0 +1,1366 @@
+/* =========================================================
+   ARTIUM — EXACT LIGHT PREMIUM LANDING
+   (client-supplied stylesheet, installed verbatim; the two
+   pin placeholders became SVGs, so their clip-path rules are
+   replaced by same-footprint sizing rules at the end)
+========================================================= */
+
+:root {
+  --artium-gold: #c99538;
+  --artium-gold-light: #e4c57e;
+  --artium-gold-pale: #f4e8ce;
+
+  --artium-black: #111b27;
+  --artium-gray: #555c62;
+
+  --artium-border: #eee8dc;
+  --artium-background: #fcfbf9;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.artium-page {
+  min-height: 100vh;
+  width: 100%;
+  overflow-x: hidden;
+
+  background:
+    radial-gradient(
+      ellipse at 50% 25%,
+      #ffffff 0%,
+      #fdfcfb 58%,
+      #faf9f6 100%
+    );
+
+  color: var(--artium-black);
+
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.artium-header {
+  width: 100%;
+  height: 106px;
+
+  padding:
+    22px
+    clamp(25px, 5vw, 65px);
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.artium-logo {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+
+  color: var(--artium-gold);
+
+  font-family:
+    Georgia,
+    "Times New Roman",
+    serif;
+
+  font-size: 40px;
+  letter-spacing: -1.8px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.header-circle,
+.header-user {
+  height: 53px;
+
+  border: 1px solid #e8dfce;
+
+  background:
+    linear-gradient(
+      145deg,
+      #ffffff,
+      #fbfaf7
+    );
+
+  color: #202831;
+
+  box-shadow:
+    0 3px 10px rgba(70, 50, 20, 0.045),
+    inset 0 1px 0 white;
+
+  cursor: pointer;
+
+  transition:
+    transform .25s ease,
+    box-shadow .25s ease;
+}
+
+.header-circle:hover,
+.header-user:hover {
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 7px 18px rgba(70, 50, 20, 0.08);
+}
+
+.header-circle {
+  width: 53px;
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-user {
+  padding: 0 16px;
+
+  border-radius: 30px;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  font-size: 24px;
+  font-weight: 400;
+}
+
+/* =========================================================
+   HERO
+========================================================= */
+
+.hero {
+  text-align: center;
+
+  padding-top: 12px;
+}
+
+.welcome {
+  color: #b9842d;
+
+  font-size: 15px;
+  font-weight: 500;
+
+  letter-spacing: 4px;
+}
+
+.hero h1 {
+  margin: 25px auto 0;
+
+  max-width: 800px;
+
+  color: #101b27;
+
+  font-family:
+    Georgia,
+    "Times New Roman",
+    serif;
+
+  font-size:
+    clamp(58px, 7vw, 91px);
+
+  font-weight: 400;
+
+  line-height: .91;
+
+  letter-spacing: -4.8px;
+}
+
+.hero > p {
+  margin-top: 25px;
+
+  color: #555b61;
+
+  font-size: 22px;
+  font-weight: 400;
+
+  letter-spacing: -.4px;
+}
+
+.hero-decoration {
+  margin: 20px auto 0;
+
+  width: 330px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+}
+
+.hero-decoration span {
+  height: 1px;
+  flex: 1;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      #d9bd83
+    );
+}
+
+.hero-decoration span:last-child {
+  background:
+    linear-gradient(
+      90deg,
+      #d9bd83,
+      transparent
+    );
+}
+
+.hero-decoration b {
+  color: #c9973e;
+
+  font-size: 12px;
+  font-weight: 400;
+}
+
+/* =========================================================
+   ARCHITECTURE
+========================================================= */
+
+.architecture {
+  position: relative;
+
+  width: min(
+    790px,
+    calc(100% - 70px)
+  );
+
+  height: 790px;
+
+  margin: 0 auto;
+}
+
+.cards-grid {
+  position: relative;
+
+  width: 100%;
+  height: 100%;
+}
+
+/* =========================================================
+   BACKGROUND ARCHITECTURE
+========================================================= */
+
+.architecture-circle {
+  position: absolute;
+
+  left: 50%;
+  top: 50%;
+
+  transform: translate(-50%, -50%);
+
+  border-radius: 50%;
+
+  pointer-events: none;
+}
+
+.circle-large {
+  width: 520px;
+  height: 520px;
+
+  border:
+    1px solid
+    rgba(208, 166, 83, .25);
+}
+
+.circle-small {
+  width: 285px;
+  height: 285px;
+
+  border:
+    1px solid
+    rgba(208, 166, 83, .18);
+}
+
+.architecture-line {
+  position: absolute;
+
+  left: 50%;
+  top: 50%;
+
+  background:
+    rgba(201, 159, 78, .23);
+
+  pointer-events: none;
+}
+
+.architecture-horizontal {
+  width: 520px;
+  height: 1px;
+
+  transform: translate(-50%, -50%);
+}
+
+.architecture-vertical {
+  width: 1px;
+  height: 520px;
+
+  transform: translate(-50%, -50%);
+}
+
+.architecture-dot {
+  position: absolute;
+
+  width: 9px;
+  height: 9px;
+
+  border-radius: 50%;
+
+  background: #d19d43;
+
+  box-shadow:
+    0 0 0 4px rgba(209, 157, 67, .08);
+}
+
+.dot-top {
+  left: 50%;
+  top: calc(50% - 260px);
+
+  transform: translateX(-50%);
+}
+
+.dot-bottom {
+  left: 50%;
+  bottom: calc(50% - 260px);
+
+  transform: translateX(-50%);
+}
+
+.dot-left {
+  top: 50%;
+  left: calc(50% - 260px);
+
+  transform: translateY(-50%);
+}
+
+.dot-right {
+  top: 50%;
+  right: calc(50% - 260px);
+
+  transform: translateY(-50%);
+}
+
+/* =========================================================
+   CARDS
+========================================================= */
+
+.experience-card {
+  position: absolute;
+
+  width: 330px;
+  height: 365px;
+
+  padding: 28px 30px;
+
+  text-decoration: none;
+
+  color: inherit;
+
+  overflow: hidden;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255,255,255,.99),
+      rgba(250,249,246,.96)
+    );
+
+  border:
+    1px solid
+    rgba(222, 208, 184, .7);
+
+  box-shadow:
+    0 14px 25px rgba(77, 58, 25, .075),
+    0 30px 55px rgba(77, 58, 25, .055),
+    inset 0 1px 1px rgba(255,255,255,.98),
+    inset 0 -1px 0 rgba(209,170,98,.15);
+
+  transition:
+    transform .35s ease,
+    box-shadow .35s ease;
+
+  z-index: 4;
+}
+
+.experience-card:hover {
+  box-shadow:
+    0 20px 34px rgba(77, 58, 25, .10),
+    0 35px 65px rgba(77, 58, 25, .07),
+    inset 0 1px 1px white;
+
+  transform: translateY(-4px);
+}
+
+/*
+   The cards deliberately use different corner radii
+   to reproduce the architectural shapes in the reference.
+*/
+
+.top-left {
+  left: 0;
+  top: 0;
+
+  border-radius:
+    42px
+    42px
+    42px
+    70px;
+}
+
+.top-right {
+  right: 0;
+  top: 0;
+
+  border-radius:
+    42px
+    42px
+    70px
+    42px;
+}
+
+.bottom-left {
+  left: 0;
+  bottom: 0;
+
+  border-radius:
+    70px
+    42px
+    42px
+    42px;
+}
+
+.bottom-right {
+  right: 0;
+  bottom: 0;
+
+  border-radius:
+    42px
+    70px
+    42px
+    42px;
+}
+
+/* =========================================================
+   CARD GLOSS
+========================================================= */
+
+.experience-card::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  border-radius: inherit;
+
+  pointer-events: none;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.95) 0%,
+      rgba(255,255,255,.35) 20%,
+      transparent 42%
+    );
+
+  opacity: .9;
+}
+
+.experience-card::after {
+  content: "";
+
+  position: absolute;
+
+  inset: 5px;
+
+  border-radius: inherit;
+
+  pointer-events: none;
+
+  border:
+    1px solid
+    rgba(255,255,255,.9);
+
+  box-shadow:
+    inset 0 0 18px rgba(221,194,143,.09);
+}
+
+/* =========================================================
+   CARD CONTENT
+========================================================= */
+
+.card-number {
+  position: absolute;
+
+  top: 17px;
+  left: 18px;
+
+  width: 51px;
+  height: 51px;
+
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background:
+    linear-gradient(
+      145deg,
+      #ffffff,
+      #faf7ef
+    );
+
+  border:
+    1px solid
+    #ebe0ca;
+
+  color: #b8832b;
+
+  font-size: 18px;
+  font-weight: 500;
+
+  box-shadow:
+    0 4px 10px rgba(100,70,25,.06),
+    inset 0 1px 1px white;
+
+  z-index: 5;
+}
+
+.top-right .card-number,
+.bottom-right .card-number {
+  left: auto;
+  right: 18px;
+}
+
+.card-content {
+  height: 100%;
+
+  position: relative;
+  z-index: 3;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  text-align: center;
+
+  padding-top: 32px;
+}
+
+.experience-icon {
+  height: 74px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #bc8932;
+}
+
+.custom-icon {
+  width: 67px;
+  height: 67px;
+
+  fill: none;
+
+  stroke:
+    currentColor;
+
+  stroke-width: 1.35;
+
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.composer-icon {
+  width: 67px;
+  height: 67px;
+}
+
+.lucide-experience-icon {
+  width: 66px;
+  height: 66px;
+
+  color: #bd8c35;
+}
+
+.card-content h2 {
+  margin: 17px 0 0;
+
+  color: #121c26;
+
+  font-family:
+    Georgia,
+    "Times New Roman",
+    serif;
+
+  font-size: 26px;
+  line-height: 1.12;
+
+  font-weight: 400;
+
+  letter-spacing: -.8px;
+}
+
+.card-divider {
+  width: 17px;
+  height: 2px;
+
+  margin-top: 14px;
+
+  background: #c69846;
+}
+
+.card-content p {
+  max-width: 255px;
+
+  margin: 15px 0 0;
+
+  color: #40464b;
+
+  font-size: 14px;
+
+  line-height: 1.7;
+}
+
+.card-arrow {
+  width: 50px;
+  height: 50px;
+
+  margin-top: auto;
+  /* The reference seats every arrow at the card's lower right, not on its
+     centreline. */
+  align-self: flex-end;
+  margin-right: 2px;
+
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #b9852d;
+
+  background:
+    linear-gradient(
+      145deg,
+      #ffffff,
+      #faf8f2
+    );
+
+  border:
+    1px solid
+    #e8deca;
+
+  box-shadow:
+    0 4px 12px rgba(70,50,20,.06),
+    inset 0 1px 0 white;
+}
+
+/* =========================================================
+   CENTER
+========================================================= */
+
+.artium-center {
+  position: absolute;
+
+  left: 50%;
+  top: 50%;
+
+  width: 214px;
+  height: 214px;
+
+  transform:
+    translate(-50%, -50%);
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      circle at 40% 30%,
+      #ffffff,
+      #fbfaf7 72%,
+      #f5f0e5
+    );
+
+  border:
+    1px solid
+    rgba(208,164,80,.65);
+
+  box-shadow:
+    0 12px 28px rgba(80,58,20,.12),
+    0 25px 50px rgba(80,58,20,.07),
+    inset 0 2px 4px rgba(255,255,255,.95),
+    inset 0 -2px 5px rgba(199,156,76,.10);
+
+  z-index: 15;
+}
+
+.center-ring {
+  position: absolute;
+
+  border-radius: 50%;
+
+  pointer-events: none;
+}
+
+.center-ring-outer {
+  inset: 7px;
+
+  border:
+    1px solid
+    rgba(205,161,77,.32);
+}
+
+.center-ring-inner {
+  inset: 18px;
+
+  border:
+    1px solid
+    rgba(225,205,163,.5);
+}
+
+.center-content {
+  height: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+}
+
+.center-wordmark {
+  margin-top: 3px;
+
+  color: #b9822c;
+
+  font-family:
+    Georgia,
+    "Times New Roman",
+    serif;
+
+  font-size: 34px;
+
+  letter-spacing: -1.5px;
+}
+
+/* =========================================================
+   BENEFITS
+========================================================= */
+
+.benefits {
+  width: min(
+    820px,
+    calc(100% - 70px)
+  );
+
+  min-height: 133px;
+
+  margin: 20px auto 0;
+
+  padding: 17px 24px;
+
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+
+  border:
+    1px solid
+    rgba(232,225,211,.85);
+
+  border-radius: 25px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255,255,255,.98),
+      rgba(252,250,246,.94)
+    );
+
+  box-shadow:
+    0 11px 30px rgba(60,45,20,.045),
+    inset 0 1px 0 white;
+}
+
+.benefit-item {
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+
+  gap: 16px;
+
+  padding: 7px 23px;
+}
+
+.benefit-item + .benefit-item {
+  border-left:
+    1px solid
+    #eee6d7;
+}
+
+.benefit-icon {
+  width: 52px;
+  height: 52px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background:
+    linear-gradient(
+      145deg,
+      #ffffff,
+      #faf7f0
+    );
+
+  color: #c28d32;
+
+  border:
+    1px solid
+    #eee3ce;
+
+  box-shadow:
+    0 5px 12px rgba(70,50,20,.06),
+    inset 0 1px 0 white;
+}
+
+.benefit-item h3 {
+  margin: 0;
+
+  color: #171e25;
+
+  font-size: 16px;
+  line-height: 1.2;
+
+  font-weight: 650;
+}
+
+.benefit-item p {
+  margin: 7px 0 0;
+
+  color: #62686d;
+
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+/* =========================================================
+   LOGIN
+========================================================= */
+
+.login-section {
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+
+  padding:
+    20px 20px 0;
+}
+
+.login-section > p {
+  margin: 0;
+
+  color: #62676c;
+
+  font-size: 16px;
+}
+
+.login-button {
+  width: 355px;
+  max-width: 90vw;
+
+  height: 51px;
+
+  margin-top: 13px;
+
+  border-radius: 30px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 23px;
+
+  color: #111820;
+
+  background:
+    linear-gradient(
+      180deg,
+      #f4cc80,
+      #eab963
+    );
+
+  box-shadow:
+    0 9px 22px rgba(190,143,57,.20),
+    inset 0 1px 0 rgba(255,255,255,.4);
+
+  text-decoration: none;
+
+  font-size: 18px;
+  font-weight: 500;
+
+  transition:
+    transform .25s ease,
+    box-shadow .25s ease;
+}
+
+.login-button:hover {
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 14px 30px rgba(190,143,57,.27),
+    inset 0 1px 0 rgba(255,255,255,.4);
+}
+
+/* =========================================================
+   FOOTER
+========================================================= */
+
+.artium-footer {
+  width: min(
+    900px,
+    calc(100% - 70px)
+  );
+
+  margin: 20px auto 0;
+
+  border-top:
+    1px solid
+    #eee7da;
+
+  padding-top: 17px;
+  padding-bottom: 25px;
+}
+
+.footer-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.partnership {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+
+.partnership span {
+  color: #6f7479;
+
+  font-size: 12px;
+}
+
+.partnership strong {
+  color: #b78430;
+
+  font-family:
+    Georgia,
+    "Times New Roman",
+    serif;
+
+  font-size: 19px;
+  font-weight: 400;
+}
+
+.socials {
+  display: flex;
+  gap: 12px;
+}
+
+.socials a {
+  width: 39px;
+  height: 39px;
+
+  border-radius: 50%;
+
+  border:
+    1px solid
+    #e8ddc8;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  text-decoration: none;
+
+  color: #b88632;
+
+  font-size: 20px;
+
+  background: white;
+}
+
+.socials a:last-child {
+  font-family: Arial, sans-serif;
+
+  font-weight: 500;
+}
+
+.footer-bottom {
+  margin-top: 13px;
+
+  padding-top: 12px;
+
+  border-top:
+    1px solid
+    #f1ece4;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  color: #72777b;
+
+  font-size: 12px;
+}
+
+.footer-bottom nav {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.footer-bottom nav a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.footer-bottom nav i {
+  color: #c18d35;
+  font-style: normal;
+}
+
+/* =========================================================
+   PIN MARK SIZING
+   (the real Artium SVG at the placeholder's footprint)
+========================================================= */
+
+.artium-logo-pin-svg {
+  width: 38px;
+  height: 49px;
+  display: block;
+}
+
+.center-pin-svg {
+  width: 45px;
+  height: 59px;
+  display: block;
+  /* The SVG paints currentColor; without this it inherits the page's ink
+     and the centre pin turns black — the reference's is gold. */
+  color: #c9963b;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 900px) {
+
+  .architecture {
+    width: min(700px, calc(100% - 40px));
+    height: 700px;
+  }
+
+  .experience-card {
+    width: 295px;
+    height: 325px;
+  }
+
+  .artium-center {
+    width: 185px;
+    height: 185px;
+  }
+
+  .center-wordmark {
+    font-size: 29px;
+  }
+
+  .center-pin-svg {
+    width: 39px;
+    height: 51px;
+  }
+
+  .circle-large {
+    width: 470px;
+    height: 470px;
+  }
+
+  .circle-small {
+    width: 250px;
+    height: 250px;
+  }
+
+  .architecture-horizontal {
+    width: 470px;
+  }
+
+  .architecture-vertical {
+    height: 470px;
+  }
+}
+
+@media (max-width: 720px) {
+
+  .artium-header {
+    height: 82px;
+    padding: 17px 20px;
+  }
+
+  .artium-logo {
+    font-size: 28px;
+    gap: 9px;
+  }
+
+  .artium-logo-pin-svg {
+    width: 28px;
+    height: 37px;
+  }
+
+  .header-circle,
+  .header-user {
+    height: 42px;
+  }
+
+  .header-circle {
+    width: 42px;
+  }
+
+  .header-user {
+    padding: 0 12px;
+    font-size: 17px;
+  }
+
+  .header-actions {
+    gap: 8px;
+  }
+
+  .hero {
+    padding: 25px 20px 0;
+  }
+
+  .welcome {
+    font-size: 10px;
+    letter-spacing: 3px;
+  }
+
+  .hero h1 {
+    margin-top: 17px;
+
+    font-size: 50px;
+    line-height: .95;
+
+    letter-spacing: -2.8px;
+  }
+
+  .hero > p {
+    margin-top: 19px;
+    font-size: 17px;
+  }
+
+  .hero-decoration {
+    width: 220px;
+  }
+
+  .architecture {
+    width: calc(100% - 30px);
+
+    height: auto;
+
+    margin-top: 12px;
+  }
+
+  .cards-grid {
+    height: auto;
+
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+
+    gap: 12px;
+  }
+
+  .architecture-circle,
+  .architecture-line,
+  .architecture-dot {
+    display: none;
+  }
+
+  .experience-card {
+    position: relative;
+
+    width: auto;
+    height: 310px;
+
+    padding: 22px 15px;
+  }
+
+  .top-left,
+  .top-right,
+  .bottom-left,
+  .bottom-right {
+    left: auto;
+    right: auto;
+    top: auto;
+    bottom: auto;
+  }
+
+  .card-number {
+    width: 39px;
+    height: 39px;
+
+    top: 12px;
+    left: 12px;
+
+    font-size: 13px;
+  }
+
+  .top-right .card-number,
+  .bottom-right .card-number {
+    right: 12px;
+    left: auto;
+  }
+
+  .card-content {
+    padding-top: 26px;
+  }
+
+  .experience-icon {
+    height: 60px;
+  }
+
+  .custom-icon,
+  .composer-icon,
+  .lucide-experience-icon {
+    width: 50px;
+    height: 50px;
+  }
+
+  .card-content h2 {
+    margin-top: 11px;
+    font-size: 21px;
+  }
+
+  .card-content p {
+    margin-top: 11px;
+
+    max-width: 170px;
+
+    font-size: 11px;
+    line-height: 1.55;
+  }
+
+  .card-arrow {
+    width: 41px;
+    height: 41px;
+  }
+
+  .artium-center {
+    position: absolute;
+
+    width: 118px;
+    height: 118px;
+
+    left: 50%;
+    top: 50%;
+
+    transform: translate(-50%, -50%);
+  }
+
+  .center-wordmark {
+    font-size: 19px;
+  }
+
+  .center-pin-svg {
+    width: 27px;
+    height: 35px;
+  }
+
+  .benefits {
+    width: calc(100% - 30px);
+
+    grid-template-columns: 1fr;
+
+    padding: 10px 18px;
+
+    margin-top: 18px;
+  }
+
+  .benefit-item {
+    padding: 14px 4px;
+  }
+
+  .benefit-item + .benefit-item {
+    border-left: 0;
+    border-top: 1px solid #eee6d7;
+  }
+
+  .artium-footer {
+    width: calc(100% - 30px);
+  }
+
+  .footer-bottom {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+}
+
+@media (max-width: 420px) {
+
+  .hero h1 {
+    font-size: 43px;
+  }
+
+  .experience-card {
+    height: 295px;
+  }
+
+  .card-content h2 {
+    font-size: 19px;
+  }
+
+  .card-content p {
+    font-size: 10.5px;
+  }
+
+  .artium-center {
+    width: 105px;
+    height: 105px;
+  }
+
+  .center-wordmark {
+    font-size: 17px;
+  }
+
+}
