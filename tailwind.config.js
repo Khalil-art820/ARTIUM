@@ -3,6 +3,13 @@ export default {
   content: ["./index.html", "./src/**/*.{js,jsx}"],
   theme: {
     extend: {
+      // The landing page uses Tailwind's font-serif/font-sans utilities;
+      // mapped here so they resolve to the fonts index.html already loads
+      // instead of the browser's Georgia/Helvetica defaults.
+      fontFamily: {
+        serif: ["'Cormorant Garamond'", "Georgia", "serif"],
+        sans: ["'Manrope'", "-apple-system", "'Segoe UI'", "Roboto", "sans-serif"],
+      },
       // The landing page's own palette — light, editorial, champagne metal —
       // named for what each token is used for on that page rather than the
       // hex itself, since "gold" and "champagne" are two different golds and
