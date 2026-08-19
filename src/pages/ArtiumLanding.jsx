@@ -1,6 +1,7 @@
 import React from "react";
 import {
   Menu,
+  Music2,
   UserRound,
   ArrowRight,
   Users,
@@ -321,7 +322,7 @@ function Benefits() {
 
 const ACT_INSTAGRAM = "https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==";
 
-export default function ArtiumLanding({ onLearner, onStudent, onPianist, onComposers, onLogin, memberCount }) {
+export default function ArtiumLanding({ onLearner, onStudent, onPianist, onComposers, onLogin, memberCount, musicOn, onMusicToggle, learnerProfile, learnerLoggedOut, studentLoggedIn }) {
   // The app around this page is dark; iOS rubber-band overscroll shows the
   // body. Own it while mounted, hand it back on the way out.
   React.useEffect(() => {
@@ -337,6 +338,15 @@ export default function ArtiumLanding({ onLearner, onStudent, onPianist, onCompo
     "04": onComposers,
   };
 
+  // The dark gate used to collapse to a single card for a returning visitor.
+  // This design keeps all four doors on screen — hiding three of them on a
+  // hub page reads as broken, not personalised — and greets instead: one
+  // banner above the architecture, offering to continue where they left off.
+  const returning = !!learnerProfile || learnerLoggedOut || studentLoggedIn;
+  const firstName = learnerProfile?.name ? learnerProfile.name.split(" ")[0] : "";
+  const continueLabel = studentLoggedIn ? "Continue to your network" : "Continue to your teachers";
+  const continueAction = studentLoggedIn ? onStudent : onLearner;
+
   return (
     <div className="artium-page">
 
@@ -347,6 +357,19 @@ export default function ArtiumLanding({ onLearner, onStudent, onPianist, onCompo
         </a>
 
         <div className="header-actions">
+
+          {/* The ambient-music toggle the dark gate carried. A disc like its
+              neighbours — one material, one row — gold while playing. */}
+          {onMusicToggle && (
+            <button
+              className={`header-circle header-music${musicOn ? " is-on" : ""}`}
+              aria-label={musicOn ? "Pause ambient music" : "Play ambient music"}
+              aria-pressed={!!musicOn}
+              onClick={onMusicToggle}
+            >
+              <Music2 size={21} strokeWidth={1.55} />
+            </button>
+          )}
 
           <button className="header-circle" aria-label="Menu">
             <Menu size={23} strokeWidth={1.55} />
@@ -387,6 +410,16 @@ export default function ArtiumLanding({ onLearner, onStudent, onPianist, onCompo
           </div>
 
         </section>
+
+        {returning && (
+          <div className="welcome-back">
+            <span>Welcome back{firstName ? `, ${firstName}` : ""}</span>
+            <button onClick={continueAction}>
+              {continueLabel}
+              <ArrowRight size={15} strokeWidth={1.7} />
+            </button>
+          </div>
+        )}
 
         <Architecture actionFor={actionFor} />
 
