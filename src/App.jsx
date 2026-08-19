@@ -23,6 +23,8 @@ import {
 } from "./lib/concerts";
 import L from "leaflet";
 import { MapContainer, TileLayer, Marker, Tooltip, Popup, useMap } from "react-leaflet";
+import LandingPage from "./pages/LandingPage";
+import WallOfComposers from "./pages/WallOfComposers";
 // three.js is ~1.9MB of the bundle. Loading it lazily keeps it out of the
 // initial download and out of the entry chunk, which otherwise blew past the
 // service worker's 2MiB precache ceiling and failed the build.
@@ -720,7 +722,7 @@ function Logo({ tone = "light", size = 20, markSize, slogan = false }) {
  * people are connected right now is something the owner watches, not something
  * a visitor needs on every page.
  */
-function MemberCount({ count, mark = C.ivoryDim, figure = C.ivory }) {
+export function MemberCount({ count, mark = C.ivoryDim, figure = C.ivory }) {
   if (count == null) return null;
   return (
     <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 13, color: mark }}>
@@ -846,7 +848,7 @@ function HomeBtn({ onClick }) {
 // a faint outline that read as disabled. It is now the resting state too —
 // the icon alone says whether it is playing. Sized to HEADER_CONTROL so it
 // matches the avatar and the logo mark across every header.
-function MusicBtn({ playing, onToggle, size = HEADER_CONTROL }) {
+export function MusicBtn({ playing, onToggle, size = HEADER_CONTROL }) {
   if (!SPOTIFY_PLAYLIST_ID) return null;
   // Black ring, black glyph, both stroked — the reference is drawn in outline,
   // so nothing here is filled. Ring weight and glyph size are fractions of the
@@ -2365,7 +2367,7 @@ export default function App() {
     // to a whole pixel where the gate lands on a fraction, leaving a hairline
     // of white along the foot; and on a phone the safe area and the rubber
     // band at the end of a scroll both reveal whatever is underneath.
-    <div style={{ fontFamily: FONT_BODY, background: screen === "entry" ? GATE.bg : C.ink, minHeight: "100%", width: "100%" }}>
+    <div style={{ fontFamily: FONT_BODY, background: (screen === "entry" || screen === "composers") ? "#FFFFFF" : C.ink, minHeight: "100%", width: "100%" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Serif+Display&family=Fraunces:opsz,wght@9..144,500&display=swap');
         * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
@@ -3622,7 +3624,8 @@ export default function App() {
         />
       )}
 
-      {view === "entry" && <EntryGate onLearner={chooseLearner} onStudent={() => chooseStudent("otp")} onPianist={choosePianist} onLogin={startLogin} learnerProfile={learnerProfile} learnerLoggedOut={learnerLoggedOut} studentLoggedIn={!!myProfile} musicOn={musicPlaying} onMusicToggle={toggleMusic} memberCount={Object.values(studentsByCons).flat().length} />}
+      {view === "entry" && <LandingPage onLearner={chooseLearner} onStudent={() => chooseStudent("otp")} onPianist={choosePianist} onLogin={startLogin} onComposers={() => setScreen("composers")} learnerProfile={learnerProfile} learnerLoggedOut={learnerLoggedOut} studentLoggedIn={!!myProfile} musicOn={musicPlaying} onMusicToggle={toggleMusic} memberCount={Object.values(studentsByCons).flat().length} />}
+      {view === "composers" && <WallOfComposers onBack={backToEntry} />}
       {view === "learnerSignup" && <LearnerSignup onSubmit={submitLearner} onBack={backToEntry} onLogin={startLogin} error={authError} googleName={learnerGoogleName} />}
       {view === "learnerMap" && (
         <LearnerScreen
