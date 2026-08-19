@@ -62,28 +62,44 @@ if ("serviceWorker" in navigator) {
  * deploy itself is broken rather than stale, reloading will not fix it, and a
  * page that reloads forever is worse than one that renders badly.
  */
-if (import.meta.env.PROD) {
-  const TRIED = "artium_stale_chunk_reload";
+const TRIED = "artium_stale_chunk_reload";
 
-  async function reloadOnce(why) {
-    if (sessionStorage.getItem(TRIED)) return;
-    sessionStorage.setItem(TRIED, why);
-    // Clear the caches and the worker before reloading, or the reload is
-    // served the same stale index.html and lands in the same hole.
-    try {
-      if ("caches" in window) {
-        const keys = await caches.keys();
-        await Promise.all(keys.map((k) => caches.delete(k)));
-      }
-      if ("serviceWorker" in navigator) {
-        const regs = await navigator.serviceWorker.getRegistrations();
-        await Promise.all(regs.map((r) => r.unregister()));
-      }
-    } catch {
-      // Recovery is best-effort; a reload without it still beats a hole.
+/**
+ * Clear the caches and the worker, then reload — once per tab.
+ *
+ * Exported because two different failures share this cure. A missing chunk
+ * (the listeners below) and a render crash inside a cached build (the error
+ * boundary) are both, most of the time, the same event: the service worker
+ * is serving a page from before the last deploy. The reload button on an
+ * error screen cannot fix that — the worker answers the reload with the same
+ * cached copy — so recovery has to burn the cache first.
+ *
+ * Returns whether it acted. Once per tab, tracked in sessionStorage: if the
+ * fresh build ALSO crashes, the deploy itself is broken, and a page that
+ * reloads forever is worse than an error screen someone can read.
+ */
+export async function recoverStaleBuild(why) {
+  if (!import.meta.env.PROD) return false;
+  if (sessionStorage.getItem(TRIED)) return false;
+  sessionStorage.setItem(TRIED, why);
+  try {
+    if ("caches" in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map((k) => caches.delete(k)));
     }
-    window.location.reload();
+    if ("serviceWorker" in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map((r) => r.unregister()));
+    }
+  } catch {
+    // Recovery is best-effort; a reload without it still beats a hole.
   }
+  window.location.reload();
+  return true;
+}
+
+if (import.meta.env.PROD) {
+  const reloadOnce = recoverStaleBuild;
 
   // Vite's own signal, raised when a lazily-imported chunk fails to load.
   window.addEventListener("vite:preloadError", () => reloadOnce("preload"));
