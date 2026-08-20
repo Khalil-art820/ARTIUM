@@ -1,0 +1,475 @@
+.artium-architecture {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  overflow: visible;
+}
+
+.architecture-stage {
+  position: relative;
+  /* The paths and the px-sized content were both drawn against a 1024-wide
+     stage. At min(820px, 90vw) the geometry rendered at 80% while the text
+     stayed full size and spilled across the carve — so at the reference
+     width the stage IS the reference width, and the in-viewBox margins
+     (cards start at x=122) provide the page's side spacing. */
+  width: min(1024px, 100vw);
+  aspect-ratio: 1024 / 850;
+}
+
+/* =========================================================
+   SVG
+========================================================= */
+
+.architecture-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* =========================================================
+   ARCHITECTURAL GUIDES
+========================================================= */
+
+.architecture-guides {
+  fill: none;
+  stroke: #C99538;
+  stroke-width: 1;
+  opacity: .16;
+}
+
+.architecture-guides line {
+  stroke-dasharray: 2 6;
+}
+
+.center-nodes circle {
+  fill: #C99538;
+  opacity: .8;
+}
+
+/* =========================================================
+   CARD 3D MATERIAL
+========================================================= */
+
+/*
+  These are SVG paths, not CSS borders.
+
+  The order is:
+
+  shadow/depth
+  card surface
+  gold outer rim
+  white highlight
+  bevel
+  inner gold hairline
+  localized edge glow
+*/
+
+.card-depth {
+  fill: #F4EFE6;
+  opacity: .72;
+  transform: translateY(5px);
+}
+
+.card-surface {
+  stroke: none;
+}
+
+.card-rim {
+  fill: none;
+  stroke: #C99538;
+  stroke-width: 1.35;
+  stroke-opacity: .48;
+}
+
+.card-highlight {
+  fill: none;
+  stroke: #FFFFFF;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-opacity: .88;
+}
+
+.card-bevel {
+  fill: none;
+  stroke: url(#bevelGradient);
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-opacity: .72;
+}
+
+.card-inner-line {
+  fill: none;
+  stroke: #C99538;
+  stroke-width: .75;
+  stroke-opacity: .24;
+}
+
+.card-edge-glow {
+  fill: none;
+  stroke: #FFFFFF;
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-opacity: .34;
+  filter: url(#edgeGlow);
+}
+
+/* =========================================================
+   CARD HTML CONTENT
+========================================================= */
+
+.architecture-html {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.architecture-card-content {
+  position: absolute;
+
+  width: 29.49%;
+  height: 41.65%;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  text-align: center;
+
+  pointer-events: auto;
+}
+
+/*
+  These positions intentionally leave a central
+  negative-space zone. Percentages of the 1024x850 stage so
+  the HTML tracks the SVG at every stage width — px offsets
+  only align at one size.
+*/
+
+.card-01 {
+  left: 11.91%;
+  top: 3.76%;
+}
+
+.card-02 {
+  left: 58.59%;
+  top: 3.76%;
+}
+
+.card-03 {
+  left: 11.91%;
+  top: 54.59%;
+}
+
+.card-04 {
+  left: 58.59%;
+  top: 54.59%;
+}
+
+/* =========================================================
+   NUMBER BADGES
+========================================================= */
+
+.architecture-number {
+  position: absolute;
+
+  top: 14px;
+  left: 14px;
+
+  width: 50px;
+  height: 50px;
+
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background:
+    linear-gradient(
+      145deg,
+      #FFFFFF 0%,
+      #FCF9F2 100%
+    );
+
+  border: 1px solid #E6DCC8;
+
+  color: #B9822D;
+
+  font-family:
+    Inter,
+    system-ui,
+    sans-serif;
+
+  font-size: 16px;
+
+  box-shadow:
+    0 4px 12px rgba(70, 50, 20, .06),
+    inset 0 1px 0 #FFFFFF;
+}
+
+.card-02 .architecture-number,
+.card-04 .architecture-number {
+  left: auto;
+  right: 14px;
+}
+
+/* =========================================================
+   ICON
+========================================================= */
+
+.architecture-icon {
+  margin-top: 60px;
+
+  height: 65px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #BC8A31;
+}
+
+.artium-svg-icon {
+  width: 64px;
+  height: 64px;
+
+  fill: none;
+  stroke: currentColor;
+
+  stroke-width: 1.35;
+
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.artium-lucide-icon {
+  width: 64px;
+  height: 64px;
+
+  color: #BC8A31;
+}
+
+/* =========================================================
+   CARD TITLE
+========================================================= */
+
+.architecture-card-content h2 {
+  margin: 13px 0 0;
+
+  color: #111B27;
+
+  font-family:
+    Georgia,
+    "Times New Roman",
+    serif;
+
+  font-size: 26px;
+
+  font-weight: 400;
+
+  line-height: 1.12;
+
+  letter-spacing: -.7px;
+}
+
+/* =========================================================
+   GOLD DIVIDER
+========================================================= */
+
+.architecture-divider {
+  width: 21px;
+  height: 2px;
+
+  margin-top: 14px;
+
+  background: #C99538;
+}
+
+/* =========================================================
+   DESCRIPTION
+========================================================= */
+
+.architecture-card-content p {
+  /* min(): the client's 272px where it fits, never wider than the card's
+     own content box when the stage scales below the drawing width. */
+  width: min(272px, 92%);
+
+  margin: 13px 0 0;
+
+  color: #474C52;
+
+  font-family:
+    Inter,
+    system-ui,
+    sans-serif;
+
+  font-size: 14px;
+
+  line-height: 1.6;
+}
+
+/* =========================================================
+   ARROW
+========================================================= */
+
+.architecture-arrow {
+  position: absolute;
+
+  right: 14px;
+  bottom: 7px;
+
+  width: 51px;
+  height: 51px;
+
+  border-radius: 50%;
+
+  border: 1px solid #E4D7BF;
+
+  background:
+    linear-gradient(
+      145deg,
+      #FFFFFF,
+      #FAF6ED
+    );
+
+  color: #B9822D;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  box-shadow:
+    0 5px 13px rgba(70, 50, 20, .07),
+    inset 0 1px 0 #FFFFFF;
+
+  cursor: pointer;
+
+  transition:
+    transform .2s ease,
+    box-shadow .2s ease;
+}
+
+.architecture-arrow:hover {
+  transform: translateX(3px);
+
+  box-shadow:
+    0 7px 17px rgba(70, 50, 20, .11),
+    inset 0 1px 0 #FFFFFF;
+}
+
+/* =========================================================
+   MEDALLION
+========================================================= */
+
+.architecture-center {
+  position: absolute;
+
+  left: 50%;
+  top: 50%;
+
+  width: 182px;
+  height: 182px;
+
+  transform:
+    translate(-50%, -50%);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  pointer-events: none;
+
+  z-index: 20;
+}
+
+/*
+  IMPORTANT:
+
+  The medallion is NOT touching the cards.
+
+  Its SVG outer radius is 91px.
+  The card geometry stops before it.
+
+  Preserve this separation.
+*/
+
+/* =========================================================
+   ARTIUM PIN
+========================================================= */
+
+.architecture-pin-svg {
+  width: 42px;
+  height: 56px;
+  display: block;
+}
+
+/* =========================================================
+   WORDMARK
+========================================================= */
+
+.architecture-wordmark {
+  margin-top: 5px;
+
+  color: #B9822D;
+
+  font-family:
+    Georgia,
+    "Times New Roman",
+    serif;
+
+  font-size: 30px;
+
+  line-height: 1;
+
+  letter-spacing: -1.4px;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 900px) {
+  .architecture-stage {
+    width: 94vw;
+  }
+}
+
+@media (max-width: 700px) {
+
+  /*
+    Preserve the architecture rather than
+    converting it into four unrelated cards.
+  */
+
+  .artium-architecture {
+    overflow: hidden;
+  }
+
+  .architecture-stage {
+    width: 940px;
+
+    margin-left: 50%;
+
+    transform:
+      translateX(-50%)
+      scale(.72);
+
+    transform-origin: top center;
+
+    margin-bottom: -235px;
+  }
+}
+
+@media (max-width: 500px) {
+
+  .architecture-stage {
+    transform:
+      translateX(-50%)
+      scale(.58);
+
+    margin-bottom: -330px;
+  }
+}

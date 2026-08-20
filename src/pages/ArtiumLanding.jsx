@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import "./artium-landing.css";
+import ArtiumArchitecture from "../components/ArtiumArchitecture";
 
 /* =========================================================
    The client's implementation, installed verbatim. Edits are
@@ -421,7 +422,7 @@ export default function ArtiumLanding({ onLearner, onStudent, onPianist, onCompo
           </div>
         )}
 
-        <Architecture actionFor={actionFor} />
+        <ArtiumArchitecture actionFor={actionFor} />
 
         <Benefits />
 
