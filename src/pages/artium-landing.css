@@ -167,7 +167,7 @@
 }
 
 .hero h1 {
-  margin: 14px auto 0;
+  margin: 10px auto 0;
 
   max-width: 800px;
 
@@ -192,7 +192,7 @@
 }
 
 .hero > p {
-  margin-top: 16px;
+  margin-top: 14px;
 
   color: #555b61;
 
@@ -203,7 +203,7 @@
 }
 
 .hero-decoration {
-  margin: 12px auto 0;
+  margin: 10px auto 0;
 
   width: 330px;
 
@@ -248,12 +248,17 @@
 .architecture {
   position: relative;
 
+  /* Re-measured from the reference: the field is 760x810 — portrait cards
+     with a wide central channel for the medallion (190px) but a tight seam
+     between the rows (20px). The first pass used a square field with equal
+     gaps, which is exactly why it read as four cards and a circle instead
+     of the reference's single engineered component. */
   width: min(
-    790px,
+    760px,
     calc(100% - 70px)
   );
 
-  height: 790px;
+  height: 810px;
 
   margin: 0 auto;
 }
@@ -283,8 +288,8 @@
 }
 
 .circle-large {
-  width: 520px;
-  height: 520px;
+  width: 560px;
+  height: 560px;
 
   border:
     1px solid
@@ -292,8 +297,8 @@
 }
 
 .circle-small {
-  width: 285px;
-  height: 285px;
+  width: 300px;
+  height: 300px;
 
   border:
     1px solid
@@ -313,7 +318,7 @@
 }
 
 .architecture-horizontal {
-  width: 520px;
+  width: 760px;
   height: 1px;
 
   transform: translate(-50%, -50%);
@@ -321,7 +326,7 @@
 
 .architecture-vertical {
   width: 1px;
-  height: 520px;
+  height: 810px;
 
   transform: translate(-50%, -50%);
 }
@@ -342,28 +347,28 @@
 
 .dot-top {
   left: 50%;
-  top: calc(50% - 260px);
+  top: calc(50% - 405px);
 
   transform: translateX(-50%);
 }
 
 .dot-bottom {
   left: 50%;
-  bottom: calc(50% - 260px);
+  bottom: calc(50% - 405px);
 
   transform: translateX(-50%);
 }
 
 .dot-left {
   top: 50%;
-  left: calc(50% - 260px);
+  left: calc(50% - 380px);
 
   transform: translateY(-50%);
 }
 
 .dot-right {
   top: 50%;
-  right: calc(50% - 260px);
+  right: calc(50% - 380px);
 
   transform: translateY(-50%);
 }
@@ -375,8 +380,8 @@
 .experience-card {
   position: absolute;
 
-  width: 330px;
-  height: 365px;
+  width: 285px;
+  height: 395px;
 
   /* The reference's signature: each card's inner corner is not rounded, it
      is CUT — a concave arc swept around the medallion, so four cards and
@@ -384,11 +389,11 @@
      bite is a radial mask centred on the composition's centre (395,395 in
      the 790 square, translated into each card's own coordinates below) at
      a radius that clears the 107px medallion by a ring of ivory. */
-  --cut-r: 128px;
+  --cut-r: 122px;
   -webkit-mask: radial-gradient(circle var(--cut-r) at var(--cut-x) var(--cut-y), transparent calc(var(--cut-r) - 1px), #000 var(--cut-r));
   mask: radial-gradient(circle var(--cut-r) at var(--cut-x) var(--cut-y), transparent calc(var(--cut-r) - 1px), #000 var(--cut-r));
 
-  padding: 28px 30px;
+  padding: 28px 22px;
 
   text-decoration: none;
 
@@ -437,53 +442,37 @@
 .top-left {
   left: 0;
   top: 0;
-  --cut-x: 395px;
-  --cut-y: 395px;
+  --cut-x: 380px;
+  --cut-y: 405px;
 
-  border-radius:
-    42px
-    42px
-    42px
-    70px;
+  border-radius: 46px;
 }
 
 .top-right {
   right: 0;
   top: 0;
-  --cut-x: -65px;
-  --cut-y: 395px;
+  --cut-x: -95px;
+  --cut-y: 405px;
 
-  border-radius:
-    42px
-    42px
-    70px
-    42px;
+  border-radius: 46px;
 }
 
 .bottom-left {
   left: 0;
   bottom: 0;
-  --cut-x: 395px;
-  --cut-y: -30px;
+  --cut-x: 380px;
+  --cut-y: -10px;
 
-  border-radius:
-    70px
-    42px
-    42px
-    42px;
+  border-radius: 46px;
 }
 
 .bottom-right {
   right: 0;
   bottom: 0;
-  --cut-x: -65px;
-  --cut-y: -30px;
+  --cut-x: -95px;
+  --cut-y: -10px;
 
-  border-radius:
-    42px
-    70px
-    42px
-    42px;
+  border-radius: 46px;
 }
 
 /* =========================================================
@@ -660,7 +649,7 @@
 }
 
 .card-content p {
-  max-width: 255px;
+  max-width: 225px;
 
   margin: 15px 0 0;
 
@@ -715,8 +704,8 @@
   left: 50%;
   top: 50%;
 
-  width: 214px;
-  height: 214px;
+  width: 224px;
+  height: 224px;
 
   transform:
     translate(-50%, -50%);
@@ -753,7 +742,7 @@
 }
 
 .center-ring-outer {
-  inset: 7px;
+  inset: 6px;
 
   border:
     1px solid
@@ -761,7 +750,7 @@
 }
 
 .center-ring-inner {
-  inset: 18px;
+  inset: 14px;
 
   border:
     1px solid
@@ -795,7 +784,7 @@
 }
 
 .center-wordmark {
-  margin-top: 3px;
+  margin-top: 4px;
 
   color: #b9822c;
 
@@ -805,9 +794,9 @@
     serif;
   font-weight: 600;
 
-  font-size: 34px;
+  font-size: 36px;
 
-  letter-spacing: -1.5px;
+  letter-spacing: -1.2px;
 }
 
 /* =========================================================
@@ -822,7 +811,7 @@
 
   min-height: 126px;
 
-  margin: 14px auto 0;
+  margin: 8px auto 0;
 
   padding: 14px 24px;
 
@@ -925,7 +914,7 @@
   align-items: center;
 
   padding:
-    12px 20px 0;
+    8px 20px 0;
 }
 
 .login-section > p {
@@ -993,7 +982,7 @@
     calc(100% - 70px)
   );
 
-  margin: 12px auto 0;
+  margin: 8px auto 0;
 
   border-top:
     1px solid
@@ -1113,8 +1102,8 @@
 }
 
 .center-pin-svg {
-  width: 45px;
-  height: 59px;
+  width: 52px;
+  height: 68px;
   display: block;
   /* The SVG paints currentColor; without this it inherits the page's ink
      and the centre pin turns black — the reference's is gold. */
@@ -1219,24 +1208,24 @@
 @media (max-width: 900px) {
 
   .architecture {
-    width: min(700px, calc(100% - 40px));
-    height: 700px;
+    width: min(686px, calc(100% - 40px));
+    height: 732px;
   }
 
   .experience-card {
-    width: 295px;
-    height: 325px;
-    --cut-r: 113px;
+    width: 258px;
+    height: 356px;
+    --cut-r: 110px;
   }
 
-  .top-left  { --cut-x: 350px; --cut-y: 350px; }
-  .top-right { --cut-x: -55px; --cut-y: 350px; }
-  .bottom-left  { --cut-x: 350px; --cut-y: -25px; }
-  .bottom-right { --cut-x: -55px; --cut-y: -25px; }
+  .top-left  { --cut-x: 343px; --cut-y: 366px; }
+  .top-right { --cut-x: -85px; --cut-y: 366px; }
+  .bottom-left  { --cut-x: 343px; --cut-y: -10px; }
+  .bottom-right { --cut-x: -85px; --cut-y: -10px; }
 
   .artium-center {
-    width: 185px;
-    height: 185px;
+    width: 200px;
+    height: 200px;
   }
 
   .center-wordmark {
@@ -1445,23 +1434,44 @@
     height: 35px;
   }
 
+  /* The reference's bar is one horizontal band of three, and the client
+     wants that at every width — so it compresses rather than stacking:
+     icon above text, smaller type, the same three columns. */
   .benefits {
     width: calc(100% - 30px);
 
-    grid-template-columns: 1fr;
-
-    padding: 10px 18px;
+    padding: 10px 6px;
 
     margin-top: 18px;
   }
 
   .benefit-item {
-    padding: 14px 4px;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 8px;
+
+    padding: 10px 8px;
   }
 
-  .benefit-item + .benefit-item {
-    border-left: 0;
-    border-top: 1px solid #eee6d7;
+  .benefit-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .benefit-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .benefit-item h3 {
+    font-size: 12px;
+  }
+
+  .benefit-item p {
+    margin-top: 4px;
+    font-size: 9.5px;
+    line-height: 1.5;
   }
 
   .artium-footer {
