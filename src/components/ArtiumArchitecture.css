@@ -440,8 +440,20 @@
 @media (max-width: 700px) {
 
   /*
-    Preserve the architecture rather than
-    converting it into four unrelated cards.
+    Preserve the architecture rather than converting it into four
+    unrelated cards: the whole 940-unit composition scales as one object.
+
+    Two corrections to the original rules, found because the cards were
+    entirely invisible on a real phone. First, the stage sits in a flex
+    parent, and a flex item's default shrink crushed the 940px box to the
+    container's width minus the 50% margin — 187.5px, an invisible sliver;
+    flex-shrink: 0 is what lets the fixed-width stage exist at all.
+    Second, margin-left:50% + translateX(-50%) double-centred what the
+    flex parent already centres, throwing the composition off-screen; the
+    parent centres, the transform only scales. The scale steps are chosen
+    so the scaled width fits each band's viewport, and each negative
+    bottom margin returns the flow height the scale gave up (780px tall
+    stage: -780 x (1 - scale)).
   */
 
   .artium-architecture {
@@ -450,26 +462,40 @@
 
   .architecture-stage {
     width: 940px;
+    flex-shrink: 0;
+    margin-left: 0;
 
-    margin-left: 50%;
-
-    transform:
-      translateX(-50%)
-      scale(.72);
+    transform: scale(.72);
 
     transform-origin: top center;
 
-    margin-bottom: -235px;
+    margin-bottom: -215px;
+  }
+}
+
+@media (max-width: 600px) {
+
+  .architecture-stage {
+    transform: scale(.60);
+
+    margin-bottom: -308px;
   }
 }
 
 @media (max-width: 500px) {
 
   .architecture-stage {
-    transform:
-      translateX(-50%)
-      scale(.58);
+    transform: scale(.50);
 
-    margin-bottom: -330px;
+    margin-bottom: -386px;
+  }
+}
+
+@media (max-width: 420px) {
+
+  .architecture-stage {
+    transform: scale(.395);
+
+    margin-bottom: -468px;
   }
 }
