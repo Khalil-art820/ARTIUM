@@ -181,9 +181,9 @@ export default function ArtiumArchitecture({ actionFor = {} }) {
               x2="1"
               y2="1"
             >
-              <stop offset="0%" stopColor="#FFFFFF" />
-              <stop offset="55%" stopColor="#FFFFFF" />
-              <stop offset="100%" stopColor="#FAF8F3" />
+              <stop offset="0%" stopColor="#FDF9F2" />
+              <stop offset="60%" stopColor="#FCF7EE" />
+              <stop offset="100%" stopColor="#F9F3E7" />
             </linearGradient>
 
             <linearGradient
@@ -210,6 +210,21 @@ export default function ArtiumArchitecture({ actionFor = {} }) {
                 stopColor="#FFFFFF"
                 stopOpacity="0"
               />
+            </linearGradient>
+
+            {/* The rim: a machined gold hairline, brighter/warmer on the
+                top-left, fading toward a cooler, quieter tone lower-right
+                — read as light catching a gold edge, not a flat stroke. */}
+            <linearGradient
+              id="cardRimGradient"
+              x1="0"
+              y1="0"
+              x2="1"
+              y2="1"
+            >
+              <stop offset="0%" stopColor="#E9C583" />
+              <stop offset="45%" stopColor="#D9B975" />
+              <stop offset="100%" stopColor="#D9C9A9" />
             </linearGradient>
 
             <linearGradient
@@ -263,10 +278,10 @@ export default function ArtiumArchitecture({ actionFor = {} }) {
             >
               <feDropShadow
                 dx="0"
-                dy="13"
-                stdDeviation="15"
+                dy="16"
+                stdDeviation="18"
                 floodColor="#786039"
-                floodOpacity=".12"
+                floodOpacity=".14"
               />
             </filter>
 

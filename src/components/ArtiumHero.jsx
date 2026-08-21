@@ -73,8 +73,19 @@ const cards = [
 
 function PremiumCard({ data, onSelect }) {
   const [number,title,description,Icon,position] = data;
-  const path = "M34 2H286Q306 2 306 22V286Q306 306 286 306H38Q10 306 10 278V32Q10 2 34 2Z";
   const activate = (e) => { e.preventDefault(); onSelect && onSelect(); };
+  /*
+    The slab used to be an inline SVG (viewBox 0 0 300 385,
+    preserveAspectRatio="xMidYMid meet"). At the mobile breakpoints the
+    card box's aspect ratio (158x248 / 150x242, ~1.6) doesn't match the
+    viewBox's (300x385, ~1.28), so "meet" letterboxed the drawing —
+    scaled it down and centered it, leaving empty box above/below where
+    the HTML badge/arrow (positioned against the box, not the drawing)
+    rendered outside the visible card. Drawing the slab in CSS instead
+    (border-radius + gradient background + a masked gradient-border
+    pseudo-element for the rim + an inset-bordered pseudo for the bevel)
+    scales with the box exactly, at any ratio, so this can't recur.
+  */
   return (
     <div
       className={`art-card ${position}`}
@@ -84,27 +95,6 @@ function PremiumCard({ data, onSelect }) {
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") activate(e); }}
       style={{ cursor: "pointer" }}
     >
-      <svg className="card-svg" viewBox="0 0 308 308" preserveAspectRatio="none">
-        <defs>
-          <filter id={`shadow-${position}`} x="-25%" y="-25%" width="150%" height="160%">
-            <feDropShadow dx="0" dy="10" stdDeviation="9" floodColor="#8c6a2f" floodOpacity=".10"/>
-          </filter>
-          <linearGradient id={`rim-${position}`} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor="#fff"/>
-            <stop offset=".4" stopColor="#e4d2aa"/>
-            <stop offset=".55" stopColor="#fffdf8"/>
-            <stop offset="1" stopColor="#d3c09a"/>
-          </linearGradient>
-        </defs>
-        <path d={path} fill="#fff" filter={`url(#shadow-${position})`}/>
-        <path d={path} fill={`url(#rim-${position})`} stroke="#d9c596" strokeWidth="1.2"/>
-        <path d="M38 7H281Q300 7 300 27V279Q300 300 280 300H39Q17 300 17 278V31Q17 7 38 7Z"
-          fill="none" stroke="#f4ead4" strokeWidth="3"/>
-        <path d="M41 10H278Q297 10 297 29V276Q297 298 277 298H42Q20 298 20 276V33Q20 10 41 10Z"
-          fill="#fffefa" stroke="#eee5d2" strokeWidth="1"/>
-        <path d="M40 13H270Q287 13 293 27" fill="none" stroke="#fff" strokeWidth="2"/>
-        <path d="M28 286Q32 296 45 296H272" fill="none" stroke="#d7c8a8" strokeWidth="1.3" opacity=".65"/>
-      </svg>
 
       <div className="card-content">
         <div className="number">{number}</div>

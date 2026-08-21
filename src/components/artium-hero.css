@@ -14,17 +14,116 @@
 
 .stage{width:min(820px,94vw);height:800px;margin:0 auto;position:relative}
 .orbit{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
-.art-card{position:absolute;width:300px;height:385px;z-index:2}
-.art-card.tl{left:0;top:0}.art-card.tr{right:0;top:0}.art-card.bl{left:0;bottom:0}.art-card.br{right:0;bottom:0}
-.card-svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
-.card-content{position:absolute;inset:0;padding:48px 37px 30px;display:flex;flex-direction:column;align-items:center}
-.number{position:absolute;top:13px;left:15px;width:42px;height:42px;border:1px solid #eadfc9;border-radius:50%;display:grid;place-items:center;color:#c79a43;background:#fff;font-size:13px;box-shadow:0 2px 8px #50370f0b}
-.tr .number,.br .number{left:auto;right:15px}
-.art-icon{width:72px;height:62px;color:#c79a43;margin:18px 0 8px}
-.card-content h3{margin:0;min-height:70px;display:flex;align-items:center;justify-content:center;font:600 28px/.96 "Cormorant Garamond",Georgia,serif;letter-spacing:-.5px;color:#151a21}
-.divider{width:25px;height:2px;background:#c79a43;margin:9px 0 14px}
-.card-content p{max-width:235px;margin:0;color:#53565b;font-size:14px;line-height:1.55}
-.arrow{position:absolute;right:24px;bottom:20px;width:49px;height:49px;border:1px solid #e7dbc1;border-radius:50%;background:#fff;color:#c79a43;display:grid;place-items:center;box-shadow:0 3px 10px #50370f0f}
+
+/*
+  The slab, drawn in CSS instead of an inline SVG so it scales exactly to
+  whatever box a breakpoint gives it (an SVG viewBox has its own aspect
+  ratio, and "meet" letterboxes when the box doesn't match — see the note
+  in ArtiumHero.jsx). --r carries the corner radius so the rim/bevel
+  pseudo-elements can track it without repeating the value.
+*/
+.art-card{
+  position:relative;width:300px;height:385px;z-index:2;
+  --r:35px;
+  border-radius:var(--r);
+  background:linear-gradient(135deg,#FDF9F2 0%,#FCF7EE 60%,#F9F3E7 100%);
+  box-shadow:0 12px 24px rgba(120,96,57,.13);
+  transition:transform .25s ease,box-shadow .25s ease;
+}
+.art-card.tl{position:absolute;left:0;top:0}
+.art-card.tr{position:absolute;right:0;top:0}
+.art-card.bl{position:absolute;left:0;bottom:0}
+.art-card.br{position:absolute;right:0;bottom:0}
+
+/* Rim: a continuous gold-gradient hairline, brighter top-left, drawn as a
+   masked gradient border so it's perfectly even around every corner. */
+.art-card::before{
+  content:"";position:absolute;inset:0;border-radius:var(--r);
+  padding:1.4px;
+  background:linear-gradient(135deg,#E9C583,#D9B975 45%,#D9C9A9);
+  -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor;
+  mask-composite:exclude;
+  pointer-events:none;
+  transition:filter .25s ease;
+}
+/* Bevel: a crisp 1px-reading white inner highlight, plus a barely-there
+   warm inner glow for depth. */
+.art-card::after{
+  content:"";position:absolute;inset:3px;border-radius:calc(var(--r) - 3px);
+  border:1.5px solid rgba(255,255,255,.85);
+  box-shadow:inset 0 0 22px rgba(201,149,56,.05);
+  pointer-events:none;
+}
+/*
+  Note on the bottom clearance: .card-content is a flex column pinned to
+  the card's full box (inset:0). Its children stack from the top with no
+  justify-content, so a fixed height + padding-bottom does NOT reposition
+  them — overflow just renders past the box, uncontained. The only real
+  fix is trimming the cumulative flow height (icon/divider margins, title
+  and paragraph line-heights) so the last line of even the longest copy
+  (card 02's three-line title + four-line description) lands above the
+  arrow's 70px footprint (right:20/bottom:20, 50px disc).
+*/
+.card-content{position:absolute;inset:0;z-index:1;padding:42px 37px 30px;display:flex;flex-direction:column;align-items:center}
+/* Number badge — top-left, inside the card, SAME on all four cards.
+   Embossed ivory material: bright top-left highlight, soft warm shadow,
+   faint gold rim. */
+.number{
+  position:absolute;top:18px;left:18px;width:66px;height:66px;
+  border-radius:50%;
+  border:1px solid #E7D2A0;
+  background:linear-gradient(140deg,#FFFFFF 0%,#FBF6EB 60%,#F5EDDD 100%);
+  display:grid;place-items:center;
+  color:#B8873B;
+  font:500 29px "Cormorant Garamond","Didot","Bodoni 72",Georgia,serif;
+  box-shadow:0 6px 14px rgba(70,50,20,.10),inset 0 1px 0 rgba(255,255,255,.95),inset -1px -1px 2px rgba(120,96,57,.06);
+  transition:box-shadow .25s ease,border-color .25s ease;
+}
+.art-icon{width:72px;height:62px;color:#C6913F;margin:14px 0 6px}
+.card-content h3{
+  margin:0;min-height:70px;display:flex;align-items:center;justify-content:center;
+  font:500 31px/1.15 "Cormorant Garamond","Didot","Bodoni 72",Georgia,serif;
+  letter-spacing:-.3px;color:#1E1F23;
+  text-shadow:0 1px 2px rgba(0,0,0,.18);
+}
+/* Card 02's title is the one three-line case ("I'm a / Conservatory /
+   Student | Graduate", hard <br/> breaks — it doesn't wrap, so it's always
+   three lines). At the shared 31px size that alone eats past the
+   paragraph's reserved window and its four-line description runs under
+   the arrow disc. Trim just this card's title size/box so the column
+   clears the arrow footprint without touching the other three cards'
+   (1–2 line) rhythm.
+   Budget check at 22px (content box is unchanged by the CSS-slab swap —
+   still .card-content inset:0 on a 300x385 box, arrow still right:20/
+   bottom:20 at 50px, i.e. content must clear y=315): padding-top 42 +
+   icon block 82 + divider 31 + description(4 lines @ 13.5px/1.45) 78.3 =
+   233.3 fixed; h3 3-line @ 22px/1.15 = 75.9. Total 309.2, 5.8px under the
+   315 limit — thinner than 19px's ~16px buffer but still clear. */
+.tr .card-content h3{font-size:22px;min-height:auto}
+.divider{width:15px;height:3px;background:#C9963F;margin:14px 0 14px}
+.card-content p{
+  max-width:225px;margin:0;color:#5B5D63;
+  font:500 13.5px/1.45 "Manrope",-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+/* Arrow button — bottom-right, inside the card, same embossed ivory
+   material as the badge. */
+.arrow{
+  position:absolute;right:20px;bottom:20px;width:50px;height:50px;
+  border-radius:50%;
+  border:1px solid #E7D2A0;
+  background:linear-gradient(140deg,#FFFFFF 0%,#FBF6EB 60%,#F5EDDD 100%);
+  color:#B8873B;
+  display:grid;place-items:center;
+  box-shadow:0 6px 14px rgba(70,50,20,.10),inset 0 1px 0 rgba(255,255,255,.95),inset -1px -1px 2px rgba(120,96,57,.06);
+  transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
+}
+.arrow:hover{border-color:#E9C583;box-shadow:0 8px 18px rgba(70,50,20,.14),inset 0 1px 0 rgba(255,255,255,.95)}
+
+/* Card-level hover: tasteful lift, rim/badge brighten. */
+.art-card:hover{transform:scale(1.012);box-shadow:0 16px 30px rgba(120,96,57,.17)}
+.art-card:hover::before{filter:brightness(1.15)}
+.art-card:hover .number,.art-card:hover .arrow{border-color:#E9C583}
 
 .medallion{position:absolute;width:190px;height:190px;left:50%;top:50%;transform:translate(-50%,-50%);z-index:5;pointer-events:none}
 .medallion svg{width:100%;height:100%;overflow:visible}.med-word{fill:#c79a43;font:600 25px "Cormorant Garamond",Georgia,serif}
@@ -42,17 +141,20 @@
  .hero{padding-top:29px}.kicker{font-size:12px;letter-spacing:4px}.hero h1{font-size:clamp(46px,13vw,56px);letter-spacing:-1.7px;margin-top:19px}
  .subtitle{font-size:20px;margin-top:26px}.rule{max-width:270px;margin:28px auto 25px}
  .stage{width:360px;max-width:94vw;height:610px}
- .art-card{width:158px;height:248px}.art-card.tl{left:5px;top:10px}.art-card.tr{right:5px;top:10px}.art-card.bl{left:5px;bottom:10px}.art-card.br{right:5px;bottom:10px}
- .card-content{padding:42px 17px 24px}.number{width:39px;height:39px;top:10px;left:11px;font-size:12px}.tr .number,.br .number{left:auto;right:11px}
- .art-icon{width:57px;height:51px;margin:8px 0 7px}.card-content h3{min-height:53px;font-size:22px}.divider{width:19px;margin:7px 0 10px}.card-content p{max-width:130px;font-size:11px;line-height:1.45}
- .arrow{width:42px;height:42px;right:12px;bottom:12px}
+ .art-card{width:158px;height:248px;--r:18px}.art-card.tl{left:5px;top:10px}.art-card.tr{right:5px;top:10px}.art-card.bl{left:5px;bottom:10px}.art-card.br{right:5px;bottom:10px}
+ /* Same clearance problem as desktop, tighter budget (card is 248px
+    tall, arrow reserves 50px at the bottom) — trim the flow further and
+    give card 02's three-line title its own smaller size again. */
+ .card-content{padding:18px 17px 20px}.number{width:35px;height:35px;top:10px;left:10px;font-size:15px}
+ .art-icon{width:57px;height:51px;margin:4px 0 3px}.card-content h3{min-height:auto;font-size:22px}.tr .card-content h3{font-size:16px}.divider{width:19px;height:2px;margin:4px 0 6px}.card-content p{max-width:130px;font-size:11px;line-height:1.32}
+ .arrow{width:38px;height:38px;right:12px;bottom:12px}
  .medallion{width:132px;height:132px}
  .trust{width:94vw;min-height:170px;border-radius:28px}.trust>div{display:block;min-height:170px;padding:18px 9px;text-align:center}.trust b{width:48px;height:48px;margin:0 auto 10px}.trust h4{font-size:15px}.trust p{font-size:11px;line-height:1.4}
  .login{padding-top:23px}.login p{font-size:17px}.footer{flex-direction:column;text-align:center;gap:10px}
 }
 @media(max-width:390px){
- .stage{width:340px}.art-card{width:150px;height:242px}.art-card.tl,.art-card.bl{left:1px}.art-card.tr,.art-card.br{right:1px}
- .card-content{padding-left:14px;padding-right:14px}.card-content h3{font-size:20px}.card-content p{max-width:124px;font-size:10.5px}.medallion{width:124px;height:124px}
+ .stage{width:340px}.art-card{width:150px;height:242px;--r:17px}.art-card.tl,.art-card.bl{left:1px}.art-card.tr,.art-card.br{right:1px}
+ .card-content{padding-left:14px;padding-right:14px}.number{width:33px;height:33px;top:9px;left:9px;font-size:14px}.card-content h3{font-size:20px}.tr .card-content h3{font-size:15px}.card-content p{max-width:124px;font-size:10.5px;line-height:1.28}.arrow{width:36px;height:36px;right:10px;bottom:10px}.medallion{width:124px;height:124px}
 }
 
 

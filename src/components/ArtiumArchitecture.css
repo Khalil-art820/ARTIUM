@@ -67,51 +67,59 @@
 */
 
 .card-depth {
-  fill: #F4EFE6;
-  opacity: .72;
-  transform: translateY(5px);
+  fill: #EFE7D6;
+  opacity: .55;
+  transform: translateY(6px);
 }
 
 .card-surface {
   stroke: none;
+  transition: filter .25s ease;
 }
 
+/* The gold hairline rim — continuous around the whole silhouette, warmer
+   and brighter top-left, quieter lower-right (the gradient itself carries
+   that falloff; see #cardRimGradient). This is the line the reference
+   card reads by. */
 .card-rim {
   fill: none;
-  stroke: #C99538;
-  stroke-width: 1.35;
-  stroke-opacity: .48;
+  stroke: url(#cardRimGradient);
+  stroke-width: 1.5;
+  stroke-opacity: .95;
+  transition: stroke-opacity .25s ease, stroke-width .25s ease;
 }
 
+/* A soft 1px-reading white inner highlight, following the rim's contour
+   just inside it — this plus the rim is the "thick porcelain tile" edge. */
 .card-highlight {
   fill: none;
   stroke: #FFFFFF;
-  stroke-width: 4;
+  stroke-width: 1.5;
   stroke-linecap: round;
-  stroke-opacity: .88;
+  stroke-opacity: .85;
 }
 
 .card-bevel {
   fill: none;
   stroke: url(#bevelGradient);
-  stroke-width: 2.6;
+  stroke-width: 1.4;
   stroke-linecap: round;
-  stroke-opacity: .72;
+  stroke-opacity: .5;
 }
 
 .card-inner-line {
   fill: none;
   stroke: #C99538;
   stroke-width: .75;
-  stroke-opacity: .24;
+  stroke-opacity: .18;
 }
 
 .card-edge-glow {
   fill: none;
   stroke: #FFFFFF;
-  stroke-width: 6;
+  stroke-width: 5;
   stroke-linecap: round;
-  stroke-opacity: .34;
+  stroke-opacity: .22;
   filter: url(#edgeGlow);
 }
 
@@ -138,6 +146,21 @@
   text-align: center;
 
   pointer-events: auto;
+
+  transform: scale(1);
+  filter: drop-shadow(0 0 0 rgba(0, 0, 0, 0));
+
+  transition: transform .25s ease, filter .25s ease;
+}
+
+.architecture-card-content:hover {
+  transform: scale(1.012);
+  filter: drop-shadow(0 10px 20px rgba(120, 96, 57, .10));
+}
+
+.architecture-card-content:hover .architecture-number,
+.architecture-card-content:hover .architecture-arrow {
+  border-color: #E9C583;
 }
 
 /*
@@ -174,11 +197,13 @@
 .architecture-number {
   position: absolute;
 
-  top: 14px;
-  left: 14px;
+  /* Top-left, inside the card — same orientation on all four cards, the
+     reference is never mirrored. */
+  top: 18px;
+  left: 18px;
 
-  width: 50px;
-  height: 50px;
+  width: 66px;
+  height: 66px;
 
   border-radius: 50%;
 
@@ -186,33 +211,30 @@
   align-items: center;
   justify-content: center;
 
+  /* Same ivory material as the card, embossed: bright top-left highlight,
+     soft warm shadow below-right, faint gold rim. */
   background:
     linear-gradient(
-      145deg,
+      140deg,
       #FFFFFF 0%,
-      #FCF9F2 100%
+      #FBF6EB 60%,
+      #F5EDDD 100%
     );
 
-  border: 1px solid #E6DCC8;
+  border: 1px solid #E7D2A0;
 
-  color: #B9822D;
+  color: #B8873B;
 
-  font-family:
-    Inter,
-    system-ui,
-    sans-serif;
-
-  font-size: 16px;
+  font-family: 'Cormorant Garamond', 'Didot', 'Bodoni 72', Georgia, serif;
+  font-weight: 500;
+  font-size: 29px;
 
   box-shadow:
-    0 4px 12px rgba(70, 50, 20, .06),
-    inset 0 1px 0 #FFFFFF;
-}
+    0 6px 14px rgba(70, 50, 20, .10),
+    inset 0 1px 0 rgba(255, 255, 255, .95),
+    inset -1px -1px 2px rgba(120, 96, 57, .06);
 
-.card-02 .architecture-number,
-.card-04 .architecture-number {
-  left: auto;
-  right: 14px;
+  transition: box-shadow .25s ease, border-color .25s ease;
 }
 
 /* =========================================================
@@ -220,35 +242,35 @@
 ========================================================= */
 
 .architecture-icon {
-  margin-top: 60px;
+  margin-top: 58px;
 
-  height: 65px;
+  height: 78px;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  color: #BC8A31;
+  color: #C6913F;
 }
 
 .artium-svg-icon {
-  width: 64px;
-  height: 64px;
+  width: 74px;
+  height: 74px;
 
   fill: none;
   stroke: currentColor;
 
-  stroke-width: 1.35;
+  stroke-width: 1.4;
 
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
 .artium-lucide-icon {
-  width: 64px;
-  height: 64px;
+  width: 74px;
+  height: 74px;
 
-  color: #BC8A31;
+  color: #C6913F;
 }
 
 /* =========================================================
@@ -256,22 +278,21 @@
 ========================================================= */
 
 .architecture-card-content h2 {
-  margin: 13px 0 0;
+  margin: 15px 0 0;
 
-  color: #111B27;
+  color: #1E1F23;
 
-  font-family:
-    Georgia,
-    "Times New Roman",
-    serif;
+  font-family: 'Cormorant Garamond', 'Didot', 'Bodoni 72', Georgia, serif;
 
-  font-size: 26px;
+  font-size: 31px;
 
-  font-weight: 400;
+  font-weight: 500;
 
-  line-height: 1.12;
+  line-height: 1.15;
 
-  letter-spacing: -.7px;
+  letter-spacing: -.3px;
+
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .18);
 }
 
 /* =========================================================
@@ -279,12 +300,12 @@
 ========================================================= */
 
 .architecture-divider {
-  width: 21px;
-  height: 2px;
+  width: 15px;
+  height: 3px;
 
-  margin-top: 14px;
+  margin-top: 20px;
 
-  background: #C99538;
+  background: #C9963F;
 }
 
 /* =========================================================
@@ -292,22 +313,21 @@
 ========================================================= */
 
 .architecture-card-content p {
-  /* min(): the client's 272px where it fits, never wider than the card's
-     own content box when the stage scales below the drawing width. */
-  width: min(272px, 92%);
+  /* min(): the client's 226px (~75% of the 302-unit card) where it fits,
+     never wider than the card's own content box when the stage scales
+     below the drawing width. */
+  width: min(226px, 75%);
 
-  margin: 13px 0 0;
+  margin: 20px 0 0;
 
-  color: #474C52;
+  color: #5B5D63;
 
-  font-family:
-    Inter,
-    system-ui,
-    sans-serif;
+  font-family: 'Manrope', -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-weight: 500;
 
-  font-size: 14px;
+  font-size: 13.5px;
 
-  line-height: 1.6;
+  line-height: 1.55;
 }
 
 /* =========================================================
@@ -317,46 +337,52 @@
 .architecture-arrow {
   position: absolute;
 
-  right: 14px;
-  bottom: 7px;
+  /* Bottom-right, inside the card — same orientation on all four cards. */
+  right: 20px;
+  bottom: 20px;
 
-  width: 51px;
-  height: 51px;
+  width: 50px;
+  height: 50px;
 
   border-radius: 50%;
 
-  border: 1px solid #E4D7BF;
+  border: 1px solid #E7D2A0;
 
   background:
     linear-gradient(
-      145deg,
-      #FFFFFF,
-      #FAF6ED
+      140deg,
+      #FFFFFF 0%,
+      #FBF6EB 60%,
+      #F5EDDD 100%
     );
 
-  color: #B9822D;
+  color: #B8873B;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
   box-shadow:
-    0 5px 13px rgba(70, 50, 20, .07),
-    inset 0 1px 0 #FFFFFF;
+    0 6px 14px rgba(70, 50, 20, .10),
+    inset 0 1px 0 rgba(255, 255, 255, .95),
+    inset -1px -1px 2px rgba(120, 96, 57, .06);
 
   cursor: pointer;
 
   transition:
     transform .2s ease,
-    box-shadow .2s ease;
+    box-shadow .2s ease,
+    border-color .2s ease;
 }
 
 .architecture-arrow:hover {
   transform: translateX(3px);
 
+  border-color: #E9C583;
+
   box-shadow:
-    0 7px 17px rgba(70, 50, 20, .11),
-    inset 0 1px 0 #FFFFFF;
+    0 8px 18px rgba(70, 50, 20, .14),
+    inset 0 1px 0 rgba(255, 255, 255, .95);
 }
 
 /* =========================================================
