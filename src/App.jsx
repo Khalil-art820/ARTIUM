@@ -24,6 +24,7 @@ import {
 import L from "leaflet";
 import { MapContainer, TileLayer, Marker, Tooltip, Popup, useMap } from "react-leaflet";
 import ArtiumLanding from "./pages/ArtiumLanding";
+import ArtiumHero from "./components/ArtiumHero";
 import WallOfComposers from "./pages/WallOfComposers";
 // three.js is ~1.9MB of the bundle. Loading it lazily keeps it out of the
 // initial download and out of the entry chunk, which otherwise blew past the
@@ -3624,7 +3625,7 @@ export default function App() {
         />
       )}
 
-      {view === "entry" && <ArtiumLanding onLearner={chooseLearner} onStudent={() => chooseStudent("otp")} onPianist={choosePianist} onLogin={startLogin} onComposers={() => setScreen("composers")} learnerProfile={learnerProfile} learnerLoggedOut={learnerLoggedOut} studentLoggedIn={!!myProfile} musicOn={musicPlaying} onMusicToggle={toggleMusic} memberCount={Object.values(studentsByCons).flat().length} />}
+      {view === "entry" && <ArtiumHero onLearner={chooseLearner} onStudent={() => chooseStudent("otp")} onPianist={choosePianist} onLogin={startLogin} onComposers={() => setScreen("composers")} learnerProfile={learnerProfile} learnerLoggedOut={learnerLoggedOut} studentLoggedIn={!!myProfile} musicOn={musicPlaying} onMusicToggle={toggleMusic} memberCount={Object.values(studentsByCons).flat().length} />}
       {view === "composers" && <WallOfComposers onBack={backToEntry} />}
       {view === "learnerSignup" && <LearnerSignup onSubmit={submitLearner} onBack={backToEntry} onLogin={startLogin} error={authError} googleName={learnerGoogleName} />}
       {view === "learnerMap" && (
