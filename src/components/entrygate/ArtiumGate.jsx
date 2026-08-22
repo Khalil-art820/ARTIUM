@@ -184,11 +184,15 @@ function FeatureCard({ card, onActivate }) {
     >
       <svg className="cardsvg" viewBox="0 0 260 412" aria-hidden="true">
         <defs>
+          {/* Card surface now matches the page ground (--bg #FDFAF5)
+              exactly, per the client's follow-up — flat stops, same
+              gradient element/id so the rest of the layer stack (keylines,
+              groove filter, shade overlay, drop-shadows) is untouched. */}
           <linearGradient id={gp} gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="412">
-            <stop offset="0" stopColor="#FFFEFB" /><stop offset=".68" stopColor="#F8F2E6" /><stop offset="1" stopColor="#F0E7D4" />
+            <stop offset="0" stopColor="#FDFAF5" /><stop offset="1" stopColor="#FDFAF5" />
           </linearGradient>
           <linearGradient id={gn} gradientUnits="userSpaceOnUse" x1="0" y1="10" x2="0" y2="402">
-            <stop offset="0" stopColor="#FFFEFC" /><stop offset=".62" stopColor="#FBF6EB" /><stop offset="1" stopColor="#F5EDDC" />
+            <stop offset="0" stopColor="#FDFAF5" /><stop offset="1" stopColor="#FDFAF5" />
           </linearGradient>
           <linearGradient id={sh} gradientUnits="userSpaceOnUse" x1="0" y1="240" x2="0" y2="402">
             <stop offset="0" stopColor="rgba(176,146,98,0)" /><stop offset="1" stopColor="rgba(176,146,98,.16)" />

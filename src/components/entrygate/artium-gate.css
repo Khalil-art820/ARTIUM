@@ -179,7 +179,10 @@
   left:calc(50% - 190px);top:200px;
   width:380px;height:446px;
   border-radius:50%;
-  background:linear-gradient(175deg,#FFFEFC 0%,#FBF6EC 55%,#F1E8D5 100%);
+  /* Medallion surface matches the page ground (--bg) exactly, per the
+     client's follow-up — keep the box-shadows/orbit/balls that make it
+     read as an object, only the fill flattened. */
+  background:var(--bg);
   box-shadow:
     0 42px 70px -25px rgba(150,115,55,.48),
     0 14px 28px -10px rgba(150,115,55,.20),
