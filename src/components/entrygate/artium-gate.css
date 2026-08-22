@@ -24,7 +24,15 @@
   --contour:rgba(176,146,98,.30);
   --warm-shadow:rgba(150,115,55,.38);
 
+  /* The rest of the app is dark (index.css sets html/body/#root to
+     #0F1012) and App.jsx's own screen wrapper paints white behind
+     "entry"/"composers". Neither matches this page's cream — .agate has
+     to own its full extent (not just the first viewport) so nothing
+     underneath can show through as a different-colored band, including
+     iOS rubber-band overscroll past the top/bottom edge. */
   background:var(--bg);
+  min-height:100vh;
+  min-height:100dvh;
   color:var(--ink);
   font-family:'Jost',system-ui,sans-serif;
   -webkit-font-smoothing:antialiased;
@@ -268,12 +276,15 @@
 
 /* ================= FOOTER ================= */
 .agate footer{margin-top:44px;font-size:14px;color:var(--muted);}
-.agate .foot-top{display:flex;align-items:center;justify-content:space-between;}
-.agate .partner{display:flex;align-items:baseline;gap:10px;
+/* Centered column at every width: "In partnership with" / "aclassicaltone"
+   (the top border spans this whole block), then the two social pucks
+   beneath, centered. */
+.agate .foot-top{display:flex;flex-direction:column;align-items:center;
   border-top:1px solid rgba(198,149,47,.35);padding-top:14px;}
+.agate .partner{display:flex;flex-direction:column;align-items:center;gap:2px;}
 .agate .partner .lbl{font-size:12.5px;color:#7A8090;}
 .agate .partner .pname{font-family:'Playfair Display',serif;color:var(--gold);font-size:19px;}
-.agate .socials{display:flex;gap:12px;}
+.agate .socials{display:flex;gap:12px;margin-top:14px;}
 .agate .socials .puck{width:44px;height:44px;text-decoration:none;}
 .agate .foot-bottom{display:flex;align-items:center;justify-content:space-between;
   margin-top:16px;font-size:14.5px;color:#3A4152;}
@@ -291,7 +302,15 @@
 @media (max-width:700px){
   .agate .page{padding:22px 18px;}
   .agate h1{font-size:44px;}
-  .agate .trust{grid-template-columns:1fr;row-gap:18px;}
-  .agate .cell + .cell{border-left:none;border-top:1px solid rgba(176,146,98,.25);padding-top:18px;}
-  .agate .foot-top,.agate .foot-bottom{flex-direction:column;gap:12px;}
+  /* Trust bar stays horizontal (3 columns, vertical separators) like
+     desktop — the user wants the same row shape at every width, just
+     tightened so three cells fit ~375px without page scroll. Each cell
+     stacks its icon above its text to save horizontal room. */
+  .agate .trust{padding:16px 10px;}
+  .agate .cell{flex-direction:column;align-items:center;text-align:center;gap:8px;padding:4px 8px;}
+  .agate .disc{width:40px;height:40px;}
+  .agate .disc svg{width:20px;height:20px;}
+  .agate .trust h4{font-size:13px;}
+  .agate .trust p{font-size:10.5px;margin-top:4px;line-height:1.35;}
+  .agate .foot-bottom{flex-direction:column;gap:12px;}
 }

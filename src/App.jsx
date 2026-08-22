@@ -2372,7 +2372,10 @@ export default function App() {
     // to a whole pixel where the gate lands on a fraction, leaving a hairline
     // of white along the foot; and on a phone the safe area and the rubber
     // band at the end of a scroll both reveal whatever is underneath.
-    <div style={{ fontFamily: FONT_BODY, background: (screen === "entry" || screen === "composers") ? "#FFFFFF" : C.ink, minHeight: "100%", width: "100%" }}>
+    // "entry" is the client's rebuilt cream gate (ArtiumGate.jsx, --bg
+    // #FDFAF5), not the old white one — matching this wrapper's fill to
+    // that cream is what closes the hairline/rounding gap for it now.
+    <div style={{ fontFamily: FONT_BODY, background: screen === "entry" ? "#FDFAF5" : screen === "composers" ? "#FFFFFF" : C.ink, minHeight: "100%", width: "100%" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Serif+Display&family=Fraunces:opsz,wght@9..144,500&display=swap');
         * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }

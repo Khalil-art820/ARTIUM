@@ -236,13 +236,21 @@ export default function ArtiumGate({
   onMusicToggle,
   memberCount,
 }) {
-  // The app around this page is dark; own the body while mounted so iOS
-  // overscroll doesn't frame the page in black — same as the old ArtiumHero,
-  // just restoring to this page's cream instead of white.
+  // The app around this page is dark (index.css pins html/body/#root to
+  // #0F1012); own both html and body while mounted so iOS overscroll
+  // rubber-banding past the top/bottom edge shows this page's cream
+  // instead of the app's dark theme or a mismatched white — same idea as
+  // the old ArtiumHero, extended to html since some browsers paint the
+  // overscroll fill from the root element instead of body.
   React.useEffect(() => {
-    const prev = document.body.style.backgroundColor;
+    const prevBody = document.body.style.backgroundColor;
+    const prevHtml = document.documentElement.style.backgroundColor;
     document.body.style.backgroundColor = "#FDFAF5";
-    return () => { document.body.style.backgroundColor = prev; };
+    document.documentElement.style.backgroundColor = "#FDFAF5";
+    return () => {
+      document.body.style.backgroundColor = prevBody;
+      document.documentElement.style.backgroundColor = prevHtml;
+    };
   }, []);
 
   const stageScalerRef = useRef(null);
