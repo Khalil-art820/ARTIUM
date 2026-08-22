@@ -23,8 +23,11 @@ import {
 } from "./lib/concerts";
 import L from "leaflet";
 import { MapContainer, TileLayer, Marker, Tooltip, Popup, useMap } from "react-leaflet";
-import ArtiumLanding from "./pages/ArtiumLanding";
-import ArtiumHero from "./components/ArtiumHero";
+// ArtiumLanding and ArtiumHero (the two previous gates) are intentionally NOT
+// imported: neither is rendered any more, and importing them pulls in their
+// stylesheets, whose unscoped selectors (.stage, .hero, .rule, .trust …) leak
+// into ArtiumGate — .stage{max-width:94vw} was clamping the gate's 840px
+// stage on phones. The files stay on disk for reference.
 import ArtiumGate from "./components/entrygate/ArtiumGate";
 import WallOfComposers from "./pages/WallOfComposers";
 // three.js is ~1.9MB of the bundle. Loading it lazily keeps it out of the

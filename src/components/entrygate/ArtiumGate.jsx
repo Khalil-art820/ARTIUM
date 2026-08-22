@@ -1,6 +1,41 @@
-import React from "react";
+import React, { useLayoutEffect, useRef, useState } from "react";
 import paths from "./paths.json";
 import "./artium-gate.css";
+
+const STAGE_W = 840;
+const STAGE_H = 846;
+
+/* The client's decision: mobile shows the exact desktop composition (the
+   840x846 carved stage — 4 silhouette cards + medallion + rings + diamond)
+   scaled down as one unit, not the handoff's plain-card responsive fallback.
+   The scaler measures its own content-box width (already net of .page's
+   padding since it's a plain block child) and scales the stage uniformly;
+   the wrapper's height is pinned to the scaled stage height so nothing
+   below it gaps. No CSS calc() unit-division — older iOS Safari can't do
+   it — the ratio is computed in JS on resize. */
+function useStageScale(ref) {
+  const [scale, setScale] = useState(1);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const recompute = () => {
+      const w = el.clientWidth;
+      if (w > 0) setScale(Math.min(1, w / STAGE_W));
+    };
+    recompute();
+    let ro;
+    if (typeof ResizeObserver !== "undefined") {
+      ro = new ResizeObserver(recompute);
+      ro.observe(el);
+    }
+    window.addEventListener("resize", recompute);
+    return () => {
+      if (ro) ro.disconnect();
+      window.removeEventListener("resize", recompute);
+    };
+  }, [ref]);
+  return scale;
+}
 
 /* =========================================================
    Artium entry gate — ported 1:1 from the client's approved
@@ -198,6 +233,9 @@ export default function ArtiumGate({
     return () => { document.body.style.backgroundColor = prev; };
   }, []);
 
+  const stageScalerRef = useRef(null);
+  const scale = useStageScale(stageScalerRef);
+
   const handlers = {
     onLearner,
     onPianist,
@@ -243,7 +281,21 @@ export default function ArtiumGate({
         </section>
 
         {/* ================= STAGE ================= */}
-        <div className="stage">
+        {/* The client wants the exact desktop composition on mobile too —
+            the stage keeps its 840x846 desktop DOM/CSS at every width and
+            is scaled down as one unit (see useStageScale above), never
+            swapped for a plain-card responsive layout. */}
+        <div
+          className="stage-scaler"
+          ref={stageScalerRef}
+          style={{ height: STAGE_H * scale }}
+        >
+          {/* Origin top LEFT, not center: when the 840px stage overflows the
+    scaler, auto margins clamp to 0 (they never go negative), so a
+    center origin shoves the scaled box right by 420·(1−s). From the
+    left origin the scaled width is exactly the scaler width (s = w/840),
+    which centers it by construction; at s=1 the auto margins center. */}
+<div className="stage" style={{ transform: `scale(${scale})`, transformOrigin: "top left" }}>
           <div className="diamond">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><path d="M7 0l1.8 5.2L14 7l-5.2 1.8L7 14 5.2 8.8 0 7l5.2-1.8z" /></svg>
           </div>
@@ -316,6 +368,7 @@ export default function ArtiumGate({
                 <Arrow />
               </button>
             </div>
+          </div>
           </div>
         </div>
 
