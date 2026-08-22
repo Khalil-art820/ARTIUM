@@ -172,8 +172,16 @@ function FeatureCard({ card, onActivate }) {
   const { id, numSide, title, text, Icon, ariaLabel } = card;
   const numStr = String(id).padStart(2, "0");
   const gp = `gp${id}`, gn = `gn${id}`, sh = `sh${id}`, gr = `gr${id}`;
+  const activate = (e) => { e.preventDefault(); onActivate && onActivate(); };
   return (
-    <article className="feature">
+    <article
+      className="feature"
+      role="link"
+      tabIndex={0}
+      aria-label={ariaLabel}
+      onClick={activate}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") activate(e); }}
+    >
       <svg className="cardsvg" viewBox="0 0 260 412" aria-hidden="true">
         <defs>
           <linearGradient id={gp} gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="412">
@@ -202,7 +210,11 @@ function FeatureCard({ card, onActivate }) {
         <div className="rule" />
         <p>{text}</p>
         <span className="sp" />
-        <button className="go puck" aria-label={ariaLabel} onClick={onActivate}>
+        <button
+          className="go puck"
+          aria-label={ariaLabel}
+          onClick={(e) => { e.stopPropagation(); activate(e); }}
+        >
           <Arrow />
         </button>
       </div>
@@ -246,6 +258,7 @@ export default function ArtiumGate({
     onNews: onNews || (() => {}),
   };
   const count = memberCount ?? 40;
+  const activateStudent = (e) => { e.preventDefault(); onStudent && onStudent(); };
 
   return (
     <div className="agate">
@@ -320,7 +333,14 @@ export default function ArtiumGate({
             ))}
 
             {/* MEDALLION */}
-            <div className="oval-slab">
+            <div
+              className="oval-slab"
+              role="link"
+              tabIndex={0}
+              aria-label="Conservatory Students | Graduates"
+              onClick={activateStudent}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") activateStudent(e); }}
+            >
               <span className="oring" />
               <span className="ball l" />
               <span className="ball r" />
@@ -364,7 +384,11 @@ export default function ArtiumGate({
               </div>
 
               <div className="join">Join, connect and grow within a trusted community.</div>
-              <button className="go puck" aria-label="Join the community" onClick={onStudent}>
+              <button
+                className="go puck"
+                aria-label="Join the community"
+                onClick={(e) => { e.stopPropagation(); activateStudent(e); }}
+              >
                 <Arrow />
               </button>
             </div>
