@@ -25,6 +25,8 @@ import "./artium-gate.css";
    are not yet used by this gate.
 ========================================================= */
 
+const ARTIUM_INSTAGRAM = "https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==";
+
 const Arrow = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M4 12h15M13 6l6 6-6 6" />
@@ -187,6 +189,15 @@ export default function ArtiumGate({
   onMusicToggle,
   memberCount,
 }) {
+  // The app around this page is dark; own the body while mounted so iOS
+  // overscroll doesn't frame the page in black — same as the old ArtiumHero,
+  // just restoring to this page's cream instead of white.
+  React.useEffect(() => {
+    const prev = document.body.style.backgroundColor;
+    document.body.style.backgroundColor = "#FDFAF5";
+    return () => { document.body.style.backgroundColor = prev; };
+  }, []);
+
   const handlers = {
     onLearner,
     onPianist,
@@ -203,18 +214,21 @@ export default function ArtiumGate({
       <div className="page">
         {/* ================= HEADER ================= */}
         <header>
-          <button className="brand" onClick={onLogin} aria-label="artium home">
+          <div className="brand">
             <span className="wordmark">artium</span>
-          </button>
+          </div>
           <div className="head-actions">
-            <button
-              className={`puck${musicOn ? " is-on" : ""}`}
-              aria-label={musicOn ? "Pause introduction" : "Play introduction"}
-              onClick={onMusicToggle}
-            >
-              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z" /></svg>
-            </button>
-            <button className="puck" aria-label="Account" onClick={onLogin}>
+            {onMusicToggle && (
+              <button
+                className={`puck${musicOn ? " is-on" : ""}`}
+                aria-label={musicOn ? "Pause ambient music" : "Play ambient music"}
+                aria-pressed={!!musicOn}
+                onClick={onMusicToggle}
+              >
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z" /></svg>
+              </button>
+            )}
+            <button className="puck" aria-label="Account">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="8" r="3.6" /><path d="M4.5 20c1.4-3.4 4.2-5 7.5-5s6.1 1.6 7.5 5" /></svg>
             </button>
             <span className="head-count">{count}</span>
@@ -353,12 +367,12 @@ export default function ArtiumGate({
               <span className="pname">aclassicaltone</span>
             </div>
             <div className="socials">
-              <button className="puck" aria-label="Instagram">
+              <a className="puck" href={ARTIUM_INSTAGRAM} target="_blank" rel="noreferrer" aria-label="Instagram">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C9962E" strokeWidth="1.8" strokeLinecap="round"><rect x="3.5" y="3.5" width="17" height="17" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.2" cy="6.8" r="1" fill="#C9962E" stroke="none" /></svg>
-              </button>
-              <button className="puck" aria-label="Facebook">
+              </a>
+              <a className="puck" href="#" aria-label="Facebook">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="#C9962E"><path d="M13.5 21v-7h2.4l.4-3h-2.8V9.1c0-.9.3-1.5 1.6-1.5h1.3V4.9c-.3 0-1.1-.1-2-.1-2 0-3.4 1.2-3.4 3.5V11H8.5v3H11v7z" /></svg>
-              </button>
+              </a>
             </div>
           </div>
           <div className="foot-bottom">
