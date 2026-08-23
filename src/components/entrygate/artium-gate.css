@@ -108,10 +108,8 @@
   position:absolute;left:50%;top:-6px;transform:translateX(-50%);
   display:flex;align-items:center;color:var(--gold);z-index:4;
 }
-.agate .diamond::before,.agate .diamond::after{
-  content:"";height:1px;width:110px;
-  background:repeating-linear-gradient(90deg,rgba(198,149,47,.4) 0 4px,transparent 4px 9px);
-}
+/* The dashed hairlines that flanked the diamond are gone — the user is
+   stripping every horizontal line from the stage; the star stands alone. */
 .agate .diamond svg{margin:0 10px;filter:drop-shadow(0 1px 1px rgba(150,115,55,.4));}
 
 .agate .grid{
