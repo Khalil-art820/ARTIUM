@@ -291,7 +291,7 @@ const CARDS = [
         Music Teacher
       </>
     ),
-    text: "Discover and connect with top conservatory musicians and inspiring teachers.",
+    text: "Learn from top conservatory musicians.",
     Icon: TeacherIcon,
     ariaLabel: "Find a classical music teacher",
     propKey: "onLearner",
@@ -306,7 +306,7 @@ const CARDS = [
         Musician
       </>
     ),
-    text: "Hire talented conservatory musicians for your concert, event or project.",
+    text: "Hire musicians for concerts and events.",
     Icon: ConcertIcon,
     ariaLabel: "Find a concert musician",
     propKey: "onPianist",
@@ -321,7 +321,7 @@ const CARDS = [
         Music Events
       </>
     ),
-    text: "Concerts, festivals, competitions and classical music news worldwide.",
+    text: "Classical concerts, competitions and news.",
     Icon: NewsIcon,
     ariaLabel: "See news and events",
     propKey: "onNews",
@@ -336,7 +336,7 @@ const CARDS = [
         Composers
       </>
     ),
-    text: "A space where today's living composers post and share their newest works.",
+    text: "Living composers share their newest works.",
     Icon: ComposerIcon,
     ariaLabel: "Discover tomorrow's composers",
     propKey: "onComposers",
@@ -562,7 +562,7 @@ export default function ArtiumGate({
                   <circle cx="42.6" cy="23.2" r="2.1" />
                 </svg>
               </div>
-              <h2>Conservatory Students<br />| Graduates</h2>
+              <h2>Conservatory<br />Students | Graduates</h2>
               <div className="sub">The heart of tomorrow's music.</div>
 
               <div className="member">
