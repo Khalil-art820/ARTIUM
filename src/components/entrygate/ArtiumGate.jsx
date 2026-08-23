@@ -6,43 +6,26 @@ const STAGE_W = 840;
 const STAGE_H = 846;
 
 /* =========================================================
-   First-visit reveal — plays once (localStorage flag), then never
-   again. `phase` is a single integer clock: each threshold below is
-   the phase value at which that element becomes visible/interactive.
-     1 = rings + diamond
-     2 = medallion                (+ caption: "The heart of Artium…")
-     3..6 = cards 01..04, one per phase (+ its caption line)
-     7 = quiet hint caption ("Tap any door to enter")
-     8 = done — full interactivity restored, flag set
-   REVEAL_STEPS drives a setTimeout chain from phase 0; a capture-phase
-   skip listener (pointerdown/click/keydown) jumps straight to phase 8,
-   clearing the timers, without letting the event reach any card/button
-   underneath (stopPropagation before the target is ever reached).
-========================================================= */
-const REVEAL_KEY = "artium_gate_reveal_v1";
-const REVEAL_DONE_PHASE = 8;
-const REVEAL_STEPS = [
-  { at: 300, phase: 1 },
-  { at: 800, phase: 2, caption: "The heart of Artium — conservatory students & graduates." },
-  { at: 2000, phase: 3, caption: "Find inspiring teachers." },
-  { at: 2600, phase: 4, caption: "Hire a concert pianist." },
-  { at: 3200, phase: 5, caption: "Classical news & events." },
-  { at: 3800, phase: 6, caption: "Tomorrow's composers." },
-  { at: 4800, phase: 7, caption: "Tap any door to enter" },
-  { at: 7800, phase: REVEAL_DONE_PHASE, caption: "" },
-];
+   Spotlight tour — the entry gate's one and only introduction (the
+   choreographed "reveal" that hid/animated cards in was tried and
+   retired in favor of this). It never hides anything: the gate always
+   renders in its normal finished, fully-interactive state; the tour is
+   just a dimmed overlay with a spotlight hole framing one element at a
+   time on top of it.
 
-/* =========================================================
-   Spotlight tour — "Alternative A". A previewable second intro mode,
-   independent of the first-visit reveal above: activated only by
-   `?intro=tour` in the URL, never touches artium_gate_reveal_v1, and
-   runs on a gate that's already rendered in its normal finished state
-   (nothing here hides cards/medallion — the overlay does the framing).
+   Activation (see useTourActivation below):
+     - First-time visitors: plays automatically, gated by the
+       artium_gate_tour_v1 localStorage flag, decided synchronously
+       (lazy useState initializer — runs during render, before paint)
+       so there is never a flash of the overlay mounting then vanishing.
+     - `?intro=tour` in the URL: force-replays it regardless of the
+       flag, for previewing/QA. Both paths mark the flag done on
+       finish; the forced path doesn't need to, but it's harmless.
 
    Steps: 0 = medallion, 1..4 = cards 01..04 (TOUR_CAPTIONS index).
    The spotlight hole is the "huge box-shadow" trick: a transparent,
-   absolutely-fixed div sized to the target's rect (+14px pad, rounded
-   to match — ellipse for the medallion, ~28px for cards) whose
+   fixed div sized to the target's rect (+14px pad, rounded to match —
+   ellipse for the medallion, ~28px for cards) whose
    `box-shadow: 0 0 0 9999px rgba(35,42,59,.45)` paints the dim
    everywhere BUT that div, i.e. the hole. Position/size are recomputed
    from getBoundingClientRect on every step change and on resize/scroll
@@ -50,6 +33,7 @@ const REVEAL_STEPS = [
    and already reflect the stage's own scale() transform — no extra
    math needed for the mobile scaled stage).
 ========================================================= */
+const TOUR_SEEN_KEY = "artium_gate_tour_v1";
 const TOUR_CAPTIONS = [
   "The heart of Artium — conservatory students & graduates.",
   "Find inspiring teachers.",
@@ -62,8 +46,29 @@ const TOUR_PAD = 14;
 const TOUR_GAP = 16;
 const TOUR_CARD_W = 300;
 const TOUR_CARD_H_ESTIMATE = 150;
+// Auto-play (first visit) waits longer before dimming than a deliberate
+// ?intro=tour replay, so the whole gate is seen once, unframed, first.
+const TOUR_DELAY_AUTO = 800;
+const TOUR_DELAY_FORCED = 400;
 
-function useSpotlightTour(active, medallionRef, cardRefs) {
+function useTourActivation() {
+  const forced = (() => {
+    try { return new URLSearchParams(window.location.search).get("intro") === "tour"; } catch { return false; }
+  })();
+  // Lazy initializer runs synchronously during the initial render (before
+  // the browser paints), same pre-paint guarantee the old reveal used —
+  // no flash for repeat visitors, and no missed auto-play for new ones.
+  const [active] = useState(() => {
+    if (forced) return true;
+    try { return localStorage.getItem(TOUR_SEEN_KEY) !== "1"; } catch { return false; }
+  });
+  const markSeen = useCallback(() => {
+    try { localStorage.setItem(TOUR_SEEN_KEY, "1"); } catch { /* private mode etc. */ }
+  }, []);
+  return { active, delay: forced ? TOUR_DELAY_FORCED : TOUR_DELAY_AUTO, markSeen };
+}
+
+function useSpotlightTour(active, delayMs, onEnd, medallionRef, cardRefs) {
   const [visible, setVisible] = useState(false);
   const [step, setStep] = useState(0);
   const [spot, setSpot] = useState(null); // {top,left,width,height,radius}
@@ -73,9 +78,9 @@ function useSpotlightTour(active, medallionRef, cardRefs) {
   useEffect(() => {
     if (!active) return;
     try { reduceMotionRef.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch { reduceMotionRef.current = false; }
-    const t = setTimeout(() => setVisible(true), 400);
+    const t = setTimeout(() => setVisible(true), delayMs);
     return () => clearTimeout(t);
-  }, [active]);
+  }, [active, delayMs]);
 
   const targetEl = useCallback(
     (i) => (i === 0 ? medallionRef.current : cardRefs.current[i - 1]),
@@ -117,7 +122,7 @@ function useSpotlightTour(active, medallionRef, cardRefs) {
     };
   }, [active, visible, step, recompute, targetEl]);
 
-  const end = useCallback(() => { setVisible(false); }, []);
+  const end = useCallback(() => { setVisible(false); onEnd && onEnd(); }, [onEnd]);
   const next = useCallback(() => {
     setStep((s) => {
       if (s >= TOUR_STEP_COUNT - 1) { end(); return s; }
@@ -137,77 +142,6 @@ function useSpotlightTour(active, medallionRef, cardRefs) {
   const reduceMotion = reduceMotionRef.current;
 
   return { visible, step, spot, caption, isLast, next, skip: end, nextBtnRef, reduceMotion };
-}
-
-function useFirstVisitReveal(disabled) {
-  // Starts optimistic ("already seen" / nothing to animate) so a repeat
-  // visitor never renders a hidden-then-shown flash; if this turns out to
-  // be a first visit, useLayoutEffect flips both before the first paint.
-  const [phase, setPhase] = useState(REVEAL_DONE_PHASE);
-  const [caption, setCaption] = useState("");
-  const [didReveal, setDidReveal] = useState(false);
-  // True only when the user skipped (vs. the sequence finishing on its
-  // own) — forces every still-hidden element to its final state with no
-  // transition/animation, so "jumps instantly" is actually instant
-  // instead of collapsing into whatever fade/slide duration was left.
-  const [skipped, setSkipped] = useState(false);
-  const timersRef = useRef([]);
-
-  const finish = useCallback(() => {
-    timersRef.current.forEach(clearTimeout);
-    timersRef.current = [];
-    setPhase(REVEAL_DONE_PHASE);
-    setCaption("");
-    try { localStorage.setItem(REVEAL_KEY, "1"); } catch { /* private mode etc. */ }
-  }, []);
-
-  const skip = useCallback(() => { setSkipped(true); finish(); }, [finish]);
-
-  useLayoutEffect(() => {
-    // Spotlight-tour mode (`?intro=tour`) previews on top of the finished
-    // gate and never touches this flag at all — not read, not written.
-    if (disabled) return;
-    let seen = true;
-    try { seen = localStorage.getItem(REVEAL_KEY) === "1"; } catch { seen = true; }
-    let reduceMotion = false;
-    try { reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch { reduceMotion = false; }
-    if (seen || reduceMotion) {
-      if (!seen) { try { localStorage.setItem(REVEAL_KEY, "1"); } catch { /* noop */ } }
-      return;
-    }
-    setDidReveal(true);
-    setPhase(0);
-    setCaption("");
-    timersRef.current = REVEAL_STEPS.map((step) =>
-      setTimeout(() => {
-        setPhase(step.phase);
-        if (step.caption !== undefined) setCaption(step.caption);
-        if (step.phase === REVEAL_DONE_PHASE) finish();
-      }, step.at)
-    );
-    return () => { timersRef.current.forEach(clearTimeout); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Capture-phase skip: any pointer/click/key during the sequence jumps
-  // straight to the finished state and swallows that first event so it
-  // can never reach a card, the medallion, or any button underneath.
-  useEffect(() => {
-    if (!didReveal || phase >= REVEAL_DONE_PHASE) return;
-    const onSkip = (e) => { e.stopPropagation(); skip(); };
-    window.addEventListener("pointerdown", onSkip, true);
-    window.addEventListener("click", onSkip, true);
-    window.addEventListener("keydown", onSkip, true);
-    return () => {
-      window.removeEventListener("pointerdown", onSkip, true);
-      window.removeEventListener("click", onSkip, true);
-      window.removeEventListener("keydown", onSkip, true);
-    };
-  }, [didReveal, phase, skip]);
-
-  const interactive = !didReveal || phase >= REVEAL_DONE_PHASE;
-  const revealed = (threshold) => !didReveal || phase >= threshold;
-  return { didReveal, caption, interactive, revealed, skipped };
 }
 
 /* The client's decision: mobile shows the exact desktop composition (the
@@ -373,7 +307,7 @@ const CARDS = [
   },
 ];
 
-function FeatureCard({ card, onActivate, revealClass, interactive, rootRef }) {
+function FeatureCard({ card, onActivate, rootRef }) {
   const { id, numSide, title, text, Icon, ariaLabel } = card;
   const numStr = String(id).padStart(2, "0");
   const gp = `gp${id}`, gn = `gn${id}`, sh = `sh${id}`, gr = `gr${id}`;
@@ -381,9 +315,9 @@ function FeatureCard({ card, onActivate, revealClass, interactive, rootRef }) {
   return (
     <article
       ref={rootRef}
-      className={`feature${revealClass || ""}`}
+      className="feature"
       role="link"
-      tabIndex={interactive ? 0 : -1}
+      tabIndex={0}
       aria-label={ariaLabel}
       onClick={activate}
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") activate(e); }}
@@ -466,22 +400,14 @@ export default function ArtiumGate({
   const stageScalerRef = useRef(null);
   const scale = useStageScale(stageScalerRef);
 
-  // `?intro=tour` selects the previewable spotlight-tour mode instead of
-  // the first-visit reveal (mutually exclusive; computed synchronously so
-  // useFirstVisitReveal's very first layout effect already knows to stay
-  // out of the way — see its `disabled` param).
-  const tourMode = (() => {
-    try { return new URLSearchParams(window.location.search).get("intro") === "tour"; } catch { return false; }
-  })();
-
-  const { didReveal, caption, interactive, revealed, skipped } = useFirstVisitReveal(tourMode);
-  const lockClass = didReveal && !interactive ? " reveal-lock" : "";
-  const ringsClass = didReveal ? (revealed(1) ? " reveal-in" : " reveal-pending") : "";
-  const medallionRevealClass = didReveal ? (revealed(2) ? " reveal-in" : " reveal-pending") : "";
-
+  // The gate's one introduction: plays automatically on a first visit
+  // (artium_gate_tour_v1 flag) or on demand via ?intro=tour. The gate
+  // itself always renders finished/interactive — see useTourActivation
+  // and useSpotlightTour above.
+  const { active: tourActive, delay: tourDelay, markSeen: tourMarkSeen } = useTourActivation();
   const medallionRef = useRef(null);
   const cardRefs = useRef([]);
-  const tour = useSpotlightTour(tourMode, medallionRef, cardRefs);
+  const tour = useSpotlightTour(tourActive, tourDelay, tourMarkSeen, medallionRef, cardRefs);
 
   const handlers = {
     onLearner,
@@ -496,7 +422,7 @@ export default function ArtiumGate({
   const activateStudent = (e) => { e.preventDefault(); onStudent && onStudent(); };
 
   return (
-    <div className={`agate${skipped ? " reveal-skipped" : ""}`}>
+    <div className="agate">
       <div className="page">
         {/* ================= HEADER ================= */}
         <header>
@@ -544,11 +470,11 @@ export default function ArtiumGate({
     left origin the scaled width is exactly the scaler width (s = w/840),
     which centers it by construction; at s=1 the auto margins center. */}
 <div className="stage" style={{ transform: `scale(${scale})`, transformOrigin: "top left" }}>
-          <div className={`diamond${ringsClass}`}>
+          <div className="diamond">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><path d="M7 0l1.8 5.2L14 7l-5.2 1.8L7 14 5.2 8.8 0 7l5.2-1.8z" /></svg>
           </div>
 
-          <div className={`rings${ringsClass}`}>
+          <div className="rings">
             <svg width="700" height="700" viewBox="0 0 700 700" fill="none">
               <circle cx="350" cy="350" r="240" stroke="rgba(198,149,47,.30)" strokeWidth="1" />
               <circle cx="350" cy="350" r="291" stroke="rgba(198,149,47,.38)" strokeWidth="1" />
@@ -568,10 +494,6 @@ export default function ArtiumGate({
                 key={card.id}
                 card={card}
                 onActivate={handlers[card.propKey]}
-                interactive={interactive}
-                revealClass={
-                  (didReveal ? (revealed(2 + card.id) ? " reveal-in" : " reveal-pending") : "") + lockClass
-                }
                 rootRef={(el) => { cardRefs.current[card.id - 1] = el; }}
               />
             ))}
@@ -579,9 +501,9 @@ export default function ArtiumGate({
             {/* MEDALLION */}
             <div
               ref={medallionRef}
-              className={`oval-slab${medallionRevealClass}${lockClass}`}
+              className="oval-slab"
               role="link"
-              tabIndex={interactive ? 0 : -1}
+              tabIndex={0}
               aria-label="Conservatory Students | Graduates"
               onClick={activateStudent}
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") activateStudent(e); }}
@@ -640,16 +562,6 @@ export default function ArtiumGate({
           </div>
           </div>
         </div>
-
-        {/* First-visit reveal caption — reserves its own space so nothing
-            below jumps when it appears/disappears; only rendered at all
-            during the session that actually runs the reveal (repeat
-            visits skip it entirely, per spec). */}
-        {didReveal && (
-          <div className="reveal-caption" style={{ opacity: caption ? 1 : 0 }} aria-live="polite">
-            <span key={caption} className="reveal-caption-text">{caption}</span>
-          </div>
-        )}
 
         {/* ================= TRUST BAR ================= */}
         <section className="trust">
@@ -718,11 +630,12 @@ export default function ArtiumGate({
         </footer>
       </div>
 
-      {/* ================= SPOTLIGHT TOUR ("Alternative A") =================
-          Activated only by ?intro=tour — a previewable second intro mode,
-          independent of the reveal above. The gate underneath is already
-          fully rendered/interactive; this overlay just frames it. */}
-      {tourMode && tour.visible && tour.spot && (
+      {/* ================= SPOTLIGHT TOUR =================
+          The gate's one introduction: auto-plays for first-time visitors
+          (artium_gate_tour_v1) or on demand via ?intro=tour. The gate
+          underneath is already fully rendered/interactive; this overlay
+          just frames it. */}
+      {tourActive && tour.visible && tour.spot && (
         <div className="tour-overlay" role="dialog" aria-modal="true" aria-label="Guided tour">
           <div
             className={`tour-spot${tour.reduceMotion ? " no-anim" : ""}`}
