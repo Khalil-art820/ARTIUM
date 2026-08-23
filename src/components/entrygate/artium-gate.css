@@ -104,13 +104,7 @@
 }
 .agate .rings{position:absolute;left:50%;top:423px;transform:translate(-50%,-50%);
   pointer-events:none;line-height:0;z-index:0;}
-.agate .diamond{
-  position:absolute;left:50%;top:-6px;transform:translateX(-50%);
-  display:flex;align-items:center;color:var(--gold);z-index:4;
-}
-/* The dashed hairlines that flanked the diamond are gone — the user is
-   stripping every horizontal line from the stage; the star stands alone. */
-.agate .diamond svg{margin:0 10px;filter:drop-shadow(0 1px 1px rgba(150,115,55,.4));}
+/* .diamond CSS removed with the element — the divider is gone entirely. */
 
 .agate .grid{
   position:relative;z-index:1;

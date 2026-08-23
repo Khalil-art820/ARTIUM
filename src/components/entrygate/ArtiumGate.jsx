@@ -470,10 +470,9 @@ export default function ArtiumGate({
     left origin the scaled width is exactly the scaler width (s = w/840),
     which centers it by construction; at s=1 the auto margins center. */}
 <div className="stage" style={{ transform: `scale(${scale})`, transformOrigin: "top left" }}>
-          <div className="diamond">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><path d="M7 0l1.8 5.2L14 7l-5.2 1.8L7 14 5.2 8.8 0 7l5.2-1.8z" /></svg>
-          </div>
-
+          {/* The diamond divider (dashed lines, then the star) was removed
+              at the user's request — nothing sits between the tagline and
+              the stage any more. */}
           <div className="rings">
             <svg width="700" height="700" viewBox="0 0 700 700" fill="none">
               <circle cx="350" cy="350" r="240" stroke="rgba(198,149,47,.30)" strokeWidth="1" />
