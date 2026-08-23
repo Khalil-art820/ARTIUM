@@ -32,7 +32,114 @@ const REVEAL_STEPS = [
   { at: 7800, phase: REVEAL_DONE_PHASE, caption: "" },
 ];
 
-function useFirstVisitReveal() {
+/* =========================================================
+   Spotlight tour — "Alternative A". A previewable second intro mode,
+   independent of the first-visit reveal above: activated only by
+   `?intro=tour` in the URL, never touches artium_gate_reveal_v1, and
+   runs on a gate that's already rendered in its normal finished state
+   (nothing here hides cards/medallion — the overlay does the framing).
+
+   Steps: 0 = medallion, 1..4 = cards 01..04 (TOUR_CAPTIONS index).
+   The spotlight hole is the "huge box-shadow" trick: a transparent,
+   absolutely-fixed div sized to the target's rect (+14px pad, rounded
+   to match — ellipse for the medallion, ~28px for cards) whose
+   `box-shadow: 0 0 0 9999px rgba(35,42,59,.45)` paints the dim
+   everywhere BUT that div, i.e. the hole. Position/size are recomputed
+   from getBoundingClientRect on every step change and on resize/scroll
+   (rects are viewport-relative, matching this fixed-position overlay,
+   and already reflect the stage's own scale() transform — no extra
+   math needed for the mobile scaled stage).
+========================================================= */
+const TOUR_CAPTIONS = [
+  "The heart of Artium — conservatory students & graduates.",
+  "Find inspiring teachers.",
+  "Hire a concert pianist.",
+  "Classical news & events.",
+  "Tomorrow's composers.",
+];
+const TOUR_STEP_COUNT = TOUR_CAPTIONS.length;
+const TOUR_PAD = 14;
+const TOUR_GAP = 16;
+const TOUR_CARD_W = 300;
+const TOUR_CARD_H_ESTIMATE = 150;
+
+function useSpotlightTour(active, medallionRef, cardRefs) {
+  const [visible, setVisible] = useState(false);
+  const [step, setStep] = useState(0);
+  const [spot, setSpot] = useState(null); // {top,left,width,height,radius}
+  const nextBtnRef = useRef(null);
+  const reduceMotionRef = useRef(false);
+
+  useEffect(() => {
+    if (!active) return;
+    try { reduceMotionRef.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch { reduceMotionRef.current = false; }
+    const t = setTimeout(() => setVisible(true), 400);
+    return () => clearTimeout(t);
+  }, [active]);
+
+  const targetEl = useCallback(
+    (i) => (i === 0 ? medallionRef.current : cardRefs.current[i - 1]),
+    [medallionRef, cardRefs]
+  );
+
+  const recompute = useCallback(() => {
+    const el = targetEl(step);
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    setSpot({
+      top: r.top - TOUR_PAD,
+      left: r.left - TOUR_PAD,
+      width: r.width + TOUR_PAD * 2,
+      height: r.height + TOUR_PAD * 2,
+      radius: step === 0 ? "50%" : "28px",
+    });
+  }, [step, targetEl]);
+
+  // Scroll the target into view, then track it (scroll/resize) while this
+  // step is showing; re-measure a few times as the smooth scroll settles.
+  useEffect(() => {
+    if (!active || !visible) return;
+    const el = targetEl(step);
+    if (el) {
+      try {
+        el.scrollIntoView({ block: "center", behavior: reduceMotionRef.current ? "auto" : "smooth" });
+      } catch { /* older Safari without options support still scrolls */ }
+    }
+    recompute();
+    const ticks = [50, 150, 300, 450, 650].map((ms) => setTimeout(recompute, ms));
+    window.addEventListener("scroll", recompute, { passive: true });
+    window.addEventListener("resize", recompute);
+    if (nextBtnRef.current) nextBtnRef.current.focus();
+    return () => {
+      ticks.forEach(clearTimeout);
+      window.removeEventListener("scroll", recompute);
+      window.removeEventListener("resize", recompute);
+    };
+  }, [active, visible, step, recompute, targetEl]);
+
+  const end = useCallback(() => { setVisible(false); }, []);
+  const next = useCallback(() => {
+    setStep((s) => {
+      if (s >= TOUR_STEP_COUNT - 1) { end(); return s; }
+      return s + 1;
+    });
+  }, [end]);
+
+  useEffect(() => {
+    if (!active || !visible) return;
+    const onKey = (e) => { if (e.key === "Escape") { e.stopPropagation(); end(); } };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [active, visible, end]);
+
+  const caption = TOUR_CAPTIONS[step];
+  const isLast = step === TOUR_STEP_COUNT - 1;
+  const reduceMotion = reduceMotionRef.current;
+
+  return { visible, step, spot, caption, isLast, next, skip: end, nextBtnRef, reduceMotion };
+}
+
+function useFirstVisitReveal(disabled) {
   // Starts optimistic ("already seen" / nothing to animate) so a repeat
   // visitor never renders a hidden-then-shown flash; if this turns out to
   // be a first visit, useLayoutEffect flips both before the first paint.
@@ -57,6 +164,9 @@ function useFirstVisitReveal() {
   const skip = useCallback(() => { setSkipped(true); finish(); }, [finish]);
 
   useLayoutEffect(() => {
+    // Spotlight-tour mode (`?intro=tour`) previews on top of the finished
+    // gate and never touches this flag at all — not read, not written.
+    if (disabled) return;
     let seen = true;
     try { seen = localStorage.getItem(REVEAL_KEY) === "1"; } catch { seen = true; }
     let reduceMotion = false;
@@ -263,13 +373,14 @@ const CARDS = [
   },
 ];
 
-function FeatureCard({ card, onActivate, revealClass, interactive }) {
+function FeatureCard({ card, onActivate, revealClass, interactive, rootRef }) {
   const { id, numSide, title, text, Icon, ariaLabel } = card;
   const numStr = String(id).padStart(2, "0");
   const gp = `gp${id}`, gn = `gn${id}`, sh = `sh${id}`, gr = `gr${id}`;
   const activate = (e) => { e.preventDefault(); onActivate && onActivate(); };
   return (
     <article
+      ref={rootRef}
       className={`feature${revealClass || ""}`}
       role="link"
       tabIndex={interactive ? 0 : -1}
@@ -354,10 +465,23 @@ export default function ArtiumGate({
 
   const stageScalerRef = useRef(null);
   const scale = useStageScale(stageScalerRef);
-  const { didReveal, caption, interactive, revealed, skipped } = useFirstVisitReveal();
+
+  // `?intro=tour` selects the previewable spotlight-tour mode instead of
+  // the first-visit reveal (mutually exclusive; computed synchronously so
+  // useFirstVisitReveal's very first layout effect already knows to stay
+  // out of the way — see its `disabled` param).
+  const tourMode = (() => {
+    try { return new URLSearchParams(window.location.search).get("intro") === "tour"; } catch { return false; }
+  })();
+
+  const { didReveal, caption, interactive, revealed, skipped } = useFirstVisitReveal(tourMode);
   const lockClass = didReveal && !interactive ? " reveal-lock" : "";
   const ringsClass = didReveal ? (revealed(1) ? " reveal-in" : " reveal-pending") : "";
   const medallionRevealClass = didReveal ? (revealed(2) ? " reveal-in" : " reveal-pending") : "";
+
+  const medallionRef = useRef(null);
+  const cardRefs = useRef([]);
+  const tour = useSpotlightTour(tourMode, medallionRef, cardRefs);
 
   const handlers = {
     onLearner,
@@ -448,11 +572,13 @@ export default function ArtiumGate({
                 revealClass={
                   (didReveal ? (revealed(2 + card.id) ? " reveal-in" : " reveal-pending") : "") + lockClass
                 }
+                rootRef={(el) => { cardRefs.current[card.id - 1] = el; }}
               />
             ))}
 
             {/* MEDALLION */}
             <div
+              ref={medallionRef}
               className={`oval-slab${medallionRevealClass}${lockClass}`}
               role="link"
               tabIndex={interactive ? 0 : -1}
@@ -590,6 +716,63 @@ export default function ArtiumGate({
             <div>© 2026 Artium. All rights reserved.</div>
           </div>
         </footer>
+      </div>
+
+      {/* ================= SPOTLIGHT TOUR ("Alternative A") =================
+          Activated only by ?intro=tour — a previewable second intro mode,
+          independent of the reveal above. The gate underneath is already
+          fully rendered/interactive; this overlay just frames it. */}
+      {tourMode && tour.visible && tour.spot && (
+        <div className="tour-overlay" role="dialog" aria-modal="true" aria-label="Guided tour">
+          <div
+            className={`tour-spot${tour.reduceMotion ? " no-anim" : ""}`}
+            style={{
+              top: tour.spot.top,
+              left: tour.spot.left,
+              width: tour.spot.width,
+              height: tour.spot.height,
+              borderRadius: tour.spot.radius,
+            }}
+          />
+          <TourCard tour={tour} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* Floating caption card: dots (1..5), caption text, Skip / Next-Done.
+   Positioned below the spotlight by default, flipped above it when there
+   isn't enough room underneath, and clamped horizontally to stay on
+   screen. Recomputed on every step/spot change — no CSS transform tricks,
+   since its own height is content-dependent. */
+function TourCard({ tour }) {
+  const { spot, step, caption, isLast, next, skip, nextBtnRef } = tour;
+  const vw = typeof window !== "undefined" ? window.innerWidth : 1024;
+  const vh = typeof window !== "undefined" ? window.innerHeight : 768;
+  const cardW = Math.min(TOUR_CARD_W, vw - TOUR_GAP * 2);
+  const centerX = spot.left + spot.width / 2;
+  const rawLeft = centerX - cardW / 2;
+  const left = Math.min(Math.max(rawLeft, TOUR_GAP), vw - cardW - TOUR_GAP);
+  const spaceBelow = vh - (spot.top + spot.height);
+  const placeBelow = spaceBelow > TOUR_CARD_H_ESTIMATE + TOUR_GAP;
+  const posStyle = placeBelow
+    ? { top: spot.top + spot.height + TOUR_GAP, left }
+    : { bottom: vh - spot.top + TOUR_GAP, left };
+
+  return (
+    <div className="tour-card" style={{ ...posStyle, width: cardW }}>
+      <div className="tour-dots">
+        {Array.from({ length: TOUR_STEP_COUNT }).map((_, i) => (
+          <span key={i} className={`tour-dot${i === step ? " is-active" : ""}`} />
+        ))}
+      </div>
+      <p className="tour-caption">{caption}</p>
+      <div className="tour-actions">
+        <button type="button" className="tour-skip" onClick={skip}>Skip</button>
+        <button type="button" className="tour-next" ref={nextBtnRef} onClick={next}>
+          {isLast ? "Done" : "Next"}
+        </button>
       </div>
     </div>
   );
