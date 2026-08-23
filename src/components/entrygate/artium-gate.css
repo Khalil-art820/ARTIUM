@@ -131,7 +131,11 @@
 }
 .agate .content{
   position:absolute;inset:10px;
-  padding:24px 20px 16px;
+  /* Bottom padding reserves room for the now-absolutely-positioned arrow
+     (56px puck, 16px off the floor = 72px, +4px clearance) so the
+     paragraph never underlaps it regardless of how many lines it wraps
+     to. */
+  padding:24px 20px 76px;
   display:flex;flex-direction:column;
   text-align:center;
 }
@@ -143,27 +147,33 @@
 }
 .agate .content.nl .num{left:14px;}
 .agate .content.nr .num{right:14px;}
-.agate .art{height:96px;display:flex;align-items:flex-end;justify-content:center;
+.agate .art{height:88px;display:flex;align-items:flex-end;justify-content:center;
   margin-top:26px;color:var(--gold);flex-shrink:0;}
 .agate .content h3{
   font-family:'Playfair Display',serif;font-weight:500;
-  font-size:24px;line-height:1.22;margin-top:16px;
+  font-size:24px;line-height:1.22;margin-top:12px;
 }
 .agate .rule{width:44px;height:3px;border-radius:2px;margin:16px auto 0;
   background:linear-gradient(90deg,#E4BE6F,#C9962E);flex-shrink:0;}
 .agate .content p{
-  margin:14px auto 0;font-size:15px;line-height:1.55;
-  color:var(--muted);font-weight:300;max-width:212px;
+  margin:10px auto 0;font-size:17px;line-height:1.45;
+  color:var(--muted);font-weight:300;max-width:224px;
 }
-.agate .sp{flex:1;min-height:12px;}
 /* arrows: identical position on all four cards — centered at the
-   bottom, clear of the carve and of any text, fully visible */
+   bottom, clear of the carve and of any text, fully visible. Absolute
+   (not a flex spacer) so paragraph length can never shift them — all
+   four sit at the same height. Scoped to .content so the medallion's
+   own .go (normal flex flow) is untouched. */
 .agate .go{
-  align-self:center;
   margin:0;
   width:56px;height:56px;color:var(--gold);
   flex-shrink:0;
   border:none;
+}
+.agate .content .go{
+  position:absolute;
+  bottom:16px;left:50%;
+  transform:translateX(-50%);
 }
 .agate .go svg{width:20px;height:20px;}
 
@@ -187,8 +197,11 @@
   cursor:pointer;
 }
 .agate .oval-slab:focus-visible{outline:1.5px solid var(--gold);outline-offset:4px;}
+/* Ring pushed outward (was inset 7/6/20/6) to give the column below more
+   breathing room before the bottom lip — the two gold balls and the "05"
+   badge are retuned to match (see below). */
 .agate .oring{
-  position:absolute;inset:7px 6px 20px 6px;
+  position:absolute;inset:4px 3px 12px 3px;
   border-radius:50%;
   border:2px solid var(--ring);
   box-shadow:0 1px 1px rgba(255,255,255,.8), inset 0 1px 1px rgba(150,105,20,.25);
@@ -198,17 +211,26 @@
   position:absolute;width:14px;height:14px;border-radius:50%;
   background:radial-gradient(circle at 35% 30%, #F2CE7E 0%, #C9962E 60%, #96690F 100%);
   box-shadow:0 3px 5px rgba(120,85,20,.45), inset 0 1px 1px rgba(255,255,255,.5);
-  top:calc(50% - 13px);
+  top:calc(50% - 11px);
 }
-.agate .ball.l{left:-1px;}
-.agate .ball.r{right:-1px;}
+.agate .ball.l{left:-4px;}
+.agate .ball.r{right:-4px;}
+/* "05" — the medallion's own number badge, same puck as 01-04, tucked
+   just inside the ellipse's upper-left curve so it reads as part of the
+   slab, not clipped by it. */
+.agate .med-num{
+  /* A 40px seal straddling the oval's upper-left rim (the ellipse passes
+     through its center) — inside the slab it collided with the title;
+     pinned on the rim it reads like a medal clasp and touches nothing. */
+  top:45px;left:36px;width:40px;height:40px;font-size:14px;
+}
 
 .agate .cap{color:var(--gold);line-height:0;}
 .agate .oval-slab h2{
   font-family:'Playfair Display',serif;font-weight:500;
-  font-size:23px;line-height:1.26;margin-top:10px;
+  font-size:23px;line-height:1.26;margin-top:8px;
 }
-.agate .sub{margin-top:8px;font-size:14.5px;color:var(--muted);font-weight:300;}
+.agate .sub{margin-top:6px;font-size:14.5px;color:var(--muted);font-weight:300;}
 .agate .member{
   width:266px;margin-top:10px;
   background:#FFFEFC;
@@ -218,7 +240,7 @@
   display:flex;align-items:center;gap:13px;padding:9px 14px 9px 9px;
   text-align:left;
 }
-.agate .member + .member{margin-top:8px;}
+.agate .member + .member{margin-top:4px;}
 .agate .avatar{
   width:54px;height:54px;border-radius:20px;
   flex-shrink:0;
@@ -232,9 +254,15 @@
 .agate .meta{font-size:12.5px;color:var(--muted);margin-top:1px;}
 .agate .seal{color:var(--gold);flex-shrink:0;line-height:0;
   filter:drop-shadow(0 2px 2px rgba(120,85,20,.35));}
-.agate .join{margin-top:8px;font-size:14px;color:var(--muted);font-weight:300;
-  max-width:216px;line-height:1.42;}
-.agate .oval-slab .go{align-self:center;margin:8px 0 0;width:46px;height:46px;}
+/* Widened from 216px and tightened line-height so the longer join copy
+   still lands close to two lines — verify visually, the exact wrap
+   depends on font metrics this pass couldn't render/measure. */
+.agate .join{margin-top:4px;font-size:14px;color:var(--muted);font-weight:300;
+  max-width:280px;line-height:1.38;}
+/* Tight top margin: the column flows top-down, so the arrow's clearance
+   from the orbit's inner bottom edge (≥9px, DESIGN_SPEC §6) is bought by
+   trimming the space ABOVE it, not by margin below. */
+.agate .oval-slab .go{align-self:center;margin:2px 0 0;width:46px;height:46px;}
 
 /* ================= TRUST BAR ================= */
 .agate .trust{

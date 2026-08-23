@@ -37,7 +37,7 @@ const TOUR_SEEN_KEY = "artium_gate_tour_v1";
 const TOUR_CAPTIONS = [
   "The heart of Artium — conservatory students & graduates.",
   "Find inspiring teachers.",
-  "Hire a concert pianist.",
+  "Hire a concert musician.",
   "Classical news & events.",
   "Tomorrow's composers.",
 ];
@@ -187,7 +187,7 @@ function useStageScale(ref) {
 
    Wiring is state-based (this app has no router):
      card 1 "Find a Teacher"            -> onLearner
-     card 2 "Find a Concert Pianist"    -> onPianist
+     card 2 "Find a Concert Musician"   -> onPianist
      card 3 "News | Classical Music..." -> onNews (TODO: no route yet)
      card 4 "Tomorrow's Composers"      -> onComposers
      medallion arrow                    -> onStudent
@@ -215,38 +215,58 @@ const GoldBallGradient = ({ id }) => (
   </radialGradient>
 );
 
+// The card 01 mark is the same suited-teacher-with-baton figure as the PWA
+// icon (icon-512.png) — icon.svg only embeds a raster of it, so we mask
+// the flat PNG the same way App.jsx's IconTeacher does (~App.jsx:4014):
+// a currentColor box cut to the artwork's silhouette via CSS mask, not an
+// <img>, so it inherits --gold like every other line icon in this set.
+const TEACHER_MARK = "/teacher-mark.png";
 const TeacherIcon = () => (
-  <svg width="78" height="92" viewBox="0 0 86 100" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="34" cy="14" r="8" />
-    <path d="M34 24v30M34 34l-14 12M34 30l22-14M56 16l14-8M70 8l4 2" />
-    <path d="M34 54l-11 34M34 54l11 34" />
-  </svg>
+  <span
+    aria-hidden="true"
+    style={{
+      display: "block", width: 84, height: 92, backgroundColor: "currentColor",
+      WebkitMaskImage: `url('${TEACHER_MARK}')`, maskImage: `url('${TEACHER_MARK}')`,
+      WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat",
+      WebkitMaskSize: "contain", maskSize: "contain",
+      WebkitMaskPosition: "center", maskPosition: "center",
+    }}
+  />
 );
 
-const PianistIcon = () => (
-  <svg width="92" height="86" viewBox="0 0 104 96" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M18 62V40c0-4 2-8 6-10l40-20c6-3 14 0 18 6 3 5 3 12-1 16l-9 9v21" />
-    <path d="M18 62h54M18 70h54M18 62v8M72 62v8" />
-    <path d="M24 70v16M40 70v16M56 70v16M70 70v16" />
-    <path d="M30 70v9M36 70v9M46 70v9M52 70v9M62 70v9" />
+/* Refined line-art set for 02/03/04 — thin stroke (2.2-2.4), rounded caps,
+   ~90-96 viewBox family, gold currentColor, replacing the earlier rougher
+   sketches. 02 is a paired-eighth-notes mark (adapted from a tested,
+   open-source glyph rather than hand-drawn from scratch, since a freehand
+   treble clef risked an uneven curve with no way to preview it here — a
+   deviation from the literal "treble clef / violin+bow" brief worth a
+   visual gut-check). 04's quill is likewise adapted from a known-clean
+   feather glyph, rescaled, with three staff lines added beneath it. */
+const ConcertIcon = () => (
+  <svg width="78" height="78" viewBox="0 0 96 96" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="24" cy="68" r="12" />
+    <circle cx="64" cy="68" r="12" />
+    <path d="M36 68V16H76V68" />
+    <path d="M36 32H76" />
   </svg>
 );
 
 const NewsIcon = () => (
-  <svg width="82" height="88" viewBox="0 0 92 96" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="12" y="16" width="68" height="66" rx="10" />
-    <path d="M12 34h68M30 8v14M62 8v14" />
-    <path d="M52 66V46l12-3v18" />
-    <circle cx="47" cy="66" r="5" />
-    <circle cx="59" cy="61" r="5" />
+  <svg width="82" height="86" viewBox="0 0 96 100" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="14" y="16" width="68" height="66" rx="6" />
+    <path d="M14 34H82" />
+    <path d="M24 48H44M24 58H44M24 68H44" />
+    <circle cx="64" cy="64" r="7" />
+    <path d="M71 64V44h9" />
   </svg>
 );
 
 const ComposerIcon = () => (
-  <svg width="78" height="88" viewBox="0 0 86 100" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M36 14c8-8 22-6 26 2 3 6 1 12-3 15 3 2 4 6 2 10-1 3-4 5-7 5 1 3 0 7-3 9-3 3-8 3-11 1" />
-    <path d="M36 14c-6 3-9 9-9 15 0 4 1 7 3 10-2 4-2 9 1 13 2 3 5 5 9 5v14c0 6-4 10-10 10" />
-    <path d="M40 40c2 1 5 1 7 0M42 50c1 1 3 1 4 0" />
+  <svg width="76" height="90" viewBox="0 0 96 108" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M56.344 73.648A8 8 0 0 1 50.68 76H20v-30.688a8 8 0 0 1 2.344-5.656L47 15a24 24 0 1 1 33.96 33.96z" />
+    <path d="M64 32 8 88" />
+    <path d="M69.952 60H36" />
+    <path d="M10 92H62M10 98H62M10 104H62" />
   </svg>
 );
 
@@ -267,12 +287,12 @@ const CARDS = [
       <>
         Find a Concert
         <br />
-        Pianist
+        Musician
       </>
     ),
-    text: "Hire talented conservatory pianists for your concert, event or project.",
-    Icon: PianistIcon,
-    ariaLabel: "Find a concert pianist",
+    text: "Hire talented conservatory musicians for your concert, event or project.",
+    Icon: ConcertIcon,
+    ariaLabel: "Find a concert musician",
     propKey: "onPianist",
   },
   {
@@ -285,7 +305,7 @@ const CARDS = [
         Music Events
       </>
     ),
-    text: "Stay updated with concerts, festivals, competitions and classical music news around the world.",
+    text: "Concerts, festivals, competitions and classical music news worldwide.",
     Icon: NewsIcon,
     ariaLabel: "See news and events",
     propKey: "onNews",
@@ -353,7 +373,9 @@ function FeatureCard({ card, onActivate, rootRef }) {
         <h3>{title}</h3>
         <div className="rule" />
         <p>{text}</p>
-        <span className="sp" />
+        {/* .go is position:absolute (bottom:16px, centered) so all four
+            arrows sit at the same height regardless of paragraph length —
+            it no longer needs a flex spacer to push it down. */}
         <button
           className="go puck"
           aria-label={ariaLabel}
@@ -512,6 +534,7 @@ export default function ArtiumGate({
               <span className="oring" />
               <span className="ball l" />
               <span className="ball r" />
+              <div className="num puck med-num">05</div>
 
               <div className="cap">
                 <svg width="42" height="31" viewBox="0 0 46 34" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -551,7 +574,7 @@ export default function ArtiumGate({
                 </span>
               </div>
 
-              <div className="join">Join, connect and grow within a trusted community.</div>
+              <div className="join">Join a verified community of conservatory students and graduates — connect, collaborate and grow.</div>
               <button
                 className="go puck"
                 aria-label="Join the community"
