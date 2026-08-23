@@ -242,6 +242,70 @@
   max-width:216px;line-height:1.42;}
 .agate .oval-slab .go{align-self:center;margin:8px 0 0;width:46px;height:46px;}
 
+/* ================= FIRST-VISIT REVEAL ================= */
+/* Plays once (see useFirstVisitReveal in ArtiumGate.jsx), then never
+   again. Elements animate individually (opacity/transform/filter on
+   .rings/.diamond/.feature/.oval-slab), never on .stage itself, so they
+   compose cleanly with the scale() transform the mobile stage-scaler
+   already applies to .stage. */
+.agate .reveal-caption{
+  height:28px;
+  margin-top:14px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;color:var(--muted);font-weight:300;text-align:center;
+  transition:opacity .5s ease;
+}
+.agate .reveal-caption-text{display:inline-block;animation:agateCapFade .45s ease both;}
+@keyframes agateCapFade{
+  from{opacity:0;transform:translateY(3px);}
+  to{opacity:1;transform:translateY(0);}
+}
+
+.agate .rings.reveal-pending,.agate .diamond.reveal-pending{opacity:0;}
+.agate .rings.reveal-in,.agate .diamond.reveal-in{opacity:1;transition:opacity .7s ease;}
+
+.agate .feature.reveal-pending{opacity:0;}
+.agate .feature.reveal-in{animation:agateCardIn .6s cubic-bezier(.22,.61,.36,1) both;}
+@keyframes agateCardIn{
+  0%{opacity:0;transform:translateY(14px);filter:none;}
+  55%{opacity:1;transform:translateY(0);}
+  70%{filter:drop-shadow(0 0 20px rgba(201,150,46,.55));}
+  100%{opacity:1;transform:translateY(0);filter:none;}
+}
+
+.agate .oval-slab.reveal-pending{opacity:0;}
+.agate .oval-slab.reveal-in{animation:agateMedallionIn .7s cubic-bezier(.22,.61,.36,1) both;}
+@keyframes agateMedallionIn{
+  0%{opacity:0;transform:translateY(14px);}
+  100%{opacity:1;transform:translateY(0);}
+}
+
+/* Not focusable/clickable while the sequence hasn't finished, regardless
+   of whether this particular element has already visually landed —
+   interactivity is restored for everything together, at the end. */
+.agate .feature.reveal-lock,.agate .oval-slab.reveal-lock{pointer-events:none;}
+
+/* Skip = instant, not "whatever fade was left mid-flight". Wins over the
+   entrance animations/transitions above for anything still hidden.
+   .rings/.diamond keep their own base `transform` (it's their permanent
+   centering, translate(-50%,...) — not a reveal artifact), so only
+   opacity/animation/transition are reset for them; .feature/.oval-slab
+   have no base transform of their own, so transform can be cleared too. */
+.agate.reveal-skipped .rings,
+.agate.reveal-skipped .diamond{
+  opacity:1 !important;
+  animation:none !important;
+  transition:none !important;
+}
+.agate.reveal-skipped .feature,
+.agate.reveal-skipped .oval-slab{
+  opacity:1 !important;
+  transform:none !important;
+  animation:none !important;
+  transition:none !important;
+  filter:none !important;
+}
+
 /* ================= TRUST BAR ================= */
 .agate .trust{
   margin-top:46px;

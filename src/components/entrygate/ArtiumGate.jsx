@@ -1,9 +1,104 @@
-import React, { useLayoutEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import paths from "./paths.json";
 import "./artium-gate.css";
 
 const STAGE_W = 840;
 const STAGE_H = 846;
+
+/* =========================================================
+   First-visit reveal — plays once (localStorage flag), then never
+   again. `phase` is a single integer clock: each threshold below is
+   the phase value at which that element becomes visible/interactive.
+     1 = rings + diamond
+     2 = medallion                (+ caption: "The heart of Artium…")
+     3..6 = cards 01..04, one per phase (+ its caption line)
+     7 = quiet hint caption ("Tap any door to enter")
+     8 = done — full interactivity restored, flag set
+   REVEAL_STEPS drives a setTimeout chain from phase 0; a capture-phase
+   skip listener (pointerdown/click/keydown) jumps straight to phase 8,
+   clearing the timers, without letting the event reach any card/button
+   underneath (stopPropagation before the target is ever reached).
+========================================================= */
+const REVEAL_KEY = "artium_gate_reveal_v1";
+const REVEAL_DONE_PHASE = 8;
+const REVEAL_STEPS = [
+  { at: 300, phase: 1 },
+  { at: 800, phase: 2, caption: "The heart of Artium — conservatory students & graduates." },
+  { at: 2000, phase: 3, caption: "Find inspiring teachers." },
+  { at: 2600, phase: 4, caption: "Hire a concert pianist." },
+  { at: 3200, phase: 5, caption: "Classical news & events." },
+  { at: 3800, phase: 6, caption: "Tomorrow's composers." },
+  { at: 4800, phase: 7, caption: "Tap any door to enter" },
+  { at: 7800, phase: REVEAL_DONE_PHASE, caption: "" },
+];
+
+function useFirstVisitReveal() {
+  // Starts optimistic ("already seen" / nothing to animate) so a repeat
+  // visitor never renders a hidden-then-shown flash; if this turns out to
+  // be a first visit, useLayoutEffect flips both before the first paint.
+  const [phase, setPhase] = useState(REVEAL_DONE_PHASE);
+  const [caption, setCaption] = useState("");
+  const [didReveal, setDidReveal] = useState(false);
+  // True only when the user skipped (vs. the sequence finishing on its
+  // own) — forces every still-hidden element to its final state with no
+  // transition/animation, so "jumps instantly" is actually instant
+  // instead of collapsing into whatever fade/slide duration was left.
+  const [skipped, setSkipped] = useState(false);
+  const timersRef = useRef([]);
+
+  const finish = useCallback(() => {
+    timersRef.current.forEach(clearTimeout);
+    timersRef.current = [];
+    setPhase(REVEAL_DONE_PHASE);
+    setCaption("");
+    try { localStorage.setItem(REVEAL_KEY, "1"); } catch { /* private mode etc. */ }
+  }, []);
+
+  const skip = useCallback(() => { setSkipped(true); finish(); }, [finish]);
+
+  useLayoutEffect(() => {
+    let seen = true;
+    try { seen = localStorage.getItem(REVEAL_KEY) === "1"; } catch { seen = true; }
+    let reduceMotion = false;
+    try { reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch { reduceMotion = false; }
+    if (seen || reduceMotion) {
+      if (!seen) { try { localStorage.setItem(REVEAL_KEY, "1"); } catch { /* noop */ } }
+      return;
+    }
+    setDidReveal(true);
+    setPhase(0);
+    setCaption("");
+    timersRef.current = REVEAL_STEPS.map((step) =>
+      setTimeout(() => {
+        setPhase(step.phase);
+        if (step.caption !== undefined) setCaption(step.caption);
+        if (step.phase === REVEAL_DONE_PHASE) finish();
+      }, step.at)
+    );
+    return () => { timersRef.current.forEach(clearTimeout); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Capture-phase skip: any pointer/click/key during the sequence jumps
+  // straight to the finished state and swallows that first event so it
+  // can never reach a card, the medallion, or any button underneath.
+  useEffect(() => {
+    if (!didReveal || phase >= REVEAL_DONE_PHASE) return;
+    const onSkip = (e) => { e.stopPropagation(); skip(); };
+    window.addEventListener("pointerdown", onSkip, true);
+    window.addEventListener("click", onSkip, true);
+    window.addEventListener("keydown", onSkip, true);
+    return () => {
+      window.removeEventListener("pointerdown", onSkip, true);
+      window.removeEventListener("click", onSkip, true);
+      window.removeEventListener("keydown", onSkip, true);
+    };
+  }, [didReveal, phase, skip]);
+
+  const interactive = !didReveal || phase >= REVEAL_DONE_PHASE;
+  const revealed = (threshold) => !didReveal || phase >= threshold;
+  return { didReveal, caption, interactive, revealed, skipped };
+}
 
 /* The client's decision: mobile shows the exact desktop composition (the
    840x846 carved stage — 4 silhouette cards + medallion + rings + diamond)
@@ -168,16 +263,16 @@ const CARDS = [
   },
 ];
 
-function FeatureCard({ card, onActivate }) {
+function FeatureCard({ card, onActivate, revealClass, interactive }) {
   const { id, numSide, title, text, Icon, ariaLabel } = card;
   const numStr = String(id).padStart(2, "0");
   const gp = `gp${id}`, gn = `gn${id}`, sh = `sh${id}`, gr = `gr${id}`;
   const activate = (e) => { e.preventDefault(); onActivate && onActivate(); };
   return (
     <article
-      className="feature"
+      className={`feature${revealClass || ""}`}
       role="link"
-      tabIndex={0}
+      tabIndex={interactive ? 0 : -1}
       aria-label={ariaLabel}
       onClick={activate}
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") activate(e); }}
@@ -259,6 +354,10 @@ export default function ArtiumGate({
 
   const stageScalerRef = useRef(null);
   const scale = useStageScale(stageScalerRef);
+  const { didReveal, caption, interactive, revealed, skipped } = useFirstVisitReveal();
+  const lockClass = didReveal && !interactive ? " reveal-lock" : "";
+  const ringsClass = didReveal ? (revealed(1) ? " reveal-in" : " reveal-pending") : "";
+  const medallionRevealClass = didReveal ? (revealed(2) ? " reveal-in" : " reveal-pending") : "";
 
   const handlers = {
     onLearner,
@@ -273,7 +372,7 @@ export default function ArtiumGate({
   const activateStudent = (e) => { e.preventDefault(); onStudent && onStudent(); };
 
   return (
-    <div className="agate">
+    <div className={`agate${skipped ? " reveal-skipped" : ""}`}>
       <div className="page">
         {/* ================= HEADER ================= */}
         <header>
@@ -321,11 +420,11 @@ export default function ArtiumGate({
     left origin the scaled width is exactly the scaler width (s = w/840),
     which centers it by construction; at s=1 the auto margins center. */}
 <div className="stage" style={{ transform: `scale(${scale})`, transformOrigin: "top left" }}>
-          <div className="diamond">
+          <div className={`diamond${ringsClass}`}>
             <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><path d="M7 0l1.8 5.2L14 7l-5.2 1.8L7 14 5.2 8.8 0 7l5.2-1.8z" /></svg>
           </div>
 
-          <div className="rings">
+          <div className={`rings${ringsClass}`}>
             <svg width="700" height="700" viewBox="0 0 700 700" fill="none">
               <circle cx="350" cy="350" r="240" stroke="rgba(198,149,47,.30)" strokeWidth="1" />
               <circle cx="350" cy="350" r="291" stroke="rgba(198,149,47,.38)" strokeWidth="1" />
@@ -341,14 +440,22 @@ export default function ArtiumGate({
 
           <div className="grid">
             {CARDS.map((card) => (
-              <FeatureCard key={card.id} card={card} onActivate={handlers[card.propKey]} />
+              <FeatureCard
+                key={card.id}
+                card={card}
+                onActivate={handlers[card.propKey]}
+                interactive={interactive}
+                revealClass={
+                  (didReveal ? (revealed(2 + card.id) ? " reveal-in" : " reveal-pending") : "") + lockClass
+                }
+              />
             ))}
 
             {/* MEDALLION */}
             <div
-              className="oval-slab"
+              className={`oval-slab${medallionRevealClass}${lockClass}`}
               role="link"
-              tabIndex={0}
+              tabIndex={interactive ? 0 : -1}
               aria-label="Conservatory Students | Graduates"
               onClick={activateStudent}
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") activateStudent(e); }}
@@ -407,6 +514,16 @@ export default function ArtiumGate({
           </div>
           </div>
         </div>
+
+        {/* First-visit reveal caption — reserves its own space so nothing
+            below jumps when it appears/disappears; only rendered at all
+            during the session that actually runs the reveal (repeat
+            visits skip it entirely, per spec). */}
+        {didReveal && (
+          <div className="reveal-caption" style={{ opacity: caption ? 1 : 0 }} aria-live="polite">
+            <span key={caption} className="reveal-caption-text">{caption}</span>
+          </div>
+        )}
 
         {/* ================= TRUST BAR ================= */}
         <section className="trust">
