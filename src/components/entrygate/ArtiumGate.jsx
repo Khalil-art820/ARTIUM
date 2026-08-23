@@ -478,7 +478,9 @@ export default function ArtiumGate({
             <svg width="700" height="700" viewBox="0 0 700 700" fill="none">
               <circle cx="350" cy="350" r="240" stroke="rgba(198,149,47,.30)" strokeWidth="1" />
               <circle cx="350" cy="350" r="291" stroke="rgba(198,149,47,.38)" strokeWidth="1" />
-              <path d="M350 20V680 M20 350H680" stroke="rgba(198,149,47,.25)" strokeWidth="1" />
+              {/* Vertical axis only — the horizontal hairline read as a wire
+    strung between cards 01 and 02, so it's gone. */}
+<path d="M350 20V680" stroke="rgba(198,149,47,.25)" strokeWidth="1" />
               <path d="M148 233L552 467 M148 467L552 233" stroke="rgba(198,149,47,.14)" strokeWidth="1" />
               <circle cx="350" cy="59" r="6.5" fill="url(#agate-gball)" />
               <circle cx="350" cy="641" r="6.5" fill="url(#agate-gball)" />
