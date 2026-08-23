@@ -147,17 +147,17 @@
 }
 .agate .content.nl .num{left:14px;}
 .agate .content.nr .num{right:14px;}
-.agate .art{height:88px;display:flex;align-items:flex-end;justify-content:center;
+.agate .art{height:68px;display:flex;align-items:flex-end;justify-content:center;
   margin-top:26px;color:var(--gold);flex-shrink:0;}
 .agate .content h3{
   font-family:'Playfair Display',serif;font-weight:500;
-  font-size:24px;line-height:1.22;margin-top:12px;
+  font-size:24px;line-height:1.22;margin-top:6px;
 }
-.agate .rule{width:44px;height:3px;border-radius:2px;margin:16px auto 0;
+.agate .rule{width:44px;height:3px;border-radius:2px;margin:8px auto 0;
   background:linear-gradient(90deg,#E4BE6F,#C9962E);flex-shrink:0;}
 .agate .content p{
-  margin:10px auto 0;font-size:17px;line-height:1.45;
-  color:var(--muted);font-weight:300;max-width:224px;
+  margin:6px auto 0;font-size:20px;line-height:1.35;
+  color:var(--muted);font-weight:300;max-width:228px;
 }
 /* arrows: identical position on all four cards — centered at the
    bottom, clear of the carve and of any text, fully visible. Absolute
@@ -228,37 +228,37 @@
 .agate .cap{color:var(--gold);line-height:0;}
 .agate .oval-slab h2{
   font-family:'Playfair Display',serif;font-weight:500;
-  font-size:23px;line-height:1.26;margin-top:8px;
+  font-size:22px;line-height:1.26;margin-top:8px;
 }
-.agate .sub{margin-top:6px;font-size:14.5px;color:var(--muted);font-weight:300;}
+.agate .sub{margin-top:6px;font-size:16.5px;color:var(--muted);font-weight:300;}
 .agate .member{
   width:266px;margin-top:10px;
   background:#FFFEFC;
   border:1px solid rgba(176,146,98,.14);
   border-radius:24px;
   box-shadow:0 12px 22px -8px rgba(150,115,55,.30), inset 0 1px 0 #fff;
-  display:flex;align-items:center;gap:13px;padding:9px 14px 9px 9px;
+  display:flex;align-items:center;gap:11px;padding:7px 12px 7px 7px;
   text-align:left;
 }
 .agate .member + .member{margin-top:4px;}
 .agate .avatar{
-  width:54px;height:54px;border-radius:20px;
+  width:46px;height:46px;border-radius:17px;
   flex-shrink:0;
   background:radial-gradient(circle at 32% 28%, #EFD7A0, #C9962E 75%);
-  color:#fff;font-weight:500;font-size:16px;
+  color:#fff;font-weight:500;font-size:15px;
   display:flex;align-items:center;justify-content:center;
   box-shadow:inset 0 -2px 4px rgba(120,85,20,.3);
 }
 .agate .who{flex:1;}
 .agate .name{font-family:'Playfair Display',serif;font-size:18px;}
-.agate .meta{font-size:12.5px;color:var(--muted);margin-top:1px;}
+.agate .meta{font-size:14px;color:var(--muted);margin-top:1px;}
 .agate .seal{color:var(--gold);flex-shrink:0;line-height:0;
   filter:drop-shadow(0 2px 2px rgba(120,85,20,.35));}
-/* Widened from 216px and tightened line-height so the longer join copy
-   still lands close to two lines — verify visually, the exact wrap
-   depends on font metrics this pass couldn't render/measure. */
-.agate .join{margin-top:4px;font-size:14px;color:var(--muted);font-weight:300;
-  max-width:280px;line-height:1.38;}
+/* Widened further (was 280px) so the bigger 16px join text still lands
+   close to two-three lines — verify visually, exact wrap depends on font
+   metrics this pass couldn't render/measure. */
+.agate .join{margin-top:4px;font-size:16px;color:var(--muted);font-weight:300;
+  max-width:290px;line-height:1.3;}
 /* Tight top margin: the column flows top-down, so the arrow's clearance
    from the orbit's inner bottom edge (≥9px, DESIGN_SPEC §6) is bought by
    trimming the space ABOVE it, not by margin below. */

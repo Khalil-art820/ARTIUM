@@ -186,7 +186,7 @@ function useStageScale(ref) {
    (see tools/generate_card_paths.py + DESIGN_SPEC.md §4).
 
    Wiring is state-based (this app has no router):
-     card 1 "Find a Teacher"            -> onLearner
+     card 1 "Find a Classical Music Teacher" -> onLearner
      card 2 "Find a Concert Musician"   -> onPianist
      card 3 "News | Classical Music..." -> onNews (TODO: no route yet)
      card 4 "Tomorrow's Composers"      -> onComposers
@@ -225,7 +225,7 @@ const TeacherIcon = () => (
   <span
     aria-hidden="true"
     style={{
-      display: "block", width: 84, height: 92, backgroundColor: "currentColor",
+      display: "block", width: 58, height: 64, backgroundColor: "currentColor",
       WebkitMaskImage: `url('${TEACHER_MARK}')`, maskImage: `url('${TEACHER_MARK}')`,
       WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat",
       WebkitMaskSize: "contain", maskSize: "contain",
@@ -234,39 +234,49 @@ const TeacherIcon = () => (
   />
 );
 
-/* Refined line-art set for 02/03/04 — thin stroke (2.2-2.4), rounded caps,
-   ~90-96 viewBox family, gold currentColor, replacing the earlier rougher
-   sketches. 02 is a paired-eighth-notes mark (adapted from a tested,
-   open-source glyph rather than hand-drawn from scratch, since a freehand
-   treble clef risked an uneven curve with no way to preview it here — a
-   deviation from the literal "treble clef / violin+bow" brief worth a
-   visual gut-check). 04's quill is likewise adapted from a known-clean
-   feather glyph, rescaled, with three staff lines added beneath it. */
+/* Solid gold silhouettes for 02/03/04 — filled shapes (fill=currentColor),
+   no strokes, same visual family as the masked teacher figure (item 1).
+   "Knockouts" (the newspaper's text bars/note, the quill's spine/barb) are
+   drawn in the literal page cream (#FDFAF5, i.e. --bg) on top of the gold
+   fill rather than actually cut via mask/evenodd — simpler and avoids any
+   risk of an evenodd winding-order mistake with no way to render/check it
+   here. Bold, simple massing per the brief, not fine linework. */
+const CREAM = "#FDFAF5";
+
 const ConcertIcon = () => (
-  <svg width="78" height="78" viewBox="0 0 96 96" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="24" cy="68" r="12" />
-    <circle cx="64" cy="68" r="12" />
-    <path d="M36 68V16H76V68" />
-    <path d="M36 32H76" />
+  <svg width="64" height="64" viewBox="0 0 96 96" fill="currentColor">
+    {/* Proscenium stage: arched header band, two swagged curtain masses, a
+        floor bar — reads as "a stage", not a specific instrument. */}
+    <path d="M12 22a36 14 0 0 1 72 0v4H12v-4z" />
+    <path d="M20 26c12 4 16 18 8 30-5 8-9 12-9 20h-9c0-10 5-16 5-26 0-10-3-16 5-24z" />
+    <path d="M76 26c-12 4-16 18-8 30 5 8 9 12 9 20h9c0-10-5-16-5-26 0-10 3-16-5-24z" />
+    <rect x="14" y="80" width="68" height="8" rx="4" />
   </svg>
 );
 
 const NewsIcon = () => (
-  <svg width="82" height="86" viewBox="0 0 96 100" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="14" y="16" width="68" height="66" rx="6" />
-    <path d="M14 34H82" />
-    <path d="M24 48H44M24 58H44M24 68H44" />
-    <circle cx="64" cy="64" r="7" />
-    <path d="M71 64V44h9" />
+  <svg width="64" height="64" viewBox="0 0 96 96">
+    {/* Folded broadsheet, solid, with a knocked-out (cream) fold triangle,
+        three text bars and a note glyph. */}
+    <path fill="currentColor" d="M14 10H70l12 12v62a2 2 0 0 1-2 2H16a2 2 0 0 1-2-2V10z" />
+    <path fill={CREAM} d="M70 10l12 12H70z" />
+    <rect fill={CREAM} x="24" y="30" width="40" height="6" rx="1" />
+    <rect fill={CREAM} x="24" y="42" width="32" height="5" rx="1" />
+    <rect fill={CREAM} x="24" y="53" width="36" height="5" rx="1" />
+    <circle fill={CREAM} cx="63" cy="72" r="6" />
+    <rect fill={CREAM} x="67" y="54" width="4" height="19" rx="2" />
   </svg>
 );
 
 const ComposerIcon = () => (
-  <svg width="76" height="90" viewBox="0 0 96 108" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M56.344 73.648A8 8 0 0 1 50.68 76H20v-30.688a8 8 0 0 1 2.344-5.656L47 15a24 24 0 1 1 33.96 33.96z" />
-    <path d="M64 32 8 88" />
-    <path d="M69.952 60H36" />
-    <path d="M10 92H62M10 98H62M10 104H62" />
+  <svg width="58" height="64" viewBox="0 0 96 108">
+    {/* Solid quill (the tested feather silhouette from before, now filled
+        and closed) with its spine/barb knocked out in cream, over one
+        solid staff bar. */}
+    <path fill="currentColor" d="M56.344 73.648A8 8 0 0 1 50.68 76H20v-30.688a8 8 0 0 1 2.344-5.656L47 15a24 24 0 1 1 33.96 33.96z" />
+    <path stroke={CREAM} strokeWidth="3" strokeLinecap="round" fill="none" d="M64 32 8 88" />
+    <path stroke={CREAM} strokeWidth="3" strokeLinecap="round" fill="none" d="M69.952 60H36" />
+    <rect fill="currentColor" x="10" y="94" width="52" height="6" rx="3" />
   </svg>
 );
 
@@ -274,10 +284,16 @@ const CARDS = [
   {
     id: 1,
     numSide: "left",
-    title: "Find a Teacher",
+    title: (
+      <>
+        Find a Classical
+        <br />
+        Music Teacher
+      </>
+    ),
     text: "Discover and connect with top conservatory musicians and inspiring teachers.",
     Icon: TeacherIcon,
-    ariaLabel: "Find a teacher",
+    ariaLabel: "Find a classical music teacher",
     propKey: "onLearner",
   },
   {
@@ -537,10 +553,13 @@ export default function ArtiumGate({
               <div className="num puck med-num">05</div>
 
               <div className="cap">
-                <svg width="42" height="31" viewBox="0 0 46 34" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M23 3L2 12l21 9 21-9z" />
-                  <path d="M11 16v8c0 3 5.4 6 12 6s12-3 12-6v-8" />
-                  <path d="M43 12v10" />
+                {/* Solid graduation cap: filled mortarboard + band + tassel,
+                    same solid-gold family as the other three marks. */}
+                <svg width="36" height="26" viewBox="0 0 46 34" fill="currentColor">
+                  <path d="M23 2L2 12l21 9 21-9L23 2z" />
+                  <path d="M11 15.5v7c0 3 5.4 6 12 6s12-3 12-6v-7l-12 5-12-5z" />
+                  <path d="M42 12.3l2 .9v9a1.6 1.6 0 0 1-3.2 0v-9l1.2-.9z" />
+                  <circle cx="42.6" cy="23.2" r="2.1" />
                 </svg>
               </div>
               <h2>Conservatory Students<br />| Graduates</h2>
