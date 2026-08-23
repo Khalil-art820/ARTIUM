@@ -90,7 +90,9 @@
   position:relative;
   width:100%;
   margin:36px auto 0;
-  overflow:hidden;
+  /* No overflow clip: the scaled stage fits this box, and clipping here
+     sliced the cards' soft drop-shadows into a hard rectangle — the stage
+     read as a pasted-on photo instead of objects on the page's ground. */
 }
 .agate .stage{
   position:relative;
