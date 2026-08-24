@@ -619,7 +619,7 @@ export default function ArtiumGate({
             </div>
             <div>
               <h4>Trusted Community</h4>
-              <p>Verified students | musicians.</p>
+              <p>Verified conservatory students</p>
             </div>
           </div>
           <div className="cell">

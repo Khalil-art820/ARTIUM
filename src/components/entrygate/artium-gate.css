@@ -227,14 +227,11 @@
      upper-left rim spot put it edge-to-edge with card 01 (card ends at
      stage x260, the medallion starts at 230). Up here the nearest card
      is 160px away and the full 54px puck touches nothing. */
-  top:-30px;left:calc(50% - 27px);
+  top:-23px;left:calc(50% - 27px);
 }
 
-.agate .cap{color:var(--gold);line-height:0;margin-top:12px;}
-.agate .oval-slab h2{
-  font-family:'Playfair Display',serif;font-weight:500;
-  font-size:22px;line-height:1.26;margin-top:8px;
-}
+.agate .cap{color:var(--gold);line-height:0;margin-top:20px;}
+.agate .oval-slab h2{font-family:'Playfair Display',serif;font-weight:500;font-size:24px;line-height:1.22;margin-top:6px;}
 .agate .sub{margin-top:6px;font-size:18px;color:var(--muted);font-weight:300;}
 .agate .member{
   width:266px;margin-top:10px;
