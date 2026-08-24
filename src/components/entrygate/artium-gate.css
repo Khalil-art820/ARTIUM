@@ -64,7 +64,7 @@
   /* Option 5 of the wordmark proposals: Jost ExtraBold capitals, wide
      tracking, ink — the page's own geometric sans, at brand weight. */
   font-family:'Jost',system-ui,sans-serif;
-  font-size:26px;font-weight:800;color:var(--ink);
+  font-size:29px;font-weight:800;color:var(--ink);
   letter-spacing:.2em;text-transform:uppercase;
 }
 .agate .head-actions{display:flex;align-items:center;gap:14px;}
@@ -81,9 +81,8 @@
 .agate .eyebrow{font-size:13px;letter-spacing:.42em;font-weight:500;color:var(--gold);text-transform:uppercase;}
 .agate h1{
   font-family:'Playfair Display',serif;
-  /* 20% down from the reference's 76px, in a heavy, deep gold. */
-  font-weight:600;font-size:61px;line-height:1.08;
-  margin-top:14px;color:#B08420;
+  font-weight:500;font-size:76px;line-height:1.08;
+  margin-top:14px;
 }
 .agate .tagline{margin-top:16px;font-size:23px;color:#3A4152;font-weight:300;letter-spacing:.02em;}
 
