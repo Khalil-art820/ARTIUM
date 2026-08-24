@@ -518,7 +518,7 @@ export default function ArtiumGate({
         <div className="hero-backdrop">
         <div className="hero-backdrop-inner">
         <section className="hero">
-          <svg className="hero-arch" width="340" height="96" viewBox="0 0 340 96" fill="none" aria-hidden="true">
+          <svg className="hero-arch" width="289" height="82" viewBox="0 0 340 96" fill="none" aria-hidden="true">
             {/* The mock's motif: a tall, narrow arch of three nested arcs
                 whose legs run down open-ended, a slim four-point sparkle
                 low inside it, and long solid hairlines flanking at the
