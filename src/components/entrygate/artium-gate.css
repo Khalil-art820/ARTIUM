@@ -59,6 +59,14 @@
   background:linear-gradient(180deg, rgba(253,250,245,0) 0%, var(--bg) 92%);
   pointer-events:none;
 }
+/* Top fade: the photo rises out of the page's own cream instead of
+   butting against it — no second background tone anywhere. */
+.agate .hero-backdrop::before{
+  content:"";
+  position:absolute;left:0;right:0;top:0;height:22%;
+  background:linear-gradient(180deg, var(--bg) 8%, rgba(253,250,245,0) 100%);
+  pointer-events:none;z-index:0;
+}
 /* Inner wrapper re-applies .page's own max-width/padding so the header
    and hero text align exactly where they used to, independent of the
    full-bleed photo's own 100vw box. */
@@ -89,10 +97,9 @@
 /* The reference keeps the header on a clean white band, above the photo. */
 .agate .gate-head{
   width:100vw;margin-left:calc(50% - 50vw);
-  /* Not white: a very light cream that ends on the photo's own top-edge
-     tone (sampled #F0E1D1), so header and photo read as one surface with
-     no color seam. */
-  background:linear-gradient(180deg,#FCF7EF 0%,#F6EBDD 55%,#F0E1D1 100%);
+  /* One background for the whole page: the same cream the cards and
+     medallion stand on. The photo below fades out of and back into it. */
+  background:var(--bg);
 }
 .agate .gate-head-inner{
   max-width:1024px;margin:0 auto;
