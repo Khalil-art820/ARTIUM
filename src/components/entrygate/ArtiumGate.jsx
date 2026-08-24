@@ -478,10 +478,12 @@ export default function ArtiumGate({
                 <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z" /></svg>
               </button>
             )}
-            <button className="puck" aria-label="Account">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="8" r="3.6" /><path d="M4.5 20c1.4-3.4 4.2-5 7.5-5s6.1 1.6 7.5 5" /></svg>
-            </button>
-            <span className="head-count">{count}</span>
+            {/* Passive stat, not a control: no puck, no border, no shadow —
+                the raised disc made the member count read as a button. */}
+            <div className="member-count" title="Members" aria-label={`${count} members`}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="8" r="3.6" /><path d="M4.5 20c1.4-3.4 4.2-5 7.5-5s6.1 1.6 7.5 5" /></svg>
+              <span>{count}</span>
+            </div>
           </div>
         </header>
 
@@ -543,7 +545,7 @@ export default function ArtiumGate({
               className="oval-slab"
               role="link"
               tabIndex={0}
-              aria-label="Conservatory Students | Graduates"
+              aria-label="I am a conservatory student or graduate"
               onClick={activateStudent}
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") activateStudent(e); }}
             >
@@ -562,7 +564,7 @@ export default function ArtiumGate({
                   <circle cx="42.6" cy="23.2" r="2.1" />
                 </svg>
               </div>
-              <h2>I am a Conservatory<br />Students | Graduates</h2>
+              <h2>I am a Conservatory<br />Student | Graduate</h2>
 
               <div className="member">
                 <div className="avatar">AD</div>

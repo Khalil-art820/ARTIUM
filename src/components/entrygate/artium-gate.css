@@ -67,7 +67,11 @@
 .agate .head-actions{display:flex;align-items:center;gap:14px;}
 .agate .head-actions .puck{width:52px;height:52px;}
 .agate .head-actions svg{width:20px;height:20px;}
-.agate .head-count{font-size:22px;margin-left:2px;}
+.agate .member-count{
+  display:flex;align-items:center;gap:7px;margin-left:2px;
+  color:var(--muted);font-size:21px;font-weight:400;cursor:default;
+}
+.agate .member-count svg{width:19px;height:19px;}
 
 /* ================= HERO ================= */
 .agate .hero{text-align:center;margin-top:42px;}
@@ -226,7 +230,7 @@
   top:-30px;left:calc(50% - 27px);
 }
 
-.agate .cap{color:var(--gold);line-height:0;}
+.agate .cap{color:var(--gold);line-height:0;margin-top:12px;}
 .agate .oval-slab h2{
   font-family:'Playfair Display',serif;font-weight:500;
   font-size:22px;line-height:1.26;margin-top:8px;
@@ -263,7 +267,7 @@
 /* Tight top margin: the column flows top-down, so the arrow's clearance
    from the orbit's inner bottom edge (≥9px, DESIGN_SPEC §6) is bought by
    trimming the space ABOVE it, not by margin below. */
-.agate .oval-slab .go{align-self:center;margin:2px 0 0;width:56px;height:56px;}
+.agate .oval-slab .go{align-self:center;margin:14px 0 0;width:56px;height:56px;}
 
 /* ================= TRUST BAR ================= */
 .agate .trust{
@@ -281,7 +285,7 @@
 .agate .cell{display:flex;align-items:flex-start;gap:16px;padding:4px 22px;}
 .agate .cell + .cell{border-left:1px solid rgba(176,146,98,.25);}
 .agate .disc{width:64px;height:64px;flex-shrink:0;color:var(--gold);cursor:default;}
-.agate .trust h4{font-size:19px;font-weight:600;line-height:1.25;}
+.agate .trust h4{font-size:19px;font-weight:600;line-height:1.25;white-space:nowrap;}
 .agate .trust p{font-size:17px;color:var(--muted);font-weight:300;margin-top:6px;line-height:1.45;}
 
 /* ================= LOGIN ================= */
@@ -333,10 +337,10 @@
      tightened so three cells fit ~375px without page scroll. Each cell
      stacks its icon above its text to save horizontal room. */
   .agate .trust{padding:16px 10px;}
-  .agate .cell{flex-direction:column;align-items:center;text-align:center;gap:8px;padding:4px 8px;}
+  .agate .cell{flex-direction:column;align-items:center;text-align:center;gap:8px;padding:4px 4px;}
   .agate .disc{width:40px;height:40px;}
   .agate .disc svg{width:20px;height:20px;}
-  .agate .trust h4{font-size:14px;}
+  .agate .trust h4{font-size:13.5px;}
   .agate .trust p{font-size:13px;margin-top:4px;line-height:1.3;}
   .agate .foot-bottom{flex-direction:column;gap:12px;}
 }
