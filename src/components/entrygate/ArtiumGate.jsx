@@ -687,12 +687,14 @@ export default function ArtiumGate({
               {/* The partner IS the link now — the social pucks are gone,
                   and the name wears their solid ivory pill material. */}
               <a
-                className="partner-pill"
+                className="partner-avatar"
                 href={ARTIUM_INSTAGRAM}
                 target="_blank"
                 rel="noreferrer"
                 aria-label="aclassicaltone on Instagram"
-              >aclassicaltone</a>
+              >
+                <img src="/partner-aclassicaltone.png" alt="aclassicaltone" width="54" height="54" />
+              </a>
             </div>
           </div>
           <div className="foot-bottom">

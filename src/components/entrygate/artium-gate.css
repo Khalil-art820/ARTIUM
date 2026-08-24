@@ -496,18 +496,13 @@
 .agate .hs-optical{position:relative;left:2.5px;}
 
 
-/* aclassicaltone as a solid pill in the pucks' own ivory material,
-   linking to its Instagram. */
-.agate .partner-pill{
-  display:inline-flex;align-items:center;justify-content:center;
-  padding:9px 24px;border-radius:999px;
-  font-family:'Playfair Display',serif;font-size:15px;color:var(--gold);
-  text-decoration:none;cursor:pointer;
-  background:radial-gradient(circle at 35% 28%, #FFFFFF 0%, #FCF8EF 55%, #F1E8D6 100%);
-  border:1px solid rgba(255,255,255,.85);
+/* The partner's own Instagram avatar as the link — a disc in the pucks'
+   shadow language, clickable through to the profile. */
+.agate .partner-avatar{
+  display:inline-flex;border-radius:50%;line-height:0;
   box-shadow:
     0 8px 14px -4px var(--warm-shadow),
-    0 2px 4px rgba(150,115,55,.14),
-    inset 0 2px 2px #fff,
-    inset 0 -3px 5px rgba(176,146,98,.28);
+    0 2px 4px rgba(150,115,55,.14);
+  border:1px solid rgba(255,255,255,.85);
 }
+.agate .partner-avatar img{border-radius:50%;display:block;}
