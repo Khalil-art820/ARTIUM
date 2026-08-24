@@ -683,7 +683,7 @@ export default function ArtiumGate({
         <footer>
           <div className="foot-top">
             <div className="partner">
-              <span className="lbl">In partnership with</span>
+              <span className="lbl">Our partners</span>
               <span className="pname pname-pill">aclassicaltone</span>
             </div>
             <div className="socials">

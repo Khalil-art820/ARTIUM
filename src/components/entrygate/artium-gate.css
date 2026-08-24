@@ -110,7 +110,7 @@
 .agate .brand .wordmark{
   /* Smaller, tighter capitals per the user's direction, nudged left. */
   font-family:'Jost',system-ui,sans-serif;
-  font-size:25px;font-weight:600;color:var(--ink);
+  font-size:24px;font-weight:600;color:var(--ink);
   letter-spacing:.2em;text-transform:uppercase;
   display:inline-flex;align-items:center;
   margin-left:-8px;
@@ -376,10 +376,11 @@
 /* Centered column at every width: "In partnership with" / "aclassicaltone"
    (the top border spans this whole block), then the two social pucks
    beneath, centered. */
-.agate .foot-top{display:flex;flex-direction:column;align-items:center;
+.agate .foot-top{display:flex;flex-direction:column;align-items:flex-start;
   border-top:1px solid rgba(198,149,47,.35);padding-top:14px;}
-.agate .partner{display:flex;flex-direction:column;align-items:center;gap:2px;}
-.agate .partner .lbl{font-size:12.5px;color:#7A8090;}
+.agate .partner{display:flex;flex-direction:column;align-items:flex-start;gap:6px;}
+/* Same voice as the bottom row's About Us links. */
+.agate .partner .lbl{font-size:14.5px;color:#3A4152;}
 .agate .partner .pname{font-family:'Playfair Display',serif;color:var(--gold);font-size:15px;}
 .agate .socials{display:flex;gap:12px;margin-top:14px;}
 .agate .socials .puck{width:44px;height:44px;text-decoration:none;}
