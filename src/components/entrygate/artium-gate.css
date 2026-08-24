@@ -151,7 +151,7 @@
   transform:rotate(45deg);flex-shrink:0;
 }
 .agate .hero-subtitle{
-  margin:30px auto 0;max-width:230px;
+  margin:30px auto 0;
   font-family:'Jost',sans-serif;font-weight:300;
   font-size:19px;line-height:1.55;color:#3A4152;letter-spacing:.01em;
 }
@@ -179,8 +179,6 @@
   width:840px;max-width:none;height:846px;
   margin:0 auto;
 }
-.agate .rings{position:absolute;left:50%;top:423px;transform:translate(-50%,-50%);
-  pointer-events:none;line-height:0;z-index:0;}
 /* .diamond CSS removed with the element — the divider is gone entirely. */
 
 .agate .grid{
@@ -272,26 +270,25 @@
   display:flex;flex-direction:column;align-items:center;
   padding:24px 40px 0;text-align:center;
   cursor:pointer;
+  border:1px solid var(--contour);
 }
 .agate .oval-slab:focus-visible{outline:1.5px solid var(--gold);outline-offset:4px;}
+/* Double-slab rim, the cards' plate+panel language on an ellipse: a white
+   specular keyline just inside the contour, then an inset panel rim with
+   its own soft groove. Pseudo-elements, borders only — content above. */
+.agate .oval-slab::before{
+  content:"";position:absolute;inset:2.5px;border-radius:50%;
+  border:1.5px solid rgba(255,255,255,.92);pointer-events:none;
+}
+.agate .oval-slab::after{
+  content:"";position:absolute;inset:10px;border-radius:50%;
+  border:1px solid rgba(255,255,255,.78);
+  box-shadow:0 2px 2px rgba(150,110,50,.22), inset 0 1px 1px rgba(255,255,255,.85), inset 0 -4px 8px -4px rgba(176,146,98,.30);
+  pointer-events:none;
+}
 /* Ring pushed outward (was inset 7/6/20/6) to give the column below more
    breathing room before the bottom lip — the two gold balls and the "05"
    badge are retuned to match (see below). */
-.agate .oring{
-  position:absolute;inset:4px 3px 12px 3px;
-  border-radius:50%;
-  border:2px solid var(--ring);
-  box-shadow:0 1px 1px rgba(255,255,255,.8), inset 0 1px 1px rgba(150,105,20,.25);
-  pointer-events:none;
-}
-.agate .ball{
-  position:absolute;width:14px;height:14px;border-radius:50%;
-  background:radial-gradient(circle at 35% 30%, #F2CE7E 0%, #C9962E 60%, #96690F 100%);
-  box-shadow:0 3px 5px rgba(120,85,20,.45), inset 0 1px 1px rgba(255,255,255,.5);
-  top:calc(50% - 11px);
-}
-.agate .ball.l{left:-4px;}
-.agate .ball.r{right:-4px;}
 /* "05" — the medallion's own number badge, same puck as 01-04, tucked
    just inside the ellipse's upper-left curve so it reads as part of the
    slab, not clipped by it. */
@@ -406,7 +403,7 @@
      leaving the photo's flanking instruments clear of the letters. */
   .agate .hero-title{font-size:34px;}
   .agate .hero-arch{width:70px;height:70px;}
-  .agate .hero-subtitle{font-size:15px;max-width:200px;}
+  .agate .hero-subtitle{font-size:15px;}
   /* Trust bar stays horizontal (3 columns, vertical separators) like
      desktop — the user wants the same row shape at every width, just
      tightened so three cells fit ~375px without page scroll. Each cell

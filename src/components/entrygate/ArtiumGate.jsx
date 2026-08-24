@@ -534,7 +534,7 @@ export default function ArtiumGate({
           <div className="hero-decoration">
             <span className="hd-line" /><span className="hd-diamond" /><span className="hd-line" />
           </div>
-          <p className="hero-subtitle">A trusted community for classical music students, teachers, artists and lovers.</p>
+          <p className="hero-subtitle">A trusted community for<br />classical music students,<br />teachers, artists and lovers.</p>
         </section>
         </div>
         </div>
@@ -558,21 +558,7 @@ export default function ArtiumGate({
           {/* The diamond divider (dashed lines, then the star) was removed
               at the user's request — nothing sits between the tagline and
               the stage any more. */}
-          <div className="rings">
-            <svg width="700" height="700" viewBox="0 0 700 700" fill="none">
-              <circle cx="350" cy="350" r="240" stroke="rgba(198,149,47,.30)" strokeWidth="1" />
-              <circle cx="350" cy="350" r="291" stroke="rgba(198,149,47,.38)" strokeWidth="1" />
-              {/* Vertical axis only — the horizontal hairline read as a wire
-    strung between cards 01 and 02, so it's gone. */}
-<path d="M350 20V680" stroke="rgba(198,149,47,.25)" strokeWidth="1" />
-              <path d="M148 233L552 467 M148 467L552 233" stroke="rgba(198,149,47,.14)" strokeWidth="1" />
-              <circle cx="350" cy="59" r="6.5" fill="url(#agate-gball)" />
-              <circle cx="350" cy="641" r="6.5" fill="url(#agate-gball)" />
-              <defs>
-                <GoldBallGradient id="agate-gball" />
-              </defs>
-            </svg>
-          </div>
+          {/* The orbit rings, axis lines and their gold dots were removed at the user's request. */}
 
           <div className="grid">
             {CARDS.map((card) => (
@@ -594,9 +580,6 @@ export default function ArtiumGate({
               onClick={activateStudent}
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") activateStudent(e); }}
             >
-              <span className="oring" />
-              <span className="ball l" />
-              <span className="ball r" />
               <div className="num puck med-num">05</div>
 
               <div className="cap">
