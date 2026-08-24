@@ -684,15 +684,15 @@ export default function ArtiumGate({
           <div className="foot-top">
             <div className="partner">
               <span className="lbl">Our partners</span>
-              <span className="pname pname-pill">aclassicaltone</span>
-            </div>
-            <div className="socials">
-              <a className="puck" href={ARTIUM_INSTAGRAM} target="_blank" rel="noreferrer" aria-label="Instagram">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C9962E" strokeWidth="1.8" strokeLinecap="round"><rect x="3.5" y="3.5" width="17" height="17" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.2" cy="6.8" r="1" fill="#C9962E" stroke="none" /></svg>
-              </a>
-              <a className="puck" href="#" aria-label="Facebook">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="#C9962E"><path d="M13.5 21v-7h2.4l.4-3h-2.8V9.1c0-.9.3-1.5 1.6-1.5h1.3V4.9c-.3 0-1.1-.1-2-.1-2 0-3.4 1.2-3.4 3.5V11H8.5v3H11v7z" /></svg>
-              </a>
+              {/* The partner IS the link now — the social pucks are gone,
+                  and the name wears their solid ivory pill material. */}
+              <a
+                className="partner-pill"
+                href={ARTIUM_INSTAGRAM}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="aclassicaltone on Instagram"
+              >aclassicaltone</a>
             </div>
           </div>
           <div className="foot-bottom">

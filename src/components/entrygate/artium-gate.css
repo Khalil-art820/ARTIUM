@@ -378,12 +378,14 @@
    beneath, centered. */
 .agate .foot-top{display:flex;flex-direction:column;align-items:flex-start;
   border-top:1px solid rgba(198,149,47,.35);padding-top:14px;}
-.agate .partner{display:flex;flex-direction:column;align-items:flex-start;gap:6px;}
-/* Same voice as the bottom row's About Us links. */
-.agate .partner .lbl{font-size:14.5px;color:#3A4152;}
-.agate .partner .pname{font-family:'Playfair Display',serif;color:var(--gold);font-size:15px;}
-.agate .socials{display:flex;gap:12px;margin-top:14px;}
-.agate .socials .puck{width:44px;height:44px;text-decoration:none;}
+.agate .partner{display:flex;flex-direction:column;align-items:flex-start;gap:6px;width:100%;}
+/* The login question's voice, capitalised and bold, centered over the row. */
+.agate .partner .lbl{
+  align-self:center;
+  font-size:19px;font-weight:700;color:#2A3142;
+  text-transform:uppercase;letter-spacing:.04em;
+  margin-bottom:10px;
+}
 .agate .foot-bottom{display:flex;align-items:center;justify-content:space-between;
   margin-top:16px;font-size:14.5px;color:#3A4152;}
 .agate .foot-links{display:flex;align-items:center;gap:12px;}
@@ -493,11 +495,19 @@
    reading as a leftward drift — nudged right to correct the eye. */
 .agate .hs-optical{position:relative;left:2.5px;}
 
-/* The partner name wears a pill contour. */
-.agate .pname-pill{
-  display:inline-block;
-  border:1px solid rgba(198,149,47,.45);
-  border-radius:999px;
-  padding:5px 16px;
-  margin-top:2px;
+
+/* aclassicaltone as a solid pill in the pucks' own ivory material,
+   linking to its Instagram. */
+.agate .partner-pill{
+  display:inline-flex;align-items:center;justify-content:center;
+  padding:9px 24px;border-radius:999px;
+  font-family:'Playfair Display',serif;font-size:15px;color:var(--gold);
+  text-decoration:none;cursor:pointer;
+  background:radial-gradient(circle at 35% 28%, #FFFFFF 0%, #FCF8EF 55%, #F1E8D6 100%);
+  border:1px solid rgba(255,255,255,.85);
+  box-shadow:
+    0 8px 14px -4px var(--warm-shadow),
+    0 2px 4px rgba(150,115,55,.14),
+    inset 0 2px 2px #fff,
+    inset 0 -3px 5px rgba(176,146,98,.28);
 }
