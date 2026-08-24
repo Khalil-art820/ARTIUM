@@ -89,7 +89,10 @@
 /* The reference keeps the header on a clean white band, above the photo. */
 .agate .gate-head{
   width:100vw;margin-left:calc(50% - 50vw);
-  background:#FFFFFF;
+  /* Not white: a very light cream that ends on the photo's own top-edge
+     tone (sampled #F0E1D1), so header and photo read as one surface with
+     no color seam. */
+  background:linear-gradient(180deg,#FCF7EF 0%,#F6EBDD 55%,#F0E1D1 100%);
 }
 .agate .gate-head-inner{
   max-width:1024px;margin:0 auto;
