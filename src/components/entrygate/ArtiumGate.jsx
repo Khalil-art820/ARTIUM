@@ -518,13 +518,17 @@ export default function ArtiumGate({
         <div className="hero-backdrop">
         <div className="hero-backdrop-inner">
         <section className="hero">
-          <svg className="hero-arch" width="90" height="90" viewBox="0 0 90 90" fill="none" aria-hidden="true">
-            <line x1="0" y1="45" x2="26" y2="45" stroke="#D9B975" strokeWidth="1" />
-            <line x1="64" y1="45" x2="90" y2="45" stroke="#D9B975" strokeWidth="1" />
-            <path d="M32 62V34a13 13 0 0 1 26 0v28" stroke="#D9B975" strokeWidth="1" />
-            <path d="M37 62V36a8 8 0 0 1 16 0v26" stroke="#D9B975" strokeWidth="1" />
-            <path d="M42 62V38a3 3 0 0 1 6 0v24" stroke="#D9B975" strokeWidth="1" />
-            <path d="M45 26l1.4 3.1 3.1 1.4-3.1 1.4-1.4 3.1-1.4-3.1-3.1-1.4 3.1-1.4z" fill="#D9B975" />
+          <svg className="hero-arch" width="340" height="96" viewBox="0 0 340 96" fill="none" aria-hidden="true">
+            {/* The mock's motif: a tall, narrow arch of three nested arcs
+                whose legs run down open-ended, a slim four-point sparkle
+                low inside it, and long solid hairlines flanking at the
+                sparkle's height. */}
+            <path d="M144 84 V36 a26 26 0 0 1 52 0 V84" stroke="#BC8E33" strokeWidth="1.4" />
+            <path d="M151 78 V37 a19 19 0 0 1 38 0 V78" stroke="#BC8E33" strokeWidth="1.2" />
+            <path d="M158 72 V38 a12 12 0 0 1 24 0 V72" stroke="#BC8E33" strokeWidth="1.1" />
+            <path d="M170 46 Q171.6 54 178 56.5 Q171.6 59 170 67 Q168.4 59 162 56.5 Q168.4 54 170 46 Z" fill="#BC8E33" />
+            <line x1="14" y1="56.5" x2="118" y2="56.5" stroke="#BC8E33" strokeWidth="1" />
+            <line x1="222" y1="56.5" x2="326" y2="56.5" stroke="#BC8E33" strokeWidth="1" />
           </svg>
           <h1 className="hero-title">
             <span className="l-ink">Discover.</span>
