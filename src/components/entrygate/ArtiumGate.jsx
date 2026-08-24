@@ -593,7 +593,7 @@ export default function ArtiumGate({
                 </span>
               </div>
 
-              <div className="join">Join a verified community of conservatory students and graduates — connect, collaborate and grow.</div>
+              <div className="join">A verified community. Connect, collaborate, grow.</div>
               <button
                 className="go puck"
                 aria-label="Join the community"
@@ -622,7 +622,7 @@ export default function ArtiumGate({
               <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l8 3v6c0 5-3.4 8.6-8 11-4.6-2.4-8-6-8-11V5z" /><path d="M8.6 12l2.3 2.3 4.5-4.6" /></svg>
             </div>
             <div>
-              <h4>Safe |<br />Secure</h4>
+              <h4>Safe | Secure</h4>
               <p>Private, secure and reliable platform</p>
             </div>
           </div>

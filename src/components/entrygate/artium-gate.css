@@ -219,10 +219,11 @@
    just inside the ellipse's upper-left curve so it reads as part of the
    slab, not clipped by it. */
 .agate .med-num{
-  /* A 40px seal straddling the oval's upper-left rim (the ellipse passes
-     through its center) — inside the slab it collided with the title;
-     pinned on the rim it reads like a medal clasp and touches nothing. */
-  top:45px;left:36px;width:40px;height:40px;font-size:14px;
+  /* Same 54px puck as the cards' badges (user request). Centered on the
+     ellipse rim at its upper-left diagonal: rim point ≈(56,65), so the
+     54px disc spans x29–83 — the title's glyphs start ≈x85, so full
+     size clears them where an on-slab placement could not. */
+  top:38px;left:29px;
 }
 
 .agate .cap{color:var(--gold);line-height:0;}
@@ -230,7 +231,7 @@
   font-family:'Playfair Display',serif;font-weight:500;
   font-size:22px;line-height:1.26;margin-top:8px;
 }
-.agate .sub{margin-top:6px;font-size:16.5px;color:var(--muted);font-weight:300;}
+.agate .sub{margin-top:6px;font-size:18px;color:var(--muted);font-weight:300;}
 .agate .member{
   width:266px;margin-top:10px;
   background:#FFFEFC;
@@ -251,13 +252,13 @@
 }
 .agate .who{flex:1;}
 .agate .name{font-family:'Playfair Display',serif;font-size:18px;}
-.agate .meta{font-size:14px;color:var(--muted);margin-top:1px;}
+.agate .meta{font-size:15.5px;color:var(--muted);margin-top:1px;}
 .agate .seal{color:var(--gold);flex-shrink:0;line-height:0;
   filter:drop-shadow(0 2px 2px rgba(120,85,20,.35));}
 /* Widened further (was 280px) so the bigger 16px join text still lands
    close to two-three lines — verify visually, exact wrap depends on font
    metrics this pass couldn't render/measure. */
-.agate .join{margin-top:4px;font-size:16px;color:var(--muted);font-weight:300;
+.agate .join{margin-top:4px;font-size:20px;color:var(--muted);font-weight:300;
   max-width:290px;line-height:1.3;}
 /* Tight top margin: the column flows top-down, so the arrow's clearance
    from the orbit's inner bottom edge (≥9px, DESIGN_SPEC §6) is bought by
