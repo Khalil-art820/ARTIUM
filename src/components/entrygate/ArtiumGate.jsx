@@ -534,7 +534,7 @@ export default function ArtiumGate({
           <div className="hero-decoration">
             <span className="hd-line" /><span className="hd-diamond" /><span className="hd-line" />
           </div>
-          <p className="hero-subtitle">A trusted community for<br />classical music students,<br />teachers, artists and lovers.</p>
+          <p className="hero-subtitle">A trusted community for<br />classical music students,<br /><span className="hs-optical">teachers, artists and lovers.</span></p>
         </section>
         </div>
         </div>
@@ -680,7 +680,7 @@ export default function ArtiumGate({
           <div className="foot-top">
             <div className="partner">
               <span className="lbl">In partnership with</span>
-              <span className="pname">aclassicaltone</span>
+              <span className="pname pname-pill">aclassicaltone</span>
             </div>
             <div className="socials">
               <a className="puck" href={ARTIUM_INSTAGRAM} target="_blank" rel="noreferrer" aria-label="Instagram">

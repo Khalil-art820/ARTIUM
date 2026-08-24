@@ -404,6 +404,7 @@
   .agate .hero-title{font-size:34px;}
   .agate .hero-arch{width:70px;height:70px;}
   .agate .hero-subtitle{font-size:15px;}
+  
   /* Trust bar stays horizontal (3 columns, vertical separators) like
      desktop — the user wants the same row shape at every width, just
      tightened so three cells fit ~375px without page scroll. Each cell
@@ -485,3 +486,17 @@
   cursor:pointer;
 }
 .agate .tour-next:focus-visible{outline:1.5px solid var(--ink);outline-offset:2px;}
+
+/* Optical centering for the subtitle's last line: geometrically centered,
+   but its trailing period carries advance width with little visual mass,
+   reading as a leftward drift — nudged right to correct the eye. */
+.agate .hs-optical{position:relative;left:2.5px;}
+
+/* The partner name wears a pill contour. */
+.agate .pname-pill{
+  display:inline-block;
+  border:1px solid rgba(198,149,47,.45);
+  border-radius:999px;
+  padding:6px 20px;
+  margin-top:2px;
+}
