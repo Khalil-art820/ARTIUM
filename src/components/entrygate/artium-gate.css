@@ -61,8 +61,11 @@
 .agate header{display:flex;align-items:center;justify-content:space-between;}
 .agate .brand{text-decoration:none;}
 .agate .brand .wordmark{
-  font-family:'Playfair Display',serif;
-  font-size:34px;font-weight:500;color:var(--gold);letter-spacing:.5px;
+  /* Option 5 of the wordmark proposals: Jost ExtraBold capitals, wide
+     tracking, ink — the page's own geometric sans, at brand weight. */
+  font-family:'Jost',system-ui,sans-serif;
+  font-size:29px;font-weight:800;color:var(--ink);
+  letter-spacing:.2em;text-transform:uppercase;
 }
 .agate .head-actions{display:flex;align-items:center;gap:14px;}
 .agate .head-actions .puck{width:52px;height:52px;}
