@@ -562,8 +562,7 @@ export default function ArtiumGate({
                   <circle cx="42.6" cy="23.2" r="2.1" />
                 </svg>
               </div>
-              <h2>Conservatory<br />Students | Graduates</h2>
-              <div className="sub">The heart of tomorrow's music.</div>
+              <h2>I am a Conservatory<br />Students | Graduates</h2>
 
               <div className="member">
                 <div className="avatar">AD</div>
@@ -613,8 +612,8 @@ export default function ArtiumGate({
               <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="9" cy="8" r="3" /><path d="M3 19c1-3.2 3.2-4.8 6-4.8s5 1.6 6 4.8" /><circle cx="17" cy="7" r="2.4" /><path d="M15.5 12.7c2.6.1 4.5 1.5 5.3 4.3" /></svg>
             </div>
             <div>
-              <h4>Trusted<br />Community</h4>
-              <p>Verified conservatory students | musicians.</p>
+              <h4>Trusted Community</h4>
+              <p>Verified students | musicians.</p>
             </div>
           </div>
           <div className="cell">
@@ -623,7 +622,7 @@ export default function ArtiumGate({
             </div>
             <div>
               <h4>Safe | Secure</h4>
-              <p>Private, secure and reliable platform</p>
+              <p>Private, secure, reliable.</p>
             </div>
           </div>
           <div className="cell">
@@ -631,8 +630,8 @@ export default function ArtiumGate({
               <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M5 20v-5M10 20v-9M15 20v-6M20 20V7" /></svg>
             </div>
             <div>
-              <h4>Grow<br />Together</h4>
-              <p>Opportunities, collaborations and real connections.</p>
+              <h4>Grow Together</h4>
+              <p>Opportunities and real connections.</p>
             </div>
           </div>
         </section>
