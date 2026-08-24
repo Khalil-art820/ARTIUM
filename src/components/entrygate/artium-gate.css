@@ -55,7 +55,7 @@
 }
 .agate .hero-backdrop::after{
   content:"";
-  position:absolute;left:0;right:0;bottom:0;height:38%;
+  position:absolute;left:0;right:0;bottom:0;height:58%;
   background:linear-gradient(180deg, rgba(253,250,245,0) 0%, var(--bg) 92%);
   pointer-events:none;
 }
@@ -86,27 +86,25 @@
 }
 
 /* ================= HEADER ================= */
+/* The reference keeps the header on a clean white band, above the photo. */
+.agate .gate-head{
+  width:100vw;margin-left:calc(50% - 50vw);
+  background:#FFFFFF;
+}
+.agate .gate-head-inner{
+  max-width:1024px;margin:0 auto;
+  padding:22px 40px 18px;
+}
 .agate header{display:flex;align-items:center;justify-content:space-between;}
 .agate .brand{text-decoration:none;}
 .agate .brand .wordmark{
-  /* Reference mock: wide-spaced ink capitals, a touch lighter/less blocky
-     than the old ExtraBold — tuned tracking + weight to match. */
+  /* The mock's wordmark: airy wide-tracked ink capitals, medium-bold,
+     no accent — the gold wedge is gone at the user's request. */
   font-family:'Jost',system-ui,sans-serif;
-  font-size:26px;font-weight:700;color:var(--ink);
-  letter-spacing:.35em;text-transform:uppercase;
-  position:relative;
+  font-size:22px;font-weight:600;color:var(--ink);
+  letter-spacing:.42em;text-transform:uppercase;
 }
-/* Gold triangle accent filling the left leg/counter of the initial A,
-   drawn as a positioned pseudo-element on a span wrapping just that
-   letter (clip-path triangle) — matches the mock's small gold wedge. */
-.agate .wm-a{position:relative;display:inline-block;}
-.agate .wm-a::before{
-  content:"";
-  position:absolute;left:.02em;top:.16em;
-  width:.34em;height:.62em;
-  background:var(--gold);
-  clip-path:polygon(100% 0, 100% 100%, 30% 100%);
-}
+
 .agate .head-actions{display:flex;align-items:center;gap:14px;}
 .agate .head-actions .puck{width:52px;height:52px;}
 .agate .head-actions svg{width:20px;height:20px;}
@@ -117,7 +115,7 @@
 .agate .member-count svg{width:19px;height:19px;}
 
 /* ================= HERO ================= */
-.agate .hero{text-align:center;margin-top:34px;padding-bottom:44px;}
+.agate .hero{text-align:center;padding-top:26px;padding-bottom:44px;}
 .agate .hero-arch{display:block;margin:0 auto;}
 .agate .hero-title{
   font-family:'Playfair Display',serif;
@@ -137,7 +135,7 @@
   transform:rotate(45deg);flex-shrink:0;
 }
 .agate .hero-subtitle{
-  margin:16px auto 0;max-width:340px;
+  margin:30px auto 0;max-width:230px;
   font-family:'Jost',sans-serif;font-weight:300;
   font-size:19px;line-height:1.55;color:#3A4152;letter-spacing:.01em;
 }
@@ -392,7 +390,7 @@
      leaving the photo's flanking instruments clear of the letters. */
   .agate .hero-title{font-size:34px;}
   .agate .hero-arch{width:70px;height:70px;}
-  .agate .hero-subtitle{font-size:16px;max-width:300px;}
+  .agate .hero-subtitle{font-size:15px;max-width:200px;}
   /* Trust bar stays horizontal (3 columns, vertical separators) like
      desktop — the user wants the same row shape at every width, just
      tightened so three cells fit ~375px without page scroll. Each cell

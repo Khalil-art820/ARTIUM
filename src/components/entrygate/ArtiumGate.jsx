@@ -474,12 +474,14 @@ export default function ArtiumGate({
             the top; a bottom fade blends it into the page ground (--bg)
             before the stage begins. Both header and hero live inside this
             wrapper so they composite over the photo. */}
-        <div className="hero-backdrop">
-        <div className="hero-backdrop-inner">
-        {/* ================= HEADER ================= */}
+        {/* ================= HEADER =================
+            On its own white band, like the reference — the photo begins
+            below it. */}
+        <div className="gate-head">
+        <div className="gate-head-inner">
         <header>
           <div className="brand">
-            <span className="wordmark"><span className="wm-a">A</span>RTIUM</span>
+            <span className="wordmark">ARTIUM</span>
           </div>
           <div className="head-actions">
             {onMusicToggle && (
@@ -500,8 +502,14 @@ export default function ArtiumGate({
             </div>
           </div>
         </header>
+        </div>
+        </div>
 
-        {/* ================= HERO ================= */}
+        {/* ================= HERO =================
+            The instruments photo backs only the hero text, full-bleed,
+            fading into the page ground before the stage. */}
+        <div className="hero-backdrop">
+        <div className="hero-backdrop-inner">
         <section className="hero">
           <svg className="hero-arch" width="90" height="90" viewBox="0 0 90 90" fill="none" aria-hidden="true">
             <line x1="0" y1="45" x2="26" y2="45" stroke="#D9B975" strokeWidth="1" />
