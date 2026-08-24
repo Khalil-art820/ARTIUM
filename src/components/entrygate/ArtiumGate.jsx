@@ -205,8 +205,10 @@ function useStageScale(ref) {
 
 const ARTIUM_INSTAGRAM = "https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==";
 
+/* Thick black arrow (user request) — used only by the card and medallion
+   pucks; the login button draws its own. */
 const Arrow = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M4 12h15M13 6l6 6-6 6" />
   </svg>
 );

@@ -170,7 +170,7 @@
    own .go (normal flex flow) is untouched. */
 .agate .go{
   margin:0;
-  width:56px;height:56px;color:var(--gold);
+  width:56px;height:56px;color:var(--ink);
   flex-shrink:0;
   border:none;
 }
