@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import paths from "./paths.json";
 import "./artium-gate.css";
 
@@ -91,12 +91,16 @@ function useSpotlightTour(active, delayMs, onEnd, medallionRef, cardRefs) {
     const el = targetEl(step);
     if (!el) return;
     const r = el.getBoundingClientRect();
+    // Padded viewport rect — used both to place the caption card (as
+    // before) and, in TourSpotlight, as the translate/scale that maps the
+    // target's exact card/medallion silhouette (paths.json / the ellipse)
+    // from its local coordinate space onto this rect, so the hole carries
+    // the real carved geometry instead of a plain rounded rect.
     setSpot({
       top: r.top - TOUR_PAD,
       left: r.left - TOUR_PAD,
       width: r.width + TOUR_PAD * 2,
       height: r.height + TOUR_PAD * 2,
-      radius: step === 0 ? "50%" : "28px",
     });
   }, [step, targetEl]);
 
@@ -681,20 +685,61 @@ export default function ArtiumGate({
           just frames it. */}
       {tourActive && tour.visible && tour.spot && (
         <div className="tour-overlay" role="dialog" aria-modal="true" aria-label="Guided tour">
-          <div
-            className={`tour-spot${tour.reduceMotion ? " no-anim" : ""}`}
-            style={{
-              top: tour.spot.top,
-              left: tour.spot.left,
-              width: tour.spot.width,
-              height: tour.spot.height,
-              borderRadius: tour.spot.radius,
-            }}
-          />
+          <TourSpotlight tour={tour} />
           <TourCard tour={tour} />
         </div>
       )}
     </div>
+  );
+}
+
+/* The dim layer with the exact card/medallion silhouette cut out of it —
+   a full-viewport SVG mask, not a rounded-rect box-shadow hole, so the
+   concave carve toward the medallion shows correctly on card steps. The
+   hole shape is the same plate{id} path from paths.json (card-local
+   260x412) used to draw the cards themselves, or a 380x446 ellipse for
+   the medallion step; a <g> transform maps that local shape onto the
+   target's live viewport rect (translate to the padded rect's top-left,
+   scale to its padded width/height) — same translate+scale for both the
+   masked hole and a second, unmasked <g> that draws the thin gold rim
+   (vector-effect="non-scaling-stroke" keeps its 1.5px regardless of the
+   scale factor). Only the transform is animated (glide between steps);
+   the shape itself swaps instantly at the step change. */
+function TourSpotlight({ tour }) {
+  const { step, spot, reduceMotion } = tour;
+  const maskId = useId();
+  if (!spot) return null;
+
+  const isMedallion = step === 0;
+  const LOCAL_W = isMedallion ? 380 : 260;
+  const LOCAL_H = isMedallion ? 446 : 412;
+  const groupStyle = {
+    transform: `translate(${spot.left}px, ${spot.top}px) scale(${spot.width / LOCAL_W}, ${spot.height / LOCAL_H})`,
+    transition: reduceMotion ? "none" : "transform .45s ease",
+  };
+
+  const holeShape = isMedallion ? (
+    <ellipse cx="190" cy="223" rx="190" ry="223" fill="black" />
+  ) : (
+    <path d={paths[`plate${step}`]} fill="black" />
+  );
+  const rimShape = isMedallion ? (
+    <ellipse cx="190" cy="223" rx="190" ry="223" fill="none" stroke="rgba(201,150,46,.9)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
+  ) : (
+    <path d={paths[`plate${step}`]} fill="none" stroke="rgba(201,150,46,.9)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
+  );
+
+  return (
+    <svg className="tour-dim" aria-hidden="true">
+      <defs>
+        <mask id={maskId} maskUnits="objectBoundingBox" x="-20%" y="-20%" width="140%" height="140%">
+          <rect x="0" y="0" width="100%" height="100%" fill="white" />
+          <g style={groupStyle}>{holeShape}</g>
+        </mask>
+      </defs>
+      <rect x="0" y="0" width="100%" height="100%" fill="rgba(35,42,59,.45)" mask={`url(#${maskId})`} />
+      <g style={groupStyle}>{rimShape}</g>
+    </svg>
   );
 }
 

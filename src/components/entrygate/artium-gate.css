@@ -349,34 +349,32 @@
    The gate's one introduction: auto-plays for first-time visitors
    (artium_gate_tour_v1) or on demand via ?intro=tour. The gate
    underneath is already fully rendered/interactive; this is a
-   page-covering overlay that dims everything except a rounded hole cut
-   around the current target via the "huge box-shadow" trick: .tour-spot
-   is transparent and its box-shadow (0 0 0 9999px, the dim color) paints
-   everywhere BUT itself. Its own top/left/width/height/border-radius are
-   written from JS on every step (getBoundingClientRect), and — since
-   position:fixed —
-   compose correctly with the scaled mobile stage without extra math. */
+   page-covering overlay that dims everything except a hole cut around
+   the current target. The hole is a full-viewport SVG mask (see
+   TourSpotlight in ArtiumGate.jsx) carrying the EXACT card silhouette
+   (the same plate{id} path from paths.json) or medallion ellipse — not a
+   plain rounded rect — so the concave carve toward the medallion shows
+   correctly on card steps. Position/size glide via a CSS transform on
+   the mask's <g>, written from JS on every step (getBoundingClientRect);
+   since the SVG is position:fixed, that transform composes correctly
+   with the scaled mobile stage without extra math. */
 .agate .tour-overlay{
   position:fixed;inset:0;z-index:50;
-  /* Captures all clicks so the page behind is inert during the tour; the
-     spotlighted element itself is only visually un-dimmed, not reachable
-     through this layer — matches spec (it doesn't need to be clickable
-     during the tour). */
-  pointer-events:auto;
-}
-.agate .tour-spot{
-  position:fixed;
-  background:transparent;
-  box-shadow:0 0 0 9999px rgba(35,42,59,.45);
-  outline:1.5px solid rgba(201,150,46,.9);
-  outline-offset:2px;
-  transition:top .45s ease,left .45s ease,width .45s ease,height .45s ease,border-radius .45s ease;
   pointer-events:none;
 }
-.agate .tour-spot.no-anim{transition:none;}
+.agate .tour-dim{
+  position:fixed;inset:0;
+  width:100%;height:100%;
+  /* Captures all clicks so the page behind is inert during the tour; the
+     spotlighted element itself is only visually un-dimmed (seen through
+     the mask's hole), not reachable through this layer — matches spec
+     (it doesn't need to be clickable during the tour). */
+  pointer-events:auto;
+}
 
 .agate .tour-card{
   position:fixed;z-index:51;
+  pointer-events:auto;
   border-radius:22px;
   background:radial-gradient(circle at 35% 22%, #FFFFFF 0%, #FCF8EF 55%, #F1E8D6 100%);
   border:1px solid rgba(255,255,255,.85);
