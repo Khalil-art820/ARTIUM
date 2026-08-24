@@ -495,7 +495,6 @@ export default function ArtiumGate({
 
         {/* ================= HERO ================= */}
         <section className="hero">
-          <div className="eyebrow">Welcome to Artium</div>
           <h1>Your Classical<br />Music World</h1>
           <div className="tagline">Connect. Learn. Elevate.</div>
         </section>
