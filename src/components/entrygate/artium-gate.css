@@ -40,6 +40,34 @@
 .agate *{margin:0;padding:0;box-sizing:border-box;}
 .agate .page{max-width:1024px;margin:0 auto;padding:28px 40px 30px;}
 
+/* ================= HERO BACKDROP ================= */
+/* Full-bleed photo behind the header + hero text. Breaks out of .page's
+   max-width/padding via 100vw negative-margin centering (the classic
+   "full-bleed inside a constrained container" trick) so it always spans
+   the true viewport width regardless of .page's own max-width. The
+   photo's own lower half is already plain cream, but the bottom fade to
+   var(--bg) is added as insurance so it blends into the page ground
+   before the stage begins, at every viewport width/crop. */
+.agate .hero-backdrop{
+  position:relative;
+  width:100vw;margin-left:calc(50% - 50vw);
+  background:url('/gate-hero.jpg') top center / cover no-repeat;
+}
+.agate .hero-backdrop::after{
+  content:"";
+  position:absolute;left:0;right:0;bottom:0;height:38%;
+  background:linear-gradient(180deg, rgba(253,250,245,0) 0%, var(--bg) 92%);
+  pointer-events:none;
+}
+/* Inner wrapper re-applies .page's own max-width/padding so the header
+   and hero text align exactly where they used to, independent of the
+   full-bleed photo's own 100vw box. */
+.agate .hero-backdrop-inner{
+  position:relative;z-index:1;
+  max-width:1024px;margin:0 auto;
+  padding:0 40px;
+}
+
 .agate .puck{
   border-radius:50%;
   background:radial-gradient(circle at 35% 28%, #FFFFFF 0%, #FCF8EF 55%, #F1E8D6 100%);
@@ -61,11 +89,23 @@
 .agate header{display:flex;align-items:center;justify-content:space-between;}
 .agate .brand{text-decoration:none;}
 .agate .brand .wordmark{
-  /* Option 5 of the wordmark proposals: Jost ExtraBold capitals, wide
-     tracking, ink — the page's own geometric sans, at brand weight. */
+  /* Reference mock: wide-spaced ink capitals, a touch lighter/less blocky
+     than the old ExtraBold — tuned tracking + weight to match. */
   font-family:'Jost',system-ui,sans-serif;
-  font-size:29px;font-weight:800;color:var(--ink);
-  letter-spacing:.2em;text-transform:uppercase;
+  font-size:26px;font-weight:700;color:var(--ink);
+  letter-spacing:.35em;text-transform:uppercase;
+  position:relative;
+}
+/* Gold triangle accent filling the left leg/counter of the initial A,
+   drawn as a positioned pseudo-element on a span wrapping just that
+   letter (clip-path triangle) — matches the mock's small gold wedge. */
+.agate .wm-a{position:relative;display:inline-block;}
+.agate .wm-a::before{
+  content:"";
+  position:absolute;left:.02em;top:.16em;
+  width:.34em;height:.62em;
+  background:var(--gold);
+  clip-path:polygon(100% 0, 100% 100%, 30% 100%);
 }
 .agate .head-actions{display:flex;align-items:center;gap:14px;}
 .agate .head-actions .puck{width:52px;height:52px;}
@@ -77,14 +117,30 @@
 .agate .member-count svg{width:19px;height:19px;}
 
 /* ================= HERO ================= */
-.agate .hero{text-align:center;margin-top:42px;}
-.agate .eyebrow{font-size:13px;letter-spacing:.42em;font-weight:500;color:var(--gold);text-transform:uppercase;}
-.agate h1{
+.agate .hero{text-align:center;margin-top:34px;padding-bottom:44px;}
+.agate .hero-arch{display:block;margin:0 auto;}
+.agate .hero-title{
   font-family:'Playfair Display',serif;
-  font-weight:500;font-size:76px;line-height:1.08;
-  margin-top:14px;
+  font-weight:500;font-size:64px;line-height:1.15;
+  margin-top:8px;
 }
-.agate .tagline{margin-top:16px;font-size:23px;color:#3A4152;font-weight:300;letter-spacing:.02em;}
+.agate .hero-title span{display:block;}
+.agate .hero-title .l-ink{color:var(--ink);}
+.agate .hero-title .l-gold{color:var(--gold);}
+.agate .hero-decoration{
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  margin-top:18px;
+}
+.agate .hero-decoration .hd-line{width:56px;height:1px;background:var(--gold);opacity:.55;}
+.agate .hero-decoration .hd-diamond{
+  width:7px;height:7px;background:var(--gold);
+  transform:rotate(45deg);flex-shrink:0;
+}
+.agate .hero-subtitle{
+  margin:16px auto 0;max-width:340px;
+  font-family:'Jost',sans-serif;font-weight:300;
+  font-size:19px;line-height:1.55;color:#3A4152;letter-spacing:.01em;
+}
 
 /* ================= STAGE ================= */
 /* .stage-scaler measures its own content-box width (a plain block child of
@@ -331,7 +387,12 @@
    (hero title, trust bar, footer) still adapt at these breakpoints. */
 @media (max-width:700px){
   .agate .page{padding:22px 18px;}
-  .agate h1{font-size:44px;}
+  .agate .hero-backdrop-inner{padding:0 18px;}
+  /* Mock proportion: the title spans about a third of the phone width,
+     leaving the photo's flanking instruments clear of the letters. */
+  .agate .hero-title{font-size:34px;}
+  .agate .hero-arch{width:70px;height:70px;}
+  .agate .hero-subtitle{font-size:16px;max-width:300px;}
   /* Trust bar stays horizontal (3 columns, vertical separators) like
      desktop — the user wants the same row shape at every width, just
      tightened so three cells fit ~375px without page scroll. Each cell

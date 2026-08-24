@@ -468,10 +468,18 @@ export default function ArtiumGate({
   return (
     <div className="agate">
       <div className="page">
+        {/* ================= HERO BACKDROP =================
+            The instruments photo sits behind the header AND the whole hero
+            text block, full-bleed across the viewport width, anchored to
+            the top; a bottom fade blends it into the page ground (--bg)
+            before the stage begins. Both header and hero live inside this
+            wrapper so they composite over the photo. */}
+        <div className="hero-backdrop">
+        <div className="hero-backdrop-inner">
         {/* ================= HEADER ================= */}
         <header>
           <div className="brand">
-            <span className="wordmark">artium</span>
+            <span className="wordmark"><span className="wm-a">A</span>RTIUM</span>
           </div>
           <div className="head-actions">
             {onMusicToggle && (
@@ -495,10 +503,26 @@ export default function ArtiumGate({
 
         {/* ================= HERO ================= */}
         <section className="hero">
-          <div className="eyebrow">Welcome to Artium</div>
-          <h1>Your Classical<br />Music World</h1>
-          <div className="tagline">Connect. Learn. Elevate.</div>
+          <svg className="hero-arch" width="90" height="90" viewBox="0 0 90 90" fill="none" aria-hidden="true">
+            <line x1="0" y1="45" x2="26" y2="45" stroke="#D9B975" strokeWidth="1" />
+            <line x1="64" y1="45" x2="90" y2="45" stroke="#D9B975" strokeWidth="1" />
+            <path d="M32 62V34a13 13 0 0 1 26 0v28" stroke="#D9B975" strokeWidth="1" />
+            <path d="M37 62V36a8 8 0 0 1 16 0v26" stroke="#D9B975" strokeWidth="1" />
+            <path d="M42 62V38a3 3 0 0 1 6 0v24" stroke="#D9B975" strokeWidth="1" />
+            <path d="M45 26l1.4 3.1 3.1 1.4-3.1 1.4-1.4 3.1-1.4-3.1-3.1-1.4 3.1-1.4z" fill="#D9B975" />
+          </svg>
+          <h1 className="hero-title">
+            <span className="l-ink">Discover.</span>
+            <span className="l-gold">Connect.</span>
+            <span className="l-ink">Elevate.</span>
+          </h1>
+          <div className="hero-decoration">
+            <span className="hd-line" /><span className="hd-diamond" /><span className="hd-line" />
+          </div>
+          <p className="hero-subtitle">A trusted community for classical music students, teachers, artists and lovers.</p>
         </section>
+        </div>
+        </div>
 
         {/* ================= STAGE ================= */}
         {/* The client wants the exact desktop composition on mobile too —
