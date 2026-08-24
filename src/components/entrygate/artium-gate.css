@@ -110,7 +110,7 @@
 .agate .brand .wordmark{
   /* Smaller, tighter capitals per the user's direction, nudged left. */
   font-family:'Jost',system-ui,sans-serif;
-  font-size:19px;font-weight:600;color:var(--ink);
+  font-size:22px;font-weight:600;color:var(--ink);
   letter-spacing:.2em;text-transform:uppercase;
   display:inline-flex;align-items:center;
   margin-left:-8px;
