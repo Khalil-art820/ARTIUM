@@ -108,11 +108,17 @@
 .agate header{display:flex;align-items:center;justify-content:space-between;}
 .agate .brand{text-decoration:none;}
 .agate .brand .wordmark{
-  /* The mock's wordmark: airy wide-tracked ink capitals, medium-bold,
-     no accent — the gold wedge is gone at the user's request. */
+  /* Smaller, tighter capitals per the user's direction, nudged left. */
   font-family:'Jost',system-ui,sans-serif;
-  font-size:22px;font-weight:600;color:var(--ink);
-  letter-spacing:.42em;text-transform:uppercase;
+  font-size:19px;font-weight:600;color:var(--ink);
+  letter-spacing:.2em;text-transform:uppercase;
+  display:inline-flex;align-items:center;
+  margin-left:-8px;
+}
+.agate .wm-lambda{
+  width:.72em;height:.72em;
+  margin-right:.2em;
+  display:block;
 }
 
 .agate .head-actions{display:flex;align-items:center;gap:14px;}
