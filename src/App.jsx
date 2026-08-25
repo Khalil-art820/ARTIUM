@@ -3333,12 +3333,23 @@ export default function App() {
            .artium-aw-tabs is rendered once at the app shell, a sibling of
            .artium-lp rather than a descendant, so it can't be reached by
            .artium-lp--light scoping and gets its own modifier class
-           instead (see the BottomTabs "light" prop). Same gate palette:
-           grey slab, ink inactive, gold active. */
+           instead (see the BottomTabs "light" prop). Per the mock: a
+           floating inset slab (rounded corners, soft warm shadow), not a
+           full-width bar flush with the screen edges — the base rule's
+           edge-to-edge left/right/bottom and flat top border are
+           overridden accordingly; the safe-area padding-bottom is zeroed
+           since the slab is already lifted clear of the bottom edge via
+           its own "bottom" inset, so it doesn't need internal padding on
+           top of that gap too. */
         .artium-aw-tabs--light {
+          left: 14px; right: 14px;
+          bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+          padding-bottom: 0;
+          border-radius: 24px;
           background: linear-gradient(180deg, #FCFCFB 0%, #F2F2F0 70%, #EAEAE8 100%);
+          border: 1px solid rgba(176,146,98,.30);
           border-top: 1px solid rgba(176,146,98,.30);
-          box-shadow: 0 -8px 20px -12px rgba(150,115,55,.30);
+          box-shadow: 0 14px 30px -14px rgba(150,115,55,.38), inset 0 1px 0 #fff;
         }
         .artium-aw-tabs--light button { color: #6A7080; }
         .artium-aw-tabs--light button[data-on="1"] { color: #C9962E; }
@@ -3662,6 +3673,47 @@ export default function App() {
           font-family: 'Jost', system-ui, sans-serif;
         }
         .artium-lp--light .artium-gx-bd { display: none; }
+
+        /* The user's artwork (colonnade fading upper-left, gold staff +
+           notes upper-right, dotted world map + orbit rings lower half —
+           already re-grounded to this page's own #F4F4F3), behind the
+           header through the pin block. Fixed-ish height rather than the
+           image's own 1114x1412 aspect-ratio: at this box's full page
+           width that ratio would run to 1500px+ tall on a wide desktop
+           viewport, covering the steps too — clamp keeps it phone-height
+           on narrow screens (where the artwork's own composition already
+           puts the map band under the pin, per the mock) and caps how
+           tall it gets on wide ones. .artium-lp-bd is a dedicated class
+           (not the shared .artium-gx-bd) specifically so the generic
+           ".artium-lp > *:not(.artium-gx-bd) { position:relative;
+           z-index:1 }" rule above doesn't fight this element's own
+           absolute/z-index:0 — this rule wins on source order (both are
+           two-class-equivalent specificity, this one is later). Position/
+           height are a first pass — worth eyeballing background-position
+           against the mock and nudging. */
+        .artium-lp--light .artium-lp-bd {
+          position: absolute; top: 0; left: 0; width: 100%;
+          height: clamp(520px, 92vw, 760px);
+          background: url('/landing-backdrop.jpg') top center / cover no-repeat;
+          pointer-events: none; z-index: 0;
+        }
+        .artium-lp--light .artium-lp-bd::after {
+          content: '';
+          position: absolute; left: 0; right: 0; bottom: 0; height: 40%;
+          background: linear-gradient(180deg, rgba(244,244,243,0) 0%, #F4F4F3 90%);
+        }
+
+        /* "HOW IT WORKS" eyebrow over "Simple, from day one." — the mock
+           splits what used to be one two-line serif block into a small
+           gold caps label plus the serif line, matching the gate's own
+           eyebrow-over-title pattern. */
+        .artium-lp--light .artium-lp-eyebrow {
+          text-align: center;
+          font-family: 'Jost', system-ui, sans-serif;
+          font-size: 13px; font-weight: 500; letter-spacing: .3em;
+          text-transform: uppercase; color: #C9962E;
+          margin-bottom: 8px;
+        }
 
         .artium-lp--light .artium-lp-back {
           width: 34px; height: 34px; margin-left: 0;
@@ -4234,8 +4286,14 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
     // dark by design (signup flow, map, network, etc.) — see the CSS block
     // for the full list of what got scoped-overridden vs. left alone.
     <div className="artium-lp artium-lp--light artium-has-tabs">
-      {/* No GateBackdrop here any more — the gate itself dropped its photo
-          treatment for a flat grey ground, and this screen follows it. */}
+      {/* Not <GateBackdrop> (that's the old dark hall photo, gone). The
+          user's own artwork instead — colonnade/staff/dotted-map,
+          re-grounded to the page's own grey — sitting behind the header
+          through the pin block, the way the gate backs its own hero.
+          .artium-lp-bd is a dedicated class, not the shared .artium-gx-bd,
+          so it isn't caught by that class's dark-screen styling or by the
+          .artium-lp--light .artium-gx-bd{display:none} safety net above. */}
+      <div className="artium-lp-bd" aria-hidden="true" />
 
       <header className="artium-lp-bar">
         {!myProfile && !studentLoggedOut && (
@@ -4361,7 +4419,14 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
           </span>
         </button>
 
-        <h2 className="artium-lp-h2" style={{ marginTop: 40 }}>How it works<br />Simple, from day one.</h2>
+        {/* Mock splits this into a small caps eyebrow over the serif line,
+            not one two-line serif block — .artium-lp-h2 stays exactly the
+            weight/size of .artium-lp-h1, only the wrapper's margin moved
+            up to it since the eyebrow now carries the top gap. */}
+        <div style={{ marginTop: 40 }}>
+          <div className="artium-lp-eyebrow">How it works</div>
+          <h2 className="artium-lp-h2">Simple, from day one.</h2>
+        </div>
         <div className="artium-gx-rule" aria-hidden="true"><span /><i /><span /></div>
 
         <div className="artium-lp-steps">
