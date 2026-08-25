@@ -2372,10 +2372,12 @@ export default function App() {
     // to a whole pixel where the gate lands on a fraction, leaving a hairline
     // of white along the foot; and on a phone the safe area and the rubber
     // band at the end of a scroll both reveal whatever is underneath.
-    // "entry" is the client's rebuilt cream gate (ArtiumGate.jsx, --bg
-    // #FDFAF5), not the old white one — matching this wrapper's fill to
-    // that cream is what closes the hairline/rounding gap for it now.
-    <div style={{ fontFamily: FONT_BODY, background: screen === "entry" ? "#F4F4F3" : screen === "composers" ? "#FFFFFF" : C.ink, minHeight: "100%", width: "100%" }}>
+    // "entry" is the client's rebuilt grey gate (ArtiumGate.jsx, --bg
+    // #F4F4F3) and "landing" is that same grey now that the student/
+    // graduate screen one tap past it was re-skinned to match — matching
+    // this wrapper's fill to that grey is what closes the hairline/
+    // rounding gap for both. Every other screen is still the dark shell.
+    <div style={{ fontFamily: FONT_BODY, background: (screen === "entry" || screen === "landing") ? "#F4F4F3" : screen === "composers" ? "#FFFFFF" : C.ink, minHeight: "100%", width: "100%" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Serif+Display&family=Fraunces:opsz,wght@9..144,500&display=swap');
         * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
@@ -3327,6 +3329,21 @@ export default function App() {
            the class rather than by remembering the arithmetic. */
         .artium-has-tabs { padding-bottom: calc(62px + env(safe-area-inset-bottom, 0px)); }
 
+        /* Light variant — landing only ("app" keeps the dark bar above).
+           .artium-aw-tabs is rendered once at the app shell, a sibling of
+           .artium-lp rather than a descendant, so it can't be reached by
+           .artium-lp--light scoping and gets its own modifier class
+           instead (see the BottomTabs "light" prop). Same gate palette:
+           grey slab, ink inactive, gold active. */
+        .artium-aw-tabs--light {
+          background: linear-gradient(180deg, #FCFCFB 0%, #F2F2F0 70%, #EAEAE8 100%);
+          border-top: 1px solid rgba(176,146,98,.30);
+          box-shadow: 0 -8px 20px -12px rgba(150,115,55,.30);
+        }
+        .artium-aw-tabs--light button { color: #6A7080; }
+        .artium-aw-tabs--light button[data-on="1"] { color: #C9962E; }
+        .artium-aw-tabs--light button[data-on="1"]::after { background: #C9962E; }
+
         /* Profile top: identity left, cover video right, the video column
            lined up with the repertoire card in the grid underneath. */
         .artium-pf-top {
@@ -3616,6 +3633,168 @@ export default function App() {
         .artium-lp-step-i { flex-shrink: 0; display: flex; color: rgba(239,208,155,0.66); }
         .artium-lp-err { margin: 0; max-width: 460px; text-align: center; font-size: 13px; line-height: 1.5; color: #E5A0A0; }
 
+        /* ================================================================
+           LANDING — LIGHT VARIANT (student/graduate screen, one tap off the
+           gate). Everything below is scoped under .artium-lp--light so the
+           base .artium-lp/.artium-gx-* rules above (still used by the dark
+           screens: signup flow, map, network, etc.) are completely
+           untouched — this is a pure additive, higher-specificity override,
+           not a rename/fork of the shared classes. Palette lifted from
+           src/components/entrygate/artium-gate.css's :root tokens:
+             ground #F4F4F3 · ink #232A3B · muted #6A7080 · gold #C9962E
+             contour rgba(176,146,98,.30) · warm-shadow rgba(150,115,55,.38)
+           Titles: Playfair Display 500. Everything else: Jost 300-600.
+           Forked/overridden shared classes (all via this one scope, nothing
+           renamed): .artium-lp itself, .artium-gx-bd (hidden — no photo
+           backdrop any more), .artium-lp-back/-cta, the playlist button's
+           [aria-label*="playlist"] rule, .artium-gx-count, .artium-lp-h1/
+           -h2, .artium-gx-rule, .artium-lp-stage::before/::after,
+           .artium-lp-cap, .artium-lp-step*, .artium-lp-err, and
+           .artium-gx-foot* (footer). .artium-aw-tabs (the bottom bar) has
+           its own sibling-scoped .artium-aw-tabs--light variant near its
+           base rules above — it's rendered once at the app shell, a
+           sibling of .artium-lp rather than a descendant, so it can't be
+           reached by .artium-lp--light's descendant scoping and needed a
+           "light" prop on <BottomTabs> instead. */
+        .artium-lp--light {
+          background: #F4F4F3;
+          color: #232A3B;
+          font-family: 'Jost', system-ui, sans-serif;
+        }
+        .artium-lp--light .artium-gx-bd { display: none; }
+
+        .artium-lp--light .artium-lp-back {
+          width: 34px; height: 34px; margin-left: 0;
+          border-radius: 50%; color: #232A3B;
+          background: radial-gradient(circle at 35% 28%, #FFFFFF 0%, #FCF8EF 55%, #F1E8D6 100%);
+          border: 1px solid rgba(255,255,255,.85);
+          box-shadow:
+            0 8px 14px -4px rgba(150,115,55,.38),
+            0 2px 4px rgba(150,115,55,.14),
+            inset 0 2px 2px #fff,
+            inset 0 -3px 5px rgba(176,146,98,.28);
+        }
+        .artium-lp--light .artium-lp-back:hover { color: #C9962E; transform: none; }
+
+        /* The wordmark: ink caps, the gate's crossbar-less "A" (see the
+           header markup in Landing()'s JSX). */
+        .artium-lp--light .artium-lp-word {
+          font-family: 'Jost', system-ui, sans-serif;
+          font-size: 22px; font-weight: 600; color: #232A3B;
+          letter-spacing: .2em; text-transform: uppercase;
+          display: inline-flex; align-items: center;
+        }
+        .artium-lp--light .artium-lp-word-a { width: .72em; height: .72em; margin-right: .2em; display: block; }
+
+        /* Play disc: an ivory puck, same material as the back arrow above. */
+        .artium-lp--light .artium-lp-bar button[aria-label*="playlist"] {
+          border: 1px solid rgba(255,255,255,.85) !important;
+          width: 36px !important; height: 36px !important;
+          background: radial-gradient(circle at 35% 28%, #FFFFFF 0%, #FCF8EF 55%, #F1E8D6 100%);
+          box-shadow:
+            0 8px 14px -4px rgba(150,115,55,.38),
+            0 2px 4px rgba(150,115,55,.14),
+            inset 0 2px 2px #fff,
+            inset 0 -3px 5px rgba(176,146,98,.28);
+        }
+        .artium-lp--light .artium-lp-bar button[aria-label*="playlist"] svg { stroke: #232A3B; }
+        .artium-lp--light .artium-lp-bar button[aria-label*="playlist"]:hover {
+          border-color: rgba(255,255,255,.85) !important;
+          transform: none;
+          box-shadow:
+            0 10px 18px -4px rgba(150,115,55,.42),
+            0 2px 4px rgba(150,115,55,.16),
+            inset 0 2px 2px #fff,
+            inset 0 -3px 5px rgba(176,146,98,.28);
+        }
+
+        /* Member count: the gate's passive flat stat, not a chip. */
+        .artium-lp--light .artium-gx-count { color: #6A7080; font-weight: 400; }
+        .artium-lp--light .artium-gx-count svg { color: #6A7080; }
+
+        /* Sign Up / Log in: the gate's gold pill CTA. */
+        .artium-lp--light .artium-lp-cta {
+          background: linear-gradient(180deg, #EFD08A 0%, #DBAB4C 55%, #C9962E 100%);
+          color: #3A2E10; font-weight: 600;
+          box-shadow:
+            0 12px 20px -8px rgba(176,126,31,.55),
+            inset 0 2px 2px rgba(255,255,255,.7),
+            inset 0 -3px 5px rgba(140,95,15,.30);
+        }
+        .artium-lp--light .artium-lp-cta:hover {
+          background: linear-gradient(180deg, #F4DBA0 0%, #E4BB63 55%, #D3A63B 100%);
+          box-shadow:
+            0 14px 24px -8px rgba(176,126,31,.6),
+            inset 0 2px 2px rgba(255,255,255,.8),
+            inset 0 -3px 5px rgba(140,95,15,.32);
+        }
+
+        .artium-lp--light .artium-lp-h1,
+        .artium-lp--light .artium-lp-h2 {
+          color: #232A3B;
+          font-family: 'Playfair Display', serif;
+          font-weight: 500;
+        }
+        .artium-lp--light .artium-gx-rule span { background: linear-gradient(90deg, transparent, rgba(201,150,46,.55)); }
+        .artium-lp--light .artium-gx-rule span:last-child { background: linear-gradient(90deg, rgba(201,150,46,.55), transparent); }
+        .artium-lp--light .artium-gx-rule i { background: #C9962E; }
+
+        /* Pin's halo: a warm gold glow instead of champagne-on-black, tuned
+           down since a light ground needs far less to read as a pool of
+           light — the same values on white looked like a stain. */
+        .artium-lp--light .artium-lp-stage::before {
+          background: radial-gradient(ellipse at center, rgba(201,150,46,.14), rgba(201,150,46,.05) 42%, transparent 70%);
+        }
+        .artium-lp--light .artium-lp-stage::after {
+          background: radial-gradient(ellipse at center, rgba(201,150,46,.32), rgba(201,150,46,.08) 38%, transparent 72%);
+        }
+        .artium-lp--light .artium-lp-cap { color: #6A7080; }
+        .artium-lp--light .artium-lp-cap b { color: #C9962E; }
+
+        /* ---- the five steps: light slabs, gold numbered pucks ---- */
+        .artium-lp--light .artium-lp-step {
+          border: 1px solid rgba(176,146,98,.30);
+          background: linear-gradient(180deg, #FCFCFB 0%, #F2F2F0 70%, #EAEAE8 100%);
+          -webkit-backdrop-filter: none; backdrop-filter: none;
+          box-shadow:
+            0 14px 28px -16px rgba(150,115,55,.38),
+            inset 0 1px 0 #fff;
+        }
+        .artium-lp--light .artium-lp-step:hover {
+          border-color: rgba(201,150,46,.55); transform: translateY(-3px);
+          box-shadow:
+            0 20px 36px -16px rgba(150,115,55,.42),
+            inset 0 1px 0 #fff;
+        }
+        .artium-lp--light .artium-lp-num {
+          border: 1px solid rgba(255,255,255,.85); color: #C9962E;
+          background: radial-gradient(circle at 35% 28%, #FFFFFF 0%, #FCF8EF 55%, #F1E8D6 100%);
+          box-shadow:
+            0 6px 10px -4px rgba(150,115,55,.34),
+            inset 0 2px 2px #fff,
+            inset 0 -2px 4px rgba(176,146,98,.24);
+          font-family: 'Playfair Display', serif;
+        }
+        .artium-lp--light .artium-lp-step-t { color: #232A3B; font-family: 'Playfair Display', serif; font-weight: 500; }
+        .artium-lp--light .artium-lp-step-d { color: #6A7080; font-weight: 300; }
+        .artium-lp--light .artium-lp-step-d a { color: #B8862E; }
+        .artium-lp--light .artium-lp-step-d a:hover { color: #C9962E; }
+        .artium-lp--light .artium-lp-step-i { color: #C9962E; }
+
+        .artium-lp--light .artium-lp-err { color: #B23B3B; }
+
+        /* ---- footer: the gate's tones, on the same shared markup ---- */
+        .artium-lp--light .artium-gx-foot-top { background: rgba(176,146,98,.30); }
+        .artium-lp--light .artium-gx-foot-top::after { background: #C9962E; }
+        .artium-lp--light .artium-gx-foot-line { background: rgba(176,146,98,.20); }
+        .artium-lp--light .artium-gx-partner { color: #6A7080; }
+        .artium-lp--light .artium-gx-partner b { color: #C9962E; font-family: 'Playfair Display', serif; }
+        .artium-lp--light .artium-gx-social a { border-color: rgba(201,150,46,.5); color: #C9962E; }
+        .artium-lp--light .artium-gx-social a:hover { border-color: #C9962E; color: #C9962E; box-shadow: 0 0 12px rgba(201,150,46,.24); }
+        .artium-lp--light .artium-gx-foot-links span { color: #6A7080; }
+        .artium-lp--light .artium-gx-foot-links i { color: #B0AEA8; }
+        .artium-lp--light .artium-gx-copy { color: #8A8D93; }
+
       `}</style>
 
       <SpotifyPlayer
@@ -3873,6 +4052,9 @@ export default function App() {
           // reached from a tab, not a tab.
           active={view === "landing" ? "home" : selectedStudentId ? "" : appTab}
           onTab={goToTab}
+          // Only the landing screen re-skinned light (below); "app" stays
+          // the dark bar it always was.
+          light={view === "landing"}
         />
       )}
     </div>
@@ -4043,16 +4225,17 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
       d: <>Claim your promotional video on <a href="https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==" target="_blank" rel="noreferrer">aclassicaltone</a> (may be subject to fees, as per our partnership agreement).</> },
   ];
   return (
-    // The gate's world, continued. Same ground, same backdrop component, same
-    // palette and type — this is the screen immediately after the gate, and
-    // the two reading as one product matters more than either reading well
-    // alone.
-    <div className="artium-lp artium-has-tabs">
-      {/* The landing's own frame of the hall — the one with the lit floor.
-          The gate's has the conductor high on the left and nothing beneath;
-          this one puts the light on the ground, which is what the pin stands
-          in. Same room, different moment. */}
-      <GateBackdrop photo="/landing-hall.webp" />
+    // Re-skinned into the gate's current light theme (grey ground, ink/gold,
+    // Playfair + Jost) — this used to be "the gate's world, continued" in the
+    // old dark-prestige language, but the gate itself has since moved to a
+    // light theme and this screen hadn't followed. artium-lp--light scopes
+    // every override below so the shared .artium-gx-*/.artium-lp-* classes
+    // this markup still uses stay untouched for the screens that are still
+    // dark by design (signup flow, map, network, etc.) — see the CSS block
+    // for the full list of what got scoped-overridden vs. left alone.
+    <div className="artium-lp artium-lp--light artium-has-tabs">
+      {/* No GateBackdrop here any more — the gate itself dropped its photo
+          treatment for a flat grey ground, and this screen follows it. */}
 
       <header className="artium-lp-bar">
         {!myProfile && !studentLoggedOut && (
@@ -4060,12 +4243,16 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
             <ArrowLeft size={19} strokeWidth={1.9} />
           </button>
         )}
-        {/* The gate's lockup, not the app's. The reference draws the header
-            word smaller than the gate does and keeps the crescendo under it,
-            but this screen sits one tap from the gate — a wordmark that
-            changes size and grows a mark between the two reads as a fault,
-            not as a design. Consistency wins where the two disagree. */}
-        <GateLogo word={22} />
+        {/* The gate's actual current lockup (ink caps, crossbar-less A) —
+            not <GateLogo>, which is the OLD dark gate's champagne pin+serif
+            mark and colors itself inline (can't be re-themed by CSS). Same
+            "A" glyph as src/components/entrygate/ArtiumGate.jsx's header. */}
+        <span className="artium-lp-word" aria-label="ARTIUM">
+          <svg className="artium-lp-word-a" viewBox="0 0 15 15" aria-hidden="true">
+            <path d="M7.5 0.9 L1.4 14.4 M7.5 0.9 L13.6 14.4" stroke="currentColor" strokeWidth="2.85" fill="none" />
+          </svg>
+          <span aria-hidden="true">RTIUM</span>
+        </span>
         <div className="artium-lp-right">
           <MusicBtn playing={musicOn} onToggle={onMusicToggle} />
           <span className="artium-gx-count">
@@ -4114,14 +4301,14 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
                 would letterbox it. The globe and the count are positioned
                 against this wrapper, so it has to be the thing that moves. */}
             <span className="artium-globepin" style={{ height: "min(299px, 50.7vw)", aspectRatio: "560 / 837" }}>
-              {/* glo-pin-ink is glo-pin recoloured to matte black (#222222) by
-                  tools/recolor-pin.py — same artwork, same alpha, shading
-                  kept, and the bezel ring now painted a gold that ramps from
-                  #F9DEA1 at the crown to #B08642 at the foot. It was neutral
-                  white, which was right on a white page and reads as a hole
-                  punched through the artwork on this one. */}
+              {/* Back to the original glo-pin (neutral bezel) now that the
+                  page is light again — glo-pin-ink was recoloured matte
+                  black by tools/recolor-pin.py specifically for the old dark
+                  ground; on this grey it read as a hole punched through the
+                  artwork, which is exactly the failure its own comment
+                  used to warn about for the light case. */}
               <img
-                src="/glo-pin-ink.png"
+                src="/glo-pin.png"
                 alt=""
                 width={560}
                 height={837}
@@ -8241,9 +8428,9 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
  * Promote and Lessons take the space, since those were reachable only from
  * the strip that this replaces.
  */
-function BottomTabs({ items, active, onTab }) {
+function BottomTabs({ items, active, onTab, light }) {
   return (
-    <nav className="artium-aw-tabs">
+    <nav className={`artium-aw-tabs${light ? " artium-aw-tabs--light" : ""}`}>
       {items.map(({ k, label, Icon, attention }) => (
         <button key={k} data-on={k === active ? "1" : "0"} onClick={() => onTab(k)} aria-label={label}>
           <span style={{ position: "relative", display: "inline-flex" }}>
