@@ -693,7 +693,8 @@ export default function ArtiumGate({
                 rel="noreferrer"
                 aria-label="aclassicaltone on Instagram"
               >
-                <img src="/partner-aclassicaltone.png" alt="aclassicaltone" width="54" height="54" />
+                <img src="/partner-aclassicaltone.png" alt="" width="54" height="54" />
+                <span className="partner-name">aclassicaltone</span>
               </a>
             </div>
           </div>

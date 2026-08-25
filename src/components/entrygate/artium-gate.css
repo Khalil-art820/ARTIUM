@@ -499,10 +499,19 @@
 /* The partner's own Instagram avatar as the link — a disc in the pucks'
    shadow language, clickable through to the profile. */
 .agate .partner-avatar{
-  display:inline-flex;border-radius:50%;line-height:0;
+  display:inline-flex;flex-direction:column;align-items:center;gap:7px;
+  text-decoration:none;line-height:0;
+}
+.agate .partner-avatar img{
+  border-radius:50%;display:block;
   box-shadow:
     0 8px 14px -4px var(--warm-shadow),
     0 2px 4px rgba(150,115,55,.14);
   border:1px solid rgba(255,255,255,.85);
 }
-.agate .partner-avatar img{border-radius:50%;display:block;}
+/* The handle beneath: plain, small, modern — the page's sans, lowercase. */
+.agate .partner-name{
+  font-family:'Jost',system-ui,sans-serif;
+  font-size:12.5px;font-weight:400;letter-spacing:.02em;
+  color:var(--muted);line-height:1;text-transform:lowercase;
+}
