@@ -243,11 +243,11 @@ const TeacherIcon = () => (
 /* Solid gold silhouettes for 02/03/04 — filled shapes (fill=currentColor),
    no strokes, same visual family as the masked teacher figure (item 1).
    "Knockouts" (the newspaper's text bars/note, the quill's spine/barb) are
-   drawn in the literal page cream (#EFEFED, i.e. --bg) on top of the gold
+   drawn in the literal page cream (#F4F4F3, i.e. --bg) on top of the gold
    fill rather than actually cut via mask/evenodd — simpler and avoids any
    risk of an evenodd winding-order mistake with no way to render/check it
    here. Bold, simple massing per the brief, not fine linework. */
-const CREAM = "#EFEFED";
+const CREAM = "#F4F4F3";
 
 const ConcertIcon = () => (
   <svg width="64" height="64" viewBox="0 0 96 96" fill="currentColor">
@@ -366,15 +366,15 @@ function FeatureCard({ card, onActivate, rootRef }) {
     >
       <svg className="cardsvg" viewBox="0 0 260 412" aria-hidden="true">
         <defs>
-          {/* Card surface now matches the page ground (--bg #EFEFED)
+          {/* Card surface now matches the page ground (--bg #F4F4F3)
               exactly, per the client's follow-up — flat stops, same
               gradient element/id so the rest of the layer stack (keylines,
               groove filter, shade overlay, drop-shadows) is untouched. */}
           <linearGradient id={gp} gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="412">
-            <stop offset="0" stopColor="#EFEFED" /><stop offset="1" stopColor="#EFEFED" />
+            <stop offset="0" stopColor="#F4F4F3" /><stop offset="1" stopColor="#F4F4F3" />
           </linearGradient>
           <linearGradient id={gn} gradientUnits="userSpaceOnUse" x1="0" y1="10" x2="0" y2="402">
-            <stop offset="0" stopColor="#EFEFED" /><stop offset="1" stopColor="#EFEFED" />
+            <stop offset="0" stopColor="#F4F4F3" /><stop offset="1" stopColor="#F4F4F3" />
           </linearGradient>
           <linearGradient id={sh} gradientUnits="userSpaceOnUse" x1="0" y1="240" x2="0" y2="402">
             <stop offset="0" stopColor="rgba(176,146,98,0)" /><stop offset="1" stopColor="rgba(176,146,98,.16)" />
@@ -433,8 +433,8 @@ export default function ArtiumGate({
   React.useEffect(() => {
     const prevBody = document.body.style.backgroundColor;
     const prevHtml = document.documentElement.style.backgroundColor;
-    document.body.style.backgroundColor = "#EFEFED";
-    document.documentElement.style.backgroundColor = "#EFEFED";
+    document.body.style.backgroundColor = "#F4F4F3";
+    document.documentElement.style.backgroundColor = "#F4F4F3";
     return () => {
       document.body.style.backgroundColor = prevBody;
       document.documentElement.style.backgroundColor = prevHtml;
