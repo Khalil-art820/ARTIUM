@@ -10,10 +10,12 @@ body,
   overflow-x: hidden;
   /* Anything the app doesn't paint over falls through to here: the safe area
      under the home indicator, and the rubber band at either end of a scroll.
-     The app is dark throughout now, so a white document shows as a flash of
-     the old theme at exactly the moments a page is already moving. */
-  background: #0F1012;
-  color-scheme: dark;
+     The whole app now runs on the entry gate's light theme, so this is the
+     gate's own ground (#F4F4F3) rather than the old dark #0F1012 — a flash
+     of the old dark theme at exactly the moments a page is already moving
+     would be the same failure this comment used to describe, just inverted. */
+  background: #F4F4F3;
+  color-scheme: light;
 }
 
 /* Prevent horizontal scroll on all screens */

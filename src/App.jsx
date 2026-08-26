@@ -44,40 +44,50 @@ import "leaflet/dist/leaflet.css";
 // words now read backwards, but they are threaded through several thousand
 // lines and the roles they stand for have not changed. Renaming them is a
 // separate job from re-tinting them; this is the re-tint.
+// Re-themed to the entry gate's light system (ground #F4F4F3, ink #232A3B,
+// gold #C9962E) — every screen built on C now reads as one continuum with
+// the gate and the student landing rather than "the gate, then a dark
+// app". Names are unchanged (ink/parchment/brass/etc. are still what every
+// call site expects), only the values moved from "a lit room" to "the
+// gate's page". Read each token's old comment before you assume its new
+// value: ink/parchment were GROUNDS (dark), ivory/inkText were TEXT ON
+// THOSE GROUNDS (was white, is now ink) — flipping both to the same thing
+// would have erased the surface/text distinction that makes any of this
+// legible.
 const C = {
-  ink: "#0F1012",              // the page
-  inkSoft: "#15161B",          // a surface raised off it
-  inkLine: "rgba(255,255,255,0.09)",
-  parchment: "#15161B",        // cards
-  parchmentDim: "#101116",
-  parchmentLine: "rgba(255,255,255,0.07)",
-  ivory: "#FFFFFF",            // primary text
-  ivoryDim: "#8B8B8B",         // secondary text
-  inkText: "#FFFFFF",
-  inkTextDim: "#8B8B8B",
-  brass: "#E9C88D",            // the champagne, not the old marigold
-  brassText: "#0F1012",        // text sitting on the accent
-  brassLabel: "#E6DAB0",
-  brassDim: "rgba(239,208,155,0.14)",
-  // Both of these were picked to carry on white. On #0F1012 the old
-  // burgundy is nearly unreadable, so each is lifted to the tint that keeps
-  // its meaning at this luminance.
-  burgundy: "#E8908F",
-  forest: "#A8D5B5",
+  ink: "#F4F4F3",              // the page — was the dark ground, now the gate's grey
+  inkSoft: "#FFFFFF",          // a surface raised off it — was a lighter dark, now white
+  inkLine: "rgba(176,146,98,0.30)",   // the gate's --contour
+  parchment: "#FFFFFF",        // cards — was near-black, now white slabs
+  parchmentDim: "#F2F2F0",     // a quieter card tone, off pure white
+  parchmentLine: "rgba(176,146,98,0.18)",
+  ivory: "#232A3B",            // primary text — was white-on-dark, now the gate's ink
+  ivoryDim: "#6A7080",         // secondary text — the gate's --muted
+  inkText: "#232A3B",
+  inkTextDim: "#6A7080",
+  brass: "#C9962E",            // the gate's --gold, replacing the champagne
+  brassText: "#3A2E10",        // text sitting on the gold accent — the gate's own pill-text brown, not white (white-on-gold fails contrast at this lightness)
+  brassLabel: "#B8862E",       // a deeper gold for inline links/labels on white
+  brassDim: "rgba(201,150,46,0.14)",
+  // Lifted for a dark ground before; now picked to hold up on white/cream
+  // instead — the #B23B3B family the gate's own error text uses, and a
+  // muted forest green with enough weight to read as text on cream.
+  burgundy: "#B23B3B",
+  forest: "#3F8B5C",
 };
 
-// The gate's card, as a style object, for the panels that used to be white
-// boxes. Their old shadow was a black hairline ring and a soft drop — both
-// drawn to lift a white card off a white page, and both invisible here, which
-// left every panel merged into the ground behind it.
+// The gate's card, as a style object — back to an actual white box now that
+// the app is light again, not the white-tinted glass this was rebuilt as
+// for the dark screens in between (that fill, and its black hairline/drop
+// shadow, both need a dark ground to read against; on light they'd merge
+// into the page the same way the white-on-white original did). Same rim
+// recipe as .artium-su-card / the student landing's step pills: white
+// fill, a warm contour border, a warm drop shadow.
 const PANEL = {
   borderRadius: 18,
-  border: "1px solid rgba(239,208,155,0.14)",
-  background:
-    "radial-gradient(130% 110% at 6% -6%, rgba(255,255,255,0.075) 0%, rgba(255,255,255,0.042) 32%, rgba(255,255,255,0.018) 64%, rgba(255,255,255,0.005) 100%), rgba(255,255,255,0.014)",
-  WebkitBackdropFilter: "blur(18px)",
-  backdropFilter: "blur(18px)",
-  boxShadow: "0 14px 34px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.07)",
+  border: "1px solid rgba(176,146,98,0.30)",
+  background: "#FFFFFF",
+  boxShadow: "0 20px 40px -22px rgba(150,115,55,0.38), inset 0 1px 0 #fff",
   padding: "18px 18px",
 };
 
@@ -124,28 +134,30 @@ const isAdminEmail = (email) => (email || "").trim().toLowerCase() === ADMIN_EMA
 const HEADER_CONTROL = 32;
 
 /**
- * The entry gate runs on its own palette — a lit room rather than a white
- * page — so it does not draw from C, which is built for the light screens
- * behind it. Kept together here so the gate's colours can be read at once.
+ * Used to run on its own dark palette, separate from C — a lit room rather
+ * than a white page. The whole app moved onto the entry gate's light
+ * theme, so GATE now IS that theme (values below match C's and the real
+ * gate's --gold #C9962E) rather than a second, contradicting palette.
+ * Kept as its own object (not merged into C) only because call sites still
+ * reference GATE.* by name throughout this file.
  */
 const GATE = {
-  bg: "#0F1012",
-  card: "#17181C",
-  cardGlass: "rgba(255,255,255,0.03)",
-  cardLine: "rgba(239,208,155,0.18)",
-  // Two golds, because the reference uses two. Type, hairlines and the
-  // wordmark are a pale champagne; only the filled discs go to the deeper
-  // amber. Sampled off the mockup rather than picked: #D4AF37 sits at 0.74
-  // saturation where the reference is at 0.37, which is the whole of the
-  // difference between "gold" and "yellow".
-  gold: "#EFD09B",
-  goldSolid: "#D0A059",
-  goldSoft: "#E6DAB0",
-  goldDeep: "#C9A227",
-  text: "#FFFFFF",
-  text2: "#CFCFCF",
-  muted: "#8B8B8B",
-  divider: "rgba(255,255,255,0.08)",
+  bg: "#F4F4F3",
+  card: "#FFFFFF",
+  cardGlass: "rgba(176,146,98,0.05)",
+  cardLine: "rgba(176,146,98,0.30)",
+  // One gold now, matching the real gate's --gold — the "champagne vs.
+  // deeper amber" distinction below belonged to the old dark room, where
+  // hairlines needed to be paler than filled discs to both read on black.
+  // On white, one gold carries both jobs.
+  gold: "#C9962E",
+  goldSolid: "#C9962E",
+  goldSoft: "#B8862E",
+  goldDeep: "#A67B24",
+  text: "#232A3B",
+  text2: "#3A4152",
+  muted: "#6A7080",
+  divider: "rgba(176,146,98,0.20)",
 };
 // Both loaded in index.html. The fallbacks are the elegant serifs Apple and
 // Windows ship, so the gate still reads as intended in the moment before the
@@ -747,8 +759,8 @@ function Chip({ active, onClick, children, disabled = false }) {
         fontFamily: FONT_BODY,
         // brassText, not inkText: inkText is the page's type colour, which is
         // white now — and white on champagne is a 1.6:1 chip.
-        border: `1px solid ${active ? "transparent" : "rgba(255,255,255,0.12)"}`,
-        background: active ? "linear-gradient(160deg, #E9C88D, #C99A55)" : "rgba(255,255,255,0.035)",
+        border: `1px solid ${active ? "transparent" : "rgba(176,146,98,0.30)"}`,
+        background: active ? "linear-gradient(180deg, #EFD08A 0%, #DBAB4C 55%, #C9962E 100%)" : "rgba(176,146,98,0.06)",
         color: active ? C.brassText : C.ivoryDim,
         fontWeight: active ? 700 : 500,
         boxShadow: active ? "0 3px 14px rgba(233,200,141,0.20)" : "none",
@@ -799,7 +811,7 @@ function PrimaryBtn({ children, onClick, disabled, full, icon: Icon }) {
       className={`inline-flex items-center justify-center gap-2 ${full ? "w-full" : ""}`}
       style={{
         fontFamily: FONT_BODY, fontWeight: 500, fontSize: 15,
-        background: disabled ? "rgba(255,255,255,0.07)" : C.brass,
+        background: disabled ? "rgba(176,146,98,0.15)" : C.brass,
         color: disabled ? "#6E6E6E" : C.brassText,
         border: "none",
         borderRadius: 8,
@@ -936,7 +948,7 @@ function SpotifyPlayer({ open, controllerRef, onPlayingChange, onClose }) {
         // Anchored under the header pill that opens it, rather than floating in
         // a corner: every bottom corner collides with the entry gate's triangle.
         position: "fixed", top: 72, right: 16, width: 320, zIndex: 60,
-        background: "rgba(255,255,255,0.05)", border: `1px solid ${C.inkLine}`, borderRadius: 12,
+        background: "rgba(176,146,98,0.05)", border: `1px solid ${C.inkLine}`, borderRadius: 12,
         boxShadow: "0 8px 32px rgba(0,0,0,0.55)", padding: 8,
         opacity: open ? 1 : 0,
         visibility: open ? "visible" : "hidden",
@@ -1428,7 +1440,7 @@ function GlobeMap({ selectedId, onSelect, studentsByCons, height = 640, onOpenSt
         <div
           style={{
             position: "absolute", top: 12, left: 12, width: 268, zIndex: 5,
-            background: "rgba(255,255,255,0.05)", border: `1px solid ${C.inkLine}`, borderRadius: 12,
+            background: "rgba(176,146,98,0.05)", border: `1px solid ${C.inkLine}`, borderRadius: 12,
             boxShadow: "0 8px 32px rgba(0,0,0,0.55)", padding: "10px 12px",
           }}
         >
@@ -1454,7 +1466,7 @@ function GlobeMap({ selectedId, onSelect, studentsByCons, height = 640, onOpenSt
       <div style={{
         position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 4,
         display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
-        background: "rgba(255,255,255,0.05)", borderTop: `1px solid ${C.inkLine}`, padding: "7px 12px", pointerEvents: "none",
+        background: "rgba(176,146,98,0.05)", borderTop: `1px solid ${C.inkLine}`, padding: "7px 12px", pointerEvents: "none",
       }}>
         {/* Same two pin marks the flat map's legend used — without them the
             colours on the globe have nothing to key against. */}
@@ -1607,7 +1619,7 @@ function AccessGate({ onUnlock }) {
   }
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: C.inkSoft, fontFamily: FONT_BODY, padding: 24 }}>
-      <div style={{ width: "100%", maxWidth: 400, background: "rgba(255,255,255,0.05)", border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: 40, boxShadow: "0 4px 24px rgba(0,0,0,0.28)" }}>
+      <div style={{ width: "100%", maxWidth: 400, background: "rgba(176,146,98,0.05)", border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: 40, boxShadow: "0 4px 24px rgba(0,0,0,0.28)" }}>
         <div style={{ marginBottom: 28 }}>
           <Logo size={22} markSize={HEADER_CONTROL} />
           <p style={{ color: C.ivoryDim, fontSize: 14, marginTop: 12 }}>Private beta — enter access key to continue.</p>
@@ -1625,7 +1637,7 @@ function AccessGate({ onUnlock }) {
         {error && <p style={{ color: C.burgundy, fontSize: 13, marginBottom: 12 }}>Incorrect key — try again.</p>}
         <button
           onClick={attempt}
-          style={{ marginTop: 12, width: "100%", background: C.brass, color: "#FFFFFF", border: "none", borderRadius: 10, padding: "12px 0", fontSize: 15, fontWeight: 700, cursor: "pointer" }}
+          style={{ marginTop: 12, width: "100%", background: C.brass, color: C.brassText, border: "none", borderRadius: 10, padding: "12px 0", fontSize: 15, fontWeight: 700, cursor: "pointer" }}
         >Continue</button>
       </div>
     </div>
@@ -1798,7 +1810,7 @@ function AuthPrompt() {
               type="submit"
               disabled={submitting}
               style={{
-                marginTop: 4, width: "100%", background: AP_GOLD, color: "#FFFFFF", border: "none",
+                marginTop: 4, width: "100%", background: AP_GOLD, color: "#3A2E10", border: "none",
                 borderRadius: 999, padding: "12px 0", fontSize: 14.5, fontWeight: 700,
                 cursor: submitting ? "default" : "pointer", opacity: submitting ? 0.7 : 1,
               }}
@@ -2626,17 +2638,15 @@ export default function App() {
   const accountName = myProfile?.name || learnerProfile?.name || authProfile?.name || authUser?.user_metadata?.full_name || authUser?.user_metadata?.name || authUser?.email || "";
 
   return (
-    // The gate is the one dark screen in a white app, so the shell behind it
-    // has to be dark too. Two ways it showed otherwise: the wrapper rounds up
-    // to a whole pixel where the gate lands on a fraction, leaving a hairline
-    // of white along the foot; and on a phone the safe area and the rubber
-    // band at the end of a scroll both reveal whatever is underneath.
-    // "entry" is the client's rebuilt grey gate (ArtiumGate.jsx, --bg
-    // #F4F4F3) and "landing" is that same grey now that the student/
-    // graduate screen one tap past it was re-skinned to match — matching
-    // this wrapper's fill to that grey is what closes the hairline/
-    // rounding gap for both. Every other screen is still the dark shell.
-    <div style={{ fontFamily: FONT_BODY, background: (screen === "entry" || screen === "landing") ? "#F4F4F3" : screen === "composers" ? "#FFFFFF" : C.ink, minHeight: "100%", width: "100%" }}>
+    // Every screen runs on the gate's light ground now (C.ink === #F4F4F3),
+    // so this wrapper is one flat fill everywhere instead of a per-screen
+    // ternary — no more dark-shell/light-gate seam to paper over. Still its
+    // own style rather than just omitting the wrapper background: the
+    // wrapper rounds up to a whole pixel where a screen lands on a
+    // fraction, and a phone's safe area / rubber-band scroll both reveal
+    // whatever is underneath, so it still needs to be filled with the same
+    // tone as the screens themselves.
+    <div style={{ fontFamily: FONT_BODY, background: C.ink, minHeight: "100%", width: "100%" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Serif+Display&family=Fraunces:opsz,wght@9..144,500&display=swap');
         * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
@@ -3120,27 +3130,21 @@ export default function App() {
         .artium-gx-copy { font-size: 10px; font-weight: 500; color: #6E6E6E; line-height: 1.4; }
 
         /* ---- signup ------------------------------------------------------
-           The eight steps, in the gate's language rather than merely dark:
-           the same ground, the same glass panel, the same champagne. */
+           The eight steps, in the gate's language — the same grey ground,
+           the same white/contour card, the same gold. */
         .artium-su {
           position: relative; min-height: 100vh; min-height: 100dvh;
-          background:
-            radial-gradient(120% 55% at 50% -10%, #191A20 0%, transparent 62%),
-            linear-gradient(180deg, #131417 0%, #0F1012 42%, #0B0C0E 100%);
-          color: #FFFFFF; font-family: 'Manrope', -apple-system, 'Segoe UI', Roboto, sans-serif;
+          background: #F4F4F3;
+          color: #232A3B; font-family: 'Jost', -apple-system, 'Segoe UI', Roboto, sans-serif;
         }
-        /* The step's content sits on the gate's card: glass, a gold hairline,
-           and the same light from the upper left. */
+        /* The step's content sits on the gate's card: white, a contour
+           border, a warm shadow — the same rim recipe as the gate's own
+           cards/medallion and the student landing's step pills. */
         .artium-su-card {
           border-radius: 22px; padding: 22px 20px;
-          border: 1px solid rgba(239,208,155,0.15);
-          background:
-            radial-gradient(130% 110% at 6% -6%,
-              rgba(255,255,255,0.075) 0%, rgba(255,255,255,0.045) 32%,
-              rgba(255,255,255,0.020) 64%, rgba(255,255,255,0.006) 100%),
-            rgba(255,255,255,0.014);
-          -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
-          box-shadow: 0 18px 45px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.08);
+          border: 1px solid rgba(176,146,98,0.30);
+          background: #FFFFFF;
+          box-shadow: 0 20px 40px -22px rgba(150,115,55,0.38), inset 0 1px 0 #fff;
         }
         /* The stepper. A ring carrying "n of m" with the title beside it and
            the step after this one named underneath — so the flow answers
@@ -3157,8 +3161,8 @@ export default function App() {
         .artium-inst {
           display: flex; flex-direction: column; align-items: center; gap: 6px;
           padding: 10px 6px 8px; border-radius: 14px; cursor: pointer;
-          border: 1px solid rgba(255,255,255,0.09);
-          background: rgba(255,255,255,0.03);
+          border: 1px solid rgba(176,146,98,0.22);
+          background: #FFFFFF;
           transition: border-color .16s ease, background .16s ease, transform .16s ease;
         }
         .artium-inst img {
@@ -3167,23 +3171,23 @@ export default function App() {
           /* The drawings are gold already; unselected they simply sit back. */
         }
         .artium-inst span {
-          font-family: 'Manrope', -apple-system, sans-serif;
+          font-family: 'Jost', -apple-system, sans-serif;
           font-size: 10.5px; font-weight: 600; line-height: 1.25; text-align: center;
-          color: #8B8B8B; transition: color .16s ease;
+          color: #6A7080; transition: color .16s ease;
         }
-        .artium-inst:hover:not(:disabled) { border-color: rgba(239,208,155,0.32); background: rgba(255,255,255,0.05); }
+        .artium-inst:hover:not(:disabled) { border-color: rgba(201,150,46,0.45); background: #FCFAF5; }
         .artium-inst:hover:not(:disabled) img { opacity: 0.9; }
         /* Two already chosen. Faded rather than hidden — the sheet is the point
            of this grid, and removing thirty-four drawings to say "not now"
            would cost more than the greying does. */
         .artium-inst:disabled { cursor: default; opacity: 0.34; }
         .artium-inst--on {
-          border-color: rgba(239,208,155,0.65);
-          background: rgba(239,208,155,0.09);
-          box-shadow: 0 0 0 1px rgba(239,208,155,0.18) inset;
+          border-color: rgba(201,150,46,0.65);
+          background: rgba(201,150,46,0.10);
+          box-shadow: 0 0 0 1px rgba(201,150,46,0.22) inset;
         }
         .artium-inst--on img { opacity: 1; }
-        .artium-inst--on span { color: #FFFFFF; }
+        .artium-inst--on span { color: #232A3B; }
         @media (max-width: 380px) {
           .artium-inst-grid { grid-template-columns: repeat(auto-fill, minmax(74px, 1fr)); }
           .artium-inst img { width: 32px; height: 32px; }
@@ -3194,19 +3198,19 @@ export default function App() {
         .artium-su-ring svg circle { transition: stroke-dashoffset .5s cubic-bezier(.22,1,.36,1); }
         .artium-su-ring span {
           position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-          font-family: 'Manrope', -apple-system, sans-serif; font-size: 11.5px; font-weight: 700;
-          color: #FFFFFF; letter-spacing: 0.01em; white-space: nowrap;
+          font-family: 'Jost', -apple-system, sans-serif; font-size: 11.5px; font-weight: 700;
+          color: #232A3B; letter-spacing: 0.01em; white-space: nowrap;
         }
         .artium-su-head-text { min-width: 0; flex: 1; }
         .artium-su-title {
-          margin: 0; color: #FFFFFF; line-height: 1.12;
-          font-family: 'Cormorant Garamond', 'Didot', 'Bodoni 72', Georgia, serif;
-          font-weight: 700; font-size: clamp(21px, 6.4vw, 30px);
+          margin: 0; color: #232A3B; line-height: 1.12;
+          font-family: 'Playfair Display', serif;
+          font-weight: 600; font-size: clamp(21px, 6.4vw, 30px);
         }
         .artium-su-next {
-          margin: 5px 0 0; font-size: 11.5px; font-weight: 500; color: #7C7C7C; line-height: 1.35;
+          margin: 5px 0 0; font-size: 11.5px; font-weight: 500; color: #6A7080; line-height: 1.35;
         }
-        .artium-su-next b { color: #E6DAB0; font-weight: 600; }
+        .artium-su-next b { color: #B8862E; font-weight: 600; }
 
         /* Back and Next, pinned. On a form this long the action should not
            have to be scrolled to. */
@@ -3214,26 +3218,26 @@ export default function App() {
           position: sticky; bottom: 0; z-index: 20; margin-top: 22px;
           display: flex; align-items: center; gap: 11px;
           padding: 12px 24px calc(14px + env(safe-area-inset-bottom, 0px));
-          background: linear-gradient(180deg, rgba(11,12,14,0) 0%, rgba(11,12,14,0.92) 26%, #0B0C0E 100%);
+          background: linear-gradient(180deg, rgba(244,244,243,0) 0%, rgba(244,244,243,0.92) 26%, #F4F4F3 100%);
         }
         .artium-su-back {
           flex: 0 0 auto; padding: 12px 22px; border-radius: 999px; cursor: pointer;
-          border: 1px solid rgba(255,255,255,0.13); background: rgba(255,255,255,0.04);
-          color: #CFCFCF; font: inherit; font-size: 14px; font-weight: 600;
+          border: 1px solid rgba(176,146,98,0.30); background: #FFFFFF;
+          color: #3A4152; font: inherit; font-size: 14px; font-weight: 600;
           transition: border-color .25s ease, color .25s ease, background .25s ease;
         }
-        .artium-su-back:hover { border-color: rgba(239,208,155,0.42); color: #EFD09B; background: rgba(255,255,255,0.06); }
+        .artium-su-back:hover { border-color: rgba(201,150,46,0.55); color: #C9962E; background: #FCFAF5; }
         .artium-su-next-btn {
           flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
           padding: 13px 22px; border-radius: 999px; border: none; cursor: pointer;
-          background: linear-gradient(160deg, #E9C88D, #C99A55); color: #0F1012;
+          background: linear-gradient(180deg, #EFD08A 0%, #DBAB4C 55%, #C9962E 100%); color: #3A2E10;
           font: inherit; font-size: 15px; font-weight: 700;
-          box-shadow: 0 6px 22px rgba(233,200,141,0.22);
+          box-shadow: 0 12px 24px -10px rgba(176,126,31,0.55);
           transition: background .3s ease, box-shadow .3s ease, transform .2s ease;
         }
-        .artium-su-next-btn:hover:not(:disabled) { background: linear-gradient(160deg, #F2D49B, #D4A75F); transform: translateY(-1px); }
+        .artium-su-next-btn:hover:not(:disabled) { background: linear-gradient(180deg, #F4DBA0 0%, #E4BB63 55%, #D3A63B 100%); transform: translateY(-1px); }
         .artium-su-next-btn:disabled {
-          background: rgba(255,255,255,0.07); color: #6E6E6E;
+          background: rgba(176,146,98,0.15); color: #9A9A9A;
           box-shadow: none; cursor: not-allowed;
         }
 
@@ -3263,61 +3267,62 @@ export default function App() {
         .artium-su-door {
           display: flex; align-items: center; gap: 13px; width: 100%;
           padding: 14px 15px; border-radius: 16px; cursor: pointer; text-align: left;
-          border: 1px solid rgba(255,255,255,0.09); background: rgba(255,255,255,0.025);
+          border: 1px solid rgba(176,146,98,0.25); background: #FFFFFF;
           color: inherit; font: inherit;
           transition: border-color .25s ease, background .25s ease, transform .25s ease;
         }
-        .artium-su-door:hover { border-color: rgba(239,208,155,0.42); background: rgba(255,255,255,0.05); transform: translateY(-2px); }
+        .artium-su-door:hover { border-color: rgba(201,150,46,0.5); background: #FCFAF5; transform: translateY(-2px); }
         .artium-su-door-i {
           width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
-          border: 1px solid rgba(239,208,155,0.32); color: #E3BB7A;
+          border: 1px solid rgba(201,150,46,0.45); color: #C9962E;
           display: flex; align-items: center; justify-content: center;
         }
         .artium-su-door-t {
-          margin: 0; font-family: 'Cormorant Garamond', 'Didot', 'Bodoni 72', Georgia, serif;
-          font-weight: 700; font-size: 16px; color: #FFFFFF; line-height: 1.2;
+          margin: 0; font-family: 'Playfair Display', serif;
+          font-weight: 600; font-size: 16px; color: #232A3B; line-height: 1.2;
         }
-        .artium-su-door-d { margin: 3px 0 0; font-size: 11.5px; color: #8B8B8B; line-height: 1.45; }
+        .artium-su-door-d { margin: 3px 0 0; font-size: 11.5px; color: #6A7080; line-height: 1.45; }
         /* The chosen door, restated at the top of the panel it opened, with
            the way back out. */
         .artium-su-chosen {
           display: flex; align-items: center; gap: 11px; margin-bottom: 14px;
           padding: 11px 14px; border-radius: 14px;
-          border: 1px solid rgba(239,208,155,0.28); background: rgba(239,208,155,0.05);
+          border: 1px solid rgba(201,150,46,0.35); background: rgba(201,150,46,0.07);
         }
-        .artium-su-chosen p { margin: 0; font-size: 12.5px; color: #E6DAB0; font-weight: 600; line-height: 1.35; }
+        .artium-su-chosen p { margin: 0; font-size: 12.5px; color: #B8862E; font-weight: 600; line-height: 1.35; }
         .artium-su-change {
           margin-left: auto; flex-shrink: 0; padding: 6px 12px; border-radius: 999px;
-          border: 1px solid rgba(255,255,255,0.14); background: none; color: #CFCFCF;
+          border: 1px solid rgba(176,146,98,0.30); background: none; color: #6A7080;
           font: inherit; font-size: 11.5px; font-weight: 600; cursor: pointer;
         }
-        .artium-su-change:hover { border-color: rgba(239,208,155,0.5); color: #EFD09B; }
+        .artium-su-change:hover { border-color: rgba(201,150,46,0.55); color: #C9962E; }
 
         /* ---- forms ------------------------------------------------------
            The signup fields are styled inline, which cannot express :focus,
            a placeholder colour, or what the browser does to an autofilled
            input. All three live here. */
-        input::placeholder, textarea::placeholder { color: #6E6E6E; opacity: 1; }
+        input::placeholder, textarea::placeholder { color: #9A9A9A; opacity: 1; }
         input:focus, textarea:focus, select:focus {
-          border-color: rgba(239,208,155,0.55) !important;
-          box-shadow: 0 0 0 3px rgba(239,208,155,0.10) !important;
+          border-color: rgba(201,150,46,0.55) !important;
+          box-shadow: 0 0 0 3px rgba(201,150,46,0.14) !important;
         }
         /* Chrome paints autofilled fields a solid pale yellow and sets the
-           text near-black. Neither is overridable directly, so the fill is
-           faked with a large inset shadow and the text colour is forced. */
+           text near-black — on this light theme both are already close to
+           what the field wants, so only the caret/text colour is forced
+           back to ink rather than faking the fill too. */
         input:-webkit-autofill,
         input:-webkit-autofill:hover,
         input:-webkit-autofill:focus {
-          -webkit-text-fill-color: #FFFFFF;
-          -webkit-box-shadow: 0 0 0 1000px #17181D inset;
-          caret-color: #FFFFFF;
+          -webkit-text-fill-color: #232A3B;
+          -webkit-box-shadow: 0 0 0 1000px #FFFFFF inset;
+          caret-color: #232A3B;
           transition: background-color 9999s ease-out 0s;
         }
-        /* The date and time pickers ship a black glyph, invisible on this
-           ground until it is inverted. */
+        /* The date and time pickers ship a black glyph — correct as-is on a
+           light ground, so no inversion needed any more. */
         input[type="date"]::-webkit-calendar-picker-indicator,
-        input[type="time"]::-webkit-calendar-picker-indicator { filter: invert(1) opacity(0.55); cursor: pointer; }
-        select option { background: #17181D; color: #FFFFFF; }
+        input[type="time"]::-webkit-calendar-picker-indicator { cursor: pointer; }
+        select option { background: #FFFFFF; color: #232A3B; }
 
         /* ---- Artium's World -------------------------------------------
            The network page, in the gate's language. Matte black ground, the
@@ -3325,8 +3330,8 @@ export default function App() {
            and champagne the entry gate uses. */
         .artium-aw {
           position: relative; min-height: 100vh; min-height: 100dvh;
-          background: radial-gradient(120% 70% at 50% 0%, #15161B 0%, #0C0D10 55%, #08090B 100%);
-          color: #FFFFFF; font-family: 'Manrope', -apple-system, 'Segoe UI', Roboto, sans-serif;
+          background: #F4F4F3;
+          color: #232A3B; font-family: 'Jost', -apple-system, 'Segoe UI', Roboto, sans-serif;
           display: flex; flex-direction: column; overflow-x: hidden;
           padding-bottom: calc(62px + env(safe-area-inset-bottom, 0px));
         }
@@ -3339,29 +3344,29 @@ export default function App() {
         }
         .artium-aw-round {
           width: 34px; height: 34px; border-radius: 50%; padding: 0; flex-shrink: 0;
-          border: 1px solid rgba(239,208,155,0.42); background: transparent;
-          color: #EFD09B; cursor: pointer;
+          border: 1px solid rgba(176,146,98,0.45); background: #FFFFFF;
+          color: #C9962E; cursor: pointer;
           display: inline-flex; align-items: center; justify-content: center;
           transition: border-color .25s ease, box-shadow .25s ease, transform .25s ease;
         }
-        .artium-aw-round:hover { border-color: #EFD09B; box-shadow: 0 0 16px rgba(239,208,155,0.26); transform: scale(1.05); }
+        .artium-aw-round:hover { border-color: #C9962E; box-shadow: 0 4px 16px rgba(150,115,55,0.26); transform: scale(1.05); }
         .artium-aw-bar-right { display: flex; align-items: center; justify-content: flex-end; gap: 12px; }
-        .artium-aw-count { display: inline-flex; align-items: center; gap: 6px; color: #FFFFFF; font-size: 14px; font-weight: 600; }
+        .artium-aw-count { display: inline-flex; align-items: center; gap: 6px; color: #232A3B; font-size: 14px; font-weight: 600; }
 
         /* Eyebrow with a rule running out either side. */
         .artium-aw-eyebrow {
           display: flex; align-items: center; gap: 12px; margin: 6px 0 0;
           font-size: 10px; font-weight: 600; letter-spacing: 0.24em;
-          text-transform: uppercase; color: #E6DAB0; white-space: nowrap;
+          text-transform: uppercase; color: #B8862E; white-space: nowrap;
         }
-        .artium-aw-eyebrow i { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(239,208,155,0.5)); }
-        .artium-aw-eyebrow i:last-child { background: linear-gradient(90deg, rgba(239,208,155,0.5), transparent); }
+        .artium-aw-eyebrow i { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(201,150,46,0.5)); }
+        .artium-aw-eyebrow i:last-child { background: linear-gradient(90deg, rgba(201,150,46,0.5), transparent); }
         .artium-aw-h1 {
-          margin: 10px 0 0; text-align: center; color: #FFFFFF;
-          font-family: 'Cormorant Garamond', 'Didot', 'Bodoni 72', Georgia, serif;
-          font-weight: 700; font-size: clamp(22px, 6.6vw, 34px); line-height: 1.14;
+          margin: 10px 0 0; text-align: center; color: #232A3B;
+          font-family: 'Playfair Display', serif;
+          font-weight: 600; font-size: clamp(22px, 6.6vw, 34px); line-height: 1.14;
         }
-        .artium-aw-sub { margin: 8px 0 0; text-align: center; font-size: 12.5px; font-weight: 500; color: #9C9C9C; line-height: 1.5; }
+        .artium-aw-sub { margin: 8px 0 0; text-align: center; font-size: 12.5px; font-weight: 500; color: #6A7080; line-height: 1.5; }
 
         /* The globe, and the gold orbits the reference draws around it. The
            rings are CSS ellipses rather than geometry in the scene: they sit
@@ -3372,120 +3377,120 @@ export default function App() {
            wider than it is tall runs off both edges of the phone. */
         .artium-aw-ring {
           position: absolute; left: 50%; top: 52%; pointer-events: none;
-          border: 1px solid rgba(239,208,155,0.30); border-radius: 50%;
+          border: 1px solid rgba(201,150,46,0.30); border-radius: 50%;
           transform-style: preserve-3d;
         }
-        .artium-aw-ring--a { height: 84%; aspect-ratio: 1; transform: translate(-50%,-50%) rotateX(75deg) rotate(-14deg); border-color: rgba(239,208,155,0.38); }
-        .artium-aw-ring--b { height: 97%; aspect-ratio: 1; transform: translate(-50%,-50%) rotateX(71deg) rotate(13deg); border-color: rgba(239,208,155,0.20); }
+        .artium-aw-ring--a { height: 84%; aspect-ratio: 1; transform: translate(-50%,-50%) rotateX(75deg) rotate(-14deg); border-color: rgba(201,150,46,0.40); }
+        .artium-aw-ring--b { height: 97%; aspect-ratio: 1; transform: translate(-50%,-50%) rotateX(71deg) rotate(13deg); border-color: rgba(201,150,46,0.22); }
         .artium-aw-glow {
           position: absolute; left: 50%; top: 50%; width: 96%; height: 96%;
           transform: translate(-50%,-50%); border-radius: 50%; pointer-events: none;
-          box-shadow: 0 0 70px 12px rgba(239,208,155,0.10);
+          box-shadow: 0 0 70px 12px rgba(201,150,46,0.10);
         }
 
         /* Stats: three columns, hairlines between, as the reference draws. */
         .artium-aw-stats {
           display: flex; align-items: stretch; margin-top: 4px;
-          border-radius: 18px; border: 1px solid rgba(239,208,155,0.16);
-          background: rgba(255,255,255,0.028);
-          -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
-          box-shadow: 0 14px 34px rgba(0,0,0,0.38);
+          border-radius: 18px; border: 1px solid rgba(176,146,98,0.30);
+          background: linear-gradient(180deg, #FCFCFB 0%, #F2F2F0 70%, #EAEAE8 100%);
+          box-shadow: 0 14px 34px -18px rgba(150,115,55,0.38), inset 0 1px 0 #fff;
         }
         .artium-aw-stat { flex: 1 1 0; min-width: 0; padding: 13px 6px; text-align: center; }
-        .artium-aw-stat + .artium-aw-stat { border-left: 1px solid rgba(255,255,255,0.08); }
-        .artium-aw-stat-n { display: inline-flex; align-items: center; gap: 6px; font-size: 17px; font-weight: 700; color: #FFFFFF; line-height: 1; }
-        .artium-aw-stat-n svg { color: #E3BB7A; flex-shrink: 0; }
-        .artium-aw-stat-l { margin: 5px 0 0; font-size: 10.5px; font-weight: 500; color: #8B8B8B; }
+        .artium-aw-stat + .artium-aw-stat { border-left: 1px solid rgba(176,146,98,0.25); }
+        .artium-aw-stat-n { display: inline-flex; align-items: center; gap: 6px; font-size: 17px; font-weight: 700; color: #232A3B; line-height: 1; }
+        .artium-aw-stat-n svg { color: #C9962E; flex-shrink: 0; }
+        .artium-aw-stat-l { margin: 5px 0 0; font-size: 10.5px; font-weight: 500; color: #6A7080; }
 
-        /* Segmented control. The active half is the amber the gate fills its
-           buttons with; the track is the same glass as the cards. */
+        /* Segmented control. The active half is the gold pill the gate fills
+           its buttons with; the track is a light ground rather than dark
+           glass. */
         .artium-aw-seg {
           display: flex; margin-top: 14px; padding: 4px; gap: 4px;
-          border-radius: 999px; border: 1px solid rgba(239,208,155,0.18);
-          background: rgba(255,255,255,0.025);
+          border-radius: 999px; border: 1px solid rgba(176,146,98,0.30);
+          background: #F2F2F0;
         }
         .artium-aw-seg button {
           flex: 1 1 0; padding: 9px 6px; border: none; border-radius: 999px; cursor: pointer;
-          background: transparent; color: #CFCFCF; font: inherit; font-size: 12.5px; font-weight: 600;
+          background: transparent; color: #6A7080; font: inherit; font-size: 12.5px; font-weight: 600;
           transition: background .3s ease, color .3s ease, box-shadow .3s ease;
         }
         .artium-aw-seg button[data-on="1"] {
-          background: linear-gradient(160deg, #E9C88D, #C99A55); color: #0F1012;
-          box-shadow: 0 4px 16px rgba(239,208,155,0.22);
+          background: linear-gradient(180deg, #EFD08A 0%, #DBAB4C 55%, #C9962E 100%); color: #3A2E10;
+          box-shadow: 0 4px 16px rgba(176,126,31,0.35);
         }
 
         .artium-aw-find { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
         .artium-aw-field {
           flex: 1; min-width: 0; display: flex; align-items: center; gap: 9px;
           height: 44px; padding: 0 15px; border-radius: 999px;
-          border: 1px solid rgba(255,255,255,0.10); background: rgba(255,255,255,0.03);
+          border: 1px solid rgba(176,146,98,0.30); background: #FFFFFF;
         }
-        .artium-aw-field svg { color: #7C7C7C; flex-shrink: 0; }
+        .artium-aw-field svg { color: #6A7080; flex-shrink: 0; }
         .artium-aw-field input {
           flex: 1; min-width: 0; background: none; border: none; outline: none;
-          color: #FFFFFF; font: inherit; font-size: 12.5px;
+          color: #232A3B; font: inherit; font-size: 12.5px;
         }
-        .artium-aw-field input::placeholder { color: #6E6E6E; }
+        .artium-aw-field input::placeholder { color: #9A9A9A; }
         .artium-aw-filter {
           width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0; padding: 0;
-          border: 1px solid rgba(239,208,155,0.5); background: transparent; color: #EFD09B;
+          border: 1px solid rgba(201,150,46,0.55); background: #FFFFFF; color: #C9962E;
           display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
           transition: border-color .25s ease, box-shadow .25s ease;
         }
-        .artium-aw-filter:hover { border-color: #EFD09B; box-shadow: 0 0 16px rgba(239,208,155,0.25); }
-        .artium-aw-hint { margin: 11px 0 0; text-align: center; font-size: 11.5px; color: #7C7C7C; line-height: 1.5; }
+        .artium-aw-filter:hover { border-color: #C9962E; box-shadow: 0 4px 16px rgba(150,115,55,0.25); }
+        .artium-aw-hint { margin: 11px 0 0; text-align: center; font-size: 11.5px; color: #6A7080; line-height: 1.5; }
 
         .artium-aw-listhead { display: flex; align-items: center; gap: 9px; margin: 22px 0 12px; }
         .artium-aw-listhead h2 {
-          margin: 0; font-family: 'Cormorant Garamond', 'Didot', 'Bodoni 72', Georgia, serif;
-          font-weight: 700; font-size: 21px; color: #FFFFFF; line-height: 1;
+          margin: 0; font-family: 'Playfair Display', serif;
+          font-weight: 600; font-size: 21px; color: #232A3B; line-height: 1;
         }
-        .artium-aw-listhead span { font-size: 11.5px; color: #7C7C7C; }
+        .artium-aw-listhead span { font-size: 11.5px; color: #6A7080; }
         .artium-aw-sort {
           margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
           height: 34px; padding: 0 12px; border-radius: 999px; cursor: pointer;
-          border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.03);
-          color: #CFCFCF; font: inherit; font-size: 12px; font-weight: 500;
+          border: 1px solid rgba(176,146,98,0.30); background: #FFFFFF;
+          color: #6A7080; font: inherit; font-size: 12px; font-weight: 500;
         }
 
         .artium-aw-list { display: flex; flex-direction: column; gap: 9px; }
         .artium-aw-row {
           display: flex; align-items: center; gap: 13px; width: 100%;
           padding: 11px 13px; border-radius: 16px; cursor: pointer; text-align: left;
-          border: 1px solid rgba(255,255,255,0.07);
-          background: rgba(255,255,255,0.022);
+          border: 1px solid rgba(176,146,98,0.25);
+          background: #FFFFFF;
           color: inherit; font: inherit;
           transition: border-color .25s ease, background .25s ease, transform .25s ease;
         }
-        .artium-aw-row:hover { border-color: rgba(239,208,155,0.34); background: rgba(255,255,255,0.045); transform: translateY(-2px); }
+        .artium-aw-row:hover { border-color: rgba(201,150,46,0.5); background: #FCFAF5; transform: translateY(-2px); }
         /* A monogram, not a logo: the schools have no marks in this project,
            and admins can add more at any time — a lettered tile is the one
            treatment that covers every row without a missing-image hole. */
         .artium-aw-mono {
           width: 58px; height: 44px; border-radius: 10px; flex-shrink: 0;
-          border: 1px solid rgba(255,255,255,0.09); background: rgba(255,255,255,0.04);
+          border: 1px solid rgba(176,146,98,0.30); background: #F4F4F3;
           display: flex; align-items: center; justify-content: center;
-          font-family: 'Cormorant Garamond', 'Didot', 'Bodoni 72', Georgia, serif;
-          font-weight: 600; font-size: 13px; letter-spacing: 0.02em; color: #E6DAB0;
+          font-family: 'Playfair Display', serif;
+          font-weight: 600; font-size: 13px; letter-spacing: 0.02em; color: #B8862E;
           text-align: center; line-height: 1.05; padding: 0 4px; overflow: hidden;
         }
         .artium-aw-row-body { flex: 1; min-width: 0; }
         .artium-aw-row-t {
-          margin: 0; font-family: 'Cormorant Garamond', 'Didot', 'Bodoni 72', Georgia, serif;
-          font-weight: 700; font-size: 16px; color: #FFFFFF; line-height: 1.2;
+          margin: 0; font-family: 'Playfair Display', serif;
+          font-weight: 600; font-size: 16px; color: #232A3B; line-height: 1.2;
           display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
           overflow: hidden;
         }
-        .artium-aw-sort[data-on="1"] { border-color: rgba(239,208,155,0.5); color: #EFD09B; }
-        .artium-aw-row-c { margin: 3px 0 0; display: flex; align-items: center; gap: 4px; font-size: 11.5px; color: #8B8B8B; }
-        .artium-aw-row-c svg { color: #7C7C7C; flex-shrink: 0; }
+        .artium-aw-sort[data-on="1"] { border-color: rgba(201,150,46,0.55); color: #C9962E; }
+        .artium-aw-row-c { margin: 3px 0 0; display: flex; align-items: center; gap: 4px; font-size: 11.5px; color: #6A7080; }
+        .artium-aw-row-c svg { color: #6A7080; flex-shrink: 0; }
         .artium-aw-badge {
           flex-shrink: 0; min-width: 52px; padding: 6px 8px; border-radius: 11px; text-align: center;
-          border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.035);
+          border: 1px solid rgba(176,146,98,0.25); background: #F4F4F3;
         }
-        .artium-aw-badge b { display: block; font-size: 15px; font-weight: 700; color: #FFFFFF; line-height: 1; }
-        .artium-aw-badge span { display: block; margin-top: 3px; font-size: 9.5px; color: #8B8B8B; }
-        .artium-aw-row > svg:last-child { color: #6E6E6E; flex-shrink: 0; }
+        .artium-aw-badge b { display: block; font-size: 15px; font-weight: 700; color: #232A3B; line-height: 1; }
+        .artium-aw-badge span { display: block; margin-top: 3px; font-size: 9.5px; color: #6A7080; }
+        .artium-aw-row > svg:last-child { color: #9A9A9A; flex-shrink: 0; }
         /* The instrument, drawn. It sits between the name and the chevron, and
            it is the one gold thing in the row, so it needs no label. */
         /* A fixed width, not a shrink-to-fit one: it makes the drawings and
@@ -3497,10 +3502,10 @@ export default function App() {
         }
         .artium-aw-inst-art { display: flex; align-items: center; gap: 6px; }
         .artium-aw-inst-name {
-          font-family: 'Manrope', -apple-system, sans-serif;
+          font-family: 'Jost', -apple-system, sans-serif;
           font-size: 9.5px; font-weight: 600; letter-spacing: 0.02em;
           line-height: 1.2; text-align: center;
-          color: rgba(239,208,155,0.78);
+          color: rgba(150,115,55,0.85);
           /* Two lines, so "Double Bass" and "Tubular Bells" wrap inside the
              column rather than widening it and stealing the name's room. */
           display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
@@ -3512,40 +3517,20 @@ export default function App() {
           flex-shrink: 0; margin-right: 2px;
           font-size: 8.5px; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase;
           padding: 2px 7px; border-radius: 999px;
-          background: linear-gradient(160deg, #E9C88D, #C99A55); color: #241A0E;
+          background: linear-gradient(180deg, #EFD08A 0%, #DBAB4C 55%, #C9962E 100%); color: #3A2E10;
         }
         .artium-aw-inst img {
           width: 54px; height: 54px; object-fit: contain; display: block;
-          /* These read as faint for a reason that is not brightness: the
-             strokes are already gold at luminance ~195, but they cover only
-             five per cent of the tile, and a hairline drawn at 128px and shown
-             at 46 loses most of what is left to antialiasing. Turning it up
-             does nothing to a pixel that is already near the top.
-
-             So the weight is rebuilt instead. Two halos in the same champagne
-             as the strokes — one tight enough to thicken each line, one wide
-             enough to lift the whole mark off the black — and the drawing
-             gains presence without being redrawn. The small brightness and
-             saturation lift is the last few per cent, not the mechanism. */
+          /* Gold line art already has full contrast on white — none of the
+             black-ground "lift it off the dark" halo trick this used to need
+             is wanted here, so this is a plain, quiet drop-shadow for a
+             touch of depth rather than three stacked glows. */
           opacity: 1;
-          /* Three halos, not one. The tight pair builds density right at the
-             line — that is what reads as a thicker stroke — and the wide one
-             lifts the whole mark off the black so it is findable before it is
-             legible. In the same champagne as the drawing, so it looks lit
-             rather than outlined. */
-          filter:
-            brightness(1.16) saturate(1.1)
-            drop-shadow(0 0 1px rgba(239,208,155,0.7))
-            drop-shadow(0 0 3px rgba(239,208,155,0.45))
-            drop-shadow(0 0 9px rgba(239,208,155,0.26));
+          filter: drop-shadow(0 1px 2px rgba(150,115,55,0.25));
           transition: filter .25s ease, transform .25s ease;
         }
         .artium-aw-row:hover .artium-aw-inst img {
-          filter:
-            brightness(1.24) saturate(1.14)
-            drop-shadow(0 0 1px rgba(250,232,195,0.9))
-            drop-shadow(0 0 4px rgba(245,220,170,0.6))
-            drop-shadow(0 0 14px rgba(239,208,155,0.38));
+          filter: drop-shadow(0 2px 4px rgba(150,115,55,0.35));
           transform: scale(1.04);
         }
         /* Two fit in the width of one and a half rather than pushing the row
@@ -3559,28 +3544,36 @@ export default function App() {
           .artium-aw-inst[data-two="1"] { width: 78px; }
           .artium-aw-inst[data-two="1"] img { width: 36px; height: 36px; }
         }
-        .artium-aw-empty { padding: 26px 4px; text-align: center; font-size: 12.5px; color: #7C7C7C; }
+        .artium-aw-empty { padding: 26px 4px; text-align: center; font-size: 12.5px; color: #6A7080; }
 
         /* Bottom bar. Fixed, because the reference has it pinned and this page
-           scrolls a long way. */
+           scrolls a long way. Every screen is light now, so the base rule
+           IS the floating inset slab the mock draws (rounded corners, warm
+           shadow) rather than a full-width dark bar with a separate
+           "--light" variant — the modifier class below is kept (redundant,
+           re-applies the same values) rather than removed, since the
+           BottomTabs "light" prop and its call site are still wired to it
+           and touching that was more risk than the duplication is worth. */
         .artium-aw-tabs {
-          position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+          position: fixed; z-index: 40;
           display: flex; align-items: stretch;
-          padding-bottom: env(safe-area-inset-bottom, 0px);
-          background: rgba(9,10,13,0.92);
-          -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
-          border-top: 1px solid rgba(255,255,255,0.07);
+          left: 14px; right: 14px;
+          bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+          border-radius: 24px;
+          background: linear-gradient(180deg, #FCFCFB 0%, #F2F2F0 70%, #EAEAE8 100%);
+          border: 1px solid rgba(176,146,98,.30);
+          box-shadow: 0 14px 30px -14px rgba(150,115,55,.38), inset 0 1px 0 #fff;
         }
         .artium-aw-tabs button {
           flex: 1 1 0; display: flex; flex-direction: column; align-items: center; gap: 3px;
           padding: 9px 2px 8px; border: none; background: none; cursor: pointer;
-          color: #7C7C7C; font: inherit; font-size: 9.5px; font-weight: 500;
+          color: #6A7080; font: inherit; font-size: 9.5px; font-weight: 500;
           transition: color .25s ease;
         }
-        .artium-aw-tabs button[data-on="1"] { color: #E9C88D; }
+        .artium-aw-tabs button[data-on="1"] { color: #C9962E; }
         .artium-aw-tabs button[data-on="1"]::after {
           content: ''; position: absolute; bottom: calc(env(safe-area-inset-bottom, 0px) + 2px);
-          width: 22px; height: 2px; border-radius: 2px; background: #E9C88D;
+          width: 22px; height: 2px; border-radius: 2px; background: #C9962E;
         }
         .artium-aw-tabs button { position: relative; }
         /* Anything the fixed bar can cover reserves its height. One number,
@@ -3588,18 +3581,9 @@ export default function App() {
            the class rather than by remembering the arithmetic. */
         .artium-has-tabs { padding-bottom: calc(62px + env(safe-area-inset-bottom, 0px)); }
 
-        /* Light variant — landing only ("app" keeps the dark bar above).
-           .artium-aw-tabs is rendered once at the app shell, a sibling of
-           .artium-lp rather than a descendant, so it can't be reached by
-           .artium-lp--light scoping and gets its own modifier class
-           instead (see the BottomTabs "light" prop). Per the mock: a
-           floating inset slab (rounded corners, soft warm shadow), not a
-           full-width bar flush with the screen edges — the base rule's
-           edge-to-edge left/right/bottom and flat top border are
-           overridden accordingly; the safe-area padding-bottom is zeroed
-           since the slab is already lifted clear of the bottom edge via
-           its own "bottom" inset, so it doesn't need internal padding on
-           top of that gap too. */
+        /* Redundant with the base rule above now that every screen is
+           light (kept rather than removed — see the comment on the base
+           rule). */
         .artium-aw-tabs--light {
           left: 14px; right: 14px;
           bottom: calc(10px + env(safe-area-inset-bottom, 0px));
@@ -3657,26 +3641,21 @@ export default function App() {
         }
 
         .artium-map, .artium-map .leaflet-container { border-radius: inherit; }
-        /* OSM ships one set of tiles and they are drawn for a white page.
-           Inverting and rotating the hue a half-turn is the standard way to a
-           dark map: invert makes land dark and water light, and the 180deg
-           rotation puts the hues back where they started, so the sea is blue
-           again rather than orange. The rest pulls the result down to this
-           page's luminance. */
-        .artium-map .leaflet-tile-pane {
-          filter: invert(1) hue-rotate(180deg) saturate(0.42) brightness(0.78) contrast(1.05);
-        }
-        .artium-map .leaflet-container { background: #0F1012; }
+        /* OSM ships one set of tiles and they are already drawn for a light
+           page — the invert/hue-rotate that used to fake a dark map here is
+           gone; the tiles render in their own natural colors now, which is
+           what the whole app's light ground wants anyway. */
+        .artium-map .leaflet-container { background: #F4F4F3; }
         /* Not scoped to .artium-map: the zoom control lives in its own pane,
-           outside the tile pane the filter above applies to, and the signup's
-           map does not carry that class. */
+           and the signup's map (the globe on the conservatory step) does
+           not carry that class. */
         .leaflet-control-zoom a, .leaflet-bar a {
-          background: #17181D !important; color: #CFCFCF !important;
-          border-bottom-color: rgba(255,255,255,0.10) !important;
+          background: #FFFFFF !important; color: #232A3B !important;
+          border-bottom-color: rgba(176,146,98,0.25) !important;
         }
-        .leaflet-control-zoom a:hover, .leaflet-bar a:hover { background: #232430 !important; color: #EFD09B !important; }
-        .leaflet-bar { border: 1px solid rgba(255,255,255,0.12) !important; box-shadow: 0 4px 14px rgba(0,0,0,0.45) !important; }
-        .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: #17181D !important; color: #FFFFFF !important; }
+        .leaflet-control-zoom a:hover, .leaflet-bar a:hover { background: #FCFAF5 !important; color: #C9962E !important; }
+        .leaflet-bar { border: 1px solid rgba(176,146,98,0.30) !important; box-shadow: 0 4px 14px rgba(150,115,55,0.20) !important; }
+        .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: #FFFFFF !important; color: #232A3B !important; }
         .artium-map .leaflet-control-zoom { border: 1px solid #E6EBF1 !important; box-shadow: 0 2px 8px rgba(0,0,0,0.32) !important; border-radius: 8px !important; overflow: hidden; }
         .artium-map .leaflet-control-zoom a { background: #FFFFFF !important; color: #0A2540 !important; border-color: #E6EBF1 !important; font-weight: 600 !important; }
         .artium-map .leaflet-control-zoom a:hover { background: #F6F9FC !important; }
@@ -4327,7 +4306,7 @@ export default function App() {
               and a tab everybody sees for a room almost nobody can open is
               worse than a strip the two of them learn. */}
           {myProfile && !selectedStudentId && isAdmin && (
-            <div className="flex" style={{ borderBottom: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.05)" }}>
+            <div className="flex" style={{ borderBottom: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)" }}>
               {[
                 { key: "admin", label: "Admin", Icon: ShieldCheck },
               ].map(({ key, label, Icon }) => (
@@ -4512,7 +4491,7 @@ function PinGlobe() {
   return (
     // The white disc is the wrapper itself, so the sphere sits in the
     // artwork's ring the way the painted globe did, and covers it entirely.
-    <span ref={wrapRef} style={{ position: "absolute", inset: 0, borderRadius: "50%", background: "rgba(255,255,255,0.05)", overflow: "hidden" }}>
+    <span ref={wrapRef} style={{ position: "absolute", inset: 0, borderRadius: "50%", background: "rgba(176,146,98,0.05)", overflow: "hidden" }}>
       {size > 0 && (
         <Suspense fallback={null}>
           <Globe
@@ -4854,7 +4833,7 @@ function StepRing({ step, total, size = 62 }) {
   return (
     <span className="artium-su-ring" style={{ width: size, height: size }}>
       <svg viewBox="0 0 44 44" aria-hidden="true">
-        <circle cx="22" cy="22" r={R} fill="none" stroke="rgba(255,255,255,0.10)" strokeWidth="3" />
+        <circle cx="22" cy="22" r={R} fill="none" stroke="rgba(176,146,98,0.30)" strokeWidth="3" />
         <circle
           cx="22" cy="22" r={R} fill="none" stroke="#E9C88D" strokeWidth="3" strokeLinecap="round"
           strokeDasharray={CIRC} strokeDashoffset={CIRC * (1 - done)}
@@ -4960,13 +4939,13 @@ function HirerSignup({ authUser, onBack, onDone }) {
                   the one the eye lands on. Leaving is a choice, not a default. */}
               <button
                 onClick={() => setConfirmLeave(false)}
-                style={{ flex: 1, padding: "10px 14px", borderRadius: 999, border: "none", background: "linear-gradient(180deg, #F3D9A6 0%, #D9AE66 100%)", color: C.brassText, fontFamily: FONT_BODY, fontSize: 13.5, fontWeight: 700, cursor: "pointer" }}
+                style={{ flex: 1, padding: "10px 14px", borderRadius: 999, border: "none", background: "linear-gradient(180deg, #EFD08A 0%, #DBAB4C 55%, #C9962E 100%)", color: C.brassText, fontFamily: FONT_BODY, fontSize: 13.5, fontWeight: 700, cursor: "pointer" }}
               >
                 Keep filling it in
               </button>
               <button
                 onClick={() => { setConfirmLeave(false); onBack(); }}
-                style={{ flex: "0 0 auto", padding: "10px 16px", borderRadius: 999, border: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.05)", color: C.ivoryDim, fontFamily: FONT_BODY, fontSize: 13.5, fontWeight: 600, cursor: "pointer" }}
+                style={{ flex: "0 0 auto", padding: "10px 16px", borderRadius: 999, border: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)", color: C.ivoryDim, fontFamily: FONT_BODY, fontSize: 13.5, fontWeight: 600, cursor: "pointer" }}
               >
                 Leave
               </button>
@@ -5044,7 +5023,7 @@ function HirerSignup({ authUser, onBack, onDone }) {
         )}
         {step === 2 && (
           <div style={{ maxWidth: 560 }}>
-            <div style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: "18px 22px", display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ background: "rgba(176,146,98,0.05)", border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: "18px 22px", display: "flex", flexDirection: "column", gap: 10 }}>
               {[
                 ["Account", authUser?.email || ""],
                 ["Hiring as", `${d.name} — ${d.org}`],
@@ -5181,7 +5160,7 @@ function ConcertMessageBubble({ m, mine }) {
             <img src={attachmentHref} alt={m.attachmentName || ""} style={{ maxWidth: 220, borderRadius: 12, border: `1px solid ${C.inkLine}`, display: "block" }} />
           </a>
         ) : (
-          <a href={attachmentHref} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 12px", borderRadius: 10, border: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.04)", color: C.ivory, textDecoration: "none", fontSize: 12.5 }}>
+          <a href={attachmentHref} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 12px", borderRadius: 10, border: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.07)", color: C.ivory, textDecoration: "none", fontSize: 12.5 }}>
             <FileText size={14} /> {m.attachmentName || "Attachment"}
           </a>
         )
@@ -5323,7 +5302,7 @@ function AgreementPanel({ inquiry, role, myName, onSign, signing, acceptedOffer 
 
   if (inquiry.status === "confirmed") {
     return (
-      <div style={{ background: "#0B0C0E", border: `1px solid ${C.brass}`, borderRadius: 16, padding: "22px", margin: 16 }}>
+      <div style={{ background: "#FFFFFF", border: `1px solid ${C.brass}`, borderRadius: 16, padding: "22px", margin: 16 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
           <span style={{ width: 30, height: 30, borderRadius: "50%", border: `1.5px solid ${C.brass}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
             <CheckIcon size={15} color={C.brass} />
@@ -5711,7 +5690,7 @@ function PianistDiscover({ students, onOpen }) {
 function HirerPianistProfile({ student, conservatory, onBack, onContact }) {
   if (!student) return null;
   const Row = ({ label, children }) => (
-    <div style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
+    <div style={{ background: "rgba(176,146,98,0.05)", border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
       <span style={{ fontSize: 11, fontWeight: 600, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
       <div style={{ fontSize: 15, color: C.ivory, lineHeight: 1.6 }}>{children}</div>
     </div>
@@ -6023,13 +6002,13 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
                   the one the eye lands on. Leaving is a choice, not a default. */}
               <button
                 onClick={() => setConfirmLeave(false)}
-                style={{ flex: 1, padding: "10px 14px", borderRadius: 999, border: "none", background: "linear-gradient(180deg, #F3D9A6 0%, #D9AE66 100%)", color: C.brassText, fontFamily: FONT_BODY, fontSize: 13.5, fontWeight: 700, cursor: "pointer" }}
+                style={{ flex: 1, padding: "10px 14px", borderRadius: 999, border: "none", background: "linear-gradient(180deg, #EFD08A 0%, #DBAB4C 55%, #C9962E 100%)", color: C.brassText, fontFamily: FONT_BODY, fontSize: 13.5, fontWeight: 700, cursor: "pointer" }}
               >
                 Keep filling it in
               </button>
               <button
                 onClick={() => { setConfirmLeave(false); onCancel(); }}
-                style={{ flex: "0 0 auto", padding: "10px 16px", borderRadius: 999, border: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.05)", color: C.ivoryDim, fontFamily: FONT_BODY, fontSize: 13.5, fontWeight: 600, cursor: "pointer" }}
+                style={{ flex: "0 0 auto", padding: "10px 16px", borderRadius: 999, border: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)", color: C.ivoryDim, fontFamily: FONT_BODY, fontSize: 13.5, fontWeight: 600, cursor: "pointer" }}
               >
                 Leave
               </button>
@@ -6071,14 +6050,14 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
             <button
               onClick={() => setConfirmLeave(true)}
               title="Your answers are saved — you can pick this up later"
-              style={{ marginLeft: "auto", fontSize: 12.5, fontWeight: 600, color: C.ivoryDim, background: "rgba(255,255,255,0.04)", border: `1px solid ${C.inkLine}`, borderRadius: 999, padding: "7px 15px", cursor: "pointer", whiteSpace: "nowrap" }}
+              style={{ marginLeft: "auto", fontSize: 12.5, fontWeight: 600, color: C.ivoryDim, background: "rgba(176,146,98,0.07)", border: `1px solid ${C.inkLine}`, borderRadius: 999, padding: "7px 15px", cursor: "pointer", whiteSpace: "nowrap" }}
             >
               Leave
             </button>
           )}
           {editing && (
             <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
-              <button onClick={onCancel} style={{ fontSize: 12.5, fontWeight: 600, color: C.ivoryDim, background: "rgba(255,255,255,0.04)", border: `1px solid ${C.inkLine}`, borderRadius: 999, padding: "7px 15px", cursor: "pointer" }}>
+              <button onClick={onCancel} style={{ fontSize: 12.5, fontWeight: 600, color: C.ivoryDim, background: "rgba(176,146,98,0.07)", border: `1px solid ${C.inkLine}`, borderRadius: 999, padding: "7px 15px", cursor: "pointer" }}>
                 Cancel
               </button>
               {/* Changing one line of a bio meant clicking Next through six
@@ -6093,7 +6072,7 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
                   border: "none", whiteSpace: "nowrap",
                   cursor: canSaveAll && !submitting ? "pointer" : "not-allowed",
                   color: canSaveAll ? C.brassText : C.ivoryDim,
-                  background: canSaveAll ? "linear-gradient(180deg, #F3D9A6 0%, #D9AE66 100%)" : "rgba(255,255,255,0.05)",
+                  background: canSaveAll ? "linear-gradient(180deg, #EFD08A 0%, #DBAB4C 55%, #C9962E 100%)" : "rgba(176,146,98,0.05)",
                   opacity: submitting ? 0.7 : 1,
                 }}
               >
@@ -6181,7 +6160,7 @@ function Field({ label, children }) {
 // The gate's field: glass over the page with a hairline, not a white card
 // re-tinted. The focus ring is a CSS rule further down — an inline style
 // cannot express :focus.
-const inputStyle = { width: "100%", background: "rgba(255,255,255,0.035)", border: "1px solid rgba(255,255,255,0.11)", borderRadius: 11, padding: "12px 15px", color: "#FFFFFF", fontFamily: FONT_BODY, fontSize: 15, outline: "none", boxShadow: "none" };
+const inputStyle = { width: "100%", background: "#FFFFFF", border: "1px solid rgba(176,146,98,0.30)", borderRadius: 11, padding: "12px 15px", color: "#232A3B", fontFamily: FONT_BODY, fontSize: 15, outline: "none", boxShadow: "none" };
 
 function PasswordField({ value, onChange, placeholder, autoComplete }) {
   const [visible, setVisible] = useState(false);
@@ -6420,7 +6399,7 @@ function GoogleBtn({ label = "Continue with Google", role = "student" }) {
       disabled={loading}
       style={{
         width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
-        background: "rgba(255,255,255,0.05)", color: C.ivory, border: `1px solid ${C.inkLine}`,
+        background: "rgba(176,146,98,0.05)", color: C.ivory, border: `1px solid ${C.inkLine}`,
         borderRadius: 6, padding: "10px 16px", fontSize: 14, fontWeight: 500,
         boxShadow: "0 1px 2px rgba(0,0,0,0.16)",
         cursor: loading ? "default" : "pointer", opacity: loading ? 0.7 : 1,
@@ -6455,7 +6434,7 @@ function StepAccount({ draft, update, error }) {
           Which one applies is the visitor's own fact about themselves, and
           knowing it now is what stops the document route feeling like a
           rejection when they reach it. */}
-      <div className="mb-6" style={{ marginTop: 14, borderRadius: 14, border: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.025)", padding: "13px 15px" }}>
+      <div className="mb-6" style={{ marginTop: 14, borderRadius: 14, border: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)", padding: "13px 15px" }}>
         <p style={{ fontFamily: FONT_MONO, fontSize: 10.5, letterSpacing: 0.5, color: C.brassLabel, margin: 0 }}>
           PROVING YOU'RE A CONSERVATORY MUSICIAN
         </p>
@@ -7252,7 +7231,7 @@ function StepConservatory({ draft, update, editing }) {
       )}
 
       {editing && selectedCons && !changingSchool ? (
-        <div className="mt-2 rounded-2xl" style={{ border: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.025)", padding: "16px 18px" }}>
+        <div className="mt-2 rounded-2xl" style={{ border: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)", padding: "16px 18px" }}>
           {/* The tick rides with the label rather than the name: beside a
               school called "The Juilliard School" it was taking the width the
               name needed and pushing it onto a third line. */}
@@ -7362,7 +7341,7 @@ function StepConservatory({ draft, update, editing }) {
           said so once the list came back empty — which never happens on the
           email route, where 110 schools are listed and yours simply is not
           one of them. Said plainly, always. */}
-      <div style={{ marginTop: 14, borderRadius: 14, border: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.025)", padding: "13px 15px" }}>
+      <div style={{ marginTop: 14, borderRadius: 14, border: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)", padding: "13px 15px" }}>
         <p className="text-sm" style={{ margin: 0, color: C.ivory, fontWeight: 600, fontSize: 13 }}>
           {isDoc ? "Can't find your conservatory?" : "Can't find your conservatory, or having trouble with your email?"}
         </p>
@@ -7452,7 +7431,7 @@ function StepConservatory({ draft, update, editing }) {
             <div>
               <p className="text-sm" style={{ color: C.ivoryDim, marginBottom: 8 }}>Enter the code sent to <b>{reqEmail.trim()}</b>.</p>
               <input
-                style={{ width: "100%", maxWidth: 260, padding: "12px 16px", borderRadius: 10, border: `1.5px solid ${C.inkLine}`, background: "rgba(255,255,255,0.05)", color: C.ivory, fontFamily: FONT_MONO, fontSize: 22, fontWeight: 600, letterSpacing: 8, textAlign: "center", outline: "none", boxSizing: "border-box" }}
+                style={{ width: "100%", maxWidth: 260, padding: "12px 16px", borderRadius: 10, border: `1.5px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)", color: C.ivory, fontFamily: FONT_MONO, fontSize: 22, fontWeight: 600, letterSpacing: 8, textAlign: "center", outline: "none", boxSizing: "border-box" }}
                 value={reqCode}
                 onChange={(e) => { setReqCode(e.target.value.replace(/\D/g, "").slice(0, 10)); setReqErr(""); }}
                 placeholder="••••••••" inputMode="numeric" autoFocus />
@@ -7526,7 +7505,7 @@ function StepConservatory({ draft, update, editing }) {
               </label>
             </div>
           ) : (
-            <label style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "11px 18px", borderRadius: 10, border: `1.5px dashed ${C.inkLine}`, background: "rgba(255,255,255,0.05)", cursor: uploading ? "default" : "pointer", color: C.ivory, fontWeight: 600, fontSize: 14 }}>
+            <label style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "11px 18px", borderRadius: 10, border: `1.5px dashed ${C.inkLine}`, background: "rgba(176,146,98,0.05)", cursor: uploading ? "default" : "pointer", color: C.ivory, fontWeight: 600, fontSize: 14 }}>
               <Upload size={16} /> {uploading ? "Uploading…" : "Choose a file"}
               <input type="file" accept="image/*,application/pdf" style={{ display: "none" }} disabled={uploading} onChange={(e) => uploadProof(e.target.files?.[0])} />
             </label>
@@ -7567,7 +7546,7 @@ function StepConservatory({ draft, update, editing }) {
                 <div style={{ marginTop: 12 }}>
                   <p className="text-sm" style={{ color: C.ivoryDim, marginBottom: 8 }}>Enter the code sent to <b>{email}</b>.</p>
                   <input
-                    style={{ width: "100%", maxWidth: 260, padding: "12px 16px", borderRadius: 10, border: `1.5px solid ${C.inkLine}`, background: "rgba(255,255,255,0.05)", color: C.ivory, fontFamily: FONT_MONO, fontSize: 22, fontWeight: 600, letterSpacing: 8, textAlign: "center", outline: "none", boxSizing: "border-box" }}
+                    style={{ width: "100%", maxWidth: 260, padding: "12px 16px", borderRadius: 10, border: `1.5px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)", color: C.ivory, fontFamily: FONT_MONO, fontSize: 22, fontWeight: 600, letterSpacing: 8, textAlign: "center", outline: "none", boxSizing: "border-box" }}
                     value={code}
                     onChange={(e) => { setCode(e.target.value.replace(/\D/g, "").slice(0, 10)); setErr(""); }}
                     placeholder="••••••••" inputMode="numeric" autoFocus />
@@ -7596,7 +7575,7 @@ function StepConservatory({ draft, update, editing }) {
           only escape is off-screen behind everything they just read. An exit
           is no use where the trouble is not. */}
       {changingSchool && !draft.conservatoryVerified && !draft.proofDocUrl && !draft.domainReq && (
-        <div className="mt-5 rounded-2xl" style={{ border: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.025)", padding: "14px 16px" }}>
+        <div className="mt-5 rounded-2xl" style={{ border: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)", padding: "14px 16px" }}>
           <p className="text-sm" style={{ margin: 0, color: C.ivoryDim, lineHeight: 1.55 }}>
             Changed your mind? Nothing has moved yet — your conservatory is still
             the one you had.
@@ -7734,7 +7713,7 @@ function StepReview({ draft }) {
   const cons = findConservatory(draft.conservatoryId);
 
   const Card = ({ label, children }) => (
-    <div style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "14px 18px", display: "flex", flexDirection: "column", gap: 6 }}>
+    <div style={{ background: "rgba(176,146,98,0.05)", border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "14px 18px", display: "flex", flexDirection: "column", gap: 6 }}>
       <span style={{ fontSize: 11, fontWeight: 600, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
       <div style={{ fontSize: 14, color: C.ivory, lineHeight: 1.6 }}>{children}</div>
     </div>
@@ -7892,14 +7871,14 @@ function LoginScreen({ onSubmit, onBack, error, unfinished, onResume }) {
   }
   return (
     <div className="min-h-full flex flex-col" style={{ background: C.inkSoft, color: C.ivory }}>
-      <div style={{ background: "rgba(255,255,255,0.05)", borderBottom: `1px solid ${C.inkLine}`, padding: "0 32px", height: 60, display: "flex", alignItems: "center" }}>
+      <div style={{ background: "rgba(176,146,98,0.05)", borderBottom: `1px solid ${C.inkLine}`, padding: "0 32px", height: 60, display: "flex", alignItems: "center" }}>
         <button onClick={onBack} style={{ color: C.ivoryDim, background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", padding: 0, marginRight: 12 }}>
           <ChevronLeft size={18} />
         </button>
         <Logo size={20} />
       </div>
       <div className="flex-1 flex items-center justify-center px-6 py-12">
-        <div className="w-full max-w-md lg-fade" style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: 40, boxShadow: "0 4px 24px rgba(0,0,0,0.28)" }}>
+        <div className="w-full max-w-md lg-fade" style={{ background: "rgba(176,146,98,0.05)", border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: 40, boxShadow: "0 4px 24px rgba(0,0,0,0.28)" }}>
           <h2 style={{ fontSize: 24, fontWeight: 700, letterSpacing: -0.3, marginBottom: 4 }}>Welcome back</h2>
           <p style={{ color: C.ivoryDim, fontSize: 15, marginBottom: 24 }}>Log in to your Artium account.</p>
 
@@ -7915,7 +7894,7 @@ function LoginScreen({ onSubmit, onBack, error, unfinished, onResume }) {
               <p className="text-sm" style={{ margin: "4px 0 0", color: C.ivoryDim, lineHeight: 1.5 }}>
                 There's no account yet — it's only created at the last step. Everything you filled in is still here.
               </p>
-              <button onClick={onResume} style={{ marginTop: 10, padding: "8px 16px", borderRadius: 999, border: "none", background: "linear-gradient(180deg, #F3D9A6 0%, #D9AE66 100%)", color: C.brassText, fontFamily: FONT_BODY, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+              <button onClick={onResume} style={{ marginTop: 10, padding: "8px 16px", borderRadius: 999, border: "none", background: "linear-gradient(180deg, #EFD08A 0%, #DBAB4C 55%, #C9962E 100%)", color: C.brassText, fontFamily: FONT_BODY, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
                 Carry on where you left off
               </button>
             </div>
@@ -7945,7 +7924,7 @@ function LearnerProfileModal({ learner, onClose }) {
   if (!learner) return null;
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={onClose}>
-      <div style={{ background: "rgba(255,255,255,0.05)", borderRadius: 16, padding: 32, width: 340, maxWidth: "90vw", boxShadow: "0 16px 48px rgba(0,0,0,0.18)" }} onClick={(e) => e.stopPropagation()}>
+      <div style={{ background: "rgba(176,146,98,0.05)", borderRadius: 16, padding: 32, width: 340, maxWidth: "90vw", boxShadow: "0 16px 48px rgba(0,0,0,0.18)" }} onClick={(e) => e.stopPropagation()}>
         <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20 }}>
           <Avatar name={learner.name} id={learner.learnerId} size={56} />
           <div>
@@ -8037,7 +8016,7 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
         )}
       </button>
       {open && (
-        <div style={{ position: "absolute", right: 0, top: "calc(100% + 8px)", width: 320, background: "rgba(255,255,255,0.05)", borderRadius: 12, boxShadow: "0 8px 32px rgba(0,0,0,0.14)", border: `1px solid ${C.inkLine}`, zIndex: 200, overflow: "hidden", maxHeight: 420, overflowY: "auto" }}>
+        <div style={{ position: "absolute", right: 0, top: "calc(100% + 8px)", width: 320, background: "rgba(176,146,98,0.05)", borderRadius: 12, boxShadow: "0 8px 32px rgba(0,0,0,0.14)", border: `1px solid ${C.inkLine}`, zIndex: 200, overflow: "hidden", maxHeight: 420, overflowY: "auto" }}>
           <div style={{ padding: "12px 16px", borderBottom: `1px solid ${C.inkLine}` }}>
             <p style={{ fontSize: 13, fontWeight: 700, color: C.ivory, margin: 0 }}>Notifications</p>
           </div>
@@ -8045,7 +8024,7 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
           {promoPending.map((p) => (
             <div key={p.id} style={{ padding: "12px 16px", background: "#EEF4FF", borderBottom: `1px solid ${C.inkLine}` }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
-                <div style={{ width: 38, height: 38, borderRadius: "50%", background: C.inkSoft, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Megaphone size={18} /></div>
+                <div style={{ width: 38, height: 38, borderRadius: "50%", background: C.brassDim, color: C.brass, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Megaphone size={18} /></div>
                 <div>
                   <p style={{ fontSize: 13, fontWeight: 700, color: C.ivory, margin: "0 0 2px" }}>{p.name} submitted a promo video</p>
                   <p style={{ fontSize: 12, color: C.ivoryDim, margin: 0 }}>{p.provider} · awaiting your approval</p>
@@ -8097,7 +8076,7 @@ function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, mus
     // Room for the fixed bottom bar. The bare branch needs none: the page it
     // wraps is the Network screen, which already reserves the same height.
     <div className="min-h-full flex flex-col artium-has-tabs" style={{ background: C.inkSoft, color: C.ivory }}>
-      <div className="px-6 flex items-center gap-4" style={{ height: 60, background: "rgba(255,255,255,0.05)", borderBottom: `1px solid ${C.inkLine}` }}>
+      <div className="px-6 flex items-center gap-4" style={{ height: 60, background: "rgba(176,146,98,0.05)", borderBottom: `1px solid ${C.inkLine}` }}>
         <div className="flex items-center gap-3">
           {(previewOnly || onBack) && (
             <button onClick={previewOnly ? onHome : onBack} style={{ color: C.ivoryDim, background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 2, padding: 0 }}>
@@ -8935,7 +8914,7 @@ function ProfileLinks({ links }) {
           style={{
             display: "inline-flex", alignItems: "center", gap: 7,
             padding: "8px 13px", borderRadius: 999,
-            border: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.03)",
+            border: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)",
             color: C.ivory, textDecoration: "none",
             fontFamily: FONT_BODY, fontSize: 13, fontWeight: 500,
           }}>
@@ -8952,7 +8931,7 @@ function StudentProfile({ student, conservatory, onBack, onMessage, locked, onAp
   if (!student) return null;
 
   const Row = ({ label, children }) => (
-    <div style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
+    <div style={{ background: "rgba(176,146,98,0.05)", border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
       <span style={{ fontSize: 11, fontWeight: 600, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
       <div style={{ fontSize: 15, color: C.ivory, lineHeight: 1.6 }}>{children}</div>
     </div>
@@ -9046,7 +9025,7 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack, onUpdat
   const [deleting, setDeleting] = React.useState(false);
 
   const Row = ({ label, children }) => (
-    <div style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
+    <div style={{ background: "rgba(176,146,98,0.05)", border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
       <span style={{ fontSize: 11, fontWeight: 600, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
       <div style={{ fontSize: 15, color: C.ivory, lineHeight: 1.6 }}>{children}</div>
     </div>
@@ -10138,7 +10117,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
       {(appTab === "map" || (appTab === "lesson" && selectedId === activeLessonTeacher?.id)) && selectedId && selected && (() => {
         const selCons = findConservatory(selected.conservatoryId);
         const Row = ({ label, children }) => (
-          <div style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ background: "rgba(176,146,98,0.05)", border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
             <span style={{ fontSize: 11, fontWeight: 600, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
             <div style={{ fontSize: 15, color: C.inkText, lineHeight: 1.6 }}>{children}</div>
           </div>
@@ -10272,7 +10251,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
                             const dt = new Date(s.date + "T" + s.time);
                             const amount = s.status === "confirmed" && s.paid ? `€${s.teacher.price}` : "—";
                             return (
-                              <tr key={i} style={{ borderBottom: `1px solid ${C.inkLine}`, background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.025)" }}>
+                              <tr key={i} style={{ borderBottom: `1px solid ${C.inkLine}`, background: i % 2 === 0 ? "transparent" : "rgba(176,146,98,0.05)" }}>
                                 <td style={{ padding: "9px 12px" }}>
                                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                                     <Avatar name={s.teacher.name} id={s.teacher.id} size={26} />
@@ -10310,13 +10289,13 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap", padding: "12px 0 16px" }}>
                 {acceptedTeachers.map((t) => (
                   <button key={t.id} onClick={() => setActiveLessonTeacherId(t.id)}
-                    style={{ padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: t.id === activeLessonTeacher.id ? 700 : 500, border: t.id === activeLessonTeacher.id ? `2px solid ${C.brass}` : "none", background: "rgba(255,255,255,0.05)", color: t.id === activeLessonTeacher.id ? C.ivory : C.ivoryDim, cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.06)" }}>
+                    style={{ padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: t.id === activeLessonTeacher.id ? 700 : 500, border: t.id === activeLessonTeacher.id ? `2px solid ${C.brass}` : "none", background: "rgba(176,146,98,0.05)", color: t.id === activeLessonTeacher.id ? C.ivory : C.ivoryDim, cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.06)" }}>
                     {t.name.split(" ")[0]}
                   </button>
                 ))}
               </div>
               <button onClick={() => selectTeacher(activeLessonTeacher.id)}
-                style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", background: "rgba(255,255,255,0.05)", borderRadius: 12, border: "none", boxShadow: "0 1px 6px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04)", marginBottom: 16, width: "100%", cursor: "pointer", textAlign: "left" }}>
+                style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", background: "rgba(176,146,98,0.05)", borderRadius: 12, border: "none", boxShadow: "0 1px 6px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04)", marginBottom: 16, width: "100%", cursor: "pointer", textAlign: "left" }}>
                 <Avatar name={activeLessonTeacher.name} id={activeLessonTeacher.id} size={40} photoUrl={activeLessonTeacher.photoUrl} online={activeLessonTeacher.online} />
                 <div style={{ flex: 1 }}>
                   <p style={{ fontSize: 14, fontWeight: 700, color: C.ivory, margin: 0 }}>{activeLessonTeacher.name}</p>
@@ -10325,7 +10304,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
                 <ChevronRight size={16} color={C.ivoryDim} />
               </button>
             </div>
-            <div style={{ margin: "0 20px 20px", background: "rgba(255,255,255,0.05)", borderRadius: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06)", overflow: "hidden", minHeight: 320 }}>
+            <div style={{ margin: "0 20px 20px", background: "rgba(176,146,98,0.05)", borderRadius: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06)", overflow: "hidden", minHeight: 320 }}>
               <LessonRoom
                 teacher={activeLessonTeacher}
                 messages={conversations[activeLessonTeacher.id] || []}
@@ -10336,11 +10315,11 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
               />
             </div>
             {/* Bottom nav — My Planning */}
-            <div style={{ display: "flex", justifyContent: "center", gap: 40, padding: "20px 20px 12px", background: "rgba(255,255,255,0.05)", borderTop: `1px solid ${C.inkLine}` }}>
+            <div style={{ display: "flex", justifyContent: "center", gap: 40, padding: "20px 20px 12px", background: "rgba(176,146,98,0.05)", borderTop: `1px solid ${C.inkLine}` }}>
               {[{ v: "planning", Icon: LayoutList, label: "My Planning" }].map(({ v, Icon, label }) => (
                 <button key={v} onClick={() => setLearnerRoomView(v)}
                   style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5, background: "none", border: "none", cursor: "pointer", color: C.ivoryDim }}>
-                  <div style={{ width: 52, height: 52, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,0.05)", border: "2px solid transparent", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07)" }}>
+                  <div style={{ width: 52, height: 52, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(176,146,98,0.05)", border: "2px solid transparent", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07)" }}>
                     <Icon size={22} color={C.ivoryDim} />
                   </div>
                   <span style={{ fontSize: 11, fontWeight: 600 }}>{label}</span>
@@ -10353,7 +10332,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
 
       {appTab === "profile" && (() => {
         const Row = ({ label, children }) => (
-          <div style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ background: "rgba(176,146,98,0.05)", border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
             <span style={{ fontSize: 11, fontWeight: 600, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
             <div style={{ fontSize: 15, color: C.inkText, lineHeight: 1.6 }}>{children}</div>
           </div>
@@ -10690,7 +10669,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
   return (
     <div style={{ overflow: "hidden", background: C.parchment }}>
       {/* Tab bar */}
-      <div style={{ display: "flex", borderBottom: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.05)" }}>
+      <div style={{ display: "flex", borderBottom: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)" }}>
         {tabs.map(({ id, label, Icon }) => (
           <button key={id} onClick={() => setTab(id)}
             style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "10px 4px", fontSize: 11, fontWeight: tab === id ? 700 : 400, color: tab === id ? C.ivory : C.ivoryDim, background: "none", border: "none", cursor: "pointer", borderBottom: tab === id ? `2px solid ${C.brass}` : "2px solid transparent" }}>
@@ -10744,7 +10723,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
                 const isSelected = s.id === selectedSessionId;
                 return (
                   <button key={s.id} onClick={() => setSelectedSessionId(isSelected ? null : s.id)}
-                    style={{ flexShrink: 0, width: 110, height: 110, borderRadius: 14, border: isSelected ? `2px solid ${C.brass}` : `1px solid ${isConfirmed ? "#A8D5B5" : C.inkLine}`, background: isConfirmed ? "rgba(26,158,110,0.10)" : "rgba(255,255,255,0.035)", display: "flex", flexDirection: "column", alignItems: "flex-start", justifyContent: "space-between", padding: 12, cursor: "pointer", boxShadow: isSelected ? `0 0 0 3px ${C.brassDim}` : "none", transition: "box-shadow 0.15s" }}>
+                    style={{ flexShrink: 0, width: 110, height: 110, borderRadius: 14, border: isSelected ? `2px solid ${C.brass}` : `1px solid ${isConfirmed ? "#A8D5B5" : C.inkLine}`, background: isConfirmed ? "rgba(26,158,110,0.10)" : "rgba(176,146,98,0.06)", display: "flex", flexDirection: "column", alignItems: "flex-start", justifyContent: "space-between", padding: 12, cursor: "pointer", boxShadow: isSelected ? `0 0 0 3px ${C.brassDim}` : "none", transition: "box-shadow 0.15s" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", width: "100%", alignItems: "center" }}>
                       <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: isConfirmed ? "#1A9E6E" : "#D4810A" }}>
                         {isConfirmed ? "Confirmed" : "Awaiting"}
@@ -10885,7 +10864,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
       {confirmCancelId !== null && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(10,20,40,0.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999 }}
           onClick={() => setConfirmCancelId(null)}>
-          <div style={{ background: "rgba(255,255,255,0.05)", borderRadius: 16, padding: "28px 28px 24px", maxWidth: 320, width: "90%", boxShadow: "0 8px 32px rgba(0,0,0,0.18)", textAlign: "center" }}
+          <div style={{ background: "rgba(176,146,98,0.05)", borderRadius: 16, padding: "28px 28px 24px", maxWidth: 320, width: "90%", boxShadow: "0 8px 32px rgba(0,0,0,0.18)", textAlign: "center" }}
             onClick={(e) => e.stopPropagation()}>
             <p style={{ fontSize: 16, fontWeight: 700, color: C.inkText, margin: "0 0 8px" }}>Cancel this session?</p>
             <p style={{ fontSize: 13, color: C.ivoryDim, margin: "0 0 20px", lineHeight: 1.5 }}>Are you sure you want to remove this proposal? This cannot be undone.</p>
@@ -11155,7 +11134,7 @@ function ArtiumSoundCard({ myProfile, authUser }) {
               title={rights ? undefined : "Tick the box above first"}
               style={{
                 display: "inline-flex", alignItems: "center", gap: 8, padding: "11px 18px",
-                borderRadius: 10, border: `1.5px dashed ${C.inkLine}`, background: "rgba(255,255,255,0.05)",
+                borderRadius: 10, border: `1.5px dashed ${C.inkLine}`, background: "rgba(176,146,98,0.05)",
                 fontWeight: 600, fontSize: 14,
                 color: rights ? C.ivory : C.ivoryDim,
                 opacity: rights ? 1 : 0.55,
@@ -11311,7 +11290,7 @@ function PromoteMe({ myProfile, authUser }) {
                 style={{
                   display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
                   width: "100%", textAlign: "left", padding: "18px 20px", borderRadius: 999,
-                  border: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.05)", cursor: "pointer",
+                  border: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)", cursor: "pointer",
                   font: "inherit", boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
                 }}
               >
@@ -11379,7 +11358,7 @@ function PromoteMe({ myProfile, authUser }) {
             <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
               {[{ v: "bio", t: "Use my bio" }, { v: "custom", t: "Custom text" }].map(({ v, t }) => (
                 <button key={v} onClick={() => setCaptionPref(v)}
-                  style={{ padding: "7px 14px", borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: "pointer", background: "rgba(255,255,255,0.05)", color: captionPref === v ? C.ivory : C.ivoryDim, border: captionPref === v ? `2px solid ${C.brass}` : `1px solid ${C.inkLine}` }}>{t}</button>
+                  style={{ padding: "7px 14px", borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: "pointer", background: "rgba(176,146,98,0.05)", color: captionPref === v ? C.ivory : C.ivoryDim, border: captionPref === v ? `2px solid ${C.brass}` : `1px solid ${C.inkLine}` }}>{t}</button>
               ))}
             </div>
             {captionPref === "custom" && (
@@ -11499,7 +11478,7 @@ function AdminScreen({ authUser, onlineCount }) {
               a visitor needs on the way in — so it lives here and nowhere
               else. The green dot is the same mark it always carried. */}
           {onlineCount != null && (
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 10, padding: "5px 12px", borderRadius: 999, background: "rgba(255,255,255,0.035)", border: `1px solid ${C.inkLine}`, fontSize: 12, color: C.ivoryDim }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 10, padding: "5px 12px", borderRadius: 999, background: "rgba(176,146,98,0.06)", border: `1px solid ${C.inkLine}`, fontSize: 12, color: C.ivoryDim }}>
               <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#1A9E6E", display: "inline-block", flexShrink: 0 }} />
               <span style={{ color: C.ivory, fontWeight: 600 }}>{onlineCount}</span> online now
             </span>
@@ -11510,7 +11489,7 @@ function AdminScreen({ authUser, onlineCount }) {
         <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
           {[{ v: "verifications", t: "Student verifications" }, { v: "conservatories", t: "Conservatories" }, { v: "tracks", t: "Recordings" }, { v: "promotions", t: "Promotions" }].map(({ v, t }) => (
             <button key={v} onClick={() => setSection(v)}
-              style={{ padding: "9px 18px", borderRadius: 999, fontSize: 13, fontWeight: 700, cursor: "pointer", background: section === v ? "linear-gradient(160deg, #E9C88D, #C99A55)" : "rgba(255,255,255,0.04)", color: section === v ? C.brassText : C.ivoryDim, border: section === v ? "none" : `1px solid ${C.inkLine}` }}>{t}</button>
+              style={{ padding: "9px 18px", borderRadius: 999, fontSize: 13, fontWeight: 700, cursor: "pointer", background: section === v ? "linear-gradient(180deg, #EFD08A 0%, #DBAB4C 55%, #C9962E 100%)" : "rgba(176,146,98,0.07)", color: section === v ? C.brassText : C.ivoryDim, border: section === v ? "none" : `1px solid ${C.inkLine}` }}>{t}</button>
           ))}
         </div>
 
@@ -11522,7 +11501,7 @@ function AdminScreen({ authUser, onlineCount }) {
         <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
           {[{ v: "pending", t: `Pending (${pending.length})` }, { v: "history", t: `History (${decided.length})` }].map(({ v, t }) => (
             <button key={v} onClick={() => setTab(v)}
-              style={{ padding: "8px 16px", borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: "pointer", background: "rgba(255,255,255,0.05)", color: tab === v ? C.ivory : C.ivoryDim, border: tab === v ? `2px solid ${C.brass}` : `1px solid ${C.inkLine}` }}>{t}</button>
+              style={{ padding: "8px 16px", borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: "pointer", background: "rgba(176,146,98,0.05)", color: tab === v ? C.ivory : C.ivoryDim, border: tab === v ? `2px solid ${C.brass}` : `1px solid ${C.inkLine}` }}>{t}</button>
           ))}
         </div>
 
@@ -11544,11 +11523,11 @@ function AdminScreen({ authUser, onlineCount }) {
             {p.status === "pending" && (
               <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
                 <button onClick={() => setStatus(p, "approved")} style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "none", background: "#1A9E6E", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Approve</button>
-                <button onClick={() => setStatus(p, "rejected")} style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.05)", color: C.burgundy, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Reject</button>
+                <button onClick={() => setStatus(p, "rejected")} style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)", color: C.burgundy, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Reject</button>
               </div>
             )}
             {p.status !== "pending" && (
-              <button onClick={() => setStatus(p, "pending")} style={{ marginTop: 12, padding: "7px 14px", borderRadius: 9, border: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.05)", color: C.ivoryDim, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Reset to pending</button>
+              <button onClick={() => setStatus(p, "pending")} style={{ marginTop: 12, padding: "7px 14px", borderRadius: 9, border: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)", color: C.ivoryDim, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Reset to pending</button>
             )}
           </div>
         ))}
@@ -11651,13 +11630,13 @@ function AdminTracks({ card, STATUS_COLOR }) {
                     Approve
                   </button>
                   <button disabled={busy === r.id} onClick={() => decide(r, "rejected")}
-                    style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.05)", color: C.burgundy, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                    style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)", color: C.burgundy, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
                     Reject
                   </button>
                 </>
               ) : (
                 <button onClick={() => decide(r, "pending")}
-                  style={{ padding: "7px 12px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.05)", color: C.ivoryDim, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
+                  style={{ padding: "7px 12px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)", color: C.ivoryDim, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
                   Reset
                 </button>
               )}
@@ -11800,7 +11779,7 @@ function AdminConservatories({ card }) {
   const chip = (on) => ({
     display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 10px", borderRadius: 999,
     border: `1px solid ${on ? "rgba(26,158,110,0.55)" : C.inkLine}`,
-    background: on ? "rgba(26,158,110,0.12)" : "rgba(255,255,255,0.04)",
+    background: on ? "rgba(26,158,110,0.12)" : "rgba(176,146,98,0.07)",
     color: on ? C.ivory : C.ivoryDim, fontSize: 12, fontWeight: 600, cursor: "pointer",
   });
 
@@ -11829,7 +11808,7 @@ function AdminConservatories({ card }) {
           // moment ago can be put back without retyping it.
           const universe = [...new Set([...c.builtIn, ...c.domains, ...d])];
           return (
-            <div key={c.id} style={{ border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: "11px 13px", background: "rgba(255,255,255,0.02)" }}>
+            <div key={c.id} style={{ border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: "11px 13px", background: "rgba(176,146,98,0.03)" }}>
               <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
                 <p style={{ margin: 0, fontWeight: 700, color: C.ivory, fontSize: 14 }}>{c.name}</p>
                 {c.where && <p style={{ margin: 0, fontSize: 11.5, color: C.ivoryDim }}>{c.where}</p>}
@@ -11854,14 +11833,14 @@ function AdminConservatories({ card }) {
                   onChange={(e) => setAdding((x) => ({ ...x, [c.id]: e.target.value }))}
                   onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addDomain(c); } }}
                   placeholder="add a domain, e.g. stud.school.edu"
-                  style={{ flex: "1 1 180px", minWidth: 150, padding: "7px 10px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.05)", color: C.ivory, fontSize: 12, outline: "none" }}
+                  style={{ flex: "1 1 180px", minWidth: 150, padding: "7px 10px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)", color: C.ivory, fontSize: 12, outline: "none" }}
                 />
-                <button onClick={() => addDomain(c)} style={{ padding: "7px 12px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.05)", color: C.ivoryDim, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Add</button>
+                <button onClick={() => addDomain(c)} style={{ padding: "7px 12px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)", color: C.ivoryDim, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Add</button>
                 <button
                   onClick={() => save(c)}
                   disabled={!dirty(c) || busy === c.id}
                   style={{ padding: "7px 14px", borderRadius: 8, border: "none", fontSize: 12, fontWeight: 700,
-                    background: dirty(c) ? "linear-gradient(180deg, #F3D9A6 0%, #D9AE66 100%)" : "rgba(255,255,255,0.05)",
+                    background: dirty(c) ? "linear-gradient(180deg, #EFD08A 0%, #DBAB4C 55%, #C9962E 100%)" : "rgba(176,146,98,0.05)",
                     color: dirty(c) ? C.brassText : C.ivoryDim, cursor: dirty(c) ? "pointer" : "not-allowed" }}
                 >{busy === c.id ? "Saving…" : "Save"}</button>
               </div>
@@ -12377,7 +12356,7 @@ function AdminVerifications({ card, STATUS_COLOR }) {
                         const suggested = looksLike(fieldVal(r, "conservatory_name"), fieldVal(r, "conservatory_address"));
                         if (!pick) {
                           return (
-                            <div style={{ padding: "9px 10px", borderRadius: 10, border: `1px solid ${suggested.length ? "rgba(239,208,155,0.35)" : C.inkLine}`, background: suggested.length ? "rgba(239,208,155,0.06)" : "rgba(255,255,255,0.03)" }}>
+                            <div style={{ padding: "9px 10px", borderRadius: 10, border: `1px solid ${suggested.length ? "rgba(239,208,155,0.35)" : C.inkLine}`, background: suggested.length ? "rgba(239,208,155,0.06)" : "rgba(176,146,98,0.05)" }}>
                               <p style={{ margin: "0 0 3px", fontSize: 11, fontWeight: 700, color: C.brassLabel }}>
                                 {suggested.length ? "Looks like a school we already have" : "Which school is this?"}
                               </p>
@@ -12398,7 +12377,7 @@ function AdminVerifications({ card, STATUS_COLOR }) {
                                 <button
                                   key={k.id}
                                   onClick={() => choose(r, k)}
-                                  style={{ display: "block", width: "100%", textAlign: "left", marginBottom: 4, padding: "6px 8px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.05)", color: C.ivory, fontSize: 11.5, cursor: "pointer" }}
+                                  style={{ display: "block", width: "100%", textAlign: "left", marginBottom: 4, padding: "6px 8px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)", color: C.ivory, fontSize: 11.5, cursor: "pointer" }}
                                 >
                                   {k.name}
                                   {k.where ? <span style={{ color: C.ivoryDim }}> · {k.where}</span> : null}
@@ -12423,7 +12402,7 @@ function AdminVerifications({ card, STATUS_COLOR }) {
                               <p style={{ margin: "6px 0 0", fontSize: 10.5, color: C.ivoryDim, lineHeight: 1.45 }}>
                                 Its domain joins that school. No new row.
                               </p>
-                              <button onClick={() => clearPick(r)} style={{ marginTop: 7, padding: "5px 9px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.05)", color: C.ivoryDim, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Change</button>
+                              <button onClick={() => clearPick(r)} style={{ marginTop: 7, padding: "5px 9px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)", color: C.ivoryDim, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Change</button>
                             </div>
                           );
                         }
@@ -12435,7 +12414,7 @@ function AdminVerifications({ card, STATUS_COLOR }) {
                             <p style={{ margin: "2px 0 0", fontSize: 10.5, color: C.ivoryDim, lineHeight: 1.45 }}>
                               Use the school's own spelling. Every later request is matched against this.
                             </p>
-                            <button onClick={() => clearPick(r)} style={{ marginTop: 7, padding: "5px 9px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.05)", color: C.ivoryDim, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Change</button>
+                            <button onClick={() => clearPick(r)} style={{ marginTop: 7, padding: "5px 9px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)", color: C.ivoryDim, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Change</button>
                           </div>
                         );
                       })()}
@@ -12459,7 +12438,7 @@ function AdminVerifications({ card, STATUS_COLOR }) {
                             disabled={busy === r.id || !ready}
                             onClick={() => decide(r, "approved")}
                             title={ready ? undefined : "Choose the school first"}
-                            style={{ padding: "8px 10px", borderRadius: 8, border: "none", background: ready ? "#1A9E6E" : "rgba(255,255,255,0.06)", color: ready ? "#fff" : C.ivoryDim, fontSize: 12, fontWeight: 700, cursor: ready ? "pointer" : "not-allowed" }}
+                            style={{ padding: "8px 10px", borderRadius: 8, border: "none", background: ready ? "#1A9E6E" : "rgba(176,146,98,0.12)", color: ready ? "#fff" : C.ivoryDim, fontSize: 12, fontWeight: 700, cursor: ready ? "pointer" : "not-allowed" }}
                           >Approve</button>
                         );
                       })()}
@@ -12473,7 +12452,7 @@ function AdminVerifications({ card, STATUS_COLOR }) {
                             disabled={busy === r.id || !has}
                             onClick={() => decide(r, "rejected")}
                             title={has ? undefined : "Write a reason first — it is sent to the applicant"}
-                            style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.05)", color: has ? C.burgundy : C.ivoryDim, fontSize: 12, fontWeight: 700, cursor: has ? "pointer" : "not-allowed" }}
+                            style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)", color: has ? C.burgundy : C.ivoryDim, fontSize: 12, fontWeight: 700, cursor: has ? "pointer" : "not-allowed" }}
                           >Reject</button>
                         );
                       })()}
@@ -12523,7 +12502,7 @@ function AdminVerifications({ card, STATUS_COLOR }) {
                   ) : (
                     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                       <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: STATUS_COLOR[r.status] || C.ivoryDim }}>{r.status}</span>
-                      <button onClick={() => decide(r, "pending")} style={{ padding: "6px 8px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.05)", color: C.ivoryDim, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Reset</button>
+                      <button onClick={() => decide(r, "pending")} style={{ padding: "6px 8px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)", color: C.ivoryDim, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Reset</button>
                     </div>
                   )}
                 </td>
@@ -12802,7 +12781,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
   }
 
   const RoomTabs = () => (
-    <div style={{ display: "flex", borderBottom: `1px solid ${C.inkLine}`, background: "rgba(255,255,255,0.05)" }}>
+    <div style={{ display: "flex", borderBottom: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)" }}>
       {tabs.map((t) => {
         const { id, label, Icon } = t;
         const on = activeTab === id;
@@ -12836,7 +12815,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
       {confirmRemoveId && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 600, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}
           onClick={() => setConfirmRemoveId(null)}>
-          <div style={{ background: "rgba(255,255,255,0.05)", borderRadius: 16, padding: 24, maxWidth: 340, width: "100%" }} onClick={e => e.stopPropagation()}>
+          <div style={{ background: "rgba(176,146,98,0.05)", borderRadius: 16, padding: 24, maxWidth: 340, width: "100%" }} onClick={e => e.stopPropagation()}>
             <p style={{ fontSize: 15, fontWeight: 700, color: C.ivory, margin: "0 0 10px" }}>Remove student?</p>
             <p style={{ fontSize: 13, color: C.ivoryDim, lineHeight: 1.6, margin: "0 0 20px" }}>
               Are you sure you want to remove this student? They will need to send you a new teaching request in order to connect again.
@@ -12895,7 +12874,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
                 {pageLearners.map((l) => (
                   <div key={l.id} style={{ position: "relative", display: "inline-flex" }}>
                     <button onClick={() => { setActiveLearner(l); setSelectedSessionId(null); setTab("chat"); }}
-                      style={{ padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: activeLearner.id === l.id ? 700 : 500, border: activeLearner.id === l.id ? `2px solid ${C.brass}` : "none", background: "rgba(255,255,255,0.05)", color: activeLearner.id === l.id ? C.ivory : C.ivoryDim, cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.06)" }}>
+                      style={{ padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: activeLearner.id === l.id ? 700 : 500, border: activeLearner.id === l.id ? `2px solid ${C.brass}` : "none", background: "rgba(176,146,98,0.05)", color: activeLearner.id === l.id ? C.ivory : C.ivoryDim, cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.06)" }}>
                       {l.name.split(" ")[0]}
                     </button>
                     <button onClick={(e) => { e.stopPropagation(); setConfirmRemoveId(l.id); }}
@@ -12923,7 +12902,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
           );
         })()}
         {/* Active learner info */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", background: "rgba(255,255,255,0.05)", borderRadius: 12, border: "none", boxShadow: "0 1px 6px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04)", marginBottom: 16, marginTop: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", background: "rgba(176,146,98,0.05)", borderRadius: 12, border: "none", boxShadow: "0 1px 6px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04)", marginBottom: 16, marginTop: 0 }}>
           <Avatar name={activeLearner.name} id={activeLearner.id} size={40} online />
           <div>
             <p style={{ fontSize: 14, fontWeight: 700, color: C.ivory, margin: 0 }}>{activeLearner.name}</p>
@@ -12936,7 +12915,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
       {/* ── Teaching Preferences ── */}
       {roomView === "preferences" && (
         <div>
-        <div style={{ margin: "0 20px 20px", background: "rgba(255,255,255,0.05)", borderRadius: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06)", overflow: "hidden" }}>
+        <div style={{ margin: "0 20px 20px", background: "rgba(176,146,98,0.05)", borderRadius: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06)", overflow: "hidden" }}>
           <RoomTabs />
         <div style={{ padding: "24px 20px" }}>
           {[
@@ -12990,7 +12969,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
         const STATUS_COLOR = { confirmed: "#1A9E6E", teacher_proposed: C.brass, student_proposed: "#E07B00", cancelled: "#c0392b" };
         return (
           <div>
-          <div style={{ margin: "0 20px 20px", background: "rgba(255,255,255,0.05)", borderRadius: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06)", overflow: "hidden" }}>
+          <div style={{ margin: "0 20px 20px", background: "rgba(176,146,98,0.05)", borderRadius: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06)", overflow: "hidden" }}>
             <RoomTabs />
           </div>
           <div style={{ padding: "0 20px 32px" }}>
@@ -13024,7 +13003,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
                           const dt = new Date(sess.date + "T" + sess.time);
                           const amount = (sess.status === "confirmed" && sess.paid) ? `€${sess.student.price}` : "—";
                           return (
-                            <tr key={i} style={{ borderBottom: `1px solid ${C.inkLine}`, background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.025)" }}>
+                            <tr key={i} style={{ borderBottom: `1px solid ${C.inkLine}`, background: i % 2 === 0 ? "transparent" : "rgba(176,146,98,0.05)" }}>
                               <td style={{ padding: "9px 12px" }}>
                                 <div onClick={() => { setActiveLearner(allLearners.find(l => l.id === sess.student.id) || allLearners[0]); setRoomView("students"); setSelectedSessionId(null); setTab("chat"); }}
                                   style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
@@ -13063,7 +13042,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
       {/* Inner tab bar — students view only */}
       {roomView === "students" && (
         <React.Fragment> {/* Inner tab bar */}
-      <div style={{ margin: "0 20px 20px", background: "rgba(255,255,255,0.05)", borderRadius: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06)", overflow: "hidden", minHeight: 320 }}>
+      <div style={{ margin: "0 20px 20px", background: "rgba(176,146,98,0.05)", borderRadius: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06)", overflow: "hidden", minHeight: 320 }}>
       <RoomTabs />
 
       {/* Chat */}
@@ -13078,7 +13057,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
             ))}
           </div>
           <div className="px-3 py-3 flex items-center gap-2" style={{ borderTop: `1px solid ${C.inkLine}` }}>
-            <input style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)", borderRadius: 999, padding: "11px 15px", fontSize: 14, color: C.ivory, outline: "none" }}
+            <input style={{ flex: 1, background: "rgba(176,146,98,0.05)", border: "1px solid rgba(255,255,255,0.10)", borderRadius: 999, padding: "11px 15px", fontSize: 14, color: C.ivory, outline: "none" }}
               placeholder={`Message ${activeLearner.name.split(" ")[0]}…`}
               onKeyDown={(e) => { if (e.key === "Enter" && e.target.value.trim()) { sendMsg(e.target.value); e.target.value = ""; } }} />
             <button onClick={(e) => { const inp = e.currentTarget.previousSibling; if (inp.value.trim()) { sendMsg(inp.value); inp.value = ""; } }}
@@ -13102,7 +13081,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
                   <Plus size={14} /> Propose a session
                 </button>
               ) : (
-                <div style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: 16, marginBottom: 14 }}>
+                <div style={{ background: "rgba(176,146,98,0.05)", border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: 16, marginBottom: 14 }}>
                   <p style={{ fontSize: 13, fontWeight: 600, color: C.ivory, margin: "0 0 10px" }}>Propose a time for {activeLearner.name.split(" ")[0]}</p>
                   <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
                     <input type="date" value={newDate} onChange={(e) => setNewDate(e.target.value)}
@@ -13155,7 +13134,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
                 const isSelected = s.id === selectedSessionId;
                 return (
                   <button key={s.id} onClick={() => setSelectedSessionId(isSelected ? null : s.id)}
-                    style={{ flexShrink: 0, width: 110, height: 110, borderRadius: 14, border: isSelected ? `2px solid ${C.brass}` : `1px solid ${isConfirmed ? "#A8D5B5" : C.inkLine}`, background: isConfirmed ? "rgba(26,158,110,0.10)" : "rgba(255,255,255,0.035)", display: "flex", flexDirection: "column", alignItems: "flex-start", justifyContent: "space-between", padding: 12, cursor: "pointer", boxShadow: isSelected ? `0 0 0 3px ${C.brassDim}` : "none", transition: "box-shadow 0.15s" }}>
+                    style={{ flexShrink: 0, width: 110, height: 110, borderRadius: 14, border: isSelected ? `2px solid ${C.brass}` : `1px solid ${isConfirmed ? "#A8D5B5" : C.inkLine}`, background: isConfirmed ? "rgba(26,158,110,0.10)" : "rgba(176,146,98,0.06)", display: "flex", flexDirection: "column", alignItems: "flex-start", justifyContent: "space-between", padding: 12, cursor: "pointer", boxShadow: isSelected ? `0 0 0 3px ${C.brassDim}` : "none", transition: "box-shadow 0.15s" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", width: "100%", alignItems: "center" }}>
                       <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: isConfirmed ? "#1A9E6E" : "#D4810A" }}>
                         {isConfirmed ? "Confirmed" : s.status === "student_counter" ? "Counter" : "Pending"}
@@ -13361,7 +13340,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
       {confirmCancelId !== null && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(10,20,40,0.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999 }}
           onClick={() => setConfirmCancelId(null)}>
-          <div style={{ background: "rgba(255,255,255,0.05)", borderRadius: 16, padding: "28px 28px 24px", maxWidth: 320, width: "90%", boxShadow: "0 8px 32px rgba(0,0,0,0.18)", textAlign: "center" }}
+          <div style={{ background: "rgba(176,146,98,0.05)", borderRadius: 16, padding: "28px 28px 24px", maxWidth: 320, width: "90%", boxShadow: "0 8px 32px rgba(0,0,0,0.18)", textAlign: "center" }}
             onClick={(e) => e.stopPropagation()}>
             <p style={{ fontSize: 16, fontWeight: 700, color: C.inkText, margin: "0 0 8px" }}>Cancel this session?</p>
             <p style={{ fontSize: 13, color: C.ivoryDim, margin: "0 0 20px", lineHeight: 1.5 }}>Are you sure you want to cancel? This cannot be undone.</p>
