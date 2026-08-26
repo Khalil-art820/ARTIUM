@@ -3466,8 +3466,8 @@ export default function App() {
           display: flex; flex-direction: column; align-items: center; gap: 3px;
           color: #FFFFFF; white-space: nowrap; pointer-events: none;
         }
-        .artium-globepin-count > svg { width: min(16px, 2.7vw); height: auto; display: block; }
-        .artium-globepin-count-n { font-weight: 700; font-size: min(17px, 2.9vw); line-height: 1; letter-spacing: -0.01em; }
+        .artium-globepin-count > svg { width: min(18px, 3.02vw); height: auto; display: block; }
+        .artium-globepin-count-n { font-weight: 400; font-size: min(17px, 2.9vw); line-height: 1; letter-spacing: -0.01em; }
 
         /* Points at the pin from its left, nudging toward it — the push says
            "press this" the way the bob alone never quite did. Anchored to the
@@ -3816,9 +3816,10 @@ export default function App() {
            the pin, same nudge-toward-it motion); this only adds the disc
            material and recolors the currentColor stroke gold. */
         .artium-lp--light .artium-globepin-hand {
-          width: min(46px, 8vw); height: min(46px, 8vw);
+          width: min(66px, 17vw); height: min(66px, 17vw);
           border-radius: 50%;
-          display: flex; align-items: center; justify-content: center;
+          display: flex; flex-direction: column; align-items: center; justify-content: center;
+          gap: 2px;
           background: radial-gradient(circle at 35% 28%, #FFFFFF 0%, #FCF8EF 55%, #F1E8D6 100%);
           border: 1px solid rgba(255,255,255,.85);
           box-shadow:
@@ -3829,15 +3830,10 @@ export default function App() {
           color: #C9962E;
         }
         .artium-lp--light .artium-globepin-hand svg { width: 55%; height: 55%; }
-        .artium-lp--light .artium-globepin-signup {
-          /* The page's call to action, riding under the hand — the whole
-             pin button is the signup now, this is its label. */
-          display: inline-block; padding: 7px 16px; border-radius: 999px;
-          background: linear-gradient(180deg,#EFD08A 0%,#DBAB4C 55%,#C9962E 100%);
-          box-shadow: 0 10px 18px -8px rgba(176,126,31,.6),
-            inset 0 1px 1px rgba(255,255,255,.7), inset 0 -2px 4px rgba(140,95,15,.35);
-          font-family: 'Jost', sans-serif; font-size: 13.5px; font-weight: 600;
-          color: #3A2E10; white-space: nowrap;
+        .artium-lp--light .artium-globepin-register {
+          font-family: 'Jost', sans-serif; font-size: min(10.5px, 2.8vw);
+          font-weight: 600; letter-spacing: .02em; color: #C9962E;
+          line-height: 1; white-space: nowrap;
         }
 
         /* ---- the five steps: pure-white slabs with the gate's
@@ -3890,7 +3886,7 @@ export default function App() {
         .artium-lp--light .artium-lp-step-t {
           color: #232A3B; font-family: 'Fraunces', serif;
           font-weight: 600; font-size: 18px; line-height: 1.3;
-          font-optical-sizing: none; font-variation-settings: 'opsz' 11;
+          font-optical-sizing: none; font-variation-settings: 'opsz' 11, 'SOFT' 100, 'WONK' 0;
         }
         .artium-lp--light .artium-lp-step-d {
           margin-top: 6px; color: #4A4F5A; font-weight: 400;
@@ -4185,7 +4181,7 @@ export default function App() {
           Not on pendingReview, whose whole point is that nothing is reachable
           yet — a bar there would be five buttons that bounce off the approval
           check, which is the Saved problem again. */}
-      {(view === "landing" || view === "app") && (
+      {view === "app" && (
         <BottomTabs
           items={
             !myProfile ? GUEST_TABS :
@@ -4198,11 +4194,8 @@ export default function App() {
           // Nothing is lit on the landing page but Home, and nothing at all
           // while a student profile is open over the app — that is a page you
           // reached from a tab, not a tab.
-          active={view === "landing" ? "home" : selectedStudentId ? "" : appTab}
+          active={selectedStudentId ? "" : appTab}
           onTab={goToTab}
-          // Only the landing screen re-skinned light (below); "app" stays
-          // the dark bar it always was.
-          light={view === "landing"}
         />
       )}
     </div>
@@ -4394,7 +4387,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
     // this markup still uses stay untouched for the screens that are still
     // dark by design (signup flow, map, network, etc.) — see the CSS block
     // for the full list of what got scoped-overridden vs. left alone.
-    <div className="artium-lp artium-lp--light artium-has-tabs">
+    <div className="artium-lp artium-lp--light">
       {/* Not <GateBackdrop> (that's the old dark hall photo, gone). The
           user's own artwork instead — colonnade/staff/dotted-map,
           re-grounded to the page's own grey — sitting behind the header
@@ -4485,11 +4478,11 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
                   without touching this markup. */}
               <span className="artium-globepin-hand-col" aria-hidden="true">
                 <span className="artium-globepin-hand">
-                  <img src="/hand-manicule.png" alt="" style={{ display: "block", width: "min(30px, 5.4vw)", height: "auto" }} />
+                  <img src="/hand-manicule.png" alt="" style={{ display: "block", width: "42%", height: "auto" }} />
+                  {!myProfile && (
+                    <span className="artium-globepin-register">{studentLoggedOut ? "Log in" : "Register"}</span>
+                  )}
                 </span>
-                {!myProfile && (
-                  <span className="artium-globepin-signup">{studentLoggedOut ? "Log in" : "Sign Up"}</span>
-                )}
               </span>
               <span className="artium-globepin-count">
                 <Users />
