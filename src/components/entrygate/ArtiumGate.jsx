@@ -703,14 +703,8 @@ export default function ArtiumGate({
           </div>
         </section>
 
-        {/* ================= LOGIN ================= */}
-        <section className="login-zone">
-          <div className="q">Already have an account?</div>
-          <button className="btn-login" onClick={onLogin}>
-            Log in
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12h15M13 6l6 6-6 6" /></svg>
-          </button>
-        </section>
+        {/* The login section is gone: the whole app is auth-first now — by the
+            time anyone sees this gate they are already signed in. */}
 
         {/* ================= FOOTER ================= */}
         <footer>

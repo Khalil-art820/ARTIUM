@@ -370,21 +370,6 @@
 .agate .trust h4{font-size:19px;font-weight:600;line-height:1.25;white-space:nowrap;}
 .agate .trust p{font-size:17px;color:var(--muted);font-weight:300;margin-top:6px;line-height:1.45;}
 
-/* ================= LOGIN ================= */
-.agate .login-zone{text-align:center;margin-top:34px;}
-.agate .q{font-size:19px;color:#2A3142;}
-.agate .btn-login{
-  margin-top:18px;
-  display:inline-flex;align-items:center;gap:14px;justify-content:center;
-  min-width:290px;padding:16px 42px;border:none;border-radius:999px;
-  background:linear-gradient(180deg,#EFD08A 0%,#DBAB4C 55%,#C9962E 100%);
-  box-shadow:
-    0 18px 30px -10px rgba(176,126,31,.6),
-    inset 0 2px 2px rgba(255,255,255,.7),
-    inset 0 -4px 7px rgba(140,95,15,.35);
-  font-family:'Jost',sans-serif;font-size:21px;font-weight:500;color:#3A2E10;
-  cursor:pointer;
-}
 
 /* ================= FOOTER ================= */
 .agate footer{margin-top:44px;font-size:14px;color:var(--muted);}
