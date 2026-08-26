@@ -3833,19 +3833,22 @@ export default function App() {
           position: relative;
           padding: 16px 14px; gap: 12px;
           border-radius: 28px;
-          border: 1px solid rgba(176,146,98,.30);
-          background: #FFFFFF;
+          /* The entry gate cards' edge, translated to a rectangle: contour
+             stroke, a raised white lip, then the inner panel set off by its
+             own hairline and groove shadow. */
+          border: 1px solid rgba(176,146,98,.35);
+          background: linear-gradient(180deg, #FFFFFF 0%, #FFFFFF 62%, #F7F4EE 100%);
           -webkit-backdrop-filter: none; backdrop-filter: none;
-          box-shadow: 0 20px 40px -22px rgba(150,115,55,.38);
+          box-shadow: 0 24px 26px -18px rgba(150,115,55,.30), 0 6px 9px -4px rgba(150,115,55,.14);
         }
         .artium-lp--light .artium-lp-step::before {
-          content: ''; position: absolute; inset: 3px; border-radius: 25px;
-          border: 1.5px solid rgba(255,255,255,.9); pointer-events: none;
+          content: ""; position: absolute; inset: 2.5px; border-radius: 25px;
+          border: 1.7px solid rgba(255,255,255,.95); pointer-events: none;
         }
         .artium-lp--light .artium-lp-step::after {
-          content: ''; position: absolute; inset: 9px; border-radius: 20px;
-          border: 1px solid rgba(176,146,98,.14);
-          box-shadow: inset 0 1px 2px rgba(150,110,50,.10);
+          content: ""; position: absolute; inset: 8px; border-radius: 20px;
+          border: 1px solid rgba(176,146,98,.28);
+          box-shadow: 0 1.6px 1.3px rgba(150,110,50,.28), inset 0 1px 0 rgba(255,255,255,.85);
           pointer-events: none;
         }
         .artium-lp--light .artium-lp-step > * { position: relative; z-index: 1; }
@@ -4453,18 +4456,10 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
                   the light variant's puck styling can recolor it gold
                   without touching this markup. */}
               <span className="artium-globepin-hand" aria-hidden="true">
-                <svg viewBox="0 0 40 40" fill="none" stroke="currentColor"
-                  strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
-                  style={{ display: "block" }}>
-                  {/* circular wrist cuff, open where it meets the hand */}
-                  <path d="M10.5 27.5a6.5 6.5 0 1 1 6.5 6.5" />
-                  {/* index finger, extended and pointing right */}
-                  <path d="M17 20h11.5a2.3 2.3 0 0 1 0 4.6H17" />
-                  {/* three curled fingers, each shorter than the last */}
-                  <path d="M17 24.6h7.4a2 2 0 0 1 0 4H17" />
-                  <path d="M17 28.6h5.6a1.8 1.8 0 0 1 0 3.6H17" />
-                  <path d="M17 32.2h3.8a1.6 1.6 0 0 1 0 3.2H17" />
-                </svg>
+                {/* The reference design's own manicule, extracted from the
+                    mock as a tinted PNG — hand-drawn SVG attempts kept
+                    missing its character. */}
+                <img src="/hand-manicule.png" alt="" style={{ display: "block", width: "min(30px, 5.4vw)", height: "auto" }} />
               </span>
               <span className="artium-globepin-count">
                 <Users />
@@ -4498,7 +4493,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
                 <p className="artium-lp-step-d">{s.d}</p>
               </span>
               <span className="artium-lp-step-i" aria-hidden="true">
-                <s.Icon size={44} strokeWidth={1.5} />
+                <s.Icon size={44} strokeWidth={1.3} />
               </span>
             </div>
           ))}
