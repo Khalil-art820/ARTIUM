@@ -3475,20 +3475,24 @@ export default function App() {
            off the right edge of its own box so the gap stays put while the
            nudge moves the hand. 35.3% is the globe's centre, measured off the
            artwork — the hand points at the globe, not at the pin's middle. */
-        .artium-globepin-hand {
+        .artium-globepin-hand-col {
           position: absolute; right: calc(100% + 12px); top: 35.3%;
-          animation: artiumPoint 1.3s ease-in-out infinite;
+          transform: translate(0, -50%);
+          display: flex; flex-direction: column; align-items: center; gap: 8px;
           pointer-events: none;
+        }
+        .artium-globepin-hand {
+          animation: artiumPoint 1.3s ease-in-out infinite;
         }
         .artium-globepin-hand svg { width: min(36px, 6.2vw); height: auto; }
         @keyframes artiumPoint {
-          0%, 100% { transform: translate(0, -50%); }
-          55%      { transform: translate(9px, -50%); }
+          0%, 100% { transform: translate(0, 0); }
+          55%      { transform: translate(9px, 0); }
         }
 
         @media (prefers-reduced-motion: reduce) {
           .artium-globepin { animation: none; }
-          .artium-globepin-hand { animation: none; transform: translate(0, -50%); }
+          .artium-globepin-hand { animation: none; }
           .artium-explore:hover .artium-globepin { transform: none; }
         }
 
@@ -3825,6 +3829,16 @@ export default function App() {
           color: #C9962E;
         }
         .artium-lp--light .artium-globepin-hand svg { width: 55%; height: 55%; }
+        .artium-lp--light .artium-globepin-signup {
+          /* The page's call to action, riding under the hand — the whole
+             pin button is the signup now, this is its label. */
+          display: inline-block; padding: 7px 16px; border-radius: 999px;
+          background: linear-gradient(180deg,#EFD08A 0%,#DBAB4C 55%,#C9962E 100%);
+          box-shadow: 0 10px 18px -8px rgba(176,126,31,.6),
+            inset 0 1px 1px rgba(255,255,255,.7), inset 0 -2px 4px rgba(140,95,15,.35);
+          font-family: 'Jost', sans-serif; font-size: 13.5px; font-weight: 600;
+          color: #3A2E10; white-space: nowrap;
+        }
 
         /* ---- the five steps: pure-white slabs with the gate's
            double-slab rim (outer contour + inner keyline + inset panel
@@ -4418,13 +4432,6 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
               <Avatar name={myProfile.name} id="me" size={HEADER_CONTROL} photoUrl={myProfile.photoUrl} online />
             </button>
           )}
-          {/* Sits where the avatar goes once signed in. This is the page's only
-              call to action. Returning students who logged out get login. */}
-          {!myProfile && (
-            <button className="artium-lp-cta" onClick={studentLoggedOut ? onLogin : onApply}>
-              {studentLoggedOut ? "Log in" : "Sign Up"}
-            </button>
-          )}
         </div>
       </header>
 
@@ -4440,9 +4447,9 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
             gone, so there is nothing between it and the page. */}
         <button
             type="button"
-            onClick={onPreview}
+            onClick={myProfile ? onPreview : (studentLoggedOut ? onLogin : onApply)}
             className="artium-explore"
-            aria-label={`Explore Artium's network — ${memberCount} members`}
+            aria-label={myProfile ? `Explore Artium's network — ${memberCount} members` : (studentLoggedOut ? "Log in" : "Sign up")}
             style={{
               display: "flex", flexDirection: "column", alignItems: "center",
               gap: 12, padding: 0, border: "none", background: "none",
@@ -4476,11 +4483,13 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
                   shorter curled fingers stacked below it. currentColor so
                   the light variant's puck styling can recolor it gold
                   without touching this markup. */}
-              <span className="artium-globepin-hand" aria-hidden="true">
-                {/* The reference design's own manicule, extracted from the
-                    mock as a tinted PNG — hand-drawn SVG attempts kept
-                    missing its character. */}
-                <img src="/hand-manicule.png" alt="" style={{ display: "block", width: "min(30px, 5.4vw)", height: "auto" }} />
+              <span className="artium-globepin-hand-col" aria-hidden="true">
+                <span className="artium-globepin-hand">
+                  <img src="/hand-manicule.png" alt="" style={{ display: "block", width: "min(30px, 5.4vw)", height: "auto" }} />
+                </span>
+                {!myProfile && (
+                  <span className="artium-globepin-signup">{studentLoggedOut ? "Log in" : "Sign Up"}</span>
+                )}
               </span>
               <span className="artium-globepin-count">
                 <Users />
