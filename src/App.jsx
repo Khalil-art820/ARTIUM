@@ -3867,8 +3867,8 @@ export default function App() {
           font-family: 'Playfair Display', serif;
         }
         .artium-lp--light .artium-lp-step-t {
-          color: #232A3B; font-family: 'Playfair Display', serif;
-          font-weight: 600; font-size: 19px; line-height: 1.25;
+          color: #232A3B; font-family: 'Fraunces', serif;
+          font-weight: 600; font-size: 18px; line-height: 1.3;
         }
         .artium-lp--light .artium-lp-step-d {
           margin-top: 6px; color: #4A4F5A; font-weight: 400;
