@@ -2189,8 +2189,12 @@ export default function App() {
     return () => { live = false; };
   }, [isPianistUser, pianistInquiries, myProfile?.id]);
 
-  const pianistNeedsAttention = pianistInquiries.some((q) =>
-    (q.status === "agreed" && !q.pianistSignedAt) || pianistOfferAttention[q.id]);
+  // Same rule as the boolean below, counted rather than tested — the network
+  // header's bell reads a number ("2 concert hiring requests"), the Concerts
+  // tab just needs to know whether to light up at all.
+  const pianistAttentionCount = pianistInquiries.filter((q) =>
+    (q.status === "agreed" && !q.pianistSignedAt) || pianistOfferAttention[q.id]).length;
+  const pianistNeedsAttention = pianistAttentionCount > 0;
 
   // Admin is now strictly profiles.is_admin — a real, signed-in account. The
   // demo teacher used to count too, which put the tab on screen while every
@@ -3353,6 +3357,51 @@ export default function App() {
         .artium-aw-bar-right { display: flex; align-items: center; justify-content: flex-end; gap: 12px; }
         .artium-aw-count { display: inline-flex; align-items: center; gap: 6px; color: #232A3B; font-size: 14px; font-weight: 600; }
 
+        /* Network page's own top row, landing-style: ivory puck back button,
+           the gate's crossbar-less-A wordmark, a passive member count (not a
+           chip) and the avatar. Sits above "Welcome, {name}" now, the same
+           position the gate and the landing header hold theirs. Distinct
+           classes from .artium-lp-*/.artium-aw-round on purpose — this bar
+           is drawn by the page below (App's "map" tab render), not by
+           Landing or by MapScreen's old internal header, and re-styling
+           .artium-aw-round itself would have reached every back button that
+           class draws across signup, messages and profile too. */
+        .artium-net-bar {
+          display: flex; align-items: center; gap: 11px;
+          width: 100%; max-width: 560px; margin: 0 auto;
+          padding: calc(12px + env(safe-area-inset-top, 0px)) 18px 10px;
+        }
+        .artium-net-puck {
+          width: 34px; height: 34px; flex-shrink: 0; border-radius: 50%; padding: 0;
+          display: inline-flex; align-items: center; justify-content: center;
+          color: #232A3B; cursor: pointer; position: relative;
+          background: radial-gradient(circle at 35% 28%, #FFFFFF 0%, #FCF8EF 55%, #F1E8D6 100%);
+          border: 1px solid rgba(255,255,255,.85);
+          box-shadow:
+            0 8px 14px -4px rgba(150,115,55,.38),
+            0 2px 4px rgba(150,115,55,.14),
+            inset 0 2px 2px #fff,
+            inset 0 -3px 5px rgba(176,146,98,.28);
+          transition: box-shadow .25s ease, transform .25s ease;
+        }
+        .artium-net-puck:hover { box-shadow: 0 10px 18px -4px rgba(150,115,55,.42), 0 2px 4px rgba(150,115,55,.16), inset 0 2px 2px #fff, inset 0 -3px 5px rgba(176,146,98,.28); }
+        .artium-net-word {
+          font-family: 'Jost', system-ui, sans-serif;
+          font-size: 19px; font-weight: 600; color: #232A3B;
+          letter-spacing: .18em; text-transform: uppercase;
+          display: inline-flex; align-items: center; white-space: nowrap;
+        }
+        .artium-net-word svg { width: .72em; height: .72em; margin-right: .2em; display: block; }
+        .artium-net-right { display: flex; align-items: center; gap: 12px; margin-left: auto; }
+        .artium-net-count { display: inline-flex; align-items: center; gap: 7px; color: #6A7080; font-size: 14px; font-weight: 400; cursor: default; }
+        .artium-net-count svg { color: #6A7080; }
+        .artium-net-bell-badge {
+          position: absolute; top: -3px; right: -3px; min-width: 16px; height: 16px; padding: 0 3px;
+          border-radius: 999px; display: flex; align-items: center; justify-content: center;
+          background: linear-gradient(180deg, #EFD08A 0%, #DBAB4C 55%, #C9962E 100%);
+          color: #3A2E10; font-size: 10px; font-weight: 700; border: 1px solid #fff;
+        }
+
         /* Eyebrow with a rule running out either side. */
         .artium-aw-eyebrow {
           display: flex; align-items: center; gap: 12px; margin: 6px 0 0;
@@ -4320,8 +4369,58 @@ export default function App() {
           )}
           {appTab === "map" && !selectedStudentId && (
             <>
+              {/* Landing's own header, first thing on the page — back puck,
+                  wordmark, passive member count, bell, avatar — same
+                  sizes/materials, just under this page's own class names
+                  (.artium-net-*) since it's drawn here rather than by
+                  Landing itself. "Welcome, {name}" used to sit above this;
+                  it moves below, same as it sits below the header on every
+                  other screen the gate draws. */}
+              <header className="artium-net-bar">
+                <button className="artium-net-puck" onClick={goHome} aria-label="Back">
+                  <ChevronLeft size={17} strokeWidth={2} />
+                </button>
+                <span className="artium-net-word" aria-label="ARTIUM">
+                  <svg viewBox="0 0 15 15" aria-hidden="true">
+                    <path d="M7.5 0.9 L1.4 14.4 M7.5 0.9 L13.6 14.4" stroke="currentColor" strokeWidth="2.85" fill="none" />
+                  </svg>
+                  <span aria-hidden="true">RTIUM</span>
+                </span>
+                <span className="artium-net-right">
+                  <span className="artium-net-count" title="Members" aria-label={`${Object.values(studentsByCons).flat().length} members`}>
+                    <Users size={15} strokeWidth={1.8} />
+                    {Object.values(studentsByCons).flat().length}
+                  </span>
+                  {myProfile && (
+                    <NotificationBell
+                      myProfile={myProfile}
+                      puck
+                      networkFeeds
+                      hireCount={pianistAttentionCount}
+                      onGoToLessonRoom={() => { setSelectedStudentId(null); setAppTabPersist("lessons"); }}
+                      onGoToConcerts={() => { setSelectedStudentId(null); setAppTabPersist("concerts"); }}
+                      onGoToComposers={() => setScreen("composers")}
+                      // Classical Events has no news feed yet — nowhere to
+                      // send a click. Marking the feed seen is still a real
+                      // action (it is what would clear the badge once there
+                      // is somewhere to read), so it stays wired.
+                      onGoToNews={() => {}}
+                      authUser={authUser}
+                      isAdmin={isAdmin}
+                      onGoToAdmin={() => { setSelectedStudentId(null); setAppTabPersist("admin"); }}
+                    />
+                  )}
+                  {myProfile ? (
+                    <button onClick={goToProfile} title="My profile" style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}>
+                      <Avatar name={myProfile.name} id="me" size={HEADER_CONTROL} photoUrl={myProfile.photoUrl} online />
+                    </button>
+                  ) : (
+                    <Avatar name={accountName || "?"} id="me" size={HEADER_CONTROL} photoUrl={accountPhotoUrl} />
+                  )}
+                </span>
+              </header>
               {myProfile && (
-                <div className="px-6 pt-6 pb-2">
+                <div className="px-6 pt-2 pb-2">
                   <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600, color: C.inkText }}>
                     Welcome, {myProfile.name.split(" ")[0]}
                   </h2>
@@ -4339,7 +4438,6 @@ export default function App() {
                 onOpenStudent={(id) => openStudent(id, "map")}
                 isGuest={!myProfile}
                 onGuestClick={() => setShowGuestPrompt(true)}
-                onBack={goHome}
                 // Unapproved students are routed to the pendingReview screen and
                 // never reach the map at all, so the approved check here is
                 // belt-and-braces — the popup's locked state shouldn't normally
@@ -7941,7 +8039,28 @@ function LearnerProfileModal({ learner, onClose }) {
   );
 }
 
-function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGoToAdmin }) {
+/**
+ * networkFeeds ("You have N teaching requests" / "N concert hiring
+ * requests" / "N new posts in Tomorrow's Composers" / "N news in Classical
+ * Events") is the student network header's own reading of this bell — a
+ * feed launcher rather than the inline accept/decline cards below. It's
+ * opt-in (a prop, not a rewrite of the default) so Landing's and the app
+ * shell's headers, which still want the old per-request cards, are
+ * untouched.
+ *
+ * Teaching requests and concert hiring requests are read off real pending
+ * state (incomingRequests / hireCount) — a signature or a reply is what
+ * clears those, not opening the bell, so their counts are NOT gated by the
+ * last-seen stamps below (stamping just marks the visit; the badge tracks
+ * truth). Composer posts and Classical Events have no timestamped feed to
+ * read yet, so their counts are hardcoded 0 with the last-seen plumbing
+ * wired and ready — see artium_seen_composers_v1 / artium_seen_news_v1.
+ */
+function markFeedSeen(key) {
+  try { localStorage.setItem(key, String(Date.now())); } catch { /* private mode */ }
+}
+
+function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGoToAdmin, networkFeeds, puck, hireCount = 0, onGoToConcerts, onGoToComposers, onGoToNews }) {
   const [open, setOpen] = React.useState(false);
   const [viewingLearner, setViewingLearner] = React.useState(null);
   const [pending, setPending] = React.useState(() => {
@@ -8002,25 +8121,55 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
 
   if (!myProfile) return null;
 
-  const totalCount = pending.length + promoPending.length;
+  // The network header's own count: exactly the four feeds, nothing else —
+  // promoPending is an admin concern, orthogonal to a student's four rows,
+  // so it never inflates this badge even when both are true at once.
+  const composerCount = 0;
+  const newsCount = 0;
+  const feedTotal = pending.length + hireCount + composerCount + newsCount;
+  const totalCount = networkFeeds ? feedTotal : pending.length + promoPending.length;
+
+  function NetworkRow({ label, count, seenKey, onGo }) {
+    const active = count > 0;
+    return (
+      <button
+        onClick={() => { markFeedSeen(seenKey); setOpen(false); onGo && onGo(); }}
+        style={{
+          width: "100%", textAlign: "left", padding: "13px 16px", border: "none",
+          borderBottom: `1px solid ${C.inkLine}`, background: "transparent", cursor: "pointer",
+          fontSize: 13, color: C.ivory, fontFamily: FONT_BODY, lineHeight: 1.5,
+        }}
+      >
+        {label(active, count)}
+      </button>
+    );
+  }
 
   return (
     <div ref={ref} style={{ position: "relative" }}>
       <LearnerProfileModal learner={viewingLearner} onClose={() => setViewingLearner(null)} />
-      <button onClick={() => setOpen((o) => !o)} style={{ position: "relative", background: "none", border: "none", cursor: "pointer", padding: 4, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <Bell size={20} color={totalCount > 0 ? C.brass : C.ivoryDim} />
+      <button
+        onClick={() => setOpen((o) => !o)}
+        aria-label="Notifications"
+        className={puck ? "artium-net-puck" : undefined}
+        style={puck ? undefined : { position: "relative", background: "none", border: "none", cursor: "pointer", padding: 4, display: "flex", alignItems: "center", justifyContent: "center" }}
+      >
+        <Bell size={puck ? 15 : 20} strokeWidth={puck ? 2 : 1.8} color={puck ? "currentColor" : (totalCount > 0 ? C.brass : C.ivoryDim)} />
         {totalCount > 0 && (
-          <span style={{ position: "absolute", top: 0, right: 0, width: 16, height: 16, borderRadius: "50%", background: "#E53E3E", color: "#fff", fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>
+          <span
+            className={puck ? "artium-net-bell-badge" : undefined}
+            style={puck ? undefined : { position: "absolute", top: 0, right: 0, width: 16, height: 16, borderRadius: "50%", background: "#E53E3E", color: "#fff", fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}
+          >
             {totalCount}
           </span>
         )}
       </button>
       {open && (
-        <div style={{ position: "absolute", right: 0, top: "calc(100% + 8px)", width: 320, background: "rgba(176,146,98,0.05)", borderRadius: 12, boxShadow: "0 8px 32px rgba(0,0,0,0.14)", border: `1px solid ${C.inkLine}`, zIndex: 200, overflow: "hidden", maxHeight: 420, overflowY: "auto" }}>
+        <div style={{ position: "absolute", right: 0, top: "calc(100% + 8px)", width: 320, background: networkFeeds ? "#FFFFFF" : "rgba(176,146,98,0.05)", borderRadius: networkFeeds ? 18 : 12, boxShadow: networkFeeds ? "0 20px 40px -22px rgba(150,115,55,0.38), inset 0 1px 0 #fff" : "0 8px 32px rgba(0,0,0,0.14)", border: `1px solid ${C.inkLine}`, zIndex: 200, overflow: "hidden", maxHeight: 420, overflowY: "auto" }}>
           <div style={{ padding: "12px 16px", borderBottom: `1px solid ${C.inkLine}` }}>
             <p style={{ fontSize: 13, fontWeight: 700, color: C.ivory, margin: 0 }}>Notifications</p>
           </div>
-          {/* Owner-only: promotion approval requests */}
+          {/* Owner-only: promotion approval requests, in either panel format */}
           {promoPending.map((p) => (
             <div key={p.id} style={{ padding: "12px 16px", background: "#EEF4FF", borderBottom: `1px solid ${C.inkLine}` }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
@@ -8036,7 +8185,42 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
               </button>
             </div>
           ))}
-          {totalCount === 0 ? (
+          {networkFeeds ? (
+            <>
+              <NetworkRow
+                seenKey="artium_seen_teach_v1"
+                count={pending.length}
+                onGo={onGoToLessonRoom}
+                label={(active, n) => active
+                  ? <>You have <b style={{ color: C.brass, fontWeight: 700 }}>{n}</b> teaching request{n === 1 ? "" : "s"}</>
+                  : <span style={{ color: C.ivoryDim }}>You have 0 teaching requests</span>}
+              />
+              <NetworkRow
+                seenKey="artium_seen_hire_v1"
+                count={hireCount}
+                onGo={onGoToConcerts}
+                label={(active, n) => active
+                  ? <>You have <b style={{ color: C.brass, fontWeight: 700 }}>{n}</b> concert hiring request{n === 1 ? "" : "s"}</>
+                  : <span style={{ color: C.ivoryDim }}>You have 0 concert hiring requests</span>}
+              />
+              <NetworkRow
+                seenKey="artium_seen_composers_v1"
+                count={composerCount}
+                onGo={onGoToComposers}
+                label={(active, n) => active
+                  ? <><b style={{ color: C.brass, fontWeight: 700 }}>{n}</b> new post{n === 1 ? "" : "s"} in Tomorrow's Composers</>
+                  : <span style={{ color: C.ivoryDim }}>0 new posts in Tomorrow's Composers</span>}
+              />
+              <NetworkRow
+                seenKey="artium_seen_news_v1"
+                count={newsCount}
+                onGo={onGoToNews}
+                label={(active, n) => active
+                  ? <><b style={{ color: C.brass, fontWeight: 700 }}>{n}</b> news in Classical Events</>
+                  : <span style={{ color: C.ivoryDim }}>0 news in Classical Events</span>}
+              />
+            </>
+          ) : totalCount === 0 ? (
             <p style={{ fontSize: 13, color: C.ivoryDim, padding: "16px", margin: 0 }}>No new notifications</p>
           ) : (
             pending.map((r) => (
@@ -8568,11 +8752,10 @@ function consMonogram(c) {
   return initials || "—";
 }
 
-function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId, onOpenStudent, isGuest, onGuestClick, onBack, canViewRoster, extraCons = [] }) {
+function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId, onOpenStudent, isGuest, onGuestClick, canViewRoster, extraCons = [] }) {
   const ALL_CONS = React.useMemo(() => [...CONSERVATORIES, ...extraCons], [extraCons]);
   const cons = ALL_CONS.find((c) => c.id === selectedConsId);
   const roster = selectedConsId ? studentsByCons[selectedConsId] || [] : [];
-  const [mode, setMode] = useState("cons");
   const [q, setQ] = useState("");
   // Off by default: the reference lists the schools in their own order, and
   // sorting alphabetically by country buries the well-known ones behind
@@ -8594,12 +8777,12 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
 
   const rows = React.useMemo(() => {
     const needle = q.trim().toLowerCase();
-    let list = ALL_CONS.filter((c) => {
-      if (mode === "teach") {
-        return (studentsByCons[c.id] || []).some((st) => st.teaching && st.teaching.open);
-      }
-      return true;
-    });
+    // Always every conservatory now — Teaching Opportunities was the only
+    // other mode, and it lived here for the conservatory students' own
+    // network page. It never touched the learner's "Find a teacher" screen,
+    // which is its own component (LearnerScreen) with its own teacher-only
+    // list, so removing it here is safe to do in just this one place.
+    let list = ALL_CONS;
     if (areaIds) {
       const keep = new Set(areaIds);
       list = list.filter((c) => keep.has(c.id));
@@ -8610,37 +8793,15 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
     return sortByCountry
       ? [...list].sort((x, y) => (x.country || "").localeCompare(y.country || "") || (x.name || "").localeCompare(y.name || ""))
       : list;
-  }, [ALL_CONS, studentsByCons, mode, q, sortByCountry, areaIds]);
+  }, [ALL_CONS, studentsByCons, q, sortByCountry, areaIds]);
 
   const nf = (n) => n.toLocaleString();
 
   return (
     <div className="artium-aw">
-      <header className="artium-aw-bar">
-        <span>
-          <button className="artium-aw-round" onClick={onBack} aria-label="Back">
-            <ChevronLeft size={17} strokeWidth={2} />
-          </button>
-        </span>
-        <GateLogo word={21} />
-        <span className="artium-aw-bar-right">
-          <button className="artium-aw-round" aria-label="Search" onClick={() => {
-            const el = document.querySelector(".artium-aw-field input");
-            if (el) { el.scrollIntoView({ block: "center", behavior: "smooth" }); el.focus(); }
-          }}>
-            <Search size={16} strokeWidth={2} />
-          </button>
-          <span className="artium-aw-count">
-            <Users size={16} strokeWidth={1.8} />
-            {allStudents.length}
-          </span>
-        </span>
-      </header>
-
       <div className="artium-aw-in">
         <p className="artium-aw-eyebrow"><i />The Artium Network<i /></p>
         <h1 className="artium-aw-h1">Bridging Musicians Worldwide</h1>
-        <p className="artium-aw-sub">Discover where the next generation of great musicians is.</p>
 
         <div className="artium-aw-stage">
           <span className="artium-aw-glow" aria-hidden="true" />
@@ -8664,11 +8825,6 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
             <span className="artium-aw-stat-n"><User size={15} strokeWidth={2} />{nf(teacherCount)}</span>
             <p className="artium-aw-stat-l">Teachers</p>
           </div>
-        </div>
-
-        <div className="artium-aw-seg">
-          <button data-on={mode === "cons" ? "1" : "0"} onClick={() => setMode("cons")}>Conservatories</button>
-          <button data-on={mode === "teach" ? "1" : "0"} onClick={() => setMode("teach")}>Teaching Opportunities</button>
         </div>
 
         <div className="artium-aw-find">
@@ -8760,7 +8916,7 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
               </div>
             )}
             <div className="artium-aw-listhead">
-              <h2>{mode === "cons" ? "Conservatories" : "Teaching"}</h2>
+              <h2>Conservatories</h2>
               <span>{rows.length} result{rows.length === 1 ? "" : "s"}</span>
               <button className="artium-aw-sort" data-on={sortByCountry ? "1" : "0"}
                 aria-pressed={sortByCountry} onClick={() => setSortByCountry((v) => !v)}>
@@ -8769,9 +8925,7 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
             </div>
             <div className="artium-aw-list">
               {rows.length === 0 && (
-                <p className="artium-aw-empty">
-                  {mode === "teach" ? "No one is open to teaching yet." : "No conservatory matches that search."}
-                </p>
+                <p className="artium-aw-empty">No conservatory matches that search.</p>
               )}
               {rows.map((c) => {
                 const n = (studentsByCons[c.id] || []).length;
