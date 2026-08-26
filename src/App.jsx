@@ -3831,24 +3831,31 @@ export default function App() {
            groove), gold Playfair numbered pucks, mock's type scale. ---- */
         .artium-lp--light .artium-lp-step {
           position: relative;
-          padding: 16px 14px; gap: 12px;
+          padding: 18px 16px; gap: 12px;
           border-radius: 28px;
-          /* The entry gate cards' edge, translated to a rectangle: contour
-             stroke, a raised white lip, then the inner panel set off by its
-             own hairline and groove shadow. */
+          /* The gate cards' actual edge stack, translated: plate surface on
+             the page tone, contour stroke, then the pseudo-elements below
+             carry the white specular keyline and the inset panel with its
+             groove — the two ridges that make the double slab. */
+          background: #F4F4F3;
           border: 1px solid rgba(176,146,98,.35);
-          background: linear-gradient(180deg, #FFFFFF 0%, #FFFFFF 62%, #F7F4EE 100%);
           -webkit-backdrop-filter: none; backdrop-filter: none;
-          box-shadow: 0 24px 26px -18px rgba(150,115,55,.30), 0 6px 9px -4px rgba(150,115,55,.14);
+          box-shadow: 0 24px 26px -12px rgba(150,115,55,.26), 0 6px 9px -3px rgba(150,115,55,.13);
         }
         .artium-lp--light .artium-lp-step::before {
-          content: ""; position: absolute; inset: 2.5px; border-radius: 25px;
-          border: 1.7px solid rgba(255,255,255,.95); pointer-events: none;
+          /* platekey: the specular white line just inside the contour */
+          content: ""; position: absolute; inset: 2.6px; border-radius: 25px;
+          border: 1.7px solid rgba(255,255,255,.92); pointer-events: none;
         }
         .artium-lp--light .artium-lp-step::after {
-          content: ""; position: absolute; inset: 8px; border-radius: 20px;
-          border: 1px solid rgba(176,146,98,.28);
-          box-shadow: 0 1.6px 1.3px rgba(150,110,50,.28), inset 0 1px 0 rgba(255,255,255,.85);
+          /* panel: inset slab with white edge, groove shadow beneath it,
+             its own inner keyline, and the cards' bottom shade */
+          content: ""; position: absolute; inset: 10px; border-radius: 19px;
+          border: 1px solid rgba(255,255,255,.78);
+          box-shadow:
+            0 1.6px 1.3px rgba(150,110,50,.40),
+            inset 0 0 0 1.5px rgba(255,255,255,.85);
+          background: linear-gradient(180deg, rgba(176,146,98,0) 58%, rgba(176,146,98,.14) 100%);
           pointer-events: none;
         }
         .artium-lp--light .artium-lp-step > * { position: relative; z-index: 1; }
@@ -3869,6 +3876,7 @@ export default function App() {
         .artium-lp--light .artium-lp-step-t {
           color: #232A3B; font-family: 'Fraunces', serif;
           font-weight: 600; font-size: 18px; line-height: 1.3;
+          font-optical-sizing: none; font-variation-settings: 'opsz' 11;
         }
         .artium-lp--light .artium-lp-step-d {
           margin-top: 6px; color: #4A4F5A; font-weight: 400;
@@ -4272,13 +4280,24 @@ const IconBox = ({ size = 34, strokeWidth = 1.5, children }) => (
     stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round"
     aria-hidden="true" style={{ display: "block" }}>{children}</svg>
 );
+const IconStage = ({ size = 34 }) => (
+  // The entry gate card 02's proscenium stage, verbatim: solid gold arch,
+  // swagged curtains, floor bar.
+  <svg width={size} height={size} viewBox="0 0 96 96" fill="currentColor" aria-hidden="true">
+    <path d="M12 22a36 14 0 0 1 72 0v4H12v-4z" />
+    <path d="M20 26c12 4 16 18 8 30-5 8-9 12-9 20h-9c0-10 5-16 5-26 0-10-3-16 5-24z" />
+    <path d="M76 26c-12 4-16 18-8 30 5 8 9 12 9 20h9c0-10-5-16-5-26 0-10 3-16-5-24z" />
+    <rect x="14" y="80" width="68" height="8" rx="4" />
+  </svg>
+);
 const IconProfileDoc = (p) => (
+  // Softer, rounder profile mark: a person in a rounded badge with a small
+  // sparkle — replaces the boxy dog-eared document at the user's request.
   <IconBox {...p}>
-    <path d="M14.2 2.5H6.6a2.1 2.1 0 0 0-2.1 2.1v14.8a2.1 2.1 0 0 0 2.1 2.1h10.8a2.1 2.1 0 0 0 2.1-2.1V7.8z" />
-    <path d="M14.2 2.5v5.3h5.3" />
-    <circle cx="12" cy="10.6" r="1.9" />
-    <path d="M8.9 16.1a3.1 3.1 0 0 1 6.2 0z" />
-    <path d="M8.2 18.3h7.6M8.2 20.1h4.4" />
+    <rect x="3.4" y="3.4" width="17.2" height="17.2" rx="6" />
+    <circle cx="12" cy="10" r="2.6" />
+    <path d="M7.4 17.6c.7-2.4 2.5-3.6 4.6-3.6s3.9 1.2 4.6 3.6" />
+    <path d="M17.4 5.9l.5 1.1 1.1.5-1.1.5-.5 1.1-.5-1.1-1.1-.5 1.1-.5z" />
   </IconBox>
 );
 const IconGlobePin = (p) => (
@@ -4347,7 +4366,9 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
       d: "Message students at any conservatory in the world, directly." },
     { n: "4", t: "Earn while you teach", Icon: IconTeacher,
       d: "Accept tutoring requests from music enthusiasts and set your own rate." },
-    { n: "5", t: "Marketing and Advertising", Icon: IconMegaphone,
+    { n: "5", t: "Perform in concerts", Icon: IconStage,
+      d: "Get hired to play in concerts, events and private engagements." },
+    { n: "6", t: "Marketing and Advertising", Icon: IconMegaphone,
       d: <>Claim your promotional video on <a href="https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==" target="_blank" rel="noreferrer">aclassicaltone</a> (may be subject to fees, as per our partnership agreement).</> },
   ];
   return (
@@ -4468,9 +4489,6 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
                 <span className="artium-globepin-count-n">{memberCount.toLocaleString()}</span>
               </span>
             </span>
-          </span>
-          <span className="artium-lp-cap">
-            Tap the pin to explore your <b>artium's</b> world
           </span>
         </button>
 
