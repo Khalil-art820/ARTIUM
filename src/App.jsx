@@ -3361,11 +3361,12 @@ export default function App() {
            the gate's crossbar-less-A wordmark, a passive member count (not a
            chip) and the avatar. Sits above "Welcome, {name}" now, the same
            position the gate and the landing header hold theirs. Distinct
-           classes from .artium-lp-*/.artium-aw-round on purpose — this bar
-           is drawn by the page below (App's "map" tab render), not by
-           Landing or by MapScreen's old internal header, and re-styling
-           .artium-aw-round itself would have reached every back button that
-           class draws across signup, messages and profile too. */
+           classes from the artium-lp and artium-aw-round families on
+           purpose — this bar is drawn by the page below (App's map tab
+           render), not by Landing or by MapScreen's old internal header,
+           and restyling artium-aw-round itself would have reached every
+           back button that class draws across signup, messages and
+           profile too. */
         .artium-net-bar {
           display: flex; align-items: center; gap: 11px;
           width: 100%; max-width: 560px; margin: 0 auto;
