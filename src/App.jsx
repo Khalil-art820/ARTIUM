@@ -1632,6 +1632,196 @@ function AccessGate({ onUnlock }) {
   );
 }
 
+/* =========================================================
+   AUTH PROMPT — one signup for the whole app.
+
+   Sits between the access gate and the entry gate: nobody reaches the four
+   role cards signed out any more. Deliberately its own small self-styled
+   screen rather than reusing the dark signup-flow chrome — it draws in the
+   entry gate's own light key (grey ground, ink/gold, Jost/Playfair) since
+   it is the first thing anyone sees past the access key, and it is the one
+   auth surface every role shares. Only two Supabase calls: signUp /
+   signInWithPassword / signInWithOAuth, the same ones every role flow used
+   to call itself — nothing new, just moved up front and shared.
+========================================================= */
+function AuthWordmark({ size = 24 }) {
+  return (
+    <span
+      aria-label="ARTIUM"
+      style={{
+        display: "inline-flex", alignItems: "center", justifyContent: "center",
+        fontFamily: "'Jost', system-ui, sans-serif", fontWeight: 500,
+        fontSize: size, letterSpacing: "0.02em", color: "#232A3B",
+      }}
+    >
+      <svg width={size * 0.62} height={size * 0.62} viewBox="0 0 15 15" aria-hidden="true" style={{ marginRight: 2 }}>
+        <path d="M7.5 0.9 L1.4 14.4 M7.5 0.9 L13.6 14.4" stroke="currentColor" strokeWidth="2.85" fill="none" />
+      </svg>
+      <span aria-hidden="true">RTIUM</span>
+    </span>
+  );
+}
+
+function AuthPrompt() {
+  const AP_INK = "#232A3B", AP_GOLD = "#C9962E", AP_BG = "#F4F4F3", AP_MUTED = "#6B7280";
+  const [mode, setMode] = useState("signup"); // "signup" | "login"
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [checkEmail, setCheckEmail] = useState(false);
+
+  async function handleGoogle() {
+    setError(""); setSubmitting(true);
+    // No artium_google_role here on purpose — that key is how a role flow's
+    // own Google button (mid-signup) says "come back and open this door".
+    // This button has no door to remember; a bare Google session with no
+    // pending role lands back on the entry gate, exactly like a returning
+    // signed-in visitor with no role yet.
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: window.location.origin },
+    });
+    if (error) { setError(error.message); setSubmitting(false); }
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setError("");
+    if (!email.trim()) { setError("Enter your email."); return; }
+    if (mode === "signup") {
+      if (password.length < 6) { setError("Password must be at least 6 characters."); return; }
+      if (password !== confirmPassword) { setError("Passwords don't match."); return; }
+      setSubmitting(true);
+      const { data, error } = await supabase.auth.signUp({ email: email.trim(), password });
+      setSubmitting(false);
+      if (error) { setError(friendlyAuthError(error.message)); return; }
+      // Supabase fakes success for an address that already has an account
+      // (see the same check in submitApplication) rather than saying so —
+      // an empty identities array on a sessionless result is that fake.
+      if (data.user && !data.session && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+        setError("An account already exists for this email. Log in instead.");
+        return;
+      }
+      if (!data.session) { setCheckEmail(true); return; }
+      // A session now exists — the app's own auth listener picks this up
+      // and swaps this screen for the entry gate; nothing left to do here.
+    } else {
+      setSubmitting(true);
+      const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+      setSubmitting(false);
+      if (error) { setError(friendlyAuthError(error.message)); return; }
+    }
+  }
+
+  const fieldStyle = {
+    marginTop: 6, width: "100%", boxSizing: "border-box", border: "1px solid rgba(35,42,59,0.18)",
+    borderRadius: 8, padding: "10px 12px", fontSize: 14, fontFamily: "inherit", color: AP_INK, background: "#FDFDFC",
+  };
+  const labelStyle = { display: "block", fontSize: 12.5, fontWeight: 600, color: AP_INK };
+
+  if (checkEmail) {
+    return (
+      <div style={{ minHeight: "100vh", width: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: AP_BG, fontFamily: "'Jost', system-ui, sans-serif", padding: 24 }}>
+        <div style={{ width: "100%", maxWidth: 400, textAlign: "center" }}>
+          <AuthWordmark />
+          <p style={{ marginTop: 22, fontFamily: "'Playfair Display', serif", fontSize: 21, color: AP_INK }}>Check your email</p>
+          <p style={{ marginTop: 10, fontSize: 14, color: AP_MUTED, lineHeight: 1.6 }}>
+            We sent a confirmation link to <b style={{ color: AP_INK }}>{email}</b>. Follow it, then come back here and log in.
+          </p>
+          <button
+            onClick={() => { setCheckEmail(false); setMode("login"); setPassword(""); setConfirmPassword(""); setError(""); }}
+            style={{ marginTop: 20, background: "none", border: "none", padding: 0, color: AP_GOLD, fontWeight: 700, fontSize: 14, cursor: "pointer" }}
+          >
+            Back to log in
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ minHeight: "100vh", width: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: AP_BG, fontFamily: "'Jost', system-ui, sans-serif", padding: 24 }}>
+      <div style={{ width: "100%", maxWidth: 400 }}>
+        <div style={{ textAlign: "center", marginBottom: 26 }}>
+          <AuthWordmark />
+          <p style={{ marginTop: 12, fontFamily: "'Playfair Display', serif", fontWeight: 500, fontSize: 21, color: AP_INK }}>
+            {mode === "signup" ? "Join Artium" : "Welcome back"}
+          </p>
+          <p style={{ marginTop: 6, fontSize: 13.5, color: AP_MUTED, lineHeight: 1.5 }}>
+            {mode === "signup" ? "One account for the whole Artium community." : "Log in to your Artium account."}
+          </p>
+        </div>
+        <div style={{ background: "#FFFFFF", border: "1px solid rgba(35,42,59,0.1)", borderRadius: 16, padding: "26px 24px", boxShadow: "0 10px 40px rgba(35,42,59,0.08)" }}>
+          <button
+            type="button"
+            onClick={handleGoogle}
+            disabled={submitting}
+            style={{
+              width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+              background: "#FFFFFF", color: AP_INK, border: "1px solid rgba(35,42,59,0.18)",
+              borderRadius: 10, padding: "11px 16px", fontSize: 14.5, fontWeight: 500,
+              cursor: submitting ? "default" : "pointer", opacity: submitting ? 0.7 : 1,
+            }}
+          >
+            <GoogleMark size={18} />
+            {mode === "signup" ? "Sign up with Google" : "Continue with Google"}
+          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "18px 0" }}>
+            <div style={{ flex: 1, height: 1, background: "rgba(35,42,59,0.12)" }} />
+            <span style={{ fontSize: 11, letterSpacing: 0.5, color: AP_MUTED }}>OR</span>
+            <div style={{ flex: 1, height: 1, background: "rgba(35,42,59,0.12)" }} />
+          </div>
+          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <label style={labelStyle}>
+              Email
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" placeholder="you@example.com" style={fieldStyle} />
+            </label>
+            <label style={labelStyle}>
+              Password
+              <input
+                type="password" value={password} onChange={(e) => setPassword(e.target.value)}
+                autoComplete={mode === "signup" ? "new-password" : "current-password"}
+                placeholder={mode === "signup" ? "At least 6 characters" : "Your password"}
+                style={fieldStyle}
+              />
+            </label>
+            {mode === "signup" && (
+              <label style={labelStyle}>
+                Confirm password
+                <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} autoComplete="new-password" style={fieldStyle} />
+              </label>
+            )}
+            {error && <p style={{ margin: 0, fontSize: 13, color: "#B3261E", lineHeight: 1.5 }}>{error}</p>}
+            <button
+              type="submit"
+              disabled={submitting}
+              style={{
+                marginTop: 4, width: "100%", background: AP_GOLD, color: "#FFFFFF", border: "none",
+                borderRadius: 999, padding: "12px 0", fontSize: 14.5, fontWeight: 700,
+                cursor: submitting ? "default" : "pointer", opacity: submitting ? 0.7 : 1,
+              }}
+            >
+              {submitting ? "Please wait…" : "Continue"}
+            </button>
+          </form>
+        </div>
+        <p style={{ textAlign: "center", marginTop: 20, fontSize: 13.5, color: AP_MUTED }}>
+          {mode === "signup" ? "Already have an account?" : "New to Artium?"}{" "}
+          <button
+            type="button"
+            onClick={() => { setError(""); setMode(mode === "signup" ? "login" : "signup"); }}
+            style={{ background: "none", border: "none", padding: 0, color: AP_GOLD, fontWeight: 700, fontSize: 13.5, cursor: "pointer" }}
+          >
+            {mode === "signup" ? "Log in" : "Sign up"}
+          </button>
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const [unlocked, setUnlocked] = useState(() => localStorage.getItem(ACCESS_KEY) === "1");
   const [onlineCount, setOnlineCount] = useState(1);
@@ -2039,21 +2229,42 @@ export default function App() {
     try { localStorage.setItem(DRAFT_KEY, JSON.stringify(body)); } catch {}
   }, [screen, editingProfile, draft, step]);
 
+  // One signup for the whole app: by the time this runs there is always a
+  // session (the access gate no longer lets anyone this far signed out —
+  // see AuthPrompt), so there is no separate account-creation step left to
+  // open. "__google__" already meant "authenticated, nothing to collect
+  // here" for the one case that used to reach this mid-flow, a Google
+  // redirect; "__authed__" is the same idea for an email/password session
+  // started at the prompt, kept as a distinct sentinel so StepConservatory's
+  // Google-domain auto-verify (which really does mean Google) isn't fooled
+  // by a plain email account that happens to share a school's domain.
+  function freshAuthedDraft() {
+    const viaGoogle = authUser?.app_metadata?.provider === "google";
+    const sentinel = viaGoogle ? "__google__" : "__authed__";
+    return {
+      ...emptyDraft(),
+      verifyMethod,
+      email: authUser?.email || "",
+      name: authUser?.user_metadata?.full_name || authUser?.user_metadata?.name || "",
+      password: sentinel,
+      confirmPassword: sentinel,
+    };
+  }
   function startApply() {
     if (authUser && authProfile?.role === "learner") {
       setAuthError("You're already registered as a piano enthusiast with this account. You can't also sign up as a conservatory student — log out first if you want to create a separate account with a different email.");
       return;
     }
     const saved = readSavedDraft();
-    // Back to the first step even when resuming, because that is where the
-    // password is set and the password is the one thing not kept. Everything
-    // after it is already filled, so Next carries them through.
+    const authed = freshAuthedDraft();
     // instruments last, and through the reader: a draft saved before the field
     // became a list carries a bare `instrument` string that would otherwise
-    // spread straight past the empty array and lose their answer.
+    // spread straight past the empty array and lose their answer. The saved
+    // copy never has a usable password (that was never kept), so the fresh
+    // session's own sentinel always wins over it.
     setDraft(saved
-      ? { ...emptyDraft(), ...saved.draft, instruments: instrumentsOf(saved.draft), password: "", confirmPassword: "" }
-      : { ...emptyDraft(), verifyMethod });
+      ? { ...authed, ...saved.draft, instruments: instrumentsOf(saved.draft), name: (saved.draft.name || "").trim() || authed.name, email: authed.email, password: authed.password, confirmPassword: authed.confirmPassword }
+      : authed);
     setResumed(!!saved);
     setStep(0);
     setEditingProfile(false);
@@ -2115,12 +2326,30 @@ export default function App() {
     setAppTabPersist(k);
     setScreen("app");
   }
+  // One account, one role. Since accounts are now shared across the whole
+  // app, an already-classified account (a student, a learner, or a hirer —
+  // the hirer check reads auth metadata directly because a hirer has no
+  // profiles row at all) that lands back on the entry gate and taps a
+  // *different* card is sent to the home it already has instead of being
+  // walked into a role flow that would try to insert a second profiles row
+  // under the same id and fail on the primary key. The only way back here
+  // with an existing role is a manual "back" (e.g. from Composers) — the
+  // boot effect's own auto-redirect only fires on auth state changing, not
+  // on every screen change.
+  function accountHomeScreen() {
+    if (authUser?.user_metadata?.role === "concert_hirer") return "hirerApp";
+    if (authProfile?.role === "learner") return "learnerMap";
+    if (authProfile) return "app";
+    return null;
+  }
   // Always "otp" from the gate now. The email route is the default and the
   // document route is the fallback offered inside the verification step, so
   // the gate no longer decides — but the argument stays, because this is also
   // where a caller that does know the route would set it.
   function chooseStudent(method) {
     if (myProfile) { setScreen("app"); setAppTabPersist("map"); return; }
+    const home = accountHomeScreen();
+    if (home) { setScreen(home); if (home === "app") setAppTabPersist("map"); return; }
     setVerifyMethod(method);
     setPianistEntry(false);
     setScreen("landing");
@@ -2131,18 +2360,23 @@ export default function App() {
   // signup instead of the student audition.
   function choosePianist() {
     if (myProfile) { setScreen("app"); setAppTabPersist("map"); return; }
+    const home = accountHomeScreen();
+    if (home) { setScreen(home); if (home === "app") setAppTabPersist("map"); return; }
     setPianistEntry(true);
     setScreen("landing");
   }
   function chooseLearner() {
     if (learnerProfile) { setScreen("learnerMap"); return; }
+    const home = accountHomeScreen();
+    if (home) { setScreen(home); if (home === "app") setAppTabPersist("map"); return; }
     if (learnerLoggedOut) { startLogin(); return; }
     setLearnerProfile(null); setAuthError(""); setScreen("learnerSignup");
   }
   async function submitLearner({ name, location, email, password, instrument, motivation }) {
     setAuthError("");
-    if (password === "__google__") {
-      // Google OAuth user — already authenticated, just insert profile
+    if (authUser) {
+      // Already authenticated at the prompt (Google or email) — just write
+      // the profile row against the live session, whichever way it signed in.
       const { data: { user: authUser } } = await supabase.auth.getUser();
       if (!authUser) { setAuthError("Session expired. Please try again."); return; }
       const { error: insertError } = await supabase.from("profiles").insert({ id: authUser.id, role: "learner", name, location, instrument, bio: motivation, approved: true });
@@ -2238,7 +2472,12 @@ export default function App() {
       setMyProfile(updated);
       setStudents((arr) => arr.map((s) => (s.id === myProfile.id ? updated : s)));
       setScreen("app"); setAppTabPersist("profile");
-    } else if (authUser && (draft.password === "__google__" || !authProfile)) {
+    } else if (authUser) {
+      // Security-review hardening: key this branch on the session alone. The
+      // old sentinel test left a fringe state (authed, existing profile row,
+      // email-password sentinel) that would fall through to the legacy
+      // signUp call and send the literal sentinel as a password — harmless
+      // but wrong. Authenticated means never signUp again, full stop.
       // Already signed in, no profile yet: finish by writing one.
       //
       // Written as the Google case, because that was the only way to arrive
@@ -2365,6 +2604,26 @@ export default function App() {
   }
 
   if (!unlocked) return <AccessGate onUnlock={() => { localStorage.setItem(ACCESS_KEY, "1"); setUnlocked(true); }} />;
+
+  // One signup for the whole app: nothing past the access gate is reachable
+  // signed out any more. authLoading is the brief window before getSession()
+  // resolves on first paint (the session itself persists across reloads, so
+  // this is never more than a flash) — a plain matching-ground placeholder
+  // avoids a flash of the auth prompt for someone who is about to turn out
+  // to already be signed in. Keyed on authUser alone, not on `screen`: a
+  // sign-out anywhere in the app clears authUser and this same check sends
+  // them straight back here, whatever screen they were last on.
+  if (authLoading) return <div style={{ minHeight: "100vh", width: "100%", background: "#F4F4F3" }} />;
+  if (!authUser) return <AuthPrompt />;
+
+  // The one avatar, wherever the header has a slot for it: a student/hirer's
+  // own uploaded photo first, then whatever Google put in the session
+  // (avatar_url for most accounts, picture on a couple of older token
+  // shapes), then initials off whatever name is known yet — falling back to
+  // the email, since a brand-new account between the prompt and finishing a
+  // role's own name field has nothing else to show.
+  const accountPhotoUrl = myProfile?.photoUrl || authProfile?.photo_url || authUser?.user_metadata?.avatar_url || authUser?.user_metadata?.picture || null;
+  const accountName = myProfile?.name || learnerProfile?.name || authProfile?.name || authUser?.user_metadata?.full_name || authUser?.user_metadata?.name || authUser?.email || "";
 
   return (
     // The gate is the one dark screen in a white app, so the shell behind it
@@ -3953,9 +4212,9 @@ export default function App() {
         />
       )}
 
-      {view === "entry" && <ArtiumGate onLearner={chooseLearner} onStudent={() => chooseStudent("otp")} onPianist={choosePianist} onLogin={startLogin} onComposers={() => setScreen("composers")} learnerProfile={learnerProfile} learnerLoggedOut={learnerLoggedOut} studentLoggedIn={!!myProfile} musicOn={musicPlaying} onMusicToggle={toggleMusic} memberCount={Object.values(studentsByCons).flat().length} />}
+      {view === "entry" && <ArtiumGate onLearner={chooseLearner} onStudent={() => chooseStudent("otp")} onPianist={choosePianist} onLogin={startLogin} onComposers={() => setScreen("composers")} learnerProfile={learnerProfile} learnerLoggedOut={learnerLoggedOut} studentLoggedIn={!!myProfile} musicOn={musicPlaying} onMusicToggle={toggleMusic} memberCount={Object.values(studentsByCons).flat().length} avatarPhotoUrl={accountPhotoUrl} avatarName={accountName} onAvatar={myProfile ? goToProfile : (learnerProfile ? () => setScreen("learnerMap") : undefined)} />}
       {view === "composers" && <WallOfComposers onBack={backToEntry} />}
-      {view === "learnerSignup" && <LearnerSignup onSubmit={submitLearner} onBack={backToEntry} onLogin={startLogin} error={authError} googleName={learnerGoogleName} />}
+      {view === "learnerSignup" && <LearnerSignup onSubmit={submitLearner} onBack={backToEntry} authUser={authUser} error={authError} />}
       {view === "learnerMap" && (
         <LearnerScreen
           learner={learnerProfile}
@@ -3982,9 +4241,10 @@ export default function App() {
         />
       )}
 
-      {view === "landing" && <Landing onApply={pianistEntry ? () => { setAuthError(""); setScreen("hirerSignup"); } : startApply} onBack={backToEntry} onPreview={startPreview} onProfile={goToProfile} onLogin={startLogin} myProfile={myProfile} studentLoggedOut={studentLoggedOut} musicOn={musicPlaying} onMusicToggle={toggleMusic} error={authError} onGoToLessonRoom={() => { setScreen("app"); setAppTabPersist("lessons"); }} studentsByCons={studentsByCons} />}
+      {view === "landing" && <Landing onApply={pianistEntry ? () => { setAuthError(""); setScreen("hirerSignup"); } : startApply} onBack={backToEntry} onPreview={startPreview} onProfile={goToProfile} onLogin={startLogin} myProfile={myProfile} studentLoggedOut={studentLoggedOut} musicOn={musicPlaying} onMusicToggle={toggleMusic} error={authError} onGoToLessonRoom={() => { setScreen("app"); setAppTabPersist("lessons"); }} studentsByCons={studentsByCons} avatarPhotoUrl={accountPhotoUrl} avatarName={accountName} />}
       {view === "hirerSignup" && (
         <HirerSignup
+          authUser={authUser}
           onBack={() => setScreen("landing")}
           onDone={() => { setPianistEntry(false); setScreen("hirerApp"); }}
         />
@@ -4005,7 +4265,7 @@ export default function App() {
         <SignupFlow
           draft={draft} update={update} toggleTaste={toggleTaste} step={step} setStep={setStep}
           editing={editingProfile} onSubmit={submitApplication} authError={authError}
-          resumed={resumed} onStartFresh={() => { clearSavedDraft(); setDraft({ ...emptyDraft(), verifyMethod }); setStep(0); }}
+          resumed={resumed} onStartFresh={() => { clearSavedDraft(); setDraft(freshAuthedDraft()); setStep(0); }}
           onCancel={() => setScreen(editingProfile ? "app" : "landing")}
           onHome={goHome}
         />
@@ -4360,7 +4620,7 @@ const IconMegaphone = (p) => (
   </IconBox>
 );
 
-function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, studentLoggedOut, musicOn, onMusicToggle, error, onGoToLessonRoom, studentsByCons }) {
+function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, studentLoggedOut, musicOn, onMusicToggle, error, onGoToLessonRoom, studentsByCons, avatarPhotoUrl, avatarName }) {
   const memberCount = Object.values(studentsByCons).flat().length;
   const steps = [
     { n: "1", t: "Build your profile", Icon: IconProfileDoc,
@@ -4418,10 +4678,16 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
             {memberCount}
           </span>
           {myProfile && <NotificationBell myProfile={myProfile} onGoToLessonRoom={onGoToLessonRoom} />}
-          {myProfile && (
+          {myProfile ? (
             <button onClick={onProfile} title="My profile" style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}>
               <Avatar name={myProfile.name} id="me" size={HEADER_CONTROL} photoUrl={myProfile.photoUrl} online />
             </button>
+          ) : (
+            // One account for the whole app: even mid-way through a role
+            // flow (before there's a profiles row to hang the button above
+            // off), the session behind this screen already has a face —
+            // Google's photo, or initials off whatever name is known yet.
+            <Avatar name={avatarName || "?"} id="me" size={HEADER_CONTROL} photoUrl={avatarPhotoUrl} />
           )}
         </div>
       </header>
@@ -4595,16 +4861,20 @@ function StepRing({ step, total, size = 62 }) {
   );
 }
 
-const HIRER_STEPS = ["Create your account", "Who's hiring", "The engagement", "Review & send"];
+// "Create your account" is gone: one signup for the whole app means
+// HirerSignup, like every other role flow, is only ever opened by someone
+// who already has a session (see AuthPrompt / App's accountHomeScreen
+// guard). What used to be step 0 (email/password) is simply not asked any
+// more — the three real questions shift down to fill its place.
+const HIRER_STEPS = ["Who's hiring", "The engagement", "Review & send"];
 const HIRER_ORG = ["Individual", "Concert venue", "Orchestra", "Festival", "Agency", "Other"];
 const HIRER_OCCASION = ["Concert", "Recital", "Wedding", "Corporate event", "Recording session", "Other"];
 const HIRER_FORMAT = ["Solo recital", "Accompanist", "Chamber ensemble"];
 const HIRER_BUDGET = ["Up to €500", "€500–1,500", "€1,500–5,000", "€5,000+", "To be discussed"];
 
-function HirerSignup({ onBack, onDone }) {
+function HirerSignup({ authUser, onBack, onDone }) {
   const [step, setStep] = useState(0);
   const [d, setD] = useState({
-    email: "", password: "", confirm: "",
     name: "", org: "",
     occasion: "", city: "", date: "", format: "", budget: "", notes: "",
   });
@@ -4619,7 +4889,6 @@ function HirerSignup({ onBack, onDone }) {
   const anythingFilled = Object.values(d).some((v) => String(v).trim() !== "");
 
   const canNext = [
-    d.email.trim().length > 3 && d.password.length >= 6 && d.password === d.confirm,
     d.name.trim().length > 1 && !!d.org,
     !!d.occasion && d.city.trim().length > 1 && !!d.format && !!d.budget,
     true,
@@ -4628,16 +4897,15 @@ function HirerSignup({ onBack, onDone }) {
   async function submit() {
     setErr(""); setSubmitting(true);
     // The engagement rides in the auth metadata: no profiles row, so the
-    // hirer cannot trip the students' RLS or show up on the map.
-    const { error } = await supabase.auth.signUp({
-      email: d.email.trim(),
-      password: d.password,
-      options: {
-        data: {
-          role: "concert_hirer", hirer_name: d.name.trim(), org_type: d.org,
-          occasion: d.occasion, city: d.city.trim(), date: d.date.trim(),
-          format: d.format, budget: d.budget, notes: d.notes.trim(),
-        },
+    // hirer cannot trip the students' RLS or show up on the map. The
+    // account already exists (whoever is filling this in got here through
+    // AuthPrompt) — this attaches the hiring metadata to that same session
+    // rather than creating a new one.
+    const { error } = await supabase.auth.updateUser({
+      data: {
+        role: "concert_hirer", hirer_name: d.name.trim(), org_type: d.org,
+        occasion: d.occasion, city: d.city.trim(), date: d.date.trim(),
+        format: d.format, budget: d.budget, notes: d.notes.trim(),
       },
     });
     setSubmitting(false);
@@ -4720,22 +4988,6 @@ function HirerSignup({ onBack, onDone }) {
       <div className="max-w-3xl mx-auto px-6 pt-7 pb-10 lg-fade" key={step}>
         <div className="artium-su-card">
         {step === 0 && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 18, maxWidth: 420 }}>
-            <Field label="Email">
-              <input style={inputStyle} type="email" value={d.email} onChange={(e) => up({ email: e.target.value })} placeholder="you@example.com" autoComplete="email" />
-            </Field>
-            <Field label="Password">
-              <input style={inputStyle} type="password" value={d.password} onChange={(e) => up({ password: e.target.value })} placeholder="At least 6 characters" autoComplete="new-password" />
-            </Field>
-            <Field label="Confirm password">
-              <input style={inputStyle} type="password" value={d.confirm} onChange={(e) => up({ confirm: e.target.value })} autoComplete="new-password" />
-              {d.confirm && d.confirm !== d.password && (
-                <p className="text-sm" style={{ color: C.burgundy, marginTop: 6 }}>Passwords don't match yet.</p>
-              )}
-            </Field>
-          </div>
-        )}
-        {step === 1 && (
           <div style={{ display: "flex", flexDirection: "column", gap: 22, maxWidth: 520 }}>
             <Field label="Your name">
               <input style={inputStyle} value={d.name} onChange={(e) => up({ name: e.target.value })} placeholder="Full name" autoComplete="name" />
@@ -4749,7 +5001,7 @@ function HirerSignup({ onBack, onDone }) {
             </Field>
           </div>
         )}
-        {step === 2 && (
+        {step === 1 && (
           <div style={{ display: "flex", flexDirection: "column", gap: 22, maxWidth: 560 }}>
             <Field label="The occasion">
               <div className="flex flex-wrap gap-2">
@@ -4785,11 +5037,11 @@ function HirerSignup({ onBack, onDone }) {
             </Field>
           </div>
         )}
-        {step === 3 && (
+        {step === 2 && (
           <div style={{ maxWidth: 560 }}>
             <div style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: "18px 22px", display: "flex", flexDirection: "column", gap: 10 }}>
               {[
-                ["Account", d.email],
+                ["Account", authUser?.email || ""],
                 ["Hiring as", `${d.name} — ${d.org}`],
                 ["Engagement", `${d.occasion} · ${d.city}${d.date ? " · " + d.date : ""}`],
                 ["Format", d.format],
@@ -4821,7 +5073,7 @@ function HirerSignup({ onBack, onDone }) {
           </button>
         ) : (
           <button className="artium-su-next-btn" disabled={submitting} onClick={submit}>
-            {submitting ? "Sending…" : "Create account & send request"}
+            {submitting ? "Sending…" : "Send request"}
             <ArrowRight size={17} strokeWidth={2.2} />
           </button>
         )}
@@ -5686,11 +5938,20 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
   // been filling for several minutes and the button gives no clue what it
   // costs. The answer — nothing — is the whole reason to ask.
   const [confirmLeave, setConfirmLeave] = useState(false);
-  const labels = editing ? STEP_LABELS : ["Create your account", ...STEP_LABELS];
+  // One signup for the whole app: everyone who reaches this flow now arrives
+  // already authenticated (see AuthPrompt / startApply's freshAuthedDraft),
+  // so the account-creation step this used to open on never has anything to
+  // collect — it is skipped exactly the way `editing` already skips it for
+  // someone updating an existing profile. "__google__"/"__authed__" are the
+  // two sentinels a fresh draft's password can hold now (real Google auth,
+  // or an email/password session from the prompt); a blank password only
+  // happens if this is ever reached without going through startApply.
+  const skipAccountStep = editing || draft.password === "__google__" || draft.password === "__authed__";
+  const labels = skipAccountStep ? STEP_LABELS : ["Create your account", ...STEP_LABELS];
   const lastStep = labels.length - 1;
-  const idx = editing ? step : step - 1;
+  const idx = skipAccountStep ? step : step - 1;
   const stepValid = [
-    !editing ? draft.email.trim().length > 3 && draft.password.length >= 6 && draft.password === draft.confirmPassword : null,
+    !skipAccountStep ? draft.email.trim().length > 3 && draft.password.length >= 6 && draft.password === draft.confirmPassword : null,
     draft.name.trim().length > 1 && instrumentsOf(draft).length > 0,
     // On the document route the upload is what gates the step — a conservatory
     // may not be selectable yet, since the approved list starts empty.
@@ -5861,7 +6122,7 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
 
       <div className="max-w-3xl mx-auto px-6 pt-7 pb-10 lg-fade" key={step}>
         <div className="artium-su-card">
-        {!editing && step === 0 && <StepAccount draft={draft} update={update} error={authError} />}
+        {!skipAccountStep && step === 0 && <StepAccount draft={draft} update={update} error={authError} />}
         {idx === 0 && <StepIntro draft={draft} update={update} />}
         {idx === 1 && <StepConservatory draft={draft} update={update} editing={editing} />}
         {idx === 2 && <StepTastes draft={draft} toggleTaste={toggleTaste} />}
@@ -9429,28 +9690,15 @@ function EntryGate({ onLearner, onStudent, onPianist, onLogin, learnerProfile, l
 }
 
 /* ---- Learner: signup form ---- */
-function LearnerSignup({ onSubmit, onBack, onLogin, error, googleName = "" }) {
-  const isGoogle = googleName.length > 0;
-  const [step, setStep] = useState(isGoogle ? 2 : 1);
-  const [forWhom, setForWhomRaw] = useState(() => {
-    if (isGoogle) {
-      // Restore the choice made before the OAuth redirect
-      const saved = sessionStorage.getItem("artium_learner_forWhom");
-      sessionStorage.removeItem("artium_learner_forWhom");
-      return saved || "self";
-    }
-    return "";
-  });
-  function setForWhom(val) {
-    sessionStorage.setItem("artium_learner_forWhom", val);
-    setForWhomRaw(val);
-  }
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState(isGoogle ? "__google__" : "");
-  const [confirmPassword, setConfirmPassword] = useState(isGoogle ? "__google__" : "");
+function LearnerSignup({ onSubmit, onBack, error, authUser }) {
+  // One signup for the whole app: whoever reaches this screen already has a
+  // session (the access gate no longer lets anyone this far signed out —
+  // see AuthPrompt), so there is no account step here any more — just the
+  // one real question this flow ever asked on top of it.
+  const [forWhom, setForWhom] = useState("");
 
   // "for me" fields
-  const [name, setName] = useState(googleName);
+  const [name, setName] = useState(authUser?.user_metadata?.full_name || authUser?.user_metadata?.name || "");
   const [location, setLocation] = useState("");
   const [instrument, setInstrument] = useState("");
   const [instrumentOther, setInstrumentOther] = useState("");
@@ -9468,15 +9716,13 @@ function LearnerSignup({ onSubmit, onBack, onLogin, error, googleName = "" }) {
   const [submitting, setSubmitting] = useState(false);
 
   const isForOther = forWhom === "other";
-  const mismatch = confirmPassword.length > 0 && password !== confirmPassword;
-  const step1Ready = forWhom !== "" && email.trim().length > 3 && password.length >= 6 && password === confirmPassword;
 
   const resolvedInstrument = instrument === "Other" ? instrumentOther.trim() : instrument;
   const resolvedLearnerInstrument = learnerInstrument === "Other" ? learnerInstrumentOther.trim() : learnerInstrument;
 
-  const step2SelfReady = name.trim().length > 1 && location.trim().length > 1 && resolvedInstrument.length > 0 && motivation.trim().length > 5;
-  const step2OtherReady = learnerName.trim().length > 1 && learnerLocation.trim().length > 1 && resolvedLearnerInstrument.length > 0 && learnerGoals.trim().length > 5;
-  const step2Ready = isForOther ? step2OtherReady : step2SelfReady;
+  const readySelf = name.trim().length > 1 && location.trim().length > 1 && resolvedInstrument.length > 0 && motivation.trim().length > 5;
+  const readyOther = learnerName.trim().length > 1 && learnerLocation.trim().length > 1 && resolvedLearnerInstrument.length > 0 && learnerGoals.trim().length > 5;
+  const ready = forWhom !== "" && (isForOther ? readyOther : readySelf);
 
   async function handleSubmit() {
     setSubmitting(true);
@@ -9486,7 +9732,9 @@ function LearnerSignup({ onSubmit, onBack, onLogin, error, googleName = "" }) {
     const submitMotivation = isForOther
       ? `On behalf of ${learnerName.trim()}${learnerAge ? ` (age ${learnerAge})` : ""}. Level: ${learnerLevel || "beginner"}. Goals: ${learnerGoals.trim()}`
       : motivation.trim();
-    await onSubmit({ name: submitName, location: submitLocation, email: email.trim(), password, instrument: submitInstrument, motivation: submitMotivation });
+    // email/password no longer come from this form — submitLearner writes
+    // against the session that got them here.
+    await onSubmit({ name: submitName, location: submitLocation, email: authUser?.email || "", password: "", instrument: submitInstrument, motivation: submitMotivation });
     setSubmitting(false);
   }
 
@@ -9494,43 +9742,23 @@ function LearnerSignup({ onSubmit, onBack, onLogin, error, googleName = "" }) {
     <div className="min-h-full" style={{ background: C.ink, color: C.ivory }}>
       <div className="max-w-2xl mx-auto px-6 pt-8">
         <div className="flex items-center gap-3">
-          <button onClick={step === 1 ? onBack : () => setStep(1)} style={{ color: C.ivoryDim, background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", padding: 0 }}>
+          <button onClick={onBack} style={{ color: C.ivoryDim, background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", padding: 0 }}>
             <ChevronLeft size={18} />
           </button>
           <Logo slogan />
         </div>
-
-        {/* The same head the conservatory flow uses: the ring carries "1 of 2"
-            and what comes next, so both signups count the same way. Two bars
-            labelled Step 1 and Step 2 said where you were and not how far that
-            was, and read as a different product besides. StepRing is
-            zero-based, hence step - 1. */}
-        {(() => {
-          const titles = ["Create your account", isForOther ? "About the learner" : "Tell us about you"];
-          const blurbs = [
-            "First, let's set up your account.",
-            isForOther
-              ? "Tell us about the person you're registering. This helps us find the right teacher for them."
-              : "We'll show conservatory musicians who give lessons near you.",
-          ];
-          return (
-            <>
-              <div className="artium-su-head">
-                <StepRing step={step - 1} total={titles.length} />
-                <span className="artium-su-head-text">
-                  <h2 className="artium-su-title">{titles[step - 1]}</h2>
-                  {titles[step] && <p className="artium-su-next">Next: <b>{titles[step]}</b></p>}
-                </span>
-              </div>
-              <p className="mt-5" style={{ color: C.ivoryDim, fontSize: 15, lineHeight: 1.6 }}>{blurbs[step - 1]}</p>
-            </>
-          );
-        })()}
+        <h2 className="artium-su-title" style={{ marginTop: 22 }}>
+          {isForOther ? "About the learner" : "Tell us about you"}
+        </h2>
+        <p className="mt-2" style={{ color: C.ivoryDim, fontSize: 15, lineHeight: 1.6 }}>
+          {isForOther
+            ? "Tell us about the person you're registering. This helps us find the right teacher for them."
+            : "We'll show conservatory musicians who give lessons near you."}
+        </p>
       </div>
 
       <div className="max-w-2xl mx-auto px-6 py-10">
-        {step === 1 ? (
-          <>
+        <>
             <Field label="Who is this registration for?">
               <div style={{ display: "flex", gap: 10 }}>
                 {[
@@ -9550,48 +9778,8 @@ function LearnerSignup({ onSubmit, onBack, onLogin, error, googleName = "" }) {
                 ))}
               </div>
             </Field>
-
-            {/* Same sentinel, same trap as the student flow: a Google signup
-                starts on step 2, and Back walks straight into these fields
-                with "__google__" sitting in them. */}
-            {isGoogle ? (
-              <div className="mb-5" style={{ borderRadius: 14, border: "1px solid rgba(26,158,110,0.45)", background: "rgba(26,158,110,0.07)", padding: "15px 16px", display: "flex", alignItems: "center", gap: 12 }}>
-                <GoogleMark />
-                <span style={{ minWidth: 0 }}>
-                  <p style={{ margin: 0, fontSize: 13.5, fontWeight: 700, color: C.ivory }}>Signed up with Google</p>
-                  <p style={{ margin: "2px 0 0", fontSize: 12.5, color: C.ivoryDim, overflow: "hidden", textOverflow: "ellipsis" }}>
-                    {email || "your Google account"}
-                  </p>
-                </span>
-                <CheckIcon size={18} color="#1A9E6E" style={{ marginLeft: "auto", flexShrink: 0 }} />
-              </div>
-            ) : (
-            <>
-            <GoogleBtn label="Sign up with Google" role="learner" />
-            <Divider />
-
-            <Field label="Your email">
-              <input style={inputStyle} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="off" />
-            </Field>
-            <Field label="Password">
-              <PasswordField value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 6 characters" autoComplete="new-password" />
-            </Field>
-            <Field label="Confirm password">
-              <PasswordField value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Re-enter your password" autoComplete="new-password" />
-            </Field>
-            {mismatch && <p className="text-sm mb-4" style={{ color: C.burgundy }}>Passwords don't match.</p>}
-            </>
-            )}
-            {error && <p className="text-sm mb-4" style={{ color: C.burgundy }}>{error}</p>}
-            <div className="mt-2">
-              <PrimaryBtn disabled={!step1Ready} onClick={() => setStep(2)} icon={ArrowRight}>Continue</PrimaryBtn>
-            </div>
-            <p style={{ textAlign: "center", marginTop: 20, fontSize: 14, color: C.ivoryDim }}>
-              Already have an account?{" "}
-              <button onClick={onLogin} style={{ color: C.brassLabel, fontWeight: 600, background: "none", border: "none", cursor: "pointer", fontSize: 14 }}>Log in</button>
-            </p>
-          </>
-        ) : isForOther ? (
+        </>
+        {forWhom === "" ? null : isForOther ? (
           /* ── On behalf of someone ── */
           <>
             <Field label="Learner's full name">
@@ -9629,7 +9817,7 @@ function LearnerSignup({ onSubmit, onBack, onLogin, error, googleName = "" }) {
             </Field>
             {error && <p className="text-sm mb-4" style={{ color: C.burgundy }}>{error}</p>}
             <div className="mt-2">
-              <PrimaryBtn disabled={!step2Ready || submitting} onClick={handleSubmit} icon={ArrowRight}>
+              <PrimaryBtn disabled={!ready || submitting} onClick={handleSubmit} icon={ArrowRight}>
                 {submitting ? "Submitting…" : "Find a teacher"}
               </PrimaryBtn>
             </div>
@@ -9663,7 +9851,7 @@ function LearnerSignup({ onSubmit, onBack, onLogin, error, googleName = "" }) {
             </Field>
             {error && <p className="text-sm mb-4" style={{ color: C.burgundy }}>{error}</p>}
             <div className="mt-2">
-              <PrimaryBtn disabled={!step2Ready || submitting} onClick={handleSubmit} icon={ArrowRight}>
+              <PrimaryBtn disabled={!ready || submitting} onClick={handleSubmit} icon={ArrowRight}>
                 {submitting ? "Submitting…" : "Find my teacher"}
               </PrimaryBtn>
             </div>

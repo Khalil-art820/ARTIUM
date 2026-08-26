@@ -410,6 +410,18 @@ function FeatureCard({ card, onActivate, rootRef }) {
   );
 }
 
+// Initials fallback for the header avatar — same "first letter of up to two
+// words" rule the rest of the app uses (App.jsx's own `initials`), kept as a
+// tiny local copy since this component has no access to that module scope.
+function accountInitials(name) {
+  const trimmed = (name || "").trim();
+  if (!trimmed) return "?";
+  // An email (the last-resort fallback for a brand-new account with no name
+  // yet) reads better as its first letter than as "Y@" from "you@x.com".
+  if (trimmed.includes("@") && !trimmed.includes(" ")) return trimmed[0].toUpperCase();
+  return trimmed.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
+}
+
 export default function ArtiumGate({
   onLearner,
   onStudent,
@@ -423,6 +435,13 @@ export default function ArtiumGate({
   musicOn,
   onMusicToggle,
   memberCount,
+  // One signup for the whole app: by the time this gate is on screen there
+  // is always a signed-in session behind it (see App.jsx's AuthPrompt gate),
+  // so it always has a face to show — a photo if one exists (Google's, or
+  // the student's own upload), initials otherwise.
+  avatarPhotoUrl,
+  avatarName,
+  onAvatar,
 }) {
   // The app around this page is dark (index.css pins html/body/#root to
   // #0F1012); own both html and body while mounted so iOS overscroll
@@ -507,6 +526,20 @@ export default function ArtiumGate({
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="8" r="3.6" /><path d="M4.5 20c1.4-3.4 4.2-5 7.5-5s6.1 1.6 7.5 5" /></svg>
               <span>{count}</span>
             </div>
+            <button
+              type="button"
+              className="puck avatar-puck"
+              onClick={onAvatar}
+              disabled={!onAvatar}
+              title={avatarName || "Your account"}
+              aria-label={avatarName ? `${avatarName} — your account` : "Your account"}
+            >
+              {avatarPhotoUrl ? (
+                <img src={avatarPhotoUrl} alt="" />
+              ) : (
+                <span aria-hidden="true">{accountInitials(avatarName)}</span>
+              )}
+            </button>
           </div>
         </header>
         </div>
