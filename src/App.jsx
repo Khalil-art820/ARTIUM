@@ -4212,7 +4212,12 @@ export default function App() {
         />
       )}
 
-      {view === "entry" && <ArtiumGate onLearner={chooseLearner} onStudent={() => chooseStudent("otp")} onPianist={choosePianist} onLogin={startLogin} onComposers={() => setScreen("composers")} learnerProfile={learnerProfile} learnerLoggedOut={learnerLoggedOut} studentLoggedIn={!!myProfile} musicOn={musicPlaying} onMusicToggle={toggleMusic} memberCount={Object.values(studentsByCons).flat().length} avatarPhotoUrl={accountPhotoUrl} avatarName={accountName} onAvatar={myProfile ? goToProfile : (learnerProfile ? () => setScreen("learnerMap") : undefined)} />}
+      {view === "entry" && <ArtiumGate onLearner={chooseLearner} onStudent={() => chooseStudent("otp")} onPianist={choosePianist} onLogin={startLogin} onComposers={() => setScreen("composers")} learnerProfile={learnerProfile} learnerLoggedOut={learnerLoggedOut} studentLoggedIn={!!myProfile} musicOn={musicPlaying} onMusicToggle={toggleMusic} memberCount={Object.values(studentsByCons).flat().length} avatarPhotoUrl={accountPhotoUrl} avatarName={accountName} onAvatar={myProfile ? goToProfile : (learnerProfile ? () => setScreen("learnerMap") : undefined)} onLogout={async () => {
+        // Logging out re-arms the gate tour: the next login meets the
+        // card-by-card introduction again, per the user's request.
+        try { localStorage.removeItem("artium_gate_tour_v1"); } catch { /* private mode */ }
+        await supabase.auth.signOut().catch(() => {});
+      }} />}
       {view === "composers" && <WallOfComposers onBack={backToEntry} />}
       {view === "learnerSignup" && <LearnerSignup onSubmit={submitLearner} onBack={backToEntry} authUser={authUser} error={authError} />}
       {view === "learnerMap" && (

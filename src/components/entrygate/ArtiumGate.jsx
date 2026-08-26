@@ -442,6 +442,7 @@ export default function ArtiumGate({
   avatarPhotoUrl,
   avatarName,
   onAvatar,
+  onLogout,
 }) {
   // The app around this page is dark (index.css pins html/body/#root to
   // #0F1012); own both html and body while mounted so iOS overscroll
@@ -703,8 +704,16 @@ export default function ArtiumGate({
           </div>
         </section>
 
-        {/* The login section is gone: the whole app is auth-first now — by the
-            time anyone sees this gate they are already signed in. */}
+        {/* ================= LOG OUT =================
+            Auth-first means everyone here is signed in — the old Log in
+            section returns as its mirror, in the same dress. */}
+        <section className="login-zone">
+          {avatarName && <div className="q">Signed in as {avatarName}</div>}
+          <button className="btn-login" onClick={onLogout}>
+            Log out
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12h15M13 6l6 6-6 6" /></svg>
+          </button>
+        </section>
 
         {/* ================= FOOTER ================= */}
         <footer>
