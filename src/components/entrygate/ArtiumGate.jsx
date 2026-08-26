@@ -708,7 +708,6 @@ export default function ArtiumGate({
             Auth-first means everyone here is signed in — the old Log in
             section returns as its mirror, in the same dress. */}
         <section className="login-zone">
-          {avatarName && <div className="q">{avatarName}</div>}
           <button className="btn-login" onClick={onLogout}>
             Log out
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12h15M13 6l6 6-6 6" /></svg>
