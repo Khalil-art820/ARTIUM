@@ -3803,22 +3803,58 @@ export default function App() {
         .artium-lp--light .artium-lp-cap { color: #6A7080; }
         .artium-lp--light .artium-lp-cap b { color: #C9962E; }
 
-        /* ---- the five steps: light slabs, gold numbered pucks ---- */
-        .artium-lp--light .artium-lp-step {
-          border: 1px solid rgba(176,146,98,.30);
-          background: linear-gradient(180deg, #FCFCFB 0%, #F2F2F0 70%, #EAEAE8 100%);
-          -webkit-backdrop-filter: none; backdrop-filter: none;
+        /* Pin's headcount: ink, not the white styled for the old dark pin. */
+        .artium-lp--light .artium-globepin-count { color: #232A3B; }
+
+        /* The manicule's ivory puck disc — see the redrawn hand SVG in the
+           JSX (circular cuff + extended index + three curled fingers).
+           Position/animation are untouched (still the base rule, left of
+           the pin, same nudge-toward-it motion); this only adds the disc
+           material and recolors the currentColor stroke gold. */
+        .artium-lp--light .artium-globepin-hand {
+          width: min(46px, 8vw); height: min(46px, 8vw);
+          border-radius: 50%;
+          display: flex; align-items: center; justify-content: center;
+          background: radial-gradient(circle at 35% 28%, #FFFFFF 0%, #FCF8EF 55%, #F1E8D6 100%);
+          border: 1px solid rgba(255,255,255,.85);
           box-shadow:
-            0 14px 28px -16px rgba(150,115,55,.38),
-            inset 0 1px 0 #fff;
+            0 8px 14px -4px rgba(150,115,55,.38),
+            0 2px 4px rgba(150,115,55,.14),
+            inset 0 2px 2px #fff,
+            inset 0 -3px 5px rgba(176,146,98,.28);
+          color: #C9962E;
         }
+        .artium-lp--light .artium-globepin-hand svg { width: 55%; height: 55%; }
+
+        /* ---- the five steps: pure-white slabs with the gate's
+           double-slab rim (outer contour + inner keyline + inset panel
+           groove), gold Playfair numbered pucks, mock's type scale. ---- */
+        .artium-lp--light .artium-lp-step {
+          position: relative;
+          padding: 16px 14px; gap: 12px;
+          border-radius: 28px;
+          border: 1px solid rgba(176,146,98,.30);
+          background: #FFFFFF;
+          -webkit-backdrop-filter: none; backdrop-filter: none;
+          box-shadow: 0 20px 40px -22px rgba(150,115,55,.38);
+        }
+        .artium-lp--light .artium-lp-step::before {
+          content: ''; position: absolute; inset: 3px; border-radius: 25px;
+          border: 1.5px solid rgba(255,255,255,.9); pointer-events: none;
+        }
+        .artium-lp--light .artium-lp-step::after {
+          content: ''; position: absolute; inset: 9px; border-radius: 20px;
+          border: 1px solid rgba(176,146,98,.14);
+          box-shadow: inset 0 1px 2px rgba(150,110,50,.10);
+          pointer-events: none;
+        }
+        .artium-lp--light .artium-lp-step > * { position: relative; z-index: 1; }
         .artium-lp--light .artium-lp-step:hover {
           border-color: rgba(201,150,46,.55); transform: translateY(-3px);
-          box-shadow:
-            0 20px 36px -16px rgba(150,115,55,.42),
-            inset 0 1px 0 #fff;
+          box-shadow: 0 26px 46px -22px rgba(150,115,55,.44);
         }
         .artium-lp--light .artium-lp-num {
+          width: 46px; height: 46px; font-size: 21px; font-weight: 600;
           border: 1px solid rgba(255,255,255,.85); color: #C9962E;
           background: radial-gradient(circle at 35% 28%, #FFFFFF 0%, #FCF8EF 55%, #F1E8D6 100%);
           box-shadow:
@@ -3827,22 +3863,57 @@ export default function App() {
             inset 0 -2px 4px rgba(176,146,98,.24);
           font-family: 'Playfair Display', serif;
         }
-        .artium-lp--light .artium-lp-step-t { color: #232A3B; font-family: 'Playfair Display', serif; font-weight: 500; }
-        .artium-lp--light .artium-lp-step-d { color: #6A7080; font-weight: 300; }
+        .artium-lp--light .artium-lp-step-t {
+          color: #232A3B; font-family: 'Playfair Display', serif;
+          font-weight: 600; font-size: 19px; line-height: 1.25;
+        }
+        .artium-lp--light .artium-lp-step-d {
+          margin-top: 6px; color: #4A4F5A; font-weight: 400;
+          font-size: 14.5px; line-height: 1.45;
+        }
         .artium-lp--light .artium-lp-step-d a { color: #B8862E; }
         .artium-lp--light .artium-lp-step-d a:hover { color: #C9962E; }
         .artium-lp--light .artium-lp-step-i { color: #C9962E; }
 
         .artium-lp--light .artium-lp-err { color: #B23B3B; }
 
-        /* ---- footer: the gate's tones, on the same shared markup ---- */
+        /* ---- footer: the entry gate's current footer, ported ----
+           "OUR PARTNERS" centered, the avatar lockup flush-left beneath
+           it (one <a> to the Instagram profile) — not the old "In
+           partnership with aclassicaltone" + social-puck row, which is
+           why this uses new .artium-lp-partner* classes rather than
+           overriding .artium-gx-partner/.artium-gx-social (still exactly
+           as they were, unused by this screen's markup now, intact for
+           whatever dark screen still renders them). */
         .artium-lp--light .artium-gx-foot-top { background: rgba(176,146,98,.30); }
         .artium-lp--light .artium-gx-foot-top::after { background: #C9962E; }
         .artium-lp--light .artium-gx-foot-line { background: rgba(176,146,98,.20); }
-        .artium-lp--light .artium-gx-partner { color: #6A7080; }
-        .artium-lp--light .artium-gx-partner b { color: #C9962E; font-family: 'Playfair Display', serif; }
-        .artium-lp--light .artium-gx-social a { border-color: rgba(201,150,46,.5); color: #C9962E; }
-        .artium-lp--light .artium-gx-social a:hover { border-color: #C9962E; color: #C9962E; box-shadow: 0 0 12px rgba(201,150,46,.24); }
+        .artium-lp--light .artium-lp-partner {
+          display: flex; flex-direction: column; align-items: flex-start;
+          gap: 6px; width: 100%;
+        }
+        .artium-lp--light .artium-lp-partner-lbl {
+          align-self: center;
+          font-size: 19px; font-weight: 700; color: #2A3142;
+          text-transform: uppercase; letter-spacing: .04em;
+          margin-bottom: 10px;
+        }
+        .artium-lp--light .artium-lp-partner-avatar {
+          display: inline-flex; flex-direction: column; align-items: center;
+          gap: 7px; text-decoration: none; line-height: 0;
+        }
+        .artium-lp--light .artium-lp-partner-avatar img {
+          border-radius: 50%; display: block;
+          box-shadow:
+            0 8px 14px -4px rgba(150,115,55,.38),
+            0 2px 4px rgba(150,115,55,.14);
+          border: 1px solid rgba(255,255,255,.85);
+        }
+        .artium-lp--light .artium-lp-partner-name {
+          font-family: 'Jost', system-ui, sans-serif;
+          font-size: 12.5px; font-weight: 400; letter-spacing: .02em;
+          color: #6A7080; line-height: 1; text-transform: lowercase;
+        }
         .artium-lp--light .artium-gx-foot-links span { color: #6A7080; }
         .artium-lp--light .artium-gx-foot-links i { color: #B0AEA8; }
         .artium-lp--light .artium-gx-copy { color: #8A8D93; }
@@ -4334,7 +4405,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
       </header>
 
       <main className="artium-lp-main">
-        <h1 className="artium-lp-h1">Every Conservatory. One Network.</h1>
+        <h1 className="artium-lp-h1">Every Conservatory.<br />One Network.</h1>
         <div className="artium-gx-rule" aria-hidden="true"><span /><i /><span /></div>
 
         {/* The intro card is gone and its call to action moved to the header
@@ -4359,14 +4430,13 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
                 would letterbox it. The globe and the count are positioned
                 against this wrapper, so it has to be the thing that moves. */}
             <span className="artium-globepin" style={{ height: "min(299px, 50.7vw)", aspectRatio: "560 / 837" }}>
-              {/* Back to the original glo-pin (neutral bezel) now that the
-                  page is light again — glo-pin-ink was recoloured matte
-                  black by tools/recolor-pin.py specifically for the old dark
-                  ground; on this grey it read as a hole punched through the
-                  artwork, which is exactly the failure its own comment
-                  used to warn about for the light case. */}
+              {/* glo-pin-ivory: the artwork duotoned ivory (highlights
+                  #FDFBF6 to shadows #C9BBA2) — glo-pin.png's body reads
+                  pure amber (#FDBC02) against the mock's cream tones,
+                  wrong the same way glo-pin-ink was wrong on the old dark
+                  ground. */}
               <img
-                src="/glo-pin.png"
+                src="/glo-pin-ivory.png"
                 alt=""
                 width={560}
                 height={837}
@@ -4375,35 +4445,25 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
               <span className="artium-globepin-globe" aria-hidden="true">
                 <PinGlobe />
               </span>
-              {/* A manicule — the printer's pointing hand — drawn as an
-                  outline rather than a silhouette.
-
-                  The five stacked rectangles this replaces were legible as
-                  "a hand" only if you already knew that was the intention:
-                  rounded bars have no knuckles, no taper and no thumb web, so
-                  what read at 36px was a stack of lozenges. Anatomy is what
-                  was missing, not detail. Here the index tapers to a blunt
-                  tip, the three curled fingers are separate arcs of
-                  decreasing length, the thumb crosses over them, and the cuff
-                  closes the wrist — the same five parts, but each with the
-                  shape it has on a hand.
-
-                  Outline, not solid: at this size a filled hand loses the
-                  gaps between the curled fingers and goes back to being a
-                  lump, and the line weight matches the step marks below. */}
+              {/* A manicule — the printer's pointing hand — in an ivory
+                  puck disc per the mock (see /tmp/hand_crop.png): a
+                  circular wrist cuff at the left feeding into an extended
+                  index finger pointing right at the pin, with three
+                  shorter curled fingers stacked below it. currentColor so
+                  the light variant's puck styling can recolor it gold
+                  without touching this markup. */}
               <span className="artium-globepin-hand" aria-hidden="true">
-                <svg viewBox="0 0 30 26" fill="none" stroke={GATE.gold}
-                  strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
+                <svg viewBox="0 0 40 40" fill="none" stroke="currentColor"
+                  strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
                   style={{ display: "block" }}>
-                  {/* index finger, out to the right and slightly tapered */}
-                  <path d="M13.2 10.1h11.3a1.85 1.85 0 0 1 0 3.7H13.2" />
-                  {/* the three curled fingers, each shorter than the last */}
-                  <path d="M13.4 13.8h5.9a1.7 1.7 0 0 1 0 3.4h-5.9" />
-                  <path d="M13.4 17.2h4.6a1.7 1.7 0 0 1 0 3.4h-4.6" />
-                  <path d="M13.4 20.6h3.1a1.55 1.55 0 0 1 0 3.1h-3.1" />
-                  {/* palm and the thumb web crossing over the top */}
-                  <path d="M13.4 23.7H10a5.6 5.6 0 0 1-5.6-5.6v-4.6a3.5 3.5 0 0 1 3.5-3.5h5.3" />
-                  <path d="M7.9 10a4.6 4.6 0 0 1 4.3-4.4c1.9-.1 3.4 1 4.6 2.5" />
+                  {/* circular wrist cuff, open where it meets the hand */}
+                  <path d="M10.5 27.5a6.5 6.5 0 1 1 6.5 6.5" />
+                  {/* index finger, extended and pointing right */}
+                  <path d="M17 20h11.5a2.3 2.3 0 0 1 0 4.6H17" />
+                  {/* three curled fingers, each shorter than the last */}
+                  <path d="M17 24.6h7.4a2 2 0 0 1 0 4H17" />
+                  <path d="M17 28.6h5.6a1.8 1.8 0 0 1 0 3.6H17" />
+                  <path d="M17 32.2h3.8a1.6 1.6 0 0 1 0 3.2H17" />
                 </svg>
               </span>
               <span className="artium-globepin-count">
@@ -4438,29 +4498,34 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
                 <p className="artium-lp-step-d">{s.d}</p>
               </span>
               <span className="artium-lp-step-i" aria-hidden="true">
-                <s.Icon size={36} strokeWidth={1.5} />
+                <s.Icon size={44} strokeWidth={1.5} />
               </span>
             </div>
           ))}
         </div>
       </main>
 
-      {/* The gate's footer, verbatim — the two screens are one tap apart and
-          share the stylesheet, so they cannot carry different footers. */}
+      {/* The entry gate's current footer language, ported — "OUR PARTNERS"
+          centered over a flush-left avatar lockup, not the old "In
+          partnership with aclassicaltone" + social-puck row. New
+          .artium-lp-partner* classes (not the shared .artium-gx-partner/
+          .artium-gx-social, which stay exactly as they are for the dark
+          screens that still use them) since the structure itself is
+          different, not just the color. */}
       <footer className="artium-gx-foot">
         <div className="artium-gx-foot-top" aria-hidden="true" />
-        <div className="artium-gx-foot-row">
-          <span className="artium-gx-partner">
-            In partnership with <b>aclassicaltone</b>
-          </span>
-          <span className="artium-gx-social">
-            <a href={ACT_INSTAGRAM} target="_blank" rel="noreferrer" aria-label="aclassicaltone on Instagram">
-              <Instagram size={15} strokeWidth={1.7} />
-            </a>
-            <a href={ACT_FACEBOOK} target="_blank" rel="noreferrer" aria-label="aclassicaltone on Facebook">
-              <Facebook size={15} strokeWidth={1.7} />
-            </a>
-          </span>
+        <div className="artium-lp-partner">
+          <span className="artium-lp-partner-lbl">Our partners</span>
+          <a
+            className="artium-lp-partner-avatar"
+            href={ACT_INSTAGRAM}
+            target="_blank"
+            rel="noreferrer"
+            aria-label="aclassicaltone on Instagram"
+          >
+            <img src="/partner-aclassicaltone.png" alt="" width="54" height="54" />
+            <span className="artium-lp-partner-name">aclassicaltone</span>
+          </a>
         </div>
         <div className="artium-gx-foot-line" aria-hidden="true" />
         <div className="artium-gx-foot-row">
