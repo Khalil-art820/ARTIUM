@@ -3841,31 +3841,30 @@ export default function App() {
            groove), gold Playfair numbered pucks, mock's type scale. ---- */
         .artium-lp--light .artium-lp-step {
           position: relative;
-          padding: 18px 16px; gap: 12px;
-          border-radius: 28px;
-          /* The gate cards' actual edge stack, translated: plate surface on
-             the page tone, contour stroke, then the pseudo-elements below
-             carry the white specular keyline and the inset panel with its
-             groove — the two ridges that make the double slab. */
+          padding: 16px 14px; gap: 12px;
+          /* Matched to how the gate cards actually RENDER on a phone: the
+             stage scales to ~0.4, so its 62-unit corners read ~25px, the
+             keyline sits ~1px in, the panel ~4px — fine and smooth. The
+             pills draw unscaled, so they take those rendered values. */
+          border-radius: 24px;
           background: #F4F4F3;
-          border: 1px solid rgba(176,146,98,.35);
+          border: 1px solid rgba(176,146,98,.32);
           -webkit-backdrop-filter: none; backdrop-filter: none;
-          box-shadow: 0 24px 26px -12px rgba(150,115,55,.26), 0 6px 9px -3px rgba(150,115,55,.13);
+          box-shadow: 0 10px 12px -6px rgba(150,115,55,.26), 0 3px 4px -2px rgba(150,115,55,.13);
         }
         .artium-lp--light .artium-lp-step::before {
-          /* platekey: the specular white line just inside the contour */
-          content: ""; position: absolute; inset: 2.6px; border-radius: 25px;
-          border: 1.7px solid rgba(255,255,255,.92); pointer-events: none;
+          /* platekey at rendered scale: a hairline just inside the contour */
+          content: ""; position: absolute; inset: 1px; border-radius: 23px;
+          border: 1px solid rgba(255,255,255,.92); pointer-events: none;
         }
         .artium-lp--light .artium-lp-step::after {
-          /* panel: inset slab with white edge, groove shadow beneath it,
-             its own inner keyline, and the cards' bottom shade */
-          content: ""; position: absolute; inset: 10px; border-radius: 19px;
-          border: 1px solid rgba(255,255,255,.78);
+          /* panel at rendered scale: shallow inset, fine edge, soft groove */
+          content: ""; position: absolute; inset: 4px; border-radius: 20px;
+          border: 1px solid rgba(255,255,255,.75);
           box-shadow:
-            0 1.6px 1.3px rgba(150,110,50,.40),
-            inset 0 0 0 1.5px rgba(255,255,255,.85);
-          background: linear-gradient(180deg, rgba(176,146,98,0) 58%, rgba(176,146,98,.14) 100%);
+            0 1px 1px rgba(150,110,50,.30),
+            inset 0 0 0 1px rgba(255,255,255,.6);
+          background: linear-gradient(180deg, rgba(176,146,98,0) 62%, rgba(176,146,98,.10) 100%);
           pointer-events: none;
         }
         .artium-lp--light .artium-lp-step > * { position: relative; z-index: 1; }
