@@ -8108,6 +8108,12 @@ function readAckIds(key) {
   } catch { return []; }
 }
 
+// A stamped timestamp, read back as a number (0 if never stamped).
+function readTs(key) {
+  const v = Number(localStorage.getItem(key));
+  return Number.isFinite(v) ? v : 0;
+}
+
 function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGoToAdmin, networkFeeds, puck, hireCount = 0, hireIds = [], onGoToConcerts, onGoToComposers, onGoToNews }) {
   const [open, setOpen] = React.useState(false);
   const [viewingLearner, setViewingLearner] = React.useState(null);
@@ -8129,7 +8135,26 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
   // list can't grow past what's currently pending.
   const [ackTeachIds, setAckTeachIds] = React.useState(() => readAckIds("artium_ack_teach_v1"));
   const [ackHireIds, setAckHireIds] = React.useState(() => readAckIds("artium_ack_hire_v1"));
+  // Composers/news split the same way, but by two timestamps instead of one
+  // set of ids (there's no per-item id for either feed, just a publish
+  // time). The ROW stamp (artium_seen_*) only moves on an actual visit — a
+  // row click navigating to the page. The BADGE's own ack stamp
+  // (artium_ackts_*) moves the moment the panel is opened or "Mark all as
+  // read" is pressed, same trigger as the two request feeds above. So
+  // opening the bell quiets the badge, but the row keeps reading "3 new
+  // posts" until the student actually goes and looks — the two stamps are
+  // deliberately different clocks.
+  const [seenComposersTs, setSeenComposersTs] = React.useState(() => readTs("artium_seen_composers_v1"));
+  const [seenNewsTs, setSeenNewsTs] = React.useState(() => readTs("artium_seen_news_v1"));
+  const [ackComposersTs, setAckComposersTs] = React.useState(() => readTs("artium_ackts_composers_v1"));
+  const [ackNewsTs, setAckNewsTs] = React.useState(() => readTs("artium_ackts_news_v1"));
   const ref = React.useRef(null);
+
+  function stampTs(key, setter) {
+    const now = Date.now();
+    try { localStorage.setItem(key, String(now)); } catch { /* private mode */ }
+    setter(now);
+  }
 
   function acknowledgeAll() {
     if (!networkFeeds) return;
@@ -8140,8 +8165,10 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
     } catch { /* private mode */ }
     setAckTeachIds(teachIds);
     setAckHireIds(hireIds);
-    markFeedSeen("artium_seen_composers_v1");
-    markFeedSeen("artium_seen_news_v1");
+    // Ack-only — the row's own seen stamp is untouched here, and only moves
+    // when a row is actually clicked through (see NetworkRow's onVisit).
+    stampTs("artium_ackts_composers_v1", setAckComposersTs);
+    stampTs("artium_ackts_news_v1", setAckNewsTs);
   }
 
   // Admin-only: pending promotion submissions (Supabase for real, localStorage for demo)
@@ -8200,14 +8227,25 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
   // The badge itself is "new since acknowledged", not "pending" — teach/hire
   // rows keep showing the full pending count (pending.length / hireCount)
   // regardless, but the BADGE only counts pending items whose id hasn't been
-  // acknowledged yet (see acknowledgeAll above). Composers/news have no
-  // per-item id to track, so their badge contribution is just their row
-  // count, same as before.
-  const composerCount = 0;
-  const newsCount = 0;
+  // acknowledged yet (see acknowledgeAll above).
+  //
+  // Composers/news mirror that split with timestamps instead of ids: no
+  // client-side feed exists yet for either (WallOfComposers is a static
+  // list, there is no news source at all), so these arrays are empty and
+  // both counts stay latent 0s — but the shape is real. ROW count reads
+  // against the row's own seen stamp, which only advances on an actual
+  // visit (NetworkRow's onVisit, below); BADGE count reads against the ack
+  // stamp, which advances on opening the panel or "Mark all as read", same
+  // as the request feeds.
+  const composerPosts = []; // { createdAt: number }[] — no feed to read yet
+  const newsItems = []; // { createdAt: number }[] — no feed to read yet
+  const composerCount = composerPosts.filter((p) => p.createdAt > seenComposersTs).length;
+  const newsCount = newsItems.filter((p) => p.createdAt > seenNewsTs).length;
+  const composerBadgeCount = composerPosts.filter((p) => p.createdAt > ackComposersTs).length;
+  const newsBadgeCount = newsItems.filter((p) => p.createdAt > ackNewsTs).length;
   const newTeachCount = pending.filter((r) => !ackTeachIds.includes(r.learnerId)).length;
   const newHireCount = hireIds.filter((id) => !ackHireIds.includes(id)).length;
-  const feedTotal = newTeachCount + newHireCount + composerCount + newsCount;
+  const feedTotal = newTeachCount + newHireCount + composerBadgeCount + newsBadgeCount;
   const totalCount = networkFeeds ? feedTotal : pending.length + promoPending.length;
 
   // A ~40px tinted tile, its icon, a title over a status line, and a
@@ -8216,11 +8254,17 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
   // pending/row figure, never the "new" figure the badge tracks — a row you
   // already opened once still shows "2 requests" until one is actually
   // answered, it just stops being what lit the bell.
-  function NetworkRow({ icon, tileBg, tileColor, title, count, activeText, inactiveText, seenKey, onGo }) {
+  // onVisit is the composers/news rows' own extra step: a click-through is
+  // both the row's seen stamp (markFeedSeen, below — read by composerCount/
+  // newsCount above) and the badge's ack stamp (onVisit — read by
+  // composerBadgeCount/newsBadgeCount), since actually visiting the page
+  // acknowledges the badge too. The request rows don't pass onVisit; they
+  // have nothing else to stamp on click.
+  function NetworkRow({ icon, tileBg, tileColor, title, count, activeText, inactiveText, seenKey, onGo, onVisit }) {
     const active = count > 0;
     return (
       <button
-        onClick={() => { markFeedSeen(seenKey); setOpen(false); onGo && onGo(); }}
+        onClick={() => { markFeedSeen(seenKey); onVisit && onVisit(); setOpen(false); onGo && onGo(); }}
         style={{
           width: "100%", display: "flex", alignItems: "center", gap: 12, textAlign: "left",
           padding: "13px 16px", border: "none", borderBottom: `1px solid ${C.inkLine}`,
@@ -8336,6 +8380,7 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
                 inactiveText="0 new posts"
                 seenKey="artium_seen_composers_v1"
                 onGo={onGoToComposers}
+                onVisit={() => stampTs("artium_ackts_composers_v1", setAckComposersTs)}
               />
               <NetworkRow
                 icon={<Calendar size={18} strokeWidth={2} />}
@@ -8346,6 +8391,7 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
                 inactiveText="0 new updates"
                 seenKey="artium_seen_news_v1"
                 onGo={onGoToNews}
+                onVisit={() => stampTs("artium_ackts_news_v1", setAckNewsTs)}
               />
               {/* No destination exists for this yet — the four rows above
                   are the whole list, so "view all" has nowhere further to
