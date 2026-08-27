@@ -10,7 +10,7 @@ import {
   Pencil, Plus, Trash2, Home, Upload, Eye, EyeOff, ChevronLeft,
   Calendar, CreditCard, Video, Link2, Clock, Bell,
   Map, BookOpen, ListChecks, LayoutList, Megaphone, Check as CheckIcon, ShieldCheck, FileText, Lock,
-  ScanLine, ArrowUpRight, Globe2, MapPin, GraduationCap, User, Paperclip,
+  ScanLine, ArrowUpRight, Globe2, MapPin, GraduationCap, User, Paperclip, ArrowUpDown,
 } from "lucide-react";
 import { useAuth } from "./contexts/AuthContext";
 import { supabase } from "./lib/supabase";
@@ -3447,9 +3447,9 @@ export default function App() {
         }
         .artium-aw-stat { flex: 1 1 0; min-width: 0; padding: 13px 6px; text-align: center; }
         .artium-aw-stat + .artium-aw-stat { border-left: 1px solid rgba(176,146,98,0.25); }
-        .artium-aw-stat-n { display: inline-flex; align-items: center; gap: 6px; font-size: 17px; font-weight: 700; color: #232A3B; line-height: 1; }
+        .artium-aw-stat-n { display: inline-flex; align-items: center; gap: 7px; font-size: 27px; font-weight: 700; color: #232A3B; line-height: 1; }
         .artium-aw-stat-n svg { color: #C9962E; flex-shrink: 0; }
-        .artium-aw-stat-l { margin: 5px 0 0; font-size: 10.5px; font-weight: 500; color: #6A7080; }
+        .artium-aw-stat-l { margin: 6px 0 0; font-size: 16.5px; font-weight: 500; color: #6A7080; }
 
         /* Segmented control. The active half is the gold pill the gate fills
            its buttons with; the track is a light ground rather than dark
@@ -3488,7 +3488,12 @@ export default function App() {
           transition: border-color .25s ease, box-shadow .25s ease;
         }
         .artium-aw-filter:hover { border-color: #C9962E; box-shadow: 0 4px 16px rgba(150,115,55,0.25); }
-        .artium-aw-hint { margin: 11px 0 0; text-align: center; font-size: 11.5px; color: #6A7080; line-height: 1.5; }
+        .artium-aw-filter[data-on="1"] {
+          background: linear-gradient(180deg, #EFD08A 0%, #DBAB4C 55%, #C9962E 100%);
+          color: #3A2E10; border-color: transparent;
+          box-shadow: 0 4px 16px rgba(176,126,31,0.35);
+        }
+        .artium-aw-hint { margin: 14px 0 0; text-align: center; font-size: 17.5px; font-weight: 500; color: #6A7080; line-height: 1.5; }
 
         .artium-aw-listhead { display: flex; align-items: center; gap: 9px; margin: 22px 0 12px; }
         .artium-aw-listhead h2 {
@@ -8823,21 +8828,14 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
             <p className="artium-aw-stat-l">Students</p>
           </div>
           <div className="artium-aw-stat">
-            <span className="artium-aw-stat-n"><User size={15} strokeWidth={2} />{nf(teacherCount)}</span>
+            <span className="artium-aw-stat-n">
+              <span style={{ color: "#C9962E", display: "inline-flex", flexShrink: 0 }}><IconTeacher size={16} /></span>
+              {nf(teacherCount)}
+            </span>
             <p className="artium-aw-stat-l">Teachers</p>
           </div>
         </div>
 
-        <div className="artium-aw-find">
-          <span className="artium-aw-field">
-            <Search size={15} strokeWidth={2} />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search for a conservatory or city..." />
-          </span>
-          <button className="artium-aw-filter" aria-label="Sort by country" aria-pressed={sortByCountry}
-            onClick={() => setSortByCountry((v) => !v)}>
-            <ListChecks size={17} strokeWidth={1.8} />
-          </button>
-        </div>
         <p className="artium-aw-hint">Explore the world map and pick a pin to see who's studying there.</p>
 
         {cons ? (
@@ -8916,12 +8914,21 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
                 <span>{areaIds.length} in this area</span>
               </div>
             )}
+            {/* Search lives here now, beside the heading it actually filters
+                — not floating above the page where it kept rendering (and
+                looking clickable) over the roster view below, which never
+                read it. The old text "Country" toggle is gone; the same
+                sort still lives one control over, in the round button. */}
             <div className="artium-aw-listhead">
               <h2>Conservatories</h2>
-              <span>{rows.length} result{rows.length === 1 ? "" : "s"}</span>
-              <button className="artium-aw-sort" data-on={sortByCountry ? "1" : "0"}
-                aria-pressed={sortByCountry} onClick={() => setSortByCountry((v) => !v)}>
-                Country <ChevronRight size={13} style={{ transform: "rotate(90deg)" }} />
+              <span className="artium-aw-field">
+                <Search size={15} strokeWidth={2} />
+                <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search for a conservatory or city..." />
+              </span>
+              <button className="artium-aw-filter" aria-label={sortByCountry ? "Sorted by country — tap to reset order" : "Sort by country"}
+                aria-pressed={sortByCountry} data-on={sortByCountry ? "1" : "0"}
+                onClick={() => setSortByCountry((v) => !v)}>
+                <ArrowUpDown size={16} strokeWidth={1.8} />
               </button>
             </div>
             <div className="artium-aw-list">
