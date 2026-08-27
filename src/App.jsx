@@ -3461,7 +3461,7 @@ export default function App() {
           display: inline-flex; align-items: center; justify-content: center;
           background: rgba(201,150,46,0.14); color: #C9962E;
         }
-        .artium-aw-stat-n { font-size: 28px; font-weight: 700; color: #232A3B; line-height: 1; }
+        .artium-aw-stat-n { font-size: 24px; font-weight: 700; color: #232A3B; line-height: 1; }
         .artium-aw-stat-l { margin: 7px 0 0; font-size: 15px; font-weight: 500; color: #6A7080; }
 
         /* Segmented control. The active half is the gold pill the gate fills
@@ -3530,7 +3530,7 @@ export default function App() {
         .artium-aw-listhead { display: flex; align-items: center; gap: 9px; margin: 22px 0 12px; }
         .artium-aw-listhead h2 {
           margin: 0; font-family: 'Playfair Display', serif;
-          font-weight: 700; font-size: 27px; color: #232A3B; line-height: 1;
+          font-weight: 700; font-size: 21px; color: #232A3B; line-height: 1;
         }
         .artium-aw-listhead span { font-size: 11.5px; color: #6A7080; }
         .artium-aw-sort {
@@ -4460,7 +4460,7 @@ export default function App() {
               </header>
               {myProfile && (
                 <div className="px-6 pt-2 pb-2">
-                  <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600, color: C.inkText }}>
+                  <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600, color: C.inkText, marginLeft: -3 }}>
                     Welcome, {myProfile.name.split(" ")[0]}
                   </h2>
                   <p className="mt-1 text-sm" style={{ color: C.ivoryDim }}>
@@ -8972,7 +8972,12 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
     if (needle) {
       list = list.filter((c) => `${c.name} ${c.city || ""} ${c.country || ""}`.toLowerCase().includes(needle));
     }
-    return list;
+    // Schools with students rise to the top; the empty ones keep their
+    // order below. Two filters rather than a sort comparator so the
+    // original ordering inside each group is untouched.
+    const populated = list.filter((c) => (studentsByCons[c.id] || []).length > 0);
+    const empty = list.filter((c) => (studentsByCons[c.id] || []).length === 0);
+    return [...populated, ...empty];
   }, [ALL_CONS, studentsByCons, q, areaIds]);
 
   const nf = (n) => n.toLocaleString();
@@ -9037,7 +9042,7 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
             <div className="artium-aw-row" style={{ cursor: "default", marginBottom: 12 }}>
               <span className="artium-aw-mono">{consMonogram(cons)}</span>
               <span className="artium-aw-row-body">
-                <p className="artium-aw-row-t" style={{ fontSize: 18.5 }}>{cons.name}</p>
+                <p className="artium-aw-row-t" style={{ fontSize: 16.5 }}>{cons.name}</p>
                 <p className="artium-aw-row-c" style={{ fontSize: 14 }}><MapPin size={11} strokeWidth={2} />{[cons.city, cons.country].filter(Boolean).join(", ")}</p>
               </span>
               <span className="artium-aw-badge"><b>{roster.length}</b><span>student{roster.length === 1 ? "" : "s"}</span></span>
@@ -9125,7 +9130,7 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
                   <button key={c.id} className="artium-aw-row" onClick={() => setSelectedConsId(c.id)}>
                     <span className="artium-aw-mono">{consMonogram(c)}</span>
                     <span className="artium-aw-row-body">
-                      <p className="artium-aw-row-t" style={{ fontSize: 18.5 }}>{c.name}</p>
+                      <p className="artium-aw-row-t" style={{ fontSize: 16.5 }}>{c.name}</p>
                       <p className="artium-aw-row-c" style={{ fontSize: 14 }}><MapPin size={11} strokeWidth={2} />{[c.city, c.country].filter(Boolean).join(", ")}</p>
                     </span>
                     <span className="artium-aw-badge"><b>{n}</b><span>student{n === 1 ? "" : "s"}</span></span>
