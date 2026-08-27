@@ -11,6 +11,7 @@ import {
   Calendar, CreditCard, Video, Link2, Clock, Bell,
   Map, BookOpen, ListChecks, LayoutList, Megaphone, Check as CheckIcon, ShieldCheck, FileText, Lock,
   ScanLine, ArrowUpRight, Globe2, MapPin, GraduationCap, User, Paperclip,
+  Compass, Briefcase, Feather, CheckCircle2,
 } from "lucide-react";
 import { useAuth } from "./contexts/AuthContext";
 import { supabase } from "./lib/supabase";
@@ -3447,9 +3448,17 @@ export default function App() {
         }
         .artium-aw-stat { flex: 1 1 0; min-width: 0; padding: 13px 6px; text-align: center; }
         .artium-aw-stat + .artium-aw-stat { border-left: 1px solid rgba(176,146,98,0.25); }
-        .artium-aw-stat-n { display: inline-flex; align-items: center; gap: 7px; font-size: 27px; font-weight: 700; color: #232A3B; line-height: 1; }
-        .artium-aw-stat-n svg { color: #C9962E; flex-shrink: 0; }
-        .artium-aw-stat-l { margin: 6px 0 0; font-size: 16.5px; font-weight: 500; color: #6A7080; }
+        /* The icon moved off the number and into its own tinted tile, the
+           way the mock draws it — a small gold-glass chip sitting to the
+           left of the figure rather than an inline glyph sharing its line. */
+        .artium-aw-stat-row { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+        .artium-aw-stat-tile {
+          width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
+          display: inline-flex; align-items: center; justify-content: center;
+          background: rgba(201,150,46,0.14); color: #C9962E;
+        }
+        .artium-aw-stat-n { font-size: 28px; font-weight: 700; color: #232A3B; line-height: 1; }
+        .artium-aw-stat-l { margin: 7px 0 0; font-size: 15px; font-weight: 500; color: #6A7080; }
 
         /* Segmented control. The active half is the gold pill the gate fills
            its buttons with; the track is a light ground rather than dark
@@ -3495,10 +3504,29 @@ export default function App() {
         }
         .artium-aw-hint { margin: 14px 0 0; text-align: center; font-size: 17.5px; font-weight: 500; color: #6A7080; line-height: 1.5; }
 
+        /* The slab under the stats — a compass in a gold tile, a bold line
+           over a muted one. Same cream/gold wash as the mock, a fine gold
+           hairline instead of the stats bar's neutral one so it reads as
+           its own quieter surface rather than a fourth stat cell. */
+        .artium-aw-explore {
+          display: flex; align-items: center; gap: 12px; margin-top: 14px;
+          padding: 14px 16px; border-radius: 16px;
+          background: linear-gradient(135deg, rgba(201,150,46,0.10) 0%, rgba(201,150,46,0.04) 100%);
+          border: 1px solid rgba(201,150,46,0.35);
+        }
+        .artium-aw-explore-tile {
+          width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
+          display: inline-flex; align-items: center; justify-content: center;
+          background: rgba(201,150,46,0.16); color: #C9962E;
+        }
+        .artium-aw-explore-copy { min-width: 0; }
+        .artium-aw-explore-copy b { display: block; font-size: 14.5px; font-weight: 700; color: #232A3B; line-height: 1.35; }
+        .artium-aw-explore-copy span { display: block; margin-top: 2px; font-size: 13px; font-weight: 500; color: #6A7080; line-height: 1.4; }
+
         .artium-aw-listhead { display: flex; align-items: center; gap: 9px; margin: 22px 0 12px; }
         .artium-aw-listhead h2 {
           margin: 0; font-family: 'Playfair Display', serif;
-          font-weight: 600; font-size: 21px; color: #232A3B; line-height: 1;
+          font-weight: 700; font-size: 27px; color: #232A3B; line-height: 1;
         }
         .artium-aw-listhead span { font-size: 11.5px; color: #6A7080; }
         .artium-aw-sort {
@@ -8135,18 +8163,35 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
   const feedTotal = pending.length + hireCount + composerCount + newsCount;
   const totalCount = networkFeeds ? feedTotal : pending.length + promoPending.length;
 
-  function NetworkRow({ label, count, seenKey, onGo }) {
+  // A ~40px tinted tile, its icon, a title over a status line, and a
+  // right-aligned count in the tile's own colour — the mock's row, not the
+  // single sentence the first pass drew. "Mark all as read" (in the header
+  // below) stamps every seenKey at once but never touches these counts:
+  // composers/news are already 0 with nothing to mark, and teach/hire are
+  // real pending state that only clears by being answered elsewhere, same
+  // as a single row's own click does.
+  function NetworkRow({ icon, tileBg, tileColor, title, count, activeText, inactiveText, seenKey, onGo }) {
     const active = count > 0;
     return (
       <button
         onClick={() => { markFeedSeen(seenKey); setOpen(false); onGo && onGo(); }}
         style={{
-          width: "100%", textAlign: "left", padding: "13px 16px", border: "none",
-          borderBottom: `1px solid ${C.inkLine}`, background: "transparent", cursor: "pointer",
-          fontSize: 13, color: C.ivory, fontFamily: FONT_BODY, lineHeight: 1.5,
+          width: "100%", display: "flex", alignItems: "center", gap: 12, textAlign: "left",
+          padding: "13px 16px", border: "none", borderBottom: `1px solid ${C.inkLine}`,
+          background: "transparent", cursor: "pointer", fontFamily: FONT_BODY,
         }}
       >
-        {label(active, count)}
+        <span style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, background: tileBg, color: tileColor, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          {icon}
+        </span>
+        <span style={{ flex: 1, minWidth: 0 }}>
+          <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: C.ivory, lineHeight: 1.3 }}>{title}</p>
+          <p style={{ margin: "2px 0 0", fontSize: 13, color: C.ivoryDim, lineHeight: 1.3 }}>{active ? activeText : inactiveText}</p>
+        </span>
+        <span style={{ display: "flex", alignItems: "center", gap: 3, flexShrink: 0 }}>
+          <span style={{ fontSize: 15, fontWeight: 700, color: active ? tileColor : C.ivoryDim }}>{count}</span>
+          <ChevronRight size={15} color={C.ivoryDim} />
+        </span>
       </button>
     );
   }
@@ -8171,10 +8216,25 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
         )}
       </button>
       {open && (
-        <div style={{ position: "absolute", right: 0, top: "calc(100% + 8px)", width: 320, background: networkFeeds ? "#FFFFFF" : "rgba(176,146,98,0.05)", borderRadius: networkFeeds ? 18 : 12, boxShadow: networkFeeds ? "0 20px 40px -22px rgba(150,115,55,0.38), inset 0 1px 0 #fff" : "0 8px 32px rgba(0,0,0,0.14)", border: `1px solid ${C.inkLine}`, zIndex: 200, overflow: "hidden", maxHeight: 420, overflowY: "auto" }}>
-          <div style={{ padding: "12px 16px", borderBottom: `1px solid ${C.inkLine}` }}>
-            <p style={{ fontSize: 13, fontWeight: 700, color: C.ivory, margin: 0 }}>Notifications</p>
-          </div>
+        <div style={{ position: "absolute", right: 0, top: "calc(100% + 8px)", width: 320, background: networkFeeds ? "#FFFFFF" : "rgba(176,146,98,0.05)", borderRadius: networkFeeds ? 20 : 12, boxShadow: networkFeeds ? "0 20px 40px -22px rgba(150,115,55,0.38), inset 0 1px 0 #fff" : "0 8px 32px rgba(0,0,0,0.14)", border: `1px solid ${C.inkLine}`, zIndex: 200, overflow: "hidden", maxHeight: 460, overflowY: "auto" }}>
+          {networkFeeds ? (
+            <div style={{ padding: "14px 16px", borderBottom: `1px solid ${C.inkLine}`, display: "flex", alignItems: "center", gap: 8 }}>
+              <Bell size={14} color={C.brass} />
+              <p style={{ flex: 1, minWidth: 0, margin: 0, fontSize: 17, fontWeight: 600, color: C.ivory }}>Notifications</p>
+              <button
+                onClick={() => {
+                  ["artium_seen_teach_v1", "artium_seen_hire_v1", "artium_seen_composers_v1", "artium_seen_news_v1"].forEach(markFeedSeen);
+                }}
+                style={{ display: "flex", alignItems: "center", gap: 4, background: "none", border: "none", cursor: "pointer", color: C.brass, fontSize: 12.5, fontWeight: 600, padding: 0, flexShrink: 0 }}
+              >
+                <CheckCircle2 size={13} strokeWidth={2} /> Mark all as read
+              </button>
+            </div>
+          ) : (
+            <div style={{ padding: "12px 16px", borderBottom: `1px solid ${C.inkLine}` }}>
+              <p style={{ fontSize: 13, fontWeight: 700, color: C.ivory, margin: 0 }}>Notifications</p>
+            </div>
+          )}
           {/* Owner-only: promotion approval requests, in either panel format */}
           {promoPending.map((p) => (
             <div key={p.id} style={{ padding: "12px 16px", background: "#EEF4FF", borderBottom: `1px solid ${C.inkLine}` }}>
@@ -8194,37 +8254,54 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
           {networkFeeds ? (
             <>
               <NetworkRow
-                seenKey="artium_seen_teach_v1"
+                icon={<GraduationCap size={18} strokeWidth={2} />}
+                tileBg="rgba(201,150,46,0.14)" tileColor={C.brass}
+                title="Teaching requests"
                 count={pending.length}
+                activeText={`${pending.length} new request${pending.length === 1 ? "" : "s"}`}
+                inactiveText="You have 0 new requests"
+                seenKey="artium_seen_teach_v1"
                 onGo={onGoToLessonRoom}
-                label={(active, n) => active
-                  ? <>You have <b style={{ color: C.brass, fontWeight: 700 }}>{n}</b> teaching request{n === 1 ? "" : "s"}</>
-                  : <span style={{ color: C.ivoryDim }}>You have 0 teaching requests</span>}
               />
               <NetworkRow
-                seenKey="artium_seen_hire_v1"
+                icon={<Briefcase size={18} strokeWidth={2} />}
+                tileBg="rgba(139,109,196,0.14)" tileColor="#8B6DC4"
+                title="Concert hiring requests"
                 count={hireCount}
+                activeText={`${hireCount} new request${hireCount === 1 ? "" : "s"}`}
+                inactiveText="You have 0 new requests"
+                seenKey="artium_seen_hire_v1"
                 onGo={onGoToConcerts}
-                label={(active, n) => active
-                  ? <>You have <b style={{ color: C.brass, fontWeight: 700 }}>{n}</b> concert hiring request{n === 1 ? "" : "s"}</>
-                  : <span style={{ color: C.ivoryDim }}>You have 0 concert hiring requests</span>}
               />
               <NetworkRow
-                seenKey="artium_seen_composers_v1"
+                icon={<Feather size={18} strokeWidth={2} />}
+                tileBg="rgba(63,139,92,0.14)" tileColor={C.forest}
+                title="Tomorrow's Composers"
                 count={composerCount}
+                activeText={`${composerCount} new post${composerCount === 1 ? "" : "s"}`}
+                inactiveText="0 new posts"
+                seenKey="artium_seen_composers_v1"
                 onGo={onGoToComposers}
-                label={(active, n) => active
-                  ? <><b style={{ color: C.brass, fontWeight: 700 }}>{n}</b> new post{n === 1 ? "" : "s"} in Tomorrow's Composers</>
-                  : <span style={{ color: C.ivoryDim }}>0 new posts in Tomorrow's Composers</span>}
               />
               <NetworkRow
-                seenKey="artium_seen_news_v1"
+                icon={<Calendar size={18} strokeWidth={2} />}
+                tileBg="rgba(178,59,59,0.14)" tileColor={C.burgundy}
+                title="Classical Events"
                 count={newsCount}
+                activeText={`${newsCount} new update${newsCount === 1 ? "" : "s"}`}
+                inactiveText="0 new updates"
+                seenKey="artium_seen_news_v1"
                 onGo={onGoToNews}
-                label={(active, n) => active
-                  ? <><b style={{ color: C.brass, fontWeight: 700 }}>{n}</b> news in Classical Events</>
-                  : <span style={{ color: C.ivoryDim }}>0 news in Classical Events</span>}
               />
+              {/* No destination exists for this yet — the four rows above
+                  are the whole list, so "view all" has nowhere further to
+                  go. Kept per the mock as an inert link rather than dropped,
+                  ready to wire once there is a fuller notifications screen. */}
+              <div style={{ padding: "11px 16px", textAlign: "center" }}>
+                <button onClick={() => {}} style={{ background: "none", border: "none", cursor: "pointer", color: C.brass, fontSize: 12.5, fontWeight: 600, padding: 0 }}>
+                  View all notifications ›
+                </button>
+              </div>
             </>
           ) : totalCount === 0 ? (
             <p style={{ fontSize: 13, color: C.ivoryDim, padding: "16px", margin: 0 }}>No new notifications</p>
@@ -8817,23 +8894,38 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
 
         <div className="artium-aw-stats">
           <div className="artium-aw-stat">
-            <span className="artium-aw-stat-n"><MapPin size={15} strokeWidth={2} />{nf(ALL_CONS.length)}</span>
+            <span className="artium-aw-stat-row">
+              <span className="artium-aw-stat-tile"><MapPin size={16} strokeWidth={2} /></span>
+              <span className="artium-aw-stat-n">{nf(ALL_CONS.length)}</span>
+            </span>
             <p className="artium-aw-stat-l">Conservatories</p>
           </div>
           <div className="artium-aw-stat">
-            <span className="artium-aw-stat-n"><GraduationCap size={16} strokeWidth={2} />{nf(allStudents.length)}</span>
+            <span className="artium-aw-stat-row">
+              <span className="artium-aw-stat-tile"><GraduationCap size={17} strokeWidth={2} /></span>
+              <span className="artium-aw-stat-n">{nf(allStudents.length)}</span>
+            </span>
             <p className="artium-aw-stat-l">Students</p>
           </div>
           <div className="artium-aw-stat">
-            <span className="artium-aw-stat-n">
-              <span style={{ color: "#C9962E", display: "inline-flex", flexShrink: 0 }}><IconTeacher size={16} /></span>
-              {nf(teacherCount)}
+            <span className="artium-aw-stat-row">
+              <span className="artium-aw-stat-tile"><IconTeacher size={16} /></span>
+              <span className="artium-aw-stat-n">{nf(teacherCount)}</span>
             </span>
             <p className="artium-aw-stat-l">Teachers</p>
           </div>
         </div>
 
-        <p className="artium-aw-hint">Explore the world map and pick a pin to see who's studying there.</p>
+        {/* The slab the mock draws under the stats — a compass, and the
+            page's own copy for what the globe above is for. Replaces the
+            old plain caption in exactly this one spot. */}
+        <div className="artium-aw-explore">
+          <span className="artium-aw-explore-tile"><Compass size={18} strokeWidth={1.8} /></span>
+          <span className="artium-aw-explore-copy">
+            <b>Explore the world and connect with talent.</b>
+            <span>Tap a pin on the map to discover who's studying nearby.</span>
+          </span>
+        </div>
 
         {cons ? (
           <>
@@ -8845,8 +8937,8 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
             <div className="artium-aw-row" style={{ cursor: "default", marginBottom: 12 }}>
               <span className="artium-aw-mono">{consMonogram(cons)}</span>
               <span className="artium-aw-row-body">
-                <p className="artium-aw-row-t">{cons.name}</p>
-                <p className="artium-aw-row-c"><MapPin size={11} strokeWidth={2} />{[cons.city, cons.country].filter(Boolean).join(", ")}</p>
+                <p className="artium-aw-row-t" style={{ fontSize: 18.5 }}>{cons.name}</p>
+                <p className="artium-aw-row-c" style={{ fontSize: 14 }}><MapPin size={11} strokeWidth={2} />{[cons.city, cons.country].filter(Boolean).join(", ")}</p>
               </span>
               <span className="artium-aw-badge"><b>{roster.length}</b><span>student{roster.length === 1 ? "" : "s"}</span></span>
             </div>
@@ -8914,8 +9006,8 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
             {/* Search lives here now, beside the heading it actually filters
                 — not floating above the page where it kept rendering (and
                 looking clickable) over the roster view below, which never
-                read it. The old text "Country" toggle is gone; the same
-                sort still lives one control over, in the round button. */}
+                read it. The old text "Country" toggle and the round sort
+                button beside the field are both gone at the user's request. */}
             <div className="artium-aw-listhead">
               <h2>Conservatories</h2>
               <span className="artium-aw-field">
@@ -8933,8 +9025,8 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
                   <button key={c.id} className="artium-aw-row" onClick={() => setSelectedConsId(c.id)}>
                     <span className="artium-aw-mono">{consMonogram(c)}</span>
                     <span className="artium-aw-row-body">
-                      <p className="artium-aw-row-t">{c.name}</p>
-                      <p className="artium-aw-row-c"><MapPin size={11} strokeWidth={2} />{[c.city, c.country].filter(Boolean).join(", ")}</p>
+                      <p className="artium-aw-row-t" style={{ fontSize: 18.5 }}>{c.name}</p>
+                      <p className="artium-aw-row-c" style={{ fontSize: 14 }}><MapPin size={11} strokeWidth={2} />{[c.city, c.country].filter(Boolean).join(", ")}</p>
                     </span>
                     <span className="artium-aw-badge"><b>{n}</b><span>student{n === 1 ? "" : "s"}</span></span>
                     <ChevronRight size={17} strokeWidth={2} />
