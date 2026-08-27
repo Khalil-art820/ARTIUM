@@ -2192,9 +2192,13 @@ export default function App() {
 
   // Same rule as the boolean below, counted rather than tested — the network
   // header's bell reads a number ("2 concert hiring requests"), the Concerts
-  // tab just needs to know whether to light up at all.
-  const pianistAttentionCount = pianistInquiries.filter((q) =>
-    (q.status === "agreed" && !q.pianistSignedAt) || pianistOfferAttention[q.id]).length;
+  // tab just needs to know whether to light up at all. The ids alongside the
+  // count are what let the bell tell a request it has already shown apart
+  // from a new one — each inquiry's own .id, the same id BookingsList/
+  // ConcertConversation already key off.
+  const pianistAttentionIds = pianistInquiries.filter((q) =>
+    (q.status === "agreed" && !q.pianistSignedAt) || pianistOfferAttention[q.id]).map((q) => q.id);
+  const pianistAttentionCount = pianistAttentionIds.length;
   const pianistNeedsAttention = pianistAttentionCount > 0;
 
   // Admin is now strictly profiles.is_admin — a real, signed-in account. The
@@ -4431,6 +4435,7 @@ export default function App() {
                       puck
                       networkFeeds
                       hireCount={pianistAttentionCount}
+                      hireIds={pianistAttentionIds}
                       onGoToLessonRoom={() => { setSelectedStudentId(null); setAppTabPersist("lessons"); }}
                       onGoToConcerts={() => { setSelectedStudentId(null); setAppTabPersist("concerts"); }}
                       onGoToComposers={() => setScreen("composers")}
@@ -8094,7 +8099,16 @@ function markFeedSeen(key) {
   try { localStorage.setItem(key, String(Date.now())); } catch { /* private mode */ }
 }
 
-function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGoToAdmin, networkFeeds, puck, hireCount = 0, onGoToConcerts, onGoToComposers, onGoToNews }) {
+// Read as an id list; anything else (missing key, corrupt JSON, private
+// mode) reads back empty rather than throwing.
+function readAckIds(key) {
+  try {
+    const v = JSON.parse(localStorage.getItem(key) || "[]");
+    return Array.isArray(v) ? v : [];
+  } catch { return []; }
+}
+
+function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGoToAdmin, networkFeeds, puck, hireCount = 0, hireIds = [], onGoToConcerts, onGoToComposers, onGoToNews }) {
   const [open, setOpen] = React.useState(false);
   const [viewingLearner, setViewingLearner] = React.useState(null);
   const [pending, setPending] = React.useState(() => {
@@ -8104,7 +8118,31 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
     } catch { return []; }
   });
   const [promoPending, setPromoPending] = React.useState([]);
+  // "New since last acknowledged" for the two request feeds — a list of ids
+  // (incomingRequests has no numeric id, but each entry is deduped by
+  // learnerId when it's written, so learnerId is the stable per-request key;
+  // pianist inquiries already carry a real .id). Opening the panel, or
+  // pressing "Mark all as read", replaces these wholesale with whatever is
+  // pending right now — which both quiets the badge for everything on
+  // screen AND is the prune: an id that has since been accepted/declined
+  // and dropped out of `pending`/`hireIds` is never written back, so this
+  // list can't grow past what's currently pending.
+  const [ackTeachIds, setAckTeachIds] = React.useState(() => readAckIds("artium_ack_teach_v1"));
+  const [ackHireIds, setAckHireIds] = React.useState(() => readAckIds("artium_ack_hire_v1"));
   const ref = React.useRef(null);
+
+  function acknowledgeAll() {
+    if (!networkFeeds) return;
+    const teachIds = pending.map((r) => r.learnerId);
+    try {
+      localStorage.setItem("artium_ack_teach_v1", JSON.stringify(teachIds));
+      localStorage.setItem("artium_ack_hire_v1", JSON.stringify(hireIds));
+    } catch { /* private mode */ }
+    setAckTeachIds(teachIds);
+    setAckHireIds(hireIds);
+    markFeedSeen("artium_seen_composers_v1");
+    markFeedSeen("artium_seen_news_v1");
+  }
 
   // Admin-only: pending promotion submissions (Supabase for real, localStorage for demo)
   React.useEffect(() => {
@@ -8158,18 +8196,26 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
   // The network header's own count: exactly the four feeds, nothing else —
   // promoPending is an admin concern, orthogonal to a student's four rows,
   // so it never inflates this badge even when both are true at once.
+  //
+  // The badge itself is "new since acknowledged", not "pending" — teach/hire
+  // rows keep showing the full pending count (pending.length / hireCount)
+  // regardless, but the BADGE only counts pending items whose id hasn't been
+  // acknowledged yet (see acknowledgeAll above). Composers/news have no
+  // per-item id to track, so their badge contribution is just their row
+  // count, same as before.
   const composerCount = 0;
   const newsCount = 0;
-  const feedTotal = pending.length + hireCount + composerCount + newsCount;
+  const newTeachCount = pending.filter((r) => !ackTeachIds.includes(r.learnerId)).length;
+  const newHireCount = hireIds.filter((id) => !ackHireIds.includes(id)).length;
+  const feedTotal = newTeachCount + newHireCount + composerCount + newsCount;
   const totalCount = networkFeeds ? feedTotal : pending.length + promoPending.length;
 
   // A ~40px tinted tile, its icon, a title over a status line, and a
   // right-aligned count in the tile's own colour — the mock's row, not the
-  // single sentence the first pass drew. "Mark all as read" (in the header
-  // below) stamps every seenKey at once but never touches these counts:
-  // composers/news are already 0 with nothing to mark, and teach/hire are
-  // real pending state that only clears by being answered elsewhere, same
-  // as a single row's own click does.
+  // single sentence the first pass drew. `count` here is always the true
+  // pending/row figure, never the "new" figure the badge tracks — a row you
+  // already opened once still shows "2 requests" until one is actually
+  // answered, it just stops being what lit the bell.
   function NetworkRow({ icon, tileBg, tileColor, title, count, activeText, inactiveText, seenKey, onGo }) {
     const active = count > 0;
     return (
@@ -8200,7 +8246,14 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
     <div ref={ref} style={{ position: "relative" }}>
       <LearnerProfileModal learner={viewingLearner} onClose={() => setViewingLearner(null)} />
       <button
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => setOpen((o) => {
+          const next = !o;
+          // Opening is looking — everything on screen counts as seen the
+          // moment the panel is up, same as "Mark all as read" does
+          // explicitly. Closing acknowledges nothing new.
+          if (next) acknowledgeAll();
+          return next;
+        })}
         aria-label="Notifications"
         className={puck ? "artium-net-puck" : undefined}
         style={puck ? undefined : { position: "relative", background: "none", border: "none", cursor: "pointer", padding: 4, display: "flex", alignItems: "center", justifyContent: "center" }}
@@ -8221,10 +8274,11 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
             <div style={{ padding: "14px 16px", borderBottom: `1px solid ${C.inkLine}`, display: "flex", alignItems: "center", gap: 8 }}>
               <Bell size={14} color={C.brass} />
               <p style={{ flex: 1, minWidth: 0, margin: 0, fontSize: 17, fontWeight: 600, color: C.ivory }}>Notifications</p>
+              {/* Genuinely redundant with opening the panel now — opening
+                  already acknowledges everything below — but harmless, and
+                  it's the explicit, expected control the mock draws. */}
               <button
-                onClick={() => {
-                  ["artium_seen_teach_v1", "artium_seen_hire_v1", "artium_seen_composers_v1", "artium_seen_news_v1"].forEach(markFeedSeen);
-                }}
+                onClick={acknowledgeAll}
                 style={{ display: "flex", alignItems: "center", gap: 4, background: "none", border: "none", cursor: "pointer", color: C.brass, fontSize: 12.5, fontWeight: 600, padding: 0, flexShrink: 0 }}
               >
                 <CheckCircle2 size={13} strokeWidth={2} /> Mark all as read
