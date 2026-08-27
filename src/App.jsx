@@ -10,7 +10,7 @@ import {
   Pencil, Plus, Trash2, Home, Upload, Eye, EyeOff, ChevronLeft,
   Calendar, CreditCard, Video, Link2, Clock, Bell,
   Map, BookOpen, ListChecks, LayoutList, Megaphone, Check as CheckIcon, ShieldCheck, FileText, Lock,
-  ScanLine, ArrowUpRight, Globe2, MapPin, GraduationCap, User, Paperclip, ArrowUpDown,
+  ScanLine, ArrowUpRight, Globe2, MapPin, GraduationCap, User, Paperclip,
 } from "lucide-react";
 import { useAuth } from "./contexts/AuthContext";
 import { supabase } from "./lib/supabase";
@@ -8766,7 +8766,6 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
   // Off by default: the reference lists the schools in their own order, and
   // sorting alphabetically by country buries the well-known ones behind
   // whichever country happens to start with an A.
-  const [sortByCountry, setSortByCountry] = useState(false);
   // The schools behind one badge on the globe, when zooming could not tell
   // them apart. Brussels' two conservatories are a hundred metres from each
   // other; no altitude separates them, but a list has no trouble at all.
@@ -8796,10 +8795,8 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
     if (needle) {
       list = list.filter((c) => `${c.name} ${c.city || ""} ${c.country || ""}`.toLowerCase().includes(needle));
     }
-    return sortByCountry
-      ? [...list].sort((x, y) => (x.country || "").localeCompare(y.country || "") || (x.name || "").localeCompare(y.name || ""))
-      : list;
-  }, [ALL_CONS, studentsByCons, q, sortByCountry, areaIds]);
+    return list;
+  }, [ALL_CONS, studentsByCons, q, areaIds]);
 
   const nf = (n) => n.toLocaleString();
 
@@ -8925,11 +8922,6 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
                 <Search size={15} strokeWidth={2} />
                 <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search for a conservatory or city..." />
               </span>
-              <button className="artium-aw-filter" aria-label={sortByCountry ? "Sorted by country — tap to reset order" : "Sort by country"}
-                aria-pressed={sortByCountry} data-on={sortByCountry ? "1" : "0"}
-                onClick={() => setSortByCountry((v) => !v)}>
-                <ArrowUpDown size={16} strokeWidth={1.8} />
-              </button>
             </div>
             <div className="artium-aw-list">
               {rows.length === 0 && (
