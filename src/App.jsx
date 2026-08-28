@@ -4460,87 +4460,73 @@ export default function App() {
               </header>
               {myProfile && (
                 <div className="px-6 pt-2 pb-2">
-                  {/* The reference's welcome card: one white slab holding the
-                      gold GOOD TO SEE YOU eyebrow with its hairline, the big
-                      serif name with the waving disc, the conservatory row
-                      with the columned-building mark, and the credential
-                      pills on one unwrappable line. The mock's concentric
-                      rings at the right are deliberately not copied. */}
-                  <div style={{
-                    background: "#FFFFFF", border: `1px solid ${C.inkLine}`,
-                    borderRadius: 24, padding: "20px 20px 18px",
-                    boxShadow: "0 16px 24px -14px rgba(150,115,55,.30)",
-                  }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                      <span style={{
-                        fontFamily: FONT_BODY, fontSize: 12.5, fontWeight: 600,
-                        letterSpacing: ".32em", textTransform: "uppercase", color: C.brass,
-                      }}>Good to see you</span>
-                      <span style={{ flex: "0 1 90px", height: 1.5, background: C.brass, opacity: .7 }} />
-                    </div>
-                    <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 40, fontWeight: 600, color: C.inkText, margin: "10px 0 0", marginLeft: -2, display: "flex", alignItems: "center", gap: 14 }}>
-                      {myProfile.name.split(" ")[0]}
-                      <span aria-hidden="true" style={{
-                        display: "inline-flex", alignItems: "center", justifyContent: "center",
-                        width: 46, height: 46, borderRadius: "50%",
-                        background: "radial-gradient(circle at 35% 28%, #FFFFFF 0%, #FCF8EF 55%, #F1E8D6 100%)",
-                        boxShadow: "0 6px 10px -4px rgba(150,115,55,.35), inset 0 1px 1px #fff",
-                        fontSize: 22, lineHeight: 1,
-                      }}>{"\uD83D\uDC4B"}</span>
-                    </h2>
-                    <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 14 }}>
-                      <span style={{
-                        display: "inline-flex", alignItems: "center", justifyContent: "center",
-                        width: 38, height: 38, borderRadius: "50%",
-                        background: "rgba(201,150,46,.14)", color: C.brass, flexShrink: 0,
-                      }}>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                          <path d="M12 2.5 2.8 7.2v1.6h18.4V7.2L12 2.5zM4.2 10.3h2.4v7.2H4.2zM10.8 10.3h2.4v7.2h-2.4zM17.4 10.3h2.4v7.2h-2.4zM2.8 19h18.4v2H2.8z" />
-                        </svg>
-                      </span>
-                      <span style={{ fontFamily: FONT_BODY, fontSize: 17.5, fontWeight: 500, color: "#565B66" }}>
-                        {myProfile.conservatoryId
-                          ? (findConservatory(myProfile.conservatoryId)?.name || "Conservatory")
-                          : "Conservatory student"}
-                      </span>
-                    </div>
-                    <div style={{ display: "flex", flexWrap: "nowrap", gap: 8, marginTop: 14, overflowX: "auto", paddingBottom: 2 }}>
-                      {(myProfile.year || "").split(",").map((t) => t.trim()).filter(Boolean).map((label) => {
-                        const low = label.toLowerCase();
-                        const isYear = /year/.test(low);
-                        const isDoc = /doctor|phd/.test(low);
-                        return (
-                          <span key={label} style={{
-                            display: "inline-flex", alignItems: "center", gap: 7, flexShrink: 0,
-                            background: "#FFFFFF", border: `1px solid ${C.inkLine}`,
-                            borderRadius: 999, padding: "7px 14px",
-                            fontFamily: FONT_BODY, fontSize: 13.5, fontWeight: 600, color: C.inkText,
-                            boxShadow: "0 4px 8px -4px rgba(150,115,55,.25)",
-                          }}>
-                            {isYear ? (
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.brass} strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M6 20v-6M12 20v-10M18 20V6" /></svg>
-                            ) : isDoc ? (
-                              <FileText size={15} strokeWidth={1.8} style={{ color: C.brass }} />
-                            ) : (
-                              <GraduationCap size={15} strokeWidth={1.8} style={{ color: C.brass }} />
-                            )}
-                            {label}
-                          </span>
-                        );
-                      })}
-                      {myProfile.teaching?.open && (
-                        <span style={{
+                  {/* Back to the plain block by request — the white card and
+                      the GOOD TO SEE YOU eyebrow are reversed; what survives
+                      of that round: the corrected pill marks, the columned
+                      hall beside the conservatory, and its newer text voice. */}
+                  <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600, color: C.inkText, marginLeft: -3 }}>
+                    Welcome, {myProfile.name.split(" ")[0]}
+                    <span aria-hidden="true" style={{
+                      display: "inline-flex", alignItems: "center", justifyContent: "center",
+                      width: 30, height: 30, borderRadius: "50%", marginLeft: 8,
+                      verticalAlign: "middle", position: "relative", top: -4,
+                      background: "radial-gradient(circle at 35% 28%, #FFFFFF 0%, #FCF8EF 55%, #F1E8D6 100%)",
+                      boxShadow: "0 4px 8px -3px rgba(150,115,55,.35), inset 0 1px 1px #fff",
+                      fontSize: 15, lineHeight: 1,
+                    }}>{"\uD83D\uDC4B"}</span>
+                  </h2>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>
+                    <span style={{
+                      display: "inline-flex", alignItems: "center", justifyContent: "center",
+                      width: 32, height: 32, borderRadius: "50%",
+                      background: "rgba(201,150,46,.14)", color: C.brass, flexShrink: 0,
+                    }}>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M12 2.5 2.8 7.2v1.6h18.4V7.2L12 2.5zM4.2 10.3h2.4v7.2H4.2zM10.8 10.3h2.4v7.2h-2.4zM17.4 10.3h2.4v7.2h-2.4zM2.8 19h18.4v2H2.8z" />
+                      </svg>
+                    </span>
+                    <span style={{ fontFamily: FONT_BODY, fontSize: 17.5, fontWeight: 500, color: "#565B66" }}>
+                      {myProfile.conservatoryId
+                        ? (findConservatory(myProfile.conservatoryId)?.name || "Conservatory")
+                        : "Conservatory student"}
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", flexWrap: "nowrap", gap: 8, marginTop: 12, overflowX: "auto", paddingBottom: 2 }}>
+                    {(myProfile.year || "").split(",").map((t) => t.trim()).filter(Boolean).map((label) => {
+                      const low = label.toLowerCase();
+                      const isYear = /year/.test(low);
+                      const isDoc = /doctor|phd/.test(low);
+                      return (
+                        <span key={label} style={{
                           display: "inline-flex", alignItems: "center", gap: 7, flexShrink: 0,
                           background: "#FFFFFF", border: `1px solid ${C.inkLine}`,
                           borderRadius: 999, padding: "7px 14px",
                           fontFamily: FONT_BODY, fontSize: 13.5, fontWeight: 600, color: C.inkText,
                           boxShadow: "0 4px 8px -4px rgba(150,115,55,.25)",
                         }}>
-                          <span style={{ color: C.brass, display: "inline-flex" }}><IconTeacher size={15} /></span>
-                          Open to teach
+                          {isYear ? (
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.brass} strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M6 20v-6M12 20v-10M18 20V6" /></svg>
+                          ) : isDoc ? (
+                            <FileText size={15} strokeWidth={1.8} style={{ color: C.brass }} />
+                          ) : (
+                            <GraduationCap size={15} strokeWidth={1.8} style={{ color: C.brass }} />
+                          )}
+                          {label}
                         </span>
-                      )}
-                    </div>
+                      );
+                    })}
+                    {myProfile.teaching?.open && (
+                      <span style={{
+                        display: "inline-flex", alignItems: "center", gap: 7, flexShrink: 0,
+                        background: "#FFFFFF", border: `1px solid ${C.inkLine}`,
+                        borderRadius: 999, padding: "7px 14px",
+                        fontFamily: FONT_BODY, fontSize: 13.5, fontWeight: 600, color: C.inkText,
+                        boxShadow: "0 4px 8px -4px rgba(150,115,55,.25)",
+                      }}>
+                        <span style={{ color: C.brass, display: "inline-flex" }}><IconTeacher size={15} /></span>
+                        Open to teach
+                      </span>
+                    )}
                   </div>
                 </div>
               )}
