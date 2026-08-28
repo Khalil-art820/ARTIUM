@@ -4462,6 +4462,14 @@ export default function App() {
                 <div className="px-6 pt-2 pb-2">
                   <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600, color: C.inkText, marginLeft: -3 }}>
                     Welcome, {myProfile.name.split(" ")[0]}
+                    <span aria-hidden="true" style={{
+                      display: "inline-flex", alignItems: "center", justifyContent: "center",
+                      width: 30, height: 30, borderRadius: "50%", marginLeft: 8,
+                      verticalAlign: "middle",
+                      background: "radial-gradient(circle at 35% 28%, #FFFFFF 0%, #FCF8EF 55%, #F1E8D6 100%)",
+                      boxShadow: "0 4px 8px -3px rgba(150,115,55,.35), inset 0 1px 1px #fff",
+                      fontSize: 15, lineHeight: 1,
+                    }}>{"\uD83D\uDC4B"}</span>
                   </h2>
                   <p className="mt-1 text-sm" style={{ color: C.ivoryDim }}>
                     {myProfile.conservatoryId
