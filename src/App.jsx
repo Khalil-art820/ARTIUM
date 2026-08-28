@@ -4475,7 +4475,7 @@ export default function App() {
                       fontSize: 15, lineHeight: 1,
                     }}>{"\uD83D\uDC4B"}</span>
                   </h2>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginTop: 16 }}>
                     <span style={{
                       display: "inline-flex", alignItems: "center", justifyContent: "center",
                       width: 32, height: 32, borderRadius: "50%",
@@ -4491,25 +4491,25 @@ export default function App() {
                         : "Conservatory student"}
                     </span>
                   </div>
-                  <div style={{ display: "flex", flexWrap: "nowrap", gap: 8, marginTop: 12, overflowX: "auto", paddingBottom: 2 }}>
+                  <div style={{ display: "flex", flexWrap: "nowrap", justifyContent: "center", gap: 5, marginTop: 12 }}>
                     {(myProfile.year || "").split(",").map((t) => t.trim()).filter(Boolean).map((label) => {
                       const low = label.toLowerCase();
                       const isYear = /year/.test(low);
                       const isDoc = /doctor|phd/.test(low);
                       return (
                         <span key={label} style={{
-                          display: "inline-flex", alignItems: "center", gap: 7, flexShrink: 0,
+                          display: "inline-flex", alignItems: "center", gap: 5, flexShrink: 0,
                           background: "#FFFFFF", border: `1px solid ${C.inkLine}`,
-                          borderRadius: 999, padding: "7px 14px",
-                          fontFamily: FONT_BODY, fontSize: 13.5, fontWeight: 600, color: C.inkText,
+                          borderRadius: 999, padding: "4px 9px",
+                          fontFamily: FONT_BODY, fontSize: 11, fontWeight: 600, color: C.inkText,
                           boxShadow: "0 4px 8px -4px rgba(150,115,55,.25)",
                         }}>
                           {isYear ? (
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.brass} strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M6 20v-6M12 20v-10M18 20V6" /></svg>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.brass} strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M6 20v-6M12 20v-10M18 20V6" /></svg>
                           ) : isDoc ? (
-                            <FileText size={15} strokeWidth={1.8} style={{ color: C.brass }} />
+                            <FileText size={12} strokeWidth={1.8} style={{ color: C.brass }} />
                           ) : (
-                            <GraduationCap size={15} strokeWidth={1.8} style={{ color: C.brass }} />
+                            <GraduationCap size={12} strokeWidth={1.8} style={{ color: C.brass }} />
                           )}
                           {label}
                         </span>
@@ -4517,13 +4517,13 @@ export default function App() {
                     })}
                     {myProfile.teaching?.open && (
                       <span style={{
-                        display: "inline-flex", alignItems: "center", gap: 7, flexShrink: 0,
+                        display: "inline-flex", alignItems: "center", gap: 5, flexShrink: 0,
                         background: "#FFFFFF", border: `1px solid ${C.inkLine}`,
-                        borderRadius: 999, padding: "7px 14px",
-                        fontFamily: FONT_BODY, fontSize: 13.5, fontWeight: 600, color: C.inkText,
+                        borderRadius: 999, padding: "4px 9px",
+                        fontFamily: FONT_BODY, fontSize: 11, fontWeight: 600, color: C.inkText,
                         boxShadow: "0 4px 8px -4px rgba(150,115,55,.25)",
                       }}>
-                        <span style={{ color: C.brass, display: "inline-flex" }}><IconTeacher size={15} /></span>
+                        <span style={{ color: C.brass, display: "inline-flex" }}><IconTeacher size={12} /></span>
                         Open to teach
                       </span>
                     )}
@@ -13660,7 +13660,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
                                 placeholder={`Write the agenda for this session with ${activeLearner.name.split(" ")[0]}…`}
                                 style={{ width: "100%", minHeight: 120, background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "10px 12px", fontSize: 13, color: C.inkText, resize: "vertical", outline: "none", fontFamily: FONT_BODY, lineHeight: 1.6, boxSizing: "border-box" }}
                               />
-                              <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>
+                              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginTop: 16 }}>
                                 <button onClick={() => { saveAgenda(activeLearner.id, sel.id, draft); setAgendaDraft(prev => ({ ...prev, [draftKey]: draft })); }} disabled={!draft.trim() || !isDirty}
                                   style={{ padding: "7px 18px", borderRadius: 9, background: C.brass, color: C.brassText, fontSize: 13, fontWeight: 600, border: "none", cursor: !draft.trim() || !isDirty ? "not-allowed" : "pointer", opacity: !draft.trim() || !isDirty ? 0.5 : 1 }}>
                                   {submitted ? "Update agenda" : "Send agenda"}
