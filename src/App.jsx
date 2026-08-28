@@ -3446,25 +3446,46 @@ export default function App() {
         }
 
         /* Stats: three columns, hairlines between, as the reference draws. */
+        /* The count bar per the reference: one white outer slab holding
+           three soft ivory inner slabs, gold hairlines between them; each
+           cell stacks a tinted disc with its gold mark, a serif figure, a
+           letter-spaced caps label, and a short gold dash beneath. */
         .artium-aw-stats {
-          display: flex; align-items: stretch; margin-top: 4px;
-          border-radius: 18px; border: 1px solid rgba(176,146,98,0.30);
-          background: linear-gradient(180deg, #FCFCFB 0%, #F2F2F0 70%, #EAEAE8 100%);
-          box-shadow: 0 14px 34px -18px rgba(150,115,55,0.38), inset 0 1px 0 #fff;
+          display: flex; align-items: stretch; gap: 13px; margin-top: 4px;
+          border-radius: 26px; padding: 12px;
+          background: #FFFFFF; border: 1px solid rgba(176,146,98,0.22);
+          box-shadow: 0 18px 34px -18px rgba(150,115,55,0.38), inset 0 1px 0 #fff;
         }
-        .artium-aw-stat { flex: 1 1 0; min-width: 0; padding: 13px 6px; text-align: center; }
-        .artium-aw-stat + .artium-aw-stat { border-left: 1px solid rgba(176,146,98,0.25); }
-        /* The icon moved off the number and into its own tinted tile, the
-           way the mock draws it — a small gold-glass chip sitting to the
-           left of the figure rather than an inline glyph sharing its line. */
-        .artium-aw-stat-row { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+        .artium-aw-stat {
+          flex: 1 1 0; min-width: 0; padding: 14px 4px 12px; text-align: center;
+          position: relative; border-radius: 20px;
+          background: linear-gradient(180deg, #FDFCFA 0%, #F7F4EE 100%);
+          box-shadow: inset 0 1px 1px #fff, inset 0 -2px 5px rgba(176,146,98,.10);
+        }
+        .artium-aw-stat + .artium-aw-stat::before {
+          content: ""; position: absolute; left: -7px; top: 14%; bottom: 14%;
+          width: 1px; background: rgba(201,150,46,.35);
+        }
+        .artium-aw-stat-row { display: flex; flex-direction: column; align-items: center; gap: 9px; }
         .artium-aw-stat-tile {
-          width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
+          width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
           display: inline-flex; align-items: center; justify-content: center;
-          background: rgba(201,150,46,0.14); color: #C9962E;
+          background: radial-gradient(circle at 38% 30%, rgba(201,150,46,.10), rgba(201,150,46,.20));
+          color: #C9962E;
         }
-        .artium-aw-stat-n { font-size: 17px; font-weight: 700; color: #232A3B; line-height: 1; display: inline-flex; align-items: center; font-variant-numeric: tabular-nums; letter-spacing: 0; }
-        .artium-aw-stat-l { margin: 7px 0 0; font-size: 15px; font-weight: 500; color: #6A7080; }
+        .artium-aw-stat-n {
+          font-family: 'Playfair Display', serif;
+          font-size: 25px; font-weight: 700; color: #232A3B; line-height: 1;
+          font-variant-numeric: tabular-nums;
+        }
+        .artium-aw-stat-l {
+          margin: 6px 0 0; font-size: 10.5px; font-weight: 600; color: #565B66;
+          letter-spacing: .13em; text-transform: uppercase;
+        }
+        .artium-aw-stat-l::after {
+          content: ""; display: block; width: 36px; height: 4px; border-radius: 2px;
+          margin: 9px auto 0; background: #C9962E;
+        }
 
         /* Segmented control. The active half is the gold pill the gate fills
            its buttons with; the track is a light ground rather than dark
