@@ -1947,7 +1947,8 @@ export default function App() {
         // Document-proof student still awaiting manual review.
         if (["entry", "landing", "login", "confirmEmail"].includes(screen)) setScreen("pendingReview");
       } else if (screen === "entry" || screen === "landing" || screen === "login" || screen === "confirmEmail") {
-        setSelectedConsId(me.conservatoryId);
+        // Default view is the full conservatory list now; the welcome
+        // block's own-conservatory row is the shortcut into the roster.
         setScreen("app");
         // Come back to the tab they were on. appTab already initialises from
         // localStorage, so pinning "map" here didn't just ignore the saved
@@ -1977,7 +1978,6 @@ export default function App() {
           if (!isAdminEmail(authUser.email)) {
             setStudents((arr) => [...arr.filter((s) => s.id !== me.id), me]);
           }
-          setSelectedConsId(me.conservatoryId);
           setScreen("app");
           setAppTabPersist("map");
         });
@@ -2595,7 +2595,6 @@ export default function App() {
       setStudents((arr) => [...arr.filter((s) => s.id !== me.id), me]);
     }
     setPreviewOnly(false);
-    setSelectedConsId(me.conservatoryId);
     setScreen("app"); setAppTabPersist("map");
   }
   function editProfile() {
@@ -4502,7 +4501,11 @@ export default function App() {
                       fontSize: 15, lineHeight: 1,
                     }}>{"\uD83D\uDC4B"}</span>
                   </h2>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginTop: 16 }}>
+                  <button
+                    onClick={() => { if (myProfile.conservatoryId) setSelectedConsId(myProfile.conservatoryId); }}
+                    title="See who studies at your conservatory"
+                    style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginTop: 16, background: "none", border: "none", padding: 0, cursor: "pointer", font: "inherit", margin: "16px auto 0" }}
+                  >
                     <span style={{
                       display: "inline-flex", alignItems: "center", justifyContent: "center",
                       width: 32, height: 32, borderRadius: "50%",
@@ -4517,7 +4520,7 @@ export default function App() {
                         ? (findConservatory(myProfile.conservatoryId)?.name || "Conservatory")
                         : "Conservatory student"}
                     </span>
-                  </div>
+                  </button>
                   <div style={{ display: "flex", flexWrap: "nowrap", justifyContent: "center", gap: 5, marginTop: 12 }}>
                     {(myProfile.year || "").split(",").map((t) => t.trim()).filter(Boolean).map((label) => {
                       const low = label.toLowerCase();
