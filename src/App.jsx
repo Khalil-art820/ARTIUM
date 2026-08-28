@@ -276,7 +276,6 @@ const CONSERVATORIES = [
   { id: "codarts", name: "Codarts Rotterdam", short: "Codarts", city: "Rotterdam", country: "Netherlands", lat: 51.9244, lng: 4.4777, domains: ["student.codarts.nl"] },
   { id: "hku", name: "Utrecht Conservatory (HKU)", short: "HKU", city: "Utrecht", country: "Netherlands", lat: 52.0907, lng: 5.1214, domains: ["student.hku.nl"] },
   { id: "kcb", name: "Royal Conservatory of Brussels (KCB)", short: "KCB", city: "Brussels", country: "Belgium", lat: 50.841, lng: 4.355, domains: ["student.ehb.be"] },
-  { id: "crb", name: "Conservatoire Royal de Bruxelles", short: "CRB", city: "Brussels", country: "Belgium", lat: 50.8405, lng: 4.356, domains: ["student.arts2.be", "conservatoire.be"] },
   { id: "apantwerp", name: "Royal Conservatoire Antwerp", short: "AP Antwerp", city: "Antwerp", country: "Belgium", lat: 51.2194, lng: 4.4025, domains: ["student.ap.be"] },
   { id: "amkrakow", name: "Akademia Muzyczna w Krakowie", short: "AM Kraków", city: "Kraków", country: "Poland", lat: 50.0647, lng: 19.945, domains: ["amuz.krakow.pl"] },
   { id: "amgdansk", name: "Akademia Muzyczna w Gdańsku", short: "AM Gdańsk", city: "Gdańsk", country: "Poland", lat: 54.352, lng: 18.6466, domains: ["amuz.gda.pl"] },
