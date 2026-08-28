@@ -3373,6 +3373,7 @@ export default function App() {
         .artium-net-bar {
           display: flex; align-items: center; gap: 11px;
           width: 100%; max-width: 560px; margin: 0 auto;
+          position: relative; z-index: 320;
           padding: calc(12px + env(safe-area-inset-top, 0px)) 18px 10px;
         }
         .artium-net-puck {
@@ -3888,6 +3889,10 @@ export default function App() {
           display: flex; align-items: center; gap: 11px;
           width: 100%; max-width: 560px; margin: 0 auto; flex-shrink: 0;
           padding: calc(14px + env(safe-area-inset-top, 0px)) 20px 4px;
+          /* Above the pin/stage: the bell's dropdown lives in this bar, and
+             without a stacking context of its own the globe, pin and halo
+             painted later in the DOM rise over the open panel. */
+          position: relative; z-index: 320;
         }
         /* No ring, and an arrow rather than a chevron. Ringed-chevron-left next
            to ringed-chevron-right made two different controls — go back, and
@@ -4502,7 +4507,15 @@ export default function App() {
                     }}>{"\uD83D\uDC4B"}</span>
                   </h2>
                   <button
-                    onClick={() => { if (myProfile.conservatoryId) setSelectedConsId(myProfile.conservatoryId); }}
+                    onClick={() => {
+                      if (!myProfile.conservatoryId) return;
+                      setSelectedConsId(myProfile.conservatoryId);
+                      // The roster renders far below the globe — without this
+                      // scroll a successful tap looks like nothing happened.
+                      setTimeout(() => {
+                        document.querySelector(".artium-aw-listhead")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                      }, 60);
+                    }}
                     title="See who studies at your conservatory"
                     style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginTop: 16, background: "none", border: "none", padding: 0, cursor: "pointer", font: "inherit", margin: "16px auto 0" }}
                   >
