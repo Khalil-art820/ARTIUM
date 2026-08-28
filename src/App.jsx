@@ -3461,7 +3461,7 @@ export default function App() {
           display: inline-flex; align-items: center; justify-content: center;
           background: rgba(201,150,46,0.14); color: #C9962E;
         }
-        .artium-aw-stat-n { font-size: 20px; font-weight: 700; color: #232A3B; line-height: 1; }
+        .artium-aw-stat-n { font-size: 17px; font-weight: 700; color: #232A3B; line-height: 1; display: inline-flex; align-items: center; font-variant-numeric: tabular-nums; letter-spacing: 0; }
         .artium-aw-stat-l { margin: 7px 0 0; font-size: 15px; font-weight: 500; color: #6A7080; }
 
         /* Segmented control. The active half is the gold pill the gate fills
@@ -3491,7 +3491,7 @@ export default function App() {
         .artium-aw-field svg { color: #6A7080; flex-shrink: 0; }
         .artium-aw-field input {
           flex: 1; min-width: 0; background: none; border: none; outline: none;
-          color: #232A3B; font: inherit; font-size: 12.5px;
+          color: #232A3B; font: inherit; font-size: 15.5px;
         }
         .artium-aw-field input::placeholder { color: #9A9A9A; }
         .artium-aw-filter {
@@ -3642,14 +3642,16 @@ export default function App() {
            BottomTabs "light" prop and its call site are still wired to it
            and touching that was more risk than the duplication is worth. */
         .artium-aw-tabs {
+          /* Glued to the screen's bottom edge, full bleed — no inset, no
+             corners, no gap; the safe area is padded inside the bar. */
           position: fixed; z-index: 40;
           display: flex; align-items: stretch;
-          left: 14px; right: 14px;
-          bottom: calc(10px + env(safe-area-inset-bottom, 0px));
-          border-radius: 24px;
+          left: 0; right: 0; bottom: 0;
+          border-radius: 0;
+          padding-bottom: env(safe-area-inset-bottom, 0px);
           background: linear-gradient(180deg, #FCFCFB 0%, #F2F2F0 70%, #EAEAE8 100%);
-          border: 1px solid rgba(176,146,98,.30);
-          box-shadow: 0 14px 30px -14px rgba(150,115,55,.38), inset 0 1px 0 #fff;
+          border: none; border-top: 1px solid rgba(176,146,98,.30);
+          box-shadow: 0 -8px 22px -14px rgba(150,115,55,.35), inset 0 1px 0 #fff;
         }
         .artium-aw-tabs button {
           flex: 1 1 0; display: flex; flex-direction: column; align-items: center; gap: 3px;
@@ -9173,9 +9175,10 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
                 read it. The old text "Country" toggle and the round sort
                 button beside the field are both gone at the user's request. */}
             <div className="artium-aw-listhead">
-              <h2>Conservatories</h2>
+              {/* The heading is gone at the user's request — the search
+                  field owns the whole row now. */}
               <span className="artium-aw-field">
-                <Search size={15} strokeWidth={2} />
+                <Search size={16} strokeWidth={2} />
                 <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search for a conservatory or city..." />
               </span>
             </div>
