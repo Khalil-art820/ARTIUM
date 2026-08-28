@@ -9050,7 +9050,7 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
             <div className="artium-aw-row" style={{ cursor: "default", marginBottom: 12 }}>
               <span className="artium-aw-mono">{consMonogram(cons)}</span>
               <span className="artium-aw-row-body">
-                <p className="artium-aw-row-t" style={{ fontSize: 16.5 }}>{cons.name}</p>
+                <p className="artium-aw-row-t" style={{ fontSize: 13, fontFamily: "'Libre Baskerville', serif", fontWeight: 700 }}>{cons.name}</p>
                 <p className="artium-aw-row-c" style={{ fontSize: 14 }}><MapPin size={11} strokeWidth={2} />{[cons.city, cons.country].filter(Boolean).join(", ")}</p>
               </span>
               <span className="artium-aw-badge"><b>{roster.length}</b><span>student{roster.length === 1 ? "" : "s"}</span></span>
@@ -9138,7 +9138,7 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
                   <button key={c.id} className="artium-aw-row" onClick={() => setSelectedConsId(c.id)}>
                     <span className="artium-aw-mono">{consMonogram(c)}</span>
                     <span className="artium-aw-row-body">
-                      <p className="artium-aw-row-t" style={{ fontSize: 16.5 }}>{c.name}</p>
+                      <p className="artium-aw-row-t" style={{ fontSize: 13, fontFamily: "'Libre Baskerville', serif", fontWeight: 700 }}>{c.name}</p>
                       <p className="artium-aw-row-c" style={{ fontSize: 14 }}><MapPin size={11} strokeWidth={2} />{[c.city, c.country].filter(Boolean).join(", ")}</p>
                     </span>
                     <span className="artium-aw-badge"><b>{n}</b><span>student{n === 1 ? "" : "s"}</span></span>
