@@ -4237,9 +4237,9 @@ export default function App() {
         }
         .artium-lp--light .artium-lp-step-t {
           /* Exactly the conservatory-list title voice (The Juilliard School):
-             13px Libre Baskerville bold, its line-height. */
+             Baskerville bold, raised seventeen percent at the user's ask. */
           color: #232A3B; font-family: 'Libre Baskerville', serif;
-          font-weight: 700; font-size: 13px; line-height: 1.2;
+          font-weight: 700; font-size: 15px; line-height: 1.2;
         }
         .artium-lp--light .artium-lp-step-d {
           /* The conservatory card's location voice (New York, USA). */
@@ -4521,8 +4521,10 @@ export default function App() {
                   >
                     <span style={{
                       display: "inline-flex", alignItems: "center", justifyContent: "center",
-                      width: 32, height: 32, borderRadius: "50%",
-                      background: "rgba(201,150,46,.14)", color: C.brass, flexShrink: 0,
+                      width: 34, height: 34, borderRadius: "50%",
+                      background: "radial-gradient(circle at 35% 28%, #FFFFFF 0%, #FCF8EF 55%, #F1E8D6 100%)",
+                      boxShadow: "0 6px 10px -4px rgba(150,115,55,.38), 0 2px 4px rgba(150,115,55,.14), inset 0 2px 2px #fff, inset 0 -3px 5px rgba(176,146,98,.28)",
+                      color: C.brass, flexShrink: 0,
                     }}>
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                         <path d="M12 2.5 2.8 7.2v1.6h18.4V7.2L12 2.5zM4.2 10.3h2.4v7.2H4.2zM10.8 10.3h2.4v7.2h-2.4zM17.4 10.3h2.4v7.2h-2.4zM2.8 19h18.4v2H2.8z" />
