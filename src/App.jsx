@@ -3417,9 +3417,11 @@ export default function App() {
         .artium-aw-eyebrow i { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(201,150,46,0.5)); }
         .artium-aw-eyebrow i:last-child { background: linear-gradient(90deg, rgba(201,150,46,0.5), transparent); }
         .artium-aw-h1 {
+          /* Matched to the landing's "Every Conservatory. One Network." */
           margin: 10px 0 0; text-align: center; color: #232A3B;
           font-family: 'Playfair Display', serif;
-          font-weight: 600; font-size: clamp(22px, 6.6vw, 34px); line-height: 1.14;
+          font-weight: 500; font-size: clamp(20px, 6.0vw, 30px);
+          line-height: 1.16; letter-spacing: 0.005em;
         }
         .artium-aw-sub { margin: 8px 0 0; text-align: center; font-size: 12.5px; font-weight: 500; color: #6A7080; line-height: 1.5; }
 
