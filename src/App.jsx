@@ -5838,7 +5838,7 @@ function PianistDiscover({ students, onOpen }) {
                 <Avatar name={p.name} id={p.id} size={42} photoUrl={p.photoUrl} online={p.online} />
                 <span className="artium-aw-row-body">
                   <p className="artium-aw-row-t">{p.name}</p>
-                  <p className="artium-aw-row-c"><MapPin size={11} strokeWidth={2} />{[cons?.name, cons?.city].filter(Boolean).join(", ") || "Conservatory pianist"}</p>
+                  <p className="artium-aw-row-c"><span aria-hidden="true" style={{ fontSize: 11, lineHeight: 1 }}>{"\uD83D\uDCCD"}</span>{[cons?.name, cons?.city].filter(Boolean).join(", ") || "Conservatory pianist"}</p>
                 </span>
                 {p.concertFee ? <span className="artium-aw-teach">€{p.concertFee}</span> : <span style={{ fontSize: 11, color: C.ivoryDim, flexShrink: 0 }}>Fee on request</span>}
                 {instrumentIcons(p).length > 0 && (
@@ -7428,7 +7428,7 @@ function StepConservatory({ draft, update, editing }) {
             </p>
           </div>
           <p className="text-sm" style={{ margin: 0, color: C.ivoryDim, lineHeight: 1.5, overflowWrap: "anywhere" }}>
-            <MapPin size={11} strokeWidth={2} style={{ display: "inline", verticalAlign: "-1px", marginRight: 4 }} />
+            <span aria-hidden="true" style={{ fontSize: 11, marginRight: 4 }}>{"\uD83D\uDCCD"}</span>
             {[selectedCons.city, selectedCons.country].filter(Boolean).join(", ") || selectedCons.address || ""}
           </p>
           {draft.conservatoryEmail && (
@@ -7495,7 +7495,7 @@ function StepConservatory({ draft, update, editing }) {
                 <span className="artium-aw-row-body">
                   <p className="artium-aw-row-t">{c.name}</p>
                   <p className="artium-aw-row-c">
-                    <MapPin size={11} strokeWidth={2} />
+                    <span aria-hidden="true" style={{ fontSize: 11, lineHeight: 1 }}>{"\uD83D\uDCCD"}</span>
                     {/* Keyed on the row, not the door: the graduate list holds
                         both kinds, and a school approved from a document has
                         no domain to show. */}
@@ -9083,7 +9083,7 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
               <span className="artium-aw-mono">{consMonogram(cons)}</span>
               <span className="artium-aw-row-body">
                 <p className="artium-aw-row-t" style={{ fontSize: 13, fontFamily: "'Libre Baskerville', serif", fontWeight: 700 }}>{cons.name}</p>
-                <p className="artium-aw-row-c" style={{ fontSize: 14 }}><MapPin size={11} strokeWidth={2} />{[cons.city, cons.country].filter(Boolean).join(", ")}</p>
+                <p className="artium-aw-row-c" style={{ fontSize: 14 }}><span aria-hidden="true" style={{ fontSize: 11, lineHeight: 1 }}>{"\uD83D\uDCCD"}</span>{[cons.city, cons.country].filter(Boolean).join(", ")}</p>
               </span>
               <span className="artium-aw-badge"><b>{roster.length}</b><span>student{roster.length === 1 ? "" : "s"}</span></span>
             </div>
@@ -9171,7 +9171,7 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
                     <span className="artium-aw-mono">{consMonogram(c)}</span>
                     <span className="artium-aw-row-body">
                       <p className="artium-aw-row-t" style={{ fontSize: 13, fontFamily: "'Libre Baskerville', serif", fontWeight: 700 }}>{c.name}</p>
-                      <p className="artium-aw-row-c" style={{ fontSize: 14 }}><MapPin size={11} strokeWidth={2} />{[c.city, c.country].filter(Boolean).join(", ")}</p>
+                      <p className="artium-aw-row-c" style={{ fontSize: 14 }}><span aria-hidden="true" style={{ fontSize: 11, lineHeight: 1 }}>{"\uD83D\uDCCD"}</span>{[c.city, c.country].filter(Boolean).join(", ")}</p>
                     </span>
                     <span className="artium-aw-badge"><b>{n}</b><span>student{n === 1 ? "" : "s"}</span></span>
                     <ChevronRight size={17} strokeWidth={2} />
@@ -10455,7 +10455,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
                 <span className="artium-aw-mono">{consMonogram(cons)}</span>
                 <span className="artium-aw-row-body">
                   <p className="artium-aw-row-t">{cons.name}</p>
-                  <p className="artium-aw-row-c"><MapPin size={11} strokeWidth={2} />{[cons.city, cons.country].filter(Boolean).join(", ")}</p>
+                  <p className="artium-aw-row-c"><span aria-hidden="true" style={{ fontSize: 11, lineHeight: 1 }}>{"\uD83D\uDCCD"}</span>{[cons.city, cons.country].filter(Boolean).join(", ")}</p>
                 </span>
                 <span className="artium-aw-badge"><b>{consRoster.length}</b><span>teacher{consRoster.length === 1 ? "" : "s"}</span></span>
               </div>
@@ -10491,7 +10491,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
                     <span className="artium-aw-mono">{consMonogram(c)}</span>
                     <span className="artium-aw-row-body">
                       <p className="artium-aw-row-t">{c.name}</p>
-                      <p className="artium-aw-row-c"><MapPin size={11} strokeWidth={2} />{[c.city, c.country].filter(Boolean).join(", ")}</p>
+                      <p className="artium-aw-row-c"><span aria-hidden="true" style={{ fontSize: 11, lineHeight: 1 }}>{"\uD83D\uDCCD"}</span>{[c.city, c.country].filter(Boolean).join(", ")}</p>
                     </span>
                     <span className="artium-aw-badge">
                       <b>{c.teacherCount}</b><span>teacher{c.teacherCount === 1 ? "" : "s"}</span>
