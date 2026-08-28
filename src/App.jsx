@@ -4212,8 +4212,10 @@ export default function App() {
           font-family: 'Playfair Display', serif;
         }
         .artium-lp--light .artium-lp-step-t {
+          /* Exactly the conservatory-list title voice (The Juilliard School):
+             13px Libre Baskerville bold, its line-height. */
           color: #232A3B; font-family: 'Libre Baskerville', serif;
-          font-weight: 700; font-size: 16px; line-height: 1.35;
+          font-weight: 700; font-size: 13px; line-height: 1.2;
         }
         .artium-lp--light .artium-lp-step-d {
           margin-top: 6px; color: #4A4F5A; font-weight: 400;
