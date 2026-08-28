@@ -4473,10 +4473,42 @@ export default function App() {
                   </h2>
                   <p className="mt-1 text-sm" style={{ color: C.ivoryDim }}>
                     {myProfile.conservatoryId
-                      ? `${findConservatory(myProfile.conservatoryId)?.name || "Conservatory"} · ${myProfile.year || "student"}`
+                      ? (findConservatory(myProfile.conservatoryId)?.name || "Conservatory")
                       : "Conservatory student"}
-                    {myProfile.teaching?.open ? ` · Open to teaching at €${myProfile.teaching.price}/session` : ""}
                   </p>
+                  {/* The reference's credential pills: degree and year parsed
+                      from the profile's own "Masters, 1st year" string, plus
+                      an Open-to-teach pill — white capsules, gold marks. */}
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
+                    {(myProfile.year || "").split(",").map((t) => t.trim()).filter(Boolean).map((label, i) => (
+                      <span key={label} style={{
+                        display: "inline-flex", alignItems: "center", gap: 7,
+                        background: "#FFFFFF", border: `1px solid ${C.inkLine}`,
+                        borderRadius: 999, padding: "7px 14px",
+                        fontFamily: FONT_BODY, fontSize: 13.5, fontWeight: 600, color: C.inkText,
+                        boxShadow: "0 4px 8px -4px rgba(150,115,55,.25)",
+                      }}>
+                        {i === 0 ? (
+                          <GraduationCap size={15} strokeWidth={1.8} style={{ color: C.brass }} />
+                        ) : (
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.brass} strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M5 20v-5M10 20v-9M15 20v-6M20 20V7" /></svg>
+                        )}
+                        {label}
+                      </span>
+                    ))}
+                    {myProfile.teaching?.open && (
+                      <span style={{
+                        display: "inline-flex", alignItems: "center", gap: 7,
+                        background: "#FFFFFF", border: `1px solid ${C.inkLine}`,
+                        borderRadius: 999, padding: "7px 14px",
+                        fontFamily: FONT_BODY, fontSize: 13.5, fontWeight: 600, color: C.inkText,
+                        boxShadow: "0 4px 8px -4px rgba(150,115,55,.25)",
+                      }}>
+                        <span style={{ color: C.brass, display: "inline-flex" }}><IconTeacher size={15} /></span>
+                        Open to teach
+                      </span>
+                    )}
+                  </div>
                 </div>
               )}
               <MapScreen
