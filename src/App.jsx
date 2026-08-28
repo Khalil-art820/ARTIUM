@@ -4339,7 +4339,7 @@ export default function App() {
         />
       )}
 
-      {view === "landing" && <Landing onApply={pianistEntry ? () => { setAuthError(""); setScreen("hirerSignup"); } : startApply} onBack={backToEntry} onPreview={startPreview} onProfile={goToProfile} onLogin={startLogin} myProfile={myProfile} studentLoggedOut={studentLoggedOut} musicOn={musicPlaying} onMusicToggle={toggleMusic} error={authError} onGoToLessonRoom={() => { setScreen("app"); setAppTabPersist("lessons"); }} studentsByCons={studentsByCons} avatarPhotoUrl={accountPhotoUrl} avatarName={accountName} />}
+      {view === "landing" && <Landing onApply={pianistEntry ? () => { setAuthError(""); setScreen("hirerSignup"); } : startApply} onBack={backToEntry} onPreview={startPreview} onProfile={goToProfile} onLogin={startLogin} myProfile={myProfile} studentLoggedOut={studentLoggedOut} musicOn={musicPlaying} onMusicToggle={toggleMusic} error={authError} onGoToLessonRoom={() => { setScreen("app"); setAppTabPersist("lessons"); }} studentsByCons={studentsByCons} avatarPhotoUrl={accountPhotoUrl} avatarName={accountName} hireCount={pianistAttentionCount} hireIds={pianistAttentionIds} onGoToConcerts={() => { setScreen("app"); setAppTabPersist("concerts"); }} onGoToComposers={() => setScreen("composers")} authUser={authUser} isAdmin={isAdmin} onGoToAdmin={() => { setScreen("app"); setAppTabPersist("admin"); }} />}
       {view === "hirerSignup" && (
         <HirerSignup
           authUser={authUser}
@@ -4827,7 +4827,7 @@ const IconMegaphone = (p) => (
   </IconBox>
 );
 
-function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, studentLoggedOut, musicOn, onMusicToggle, error, onGoToLessonRoom, studentsByCons, avatarPhotoUrl, avatarName }) {
+function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, studentLoggedOut, musicOn, onMusicToggle, error, onGoToLessonRoom, studentsByCons, hireCount = 0, hireIds = [], onGoToConcerts, onGoToComposers, authUser, isAdmin, onGoToAdmin, avatarPhotoUrl, avatarName }) {
   const memberCount = Object.values(studentsByCons).flat().length;
   const steps = [
     { n: "1", t: "Build your profile", Icon: IconProfileDoc,
@@ -4884,7 +4884,22 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
             <Users size={16} strokeWidth={1.8} />
             {memberCount}
           </span>
-          {myProfile && <NotificationBell myProfile={myProfile} onGoToLessonRoom={onGoToLessonRoom} />}
+          {myProfile && (
+            <NotificationBell
+              myProfile={myProfile}
+              puck
+              networkFeeds
+              hireCount={hireCount}
+              hireIds={hireIds}
+              onGoToLessonRoom={onGoToLessonRoom}
+              onGoToConcerts={onGoToConcerts}
+              onGoToComposers={onGoToComposers}
+              onGoToNews={() => {}}
+              authUser={authUser}
+              isAdmin={isAdmin}
+              onGoToAdmin={onGoToAdmin}
+            />
+          )}
           {myProfile ? (
             <button onClick={onProfile} title="My profile" style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}>
               <Avatar name={myProfile.name} id="me" size={HEADER_CONTROL} photoUrl={myProfile.photoUrl} online />
