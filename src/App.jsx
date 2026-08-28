@@ -4238,8 +4238,9 @@ export default function App() {
           font-weight: 700; font-size: 13px; line-height: 1.2;
         }
         .artium-lp--light .artium-lp-step-d {
-          margin-top: 6px; color: #4A4F5A; font-weight: 400;
-          font-size: 14.5px; line-height: 1.45;
+          /* The conservatory card's location voice (New York, USA). */
+          margin-top: 6px; color: #6A7080; font-weight: 400;
+          font-size: 14px; line-height: 1.45;
         }
         .artium-lp--light .artium-lp-step-d a { color: #B8862E; }
         .artium-lp--light .artium-lp-step-d a:hover { color: #C9962E; }
@@ -9124,7 +9125,7 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
               <span className="artium-aw-stat-tile"><IconTeacher size={16} /></span>
               <span className="artium-aw-stat-n">{nf(teacherCount)}</span>
             </span>
-            <p className="artium-aw-stat-l">Teachers</p>
+            <p className="artium-aw-stat-l">Open to teaching</p>
           </div>
         </div>
 
