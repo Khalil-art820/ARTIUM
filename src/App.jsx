@@ -9049,7 +9049,7 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
     <div className="artium-aw">
       <div className="artium-aw-in">
         <p className="artium-aw-eyebrow"><i />The Artium Network<i /></p>
-        <h1 className="artium-aw-h1">Bridging Musicians Worldwide</h1>
+        <h1 className="artium-aw-h1">Bridging Musicians<br />Worldwide</h1>
 
         <div className="artium-aw-stage">
           <span className="artium-aw-glow" aria-hidden="true" />
