@@ -447,7 +447,7 @@ function parseStudy(years) {
 // different department. Their drawings stay cut in public/instruments in case
 // that changes.
 //
-// Icons are cut from public/INSTRUMENTS.png by tools/cut-instruments.py and
+// Icons are cut from tools/assets/INSTRUMENTS.png by tools/cut-instruments.py and
 // live in public/instruments as transparent webp, so they sit on any
 // background and the sheet stays the single source of the drawings.
 //

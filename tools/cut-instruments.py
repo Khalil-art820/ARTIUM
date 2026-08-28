@@ -1,4 +1,4 @@
-# Cuts public/INSTRUMENTS.png into one transparent icon per instrument.
+# Cuts tools/assets/INSTRUMENTS.png into one transparent icon per instrument.
 #
 #   python3 tools/cut-instruments.py
 #
@@ -20,7 +20,7 @@
 from PIL import Image
 import os
 
-SRC = "public/INSTRUMENTS.png"
+SRC = "tools/assets/INSTRUMENTS.png"
 OUT = "public/instruments"
 LIT = 150          # sum(rgb) above this counts as ink
 MAX = 128          # longest edge of a saved icon

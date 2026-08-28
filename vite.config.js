@@ -47,18 +47,38 @@ export default defineConfig({
       },
       workbox: {
         cleanupOutdatedCaches: true,
+        // Precache diet (2026-08-27): updates only activate after the whole
+        // precache downloads, and with the hall photos, 41 instrument
+        // drawings, the satellite texture and the hero art in it the bundle
+        // hit ~12MB — long enough on mobile data that every deploy felt
+        // "stuck" until the user cleared site data. The shell (js/css/html,
+        // fonts, svg, small png marks) stays precached for instant offline
+        // boot; the heavy imagery moved to runtimeCaching below — cached the
+        // first time each image is actually seen, at the cost of needing one
+        // network fetch before it's available offline.
         // webp, jpg and json were missing, and between them they are most of
         // what the app looks like: all 41 instrument drawings are webp, both
         // hall photographs are webp, the globe's satellite texture is jpg and
         // its country borders are json. None of it was ever cached, so an
         // installed app on a bad connection drew a bare sphere and rows with
         // broken-image marks where the instruments belong.
-        globPatterns: ["**/*.{js,css,html,svg,png,ico,woff2,webp,jpg,json}"],
+        globPatterns: ["**/*.{js,css,html,svg,png,ico,woff2}"],
         // The satellite texture alone is 1.4MB and the default ceiling is 2MB;
         // state it rather than leave the largest asset one edit away from
         // silently dropping out of the precache again.
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         runtimeCaching: [
+          {
+            // The imagery evicted from the precache: webp/jpg photos and the
+            // globe's satellite texture + country-borders json. Cache-first
+            // and effectively immutable (hashed or replaced wholesale).
+            urlPattern: ({ url, sameOrigin }) => sameOrigin && /\.(webp|jpg|jpeg|json)$/i.test(url.pathname),
+            handler: "CacheFirst",
+            options: {
+              cacheName: "artium-imagery",
+              expiration: { maxEntries: 120, maxAgeSeconds: 60 * 60 * 24 * 60 },
+            },
+          },
           {
             urlPattern: /^https:\/\/server\.arcgisonline\.com\/.*/i,
             handler: "CacheFirst",
