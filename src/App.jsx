@@ -3461,7 +3461,7 @@ export default function App() {
           display: inline-flex; align-items: center; justify-content: center;
           background: rgba(201,150,46,0.14); color: #C9962E;
         }
-        .artium-aw-stat-n { font-size: 24px; font-weight: 700; color: #232A3B; line-height: 1; }
+        .artium-aw-stat-n { font-size: 20px; font-weight: 700; color: #232A3B; line-height: 1; }
         .artium-aw-stat-l { margin: 7px 0 0; font-size: 15px; font-weight: 500; color: #6A7080; }
 
         /* Segmented control. The active half is the gold pill the gate fills
@@ -4465,7 +4465,7 @@ export default function App() {
                     <span aria-hidden="true" style={{
                       display: "inline-flex", alignItems: "center", justifyContent: "center",
                       width: 30, height: 30, borderRadius: "50%", marginLeft: 8,
-                      verticalAlign: "middle",
+                      verticalAlign: "middle", position: "relative", top: -4,
                       background: "radial-gradient(circle at 35% 28%, #FFFFFF 0%, #FCF8EF 55%, #F1E8D6 100%)",
                       boxShadow: "0 4px 8px -3px rgba(150,115,55,.35), inset 0 1px 1px #fff",
                       fontSize: 15, lineHeight: 1,
