@@ -7468,7 +7468,7 @@ function StepConservatory({ draft, update, editing }) {
               keeps the top row with the tick; everything textual gets the
               full width underneath. */}
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
-            <span className="artium-aw-mono">{consMonogram(selectedCons)}</span>
+            <ConsAvatar cons={selectedCons} />
             <p style={{ flex: 1, minWidth: 0, margin: 0, fontFamily: FONT_DISPLAY, fontSize: 17, fontWeight: 600, color: C.ivory, lineHeight: 1.25 }}>
               {selectedCons.name}
             </p>
@@ -7537,7 +7537,7 @@ function StepConservatory({ draft, update, editing }) {
             return (
               <button key={c.id} className="artium-aw-row" onClick={() => pickConservatory(c.id)}
                 style={on ? { borderColor: "rgba(239,208,155,0.55)", background: "rgba(239,208,155,0.07)" } : undefined}>
-                <span className="artium-aw-mono">{consMonogram(c)}</span>
+                <ConsAvatar cons={c} />
                 <span className="artium-aw-row-body">
                   <p className="artium-aw-row-t">{c.name}</p>
                   <p className="artium-aw-row-c">
@@ -9021,6 +9021,28 @@ function consMonogram(c) {
   return initials || "—";
 }
 
+/* The conservatory's real face: a photograph fetched from its Wikipedia
+   page (public/cons/<id>.jpg, 109 schools covered at build time), shown in
+   the monogram tile's exact footprint; if an id has no photo — a future
+   school, a failed load — the old text monogram steps back in. */
+function ConsAvatar({ cons }) {
+  const [broken, setBroken] = React.useState(false);
+  if (!cons?.id || broken) {
+    return <span className="artium-aw-mono">{consMonogram(cons || {})}</span>;
+  }
+  return (
+    <span className="artium-aw-mono" style={{ padding: 0 }}>
+      <img
+        src={`/cons/${cons.id}.jpg`}
+        alt=""
+        loading="lazy"
+        onError={() => setBroken(true)}
+        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", borderRadius: 9 }}
+      />
+    </span>
+  );
+}
+
 function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId, onOpenStudent, isGuest, onGuestClick, canViewRoster, extraCons = [] }) {
   const ALL_CONS = React.useMemo(() => [...CONSERVATORIES, ...extraCons], [extraCons]);
   const cons = ALL_CONS.find((c) => c.id === selectedConsId);
@@ -9126,7 +9148,7 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
               </button>
             </div>
             <div className="artium-aw-row" style={{ cursor: "default", marginBottom: 12 }}>
-              <span className="artium-aw-mono">{consMonogram(cons)}</span>
+              <ConsAvatar cons={cons} />
               <span className="artium-aw-row-body">
                 <p className="artium-aw-row-t" style={{ fontSize: 13, fontFamily: "'Libre Baskerville', serif", fontWeight: 700 }}>{cons.name}</p>
                 <p className="artium-aw-row-c" style={{ fontSize: 14 }}><span aria-hidden="true" style={{ fontSize: 11, lineHeight: 1 }}>{"\uD83D\uDCCD"}</span>{[cons.city, cons.country].filter(Boolean).join(", ")}</p>
@@ -9215,7 +9237,7 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
                 const n = (studentsByCons[c.id] || []).length;
                 return (
                   <button key={c.id} className="artium-aw-row" onClick={() => setSelectedConsId(c.id)}>
-                    <span className="artium-aw-mono">{consMonogram(c)}</span>
+                    <ConsAvatar cons={c} />
                     <span className="artium-aw-row-body">
                       <p className="artium-aw-row-t" style={{ fontSize: 13, fontFamily: "'Libre Baskerville', serif", fontWeight: 700 }}>{c.name}</p>
                       <p className="artium-aw-row-c" style={{ fontSize: 14 }}><span aria-hidden="true" style={{ fontSize: 11, lineHeight: 1 }}>{"\uD83D\uDCCD"}</span>{[c.city, c.country].filter(Boolean).join(", ")}</p>
@@ -10499,7 +10521,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
                 </button>
               </div>
               <div className="artium-aw-row" style={{ cursor: "default", marginBottom: 12 }}>
-                <span className="artium-aw-mono">{consMonogram(cons)}</span>
+                <ConsAvatar cons={cons} />
                 <span className="artium-aw-row-body">
                   <p className="artium-aw-row-t">{cons.name}</p>
                   <p className="artium-aw-row-c"><span aria-hidden="true" style={{ fontSize: 11, lineHeight: 1 }}>{"\uD83D\uDCCD"}</span>{[cons.city, cons.country].filter(Boolean).join(", ")}</p>
@@ -10535,7 +10557,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
                 {teacherCons.length === 0 && <p className="artium-aw-empty">No one is teaching here yet.</p>}
                 {teacherCons.map((c) => (
                   <button key={c.id} className="artium-aw-row" onClick={() => setSelectedConsId(c.id)}>
-                    <span className="artium-aw-mono">{consMonogram(c)}</span>
+                    <ConsAvatar cons={c} />
                     <span className="artium-aw-row-body">
                       <p className="artium-aw-row-t">{c.name}</p>
                       <p className="artium-aw-row-c"><span aria-hidden="true" style={{ fontSize: 11, lineHeight: 1 }}>{"\uD83D\uDCCD"}</span>{[c.city, c.country].filter(Boolean).join(", ")}</p>
