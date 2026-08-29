@@ -4535,12 +4535,12 @@ export default function App() {
                 </span>
               </header>
               {myProfile && (
-                <div className="px-6 pt-2 pb-2" style={{ paddingLeft: 18 }}>
+                <div className="px-6 pt-2 pb-2">
                   {/* Back to the plain block by request — the white card and
                       the GOOD TO SEE YOU eyebrow are reversed; what survives
                       of that round: the corrected pill marks, the columned
                       hall beside the conservatory, and its newer text voice. */}
-                  <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600, color: C.inkText }}>
+                  <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600, color: C.inkText, textAlign: "center" }}>
                     Good to see you, {myProfile.name.split(" ")[0]}
                     <span aria-hidden="true" style={{
                       display: "inline-flex", alignItems: "center", justifyContent: "center",
@@ -4562,6 +4562,7 @@ export default function App() {
                       }, 60);
                     }}
                     title="See who studies at your conservatory"
+                    aria-label="See who studies at your conservatory"
                     style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, background: "none", border: "none", padding: 0, cursor: "pointer", font: "inherit", margin: "16px auto 0" }}
                   >
                     <span style={{
@@ -4574,11 +4575,6 @@ export default function App() {
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                         <path d="M12 2.5 2.8 7.2v1.6h18.4V7.2L12 2.5zM4.2 10.3h2.4v7.2H4.2zM10.8 10.3h2.4v7.2h-2.4zM17.4 10.3h2.4v7.2h-2.4zM2.8 19h18.4v2H2.8z" />
                       </svg>
-                    </span>
-                    <span style={{ fontFamily: FONT_BODY, fontSize: 17.5, fontWeight: 500, color: "#3E4450" }}>
-                      {myProfile.conservatoryId
-                        ? (findConservatory(myProfile.conservatoryId)?.name || "Conservatory")
-                        : "Conservatory student"}
                     </span>
                   </button>
                   <div style={{ display: "flex", flexWrap: "nowrap", justifyContent: "center", gap: 5, marginTop: 12, opacity: .45, filter: "saturate(.6)" }}>
