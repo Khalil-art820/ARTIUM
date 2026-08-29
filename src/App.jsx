@@ -4540,7 +4540,7 @@ export default function App() {
                       the GOOD TO SEE YOU eyebrow are reversed; what survives
                       of that round: the corrected pill marks, the columned
                       hall beside the conservatory, and its newer text voice. */}
-                  <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600, color: C.inkText, marginLeft: -3 }}>
+                  <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600, color: C.inkText }}>
                     Welcome, {myProfile.name.split(" ")[0]}
                     <span aria-hidden="true" style={{
                       display: "inline-flex", alignItems: "center", justifyContent: "center",
@@ -4562,7 +4562,7 @@ export default function App() {
                       }, 60);
                     }}
                     title="See who studies at your conservatory"
-                    style={{ display: "flex", alignItems: "center", justifyContent: "flex-start", gap: 10, background: "none", border: "none", padding: 0, cursor: "pointer", font: "inherit", margin: "16px 0 0" }}
+                    style={{ display: "flex", alignItems: "center", justifyContent: "flex-start", gap: 10, background: "none", border: "none", padding: 0, cursor: "pointer", font: "inherit", margin: "16px 0 0", opacity: .45, filter: "saturate(.6)" }}
                   >
                     <span style={{
                       display: "inline-flex", alignItems: "center", justifyContent: "center",
@@ -4581,7 +4581,7 @@ export default function App() {
                         : "Conservatory student"}
                     </span>
                   </button>
-                  <div style={{ display: "flex", flexWrap: "nowrap", justifyContent: "flex-start", gap: 5, marginTop: 12 }}>
+                  <div style={{ display: "flex", flexWrap: "nowrap", justifyContent: "flex-start", gap: 5, marginTop: 12, opacity: .45, filter: "saturate(.6)" }}>
                     {(myProfile.year || "").split(",").map((t) => t.trim()).filter(Boolean).map((label) => {
                       const low = label.toLowerCase();
                       const isYear = /year/.test(low);
