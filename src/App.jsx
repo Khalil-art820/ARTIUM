@@ -4121,27 +4121,10 @@ export default function App() {
         }
         .artium-lp--light .artium-lp-word-a { width: .72em; height: .72em; margin-right: .2em; display: block; }
 
-        /* Play disc: an ivory puck, same material as the back arrow above. */
-        .artium-lp--light .artium-lp-bar button[aria-label*="playlist"] {
-          border: 1px solid rgba(255,255,255,.85) !important;
-          width: 36px !important; height: 36px !important;
-          background: radial-gradient(circle at 35% 28%, #FFFFFF 0%, #FCF8EF 55%, #F1E8D6 100%);
-          box-shadow:
-            0 8px 14px -4px rgba(150,115,55,.38),
-            0 2px 4px rgba(150,115,55,.14),
-            inset 0 2px 2px #fff,
-            inset 0 -3px 5px rgba(176,146,98,.28);
-        }
-        .artium-lp--light .artium-lp-bar button[aria-label*="playlist"] svg { stroke: #232A3B; }
-        .artium-lp--light .artium-lp-bar button[aria-label*="playlist"]:hover {
-          border-color: rgba(255,255,255,.85) !important;
-          transform: none;
-          box-shadow:
-            0 10px 18px -4px rgba(150,115,55,.42),
-            0 2px 4px rgba(150,115,55,.16),
-            inset 0 2px 2px #fff,
-            inset 0 -3px 5px rgba(176,146,98,.28);
-        }
+        /* The legacy playlist-button overrides that lived here forced the
+           landing's play disc to 36px with !important — the one page where
+           play and bell refused to match. The play button is a plain
+           .artium-net-puck now; nothing bespoke remains. */
 
         /* Member count: the gate's passive flat stat, not a chip. */
         .artium-lp--light .artium-gx-count { color: #6A7080; font-weight: 400; }
