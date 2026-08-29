@@ -4926,7 +4926,29 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
           <span aria-hidden="true">RTIUM</span>
         </span>
         <div className="artium-lp-right">
-          <MusicBtn playing={musicOn} onToggle={onMusicToggle} size={30} />
+          {/* Count first, then play, bell, avatar — and the play disc IS a
+              .artium-net-puck now, the bell's own class, so the two can
+              never drift apart in size or material again. */}
+          <span className="artium-gx-count">
+            <Users size={16} strokeWidth={1.8} />
+            {memberCount}
+          </span>
+          {onMusicToggle && (
+            <button
+              className="artium-net-puck"
+              onClick={onMusicToggle}
+              title={musicOn ? "Pause" : "Play"}
+              aria-label={musicOn ? "Pause playlist" : "Play playlist"}
+            >
+              {musicOn ? (
+                <Pause size={15} color={C.inkText} strokeWidth={2.4} />
+              ) : (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill={C.inkText} aria-hidden="true" style={{ marginLeft: 2 }}>
+                  <path d="M8 5.5v13l11-6.5z" />
+                </svg>
+              )}
+            </button>
+          )}
           {myProfile && (
             <NotificationBell
               myProfile={myProfile}
