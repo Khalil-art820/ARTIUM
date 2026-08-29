@@ -3417,7 +3417,7 @@ export default function App() {
         /* Eyebrow with a rule running out either side. */
         .artium-aw-eyebrow {
           display: flex; align-items: center; gap: 12px; margin: 6px 0 0;
-          font-size: 10px; font-weight: 600; letter-spacing: 0.24em;
+          font-size: 11.5px; font-weight: 600; letter-spacing: 0.24em;
           text-transform: uppercase; color: #B8862E; white-space: nowrap;
         }
         .artium-aw-eyebrow i { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(201,150,46,0.5)); }
@@ -3425,9 +3425,9 @@ export default function App() {
         .artium-aw-h1 {
           /* Matched to the landing's "Every Conservatory. One Network." */
           margin: 10px 0 0; text-align: center; color: #232A3B;
-          font-family: 'Playfair Display', serif;
+          font-family: 'Cormorant Garamond', 'Didot', 'Bodoni 72', Georgia, serif;
           font-weight: 600; font-size: 26px;
-          line-height: 1.16; letter-spacing: 0.005em;
+          line-height: 1.16; letter-spacing: normal;
         }
         .artium-aw-sub { margin: 8px 0 0; text-align: center; font-size: 12.5px; font-weight: 500; color: #6A7080; line-height: 1.5; }
 
@@ -3476,7 +3476,8 @@ export default function App() {
         .artium-aw-stat-tile {
           width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
           display: inline-flex; align-items: center; justify-content: center;
-          background: radial-gradient(circle at 38% 30%, rgba(201,150,46,.10), rgba(201,150,46,.20));
+          background: radial-gradient(circle at 35% 28%, #FFFFFF 0%, #FCF8EF 55%, #F1E8D6 100%);
+          box-shadow: 0 6px 10px -4px rgba(150,115,55,.38), 0 2px 4px rgba(150,115,55,.14), inset 0 2px 2px #fff, inset 0 -3px 5px rgba(176,146,98,.28);
           color: #C9962E;
         }
         .artium-aw-stat-n {
