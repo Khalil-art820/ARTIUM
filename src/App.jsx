@@ -3699,7 +3699,7 @@ export default function App() {
         /* Anything the fixed bar can cover reserves its height. One number,
            one place, so a screen added later inherits the clearance by taking
            the class rather than by remembering the arithmetic. */
-        .artium-has-tabs { padding-bottom: calc(62px + env(safe-area-inset-bottom, 0px)); }
+        .artium-has-tabs { padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
 
         /* Redundant with the base rule above now that every screen is
            light (kept rather than removed — see the comment on the base
@@ -4718,6 +4718,7 @@ export default function App() {
           check, which is the Saved problem again. */}
       {view === "app" && (
         <BottomTabs
+          light
           items={
             !myProfile ? GUEST_TABS :
             isPianistUser
@@ -6232,7 +6233,7 @@ function HirerApp({ authUser, students, onHome }) {
         )}
       </div>
       {!overlayOpen && (
-        <BottomTabs items={items} active={tab} onTab={(k) => { if (k === "home") { onHome(); return; } setTab(k); }} />
+        <BottomTabs light items={items} active={tab} onTab={(k) => { if (k === "home") { onHome(); return; } setTab(k); }} />
       )}
     </div>
   );
@@ -10990,6 +10991,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
           that page has its own way back and no tab of its own to light. */}
       {!(selectedId && appTab === "lesson") && (
         <BottomTabs
+          light
           items={[
             { k: "home", label: "Home", Icon: Home },
             { k: "map", label: "Teachers", Icon: Map },
