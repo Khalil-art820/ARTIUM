@@ -4187,7 +4187,9 @@ export default function App() {
         .artium-lp--light .artium-lp-cap b { color: #C9962E; }
 
         /* Pin's headcount: ink, not the white styled for the old dark pin. */
-        .artium-lp--light .artium-globepin-count { color: #232A3B; }
+        .artium-lp--light .artium-globepin-count { color: #4A505C; }
+        .artium-lp--light .artium-globepin-count > svg { width: min(21px, 3.5vw); }
+        .artium-lp--light .artium-globepin-count-n { font-size: min(20px, 3.4vw); }
 
         /* The manicule's ivory puck disc — see the redrawn hand SVG in the
            JSX (circular cuff + extended index + three curled fingers).
@@ -4924,11 +4926,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
           <span aria-hidden="true">RTIUM</span>
         </span>
         <div className="artium-lp-right">
-          <MusicBtn playing={musicOn} onToggle={onMusicToggle} size={34} />
-          <span className="artium-gx-count">
-            <Users size={16} strokeWidth={1.8} />
-            {memberCount}
-          </span>
+          <MusicBtn playing={musicOn} onToggle={onMusicToggle} size={30} />
           {myProfile && (
             <NotificationBell
               myProfile={myProfile}
