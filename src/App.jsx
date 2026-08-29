@@ -4535,13 +4535,13 @@ export default function App() {
                 </span>
               </header>
               {myProfile && (
-                <div className="px-6 pt-2 pb-2">
+                <div className="px-6 pt-2 pb-2" style={{ paddingLeft: 44 }}>
                   {/* Back to the plain block by request — the white card and
                       the GOOD TO SEE YOU eyebrow are reversed; what survives
                       of that round: the corrected pill marks, the columned
                       hall beside the conservatory, and its newer text voice. */}
                   <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600, color: C.inkText }}>
-                    Welcome, {myProfile.name.split(" ")[0]}
+                    Good to see you, {myProfile.name.split(" ")[0]}
                     <span aria-hidden="true" style={{
                       display: "inline-flex", alignItems: "center", justifyContent: "center",
                       width: 30, height: 30, borderRadius: "50%", marginLeft: 8,
