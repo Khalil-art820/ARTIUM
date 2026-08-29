@@ -12,6 +12,7 @@ import {
   Map, BookOpen, ListChecks, LayoutList, Megaphone, Check as CheckIcon, ShieldCheck, FileText, Lock,
   ScanLine, ArrowUpRight, Globe2, MapPin, GraduationCap, User, Paperclip,
   Compass, Briefcase, Feather, CheckCircle2,
+  BookMarked,
 } from "lucide-react";
 import { useAuth } from "./contexts/AuthContext";
 import { supabase } from "./lib/supabase";
@@ -4365,7 +4366,7 @@ export default function App() {
           items={
             !myProfile ? STUDENT_TABS :
             isPianistUser
-              ? [...STUDENT_TABS.slice(0, 5), { k: "concerts", label: "Concerts", Icon: Music2, attention: pianistNeedsAttention }, STUDENT_TABS[5]]
+              ? [...STUDENT_TABS.slice(0, 5), { k: "concerts", label: "Concerts", Icon: CalendarEventIcon, attention: pianistNeedsAttention }, STUDENT_TABS[5]]
               : STUDENT_TABS
           }
           active="home"
@@ -4408,7 +4409,7 @@ export default function App() {
           items={
             !myProfile ? STUDENT_TABS :
             isPianistUser
-              ? [...STUDENT_TABS.slice(0, 5), { k: "concerts", label: "Concerts", Icon: Music2, attention: pianistNeedsAttention }, STUDENT_TABS[5]]
+              ? [...STUDENT_TABS.slice(0, 5), { k: "concerts", label: "Concerts", Icon: CalendarEventIcon, attention: pianistNeedsAttention }, STUDENT_TABS[5]]
               : STUDENT_TABS
           }
           active=""
@@ -4756,7 +4757,7 @@ export default function App() {
             isPianistUser
               // Concerts sits after Lessons and before Profile — one more
               // room off the same corridor, not a second app bolted on.
-              ? [...STUDENT_TABS.slice(0, 5), { k: "concerts", label: "Concerts", Icon: Music2, attention: pianistNeedsAttention }, STUDENT_TABS[5]]
+              ? [...STUDENT_TABS.slice(0, 5), { k: "concerts", label: "Concerts", Icon: CalendarEventIcon, attention: pianistNeedsAttention }, STUDENT_TABS[5]]
               : STUDENT_TABS
           }
           // Nothing is lit on the landing page but Home, and nothing at all
@@ -9439,12 +9440,35 @@ function BottomTabs({ items, active, onTab, light, dimmed }) {
 // "Promote Me" and "Lesson Room" would wrap to two lines and make the bar
 // taller than the content it sits under. Admin stays on the header strip:
 // it belongs to two people, not to the bar everybody sees.
+// Tab glyphs the icon set doesn't carry: a globe wearing the landing
+// page's pin, and a calendar with one marked day. Same API as the
+// library's icons (size / strokeWidth, currentColor) so BottomTabs
+// can't tell them apart.
+const GlobePinIcon = ({ size = 24, strokeWidth = 2, ...props }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M20.94 11a9 9 0 1 0 -9.94 9.95" />
+    <path d="M3.6 9h16.8" />
+    <path d="M3.6 15h8.9" />
+    <path d="M11.5 3a17 17 0 0 0 0 18" />
+    <path d="M12.5 3a16.9 16.9 0 0 1 2.6 6.4" />
+    <path d="M21.12 20.12a3 3 0 1 0 -4.24 0L19 22z" />
+    <path d="M19 18v.01" />
+  </svg>
+);
+const CalendarEventIcon = ({ size = 24, strokeWidth = 2, ...props }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <rect x="4" y="5" width="16" height="16" rx="2" />
+    <path d="M16 3v4M8 3v4M4 11h16" />
+    <rect x="8" y="14" width="2.6" height="2.6" rx="0.4" fill="currentColor" stroke="none" />
+  </svg>
+);
+
 const STUDENT_TABS = [
   { k: "home", label: "Home", Icon: Home },
-  { k: "map", label: "Network", Icon: Globe2 },
+  { k: "map", label: "Network", Icon: GlobePinIcon },
   { k: "messages", label: "Messages", Icon: MessageCircle },
   { k: "promote", label: "Promote", Icon: Megaphone },
-  { k: "lessons", label: "Lessons", Icon: BookOpen },
+  { k: "lessons", label: "Lessons", Icon: BookMarked },
   { k: "profile", label: "Profile", Icon: User },
 ];
 
@@ -9453,7 +9477,7 @@ const STUDENT_TABS = [
 // honest shape of the app before signing up.
 const GUEST_TABS = [
   { k: "home", label: "Home", Icon: Home },
-  { k: "map", label: "Network", Icon: Globe2 },
+  { k: "map", label: "Network", Icon: GlobePinIcon },
 ];
 
 /* ---------------------------------------------------------------- */
