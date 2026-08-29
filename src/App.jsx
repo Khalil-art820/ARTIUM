@@ -4317,7 +4317,22 @@ export default function App() {
         />
       )}
 
-      {view === "entry" && <ArtiumGate onLearner={chooseLearner} onStudent={() => chooseStudent("otp")} onPianist={choosePianist} onLogin={startLogin} onComposers={() => setScreen("composers")} learnerProfile={learnerProfile} learnerLoggedOut={learnerLoggedOut} studentLoggedIn={!!myProfile} musicOn={musicPlaying} onMusicToggle={toggleMusic} memberCount={Object.values(studentsByCons).flat().length} avatarPhotoUrl={accountPhotoUrl} avatarName={accountName} memberChips={(() => {
+      {view === "entry" && <ArtiumGate onLearner={chooseLearner} onStudent={() => chooseStudent("otp")} onPianist={choosePianist} onLogin={startLogin} onComposers={() => setScreen("composers")} learnerProfile={learnerProfile} learnerLoggedOut={learnerLoggedOut} studentLoggedIn={!!myProfile} musicOn={musicPlaying} onMusicToggle={toggleMusic} memberCount={Object.values(studentsByCons).flat().length} avatarPhotoUrl={accountPhotoUrl} avatarName={accountName} bellSlot={myProfile ? (
+        <NotificationBell
+          myProfile={myProfile}
+          puck
+          networkFeeds
+          hireCount={pianistAttentionCount}
+          hireIds={pianistAttentionIds}
+          onGoToLessonRoom={() => { setScreen("app"); setAppTabPersist("lessons"); }}
+          onGoToConcerts={() => { setScreen("app"); setAppTabPersist("concerts"); }}
+          onGoToComposers={() => setScreen("composers")}
+          onGoToNews={() => {}}
+          authUser={authUser}
+          isAdmin={isAdmin}
+          onGoToAdmin={() => { setScreen("app"); setAppTabPersist("admin"); }}
+        />
+      ) : null} memberChips={(() => {
         const chips = [];
         if (myProfile) chips.push({ name: myProfile.name, meta: [myProfile.instrument, findConservatory(myProfile.conservatoryId)?.city].filter(Boolean).join(" · ") || "Conservatory student", photoUrl: accountPhotoUrl });
         const other = students.find((st) => st.id !== myProfile?.id && st.photoUrl);

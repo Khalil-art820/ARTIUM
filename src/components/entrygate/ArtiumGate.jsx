@@ -349,17 +349,18 @@ const CARDS = [
   },
 ];
 
-function FeatureCard({ card, onActivate, rootRef }) {
+function FeatureCard({ card, onActivate, rootRef, disabled }) {
   const { id, numSide, title, text, Icon, ariaLabel } = card;
   const numStr = String(id).padStart(2, "0");
   const gp = `gp${id}`, gn = `gn${id}`, sh = `sh${id}`, gr = `gr${id}`;
-  const activate = (e) => { e.preventDefault(); onActivate && onActivate(); };
+  const activate = (e) => { e.preventDefault(); if (!disabled) onActivate && onActivate(); };
   return (
     <article
       ref={rootRef}
-      className="feature"
+      className={disabled ? "feature feature--off" : "feature"}
       role="link"
-      tabIndex={0}
+      aria-disabled={disabled || undefined}
+      tabIndex={disabled ? -1 : 0}
       aria-label={ariaLabel}
       onClick={activate}
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") activate(e); }}
@@ -444,6 +445,7 @@ export default function ArtiumGate({
   onAvatar,
   onLogout,
   memberChips,
+  bellSlot,
 }) {
   // The app around this page is dark (index.css pins html/body/#root to
   // #0F1012); own both html and body while mounted so iOS overscroll
@@ -512,6 +514,12 @@ export default function ArtiumGate({
             </span>
           </div>
           <div className="head-actions">
+            {/* Passive stat, not a control: no puck, no border, no shadow —
+                the raised disc made the member count read as a button. */}
+            <div className="member-count" title="Members" aria-label={`${count} members`}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="8" r="3.6" /><path d="M4.5 20c1.4-3.4 4.2-5 7.5-5s6.1 1.6 7.5 5" /></svg>
+              <span>{count}</span>
+            </div>
             {onMusicToggle && (
               <button
                 className={`puck play-puck${musicOn ? " is-on" : ""}`}
@@ -526,12 +534,7 @@ export default function ArtiumGate({
                 )}
               </button>
             )}
-            {/* Passive stat, not a control: no puck, no border, no shadow —
-                the raised disc made the member count read as a button. */}
-            <div className="member-count" title="Members" aria-label={`${count} members`}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="8" r="3.6" /><path d="M4.5 20c1.4-3.4 4.2-5 7.5-5s6.1 1.6 7.5 5" /></svg>
-              <span>{count}</span>
-            </div>
+            {bellSlot}
             <button
               type="button"
               className="puck avatar-puck"
