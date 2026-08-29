@@ -3482,11 +3482,16 @@ export default function App() {
         }
         .artium-aw-stat-row { display: flex; flex-direction: column; align-items: center; gap: 9px; }
         .artium-aw-stat-tile {
-          width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
+          /* The bell's puck, verbatim — same size, material, rim, shadows. */
+          width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
           display: inline-flex; align-items: center; justify-content: center;
-          background: radial-gradient(circle at 35% 28%, #FBF6EA 0%, #F5EDDA 55%, #EBDFC6 100%);
-          border: 1px solid rgba(176,146,98,.35);
-          box-shadow: 0 6px 10px -4px rgba(150,115,55,.38), 0 2px 4px rgba(150,115,55,.14), inset 0 2px 2px rgba(255,255,255,.7), inset 0 -3px 5px rgba(176,146,98,.28);
+          background: radial-gradient(circle at 35% 28%, #FFFFFF 0%, #FCF8EF 55%, #F1E8D6 100%);
+          border: 1px solid rgba(255,255,255,.85);
+          box-shadow:
+            0 8px 14px -4px rgba(150,115,55,.38),
+            0 2px 4px rgba(150,115,55,.14),
+            inset 0 2px 2px #fff,
+            inset 0 -3px 5px rgba(176,146,98,.28);
           color: #C9962E;
         }
         .artium-aw-stat-n {
@@ -4397,6 +4402,20 @@ export default function App() {
       )}
 
       {view === "landing" && <Landing onApply={pianistEntry ? () => { setAuthError(""); setScreen("hirerSignup"); } : startApply} onBack={backToEntry} onPreview={startPreview} onProfile={goToProfile} onLogin={startLogin} myProfile={myProfile} studentLoggedOut={studentLoggedOut} musicOn={musicPlaying} onMusicToggle={toggleMusic} error={authError} onGoToLessonRoom={() => { setScreen("app"); setAppTabPersist("lessons"); }} studentsByCons={studentsByCons} avatarPhotoUrl={accountPhotoUrl} avatarName={accountName} hireCount={pianistAttentionCount} hireIds={pianistAttentionIds} onGoToConcerts={() => { setScreen("app"); setAppTabPersist("concerts"); }} onGoToComposers={() => setScreen("composers")} authUser={authUser} isAdmin={isAdmin} onGoToAdmin={() => { setScreen("app"); setAppTabPersist("admin"); }} />}
+      {view === "landing" && (
+        <BottomTabs
+          light
+          items={
+            !myProfile ? STUDENT_TABS :
+            isPianistUser
+              ? [...STUDENT_TABS.slice(0, 5), { k: "concerts", label: "Concerts", Icon: Music2, attention: pianistNeedsAttention }, STUDENT_TABS[5]]
+              : STUDENT_TABS
+          }
+          active=""
+          dimmed={!myProfile}
+          onTab={(k) => { if (k === "home") { setScreen("entry"); return; } setScreen("app"); setAppTabPersist(k); }}
+        />
+      )}
       {view === "hirerSignup" && (
         <HirerSignup
           authUser={authUser}
@@ -4587,7 +4606,7 @@ export default function App() {
                     }}
                     title="See who studies at your conservatory"
                     aria-label="See who studies at your conservatory"
-                    style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, background: "none", border: "none", padding: 0, cursor: "pointer", font: "inherit", margin: "6px auto 0" }}
+                    style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, background: "none", border: "none", padding: 0, cursor: "pointer", font: "inherit", margin: "2px auto 0" }}
                   >
                     <span style={{
                       display: "inline-flex", alignItems: "center", justifyContent: "center",
@@ -4936,7 +4955,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
     // this markup still uses stay untouched for the screens that are still
     // dark by design (signup flow, map, network, etc.) — see the CSS block
     // for the full list of what got scoped-overridden vs. left alone.
-    <div className="artium-lp artium-lp--light">
+    <div className="artium-lp artium-lp--light artium-has-tabs">
       {/* Not <GateBackdrop> (that's the old dark hall photo, gone). The
           user's own artwork instead — colonnade/staff/dotted-map,
           re-grounded to the page's own grey — sitting behind the header
@@ -4950,9 +4969,6 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
         {/* Everyone can walk back to the entry gate — this was guest-only,
             which read as "no back button" to every signed-in user. Same
             puck as the welcome page's back control. */}
-        <button onClick={onBack} className="artium-net-puck" aria-label="Back to the entrance">
-          <ChevronLeft size={17} strokeWidth={2} />
-        </button>
         {/* The gate's actual current lockup (ink caps, crossbar-less A) —
             not <GateLogo>, which is the OLD dark gate's champagne pin+serif
             mark and colors itself inline (can't be re-themed by CSS). Same
