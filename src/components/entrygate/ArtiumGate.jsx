@@ -443,6 +443,7 @@ export default function ArtiumGate({
   avatarName,
   onAvatar,
   onLogout,
+  memberChips,
 }) {
   // The app around this page is dark (index.css pins html/body/#root to
   // #0F1012); own both html and body while mounted so iOS overscroll
@@ -513,12 +514,16 @@ export default function ArtiumGate({
           <div className="head-actions">
             {onMusicToggle && (
               <button
-                className={`puck${musicOn ? " is-on" : ""}`}
+                className={`puck play-puck${musicOn ? " is-on" : ""}`}
                 aria-label={musicOn ? "Pause ambient music" : "Play ambient music"}
                 aria-pressed={!!musicOn}
                 onClick={onMusicToggle}
               >
-                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z" /></svg>
+                {musicOn ? (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true" style={{ width: 14, height: 14 }}><path d="M9 5v14M15 5v14" /></svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style={{ width: 14, height: 14, marginLeft: 2 }}><path d="M8 5.5v13l11-6.5z" /></svg>
+                )}
               </button>
             )}
             {/* Passive stat, not a control: no puck, no border, no shadow —
@@ -601,6 +606,7 @@ export default function ArtiumGate({
           <div className="grid">
             {CARDS.map((card) => (
               <FeatureCard
+              disabled={studentLoggedIn && (card.id === 1 || card.id === 2)}
                 key={card.id}
                 card={card}
                 onActivate={handlers[card.propKey]}
@@ -633,10 +639,14 @@ export default function ArtiumGate({
               <h2>I am a Conservatory<br />Student | Graduate</h2>
 
               <div className="member">
-                <div className="avatar">AD</div>
+                <div className="avatar">
+                  {memberChips?.[0]?.photoUrl
+                    ? <img src={memberChips[0].photoUrl} alt="" />
+                    : "AD"}
+                </div>
                 <div className="who">
-                  <div className="name">Amélie D.</div>
-                  <div className="meta">Piano · Paris</div>
+                  <div className="name">{memberChips?.[0]?.name || "Amélie D."}</div>
+                  <div className="meta">{memberChips?.[0]?.meta || "Piano · Paris"}</div>
                 </div>
                 <span className="seal">
                   <svg width="25" height="25" viewBox="0 0 24 24" fill="currentColor">
@@ -647,10 +657,14 @@ export default function ArtiumGate({
               </div>
 
               <div className="member">
-                <div className="avatar">LM</div>
+                <div className="avatar">
+                  {memberChips?.[1]?.photoUrl
+                    ? <img src={memberChips[1].photoUrl} alt="" />
+                    : "LM"}
+                </div>
                 <div className="who">
-                  <div className="name">Lucas M.</div>
-                  <div className="meta">Violin · Vienna</div>
+                  <div className="name">{memberChips?.[1]?.name || "Lucas M."}</div>
+                  <div className="meta">{memberChips?.[1]?.meta || "Violin · Vienna"}</div>
                 </div>
                 <span className="seal">
                   <svg width="25" height="25" viewBox="0 0 24 24" fill="currentColor">

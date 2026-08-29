@@ -531,3 +531,11 @@
   font-size:12.5px;font-weight:400;letter-spacing:.02em;
   color:var(--muted);line-height:1;text-transform:lowercase;
 }
+
+/* Offline cards: an approved student has no use for the teacher and
+   concert-musician doors — they stay visible, washed out, untouchable. */
+.agate .feature--off { opacity: .45; cursor: default; pointer-events: none; filter: saturate(.6); }
+/* The 34px play disc, twin of the other pages' pucks. */
+.agate .head-actions .play-puck { width: 34px; height: 34px; color: var(--ink); }
+/* Member chip photos fill the squircle. */
+.agate .member .avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; display: block; }
