@@ -3466,14 +3466,15 @@ export default function App() {
         .artium-aw-stats {
           display: flex; align-items: stretch; gap: 13px; margin-top: 4px;
           border-radius: 26px; padding: 12px;
-          background: #FFFFFF; border: 1px solid rgba(176,146,98,0.22);
-          box-shadow: 0 18px 34px -18px rgba(150,115,55,0.38), inset 0 1px 0 #fff;
+          background: #FFFFFF; border: 1px solid rgba(176,146,98,0.42);
+          box-shadow: 0 18px 34px -18px rgba(150,115,55,0.38);
         }
         .artium-aw-stat {
           flex: 1 1 0; min-width: 0; padding: 14px 4px 12px; text-align: center;
           position: relative; border-radius: 20px;
-          background: linear-gradient(180deg, #FDFCFA 0%, #F7F4EE 100%);
-          box-shadow: inset 0 1px 1px #fff, inset 0 -2px 5px rgba(176,146,98,.10);
+          background: linear-gradient(180deg, #FBF8F2 0%, #F4EFE4 100%);
+          border: 1px solid rgba(176,146,98,.28);
+          box-shadow: inset 0 -2px 5px rgba(176,146,98,.10);
         }
         .artium-aw-stat + .artium-aw-stat::before {
           content: ""; position: absolute; left: -7px; top: 14%; bottom: 14%;
@@ -3490,11 +3491,11 @@ export default function App() {
         }
         .artium-aw-stat-n {
           font-family: 'Playfair Display', serif;
-          font-size: 25px; font-weight: 700; color: #232A3B; line-height: 1;
+          font-size: 21px; font-weight: 700; color: #232A3B; line-height: 1;
           font-variant-numeric: tabular-nums;
         }
         .artium-aw-stat-l {
-          margin: 6px 0 0; font-size: 10.5px; font-weight: 600; color: #565B66;
+          margin: 6px 0 0; font-size: 9px; font-weight: 600; color: #565B66;
           letter-spacing: .13em; text-transform: uppercase;
         }
         .artium-aw-stat-l::after {
@@ -3575,7 +3576,7 @@ export default function App() {
           margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
           height: 34px; padding: 0 12px; border-radius: 999px; cursor: pointer;
           border: 1px solid rgba(176,146,98,0.30); background: #FFFFFF;
-          color: #9A9A9A; font: inherit; font-size: 15.5px; font-weight: 400;
+          color: #232A3B; font: inherit; font-size: 15.5px; font-weight: 400;
         }
 
         .artium-aw-list { display: flex; flex-direction: column; gap: 9px; }
@@ -4586,7 +4587,7 @@ export default function App() {
                     }}
                     title="See who studies at your conservatory"
                     aria-label="See who studies at your conservatory"
-                    style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, background: "none", border: "none", padding: 0, cursor: "pointer", font: "inherit", margin: "10px auto 0" }}
+                    style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, background: "none", border: "none", padding: 0, cursor: "pointer", font: "inherit", margin: "6px auto 0" }}
                   >
                     <span style={{
                       display: "inline-flex", alignItems: "center", justifyContent: "center",
@@ -4600,7 +4601,7 @@ export default function App() {
                       </svg>
                     </span>
                   </button>
-                  <div style={{ display: "flex", flexWrap: "nowrap", justifyContent: "center", gap: 5, marginTop: 10, opacity: .45, filter: "saturate(.6)" }}>
+                  <div style={{ display: "flex", flexWrap: "nowrap", justifyContent: "center", gap: 5, marginTop: 6, opacity: .45, filter: "saturate(.6)" }}>
                     {(myProfile.year || "").split(",").map((t) => t.trim()).filter(Boolean).map((label) => {
                       const low = label.toLowerCase();
                       const isYear = /year/.test(low);
@@ -9261,7 +9262,7 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
           <>
             <div className="artium-aw-listhead">
               <button className="artium-aw-sort" style={{ marginLeft: 0 }} onClick={() => setSelectedConsId(null)}>
-                <ArrowLeft size={13} /> All conservatories
+                <ArrowLeft size={13} /> All Conservatories
               </button>
             </div>
             <div className="artium-aw-row" style={{ cursor: "default", marginBottom: 12 }}>
@@ -9328,7 +9329,7 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
             {areaIds && (
               <div className="artium-aw-listhead">
                 <button className="artium-aw-sort" style={{ marginLeft: 0 }} onClick={() => setAreaIds(null)}>
-                  <ArrowLeft size={13} /> All conservatories
+                  <ArrowLeft size={13} /> All Conservatories
                 </button>
                 <span>{areaIds.length} in this area</span>
               </div>
@@ -10658,7 +10659,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
               {areaIds && (
                 <div className="artium-aw-listhead">
                   <button className="artium-aw-sort" style={{ marginLeft: 0 }} onClick={() => setAreaIds(null)}>
-                    <ArrowLeft size={13} /> All conservatories
+                    <ArrowLeft size={13} /> All Conservatories
                   </button>
                   <span>{areaIds.length} in this area</span>
                 </div>
