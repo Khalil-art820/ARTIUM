@@ -3426,7 +3426,7 @@ export default function App() {
           /* Matched to the landing's "Every Conservatory. One Network." */
           margin: 10px 0 0; text-align: center; color: #232A3B;
           font-family: 'Playfair Display', serif;
-          font-weight: 500; font-size: clamp(20px, 6.0vw, 30px);
+          font-weight: 600; font-size: 26px;
           line-height: 1.16; letter-spacing: 0.005em;
         }
         .artium-aw-sub { margin: 8px 0 0; text-align: center; font-size: 12.5px; font-weight: 500; color: #6A7080; line-height: 1.5; }
@@ -4535,7 +4535,7 @@ export default function App() {
                 </span>
               </header>
               {myProfile && (
-                <div className="px-6 pt-2 pb-2">
+                <div className="px-6 pb-2" style={{ paddingTop: 30 }}>
                   {/* Back to the plain block by request — the white card and
                       the GOOD TO SEE YOU eyebrow are reversed; what survives
                       of that round: the corrected pill marks, the columned
