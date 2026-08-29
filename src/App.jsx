@@ -886,7 +886,13 @@ export function MusicBtn({ playing, onToggle, size = HEADER_CONTROL }) {
     >
       {playing
         ? <Pause size={glyph} color={MUSIC_BTN_INK} strokeWidth={2.6} />
-        : <ChevronRight size={glyph} color={MUSIC_BTN_INK} strokeWidth={2.8} style={{ marginLeft: 1 }} />}
+        : (
+          // Solid triangle, not a chevron — a filled ▶ reads as play where
+          // the stroked > read as "next" or a link.
+          <svg width={glyph} height={glyph} viewBox="0 0 24 24" fill={MUSIC_BTN_INK} aria-hidden="true" style={{ marginLeft: 2 }}>
+            <path d="M8 5.5v13l11-6.5z" />
+          </svg>
+        )}
     </button>
   );
 }
@@ -3861,6 +3867,11 @@ export default function App() {
           overflow-x: hidden;
         }
         .artium-lp > *:not(.artium-gx-bd) { position: relative; z-index: 1; }
+        /* The rule above flattens every child to z 1 at (0,2,0) specificity,
+           which silently beat the bar's own z-index and let the pin paint
+           over the open notification panel. This (0,2,0) rule sits later,
+           so the header actually rises. */
+        .artium-lp > .artium-lp-bar { z-index: 320; }
         /* The photograph belongs to the hero, not to the whole scroll. Pinned
            to the top with a viewport's height it has faded into the base
            gradient by the time the steps begin; left at inset 0 it would
@@ -3906,6 +3917,17 @@ export default function App() {
           transition: color .25s ease, transform .25s ease;
         }
         .artium-lp-back:hover { color: #EFD09B; transform: translateX(-2px); }
+        /* On the light landing the bare gray chevron vanished into the
+           ground — it wears the pucks' ivory disc now, 34px like the bell,
+           and leads home to the entry gate. */
+        .artium-lp--light .artium-lp-back {
+          width: 34px; height: 34px; margin-left: 0; border-radius: 50%;
+          color: #232A3B;
+          background: radial-gradient(circle at 35% 28%, #FFFFFF 0%, #FCF8EF 55%, #F1E8D6 100%);
+          border: 1px solid rgba(255,255,255,.85);
+          box-shadow: 0 6px 10px -4px rgba(150,115,55,.38), 0 2px 4px rgba(150,115,55,.14), inset 0 2px 2px #fff, inset 0 -3px 5px rgba(176,146,98,.28);
+        }
+        .artium-lp--light .artium-lp-back:hover { color: #232A3B; transform: none; }
         .artium-lp-right { display: flex; align-items: center; gap: 12px; margin-left: auto; }
         .artium-lp-cta {
           border: none; border-radius: 999px; padding: 9px 17px; cursor: pointer;
@@ -4897,7 +4919,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
           <span aria-hidden="true">RTIUM</span>
         </span>
         <div className="artium-lp-right">
-          <MusicBtn playing={musicOn} onToggle={onMusicToggle} />
+          <MusicBtn playing={musicOn} onToggle={onMusicToggle} size={34} />
           <span className="artium-gx-count">
             <Users size={16} strokeWidth={1.8} />
             {memberCount}
