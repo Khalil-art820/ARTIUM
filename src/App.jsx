@@ -4535,7 +4535,7 @@ export default function App() {
                 </span>
               </header>
               {myProfile && (
-                <div className="px-6 pt-2 pb-2" style={{ paddingLeft: 44 }}>
+                <div className="px-6 pt-2 pb-2" style={{ paddingLeft: 18 }}>
                   {/* Back to the plain block by request — the white card and
                       the GOOD TO SEE YOU eyebrow are reversed; what survives
                       of that round: the corrected pill marks, the columned
@@ -4562,7 +4562,7 @@ export default function App() {
                       }, 60);
                     }}
                     title="See who studies at your conservatory"
-                    style={{ display: "flex", alignItems: "center", justifyContent: "flex-start", gap: 10, background: "none", border: "none", padding: 0, cursor: "pointer", font: "inherit", margin: "16px 0 0", opacity: .45, filter: "saturate(.6)" }}
+                    style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, background: "none", border: "none", padding: 0, cursor: "pointer", font: "inherit", margin: "16px auto 0" }}
                   >
                     <span style={{
                       display: "inline-flex", alignItems: "center", justifyContent: "center",
@@ -4581,7 +4581,7 @@ export default function App() {
                         : "Conservatory student"}
                     </span>
                   </button>
-                  <div style={{ display: "flex", flexWrap: "nowrap", justifyContent: "flex-start", gap: 5, marginTop: 12, opacity: .45, filter: "saturate(.6)" }}>
+                  <div style={{ display: "flex", flexWrap: "nowrap", justifyContent: "center", gap: 5, marginTop: 12, opacity: .45, filter: "saturate(.6)" }}>
                     {(myProfile.year || "").split(",").map((t) => t.trim()).filter(Boolean).map((label) => {
                       const low = label.toLowerCase();
                       const isYear = /year/.test(low);
