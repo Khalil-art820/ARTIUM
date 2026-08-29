@@ -172,7 +172,7 @@ const GATE_SANS = "'Manrope', -apple-system, 'Segoe UI', Roboto, sans-serif";
 
 // Brass, not black: the reference's black was the only black in a header of
 // brass and navy, and it dominated. The outlined shape is kept.
-const MUSIC_BTN_INK = C.brass;
+const MUSIC_BTN_INK = C.inkText; // black solid, per the user — was gold
 
 /* ---- Promote Me (aclassicaltone) ---- */
 const PROMO_PROVIDERS = [
@@ -4903,11 +4903,12 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
       <div className="artium-lp-bd" aria-hidden="true" />
 
       <header className="artium-lp-bar">
-        {!myProfile && !studentLoggedOut && (
-          <button onClick={onBack} className="artium-lp-back" aria-label="Back to the entrance">
-            <ArrowLeft size={19} strokeWidth={1.9} />
-          </button>
-        )}
+        {/* Everyone can walk back to the entry gate — this was guest-only,
+            which read as "no back button" to every signed-in user. Same
+            puck as the welcome page's back control. */}
+        <button onClick={onBack} className="artium-net-puck" aria-label="Back to the entrance">
+          <ChevronLeft size={17} strokeWidth={2} />
+        </button>
         {/* The gate's actual current lockup (ink caps, crossbar-less A) —
             not <GateLogo>, which is the OLD dark gate's champagne pin+serif
             mark and colors itself inline (can't be re-themed by CSS). Same
