@@ -539,3 +539,6 @@
 .agate .head-actions .play-puck { width: 34px; height: 34px; color: var(--ink); }
 /* Member chip photos fill the squircle. */
 .agate .member .avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; display: block; }
+
+/* Room for the app's fixed bottom tab bar, which now also lives on the gate. */
+.agate { padding-bottom: 72px; }

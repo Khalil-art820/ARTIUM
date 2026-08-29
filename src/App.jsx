@@ -4346,6 +4346,15 @@ export default function App() {
         try { localStorage.removeItem("artium_gate_tour_v1"); } catch { /* private mode */ }
         await supabase.auth.signOut().catch(() => {});
       }} />}
+      {view === "entry" && (
+        <BottomTabs
+          light
+          items={STUDENT_TABS}
+          active="home"
+          dimmed={!myProfile}
+          onTab={(k) => { if (k === "home") return; setScreen("app"); setAppTabPersist(k); }}
+        />
+      )}
       {view === "composers" && <WallOfComposers onBack={backToEntry} />}
       {view === "learnerSignup" && <LearnerSignup onSubmit={submitLearner} onBack={backToEntry} authUser={authUser} error={authError} />}
       {view === "learnerMap" && (
@@ -9371,9 +9380,12 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
  * Promote and Lessons take the space, since those were reachable only from
  * the strip that this replaces.
  */
-function BottomTabs({ items, active, onTab, light }) {
+function BottomTabs({ items, active, onTab, light, dimmed }) {
+  // filter/pointer-events go on the nav itself: a wrapper div with filter
+  // would become the containing block for this position:fixed bar and pull
+  // it out of the viewport corner.
   return (
-    <nav className={`artium-aw-tabs${light ? " artium-aw-tabs--light" : ""}`}>
+    <nav className={`artium-aw-tabs${light ? " artium-aw-tabs--light" : ""}`} style={dimmed ? { opacity: .45, filter: "saturate(.6)", pointerEvents: "none" } : undefined} aria-hidden={dimmed || undefined}>
       {items.map(({ k, label, Icon, attention }) => (
         <button key={k} data-on={k === active ? "1" : "0"} onClick={() => onTab(k)} aria-label={label}>
           <span style={{ position: "relative", display: "inline-flex" }}>
