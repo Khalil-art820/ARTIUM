@@ -2771,16 +2771,13 @@ export default function App() {
            black ring that has to hold its own against the page; here that is
            three times too heavy, so the weight is overridden rather than the
            component's default changed. */
-        .artium-gx-bar button[aria-label*="playlist"],
-        .artium-lp-bar button[aria-label*="playlist"] {
+        .artium-gx-bar button[aria-label*="playlist"] {
           border: 1px solid rgba(239,208,155,0.62) !important;
           width: 34px !important; height: 34px !important;
           transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
         }
-        .artium-gx-bar button[aria-label*="playlist"] svg,
-        .artium-lp-bar button[aria-label*="playlist"] svg { stroke: #EFD09B; }
-        .artium-gx-bar button[aria-label*="playlist"]:hover,
-        .artium-lp-bar button[aria-label*="playlist"]:hover {
+        .artium-gx-bar button[aria-label*="playlist"] svg { stroke: #EFD09B; }
+        .artium-gx-bar button[aria-label*="playlist"]:hover {
           transform: scale(1.05);
           border-color: #EFD09B !important;
           box-shadow: 0 0 18px rgba(239,208,155,0.28);
