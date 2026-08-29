@@ -4488,6 +4488,22 @@ export default function App() {
                     <Users size={15} strokeWidth={1.8} />
                     {Object.values(studentsByCons).flat().length}
                   </span>
+                  {/* The bell's own button, glyph swapped for the play
+                      triangle — same position as the landing header. */}
+                  <button
+                    className="artium-net-puck"
+                    onClick={toggleMusic}
+                    title={musicPlaying ? "Pause" : "Play"}
+                    aria-label={musicPlaying ? "Pause playlist" : "Play playlist"}
+                  >
+                    {musicPlaying ? (
+                      <Pause size={15} color={C.inkText} strokeWidth={2.4} />
+                    ) : (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill={C.inkText} aria-hidden="true" style={{ marginLeft: 2 }}>
+                        <path d="M8 5.5v13l11-6.5z" />
+                      </svg>
+                    )}
+                  </button>
                   {myProfile && (
                     <NotificationBell
                       myProfile={myProfile}
