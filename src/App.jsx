@@ -12,7 +12,7 @@ import {
   Map, BookOpen, ListChecks, LayoutList, Megaphone, Check as CheckIcon, ShieldCheck, FileText, Lock,
   ScanLine, ArrowUpRight, Globe2, MapPin, GraduationCap, User, Paperclip,
   Compass, Briefcase, Feather, CheckCircle2,
-  BookMarked,
+  Globe as GlobeIcon,
 } from "lucide-react";
 import { useAuth } from "./contexts/AuthContext";
 import { supabase } from "./lib/supabase";
@@ -9465,10 +9465,10 @@ const CalendarEventIcon = ({ size = 24, strokeWidth = 2, ...props }) => (
 
 const STUDENT_TABS = [
   { k: "home", label: "Home", Icon: Home },
-  { k: "map", label: "Network", Icon: GlobePinIcon },
+  { k: "map", label: "Network", Icon: GlobeIcon },
   { k: "messages", label: "Messages", Icon: MessageCircle },
   { k: "promote", label: "Promote", Icon: Megaphone },
-  { k: "lessons", label: "Lessons", Icon: BookMarked },
+  { k: "lessons", label: "Lessons", Icon: BookOpen },
   { k: "profile", label: "Profile", Icon: User },
 ];
 
@@ -9477,7 +9477,7 @@ const STUDENT_TABS = [
 // honest shape of the app before signing up.
 const GUEST_TABS = [
   { k: "home", label: "Home", Icon: Home },
-  { k: "map", label: "Network", Icon: GlobePinIcon },
+  { k: "map", label: "Network", Icon: GlobeIcon },
 ];
 
 /* ---------------------------------------------------------------- */
