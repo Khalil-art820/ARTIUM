@@ -4562,7 +4562,7 @@ export default function App() {
                       }, 60);
                     }}
                     title="See who studies at your conservatory"
-                    style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginTop: 16, background: "none", border: "none", padding: 0, cursor: "pointer", font: "inherit", margin: "16px auto 0" }}
+                    style={{ display: "flex", alignItems: "center", justifyContent: "flex-start", gap: 10, background: "none", border: "none", padding: 0, cursor: "pointer", font: "inherit", margin: "16px 0 0" }}
                   >
                     <span style={{
                       display: "inline-flex", alignItems: "center", justifyContent: "center",
@@ -4575,13 +4575,13 @@ export default function App() {
                         <path d="M12 2.5 2.8 7.2v1.6h18.4V7.2L12 2.5zM4.2 10.3h2.4v7.2H4.2zM10.8 10.3h2.4v7.2h-2.4zM17.4 10.3h2.4v7.2h-2.4zM2.8 19h18.4v2H2.8z" />
                       </svg>
                     </span>
-                    <span style={{ fontFamily: FONT_BODY, fontSize: 17.5, fontWeight: 500, color: "#565B66" }}>
+                    <span style={{ fontFamily: FONT_BODY, fontSize: 17.5, fontWeight: 500, color: "#3E4450" }}>
                       {myProfile.conservatoryId
                         ? (findConservatory(myProfile.conservatoryId)?.name || "Conservatory")
                         : "Conservatory student"}
                     </span>
                   </button>
-                  <div style={{ display: "flex", flexWrap: "nowrap", justifyContent: "center", gap: 5, marginTop: 12 }}>
+                  <div style={{ display: "flex", flexWrap: "nowrap", justifyContent: "flex-start", gap: 5, marginTop: 12 }}>
                     {(myProfile.year || "").split(",").map((t) => t.trim()).filter(Boolean).map((label) => {
                       const low = label.toLowerCase();
                       const isYear = /year/.test(low);
@@ -4589,7 +4589,7 @@ export default function App() {
                       return (
                         <span key={label} style={{
                           display: "inline-flex", alignItems: "center", gap: 5, flexShrink: 0,
-                          background: "#FFFFFF", border: `1px solid ${C.inkLine}`,
+                          background: "#FFFFFF", border: "1px solid rgba(176,146,98,0.45)",
                           borderRadius: 999, padding: "4px 9px",
                           fontFamily: FONT_BODY, fontSize: 11, fontWeight: 600, color: C.inkText,
                           boxShadow: "0 4px 8px -4px rgba(150,115,55,.25)",
@@ -4608,7 +4608,7 @@ export default function App() {
                     {myProfile.teaching?.open && (
                       <span style={{
                         display: "inline-flex", alignItems: "center", gap: 5, flexShrink: 0,
-                        background: "#FFFFFF", border: `1px solid ${C.inkLine}`,
+                        background: "#FFFFFF", border: "1px solid rgba(176,146,98,0.45)",
                         borderRadius: 999, padding: "4px 9px",
                         fontFamily: FONT_BODY, fontSize: 11, fontWeight: 600, color: C.inkText,
                         boxShadow: "0 4px 8px -4px rgba(150,115,55,.25)",
@@ -9208,14 +9208,14 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
               <span className="artium-aw-stat-tile"><MapPin size={16} strokeWidth={2} /></span>
               <span className="artium-aw-stat-n">{nf(ALL_CONS.length)}</span>
             </span>
-            <p className="artium-aw-stat-l">Conservatories</p>
+            <p className="artium-aw-stat-l">Verified conservatories</p>
           </div>
           <div className="artium-aw-stat">
             <span className="artium-aw-stat-row">
               <span className="artium-aw-stat-tile"><GraduationCap size={17} strokeWidth={2} /></span>
               <span className="artium-aw-stat-n">{nf(allStudents.length)}</span>
             </span>
-            <p className="artium-aw-stat-l">Students</p>
+            <p className="artium-aw-stat-l">Verified students</p>
           </div>
           <div className="artium-aw-stat">
             <span className="artium-aw-stat-row">
