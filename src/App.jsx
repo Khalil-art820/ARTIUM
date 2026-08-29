@@ -2325,8 +2325,15 @@ export default function App() {
     setScreen("app");
     setAppTabPersist("map");
   }
-  function goHome() {
+  // The back puck on the network header still means "the pin page";
+  // the Home tab now means the entry gate — two different ways out.
+  function goToLanding() {
     setScreen("landing");
+    setSelectedStudentId(null);
+    setAppTabPersist("map");
+  }
+  function goHome() {
+    setScreen("entry");
     setSelectedStudentId(null);
     setAppTabPersist("map");
   }
@@ -3568,7 +3575,7 @@ export default function App() {
           margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
           height: 34px; padding: 0 12px; border-radius: 999px; cursor: pointer;
           border: 1px solid rgba(176,146,98,0.30); background: #FFFFFF;
-          color: #6A7080; font: inherit; font-size: 12px; font-weight: 500;
+          color: #9A9A9A; font: inherit; font-size: 15.5px; font-weight: 400;
         }
 
         .artium-aw-list { display: flex; flex-direction: column; gap: 9px; }
@@ -4349,7 +4356,12 @@ export default function App() {
       {view === "entry" && (
         <BottomTabs
           light
-          items={STUDENT_TABS}
+          items={
+            !myProfile ? STUDENT_TABS :
+            isPianistUser
+              ? [...STUDENT_TABS.slice(0, 5), { k: "concerts", label: "Concerts", Icon: Music2, attention: pianistNeedsAttention }, STUDENT_TABS[5]]
+              : STUDENT_TABS
+          }
           active="home"
           dimmed={!myProfile}
           onTab={(k) => { if (k === "home") return; setScreen("app"); setAppTabPersist(k); }}
@@ -4486,7 +4498,7 @@ export default function App() {
                   it moves below, same as it sits below the header on every
                   other screen the gate draws. */}
               <header className="artium-net-bar">
-                <button className="artium-net-puck" onClick={goHome} aria-label="Back">
+                <button className="artium-net-puck" onClick={goToLanding} aria-label="Back">
                   <ChevronLeft size={17} strokeWidth={2} />
                 </button>
                 <span className="artium-net-word" aria-label="ARTIUM">
@@ -4574,7 +4586,7 @@ export default function App() {
                     }}
                     title="See who studies at your conservatory"
                     aria-label="See who studies at your conservatory"
-                    style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, background: "none", border: "none", padding: 0, cursor: "pointer", font: "inherit", margin: "16px auto 0" }}
+                    style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, background: "none", border: "none", padding: 0, cursor: "pointer", font: "inherit", margin: "10px auto 0" }}
                   >
                     <span style={{
                       display: "inline-flex", alignItems: "center", justifyContent: "center",
@@ -4588,7 +4600,7 @@ export default function App() {
                       </svg>
                     </span>
                   </button>
-                  <div style={{ display: "flex", flexWrap: "nowrap", justifyContent: "center", gap: 5, marginTop: 12, opacity: .45, filter: "saturate(.6)" }}>
+                  <div style={{ display: "flex", flexWrap: "nowrap", justifyContent: "center", gap: 5, marginTop: 10, opacity: .45, filter: "saturate(.6)" }}>
                     {(myProfile.year || "").split(",").map((t) => t.trim()).filter(Boolean).map((label) => {
                       const low = label.toLowerCase();
                       const isYear = /year/.test(low);

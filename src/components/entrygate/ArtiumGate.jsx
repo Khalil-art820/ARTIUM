@@ -471,7 +471,10 @@ export default function ArtiumGate({
   // (artium_gate_tour_v1 flag) or on demand via ?intro=tour. The gate
   // itself always renders finished/interactive — see useTourActivation
   // and useSpotlightTour above.
+  // A registered student knows the cards — the spotlight tour is for
+  // accounts that have not chosen one yet (?intro=tour still forces it).
   const { active: tourActive, delay: tourDelay, markSeen: tourMarkSeen } = useTourActivation();
+  const tourAllowed = tourActive && !studentLoggedIn;
   const medallionRef = useRef(null);
   const cardRefs = useRef([]);
   const tour = useSpotlightTour(tourActive, tourDelay, tourMarkSeen, medallionRef, cardRefs);
@@ -766,7 +769,7 @@ export default function ArtiumGate({
           (artium_gate_tour_v1) or on demand via ?intro=tour. The gate
           underneath is already fully rendered/interactive; this overlay
           just frames it. */}
-      {tourActive && tour.visible && tour.spot && (
+      {tourAllowed && tour.visible && tour.spot && (
         <div className="tour-overlay" role="dialog" aria-modal="true" aria-label="Guided tour">
           <TourSpotlight tour={tour} />
           <TourCard tour={tour} />
