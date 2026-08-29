@@ -878,10 +878,14 @@ export function MusicBtn({ playing, onToggle, size = HEADER_CONTROL }) {
       title={playing ? "Pause" : "Play"}
       aria-label={playing ? "Pause playlist" : "Play playlist"}
       style={{
+        // The bell puck's own material — the old heavy dark ring made this
+        // disc read larger than its equal-diameter neighbours.
         display: "inline-flex", alignItems: "center", justifyContent: "center",
         width: size, height: size, padding: 0, boxSizing: "border-box",
-        border: `${ring}px solid ${MUSIC_BTN_INK}`, borderRadius: "50%",
-        background: "transparent", cursor: "pointer", flexShrink: 0, lineHeight: 0,
+        border: "1px solid rgba(255,255,255,.85)", borderRadius: "50%",
+        background: "radial-gradient(circle at 35% 28%, #FFFFFF 0%, #FCF8EF 55%, #F1E8D6 100%)",
+        boxShadow: "0 6px 10px -4px rgba(150,115,55,.38), 0 2px 4px rgba(150,115,55,.14), inset 0 2px 2px #fff, inset 0 -3px 5px rgba(176,146,98,.28)",
+        cursor: "pointer", flexShrink: 0, lineHeight: 0,
       }}
     >
       {playing
