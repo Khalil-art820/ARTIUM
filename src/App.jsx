@@ -3496,11 +3496,11 @@ export default function App() {
         }
         .artium-aw-stat-n {
           font-family: 'Playfair Display', serif;
-          font-size: 21px; font-weight: 700; color: #232A3B; line-height: 1;
+          font-size: 22.5px; font-weight: 700; color: #232A3B; line-height: 1;
           font-variant-numeric: tabular-nums;
         }
         .artium-aw-stat-l {
-          margin: 6px 0 0; font-size: 9px; font-weight: 600; color: #565B66;
+          margin: 6px 0 0; font-size: 9.6px; font-weight: 600; color: #565B66;
           letter-spacing: .13em; text-transform: uppercase;
         }
         .artium-aw-stat-l::after {
@@ -4620,7 +4620,7 @@ export default function App() {
                       </svg>
                     </span>
                   </button>
-                  <div style={{ display: "flex", flexWrap: "nowrap", justifyContent: "center", gap: 5, marginTop: 6, opacity: .45, filter: "saturate(.6)" }}>
+                  <div style={{ display: "flex", flexWrap: "nowrap", justifyContent: "center", gap: 5, marginTop: 14, opacity: .45, filter: "saturate(.6)" }}>
                     {(myProfile.year || "").split(",").map((t) => t.trim()).filter(Boolean).map((label) => {
                       const low = label.toLowerCase();
                       const isYear = /year/.test(low);
