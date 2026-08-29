@@ -3416,7 +3416,7 @@ export default function App() {
 
         /* Eyebrow with a rule running out either side. */
         .artium-aw-eyebrow {
-          display: flex; align-items: center; gap: 12px; margin: 6px 0 0;
+          display: flex; align-items: center; gap: 12px; margin: 30px 0 0;
           font-size: 11.5px; font-weight: 600; letter-spacing: 0.24em;
           text-transform: uppercase; color: #B8862E; white-space: nowrap;
         }
@@ -3476,8 +3476,9 @@ export default function App() {
         .artium-aw-stat-tile {
           width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
           display: inline-flex; align-items: center; justify-content: center;
-          background: radial-gradient(circle at 35% 28%, #FFFFFF 0%, #FCF8EF 55%, #F1E8D6 100%);
-          box-shadow: 0 6px 10px -4px rgba(150,115,55,.38), 0 2px 4px rgba(150,115,55,.14), inset 0 2px 2px #fff, inset 0 -3px 5px rgba(176,146,98,.28);
+          background: radial-gradient(circle at 35% 28%, #FBF6EA 0%, #F5EDDA 55%, #EBDFC6 100%);
+          border: 1px solid rgba(176,146,98,.35);
+          box-shadow: 0 6px 10px -4px rgba(150,115,55,.38), 0 2px 4px rgba(150,115,55,.14), inset 0 2px 2px rgba(255,255,255,.7), inset 0 -3px 5px rgba(176,146,98,.28);
           color: #C9962E;
         }
         .artium-aw-stat-n {
