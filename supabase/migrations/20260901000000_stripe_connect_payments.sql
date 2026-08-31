@@ -62,6 +62,7 @@ alter table teacher_payout_accounts enable row level security;
 -- The owner can see their own payout status (for the "Set up payouts" UI).
 -- No INSERT/UPDATE/DELETE policy for authenticated/anon: only the edge
 -- functions (service role) write this table.
+drop policy if exists "Owner can read own payout account" on teacher_payout_accounts;
 create policy "Owner can read own payout account"
   on teacher_payout_accounts for select
   using (auth.uid() = profile_id);
@@ -94,10 +95,12 @@ alter table payments enable row level security;
 -- Payer and teacher can each see their own side of a payment. No client
 -- writes: rows are created and updated only by the checkout and webhook
 -- edge functions via the service role.
+drop policy if exists "Payer can read own payments" on payments;
 create policy "Payer can read own payments"
   on payments for select
   using (auth.uid() = payer_user_id);
 
+drop policy if exists "Teacher can read own payments" on payments;
 create policy "Teacher can read own payments"
   on payments for select
   using (auth.uid() = teacher_profile_id);
