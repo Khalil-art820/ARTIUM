@@ -158,6 +158,18 @@ Deno.serve(async (req) => {
         transfer_data: { destination: payout.stripe_account_id },
       };
     } else {
+      // One paid promotion per account. The UI hides the button once paid,
+      // but the ledger is the enforcement: a crafted request gets refused too.
+      const { data: alreadyPaid } = await adminClient
+        .from("payments")
+        .select("id")
+        .eq("payer_user_id", user.id)
+        .eq("kind", "promotion")
+        .eq("status", "paid")
+        .limit(1);
+      if (alreadyPaid && alreadyPaid.length) {
+        return new Response(JSON.stringify({ error: "This promotion is already paid." }), { status: 409, headers: { ...CORS, "Content-Type": "application/json" } });
+      }
       grossCents = PROMO_TOTAL_CENTS;
       const rate = await commissionRateFor(adminClient, null, "promotion");
       commissionCents = Math.round(grossCents * rate);

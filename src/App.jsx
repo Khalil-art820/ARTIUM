@@ -11903,6 +11903,19 @@ function PromoteMe({ myProfile, authUser }) {
   const [mine, setMine] = useState(null);       // my latest submission
   const [payLoading, setPayLoading] = useState(false);
   const [payError, setPayError] = useState("");
+  // Whether this account has already paid for a promotion. Read from the
+  // payments ledger (RLS limits the query to the caller's own rows), not
+  // from the ?promo=success redirect — the webhook is the authority. The
+  // same 4s poll that refreshes `mine` covers the webhook's settling lag.
+  const [promoPaid, setPromoPaid] = useState(false);
+  async function loadPromoPaid() {
+    if (!isRealUser) return;
+    try {
+      const { data } = await supabase.from("payments").select("id").eq("kind", "promotion").eq("status", "paid").limit(1);
+      if (data && data.length) setPromoPaid(true);
+    } catch { /* table not migrated yet — keep the button */ }
+  }
+  React.useEffect(() => { loadPromoPaid(); const id = setInterval(loadPromoPaid, 4000); return () => clearInterval(id); /* eslint-disable-next-line */ }, []);
 
   const provider = detectPromoProvider(videoLink);
   const linkValid = !!provider;
@@ -12110,7 +12123,9 @@ function PromoteMe({ myProfile, authUser }) {
               </span>
             </div>
             <p style={{ fontSize: 13, color: C.ivoryDim, margin: "0 0 4px", lineHeight: 1.5 }}>
-              {approved
+              {promoPaid
+                ? "Payment received — your promotion is booked. The aclassicaltone team will post your video on the proposed date."
+                : approved
                 ? "Your video was approved. You can now complete your payment to book your promotion."
                 : "Your video link was received and is awaiting approval by the Artium team. You'll be able to pay once it's approved."}
             </p>
@@ -12119,13 +12134,19 @@ function PromoteMe({ myProfile, authUser }) {
             </p>
 
             <div style={{ marginTop: 16, position: "relative" }}>
+              {promoPaid ? (
+                <div style={{ width: "100%", padding: "13px 0", borderRadius: 12, background: "#EAF3DE", color: "#3B6D11", fontSize: 15, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                  <CheckCircle2 size={17} /> Paid — promotion booked
+                </div>
+              ) : (
               <button onClick={approved ? payForPromo : undefined} disabled={!approved || payLoading}
                 title={approved ? "" : "Available after approval"}
                 style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: "#635BFF", color: "#fff", fontSize: 15, fontWeight: 700, cursor: approved ? (payLoading ? "default" : "pointer") : "not-allowed", opacity: approved ? 1 : 0.4, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
                 <CreditCard size={17} /> {payLoading ? "Redirecting…" : `Pay €${PROMO_TOTAL} with Stripe`}
               </button>
-              {!approved && <p style={{ fontSize: 11, color: C.ivoryDim, textAlign: "center", margin: "8px 0 0" }}>🔒 Unlocks once your video is approved</p>}
-              {payError && <p style={{ fontSize: 13, color: C.burgundy, textAlign: "center", margin: "8px 0 0" }}>{payError}</p>}
+              )}
+              {!approved && !promoPaid && <p style={{ fontSize: 11, color: C.ivoryDim, textAlign: "center", margin: "8px 0 0" }}>🔒 Unlocks once your video is approved</p>}
+              {!promoPaid && payError && <p style={{ fontSize: 13, color: C.burgundy, textAlign: "center", margin: "8px 0 0" }}>{payError}</p>}
             </div>
           </div>
         )}
