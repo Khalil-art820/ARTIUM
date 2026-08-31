@@ -6470,7 +6470,7 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
         {idx === 2 && <StepTastes draft={draft} toggleTaste={toggleTaste} />}
         {idx === 3 && <StepPieces draft={draft} update={update} />}
         {idx === 4 && <StepTopFlop draft={draft} update={update} />}
-        {idx === 5 && <StepTeaching draft={draft} update={update} />}
+        {idx === 5 && <StepTeaching draft={draft} update={update} editing={editing} />}
         {idx === 6 && <StepReview draft={draft} />}
         </div>
       </div>
@@ -9870,8 +9870,103 @@ function teacherPin(student) {
   return { x: cons.x + jx, y: cons.y + jy, cons };
 }
 
+// Set-up-payouts button + status line, shown once a student who is already
+// a real profile (editing an existing account, not still signing up) says
+// they're open to teaching. teacher_payout_accounts may not exist yet if the
+// migration hasn't been run — the status read is defensive about that, and
+// swallows the error rather than showing anything broken.
+function TeachingPayoutsPanel({ profileId }) {
+  const [status, setStatus] = React.useState(null); // null = unknown/none yet
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState("");
+  const [checkedReturn, setCheckedReturn] = React.useState(false);
+
+  const loadStatus = React.useCallback(async () => {
+    if (!profileId) return;
+    const { data, error: err } = await supabase
+      .from("teacher_payout_accounts")
+      .select("stripe_onboarding_status, payout_status")
+      .eq("profile_id", profileId)
+      .maybeSingle();
+    // Table might not exist yet (migration not run), or RLS might reject —
+    // either way, say nothing rather than show a broken status line.
+    if (!err && data) setStatus(data);
+  }, [profileId]);
+
+  React.useEffect(() => { loadStatus(); }, [loadStatus]);
+
+  // Returning from Stripe onboarding lands back here with ?payouts=return —
+  // refresh once so the status line doesn't wait for the webhook.
+  React.useEffect(() => {
+    if (checkedReturn) return;
+    setCheckedReturn(true);
+    if (new URLSearchParams(window.location.search).get("payouts") !== "return") return;
+    (async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
+        await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stripe-connect-status`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.access_token}` },
+          body: "{}",
+        });
+        loadStatus();
+      } catch {
+        // Best-effort refresh; the webhook will catch up regardless.
+      }
+    })();
+  }, [checkedReturn, loadStatus]);
+
+  async function startOnboarding() {
+    setLoading(true); setError("");
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Please sign in again.");
+      const base = window.location.origin + window.location.pathname;
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stripe-connect-onboard`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.access_token}` },
+        body: JSON.stringify({ refreshUrl: base + "?payouts=refresh", returnUrl: base + "?payouts=return" }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data?.url) throw new Error(data?.error || "Could not start payout setup");
+      window.location.href = data.url;
+    } catch (e) {
+      setError(e.message); setLoading(false);
+    }
+  }
+
+  const ready = status?.payout_status === "ready";
+  const label = ready ? "Payouts are set up"
+    : status?.stripe_onboarding_status === "in_progress" ? "Finish setting up payouts"
+    : "Set up payouts";
+
+  return (
+    <div style={{ marginTop: 14, padding: "12px 14px", borderRadius: 10, border: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)" }}>
+      <p style={{ margin: "0 0 8px", fontSize: 12.5, color: C.ivoryDim, lineHeight: 1.5 }}>
+        To be paid for lessons booked through Artium, connect a Stripe account.
+      </p>
+      {!ready && (
+        <button
+          type="button"
+          onClick={startOnboarding}
+          disabled={loading}
+          style={{ fontSize: 12.5, fontWeight: 700, borderRadius: 999, padding: "7px 15px", border: "none", cursor: loading ? "not-allowed" : "pointer", color: C.brassText, background: "linear-gradient(180deg, #EFD08A 0%, #DBAB4C 55%, #C9962E 100%)", opacity: loading ? 0.7 : 1 }}
+        >
+          {loading ? "Redirecting…" : label}
+        </button>
+      )}
+      {ready && <p style={{ margin: 0, fontSize: 12.5, fontWeight: 600, color: C.brassLabel }}>{label}</p>}
+      {status && !ready && status.stripe_onboarding_status !== "not_started" && (
+        <p style={{ margin: "8px 0 0", fontSize: 12, color: C.ivoryDim }}>Status: {status.payout_status === "pending" ? "Stripe is reviewing your details" : "Not finished yet"}</p>
+      )}
+      {error && <p style={{ margin: "8px 0 0", fontSize: 12, color: C.burgundy }}>{error}</p>}
+    </div>
+  );
+}
+
 /* ---- Student signup: teaching step ---- */
-function StepTeaching({ draft, update }) {
+function StepTeaching({ draft, update, editing }) {
   const t = draft.teaching;
   const setT = (partial) => update({ teaching: { ...t, ...partial } });
   return (
@@ -9926,6 +10021,9 @@ function StepTeaching({ draft, update }) {
               Optional · {(t.pitch || "").length}/{TEACHING_PITCH_MAX}
             </p>
           </Field>
+          {/* Only once there's a real profile row to attach a Stripe account
+              to — during initial signup draft.id doesn't exist yet. */}
+          {editing && draft.id && <TeachingPayoutsPanel profileId={draft.id} />}
         </>
       )}
     </div>
@@ -10523,30 +10621,27 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
   async function payForLesson(teacher) {
     setPayLoading(true);
     setPayError("");
-    const price = parseFloat(String(teacher.teaching?.price).replace(/[^0-9.]/g, "")) || 0;
-    if (!price) { setPayError("This teacher hasn't set a lesson price yet."); setPayLoading(false); return; }
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { setPayError("Please sign in again to book a lesson."); setPayLoading(false); return; }
       const res = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stripe-checkout`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+            "Authorization": `Bearer ${session.access_token}`,
           },
           body: JSON.stringify({
+            kind: "lesson",
             teacherId: teacher.id,
-            teacherName: teacher.name,
-            amount: price,
-            currency: "eur",
-            stripeAccountId: teacher.stripeAccountId || null,
             successUrl: window.location.origin + "?payment=success",
             cancelUrl: window.location.origin + "?payment=cancel",
           }),
         }
       );
       const data = await res.json();
-      if (!res.ok || !data?.url) throw new Error(data?.error || "Could not start checkout");
+      if (!res.ok || !data?.url) throw new Error(data?.error || "This teacher can't accept paid bookings yet.");
       window.location.href = data.url;
     } catch (e) {
       setPayError(e.message);
@@ -11860,14 +11955,13 @@ function PromoteMe({ myProfile, authUser }) {
   async function payForPromo() {
     setPayLoading(true); setPayError("");
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { setPayError("Please sign in again to continue."); setPayLoading(false); return; }
       const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stripe-checkout`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}` },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.access_token}` },
         body: JSON.stringify({
-          teacherId: myProfile?.id || "promo",
-          teacherName: `aclassicaltone promotion — ${myProfile?.name || "Student"}`,
-          amount: PROMO_TOTAL,
-          currency: "eur",
+          kind: "promotion",
           successUrl: window.location.origin + "?promo=success",
           cancelUrl: window.location.origin + "?promo=cancel",
         }),
