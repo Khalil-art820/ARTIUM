@@ -1865,6 +1865,10 @@ export default function App() {
   // the list only grows. Collapsing them to a single expression means a new
   // screen is covered the day it is written, by nobody remembering anything.
   const [screen, setScreen] = useState("entry");
+  // Which tab LearnerScreen opens on: the gate avatar wants "profile",
+  // every other entrance wants the map. Reset to "map" after profile use
+  // happens at each entrance below.
+  const [learnerStartTab, setLearnerStartTab] = useState("map");
   const view = awaitingReview ? "pendingReview" : screen;
   // The document's own colour is set in index.css now that every screen is
   // dark; this used to flip it per screen and no longer has anything to say.
@@ -1940,7 +1944,9 @@ export default function App() {
         setLearnerProfile({ name: authProfile.name, location: authProfile.location, instrument: authProfile.instrument, bio: authProfile.bio, photoUrl: authProfile.photo_url });
         setLearnerLoggedOut(false);
         if (["entry", "landing", "login", "confirmEmail", "learnerSignup"].includes(screen)) {
-          setScreen("learnerMap");
+          setLearnerStartTab("map");
+          setLearnerStartTab("map");
+      setScreen("learnerMap");
         }
         return;
       }
@@ -1997,7 +2003,9 @@ export default function App() {
           if (error) { setAuthError(error.message); return; }
           supabase.auth.updateUser({ data: { pendingLearner: null } });
           setLearnerProfile({ name: pendingLearner.name, location: pendingLearner.location, instrument: pendingLearner.instrument, bio: pendingLearner.motivation, photoUrl: pendingLearner.photoUrl || null });
-          setScreen("learnerMap");
+          setLearnerStartTab("map");
+          setLearnerStartTab("map");
+      setScreen("learnerMap");
         });
       } else {
         // Google OAuth user with no profile yet — route to signup flow to collect info.
@@ -2404,7 +2412,7 @@ export default function App() {
     setScreen("landing");
   }
   function chooseLearner() {
-    if (learnerProfile) { setScreen("learnerMap"); return; }
+    if (learnerProfile) { setLearnerStartTab("map"); setScreen("learnerMap"); return; }
     const home = accountHomeScreen();
     if (home) { setScreen(home); if (home === "app") setAppTabPersist("map"); return; }
     if (learnerLoggedOut) { startLogin(); return; }
@@ -2422,6 +2430,7 @@ export default function App() {
       setLearnerGoogleName("");
       setLearnerProfile({ name, location, instrument, bio: motivation, photoUrl: photoUrl || null });
       setLearnerLoggedOut(false);
+      setLearnerStartTab("map");
       setScreen("learnerMap");
       return;
     }
@@ -2437,6 +2446,7 @@ export default function App() {
       await supabase.auth.updateUser({ data: { pendingLearner: null } });
       setLearnerProfile({ name, location, instrument, bio: motivation, photoUrl: photoUrl || null });
       setLearnerLoggedOut(false);
+      setLearnerStartTab("map");
       setScreen("learnerMap");
     } else {
       setLearnerProfile({ name, location, instrument, bio: motivation, photoUrl: photoUrl || null });
@@ -4369,7 +4379,7 @@ export default function App() {
         const other = students.find((st) => st.id !== myProfile?.id && st.photoUrl);
         if (other) chips.push({ name: other.name, meta: [other.instrument, findConservatory(other.conservatoryId)?.city].filter(Boolean).join(" · "), photoUrl: other.photoUrl });
         return chips;
-      })()} onAvatar={myProfile ? goToProfile : (learnerProfile ? () => setScreen("learnerMap") : undefined)} onLogout={async () => {
+      })()} onAvatar={myProfile ? goToProfile : (learnerProfile ? () => { setLearnerStartTab("profile"); setScreen("learnerMap"); } : undefined)} onLogout={async () => {
         // Logging out re-arms the gate tour: the next login meets the
         // card-by-card introduction again, per the user's request.
         try { localStorage.removeItem("artium_gate_tour_v1"); } catch { /* private mode */ }
@@ -4393,6 +4403,7 @@ export default function App() {
       {view === "learnerSignup" && <LearnerSignup onSubmit={submitLearner} onBack={backToEntry} authUser={authUser} error={authError} />}
       {view === "learnerMap" && (
         <LearnerScreen
+          initialTab={learnerStartTab}
           learner={learnerProfile}
           teachers={students.filter((s) => s.teaching && s.teaching.open)}
           teachRequests={teachRequests}
@@ -10630,8 +10641,8 @@ function TeacherMap({ teachers, selectedId, onSelect, height = 520 }) {
 }
 
 /* ---- Learner home: map + request + chat ---- */
-function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conversations, activeChatId, setActiveChatId, onSend, onBack, onUpdateProfile, onLogout, onDeleteAccount, memberCount, musicOn, onMusicToggle, avatarPhotoUrl, avatarName }) {
-  const [appTab, setAppTab] = useState("map");
+function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conversations, activeChatId, setActiveChatId, onSend, onBack, onUpdateProfile, onLogout, onDeleteAccount, memberCount, musicOn, onMusicToggle, avatarPhotoUrl, avatarName, initialTab = "map" }) {
+  const [appTab, setAppTab] = useState(initialTab);
   const [selectedConsId, setSelectedConsId] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
   const [activeLessonTeacherId, setActiveLessonTeacherId] = useState(null);
