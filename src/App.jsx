@@ -1937,7 +1937,7 @@ export default function App() {
     }
     if (authProfile) {
       if (authProfile.role === "learner") {
-        setLearnerProfile({ name: authProfile.name, location: authProfile.location, instrument: authProfile.instrument, bio: authProfile.bio });
+        setLearnerProfile({ name: authProfile.name, location: authProfile.location, instrument: authProfile.instrument, bio: authProfile.bio, photoUrl: authProfile.photo_url });
         setLearnerLoggedOut(false);
         if (["entry", "landing", "login", "confirmEmail", "learnerSignup"].includes(screen)) {
           setScreen("learnerMap");
@@ -1993,10 +1993,10 @@ export default function App() {
           setAppTabPersist("map");
         });
       } else if (pendingLearner) {
-        supabase.from("profiles").insert({ id: authUser.id, role: "learner", name: pendingLearner.name, location: pendingLearner.location, instrument: pendingLearner.instrument, bio: pendingLearner.motivation, approved: true }).then(({ error }) => {
+        supabase.from("profiles").insert({ id: authUser.id, role: "learner", name: pendingLearner.name, location: pendingLearner.location, instrument: pendingLearner.instrument, bio: pendingLearner.motivation, photo_url: pendingLearner.photoUrl || null, approved: true }).then(({ error }) => {
           if (error) { setAuthError(error.message); return; }
           supabase.auth.updateUser({ data: { pendingLearner: null } });
-          setLearnerProfile({ name: pendingLearner.name, location: pendingLearner.location, instrument: pendingLearner.instrument, bio: pendingLearner.motivation });
+          setLearnerProfile({ name: pendingLearner.name, location: pendingLearner.location, instrument: pendingLearner.instrument, bio: pendingLearner.motivation, photoUrl: pendingLearner.photoUrl || null });
           setScreen("learnerMap");
         });
       } else {
@@ -2410,17 +2410,17 @@ export default function App() {
     if (learnerLoggedOut) { startLogin(); return; }
     setLearnerProfile(null); setAuthError(""); setScreen("learnerSignup");
   }
-  async function submitLearner({ name, location, email, password, instrument, motivation }) {
+  async function submitLearner({ name, location, email, password, instrument, motivation, photoUrl }) {
     setAuthError("");
     if (authUser) {
       // Already authenticated at the prompt (Google or email) — just write
       // the profile row against the live session, whichever way it signed in.
       const { data: { user: authUser } } = await supabase.auth.getUser();
       if (!authUser) { setAuthError("Session expired. Please try again."); return; }
-      const { error: insertError } = await supabase.from("profiles").insert({ id: authUser.id, role: "learner", name, location, instrument, bio: motivation, approved: true });
+      const { error: insertError } = await supabase.from("profiles").insert({ id: authUser.id, role: "learner", name, location, instrument, bio: motivation, photo_url: photoUrl || null, approved: true });
       if (insertError) { setAuthError(await friendlyProfileError(insertError)); return; }
       setLearnerGoogleName("");
-      setLearnerProfile({ name, location, instrument, bio: motivation });
+      setLearnerProfile({ name, location, instrument, bio: motivation, photoUrl: photoUrl || null });
       setLearnerLoggedOut(false);
       setScreen("learnerMap");
       return;
@@ -2428,18 +2428,18 @@ export default function App() {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { pendingLearner: { name, location, instrument, motivation } } },
+      options: { data: { pendingLearner: { name, location, instrument, motivation, photoUrl } } },
     });
     if (error) { setAuthError(friendlyAuthError(error.message)); return; }
     if (data.session && data.user) {
-      const { error: insertError } = await supabase.from("profiles").insert({ id: data.user.id, role: "learner", name, location, instrument, bio: motivation, approved: true });
+      const { error: insertError } = await supabase.from("profiles").insert({ id: data.user.id, role: "learner", name, location, instrument, bio: motivation, photo_url: photoUrl || null, approved: true });
       if (insertError) { setAuthError(await friendlyProfileError(insertError)); return; }
       await supabase.auth.updateUser({ data: { pendingLearner: null } });
-      setLearnerProfile({ name, location, instrument, bio: motivation });
+      setLearnerProfile({ name, location, instrument, bio: motivation, photoUrl: photoUrl || null });
       setLearnerLoggedOut(false);
       setScreen("learnerMap");
     } else {
-      setLearnerProfile({ name, location, instrument, bio: motivation });
+      setLearnerProfile({ name, location, instrument, bio: motivation, photoUrl: photoUrl || null });
       setPendingEmail(email);
       setScreen("confirmEmail");
     }
@@ -4387,7 +4387,18 @@ export default function App() {
           setActiveChatId={setActiveChatId}
           onSend={sendMessage}
           onBack={backToEntry}
-          onUpdateProfile={(updates) => setLearnerProfile((p) => ({ ...p, ...updates }))}
+          onUpdateProfile={(updates) => {
+            setLearnerProfile((p) => ({ ...p, ...updates }));
+            if (authUser?.id) {
+              const dbUpdates = {};
+              if ("name" in updates) dbUpdates.name = updates.name;
+              if ("location" in updates) dbUpdates.location = updates.location;
+              if ("photoUrl" in updates) dbUpdates.photo_url = updates.photoUrl;
+              if (Object.keys(dbUpdates).length) {
+                supabase.from("profiles").update(dbUpdates).eq("id", authUser.id);
+              }
+            }
+          }}
           onLogout={async () => { await supabase.auth.signOut(); localStorage.removeItem("artium_demo_session"); setLearnerProfile(null); setLearnerLoggedOut(true); setScreen("entry"); }}
           onDeleteAccount={async () => {
             await supabase.rpc("delete_own_account");
@@ -10408,6 +10419,7 @@ function LearnerSignup({ onSubmit, onBack, error, authUser }) {
   const [instrument, setInstrument] = useState("");
   const [instrumentOther, setInstrumentOther] = useState("");
   const [motivation, setMotivation] = useState("");
+  const [photoUrl, setPhotoUrl] = useState("");
 
   // "on behalf" fields
   const [learnerName, setLearnerName] = useState("");
@@ -10439,7 +10451,7 @@ function LearnerSignup({ onSubmit, onBack, error, authUser }) {
       : motivation.trim();
     // email/password no longer come from this form — submitLearner writes
     // against the session that got them here.
-    await onSubmit({ name: submitName, location: submitLocation, email: authUser?.email || "", password: "", instrument: submitInstrument, motivation: submitMotivation });
+    await onSubmit({ name: submitName, location: submitLocation, email: authUser?.email || "", password: "", instrument: submitInstrument, motivation: submitMotivation, photoUrl });
     setSubmitting(false);
   }
 
@@ -10487,6 +10499,7 @@ function LearnerSignup({ onSubmit, onBack, error, authUser }) {
         {forWhom === "" ? null : isForOther ? (
           /* ── On behalf of someone ── */
           <>
+            <PhotoUpload name={learnerName} photoUrl={photoUrl} onChange={setPhotoUrl} />
             <Field label="Learner's full name">
               <input style={inputStyle} value={learnerName} onChange={(e) => setLearnerName(e.target.value)} placeholder="e.g. Sophie" autoComplete="off" autoFocus />
             </Field>
@@ -10530,6 +10543,7 @@ function LearnerSignup({ onSubmit, onBack, error, authUser }) {
         ) : (
           /* ── For myself ── */
           <>
+            <PhotoUpload name={name} photoUrl={photoUrl} onChange={setPhotoUrl} />
             <Field label="Your full name">
               <input style={inputStyle} value={name} onChange={(e) => setName(e.target.value)} placeholder="Your full name" autoComplete="off" autoFocus />
             </Field>
@@ -10613,6 +10627,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
   // profile editing state
   const [editName, setEditName] = useState(learner?.name || "");
   const [editLocation, setEditLocation] = useState(learner?.location || "");
+  const [editPhotoUrl, setEditPhotoUrl] = useState(learner?.photoUrl || "");
   const [saved, setSaved] = useState(false);
   const [editingProfile, setEditingProfile] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -10700,7 +10715,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
   }
 
   function saveProfile() {
-    onUpdateProfile({ name: editName.trim(), location: editLocation.trim() });
+    onUpdateProfile({ name: editName.trim(), location: editLocation.trim(), photoUrl: editPhotoUrl });
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   }
@@ -10750,7 +10765,11 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
             title={selectedId ? undefined : "My profile"}
             style={{ background: "none", border: "none", padding: 0, cursor: selectedId ? "default" : "pointer" }}
           >
-            <Avatar name={avatarName || learner?.name || "?"} id="me" size={HEADER_CONTROL} photoUrl={avatarPhotoUrl || learner?.photoUrl} />
+            {learner ? (
+              <Avatar name={learner.name} id="me" size={HEADER_CONTROL} photoUrl={learner.photoUrl} online />
+            ) : (
+              <Avatar name={avatarName || "?"} id="me" size={HEADER_CONTROL} photoUrl={avatarPhotoUrl} />
+            )}
           </button>
         </span>
       </header>
@@ -11127,7 +11146,14 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
             <div style={{ marginBottom: 28 }}>
               <div style={{ display: "flex", alignItems: "flex-start", gap: 16, marginBottom: 16 }}>
                 <div style={{ marginTop: 4 }}>
-                  <Avatar name={learner?.name || ""} id="me-learner" size={64} online />
+                  <button
+                    type="button"
+                    onClick={() => setEditingProfile(true)}
+                    title="Change photo"
+                    style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}
+                  >
+                    <Avatar name={learner?.name || ""} id="me-learner" size={64} photoUrl={learner?.photoUrl} online />
+                  </button>
                 </div>
                 <div style={{ flex: 1 }}>
                   <h2 style={{ fontSize: 20, fontWeight: 700, color: C.inkText, margin: 0, lineHeight: 1.3 }}>{learner?.name}</h2>
@@ -11172,6 +11198,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
             {editingProfile && (
               <div className="mt-8 flex flex-col gap-5">
                 <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 18, fontWeight: 600, color: C.inkText, margin: 0 }}>Edit profile</h3>
+                <PhotoUpload name={editName || learner?.name} photoUrl={editPhotoUrl} onChange={(url) => { setEditPhotoUrl(url); setSaved(false); }} />
                 <div>
                   <label className="block mb-1.5 text-xs" style={{ fontFamily: FONT_MONO, color: C.ivoryDim }}>FULL NAME</label>
                   <input value={editName} onChange={(e) => { setEditName(e.target.value); setSaved(false); }}
