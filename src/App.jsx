@@ -4340,7 +4340,15 @@ export default function App() {
         />
       )}
 
-      {view === "entry" && <ArtiumGate onLearner={chooseLearner} onStudent={() => chooseStudent("otp")} onPianist={choosePianist} onLogin={startLogin} onComposers={() => setScreen("composers")} learnerProfile={learnerProfile} learnerLoggedOut={learnerLoggedOut} studentLoggedIn={!!myProfile} musicOn={musicPlaying} onMusicToggle={toggleMusic} memberCount={Object.values(studentsByCons).flat().length} avatarPhotoUrl={accountPhotoUrl} avatarName={accountName} bellSlot={myProfile ? (
+      {view === "entry" && <ArtiumGate onLearner={chooseLearner} onStudent={() => chooseStudent("otp")} onPianist={choosePianist} onLogin={startLogin} onComposers={() => setScreen("composers")} learnerProfile={learnerProfile} learnerLoggedOut={learnerLoggedOut} studentLoggedIn={!!myProfile} musicOn={musicPlaying} onMusicToggle={toggleMusic} memberCount={Object.values(studentsByCons).flat().length} avatarPhotoUrl={accountPhotoUrl} avatarName={accountName} avatarNode={(myProfile || learnerProfile) ? (
+        <Avatar
+          name={(myProfile || learnerProfile).name}
+          id="me"
+          size={HEADER_CONTROL}
+          photoUrl={(myProfile || learnerProfile).photoUrl || accountPhotoUrl}
+          online
+        />
+      ) : null} bellSlot={myProfile ? (
         <NotificationBell
           myProfile={myProfile}
           puck

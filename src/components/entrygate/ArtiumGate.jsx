@@ -446,6 +446,7 @@ export default function ArtiumGate({
   onLogout,
   memberChips,
   bellSlot,
+  avatarNode,
 }) {
   // The app around this page is dark (index.css pins html/body/#root to
   // #0F1012); own both html and body while mounted so iOS overscroll
@@ -540,13 +541,15 @@ export default function ArtiumGate({
             {bellSlot}
             <button
               type="button"
-              className="puck avatar-puck"
+              className={avatarNode ? "puck avatar-puck avatar-puck--bare" : "puck avatar-puck"}
               onClick={onAvatar}
               disabled={!onAvatar}
               title={avatarName || "Your account"}
               aria-label={avatarName ? `${avatarName} — your account` : "Your account"}
             >
-              {avatarPhotoUrl ? (
+              {avatarNode ? (
+                avatarNode
+              ) : avatarPhotoUrl ? (
                 <img src={avatarPhotoUrl} alt="" />
               ) : (
                 <span aria-hidden="true">{accountInitials(avatarName)}</span>

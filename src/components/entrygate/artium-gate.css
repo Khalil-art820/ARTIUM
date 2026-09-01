@@ -542,3 +542,9 @@
 
 /* Room for the app's fixed bottom tab bar, which now also lives on the gate. */
 .agate { padding-bottom: 72px; }
+
+/* When the app hands the gate a ready-made avatar (the same Avatar the
+   headers render), the puck sheds its own material so the two match. */
+.agate .avatar-puck--bare{
+  background:none;border:none;box-shadow:none;overflow:visible;
+}
