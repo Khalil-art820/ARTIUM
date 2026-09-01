@@ -490,7 +490,10 @@ export default function ArtiumGate({
     onNews: onNews || (() => {}),
   };
   const count = memberCount ?? 40;
-  const activateStudent = (e) => { e.preventDefault(); onStudent && onStudent(); };
+  // A registered learner already has their role — the conservatory door is
+  // shown but offline for them, same treatment as cards 01/02 for students.
+  const medallionOff = !!learnerProfile && !studentLoggedIn;
+  const activateStudent = (e) => { e.preventDefault(); if (!medallionOff) onStudent && onStudent(); };
 
   return (
     <div className="agate">
@@ -626,9 +629,10 @@ export default function ArtiumGate({
             {/* MEDALLION */}
             <div
               ref={medallionRef}
-              className="oval-slab"
+              className={medallionOff ? "oval-slab oval-slab--off" : "oval-slab"}
               role="link"
-              tabIndex={0}
+              aria-disabled={medallionOff || undefined}
+              tabIndex={medallionOff ? -1 : 0}
               aria-label="I am a conservatory student or graduate"
               onClick={activateStudent}
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") activateStudent(e); }}

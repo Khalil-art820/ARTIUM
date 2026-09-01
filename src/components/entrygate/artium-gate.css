@@ -548,3 +548,6 @@
 .agate .avatar-puck--bare{
   background:none;border:none;box-shadow:none;overflow:visible;
 }
+
+/* The medallion, offline for registered learners — the cards' hush, verbatim. */
+.agate .oval-slab--off { opacity: .45; cursor: default; pointer-events: none; filter: saturate(.6); }
