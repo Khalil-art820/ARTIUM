@@ -2659,7 +2659,14 @@ export default function App() {
   // shapes), then initials off whatever name is known yet — falling back to
   // the email, since a brand-new account between the prompt and finishing a
   // role's own name field has nothing else to show.
-  const accountPhotoUrl = myProfile?.photoUrl || authProfile?.photo_url || authUser?.user_metadata?.avatar_url || authUser?.user_metadata?.picture || null;
+  // A registered role shows its own uploaded photo, or (if none) nothing —
+  // letting headers fall back to gold initials. Google's colored-initial
+  // avatar disc is reserved for accounts that signed up but registered no
+  // role yet, which is the only state that should look "account-generic".
+  const roleProfile = myProfile || learnerProfile;
+  const accountPhotoUrl = roleProfile
+    ? (roleProfile.photoUrl || authProfile?.photo_url || null)
+    : (authProfile?.photo_url || authUser?.user_metadata?.avatar_url || authUser?.user_metadata?.picture || null);
   const accountName = myProfile?.name || learnerProfile?.name || authProfile?.name || authUser?.user_metadata?.full_name || authUser?.user_metadata?.name || authUser?.email || "";
 
   return (
@@ -4395,7 +4402,10 @@ export default function App() {
               if ("location" in updates) dbUpdates.location = updates.location;
               if ("photoUrl" in updates) dbUpdates.photo_url = updates.photoUrl;
               if (Object.keys(dbUpdates).length) {
-                supabase.from("profiles").update(dbUpdates).eq("id", authUser.id);
+                supabase.from("profiles").update(dbUpdates).eq("id", authUser.id).then(({ error }) => {
+                  if (error) console.error("learner profile save failed", error.message);
+                });
+                setAuthProfile((p) => (p ? { ...p, ...dbUpdates } : p));
               }
             }
           }}
