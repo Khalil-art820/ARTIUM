@@ -10795,15 +10795,24 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
 
           <div className="artium-aw-stats">
             <div className="artium-aw-stat">
-              <span className="artium-aw-stat-n"><User size={15} strokeWidth={2} />{teachers.length}</span>
+              <span className="artium-aw-stat-row">
+                <span className="artium-aw-stat-tile"><IconTeacher size={16} /></span>
+                <span className="artium-aw-stat-n">{teachers.length}</span>
+              </span>
               <p className="artium-aw-stat-l">Teachers</p>
             </div>
             <div className="artium-aw-stat">
-              <span className="artium-aw-stat-n"><MapPin size={15} strokeWidth={2} />{teacherPins.length}</span>
+              <span className="artium-aw-stat-row">
+                <span className="artium-aw-stat-tile"><MapPin size={16} strokeWidth={2} /></span>
+                <span className="artium-aw-stat-n">{teacherPins.length}</span>
+              </span>
               <p className="artium-aw-stat-l">Conservatories</p>
             </div>
             <div className="artium-aw-stat">
-              <span className="artium-aw-stat-n"><Globe2 size={15} strokeWidth={2} />{onlineTeacherCount}</span>
+              <span className="artium-aw-stat-row">
+                <span className="artium-aw-stat-tile"><Globe2 size={16} strokeWidth={2} /></span>
+                <span className="artium-aw-stat-n">{onlineTeacherCount}</span>
+              </span>
               <p className="artium-aw-stat-l">Online now</p>
             </div>
           </div>
