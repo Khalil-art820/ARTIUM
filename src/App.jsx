@@ -13856,6 +13856,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
   }, [isReal, tid, activeLearner.id, tab]);
   const [selectedSessionId, setSelectedSessionId] = useState(null);
   const [showPropose, setShowPropose] = useState(false);
+  const [proposeErr, setProposeErr] = useState("");
   const [newDate, setNewDate] = useState("");
   const [newTime, setNewTime] = useState("");
   const [recurring, setRecurring] = useState("none");
@@ -13949,7 +13950,8 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
       // approve/counter/cancel tried to update or delete by id.
       const rows = dates.map((dateStr) => ({ teacher_id: tid, learner_id: activeLearner.id, session_date: dateStr, session_time: newTime, status: "teacher_proposed", proposed_by: "teacher", paid: false }));
       supabase.from("lesson_sessions").insert(rows).select("id, session_date, session_time, status, proposed_by, paid").then(({ data, error }) => {
-        if (error) { console.error("proposeSession", error.message); return; }
+        if (error) { console.error("proposeSession", error.message); setProposeErr(error.message); return; }
+        setProposeErr("");
         const inserted = (data || []).map(dbRowToSession);
         setSessionsByLearner((prev) => ({ ...prev, [activeLearner.id]: [...(prev[activeLearner.id] || []), ...inserted] }));
       });
@@ -14368,6 +14370,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
                       </span>
                     </div>
                   )}
+                  {proposeErr && <p style={{ fontSize: 12, color: "#B3261E", margin: "0 0 8px" }}>Could not save: {proposeErr}</p>}
                   <div style={{ display: "flex", gap: 8 }}>
                     <button onClick={proposeSession} disabled={!newDate || !newTime}
                       style={{ flex: 1, padding: "8px 0", borderRadius: 9, background: C.brass, color: C.brassText, fontSize: 13, fontWeight: 600, border: "none", cursor: !newDate || !newTime ? "not-allowed" : "pointer", opacity: !newDate || !newTime ? 0.5 : 1 }}>
