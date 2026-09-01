@@ -10636,6 +10636,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
   const [selectedId, setSelectedId] = useState(null);
   const [activeLessonTeacherId, setActiveLessonTeacherId] = useState(null);
   const [learnerRoomView, setLearnerRoomView] = useState("teachers"); // "teachers" | "planning"
+  const [teacherQ, setTeacherQ] = useState("");
   const [learnerOpenMonths, setLearnerOpenMonths] = useState({});
   const selected = teachers.find((t) => t.id === selectedId);
   const status = selectedId ? teachRequests[selectedId] : undefined;
@@ -10892,13 +10893,23 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
                   already has an opinion about, and the thing the pins on the
                   globe are. It also makes the list and the map agree: both are
                   places, and clicking either one opens the same roster. */}
-              <div className="artium-aw-listhead">
-                <h2>Conservatories</h2>
-                <span>{teacherCons.length} result{teacherCons.length === 1 ? "" : "s"}</span>
+              {/* The student side's search field, verbatim — it owns the row
+                  the "Conservatories" heading used to hold. */}
+              <div className="artium-aw-find">
+                <span className="artium-aw-field">
+                  <Search size={16} strokeWidth={2} />
+                  <input value={teacherQ} onChange={(e) => setTeacherQ(e.target.value)} placeholder="Search for a conservatory or city..." />
+                </span>
               </div>
+              {(() => {
+                const q = teacherQ.trim().toLowerCase();
+                const rows = q
+                  ? teacherCons.filter((c) => [c.name, c.city, c.country].filter(Boolean).some((v) => v.toLowerCase().includes(q)))
+                  : teacherCons;
+                return (
               <div className="artium-aw-list">
-                {teacherCons.length === 0 && <p className="artium-aw-empty">No one is teaching here yet.</p>}
-                {teacherCons.map((c) => (
+                {rows.length === 0 && <p className="artium-aw-empty">{q ? "No conservatory matches that search." : "No one is teaching here yet."}</p>}
+                {rows.map((c) => (
                   <button key={c.id} className="artium-aw-row" onClick={() => setSelectedConsId(c.id)}>
                     <ConsAvatar cons={c} />
                     <span className="artium-aw-row-body">
@@ -10912,6 +10923,8 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
                   </button>
                 ))}
               </div>
+                );
+              })()}
             </>
           )}
         </div>
