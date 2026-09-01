@@ -4399,6 +4399,8 @@ export default function App() {
           memberCount={Object.values(studentsByCons).flat().length}
           musicOn={musicPlaying}
           onMusicToggle={toggleMusic}
+          avatarPhotoUrl={accountPhotoUrl}
+          avatarName={accountName}
         />
       )}
 
@@ -10596,7 +10598,7 @@ function TeacherMap({ teachers, selectedId, onSelect, height = 520 }) {
 }
 
 /* ---- Learner home: map + request + chat ---- */
-function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conversations, activeChatId, setActiveChatId, onSend, onBack, onUpdateProfile, onLogout, onDeleteAccount, memberCount, musicOn, onMusicToggle }) {
+function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conversations, activeChatId, setActiveChatId, onSend, onBack, onUpdateProfile, onLogout, onDeleteAccount, memberCount, musicOn, onMusicToggle, avatarPhotoUrl, avatarName }) {
   const [appTab, setAppTab] = useState("map");
   const [selectedConsId, setSelectedConsId] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
@@ -10703,17 +10705,56 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
     setTimeout(() => setSaved(false), 2000);
   }
 
-  const learnerProfile = learner ? { name: learner.name, photoUrl: learner.photoUrl } : null;
-
   return (
-    <AppShell
-      appTab={appTab} setAppTab={setAppTab}
-      myProfile={learnerProfile}
-      musicOn={musicOn} onMusicToggle={onMusicToggle}
-      memberCount={memberCount}
-      onBack={selectedId ? () => setSelectedId(null) : appTab === "lesson" && learnerRoomView !== "teachers" ? () => setLearnerRoomView("teachers") : appTab !== "map" ? () => setAppTab("map") : onBack}
-      hideTabs={!!selectedId}
-    >
+    <div className="min-h-full flex flex-col artium-has-tabs" style={{ background: C.inkSoft, color: C.ivory }}>
+      {/* Same header the conservatory side draws on its network/welcome
+          screen — back puck, wordmark, passive member count, play/pause,
+          avatar — reused verbatim so the learner never lands on a page that
+          looks like a different app. It replaces the plain AppShell strip
+          that used to sit here (Logo + tab pills + controls): that strip
+          was this screen's only chrome, so there is nothing left to
+          duplicate now that this header covers the same ground. */}
+      <header className="artium-net-bar">
+        <button className="artium-net-puck" onClick={onBack} aria-label="Back">
+          <ChevronLeft size={17} strokeWidth={2} />
+        </button>
+        <span className="artium-net-word" aria-label="ARTIUM">
+          <svg viewBox="0 0 15 15" aria-hidden="true">
+            <path d="M7.5 0.9 L1.4 14.4 M7.5 0.9 L13.6 14.4" stroke="currentColor" strokeWidth="2.85" fill="none" />
+          </svg>
+          <span aria-hidden="true">RTIUM</span>
+        </span>
+        <span className="artium-net-right">
+          <span className="artium-net-count" title="Members" aria-label={`${memberCount} members`}>
+            <Users size={15} strokeWidth={1.8} />
+            {memberCount}
+          </span>
+          <button
+            className="artium-net-puck"
+            onClick={onMusicToggle}
+            title={musicOn ? "Pause" : "Play"}
+            aria-label={musicOn ? "Pause playlist" : "Play playlist"}
+          >
+            {musicOn ? (
+              <Pause size={15} color={C.inkText} strokeWidth={2.4} />
+            ) : (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill={C.inkText} aria-hidden="true" style={{ marginLeft: 2 }}>
+                <path d="M8 5.5v13l11-6.5z" />
+              </svg>
+            )}
+          </button>
+          {/* No notification bell here — it's built around a conservatory
+              student profile, which a learner doesn't have. */}
+          <button
+            onClick={selectedId ? undefined : () => setAppTab("profile")}
+            title={selectedId ? undefined : "My profile"}
+            style={{ background: "none", border: "none", padding: 0, cursor: selectedId ? "default" : "pointer" }}
+          >
+            <Avatar name={avatarName || learner?.name || "?"} id="me" size={HEADER_CONTROL} photoUrl={avatarPhotoUrl || learner?.photoUrl} />
+          </button>
+        </span>
+      </header>
+      <div className="flex-1">
       {/* The learner's own strip is gone the same way the student's went: its
           two destinations are in the bottom bar at the foot of this screen,
           and the same place on every screen is the point of having one bar.
@@ -10840,6 +10881,10 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
         );
         return (
           <div style={{ maxWidth: 640, margin: "0 auto", padding: "40px 24px" }}>
+            {/* This screen's own back — a different level than the header
+                puck above, which now always goes home. This one just
+                closes the teacher's profile and returns to the roster. */}
+            <button className="artium-aw-round" onClick={() => setSelectedId(null)} style={{ marginBottom: 20 }} aria-label="Back"><ChevronLeft size={17} strokeWidth={2} /></button>
             {/* Header */}
             <div style={{ display: "flex", alignItems: "flex-start", gap: 16, marginBottom: 28 }}>
               <div style={{ marginTop: 4 }}>
@@ -10946,6 +10991,11 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
           const STATUS_COLOR = { confirmed: "#1A9E6E", teacher_proposed: C.brass, student_proposed: "#E07B00", cancelled: "#c0392b" };
           return (
             <div style={{ padding: "16px 20px 32px", background: C.parchment, minHeight: "100%" }}>
+              <div className="artium-aw-listhead">
+                <button className="artium-aw-sort" style={{ marginLeft: 0 }} onClick={() => setLearnerRoomView("teachers")}>
+                  <ArrowLeft size={13} /> Lesson Room
+                </button>
+              </div>
               {Object.entries(byMonth).map(([monthKey, sessions]) => {
                 const spent = sessions.filter((s) => s.status === "confirmed" && s.paid).reduce((sum, s) => sum + s.teacher.price, 0);
                 const [y, m] = monthKey.split("-");
@@ -11164,7 +11214,8 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
           }}
         />
       )}
-    </AppShell>
+      </div>
+    </div>
   );
 }
 
