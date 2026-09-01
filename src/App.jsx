@@ -4509,6 +4509,7 @@ export default function App() {
       {view === "learnerMap" && (
         <LearnerScreen
           initialTab={learnerStartTab}
+          authUser={authUser}
           learner={learnerProfile}
           teachers={students.filter((s) => s.teaching && s.teaching.open)}
           teachRequests={teachRequests}
@@ -8503,6 +8504,65 @@ async function fetchIncomingTeachRequests(teacherId) {
   }));
 }
 
+// Real teacher/learner ids are auth.users uuids (profiles.id); every mock
+// roster in this file (SAMPLE_STUDENTS, MOCK_LESSON_LEARNERS, "demo-teacher",
+// etc.) uses short hand-written string ids instead. lesson_sessions has a
+// foreign key to profiles(id), so this is also a cheap way to know whether a
+// given side of a lesson pairing can have a real row at all.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+function isUuid(id) { return typeof id === "string" && UUID_RE.test(id); }
+
+// Shared by LessonRoom (learner side) and TeacherLessonRoom (teacher side):
+// adapts a lesson_sessions row into the object shape both sides' local
+// session state already used before this table existed
+// ({id, date, time, status, proposedBy, paid}), so wiring in a real table
+// didn't require touching the rendering code on either side.
+function dbRowToSession(row) {
+  return {
+    id: row.id,
+    date: row.session_date,
+    time: row.session_time,
+    status: row.status,
+    proposedBy: row.proposed_by === "learner" ? "student" : "teacher",
+    paid: row.paid,
+  };
+}
+async function fetchLessonSessions(teacherId, learnerId) {
+  if (!teacherId || !learnerId) return [];
+  const { data, error } = await supabase.from("lesson_sessions")
+    .select("id, session_date, session_time, status, proposed_by, paid")
+    .eq("teacher_id", teacherId).eq("learner_id", learnerId)
+    .order("session_date", { ascending: true });
+  if (error || !data) return [];
+  return data.map(dbRowToSession);
+}
+// Teacher side has many learners at once — one query grouped client-side
+// beats one query per learner, same reasoning as fetchIncomingTeachRequests.
+async function fetchLessonSessionsForTeacher(teacherId) {
+  if (!teacherId) return {};
+  const { data, error } = await supabase.from("lesson_sessions")
+    .select("id, learner_id, session_date, session_time, status, proposed_by, paid")
+    .eq("teacher_id", teacherId)
+    .order("session_date", { ascending: true });
+  if (error || !data) return {};
+  const grouped = {};
+  for (const row of data) (grouped[row.learner_id] = grouped[row.learner_id] || []).push(dbRowToSession(row));
+  return grouped;
+}
+// Mirror of the above for the learner's "My Planning" view, which aggregates
+// across every teacher a learner has, not just one.
+async function fetchLessonSessionsForLearner(learnerId) {
+  if (!learnerId) return {};
+  const { data, error } = await supabase.from("lesson_sessions")
+    .select("id, teacher_id, session_date, session_time, status, proposed_by, paid")
+    .eq("learner_id", learnerId)
+    .order("session_date", { ascending: true });
+  if (error || !data) return {};
+  const grouped = {};
+  for (const row of data) (grouped[row.teacher_id] = grouped[row.teacher_id] || []).push(dbRowToSession(row));
+  return grouped;
+}
+
 function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGoToAdmin, networkFeeds, puck, hireCount = 0, hireIds = [], onGoToConcerts, onGoToComposers, onGoToNews }) {
   const [open, setOpen] = React.useState(false);
   const [viewingLearner, setViewingLearner] = React.useState(null);
@@ -10789,7 +10849,7 @@ function TeacherMap({ teachers, selectedId, onSelect, height = 520 }) {
 }
 
 /* ---- Learner home: map + request + chat ---- */
-function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conversations, activeChatId, setActiveChatId, onSend, onBack, onUpdateProfile, onLogout, onDeleteAccount, memberCount, musicOn, onMusicToggle, avatarPhotoUrl, avatarName, initialTab = "map" }) {
+function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conversations, activeChatId, setActiveChatId, onSend, onBack, onUpdateProfile, onLogout, onDeleteAccount, memberCount, musicOn, onMusicToggle, avatarPhotoUrl, avatarName, initialTab = "map", authUser }) {
   const [appTab, setAppTab] = useState(initialTab);
   const [selectedConsId, setSelectedConsId] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
@@ -10797,6 +10857,22 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
   const [learnerRoomView, setLearnerRoomView] = useState("teachers"); // "teachers" | "planning"
   const [teacherQ, setTeacherQ] = useState("");
   const [learnerOpenMonths, setLearnerOpenMonths] = useState({});
+  const [learnerSessionsByTeacher, setLearnerSessionsByTeacher] = useState({});
+
+  // Real learner: load every session across every real teacher in one query,
+  // grouped client-side by teacher_id — feeds both this screen's "My
+  // Planning" view and (indirectly, per teacher) LessonRoom below.
+  React.useEffect(() => {
+    if (!authUser?.id) return;
+    let live = true;
+    async function load() {
+      const grouped = await fetchLessonSessionsForLearner(authUser.id);
+      if (live) setLearnerSessionsByTeacher(grouped);
+    }
+    load();
+    const id = setInterval(load, 8000);
+    return () => { live = false; clearInterval(id); };
+  }, [authUser?.id]);
   const selected = teachers.find((t) => t.id === selectedId);
   const status = selectedId ? teachRequests[selectedId] : undefined;
   const acceptedTeachers = teachers.filter((t) => teachRequests[t.id] === "accepted");
@@ -11192,15 +11268,23 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
 
         // ── My Planning view ──
         if (learnerRoomView === "planning") {
-          const MOCK_LEARNER_PLANNING = acceptedTeachers.map((t) => ({
-            teacher: { id: t.id, name: t.name, instrument: instrumentLabel(t), price: parseFloat(String(t.teaching?.price).replace(/[^0-9.]/g, "")) || 60 },
-            sessions: [
-              { id: `s1-${t.id}`, date: "2026-07-20", time: "10:00", status: "confirmed", paid: true },
-              { id: `s2-${t.id}`, date: "2026-08-05", time: "14:00", status: "teacher_proposed", paid: false },
-              { id: `s3-${t.id}`, date: "2026-08-18", time: "11:00", status: "confirmed", paid: false },
-            ],
-          }));
-          const allSessions = MOCK_LEARNER_PLANNING.flatMap(({ teacher, sessions }) =>
+          // Real (uuid) accepted teachers: sessions come from
+          // learnerSessionsByTeacher, loaded from lesson_sessions above.
+          // Mock accepted teachers (sample/demo rosters, non-uuid ids) have
+          // no real rows to read, so they keep the canned three-session
+          // preview this view always showed for them.
+          const LEARNER_PLANNING = acceptedTeachers.map((t) => {
+            const teacher = { id: t.id, name: t.name, instrument: instrumentLabel(t), price: parseFloat(String(t.teaching?.price).replace(/[^0-9.]/g, "")) || 60 };
+            const sessions = isUuid(t.id)
+              ? (learnerSessionsByTeacher[t.id] || [])
+              : [
+                  { id: `s1-${t.id}`, date: "2026-07-20", time: "10:00", status: "confirmed", paid: true },
+                  { id: `s2-${t.id}`, date: "2026-08-05", time: "14:00", status: "teacher_proposed", paid: false },
+                  { id: `s3-${t.id}`, date: "2026-08-18", time: "11:00", status: "confirmed", paid: false },
+                ];
+            return { teacher, sessions };
+          });
+          const allSessions = LEARNER_PLANNING.flatMap(({ teacher, sessions }) =>
             sessions.map((s) => ({ ...s, teacher }))
           ).sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
           const byMonth = {};
@@ -11305,6 +11389,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
                 onPayLesson={payForLesson}
                 payLoading={payLoading}
                 payError={payError}
+                authUser={authUser}
               />
             </div>
             {/* Bottom nav — My Planning */}
@@ -11537,8 +11622,13 @@ function VideoSessionTab({ sessions, teacher, zoomLink, meetLink }) {
   );
 }
 
-function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payError }) {
+function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payError, authUser }) {
   const [tab, setTab] = useState("chat");
+  // Real learner, real teacher: sessions live in lesson_sessions, keyed by
+  // the learner's own id — replacing the localStorage key below, which was
+  // hardcoded to a literal "demo-learner" and so never matched anything a
+  // real teacher wrote to for a real learner.
+  const isRealPair = !!(authUser?.id && isUuid(teacher?.id));
   const lsKey = teacher ? `artium_sessions_${teacher.id}_demo-learner` : null;
   const chatLsKey = teacher ? `artium_chat_${teacher.id}_demo-learner` : null;
 
@@ -11585,6 +11675,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
   React.useEffect(() => { if (tab === "chat") setLastSeenCount(themMsgCount); }, [tab, themMsgCount]);
 
   const [sessions, setSessions] = useState(() => {
+    if (isRealPair) return []; // filled by the DB loader below
     if (lsKey) {
       try { const s = JSON.parse(localStorage.getItem(lsKey) || "null"); if (s) return s; } catch {}
     }
@@ -11595,9 +11686,24 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
     ];
   });
 
-  // Live sync: teacher writes sessions → learner tab reacts
+  // Real learner: load sessions the teacher proposed and poll for changes —
+  // same cadence and shape as the teach_requests/direct_messages pollers
+  // above, just scoped to this one teacher/learner pair.
   React.useEffect(() => {
-    if (!lsKey) return;
+    if (!isRealPair) return;
+    let live = true;
+    async function load() {
+      const rows = await fetchLessonSessions(teacher.id, authUser.id);
+      if (live) setSessions(rows);
+    }
+    load();
+    const id = setInterval(load, 8000);
+    return () => { live = false; clearInterval(id); };
+  }, [isRealPair, teacher?.id, authUser?.id]);
+
+  // Demo/local fallback only: live sync via localStorage (cross-tab).
+  React.useEffect(() => {
+    if (!lsKey || isRealPair) return;
     function sync() {
       try {
         const s = JSON.parse(localStorage.getItem(lsKey) || "null");
@@ -11607,10 +11713,10 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
     const id = setInterval(sync, 2000);
     window.addEventListener("storage", sync);
     return () => { clearInterval(id); window.removeEventListener("storage", sync); };
-  }, [lsKey]);
+  }, [lsKey, isRealPair]);
 
   function persistSessions(next) {
-    if (lsKey) localStorage.setItem(lsKey, JSON.stringify(next));
+    if (lsKey && !isRealPair) localStorage.setItem(lsKey, JSON.stringify(next));
     setSessions(next);
   }
   const [counterDate, setCounterDate] = useState({});
@@ -11649,6 +11755,11 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
   function approveSession(id) {
     const next = sessions.map((s) => s.id === id ? { ...s, status: "confirmed" } : s);
     persistSessions(next);
+    if (isRealPair) {
+      supabase.from("lesson_sessions").update({ status: "confirmed" }).eq("id", id).then(({ error }) => {
+        if (error) console.error("approveSession", error.message);
+      });
+    }
   }
 
   function submitCounter(id) {
@@ -11657,6 +11768,11 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
     const next = sessions.map((s) => s.id === id ? { ...s, date: d, time: t, status: "student_proposed", proposedBy: "student" } : s);
     persistSessions(next);
     setShowCounter((prev) => ({ ...prev, [id]: false }));
+    if (isRealPair) {
+      supabase.from("lesson_sessions").update({ session_date: d, session_time: t, status: "student_proposed", proposed_by: "learner" }).eq("id", id).then(({ error }) => {
+        if (error) console.error("submitCounter", error.message);
+      });
+    }
   }
 
   function timeUntil(s) {
@@ -11667,6 +11783,11 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
 
   function cancelSession(id) {
     persistSessions(sessions.filter((s) => s.id !== id));
+    if (isRealPair) {
+      supabase.from("lesson_sessions").delete().eq("id", id).then(({ error }) => {
+        if (error) console.error("cancelSession", error.message);
+      });
+    }
   }
 
   return (
@@ -11827,7 +11948,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
                         <Check size={13} /> Paid
                       </span>
                     ) : (
-                      <button onClick={() => { onPayLesson(teacher); setSessions((prev) => prev.map((x) => x.id === sel.id ? { ...x, paid: true } : x)); }} disabled={payLoading}
+                      <button onClick={() => { onPayLesson(teacher); setSessions((prev) => prev.map((x) => x.id === sel.id ? { ...x, paid: true } : x)); if (isRealPair) { supabase.from("lesson_sessions").update({ paid: true }).eq("id", sel.id).then(({ error }) => { if (error) console.error("mark session paid failed", error.message); }); } }} disabled={payLoading}
                         style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, background: "none", border: `1px solid ${C.brass}`, color: C.brassLabel, fontSize: 12, fontWeight: 600, cursor: payLoading ? "not-allowed" : "pointer", opacity: payLoading ? 0.6 : 1, marginBottom: 8 }}>
                         <CreditCard size={13} />
                         {payLoading ? "Redirecting…" : `Pay €${teacher.teaching.price}`}
@@ -13640,8 +13761,27 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
     ],
   });
 
-  // Sync real learner sessions from localStorage (cross-tab)
+  // Real teacher: load every learner's sessions in one query, grouped
+  // client-side by learner_id — same shared-fetch reasoning as
+  // fetchIncomingTeachRequests. Replaces the old localStorage-only sync,
+  // which only ever reached another tab on the teacher's own device; a
+  // learner countering a proposal from their own device never showed up
+  // here under that scheme.
   React.useEffect(() => {
+    if (!isReal) return;
+    let live = true;
+    async function load() {
+      const grouped = await fetchLessonSessionsForTeacher(tid);
+      if (live) setSessionsByLearner((prev) => ({ ...prev, ...grouped }));
+    }
+    load();
+    const id = setInterval(load, 8000);
+    return () => { live = false; clearInterval(id); };
+  }, [isReal, tid]);
+
+  // Demo teacher account only: the old localStorage cross-tab sync.
+  React.useEffect(() => {
+    if (isReal) return;
     function sync() {
       acceptedLearners.forEach((r) => {
         const saved = loadSessions(r.learnerId);
@@ -13654,7 +13794,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
     const id = setInterval(sync, 2000);
     window.addEventListener("storage", sync);
     return () => { clearInterval(id); window.removeEventListener("storage", sync); };
-  }, [incoming]);
+  }, [incoming, isReal]);
   function chatKey(learnerId) { return `artium_chat_${tid}_${learnerId}`; }
   function loadMsgs(learnerId) {
     try { return JSON.parse(localStorage.getItem(chatKey(learnerId)) || "null") || null; } catch { return null; }
@@ -13778,11 +13918,17 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
   }, [tab, activeLearner.id, teacherThemCount]);
 
   const MOCK_IDS = MOCK_LESSON_LEARNERS.map((l) => l.id);
+  // Whether this session belongs to a real teacher/learner pair that has an
+  // actual lesson_sessions row behind it — same split direct_messages above
+  // already uses for this teacher room.
+  const isRealSessionPair = isReal && !MOCK_IDS.includes(activeLearner.id);
   function setSessions(fn) {
     setSessionsByLearner((prev) => {
       const next = fn(prev[activeLearner.id] || []);
-      // Persist to localStorage for real (non-mock) learners
-      if (!MOCK_IDS.includes(activeLearner.id)) saveSessions(activeLearner.id, next);
+      // Persist to localStorage for the demo-teacher / non-mock-learner case
+      // only — a real pair is persisted to the DB by each call site below,
+      // and re-derived from there on the next poll.
+      if (!isReal && !MOCK_IDS.includes(activeLearner.id)) saveSessions(activeLearner.id, next);
       return { ...prev, [activeLearner.id]: next };
     });
   }
@@ -13791,20 +13937,37 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
     if (!newDate || !newTime) return;
     const intervalDays = { none: 0, weekly: 7, biweekly: 14, monthly: 30 }[recurring];
     const count = recurring === "none" ? 1 : recurringCount;
-    const newSessions = [];
+    const dates = [];
     for (let i = 0; i < count; i++) {
       const d = new Date(newDate + "T12:00:00");
       d.setDate(d.getDate() + i * intervalDays);
-      const dateStr = d.toISOString().slice(0, 10);
-      newSessions.push({ id: Date.now() + i, date: dateStr, time: newTime, status: "teacher_proposed", paid: false, recurring: recurring !== "none" ? recurring : undefined });
+      dates.push(d.toISOString().slice(0, 10));
     }
-    setSessions((prev) => [...prev, ...newSessions]);
+    if (isRealSessionPair) {
+      // Real teacher, real learner: insert and let the DB hand back real
+      // ids — a client-side Date.now() id wouldn't match anything a later
+      // approve/counter/cancel tried to update or delete by id.
+      const rows = dates.map((dateStr) => ({ teacher_id: tid, learner_id: activeLearner.id, session_date: dateStr, session_time: newTime, status: "teacher_proposed", proposed_by: "teacher", paid: false }));
+      supabase.from("lesson_sessions").insert(rows).select("id, session_date, session_time, status, proposed_by, paid").then(({ data, error }) => {
+        if (error) { console.error("proposeSession", error.message); return; }
+        const inserted = (data || []).map(dbRowToSession);
+        setSessionsByLearner((prev) => ({ ...prev, [activeLearner.id]: [...(prev[activeLearner.id] || []), ...inserted] }));
+      });
+    } else {
+      const newSessions = dates.map((dateStr, i) => ({ id: Date.now() + i, date: dateStr, time: newTime, status: "teacher_proposed", paid: false, recurring: recurring !== "none" ? recurring : undefined }));
+      setSessions((prev) => [...prev, ...newSessions]);
+    }
     setNewDate(""); setNewTime(""); setRecurring("none"); setRecurringCount(4); setShowPropose(false);
   }
 
   function approveCounter(id) {
     setSessions((prev) => prev.map((s) => s.id === id ? { ...s, status: "confirmed" } : s));
     setShowCounter((prev) => ({ ...prev, [id]: false }));
+    if (isRealSessionPair) {
+      supabase.from("lesson_sessions").update({ status: "confirmed" }).eq("id", id).then(({ error }) => {
+        if (error) console.error("approveCounter", error.message);
+      });
+    }
   }
 
   function proposeNewTime(id) {
@@ -13812,9 +13975,21 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
     if (!d || !t) return;
     setSessions((prev) => prev.map((s) => s.id === id ? { ...s, date: d, time: t, status: "teacher_proposed" } : s));
     setShowCounter((prev) => ({ ...prev, [id]: false }));
+    if (isRealSessionPair) {
+      supabase.from("lesson_sessions").update({ session_date: d, session_time: t, status: "teacher_proposed", proposed_by: "teacher" }).eq("id", id).then(({ error }) => {
+        if (error) console.error("proposeNewTime", error.message);
+      });
+    }
   }
 
-  function cancelSession(id) { setSessions((prev) => prev.filter((s) => s.id !== id)); }
+  function cancelSession(id) {
+    setSessions((prev) => prev.filter((s) => s.id !== id));
+    if (isRealSessionPair) {
+      supabase.from("lesson_sessions").delete().eq("id", id).then(({ error }) => {
+        if (error) console.error("cancelSession", error.message);
+      });
+    }
+  }
 
   function timeUntil(s) { return new Date(s.date + "T" + s.time).getTime() - Date.now(); }
   function cancelLocked(s) { return s.status === "confirmed" && timeUntil(s) < 24 * 60 * 60 * 1000; }
