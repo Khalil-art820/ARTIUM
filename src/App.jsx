@@ -14371,6 +14371,11 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
                     </div>
                   )}
                   {proposeErr && <p style={{ fontSize: 12, color: "#B3261E", margin: "0 0 8px" }}>Could not save: {proposeErr}</p>}
+                  {/* Diagnostic while the demo-era stores are being retired:
+                      a thread the app will NOT persist says so out loud
+                      instead of silently saving into this device only. Its
+                      absence on screen also proves which build is running. */}
+                  {!isRealSessionPair && <p style={{ fontSize: 11, color: C.ivoryDim, margin: "0 0 8px" }}>Practice thread — proposals here stay on this device (learner id: {String(activeLearner.id)})</p>}
                   <div style={{ display: "flex", gap: 8 }}>
                     <button onClick={proposeSession} disabled={!newDate || !newTime}
                       style={{ flex: 1, padding: "8px 0", borderRadius: 9, background: C.brass, color: C.brassText, fontSize: 13, fontWeight: 600, border: "none", cursor: !newDate || !newTime ? "not-allowed" : "pointer", opacity: !newDate || !newTime ? 0.5 : 1 }}>
