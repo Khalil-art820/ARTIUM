@@ -10898,7 +10898,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
               <div className="artium-aw-find">
                 <span className="artium-aw-field">
                   <Search size={16} strokeWidth={2} />
-                  <input value={teacherQ} onChange={(e) => setTeacherQ(e.target.value)} placeholder="Search for teachers via a conservatory name or country/city" />
+                  <input value={teacherQ} onChange={(e) => setTeacherQ(e.target.value)} placeholder="Find teachers by conservatory or city..." />
                 </span>
               </div>
               {(() => {
