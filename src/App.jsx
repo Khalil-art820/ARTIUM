@@ -10871,6 +10871,15 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
             {/* Video link card */}
             <ProfileLinks links={selected.links} />
 
+            {/* The teacher's cover video — the thing a learner deciding
+                between teachers most wants to see. Same clip the profile
+                pages show; it was simply never rendered on this screen. */}
+            {selected.coverVideoUrl && (
+              <div style={{ marginBottom: 24 }}>
+                <Row label="Cover video"><CoverVideo url={selected.coverVideoUrl} /></Row>
+              </div>
+            )}
+
             {/* Data grid */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               {(selected.tastes || []).length > 0 && (
