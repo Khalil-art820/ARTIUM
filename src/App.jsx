@@ -2185,6 +2185,47 @@ export default function App() {
 
   const [conversations, setConversations] = useState(SAMPLE_CONVERSATIONS);
   const [activeChatId, setActiveChatId] = useState(null);
+
+  // Real signed-in account: load every direct_messages row this profile is a
+  // party to and group by the other person's id — the same shape
+  // SAMPLE_CONVERSATIONS already used, so every consumer (Messages tab,
+  // LearnerScreen's lesson room, the teacher's own lesson room below) reads
+  // it unchanged. Polled rather than realtime, same as teach_requests above.
+  // Placeholder threads opened via openChat() with no messages yet are kept
+  // across a poll (merged, not replaced) so they don't vanish from the list
+  // before a first message exists in the database.
+  React.useEffect(() => {
+    if (!authUser?.id) return;
+    let live = true;
+    async function load() {
+      const { data, error } = await supabase
+        .from("direct_messages")
+        .select("sender_id, recipient_id, body, created_at")
+        .or(`sender_id.eq.${authUser.id},recipient_id.eq.${authUser.id}`)
+        .order("created_at", { ascending: true });
+      if (!live || error || !data) return;
+      const grouped = {};
+      for (const m of data) {
+        const peer = m.sender_id === authUser.id ? m.recipient_id : m.sender_id;
+        (grouped[peer] = grouped[peer] || []).push({ from: m.sender_id === authUser.id ? "me" : "them", text: m.body });
+      }
+      setConversations((prev) => ({ ...prev, ...grouped }));
+    }
+    load();
+    const id = setInterval(load, 8000);
+    return () => { live = false; clearInterval(id); };
+  }, [authUser?.id]);
+
+  // Mark the open thread's incoming messages read as soon as it's open —
+  // there's no unread-badge consumer for this yet (the existing badges count
+  // local "them" messages against a locally-remembered last-seen count), but
+  // the truth belongs in the database for whenever one is built.
+  React.useEffect(() => {
+    if (!authUser?.id || !activeChatId) return;
+    supabase.from("direct_messages").update({ read_at: new Date().toISOString() })
+      .eq("recipient_id", authUser.id).eq("sender_id", activeChatId).is("read_at", null)
+      .then(({ error }) => { if (error) console.error("mark messages read failed", error.message); });
+  }, [authUser?.id, activeChatId]);
   const [showGuestPrompt, setShowGuestPrompt] = useState(false);
 
   const [musicOn, setMusicOn] = useState(false);
@@ -2689,6 +2730,18 @@ export default function App() {
   }
   function sendMessage(text) {
     if (!text.trim() || !activeChatId) return;
+    const body = text.trim();
+    // Real account: persist to the database and let the poll above confirm
+    // it back — appended locally first so the sender sees it immediately.
+    if (authUser?.id) {
+      const peer = activeChatId;
+      setConversations((c) => ({ ...c, [peer]: [...(c[peer] || []), { from: "me", text: body }] }));
+      supabase.from("direct_messages").insert({ sender_id: authUser.id, recipient_id: peer, body }).then(({ error }) => {
+        if (error) console.error("send message failed", error.message);
+      });
+      return;
+    }
+    // Demo (no auth account): the old canned-reply behaviour, local only.
     setConversations((c) => ({ ...c, [activeChatId]: [...(c[activeChatId] || []), { from: "me", text }] }));
     const replies = [
       "Completely agree — want to run it together sometime this week?",
@@ -13615,9 +13668,31 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
 
   const [lastSeenByLearner, setLastSeenByLearner] = useState({});
 
-  // Sync active learner's chat from localStorage (runs whenever active learner changes)
+  // Real teacher, real (non-mock) learner: load the shared direct_messages
+  // thread and poll it. This replaces the old localStorage-only sync, which
+  // only ever reached another tab on the same device — the learner's own
+  // device never saw a teacher's message under that scheme.
   React.useEffect(() => {
-    if (MOCK_IDS.includes(activeLearner.id)) return;
+    if (!isReal || MOCK_IDS.includes(activeLearner.id)) return;
+    let live = true;
+    async function load() {
+      const { data, error } = await supabase
+        .from("direct_messages")
+        .select("sender_id, recipient_id, body, created_at")
+        .or(`and(sender_id.eq.${tid},recipient_id.eq.${activeLearner.id}),and(sender_id.eq.${activeLearner.id},recipient_id.eq.${tid})`)
+        .order("created_at", { ascending: true });
+      if (!live || error || !data) return;
+      const msgs = data.map((m) => ({ from: m.sender_id === tid ? "me" : "them", text: m.body }));
+      setMessagesByLearner((prev) => ({ ...prev, [activeLearner.id]: msgs }));
+    }
+    load();
+    const id = setInterval(load, 8000);
+    return () => { live = false; clearInterval(id); };
+  }, [isReal, tid, activeLearner.id]);
+
+  // Demo fallback only (no real teacherId): the old localStorage cross-tab sync.
+  React.useEffect(() => {
+    if (isReal || MOCK_IDS.includes(activeLearner.id)) return;
     function sync() {
       const saved = loadMsgs(activeLearner.id);
       if (saved) {
@@ -13629,7 +13704,16 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
     const id = setInterval(sync, 1500);
     window.addEventListener("storage", sync);
     return () => { clearInterval(id); window.removeEventListener("storage", sync); };
-  }, [activeLearner.id]);
+  }, [isReal, activeLearner.id]);
+
+  // Mark the open learner thread's incoming messages read, same as the
+  // top-level Messages/LessonRoom side.
+  React.useEffect(() => {
+    if (!isReal || MOCK_IDS.includes(activeLearner.id) || tab !== "chat") return;
+    supabase.from("direct_messages").update({ read_at: new Date().toISOString() })
+      .eq("recipient_id", tid).eq("sender_id", activeLearner.id).is("read_at", null)
+      .then(({ error }) => { if (error) console.error("mark messages read failed", error.message); });
+  }, [isReal, tid, activeLearner.id, tab]);
   const [selectedSessionId, setSelectedSessionId] = useState(null);
   const [showPropose, setShowPropose] = useState(false);
   const [newDate, setNewDate] = useState("");
@@ -13737,15 +13821,20 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
   function modifyLocked(s) { return s.status === "confirmed" && timeUntil(s) < 48 * 60 * 60 * 1000; }
 
   function sendMsg(text) {
-    setMessagesByLearner((prev) => {
-      const displayNext = [...(prev[activeLearner.id] || []), { from: "me", text }];
-      if (!MOCK_IDS.includes(activeLearner.id)) {
-        // Persist with "teacher" tag so learner can flip perspective
-        const stored = loadMsgs(activeLearner.id) || [];
-        saveMsgs(activeLearner.id, [...stored, { from: "teacher", text }]);
-      }
-      return { ...prev, [activeLearner.id]: displayNext };
-    });
+    const body = text.trim();
+    if (!body) return;
+    setMessagesByLearner((prev) => ({ ...prev, [activeLearner.id]: [...(prev[activeLearner.id] || []), { from: "me", text: body }] }));
+    if (MOCK_IDS.includes(activeLearner.id)) return; // mock thread: display-only
+    if (isReal) {
+      // Real teacher, real learner: the shared table both sides poll.
+      supabase.from("direct_messages").insert({ sender_id: tid, recipient_id: activeLearner.id, body }).then(({ error }) => {
+        if (error) console.error("send message failed", error.message);
+      });
+      return;
+    }
+    // Demo teacher account: old localStorage cross-tab behaviour.
+    const stored = loadMsgs(activeLearner.id) || [];
+    saveMsgs(activeLearner.id, [...stored, { from: "teacher", text: body }]);
   }
 
   // One bar for five destinations. My Rules and My Planning used to be two
