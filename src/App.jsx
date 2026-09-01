@@ -2099,6 +2099,35 @@ export default function App() {
     return () => window.removeEventListener("storage", onStorage);
   }, []);
 
+  // Real learner: load their own teach_requests from the database and poll
+  // for status changes — a teacher accepting on their own device is the
+  // whole point, and there's no realtime subscription here, just a cheap
+  // interval while the learner side of the app could be visible.
+  React.useEffect(() => {
+    if (!authUser?.id || !learnerProfile) return;
+    let live = true;
+    async function load() {
+      const { data, error } = await supabase.from("teach_requests").select("teacher_id, status").eq("learner_id", authUser.id);
+      if (!live || error || !data) return;
+      const map = Object.fromEntries(data.map((r) => [r.teacher_id, r.status]));
+      setTeachRequests((prev) => {
+        // Notice acceptances that just landed, same welcome-message nudge the
+        // old cross-tab listener gave.
+        Object.entries(map).forEach(([tid, status]) => {
+          if (status === "accepted" && prev[tid] !== "accepted") {
+            setConversations((c) => c[tid] ? c : { ...c, [tid]: [
+              { from: "them", text: "Hi! I accepted your request — looking forward to teaching you. When works for a first session?" },
+            ]});
+          }
+        });
+        return map;
+      });
+    }
+    load();
+    const id = setInterval(load, 8000);
+    return () => { live = false; clearInterval(id); };
+  }, [authUser?.id, learnerProfile]);
+
   const [draft, setDraft] = useState(emptyDraft());
   // The verification step can switch the route mid-signup. Mirror it back so
   // the sessionStorage copy above stays true: if they switch and then go back
@@ -2458,19 +2487,42 @@ export default function App() {
   function sendTeachRequest(teacherId) {
     setTeachRequests((r) => {
       const next = { ...r, [teacherId]: "pending" };
-      localStorage.setItem("teachRequests", JSON.stringify(next));
       return next;
     });
-    // Also write learner profile so the teacher's tab can see who's requesting
     const lp = learnerProfile;
-    if (lp) {
-      const existing = JSON.parse(localStorage.getItem("incomingRequests") || "{}");
-      existing[teacherId] = existing[teacherId] || [];
-      if (!existing[teacherId].find((r) => r.learnerId === "demo-learner")) {
-        existing[teacherId].push({ learnerId: "demo-learner", name: lp.name, instrument: lp.instrument, bio: lp.bio, status: "pending" });
-      }
-      localStorage.setItem("incomingRequests", JSON.stringify(existing));
+    if (!lp) return;
+    // A real learner: the request has to reach a teacher who may be signed in
+    // on a different device entirely, so it goes to the database, not
+    // localStorage. There is no learner UPDATE policy on teach_requests (a
+    // teacher accepting/declining is the only client update path), so a
+    // second request after a decline can't flip the row back to pending —
+    // the insert just no-ops on the unique-violation below. Good enough for
+    // now: re-requesting after a decline is rare, and the alternative (an
+    // UPDATE policy a learner could also use to rewrite their own status)
+    // is worse.
+    if (authUser?.id) {
+      supabase.from("teach_requests").insert({
+        learner_id: authUser.id,
+        teacher_id: teacherId,
+        learner_name: lp.name,
+        learner_instrument: lp.instrument,
+        learner_bio: lp.bio,
+        learner_photo_url: lp.photoUrl || null,
+      }).then(({ error }) => {
+        // 23505 = unique_violation (learner_id, teacher_id already exists) —
+        // a request is already on file for this pair; nothing to do.
+        if (error && error.code !== "23505") console.error("sendTeachRequest", error);
+      });
+      return;
     }
+    // Demo/local fallback: no real account, keep the old localStorage path.
+    localStorage.setItem("teachRequests", JSON.stringify({ ...JSON.parse(localStorage.getItem("teachRequests") || "{}"), [teacherId]: "pending" }));
+    const existing = JSON.parse(localStorage.getItem("incomingRequests") || "{}");
+    existing[teacherId] = existing[teacherId] || [];
+    if (!existing[teacherId].find((r) => r.learnerId === "demo-learner")) {
+      existing[teacherId].push({ learnerId: "demo-learner", name: lp.name, instrument: lp.instrument, bio: lp.bio, status: "pending" });
+    }
+    localStorage.setItem("incomingRequests", JSON.stringify(existing));
   }
   function goToProfile() {
     if (!myProfile) return;
@@ -8326,7 +8378,7 @@ function LearnerProfileModal({ learner, onClose }) {
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={onClose}>
       <div style={{ background: "rgba(176,146,98,0.05)", borderRadius: 16, padding: 32, width: 340, maxWidth: "90vw", boxShadow: "0 16px 48px rgba(0,0,0,0.18)" }} onClick={(e) => e.stopPropagation()}>
         <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20 }}>
-          <Avatar name={learner.name} id={learner.learnerId} size={56} />
+          <Avatar name={learner.name} id={learner.learnerId} size={56} photoUrl={learner.photoUrl} />
           <div>
             <p style={{ fontSize: 16, fontWeight: 700, color: C.ivory, margin: 0 }}>{learner.name}</p>
             <p style={{ fontSize: 13, color: C.ivoryDim, margin: "3px 0 0" }}>{learner.instrument}</p>
@@ -8377,10 +8429,32 @@ function readTs(key) {
   return Number.isFinite(v) ? v : 0;
 }
 
+// Shared by NotificationBell and TeacherLessonRoom, which are far apart in
+// this file but both need the same teacher's-eye view of teach_requests:
+// the DB row shape (learner_id/learner_name/…) adapted into what the old
+// localStorage `incomingRequests` entries looked like ({learnerId, name,
+// instrument, bio, photoUrl, status}), plus the row id (used as the stable
+// key the bell's ack-list tracks, replacing learnerId).
+async function fetchIncomingTeachRequests(teacherId) {
+  if (!teacherId) return [];
+  const { data, error } = await supabase.from("teach_requests").select("id, learner_id, learner_name, learner_instrument, learner_bio, learner_photo_url, status").eq("teacher_id", teacherId);
+  if (error || !data) return [];
+  return data.map((r) => ({
+    id: r.id,
+    learnerId: r.learner_id,
+    name: r.learner_name,
+    instrument: r.learner_instrument,
+    bio: r.learner_bio,
+    photoUrl: r.learner_photo_url,
+    status: r.status,
+  }));
+}
+
 function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGoToAdmin, networkFeeds, puck, hireCount = 0, hireIds = [], onGoToConcerts, onGoToComposers, onGoToNews }) {
   const [open, setOpen] = React.useState(false);
   const [viewingLearner, setViewingLearner] = React.useState(null);
   const [pending, setPending] = React.useState(() => {
+    if (authUser?.id) return []; // real teacher: filled by the DB loader below
     try {
       const all = JSON.parse(localStorage.getItem("incomingRequests") || "{}");
       return (all[myProfile?.id] || []).filter((r) => r.status === "pending");
@@ -8421,7 +8495,9 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
 
   function acknowledgeAll() {
     if (!networkFeeds) return;
-    const teachIds = pending.map((r) => r.learnerId);
+    // Real requests carry the row's own uuid now; the demo/localStorage path
+    // still has none, so it falls back to learnerId as before.
+    const teachIds = pending.map((r) => r.id ?? r.learnerId);
     try {
       localStorage.setItem("artium_ack_teach_v1", JSON.stringify(teachIds));
       localStorage.setItem("artium_ack_hire_v1", JSON.stringify(hireIds));
@@ -8451,7 +8527,10 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
     return () => { alive = false; clearInterval(id); };
   }, [isAdmin, authUser?.id]);
 
+  // Demo/local fallback only — a real teacher's pending list comes from the
+  // DB poll below instead.
   React.useEffect(() => {
+    if (authUser?.id) return;
     function onStorage(e) {
       if (e.key === "incomingRequests") {
         try {
@@ -8462,10 +8541,11 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
     }
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
-  }, [myProfile?.id]);
+  }, [myProfile?.id, authUser?.id]);
 
   // Also poll localStorage every 2s (same-tab updates don't fire storage event)
   React.useEffect(() => {
+    if (authUser?.id) return;
     const id = setInterval(() => {
       try {
         const all = JSON.parse(localStorage.getItem("incomingRequests") || "{}");
@@ -8473,7 +8553,22 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
       } catch {}
     }, 2000);
     return () => clearInterval(id);
-  }, [myProfile?.id]);
+  }, [myProfile?.id, authUser?.id]);
+
+  // Real teacher: pending teach_requests from the database, polled — this is
+  // the bell's count/ids source of truth, same fetch helper TeacherLessonRoom
+  // uses for the full accept/decline list.
+  React.useEffect(() => {
+    if (!authUser?.id || !myProfile?.id) return;
+    let live = true;
+    async function load() {
+      const rows = await fetchIncomingTeachRequests(myProfile.id);
+      if (live) setPending(rows.filter((r) => r.status === "pending"));
+    }
+    load();
+    const id = setInterval(load, 8000);
+    return () => { live = false; clearInterval(id); };
+  }, [authUser?.id, myProfile?.id]);
 
   React.useEffect(() => {
     function onClick(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }
@@ -8506,7 +8601,7 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
   const newsCount = newsItems.filter((p) => p.createdAt > seenNewsTs).length;
   const composerBadgeCount = composerPosts.filter((p) => p.createdAt > ackComposersTs).length;
   const newsBadgeCount = newsItems.filter((p) => p.createdAt > ackNewsTs).length;
-  const newTeachCount = pending.filter((r) => !ackTeachIds.includes(r.learnerId)).length;
+  const newTeachCount = pending.filter((r) => !ackTeachIds.includes(r.id ?? r.learnerId)).length;
   const newHireCount = hireIds.filter((id) => !ackHireIds.includes(id)).length;
   const feedTotal = newTeachCount + newHireCount + composerBadgeCount + newsBadgeCount;
   const totalCount = networkFeeds ? feedTotal : pending.length + promoPending.length;
@@ -8672,7 +8767,7 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
             pending.map((r) => (
               <div key={r.learnerId} style={{ padding: "12px 16px", background: "#FFF8E7", borderBottom: `1px solid ${C.inkLine}` }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
-                  <Avatar name={r.name} id={r.learnerId} size={38} />
+                  <Avatar name={r.name} id={r.learnerId} size={38} photoUrl={r.photoUrl} />
                   <div>
                     <p style={{ fontSize: 13, fontWeight: 700, color: C.ivory, margin: "0 0 2px" }}>{r.name} wants lessons</p>
                     <p style={{ fontSize: 12, color: C.ivoryDim, margin: 0 }}>{r.instrument}</p>
@@ -13403,12 +13498,34 @@ function AdminVerifications({ card, STATUS_COLOR }) {
 
 function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
   const tid = teacherId || "demo-teacher";
+  // teacherId is only ever passed as myProfile.id (see the one call site),
+  // which only exists for a real signed-in profile — so its presence is
+  // itself the real/demo split; there's no separate authUser prop here.
+  const isReal = !!teacherId;
 
-  // Real incoming requests from localStorage (cross-tab)
   const [incoming, setIncoming] = useState(() => {
+    if (isReal) return []; // filled by the DB loader below
     try { return (JSON.parse(localStorage.getItem("incomingRequests") || "{}"))[tid] || []; } catch { return []; }
   });
+
+  // Real teacher: load from teach_requests and poll for new/changed rows —
+  // a request sent from the learner's own device has to show up here
+  // without either side reloading.
   React.useEffect(() => {
+    if (!isReal) return;
+    let live = true;
+    async function load() {
+      const rows = await fetchIncomingTeachRequests(tid);
+      if (live) setIncoming(rows);
+    }
+    load();
+    const id = setInterval(load, 8000);
+    return () => { live = false; clearInterval(id); };
+  }, [isReal, tid]);
+
+  // Demo fallback only.
+  React.useEffect(() => {
+    if (isReal) return;
     function onStorage(e) {
       if (e.key === "incomingRequests") {
         try { setIncoming((JSON.parse(e.newValue || "{}"))[tid] || []); } catch {}
@@ -13416,27 +13533,30 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
     }
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
-  }, [tid]);
+  }, [isReal, tid]);
 
-  function acceptRequest(learnerId) {
-    // Update incomingRequests
+  function acceptRequest(learnerId) { decideRequest(learnerId, "accepted"); }
+  function declineRequest(learnerId) { decideRequest(learnerId, "declined"); }
+
+  function decideRequest(learnerId, status) {
+    if (isReal) {
+      // Optimistic — the row itself carries the id we matched by, not
+      // learnerId, so look it up first.
+      const row = incoming.find((r) => r.learnerId === learnerId);
+      setIncoming((cur) => cur.map((r) => r.learnerId === learnerId ? { ...r, status } : r));
+      if (row?.id) {
+        supabase.from("teach_requests").update({ status }).eq("id", row.id).then(({ error }) => {
+          if (error) console.error("decideRequest", error);
+        });
+      }
+      return;
+    }
     const all = JSON.parse(localStorage.getItem("incomingRequests") || "{}");
-    if (all[tid]) all[tid] = all[tid].map((r) => r.learnerId === learnerId ? { ...r, status: "accepted" } : r);
+    if (all[tid]) all[tid] = all[tid].map((r) => r.learnerId === learnerId ? { ...r, status } : r);
     localStorage.setItem("incomingRequests", JSON.stringify(all));
     setIncoming(all[tid] || []);
-    // Update teachRequests so learner's tab reacts
     const tr = JSON.parse(localStorage.getItem("teachRequests") || "{}");
-    tr[tid] = "accepted";
-    localStorage.setItem("teachRequests", JSON.stringify(tr));
-  }
-
-  function declineRequest(learnerId) {
-    const all = JSON.parse(localStorage.getItem("incomingRequests") || "{}");
-    if (all[tid]) all[tid] = all[tid].map((r) => r.learnerId === learnerId ? { ...r, status: "declined" } : r);
-    localStorage.setItem("incomingRequests", JSON.stringify(all));
-    setIncoming(all[tid] || []);
-    const tr = JSON.parse(localStorage.getItem("teachRequests") || "{}");
-    tr[tid] = "declined";
+    tr[tid] = status;
     localStorage.setItem("teachRequests", JSON.stringify(tr));
   }
 
@@ -13719,7 +13839,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
           {pendingRequests.map((r) => (
             <div key={r.learnerId} style={{ marginBottom: 12 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-                <Avatar name={r.name} id={r.learnerId} size={34} />
+                <Avatar name={r.name} id={r.learnerId} size={34} photoUrl={r.photoUrl} />
                 <div style={{ flex: 1 }}>
                   <p style={{ fontSize: 13, fontWeight: 600, color: C.ivory, margin: 0 }}>{r.name}</p>
                   <p style={{ fontSize: 11, color: C.ivoryDim, margin: 0 }}>{r.instrument}</p>
