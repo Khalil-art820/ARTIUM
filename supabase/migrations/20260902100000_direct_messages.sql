@@ -45,3 +45,9 @@ create policy "Recipient can mark own inbox read"
   with check (auth.uid() = recipient_id);
 
 -- No DELETE policy for anyone.
+
+-- RLS limits WHICH rows the recipient may update; these grants limit it to
+-- WHICH COLUMN — without them the mark-read policy would also let a
+-- recipient rewrite the body of messages sent to them.
+revoke update on direct_messages from authenticated;
+grant update (read_at) on direct_messages to authenticated;
