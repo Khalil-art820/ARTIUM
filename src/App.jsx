@@ -338,69 +338,6 @@ const colorFor = (seed) => {
 };
 const initials = (name) => name.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
 
-const SAMPLE_STUDENTS = [
-  { id: "demo-teacher", name: "Marcus Feld", instrument: "Piano", conservatoryId: "juilliard", year: "Final year", bio: "Final-year pianist at Juilliard. Happiest inside a Chopin ballade.", tastes: ["Chopin", "Debussy"], pieces: [{ title: "Ballade No. 1", composer: "Chopin" }], links: {}, top: "", flop: "", photoUrl: null, coverVideoUrl: null, teaching: { open: true, mode: "online", price: "60", pitch: "Patient with beginners, blunt about fundamentals. We will spend the first lesson on how you sit before we play a note." }, status: "approved", online: true },
-  { id: "elise", name: "Élise Marchand", instrument: "Piano", conservatoryId: "paris", year: "3rd year", bio: "Drawn to color and light at the keyboard — chasing the perfect pedal half-tone.", tastes: ["Debussy", "Ravel", "Impressionism", "Chopin"], pieces: [{ title: "Images, Book I", composer: "Debussy" }, { title: "Gaspard de la nuit", composer: "Ravel" }], links: { instagram: "https://instagram.com/elise.piano" }, top: "Just nailed the voicing in \"Reflets dans l'eau\" — finally sounds like water instead of notes.", flop: "Still wrestling with the tremolo passage in Gaspard, my wrist gives out after a few bars.", online: true },
-  { id: "theo", name: "Théo Lambert", instrument: "Piano", conservatoryId: "paris", year: "1st year", bio: "Recovering organist, newly obsessed with counterpoint.", tastes: ["Bach", "Baroque", "Beethoven"], pieces: [{ title: "Goldberg Variations, BWV 988", composer: "Bach" }], links: {}, top: "Finished memorizing the Goldberg aria — it finally feels like home.", flop: "Variation 26 is destroying my left hand independence.", online: false },
-  { id: "lukas", name: "Lukas Brunner", instrument: "Piano", conservatoryId: "vienna", year: "4th year", bio: "Viennese classicism is home turf, but I'm trying to loosen up rhythmically.", tastes: ["Beethoven", "Schubert", "Classical Era"], pieces: [{ title: "Sonata No. 23 'Appassionata'", composer: "Beethoven" }, { title: "Wanderer Fantasy", composer: "Schubert" }], links: { instagram: "https://instagram.com/lukas.keys" }, top: "Played the Appassionata finale up to tempo for the first time.", flop: "The Wanderer Fantasy's octave passages are still sloppy under pressure.", online: true },
-  { id: "polina", name: "Polina Sokolova", instrument: "Piano", conservatoryId: "moscow", year: "Masters, 2nd year", bio: "Big hands, bigger chords. Competition season starts in March.", tastes: ["Rachmaninoff", "Scriabin", "Romantic Era"], pieces: [{ title: "Piano Concerto No. 3", composer: "Rachmaninoff" }, { title: "Sonata No. 5", composer: "Scriabin" }], links: {}, top: "Got through the first movement cadenza without cracking, for once.", flop: "Stamina is the real issue — my arms give out by the development section.", online: true },
-  { id: "maya", name: "Maya Chen", instrument: "Piano", conservatoryId: "juilliard", year: "Final year", bio: "Trying to make Liszt sound inevitable instead of just difficult.", tastes: ["Liszt", "Prokofiev", "Romantic Era", "20th Century"], pieces: [{ title: "Mephisto Waltz No. 1", composer: "Liszt" }, { title: "Sonata No. 7", composer: "Prokofiev" }], links: { instagram: "https://instagram.com/mayachen.music" }, top: "Mephisto Waltz finally sounds dangerous instead of just difficult.", flop: "The Prokofiev's toccata movement keeps falling apart past a certain speed.", online: false },
-  { id: "daniel", name: "Daniel Osei", instrument: "Piano", conservatoryId: "curtis", year: "2nd year", bio: "Chopin is the reason I started, Brahms is the reason I stayed.", tastes: ["Chopin", "Brahms"], pieces: [{ title: "Ballade No. 1, Op. 23", composer: "Chopin" }, { title: "Handel Variations, Op. 24", composer: "Brahms" }], links: { instagram: "https://instagram.com/daniel.plays" }, top: "Played the Ballade in masterclass and it actually went well.", flop: "The fugue at the end of the Handel Variations keeps tripping up my voicing.", online: true },
-  { id: "freya", name: "Freya Whitlock", instrument: "Piano", conservatoryId: "rcm", year: "3rd year", bio: "Slowly working my way through Messiaen's bestiary of birdsong.", tastes: ["Debussy", "Messiaen", "Impressionism"], pieces: [{ title: "Vingt Regards (No. 6)", composer: "Messiaen" }], links: {}, top: "Cracked the bird calls in 'Regard des oiseaux' — they finally sound free, not mechanical.", flop: "The huge chord clusters are still bruising my hands.", online: false },
-  { id: "wei", name: "Wei Zhang", instrument: "Piano", conservatoryId: "shanghai", year: "Masters, 1st year", bio: "Bach in the morning keeps the rest of the day honest.", tastes: ["Bach", "Chopin", "Baroque"], pieces: [{ title: "Italian Concerto, BWV 971", composer: "Bach" }], links: { instagram: "https://instagram.com/wei.z.piano" }, top: "Recorded a take of the Italian Concerto I'm actually proud of.", flop: "The third movement's perpetual motion still falls apart past 120bpm.", online: true },
-  { id: "haruto", name: "Haruto Sato", instrument: "Piano", conservatoryId: "geidai", year: "4th year", bio: "Looking for practice partners who also hear color in sound.", tastes: ["Debussy", "Ravel", "Liszt"], pieces: [{ title: "Miroirs", composer: "Ravel" }], links: {}, top: "Just finished learning all five movements of Miroirs.", flop: "'Une barque sur l'ocean' still feels murky instead of fluid.", online: true },
-  { id: "jiwoo", name: "Ji-woo Kang", instrument: "Piano", conservatoryId: "snu", year: "2nd year", bio: "Slow practice evangelist. Ask me about metronome marks.", tastes: ["Rachmaninoff", "Chopin", "Romantic Era"], pieces: [{ title: "24 Preludes, Op. 28", composer: "Chopin" }], links: { instagram: "https://instagram.com/jiwoo.kg" }, top: "Performed all 24 Preludes in one sitting for the first time.", flop: "No. 16 in B-flat minor is still too fast for my fingers to stay clean.", online: false },
-  { id: "anneliese", name: "Anneliese Voss", instrument: "Piano", conservatoryId: "eisler", year: "3rd year", bio: "The Hammerklavier has humbled me twice now. Third time's the charm.", tastes: ["Bach", "Beethoven", "Brahms", "Baroque"], pieces: [{ title: "Sonata No. 29 'Hammerklavier'", composer: "Beethoven" }], links: {}, top: "Made it through the Hammerklavier fugue without stopping, for the first time ever.", flop: "The opening leap still misses about half the time.", online: true },
-  { id: "nathan", name: "Nathan Boucher", instrument: "Piano", conservatoryId: "rcmt", year: "1st year", bio: "New to conservatory life, very open to repertoire suggestions.", tastes: ["Chopin", "Schumann", "Romantic Era"], pieces: [{ title: "Carnaval, Op. 9", composer: "Schumann" }], links: { instagram: "https://instagram.com/nateplayspiano" }, top: "Just started Carnaval and having a blast with the character pieces.", flop: "Eusebius vs. Florestan — I can't find the right contrast yet.", online: false },
-  { id: "isla", name: "Isla Cooper", instrument: "Piano", conservatoryId: "sydney", year: "2nd year", bio: "Trying to find the line between precision and feel.", tastes: ["Ravel", "Debussy", "Prokofiev", "20th Century"], pieces: [{ title: "Sonatine", composer: "Ravel" }], links: { instagram: "https://instagram.com/isla.c.piano" }, top: "Finished my end-of-year recital and the Sonatine went better than I'd hoped.", flop: "Still chasing the right touch for the second movement's habanera rhythm.", online: true },
-];
-
-/* ---------------------------------------------------------------- */
-/* MOCK COHORT — a full 25-student roster at Curtis, purely to see   */
-/* how the map pin popup and the sidebar behave at volume. Delete    */
-/* this array and its spread in the students useState to remove.     */
-/* ---------------------------------------------------------------- */
-const CURTIS_MOCK_STUDENTS = [
-  { id: "curtis-amara", name: "Amara Okafor", instrument: "Violin", conservatoryId: "curtis", year: "3rd year", bio: "Chasing a bigger sound without losing the sweetness up high.", tastes: ["Brahms", "Bach", "Romantic Era"], pieces: [{ title: "Violin Concerto in D, Op. 77", composer: "Brahms" }], links: {}, top: "The double stops in the first movement finally ring instead of scratch.", flop: "Intonation in the cadenza still drifts when I get nervous.", online: true, teaching: { open: true, mode: "both", price: "42" } },
-  { id: "curtis-sebastian", name: "Sebastián Ruiz", instrument: "Cello", conservatoryId: "curtis", year: "Masters, 1st year", bio: "Bach suites every morning, everything else after.", tastes: ["Bach", "Baroque", "Schumann"], pieces: [{ title: "Cello Suite No. 5, BWV 1011", composer: "Bach" }], links: {}, top: "Played the Sarabande from memory in class and nobody breathed.", flop: "The gigue keeps running away from me.", online: false, teaching: { open: true, mode: "online", price: "48" } },
-  { id: "curtis-nora", name: "Nora Lindqvist", instrument: "Viola", conservatoryId: "curtis", year: "2nd year", bio: "Viola jokes welcome, I have better ones.", tastes: ["Brahms", "Schubert", "Romantic Era"], pieces: [{ title: "Sonata in F minor, Op. 120 No. 1", composer: "Brahms" }], links: {}, top: "Found a bow that finally suits my instrument.", flop: "Shifting into the top register still feels like guesswork.", online: true },
-  { id: "curtis-kwame", name: "Kwame Boateng", instrument: "Double Bass", conservatoryId: "curtis", year: "4th year", bio: "Orchestral excerpts by day, jazz basement by night.", tastes: ["Beethoven", "Prokofiev", "20th Century"], pieces: [{ title: "Symphony No. 5, bass excerpts", composer: "Beethoven" }], links: {}, top: "Nailed the trio section from the Scherzo at audition tempo.", flop: "My thumb position work is still inconsistent.", online: true, teaching: { open: true, mode: "physical", price: "35" } },
-  { id: "curtis-yuki", name: "Yuki Tanaka", instrument: "Flute", conservatoryId: "curtis", year: "1st year", bio: "Long tones are the whole personality, apparently.", tastes: ["Debussy", "Ravel", "Impressionism"], pieces: [{ title: "Syrinx", composer: "Debussy" }], links: {}, top: "Syrinx felt genuinely free for the first time this week.", flop: "Running out of air in the long phrases.", online: false, teaching: { open: true, mode: "online", price: "40" } },
-  { id: "curtis-marta", name: "Marta Kowalczyk", instrument: "Clarinet", conservatoryId: "curtis", year: "3rd year", bio: "Reed hoarder. Ask me about cane, at your peril.", tastes: ["Mozart", "Brahms", "Classical Era"], pieces: [{ title: "Clarinet Concerto, K. 622", composer: "Mozart" }], links: {}, top: "Finally have a reed that survives more than one rehearsal.", flop: "The Adagio still sounds careful rather than simple.", online: true },
-  { id: "curtis-idris", name: "Idris Rahman", instrument: "Oboe", conservatoryId: "curtis", year: "2nd year", bio: "Half my practice time is making reeds. The other half is regret.", tastes: ["Bach", "Baroque", "Mozart"], pieces: [{ title: "Oboe Concerto in D minor", composer: "Marcello" }], links: {}, top: "The Adagio finally sings instead of just sounding.", flop: "Reed making. Always the reed making.", online: false },
-  { id: "curtis-chiara", name: "Chiara Bellini", instrument: "Bassoon", conservatoryId: "curtis", year: "Masters, 2nd year", bio: "The bassoon is a tenor, not a punchline.", tastes: ["Mozart", "Prokofiev", "20th Century"], pieces: [{ title: "Bassoon Concerto, K. 191", composer: "Mozart" }], links: {}, top: "Got through the whole concerto without a single cracked note.", flop: "Low register response is sluggish in a cold hall.", online: true, teaching: { open: true, mode: "both", price: "36" } },
-  { id: "curtis-tomas", name: "Tomás Silva", instrument: "Trumpet", conservatoryId: "curtis", year: "1st year", bio: "Working on playing quietly, which nobody warned me was the hard part.", tastes: ["Bach", "20th Century"], pieces: [{ title: "Brandenburg Concerto No. 2", composer: "Bach" }], links: {}, top: "Hit the high register cleanly three days running.", flop: "Endurance drops off badly in the last movement.", online: true },
-  { id: "curtis-annika", name: "Annika Hoffmann", instrument: "French Horn", conservatoryId: "curtis", year: "4th year", bio: "Chasing a warm sound that still carries over an orchestra.", tastes: ["Brahms", "Schumann", "Romantic Era"], pieces: [{ title: "Horn Trio, Op. 40", composer: "Brahms" }], links: {}, top: "The Adagio mesto came together in rehearsal last night.", flop: "Still cracking the exposed entrance in the finale.", online: false, teaching: { open: true, mode: "physical", price: "44" } },
-  { id: "curtis-diego", name: "Diego Fernández", instrument: "Trombone", conservatoryId: "curtis", year: "3rd year", bio: "Legato on a slide instrument is a lifelong argument.", tastes: ["Mozart", "20th Century"], pieces: [{ title: "Tuba mirum, from Requiem", composer: "Mozart" }], links: {}, top: "My slide legato is finally starting to sound like a wind player.", flop: "Soft high entrances are still a coin flip.", online: true },
-  { id: "curtis-leila", name: "Leila Haddad", instrument: "Harp", conservatoryId: "curtis", year: "2nd year", bio: "Yes, I have to carry it. No, it does not fit in an elevator.", tastes: ["Debussy", "Ravel", "Impressionism"], pieces: [{ title: "Danses sacrée et profane", composer: "Debussy" }], links: {}, top: "Pedal changes in the Danse profane are finally automatic.", flop: "Buzzing strings in the low register are driving me mad.", online: true, teaching: { open: true, mode: "both", price: "55" } },
-  { id: "curtis-ruth", name: "Ruth Adeyemi", instrument: "Marimba", conservatoryId: "curtis", year: "1st year", bio: "Four mallets, endless patience, one very tired practice room.", tastes: ["Messiaen", "20th Century"], pieces: [{ title: "Rebonds B", composer: "Xenakis" }], links: {}, top: "Memorised the whole of Rebonds B this month.", flop: "My roll is still uneven on the softest dynamics.", online: false },
-  { id: "curtis-jonas", name: "Jonas Berg", instrument: "Organ", conservatoryId: "curtis", year: "Masters, 1st year", bio: "Registration is composition. I will not be taking questions.", tastes: ["Bach", "Messiaen", "Baroque"], pieces: [{ title: "Passacaglia in C minor, BWV 582", composer: "Bach" }], links: {}, top: "Found a registration for the Passacaglia that finally builds properly.", flop: "Pedal accuracy falls apart in the final variations.", online: true },
-  { id: "curtis-sofia", name: "Sofia Papadopoulos", instrument: "Voice", conservatoryId: "curtis", year: "3rd year", bio: "Lieder over opera, quietly and unfashionably.", tastes: ["Schubert", "Schumann", "Romantic Era"], pieces: [{ title: "Frauenliebe und -leben", composer: "Schumann" }], links: {}, top: "The last song finally sits in the voice without pushing.", flop: "German diction still slows my line down.", online: true, teaching: { open: true, mode: "online", price: "50" } },
-  { id: "curtis-hector", name: "Héctor Álvarez", instrument: "Guitar", conservatoryId: "curtis", year: "2nd year", bio: "Transcribing lute music until somebody stops me.", tastes: ["Bach", "Baroque"], pieces: [{ title: "Lute Suite No. 4, BWV 1006a", composer: "Bach" }], links: {}, top: "The Prelude is up to tempo and still clean.", flop: "Nail shape is a constant, tedious science experiment.", online: false, teaching: { open: true, mode: "both", price: "33" } },
-  { id: "curtis-mei", name: "Mei Lin", instrument: "Piano", conservatoryId: "curtis", year: "4th year", bio: "Accompanying half the school, which is the best ear training there is.", tastes: ["Schubert", "Brahms", "Romantic Era"], pieces: [{ title: "Four Impromptus, D. 899", composer: "Schubert" }], links: {}, top: "Sight-read an entire song recital and survived.", flop: "The third Impromptu still sounds rushed under pressure.", online: true, teaching: { open: true, mode: "both", price: "46" } },
-  { id: "curtis-oscar", name: "Oscar Dubois", instrument: "Violin", conservatoryId: "curtis", year: "1st year", bio: "Scales, then Ysaÿe, then more scales.", tastes: ["Bach", "20th Century"], pieces: [{ title: "Sonata No. 3 'Ballade'", composer: "Ysaÿe" }], links: {}, top: "The Ballade's opening recitative finally has shape.", flop: "My left hand tenses up the moment anyone listens.", online: false },
-  { id: "curtis-priya", name: "Priya Nair", instrument: "Cello", conservatoryId: "curtis", year: "2nd year", bio: "Chamber music is the reason I practise at all.", tastes: ["Schubert", "Brahms", "Romantic Era"], pieces: [{ title: "String Quintet in C, D. 956", composer: "Schubert" }], links: {}, top: "Our quartet got through the Adagio without anyone rushing.", flop: "Vibrato still narrows when the writing gets high.", online: true },
-  { id: "curtis-finn", name: "Finn O'Sullivan", instrument: "Viola", conservatoryId: "curtis", year: "3rd year", bio: "Inner voices are where the harmony actually happens.", tastes: ["Bach", "Brahms", "Baroque"], pieces: [{ title: "Cello Suite No. 1 (viola transcription)", composer: "Bach" }], links: {}, top: "Transcribed the whole first suite and it suits the viola better.", flop: "String crossings in the Courante are still uneven.", online: true, teaching: { open: true, mode: "physical", price: "38" } },
-  { id: "curtis-zara", name: "Zara Mahmood", instrument: "Flute", conservatoryId: "curtis", year: "Masters, 2nd year", bio: "Contemporary repertoire and extended techniques, mostly.", tastes: ["Messiaen", "20th Century", "Debussy"], pieces: [{ title: "Le merle noir", composer: "Messiaen" }], links: {}, top: "Multiphonics are finally reliable rather than lucky.", flop: "The fast final section is still a blur.", online: false },
-  { id: "curtis-nikolai", name: "Nikolai Petrov", instrument: "Clarinet", conservatoryId: "curtis", year: "4th year", bio: "Orchestral auditions are the whole year, apparently.", tastes: ["Prokofiev", "Beethoven", "20th Century"], pieces: [{ title: "Symphony No. 5, clarinet excerpts", composer: "Prokofiev" }], links: {}, top: "Got a trial week with a regional orchestra.", flop: "My tone thins out at the very top of the register.", online: true, teaching: { open: true, mode: "online", price: "41" } },
-  { id: "curtis-elena", name: "Elena Rossi", instrument: "Voice", conservatoryId: "curtis", year: "1st year", bio: "Learning that singing quietly is far harder than singing loudly.", tastes: ["Mozart", "Classical Era"], pieces: [{ title: "Le nozze di Figaro, 'Porgi amor'", composer: "Mozart" }], links: {}, top: "Held the opening phrase in one breath at last.", flop: "The passaggio is still an obvious seam.", online: true },
-  { id: "curtis-samuel", name: "Samuel Adeleke", instrument: "Trumpet", conservatoryId: "curtis", year: "2nd year", bio: "Piccolo trumpet enthusiast, to everyone else's dismay.", tastes: ["Bach", "Baroque"], pieces: [{ title: "Cantata BWV 51", composer: "Bach" }], links: {}, top: "Made it through the whole cantata without splitting a note.", flop: "Piccolo intonation is unforgiving when I'm tired.", online: false },
-  { id: "curtis-hanne", name: "Hanne Voss", instrument: "Timpani", conservatoryId: "curtis", year: "3rd year", bio: "Timpani principally, marimba when nobody is looking.", tastes: ["Beethoven", "Brahms", "Classical Era"], pieces: [{ title: "Symphony No. 9, timpani excerpts", composer: "Beethoven" }], links: {}, top: "My tuning between movements is quick and accurate now.", flop: "Still over-playing in the loud tutti passages.", online: true, teaching: { open: true, mode: "physical", price: "37" } },
-];
-
-const SAMPLE_CONVERSATIONS = {
-  daniel: [
-    { from: "them", text: "Hey! Caught the clip of your Ballade No. 1 on your profile — that coda is brutal." },
-    { from: "me", text: "Thank you. Still a work in progress, the octaves are wearing my hands out." },
-    { from: "them", text: "Same with my Handel Variations, the double notes near the end never get easier. What tempo are you taking the presto con fuoco at?" },
-  ],
-  polina: [
-    { from: "them", text: "Are you also preparing for the spring competition season?" },
-    { from: "me", text: "Yes — trying to get the second movement of the Rach 3 solid before then." },
-    { from: "them", text: "That cadenza is no joke. Which version are you using, the ossia or the original?" },
-  ],
-};
-
 // Read back verbatim wherever a student is summarised, so these are the
 // phrases themselves rather than numbers needing a suffix at each call site.
 // "5th year+" rather than "4+ years", which sat next to "4th year" and asked
@@ -1902,11 +1839,9 @@ export default function App() {
   const [pianistEntry, setPianistEntry] = useState(() => sessionStorage.getItem("artium_entry_pianist") === "1");
   React.useEffect(() => { sessionStorage.setItem("artium_entry_pianist", pianistEntry ? "1" : "0"); }, [pianistEntry]);
 
-  // Real rows only. SAMPLE_STUDENTS / CURTIS_MOCK_STUDENTS used to be seeded
-  // here "to see the map at volume" — but the app is auth-first now, so those
-  // ghosts reached real learners, who could request/message them into a
-  // silent void (non-uuid ids fail every insert). The arrays stay defined
-  // for the (unreachable) demo paths; they just never enter live state.
+  // Real rows only — the app is auth-first now, so a seeded mock roster
+  // would reach real learners, who could request/message them into a
+  // silent void (non-uuid ids fail every insert).
   const [students, setStudents] = useState([]);
   const [myProfile, setMyProfile] = useState(null);
 
@@ -2076,34 +2011,9 @@ export default function App() {
   const [learnerGoogleName, setLearnerGoogleName] = useState("");
   // Read Google role eagerly on mount so it's available before auth state fires
   const pendingGoogleRoleRef = React.useRef(sessionStorage.getItem("artium_google_role") || "");
-  const [teachRequests, setTeachRequests] = useState(() => {
-    try { return JSON.parse(localStorage.getItem("teachRequests") || "{}"); } catch { return {}; }
-  });
+  const [teachRequests, setTeachRequests] = useState({});
 
-
-  // Cross-tab sync: when teacher accepts/declines in their tab, update learner's state live
-  React.useEffect(() => {
-    function onStorage(e) {
-      if (e.key === "teachRequests") {
-        try {
-          const updated = JSON.parse(e.newValue || "{}");
-          setTeachRequests(updated);
-          // If teacher just accepted, open a welcome message from them
-          Object.entries(updated).forEach(([tid, status]) => {
-            if (status === "accepted") {
-              setConversations((c) => c[tid] ? c : { ...c, [tid]: [
-                { from: "them", text: "Hi! I accepted your request — looking forward to teaching you. When works for a first session?" },
-              ]});
-            }
-          });
-        } catch {}
-      }
-    }
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, []);
-
-  // Real learner: load their own teach_requests from the database and poll
+  // Load their own teach_requests from the database and poll
   // for status changes — a teacher accepting on their own device is the
   // whole point, and there's no realtime subscription here, just a cheap
   // interval while the learner side of the app could be visible.
@@ -2187,14 +2097,13 @@ export default function App() {
     return () => { live = false; };
   }, []);
 
-  const [conversations, setConversations] = useState(SAMPLE_CONVERSATIONS);
+  const [conversations, setConversations] = useState({});
   const [activeChatId, setActiveChatId] = useState(null);
 
-  // Real signed-in account: load every direct_messages row this profile is a
-  // party to and group by the other person's id — the same shape
-  // SAMPLE_CONVERSATIONS already used, so every consumer (Messages tab,
-  // LearnerScreen's lesson room, the teacher's own lesson room below) reads
-  // it unchanged. Polled rather than realtime, same as teach_requests above.
+  // Load every direct_messages row this profile is a party to and group by
+  // the other person's id — every consumer (Messages tab, LearnerScreen's
+  // lesson room, the teacher's own lesson room below) reads it unchanged.
+  // Polled rather than realtime, same as teach_requests above.
   // Placeholder threads opened via openChat() with no messages yet are kept
   // across a poll (merged, not replaced) so they don't vanish from the list
   // before a first message exists in the database.
@@ -2536,38 +2445,26 @@ export default function App() {
     });
     const lp = learnerProfile;
     if (!lp) return;
-    // A real learner: the request has to reach a teacher who may be signed in
-    // on a different device entirely, so it goes to the database, not
-    // localStorage. There is no learner UPDATE policy on teach_requests (a
-    // teacher accepting/declining is the only client update path), so a
-    // second request after a decline can't flip the row back to pending —
-    // the insert just no-ops on the unique-violation below. Good enough for
-    // now: re-requesting after a decline is rare, and the alternative (an
-    // UPDATE policy a learner could also use to rewrite their own status)
-    // is worse.
-    if (authUser?.id) {
-      supabase.from("teach_requests").insert({
-        learner_id: authUser.id,
-        teacher_id: teacherId,
-        learner_name: lp.name,
-        learner_instrument: lp.instrument,
-        learner_bio: lp.bio,
-        learner_photo_url: lp.photoUrl || null,
-      }).then(({ error }) => {
-        // 23505 = unique_violation (learner_id, teacher_id already exists) —
-        // a request is already on file for this pair; nothing to do.
-        if (error && error.code !== "23505") console.error("sendTeachRequest", error);
-      });
-      return;
-    }
-    // Demo/local fallback: no real account, keep the old localStorage path.
-    localStorage.setItem("teachRequests", JSON.stringify({ ...JSON.parse(localStorage.getItem("teachRequests") || "{}"), [teacherId]: "pending" }));
-    const existing = JSON.parse(localStorage.getItem("incomingRequests") || "{}");
-    existing[teacherId] = existing[teacherId] || [];
-    if (!existing[teacherId].find((r) => r.learnerId === "demo-learner")) {
-      existing[teacherId].push({ learnerId: "demo-learner", name: lp.name, instrument: lp.instrument, bio: lp.bio, status: "pending" });
-    }
-    localStorage.setItem("incomingRequests", JSON.stringify(existing));
+    // The request has to reach a teacher who may be signed in on a different
+    // device entirely, so it goes to the database, not localStorage. There is
+    // no learner UPDATE policy on teach_requests (a teacher accepting/declining
+    // is the only client update path), so a second request after a decline
+    // can't flip the row back to pending — the insert just no-ops on the
+    // unique-violation below. Good enough for now: re-requesting after a
+    // decline is rare, and the alternative (an UPDATE policy a learner could
+    // also use to rewrite their own status) is worse.
+    supabase.from("teach_requests").insert({
+      learner_id: authUser.id,
+      teacher_id: teacherId,
+      learner_name: lp.name,
+      learner_instrument: lp.instrument,
+      learner_bio: lp.bio,
+      learner_photo_url: lp.photoUrl || null,
+    }).then(({ error }) => {
+      // 23505 = unique_violation (learner_id, teacher_id already exists) —
+      // a request is already on file for this pair; nothing to do.
+      if (error && error.code !== "23505") console.error("sendTeachRequest", error);
+    });
   }
   function goToProfile() {
     if (!myProfile) return;
@@ -2739,28 +2636,13 @@ export default function App() {
   function sendMessageTo(peerId, text) {
     if (!text.trim() || !peerId) return;
     const body = text.trim();
-    // Real account: persist to the database and let the poll above confirm
-    // it back — appended locally first so the sender sees it immediately.
-    if (authUser?.id) {
-      const peer = peerId;
-      setConversations((c) => ({ ...c, [peer]: [...(c[peer] || []), { from: "me", text: body }] }));
-      supabase.from("direct_messages").insert({ sender_id: authUser.id, recipient_id: peer, body }).then(({ error }) => {
-        if (error) console.error("send message failed", error.message);
-      });
-      return;
-    }
-    // Demo (no auth account): the old canned-reply behaviour, local only.
-    setConversations((c) => ({ ...c, [peerId]: [...(c[peerId] || []), { from: "me", text }] }));
-    const replies = [
-      "Completely agree — want to run it together sometime this week?",
-      "That's exactly the section I'm stuck on too.",
-      "Send me a clip when you've got a take you like.",
-      "I usually slow it down to half tempo first, helps a lot.",
-      "Let's set up a call and compare fingerings.",
-    ];
-    setTimeout(() => {
-      setConversations((c) => ({ ...c, [peerId]: [...(c[peerId] || []), { from: "them", text: replies[Math.floor(Math.random() * replies.length)] }] }));
-    }, 1400);
+    // Persist to the database and let the poll above confirm it back —
+    // appended locally first so the sender sees it immediately.
+    const peer = peerId;
+    setConversations((c) => ({ ...c, [peer]: [...(c[peer] || []), { from: "me", text: body }] }));
+    supabase.from("direct_messages").insert({ sender_id: authUser.id, recipient_id: peer, body }).then(({ error }) => {
+      if (error) console.error("send message failed", error.message);
+    });
   }
 
   if (!unlocked) return <AccessGate onUnlock={() => { localStorage.setItem(ACCESS_KEY, "1"); setUnlocked(true); }} />;
@@ -8466,7 +8348,7 @@ function LearnerProfileModal({ learner, onClose }) {
  * untouched.
  *
  * Teaching requests and concert hiring requests are read off real pending
- * state (incomingRequests / hireCount) — a signature or a reply is what
+ * state (pending / hireCount) — a signature or a reply is what
  * clears those, not opening the bell, so their counts are NOT gated by the
  * last-seen stamps below (stamping just marks the visit; the badge tracks
  * truth). Composer posts and Classical Events have no timestamped feed to
@@ -8494,10 +8376,9 @@ function readTs(key) {
 
 // Shared by NotificationBell and TeacherLessonRoom, which are far apart in
 // this file but both need the same teacher's-eye view of teach_requests:
-// the DB row shape (learner_id/learner_name/…) adapted into what the old
-// localStorage `incomingRequests` entries looked like ({learnerId, name,
-// instrument, bio, photoUrl, status}), plus the row id (used as the stable
-// key the bell's ack-list tracks, replacing learnerId).
+// the DB row shape (learner_id/learner_name/…) adapted into
+// ({learnerId, name, instrument, bio, photoUrl, status}), plus the row id
+// (used as the stable key the bell's ack-list tracks).
 async function fetchIncomingTeachRequests(teacherId) {
   if (!teacherId) return [];
   const { data, error } = await supabase.from("teach_requests").select("id, learner_id, learner_name, learner_instrument, learner_bio, learner_photo_url, status").eq("teacher_id", teacherId);
@@ -8513,18 +8394,11 @@ async function fetchIncomingTeachRequests(teacherId) {
   }));
 }
 
-// Real teacher/learner ids are auth.users uuids (profiles.id); every mock
-// roster in this file (SAMPLE_STUDENTS, MOCK_LESSON_LEARNERS, "demo-teacher",
-// etc.) uses short hand-written string ids instead. lesson_sessions has a
-// foreign key to profiles(id), so this is also a cheap way to know whether a
-// given side of a lesson pairing can have a real row at all.
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 // Whole euros stay whole: "€55", not "€55.00" — cents appear only when
 // the amount actually has them (fees like €1.98).
 function euroAmount(cents) {
   return cents % 100 === 0 ? String(cents / 100) : (cents / 100).toFixed(2);
 }
-function isUuid(id) { return typeof id === "string" && UUID_RE.test(id); }
 
 // Shared by LessonRoom (learner side) and TeacherLessonRoom (teacher side):
 // adapts a lesson_sessions row into the object shape both sides' local
@@ -8595,18 +8469,11 @@ async function fetchAgendaNotes(teacherId, learnerId) {
 function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGoToAdmin, networkFeeds, puck, hireCount = 0, hireIds = [], onGoToConcerts, onGoToComposers, onGoToNews }) {
   const [open, setOpen] = React.useState(false);
   const [viewingLearner, setViewingLearner] = React.useState(null);
-  const [pending, setPending] = React.useState(() => {
-    if (authUser?.id) return []; // real teacher: filled by the DB loader below
-    try {
-      const all = JSON.parse(localStorage.getItem("incomingRequests") || "{}");
-      return (all[myProfile?.id] || []).filter((r) => r.status === "pending");
-    } catch { return []; }
-  });
+  const [pending, setPending] = React.useState([]); // filled by the DB loader below
   const [promoPending, setPromoPending] = React.useState([]);
   // "New since last acknowledged" for the two request feeds — a list of ids
-  // (incomingRequests has no numeric id, but each entry is deduped by
-  // learnerId when it's written, so learnerId is the stable per-request key;
-  // pianist inquiries already carry a real .id). Opening the panel, or
+  // (fetchIncomingTeachRequests's rows use learnerId as the stable per-request
+  // key; pianist inquiries already carry a real .id). Opening the panel, or
   // pressing "Mark all as read", replaces these wholesale with whatever is
   // pending right now — which both quiets the badge for everything on
   // screen AND is the prune: an id that has since been accepted/declined
@@ -8652,56 +8519,24 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
     stampTs("artium_ackts_news_v1", setAckNewsTs);
   }
 
-  // Admin-only: pending promotion submissions (Supabase for real, localStorage for demo)
+  // Admin-only: pending promotion submissions.
   React.useEffect(() => {
     if (!isAdmin) { setPromoPending([]); return; }
     let alive = true;
     async function load() {
-      if (authUser?.id) {
-        const { data } = await supabase.from("promotions").select("*").eq("status", "pending").order("created_at", { ascending: true });
-        if (alive) setPromoPending(data || []);
-      } else {
-        try { setPromoPending(JSON.parse(localStorage.getItem("artium_promotions") || "[]").filter((p) => p.status === "pending")); } catch {}
-      }
+      const { data } = await supabase.from("promotions").select("*").eq("status", "pending").order("created_at", { ascending: true });
+      if (alive) setPromoPending(data || []);
     }
     load();
     const id = setInterval(load, 4000);
     return () => { alive = false; clearInterval(id); };
-  }, [isAdmin, authUser?.id]);
+  }, [isAdmin]);
 
-  // Demo/local fallback only — a real teacher's pending list comes from the
-  // DB poll below instead.
-  React.useEffect(() => {
-    if (authUser?.id) return;
-    function onStorage(e) {
-      if (e.key === "incomingRequests") {
-        try {
-          const all = JSON.parse(e.newValue || "{}");
-          setPending((all[myProfile?.id] || []).filter((r) => r.status === "pending"));
-        } catch {}
-      }
-    }
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, [myProfile?.id, authUser?.id]);
-
-  // Also poll localStorage every 2s (same-tab updates don't fire storage event)
-  React.useEffect(() => {
-    if (authUser?.id) return;
-    const id = setInterval(() => {
-      try {
-        const all = JSON.parse(localStorage.getItem("incomingRequests") || "{}");
-        setPending((all[myProfile?.id] || []).filter((r) => r.status === "pending"));
-      } catch {}
-    }, 2000);
-    return () => clearInterval(id);
-  }, [myProfile?.id, authUser?.id]);
-
-  // Real teacher: pending teach_requests from the database, polled — this is
+  // A teacher's pending list comes from the database, polled — this is
   // the bell's count/ids source of truth, same fetch helper TeacherLessonRoom
   // uses for the full accept/decline list.
   React.useEffect(() => {
-    if (!authUser?.id || !myProfile?.id) return;
+    if (!myProfile?.id) return;
     let live = true;
     async function load() {
       const rows = await fetchIncomingTeachRequests(myProfile.id);
@@ -8710,7 +8545,7 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
     load();
     const id = setInterval(load, 8000);
     return () => { live = false; clearInterval(id); };
-  }, [authUser?.id, myProfile?.id]);
+  }, [myProfile?.id]);
 
   React.useEffect(() => {
     function onClick(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }
@@ -10116,26 +9951,6 @@ function teachingModeLabel(mode) {
     : "—";
 }
 
-// Which sample students offer lessons (seeded so the learner map isn't empty).
-const TEACHING_SEED = {
-  elise:  { open: true, mode: "both",     price: "45" },
-  lukas:  { open: true, mode: "physical", price: "40" },
-  polina: { open: true, mode: "online",   price: "60" },
-  maya:   { open: true, mode: "both",     price: "70" },
-  daniel: { open: true, mode: "physical", price: "38" },
-  wei:    { open: true, mode: "online",   price: "32" },
-  isla:   { open: true, mode: "both",     price: "50" },
-  "demo-teacher": { open: true, mode: "online", price: "60" },
-};
-function seedTeaching(arr) {
-  return arr.map((s) => ({
-    ...s,
-    // TEACHING_SEED wins, then any teaching declared on the student itself, so
-    // fixtures can carry their own rates without a second lookup table.
-    teaching: TEACHING_SEED[s.id] || s.teaching || { open: false, mode: "", price: "" },
-  }));
-}
-
 // Pin a teacher at their conservatory's location, nudged a little so people
 // at the same school don't land exactly on top of each other.
 function teacherPin(student) {
@@ -10363,309 +10178,6 @@ function GateLogo({ word = 27, markScale = 1.0 }) {
         transform: `translateY(${OPTICAL.toFixed(2)}px)`,
       }}>artium</span>
     </span>
-  );
-}
-
-/**
- * Everything behind the gate's content, all of it under 8%: two staves at
- * opposing angles, the conductor standing off the left edge, a few notes, a
- * drift of dust, and a film of grain over the lot. Inline positions rather
- * than classes — each element is placed once and never reused, so a rule per
- * item would be a rule read once.
- */
-function GateBackdrop({ photo }) {
-  // Spread across the width, each on its own clock so they never pulse
-  // together — the give-away that dust is really a loop.
-  const dust = [
-    { left: "12%", dur: 34, delay: 0, size: 3 },
-    { left: "28%", dur: 46, delay: 6, size: 2 },
-    { left: "47%", dur: 39, delay: 14, size: 3 },
-    { left: "63%", dur: 52, delay: 3, size: 2 },
-    { left: "78%", dur: 42, delay: 19, size: 3 },
-    { left: "91%", dur: 48, delay: 11, size: 2 },
-  ];
-  return (
-    <div className="artium-gx-bd" aria-hidden="true" style={photo ? { "--gx-photo": `url('${photo}')` } : undefined}>
-      <div className="artium-gx-photo" />
-      <div className="artium-gx-scrim" />
-      {dust.map((d) => (
-        <span key={d.left} className="artium-gx-dust"
-          style={{ left: d.left, bottom: "-6px", width: d.size, height: d.size,
-                   animationDuration: `${d.dur}s`, animationDelay: `-${d.delay}s` }} />
-      ))}
-      <div className="artium-gx-grain" />
-    </div>
-  );
-}
-
-/**
- * A circle card in the entry gate: everything — icon, serif title, a line of
- * copy, the filled arrow — lives inside the circle, and the whole circle is
- * the button. hero renders the lit student ellipse; the rest are the dialled
- * side medallions. The copy has a budget: a circle's usable width collapses
- * away from its diameter, so descriptions stay to two short clauses.
- */
-function GateCircle({ onClick, icon, eyebrow, title, desc, step, hero, side }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`artium-gx-cc ${hero ? "artium-gx-cc--hero" : `artium-gx-cc--side artium-gx-cc--${side}`} artium-gx-in artium-gx-in--${step}`}
-    >
-      {icon}
-      {eyebrow && <span className="artium-gx-cc-eyebrow">{eyebrow}</span>}
-      <span className="artium-gx-cc-title">{title}</span>
-      {!hero && <span className="artium-gx-cc-rule" aria-hidden="true"><i /><b /><i /></span>}
-      <span className="artium-gx-cc-desc">{desc}</span>
-      <span className="artium-gx-go" aria-hidden="true">
-        <ArrowRight strokeWidth={2.1} />
-      </span>
-    </button>
-  );
-}
-
-function EntryGate({ onLearner, onStudent, onPianist, onLogin, learnerProfile, learnerLoggedOut, studentLoggedIn, musicOn, onMusicToggle, memberCount }) {
-  const singleCard = !!learnerProfile || learnerLoggedOut || studentLoggedIn;
-  const showLearner = !studentLoggedIn;
-  const showStudent = !singleCard || studentLoggedIn;
-  // The full trio only in the fresh state. In every reduced state — a learner
-  // profile on this device, a logged-out learner, a signed-in student — the
-  // gate collapses to the one card that continues their story.
-  const fullTrio = showLearner && showStudent && !singleCard;
-
-  // The conductor is the logo's own mark, painted through a mask rather than
-  // drawn: it arrives as artwork with its own colours, and here it has to be
-  // gold like everything else.
-  const conductor = (
-    <span
-      className="artium-gx-cc-mark"
-      style={{
-        aspectRatio: "34 / 41", backgroundColor: GATE.gold,
-        WebkitMaskImage: `url('${TEACHER_MARK}')`, maskImage: `url('${TEACHER_MARK}')`,
-        WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat",
-        WebkitMaskSize: "contain", maskSize: "contain",
-        WebkitMaskPosition: "center", maskPosition: "center",
-      }}
-    />
-  );
-  // Drawn, not lucide's GraduationCap. The reference cap is a solid silhouette
-  // and lucide's is an outline — and an outline path filled in collapses into
-  // a blot, because its shape is the stroke's centreline, not the form. Board,
-  // crown and tassel as three filled pieces.
-  const cap = (
-    <svg className="artium-gx-cc-mark" viewBox="0 0 24 24" aria-hidden="true" style={{ aspectRatio: "1" }}>
-      <path d="M12 3.4 23 8.7 12 14 1 8.7z" fill={GATE.gold} />
-      <path d="M6.6 11.05 12 13.65l5.4-2.6v4.02c0 .43-.26.82-.7 1.08-1.1.66-2.79 1.05-4.7 1.05s-3.6-.39-4.7-1.05c-.44-.26-.7-.65-.7-1.08z" fill={GATE.gold} />
-      <path d="M20.7 10.15a.62.62 0 0 1 .62.62v4.06a.62.62 0 0 1-1.24 0v-4.06c0-.34.28-.62.62-.62z" fill={GATE.gold} />
-      <circle cx="20.7" cy="16.1" r="1.15" fill={GATE.gold} />
-    </svg>
-  );
-  // A grand piano in silhouette, side on with the lid up — the reference's
-  // mark for the concert card. Filled pieces like the cap: rim, raised lid,
-  // keybed and three legs, so it reads at 40px where an outline would fuzz.
-  const piano = (
-    <svg className="artium-gx-cc-mark" viewBox="0 0 100 107" aria-hidden="true" style={{ aspectRatio: "100 / 107" }}>
-      <g fill={GATE.gold}>
-        {/* Traced row by row off the reference. Two things this kept getting
-            wrong: the lid and the case are separate planes with ground
-            between them, and the prop is a dark line CUT THROUGH the lid,
-            not a gold one laid over it — hence evenodd and the second
-            subpath. The lid's apex is at the top right and it widens
-            down-left; the bent side bulges to x=93 around a third of the way
-            down, which is what makes it a grand rather than a wedge. */}
-        <path
-          fillRule="evenodd"
-          d="M70 19.5 85.5 19.5C90 21 93.5 28 93.5 37c0 8-4.5 14.5-11.5 17.5L76 56.5 23 58.5zM69.3 26.5 71.8 26.5 77.3 50 74.8 50z"
-        />
-        {/* the case: rounded keyboard end at the left, tail sweeping right */}
-        <path d="M18 66c0-4.5 3-7 7-7h49c8 0 15 2.5 20 7 3.5 3 5 6 3.5 8-1.5 2.2-5.5 2.5-9.5 2.5L26 77c-5 0-8-3-8-7z" />
-        {/* four legs, the nearer ones longer, on castors */}
-        <path d="M29 76.5h4.2V95H29zM45 76.5h5v20h-5zM67 76.5h6v26h-6zM89.5 74h3v18h-3z" />
-        <rect x="27.4" y="93" width="7.4" height="2.5" rx="1.25" />
-        <rect x="42.6" y="94.6" width="9.8" height="2.6" rx="1.3" />
-        <rect x="64.6" y="100.8" width="10.8" height="2.8" rx="1.4" />
-      </g>
-    </svg>
-  );
-
-  return (
-    <div className="artium-gx">
-      <GateBackdrop />
-
-      <header className="artium-gx-bar artium-gx-in artium-gx-in--1">
-        {/* 30 is 27 plus 12%. The ring stays at the 34 that already matched. */}
-        <GateLogo word={30} />
-        <div className="artium-gx-bar-right">
-          <MusicBtn playing={musicOn} onToggle={onMusicToggle} />
-          {memberCount != null && (
-            <span className="artium-gx-count">
-              <Users size={17} strokeWidth={1.8} />
-              {memberCount}
-            </span>
-          )}
-        </div>
-      </header>
-
-      <main className="artium-gx-main">
-        <p className="artium-gx-eyebrow artium-gx-in artium-gx-in--1">Welcome to Artium</p>
-        <h1 className="artium-gx-h1 artium-gx-in artium-gx-in--2">Your Classical<br />Music World</h1>
-        <p className="artium-gx-tag artium-gx-in artium-gx-in--3">Connect. Learn. Elevate.</p>
-
-        <div className="artium-gx-rule artium-gx-in artium-gx-in--3" aria-hidden="true">
-          <span /><i /><span />
-        </div>
-
-        {/* Three audiences now: students in the lit centre, and the two ways
-            in from outside — learning from them, hiring them — either side.
-            The stem above the centre (bust, dashed drop) is the reference's
-            way of saying "this one is you". */}
-        <div className="artium-gx-stage artium-gx-in artium-gx-in--4">
-          {fullTrio && (
-            <>
-              {/* The orbit the composition hangs from. Its top carries the
-                  node, its foot the closing dot, and the two dots mark where
-                  it passes behind the flanking circles. */}
-              <svg className="artium-gx-orbit" viewBox="0 0 100 100" aria-hidden="true">
-                {/* Both arcs end exactly where the orbit meets a flank's rim,
-                    which is where the reference puts the dots. */}
-                <path d="M 5.86 26.52 A 50 50 0 0 1 94.14 26.52" />
-                <path d="M 89.20 81.04 A 50 50 0 0 1 10.80 81.04" />
-              </svg>
-              <span className="artium-gx-dot" style={{ left: "25.07%", top: "29.20%" }} aria-hidden="true" />
-              <span className="artium-gx-dot" style={{ left: "74.93%", top: "29.20%" }} aria-hidden="true" />
-              <span className="artium-gx-dot" style={{ left: "50%", top: "98.90%" }} aria-hidden="true" />
-              <span className="artium-gx-node" aria-hidden="true">
-                {/* Solid, not stroked: at 18px a two-line outline reads as a
-                    smudge, and this mark is a full stop on the orbit. */}
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  {/* Traced off the reference at 5x. The body is an oval — 42
-                      wide by 25 tall there, widest across its middle and
-                      tapering at both ends — not the arch with a flat foot
-                      this had. There is clear ground between it and the head,
-                      and the pair fills about four fifths of the ring rather
-                      than half. */}
-                  <circle cx="12" cy="5.6" r="5.5" />
-                  <ellipse cx="12" cy="18.6" rx="9" ry="5.4" />
-                </svg>
-              </span>
-              <span className="artium-gx-stem artium-gx-stem--top" aria-hidden="true" />
-              <span className="artium-gx-stem artium-gx-stem--bot" aria-hidden="true" />
-            </>
-          )}
-
-          {fullTrio && (
-            <GateCircle
-              side="left"
-              step={5}
-              onClick={onLearner}
-              icon={conductor}
-              title="Find a Teacher"
-              desc="Discover and connect with top conservatory musicians and inspiring teachers."
-            />
-          )}
-
-          {showStudent ? (
-            <GateCircle
-              hero
-              step={4}
-              onClick={onStudent}
-              icon={cap}
-              eyebrow={studentLoggedIn ? null : "I'm a"}
-              title={studentLoggedIn ? "Continue" : <>Conservatory<br />Student | Graduate</>}
-              desc="Learn, connect with peers, access resources, and grow."
-            />
-          ) : showLearner && (
-            <GateCircle
-              hero
-              step={4}
-              onClick={onLearner}
-              icon={conductor}
-              title={learnerLoggedOut ? "Log in" : "Find a Teacher"}
-              desc="Discover and connect with top conservatory musicians and inspiring teachers."
-            />
-          )}
-
-          {fullTrio && (
-            <GateCircle
-              side="right"
-              step={6}
-              onClick={onPianist}
-              icon={piano}
-              title="Find a Concert Pianist"
-              desc="Hire talented conservatory pianists for your concert, event or project."
-            />
-          )}
-        </div>
-
-        {fullTrio && (
-          <div className="artium-gx-trust artium-gx-in artium-gx-in--7">
-            {[
-              { t: "Trusted Community", d: "Verified conservatory students & musicians",
-                i: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><circle cx="9.2" cy="8.2" r="3" /><path d="M3.2 19.4a6 6 0 0 1 12 0" /><circle cx="17.4" cy="9.4" r="2.3" /><path d="M16.3 14.9a4.6 4.6 0 0 1 5 4.5" /></svg> },
-              { t: "Safe & Secure", d: "Private, secure and reliable platform",
-                i: <ShieldCheck size={22} strokeWidth={1.6} /> },
-              { t: "Grow Together", d: "Opportunities, collaborations and real connections",
-                i: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M4 20v-4M9.3 20v-8M14.6 20V7M19.9 20V3.5" /></svg> },
-            ].map((f) => (
-              <div key={f.t} className="artium-gx-trust-item">
-                {f.i}
-                <span>
-                  <p className="artium-gx-trust-t">{f.t}</p>
-                  <p className="artium-gx-trust-d">{f.d}</p>
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {(studentLoggedIn || learnerProfile) ? (
-          <p className="artium-gx-note artium-gx-in artium-gx-in--7">
-            {studentLoggedIn ? "Logged in as a conservatory student" : <>Logged in as {learnerProfile.name}</>}
-          </p>
-        ) : (
-          // Returning users had no way back in from here. "Log in" only ever
-          // appeared once this browser had seen someone log out, so on a new
-          // device — or a private window — every route led to signup and there
-          // was no way to an existing account.
-          <>
-            <p className="artium-gx-note artium-gx-in artium-gx-in--7">Already have an account?</p>
-            <button onClick={onLogin} className="artium-gx-login artium-gx-in artium-gx-in--7">
-              Log in <ArrowRight size={17} strokeWidth={2} />
-            </button>
-          </>
-        )}
-      </main>
-
-      <footer className="artium-gx-foot artium-gx-in artium-gx-in--7">
-        <div className="artium-gx-foot-top" aria-hidden="true" />
-        <div className="artium-gx-foot-row">
-          {/* The name is no longer the link — the ringed marks beside it are,
-              so it loses the radical tile it was carrying. */}
-          <span className="artium-gx-partner">
-            In partnership with <b>aclassicaltone</b>
-          </span>
-          <span className="artium-gx-social">
-            <a href={ACT_INSTAGRAM} target="_blank" rel="noreferrer" aria-label="aclassicaltone on Instagram">
-              <Instagram size={15} strokeWidth={1.7} />
-            </a>
-            <a href={ACT_FACEBOOK} target="_blank" rel="noreferrer" aria-label="aclassicaltone on Facebook">
-              <Facebook size={15} strokeWidth={1.7} />
-            </a>
-          </span>
-        </div>
-        <div className="artium-gx-foot-line" aria-hidden="true" />
-        <div className="artium-gx-foot-row">
-          {/* Rendered as text, not as links: there is nowhere for them to go
-              yet, and a footer link that does nothing when tapped is worse
-              than one that does not invite the tap. */}
-          <span className="artium-gx-foot-links">
-            <span>About Us</span><i aria-hidden="true">•</i>
-            <span>Help Center</span><i aria-hidden="true">•</i>
-            <span>Contact</span>
-          </span>
-          <span className="artium-gx-copy">© 2026 Artium. All rights reserved.</span>
-        </div>
-      </footer>
-    </div>
   );
 }
 
@@ -11129,8 +10641,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
           body: JSON.stringify({
             kind: "lesson",
             teacherId: teacher.id,
-            // Real lesson_sessions row this checkout is for, if any (demo
-            // pairs have no real row — see LessonRoom's isRealPair). The
+            // Real lesson_sessions row this checkout is for, if any. The
             // webhook uses this to flip lesson_sessions.paid once Stripe
             // actually confirms the charge; the client never sets it itself.
             ...(sessionId ? { sessionId } : {}),
@@ -11508,20 +11019,11 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
 
         // ── My Planning view ──
         if (learnerRoomView === "planning") {
-          // Real (uuid) accepted teachers: sessions come from
-          // learnerSessionsByTeacher, loaded from lesson_sessions above.
-          // Mock accepted teachers (sample/demo rosters, non-uuid ids) have
-          // no real rows to read, so they keep the canned three-session
-          // preview this view always showed for them.
+          // Accepted teachers: sessions come from learnerSessionsByTeacher,
+          // loaded from lesson_sessions above.
           const LEARNER_PLANNING = acceptedTeachers.map((t) => {
             const teacher = { id: t.id, name: t.name, instrument: instrumentLabel(t), price: parseFloat(String(t.teaching?.price).replace(/[^0-9.]/g, "")) || 60 };
-            const sessions = isUuid(t.id)
-              ? (learnerSessionsByTeacher[t.id] || [])
-              : [
-                  { id: `s1-${t.id}`, date: "2026-07-20", time: "10:00", status: "confirmed", paid: true },
-                  { id: `s2-${t.id}`, date: "2026-08-05", time: "14:00", status: "teacher_proposed", paid: false },
-                  { id: `s3-${t.id}`, date: "2026-08-18", time: "11:00", status: "confirmed", paid: false },
-                ];
+            const sessions = learnerSessionsByTeacher[t.id] || [];
             return { teacher, sessions };
           });
           const allSessions = LEARNER_PLANNING.flatMap(({ teacher, sessions }) =>
@@ -11884,55 +11386,15 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
       setLearnerSessionDetailTab((prev) => ({ ...prev, [focusSession.sessionId]: focusSession.detail }));
     }
   }, [focusSession?.at]);
-  // Real learner, real teacher: sessions live in lesson_sessions, keyed by
-  // the learner's own id — replacing the localStorage key below, which was
-  // hardcoded to a literal "demo-learner" and so never matched anything a
-  // real teacher wrote to for a real learner.
-  const isRealPair = !!(authUser?.id && isUuid(teacher?.id));
-  const lsKey = teacher ? `artium_sessions_${teacher.id}_demo-learner` : null;
-  const chatLsKey = teacher ? `artium_chat_${teacher.id}_demo-learner` : null;
-
-  // Live chat sync from localStorage — DEMO PAIRS ONLY. For a real pair the
-  // `messages` prop (grouped from direct_messages by the app-level poll) is
-  // the one truth; this local layer used to shadow it and made real chat
-  // look dead in both directions.
-  const [localMsgs, setLocalMsgs] = useState(() => {
-    if (!isRealPair && chatLsKey) {
-      try {
-        const s = JSON.parse(localStorage.getItem(chatLsKey) || "null");
-        if (s) return s.map((m) => m.from === "learner" ? { ...m, from: "me" } : m.from === "teacher" ? { ...m, from: "them" } : m);
-      } catch {}
-    }
-    return null;
-  });
-  React.useEffect(() => {
-    if (isRealPair || !chatLsKey) return;
-    function sync() {
-      try {
-        const s = JSON.parse(localStorage.getItem(chatLsKey) || "null");
-        if (s) setLocalMsgs(s.map((m) => m.from === "learner" ? { ...m, from: "me" } : m.from === "teacher" ? { ...m, from: "them" } : m));
-      } catch {}
-    }
-    const id = setInterval(sync, 1500);
-    window.addEventListener("storage", sync);
-    return () => { clearInterval(id); window.removeEventListener("storage", sync); };
-  }, [chatLsKey]);
-
   function sendLearnerMsg(text) {
     if (!text.trim()) return;
-    // Real pair: straight to direct_messages via the parent's sender, which
-    // names this teacher as the recipient explicitly.
-    if (isRealPair) { onSend(text); return; }
-    // Store with "learner" tag so teacher can flip perspective; display as "me"
-    const stored = JSON.parse(localStorage.getItem(chatLsKey) || "null") || [];
-    const nextStored = [...stored, { from: "learner", text }];
-    if (chatLsKey) localStorage.setItem(chatLsKey, JSON.stringify(nextStored));
-    // Display: "me" for learner view
-    setLocalMsgs((prev) => [...(prev || []), { from: "me", text }]);
+    // Straight to direct_messages via the parent's sender, which names this
+    // teacher as the recipient explicitly.
+    onSend(text);
   }
 
   // Map stored messages to learner display perspective
-  const activeMessages = ((isRealPair ? messages : (localMsgs || messages)) || []).map((m) =>
+  const activeMessages = (messages || []).map((m) =>
     m.from === "learner" ? { ...m, from: "me" } : m.from === "teacher" ? { ...m, from: "them" } : m
   );
   const themMsgCount = activeMessages.filter(m => m.from === "them").length;
@@ -11940,23 +11402,13 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
   const unreadCount = Math.max(0, themMsgCount - lastSeenCount);
   React.useEffect(() => { if (tab === "chat") setLastSeenCount(themMsgCount); }, [tab, themMsgCount]);
 
-  const [sessions, setSessions] = useState(() => {
-    if (isRealPair) return []; // filled by the DB loader below
-    if (lsKey) {
-      try { const s = JSON.parse(localStorage.getItem(lsKey) || "null"); if (s) return s; } catch {}
-    }
-    return [
-      { id: 0, date: "2026-07-05", time: "10:00", status: "confirmed", proposedBy: "teacher", paid: true },
-      { id: 1, date: "2026-07-15", time: "16:00", status: "teacher_proposed", proposedBy: "teacher", paid: false },
-      { id: 2, date: "2026-07-12", time: "18:00", status: "confirmed", proposedBy: "teacher", paid: true },
-    ];
-  });
+  const [sessions, setSessions] = useState([]); // filled by the DB loader below
 
-  // Real learner: load sessions the teacher proposed and poll for changes —
-  // same cadence and shape as the teach_requests/direct_messages pollers
-  // above, just scoped to this one teacher/learner pair.
+  // Load sessions the teacher proposed and poll for changes — same cadence
+  // and shape as the teach_requests/direct_messages pollers above, just
+  // scoped to this one teacher/learner pair.
   React.useEffect(() => {
-    if (!isRealPair) return;
+    if (!teacher?.id || !authUser?.id) return;
     let live = true;
     async function load() {
       const rows = await fetchLessonSessions(teacher.id, authUser.id);
@@ -11965,24 +11417,9 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
     load();
     const id = setInterval(load, 8000);
     return () => { live = false; clearInterval(id); };
-  }, [isRealPair, teacher?.id, authUser?.id]);
-
-  // Demo/local fallback only: live sync via localStorage (cross-tab).
-  React.useEffect(() => {
-    if (!lsKey || isRealPair) return;
-    function sync() {
-      try {
-        const s = JSON.parse(localStorage.getItem(lsKey) || "null");
-        if (s) setSessions(s);
-      } catch {}
-    }
-    const id = setInterval(sync, 2000);
-    window.addEventListener("storage", sync);
-    return () => { clearInterval(id); window.removeEventListener("storage", sync); };
-  }, [lsKey, isRealPair]);
+  }, [teacher?.id, authUser?.id]);
 
   function persistSessions(next) {
-    if (lsKey && !isRealPair) localStorage.setItem(lsKey, JSON.stringify(next));
     setSessions(next);
   }
   const [counterDate, setCounterDate] = useState({});
@@ -12000,7 +11437,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
   // back via sessionStorage, purely to drive the "Payment processing…" hint
   // below. Never itself the source of truth for `paid`.
   const [pendingPayId, setPendingPayId] = useState(() => {
-    if (!isRealPair || !teacher) return null;
+    if (!teacher) return null;
     try { return sessionStorage.getItem(`artium_pending_pay_${teacher.id}`) || null; } catch { return null; }
   });
   React.useEffect(() => {
@@ -12011,13 +11448,10 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
       setPendingPayId(null);
     }
   }, [sessions, pendingPayId, teacher?.id]);
-  // Real learner: load the teacher's agenda notes for this pair and poll —
-  // same cadence as the sessions loader above. Replaces the old
-  // localStorage-only sync, which read a key hardcoded with a literal
-  // "demo-learner" — a real teacher's agenda never reached a real learner
-  // under that scheme, only another tab of the demo account.
+  // Load the teacher's agenda notes for this pair and poll — same cadence
+  // as the sessions loader above.
   React.useEffect(() => {
-    if (!teacher || !isRealPair) return;
+    if (!teacher || !authUser?.id) return;
     let live = true;
     async function load() {
       const grouped = await fetchAgendaNotes(teacher.id, authUser.id);
@@ -12026,26 +11460,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
     load();
     const id = setInterval(load, 8000);
     return () => { live = false; clearInterval(id); };
-  }, [teacher?.id, authUser?.id, isRealPair]);
-
-  // Demo/local fallback only: the old localStorage cross-tab sync under the
-  // hardcoded "demo-learner" key the demo teacher room also still writes to.
-  React.useEffect(() => {
-    if (!teacher || isRealPair) return;
-    function syncAgenda() {
-      const updated = {};
-      sessions.forEach(s => {
-        const key = `artium_agenda_${teacher.id}_demo-learner_${s.id}`;
-        const val = localStorage.getItem(key);
-        if (val !== null) updated[s.id] = val;
-      });
-      setLearnerAgenda(updated);
-    }
-    syncAgenda();
-    const id = setInterval(syncAgenda, 2000);
-    window.addEventListener("storage", syncAgenda);
-    return () => { clearInterval(id); window.removeEventListener("storage", syncAgenda); };
-  }, [teacher, isRealPair, sessions.length]);
+  }, [teacher?.id, authUser?.id]);
 
   const tabs = [
     { id: "chat", label: "Chat", Icon: MessageCircle },
@@ -12056,11 +11471,9 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
   function approveSession(id) {
     const next = sessions.map((s) => s.id === id ? { ...s, status: "confirmed" } : s);
     persistSessions(next);
-    if (isRealPair) {
-      supabase.from("lesson_sessions").update({ status: "confirmed" }).eq("id", id).then(({ error }) => {
-        if (error) console.error("approveSession", error.message);
-      });
-    }
+    supabase.from("lesson_sessions").update({ status: "confirmed" }).eq("id", id).then(({ error }) => {
+      if (error) console.error("approveSession", error.message);
+    });
   }
 
   function submitCounter(id) {
@@ -12069,11 +11482,9 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
     const next = sessions.map((s) => s.id === id ? { ...s, date: d, time: t, status: "student_proposed", proposedBy: "student" } : s);
     persistSessions(next);
     setShowCounter((prev) => ({ ...prev, [id]: false }));
-    if (isRealPair) {
-      supabase.from("lesson_sessions").update({ session_date: d, session_time: t, status: "student_proposed", proposed_by: "learner" }).eq("id", id).then(({ error }) => {
-        if (error) console.error("submitCounter", error.message);
-      });
-    }
+    supabase.from("lesson_sessions").update({ session_date: d, session_time: t, status: "student_proposed", proposed_by: "learner" }).eq("id", id).then(({ error }) => {
+      if (error) console.error("submitCounter", error.message);
+    });
   }
 
   function timeUntil(s) {
@@ -12084,11 +11495,9 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
 
   function cancelSession(id) {
     persistSessions(sessions.filter((s) => s.id !== id));
-    if (isRealPair) {
-      supabase.from("lesson_sessions").delete().eq("id", id).then(({ error }) => {
-        if (error) console.error("cancelSession", error.message);
-      });
-    }
+    supabase.from("lesson_sessions").delete().eq("id", id).then(({ error }) => {
+      if (error) console.error("cancelSession", error.message);
+    });
   }
 
   return (
@@ -12249,31 +11658,24 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
                         <Check size={13} /> Paid
                       </span>
                     ) : pendingPayId === sel.id ? (
-                      // Real pair only (see below): came back from Stripe but the
-                      // 8s lesson_sessions poll hasn't seen the webhook's write
-                      // yet. Purely a "hang on" hint — the actual tick above only
-                      // ever comes from that poll picking up paid=true.
+                      // Came back from Stripe but the 8s lesson_sessions poll
+                      // hasn't seen the webhook's write yet. Purely a "hang on"
+                      // hint — the actual tick above only ever comes from that
+                      // poll picking up paid=true.
                       <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, background: "rgba(176,146,98,0.12)", color: C.brassLabel, fontSize: 12, fontWeight: 600, marginBottom: 8 }}>
                         Payment processing…
                       </span>
                     ) : (
                       <button onClick={() => {
-                        if (isRealPair) {
-                          // No optimistic write: lesson_sessions.paid is set
-                          // only by stripe-webhook once Stripe confirms the
-                          // charge (the client's UPDATE grant on that column
-                          // was revoked). Remember which session we're paying
-                          // for so the "processing" hint survives the round
-                          // trip to Stripe and back.
-                          try { sessionStorage.setItem(`artium_pending_pay_${teacher.id}`, String(sel.id)); } catch {}
-                          setPendingPayId(sel.id);
-                          onPayLesson(teacher, sel.id);
-                        } else {
-                          // Demo/mock pair: no real payments row, no webhook
-                          // will ever fire — keep the old local-only behavior.
-                          onPayLesson(teacher);
-                          setSessions((prev) => prev.map((x) => x.id === sel.id ? { ...x, paid: true } : x));
-                        }
+                        // No optimistic write: lesson_sessions.paid is set
+                        // only by stripe-webhook once Stripe confirms the
+                        // charge (the client's UPDATE grant on that column
+                        // was revoked). Remember which session we're paying
+                        // for so the "processing" hint survives the round
+                        // trip to Stripe and back.
+                        try { sessionStorage.setItem(`artium_pending_pay_${teacher.id}`, String(sel.id)); } catch {}
+                        setPendingPayId(sel.id);
+                        onPayLesson(teacher, sel.id);
                       }} disabled={payLoading}
                         style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, background: "none", border: `1px solid ${C.brass}`, color: C.brassLabel, fontSize: 12, fontWeight: 600, cursor: payLoading ? "not-allowed" : "pointer", opacity: payLoading ? 0.6 : 1, marginBottom: 8 }}>
                         <CreditCard size={13} />
@@ -12341,70 +11743,6 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
 /* ---------------------------------------------------------------- */
 /* TEACHER LESSON ROOM                                                */
 /* ---------------------------------------------------------------- */
-const MOCK_LESSON_LEARNERS = [
-  { id: "p1",  name: "Élise Marchand",   instrument: "Piano",   level: "Intermediate" },
-  { id: "p2",  name: "Théo Lambert",     instrument: "Piano",   level: "Beginner" },
-  { id: "p3",  name: "Lukas Brunner",    instrument: "Piano",   level: "Advanced" },
-  { id: "p4",  name: "Polina Sokolova",  instrument: "Piano",   level: "Intermediate" },
-  { id: "p5",  name: "Maya Chen",        instrument: "Piano",   level: "Advanced" },
-  { id: "p6",  name: "Daniel Osei",      instrument: "Piano",   level: "Beginner" },
-  { id: "p7",  name: "Freya Whitlock",   instrument: "Piano",   level: "Intermediate" },
-  { id: "p8",  name: "Wei Zhang",        instrument: "Piano",   level: "Advanced" },
-  { id: "p9",  name: "Haruto Sato",      instrument: "Piano",   level: "Intermediate" },
-  { id: "p10", name: "Ji-woo Kang",      instrument: "Piano",   level: "Beginner" },
-  { id: "p11", name: "Anneliese Voss",   instrument: "Piano",   level: "Intermediate" },
-  { id: "p12", name: "Nathan Boucher",   instrument: "Piano",   level: "Beginner" },
-  { id: "p13", name: "Isla Cooper",      instrument: "Piano",   level: "Intermediate" },
-  { id: "p14", name: "Sofia Reyes",      instrument: "Violin",  level: "Intermediate" },
-  { id: "p15", name: "Léon Dupont",      instrument: "Cello",   level: "Advanced" },
-  { id: "p16", name: "Amara Diallo",     instrument: "Voice",   level: "Beginner" },
-  { id: "p17", name: "Ryo Nakamura",     instrument: "Guitar",  level: "Intermediate" },
-  { id: "p18", name: "Ingrid Larsson",   instrument: "Flute",   level: "Advanced" },
-  { id: "p19", name: "Carlos Mendez",    instrument: "Trumpet", level: "Intermediate" },
-  { id: "p20", name: "Yuna Park",        instrument: "Harp",    level: "Advanced" },
-  { id: "p21", name: "Lucas Ferreira",   instrument: "Guitar",  level: "Intermediate" },
-  { id: "p22", name: "Chloe Dubois",     instrument: "Violin",  level: "Beginner" },
-  { id: "p23", name: "Mateo García",     instrument: "Cello",   level: "Advanced" },
-  { id: "p24", name: "Aiko Tanaka",      instrument: "Piano",   level: "Intermediate" },
-  { id: "p25", name: "Finn O'Brien",     instrument: "Flute",   level: "Beginner" },
-  { id: "p26", name: "Zara Ahmed",       instrument: "Violin",  level: "Advanced" },
-  { id: "p27", name: "Hugo Laurent",     instrument: "Trumpet", level: "Intermediate" },
-  { id: "p28", name: "Nina Kovač",       instrument: "Piano",   level: "Beginner" },
-  { id: "p29", name: "Emil Svensson",    instrument: "Cello",   level: "Advanced" },
-  { id: "p30", name: "Priya Nair",       instrument: "Sitar",   level: "Intermediate" },
-  { id: "p31", name: "Oscar Müller",     instrument: "Oboe",    level: "Beginner" },
-  { id: "p32", name: "Lena Fischer",     instrument: "Harp",    level: "Advanced" },
-  { id: "p33", name: "Marco Rossi",      instrument: "Violin",  level: "Intermediate" },
-  { id: "p34", name: "Sia Nakamura",     instrument: "Piano",   level: "Beginner" },
-  { id: "p35", name: "Remy Blanc",       instrument: "Cello",   level: "Advanced" },
-  { id: "p36", name: "Aria Patel",       instrument: "Flute",   level: "Intermediate" },
-  { id: "p37", name: "Dani Wolff",       instrument: "Oboe",    level: "Beginner" },
-  { id: "p38", name: "Tao Chen",         instrument: "Erhu",    level: "Advanced" },
-  { id: "p39", name: "Mia Johansson",    instrument: "Violin",  level: "Intermediate" },
-  { id: "p40", name: "Bram De Smet",     instrument: "Guitar",  level: "Beginner" },
-  { id: "p41", name: "Fatou Diallo",     instrument: "Piano",   level: "Advanced" },
-  { id: "p42", name: "Kenji Ito",        instrument: "Shakuhachi", level: "Intermediate" },
-  { id: "p43", name: "Iris van Dijk",    instrument: "Violin",  level: "Beginner" },
-  { id: "p44", name: "Pablo Ortiz",      instrument: "Trumpet", level: "Advanced" },
-  { id: "p45", name: "Lea Hoffmann",     instrument: "Cello",   level: "Intermediate" },
-  { id: "p46", name: "Sven Larsson",     instrument: "Piano",   level: "Beginner" },
-  { id: "p47", name: "Nour El-Amin",     instrument: "Oud",     level: "Advanced" },
-  { id: "p48", name: "Camille Moreau",   instrument: "Harp",    level: "Intermediate" },
-  { id: "p49", name: "Enzo Ferrari",     instrument: "Violin",  level: "Beginner" },
-  { id: "p50", name: "Yael Cohen",       instrument: "Piano",   level: "Advanced" },
-  { id: "p51", name: "Lila Dupont",      instrument: "Flute",   level: "Intermediate" },
-  { id: "p52", name: "Tariq Hassan",     instrument: "Cello",   level: "Beginner" },
-  { id: "p53", name: "Vera Kuznetsova",  instrument: "Violin",  level: "Advanced" },
-  { id: "p54", name: "Jules Martin",     instrument: "Guitar",  level: "Intermediate" },
-  { id: "p55", name: "Hana Kimura",      instrument: "Koto",    level: "Beginner" },
-  { id: "p56", name: "Diego Méndez",     instrument: "Piano",   level: "Advanced" },
-  { id: "p57", name: "Astrid Berg",      instrument: "Cello",   level: "Intermediate" },
-  { id: "p58", name: "Kofi Asante",      instrument: "Djembe",  level: "Beginner" },
-  { id: "p59", name: "Mei-Ling Zhou",    instrument: "Erhu",    level: "Advanced" },
-  { id: "p60", name: "Tom Brennan",      instrument: "Violin",  level: "Intermediate" },
-  { id: "p61", name: "Sara Lindqvist",   instrument: "Piano",   level: "Beginner" },
-  { id: "p62", name: "Adrien Leroy",     instrument: "Trumpet", level: "Advanced" },
-];
 
 /* ---------------------------------------------------------------- */
 /* PROMOTE ME — aclassicaltone promotion offer + approval flow        */
@@ -12623,8 +11961,6 @@ function PromoteMe({ myProfile, authUser }) {
   // Two unrelated offers on one screen read as a single long form, so the tab
   // opens on a choice and each one gets the screen to itself.
   const [view, setView] = useState(null);   // null | "artium" | "aclassicaltone"
-  const isRealUser = !!authUser?.id;
-  const lsKey = "artium_promotions";
 
   const [videoLink, setVideoLink] = useState("");
   const [captionPref, setCaptionPref] = useState("bio");
@@ -12642,7 +11978,6 @@ function PromoteMe({ myProfile, authUser }) {
   // same 4s poll that refreshes `mine` covers the webhook's settling lag.
   const [promoPaid, setPromoPaid] = useState(false);
   async function loadPromoPaid() {
-    if (!isRealUser) return;
     try {
       const { data } = await supabase.from("payments").select("id").eq("kind", "promotion").eq("status", "paid").limit(1);
       if (data && data.length) setPromoPaid(true);
@@ -12653,20 +11988,9 @@ function PromoteMe({ myProfile, authUser }) {
   const provider = detectPromoProvider(videoLink);
   const linkValid = !!provider;
 
-  // ---- storage helpers (Supabase for real users, localStorage for demo) ----
-  function readLocal() { try { return JSON.parse(localStorage.getItem(lsKey) || "[]"); } catch { return []; } }
-  function writeLocal(arr) { localStorage.setItem(lsKey, JSON.stringify(arr)); }
-
   async function loadMine() {
-    if (isRealUser) {
-      const { data } = await supabase.from("promotions").select("*").eq("user_id", authUser.id).order("created_at", { ascending: false }).limit(1);
-      setMine(data && data[0] ? data[0] : null);
-    } else {
-      const arr = readLocal();
-      const uid = myProfile?.id || "demo-teacher";
-      const mineArr = arr.filter((p) => p.user_id === uid).sort((a, b) => b.created_at.localeCompare(a.created_at));
-      setMine(mineArr[0] || null);
-    }
+    const { data } = await supabase.from("promotions").select("*").eq("user_id", authUser.id).order("created_at", { ascending: false }).limit(1);
+    setMine(data && data[0] ? data[0] : null);
   }
   React.useEffect(() => { loadMine(); const id = setInterval(loadMine, 4000); return () => clearInterval(id); /* eslint-disable-next-line */ }, []);
 
@@ -12677,7 +12001,7 @@ function PromoteMe({ myProfile, authUser }) {
     setSubmitting(true);
     const caption = captionPref === "bio" ? "Use my bio" : captionCustom.trim() || "Custom (to be provided)";
     const row = {
-      user_id: isRealUser ? authUser.id : (myProfile?.id || "demo-teacher"),
+      user_id: authUser.id,
       name: myProfile?.name || "Student",
       video_link: videoLink.trim(),
       provider,
@@ -12687,12 +12011,8 @@ function PromoteMe({ myProfile, authUser }) {
       status: "pending",
       created_at: new Date().toISOString(),
     };
-    if (isRealUser) {
-      const { error: e } = await supabase.from("promotions").insert(row);
-      if (e) { setError(e.message); setSubmitting(false); return; }
-    } else {
-      const arr = readLocal(); arr.push({ id: "promo-" + Date.now(), ...row }); writeLocal(arr);
-    }
+    const { error: e } = await supabase.from("promotions").insert(row);
+    if (e) { setError(e.message); setSubmitting(false); return; }
     setSubmitting(false);
     setVideoLink("");
     loadMine();
@@ -13997,22 +13317,16 @@ function AdminVerifications({ card, STATUS_COLOR }) {
 }
 
 function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
-  const tid = teacherId || "demo-teacher";
   // teacherId is only ever passed as myProfile.id (see the one call site),
-  // which only exists for a real signed-in profile — so its presence is
-  // itself the real/demo split; there's no separate authUser prop here.
-  const isReal = !!teacherId;
+  // which only exists for a real signed-in profile — always a real uuid here.
+  const tid = teacherId;
 
-  const [incoming, setIncoming] = useState(() => {
-    if (isReal) return []; // filled by the DB loader below
-    try { return (JSON.parse(localStorage.getItem("incomingRequests") || "{}"))[tid] || []; } catch { return []; }
-  });
+  const [incoming, setIncoming] = useState([]); // filled by the DB loader below
 
-  // Real teacher: load from teach_requests and poll for new/changed rows —
-  // a request sent from the learner's own device has to show up here
-  // without either side reloading.
+  // Load from teach_requests and poll for new/changed rows — a request sent
+  // from the learner's own device has to show up here without either side
+  // reloading.
   React.useEffect(() => {
-    if (!isReal) return;
     let live = true;
     async function load() {
       const rows = await fetchIncomingTeachRequests(tid);
@@ -14021,80 +13335,43 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
     load();
     const id = setInterval(load, 8000);
     return () => { live = false; clearInterval(id); };
-  }, [isReal, tid]);
-
-  // Demo fallback only.
-  React.useEffect(() => {
-    if (isReal) return;
-    function onStorage(e) {
-      if (e.key === "incomingRequests") {
-        try { setIncoming((JSON.parse(e.newValue || "{}"))[tid] || []); } catch {}
-      }
-    }
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, [isReal, tid]);
+  }, [tid]);
 
   function acceptRequest(learnerId) { decideRequest(learnerId, "accepted"); }
   function declineRequest(learnerId) { decideRequest(learnerId, "declined"); }
 
   function decideRequest(learnerId, status) {
-    if (isReal) {
-      // Optimistic — the row itself carries the id we matched by, not
-      // learnerId, so look it up first.
-      const row = incoming.find((r) => r.learnerId === learnerId);
-      setIncoming((cur) => cur.map((r) => r.learnerId === learnerId ? { ...r, status } : r));
-      if (row?.id) {
-        supabase.from("teach_requests").update({ status }).eq("id", row.id).then(({ error }) => {
-          if (error) console.error("decideRequest", error);
-        });
-      }
-      return;
+    // Optimistic — the row itself carries the id we matched by, not
+    // learnerId, so look it up first.
+    const row = incoming.find((r) => r.learnerId === learnerId);
+    setIncoming((cur) => cur.map((r) => r.learnerId === learnerId ? { ...r, status } : r));
+    if (row?.id) {
+      supabase.from("teach_requests").update({ status }).eq("id", row.id).then(({ error }) => {
+        if (error) console.error("decideRequest", error);
+      });
     }
-    const all = JSON.parse(localStorage.getItem("incomingRequests") || "{}");
-    if (all[tid]) all[tid] = all[tid].map((r) => r.learnerId === learnerId ? { ...r, status } : r);
-    localStorage.setItem("incomingRequests", JSON.stringify(all));
-    setIncoming(all[tid] || []);
-    const tr = JSON.parse(localStorage.getItem("teachRequests") || "{}");
-    tr[tid] = status;
-    localStorage.setItem("teachRequests", JSON.stringify(tr));
   }
 
   const pendingRequests = incoming.filter((r) => r.status === "pending");
   const acceptedLearners = incoming.filter((r) => r.status === "accepted");
   const [removedStudentIds, setRemovedStudentIds] = useState(new Set());
-  const allLearners = [...MOCK_LESSON_LEARNERS, ...acceptedLearners.map((r) => ({ id: r.learnerId, name: r.name, instrument: r.instrument, level: "Student" }))].filter(l => !removedStudentIds.has(l.id));
+  const allLearners = acceptedLearners.map((r) => ({ id: r.learnerId, name: r.name, instrument: r.instrument, level: "Student" })).filter(l => !removedStudentIds.has(l.id));
 
   const [viewingLearner, setViewingLearner] = useState(null);
   const [activeLearner, setActiveLearner] = useState(allLearners[0]);
   const [tab, setTab] = useState("chat");
-  function sessionsKey(learnerId) { return `artium_sessions_${tid}_${learnerId}`; }
-  function loadSessions(learnerId) {
-    try { return JSON.parse(localStorage.getItem(sessionsKey(learnerId)) || "null") || []; } catch { return []; }
-  }
-  function saveSessions(learnerId, arr) {
-    localStorage.setItem(sessionsKey(learnerId), JSON.stringify(arr));
-  }
 
-  const [sessionsByLearner, setSessionsByLearner] = useState({
-    alex: [
-      { id: 0, date: "2026-07-05", time: "10:00", status: "confirmed", paid: true },
-      { id: 1, date: "2026-07-15", time: "16:00", status: "teacher_proposed", paid: false },
-      { id: 2, date: "2026-07-12", time: "18:00", status: "confirmed", paid: true },
-    ],
-    sophie: [
-      { id: 0, date: "2026-07-20", time: "14:00", status: "confirmed", paid: false },
-    ],
-  });
-
-  // Real teacher: load every learner's sessions in one query, grouped
-  // client-side by learner_id — same shared-fetch reasoning as
-  // fetchIncomingTeachRequests. Replaces the old localStorage-only sync,
-  // which only ever reached another tab on the teacher's own device; a
-  // learner countering a proposal from their own device never showed up
-  // here under that scheme.
+  // No mock roster guarantees a first learner any more — pick one up as
+  // soon as a real accepted learner appears.
   React.useEffect(() => {
-    if (!isReal) return;
+    if (!activeLearner && allLearners.length > 0) setActiveLearner(allLearners[0]);
+  }, [activeLearner, allLearners.length]);
+
+  const [sessionsByLearner, setSessionsByLearner] = useState({});
+
+  // Load every learner's sessions in one query, grouped client-side by
+  // learner_id — same shared-fetch reasoning as fetchIncomingTeachRequests.
+  React.useEffect(() => {
     let live = true;
     async function load() {
       const grouped = await fetchLessonSessionsForTeacher(tid);
@@ -14103,43 +13380,15 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
     load();
     const id = setInterval(load, 8000);
     return () => { live = false; clearInterval(id); };
-  }, [isReal, tid]);
+  }, [tid]);
 
-  // Demo teacher account only: the old localStorage cross-tab sync.
-  React.useEffect(() => {
-    if (isReal) return;
-    function sync() {
-      acceptedLearners.forEach((r) => {
-        const saved = loadSessions(r.learnerId);
-        if (saved.length > 0) {
-          setSessionsByLearner((prev) => ({ ...prev, [r.learnerId]: saved }));
-        }
-      });
-    }
-    sync();
-    const id = setInterval(sync, 2000);
-    window.addEventListener("storage", sync);
-    return () => { clearInterval(id); window.removeEventListener("storage", sync); };
-  }, [incoming, isReal]);
-  function chatKey(learnerId) { return `artium_chat_${tid}_${learnerId}`; }
-  function loadMsgs(learnerId) {
-    try { return JSON.parse(localStorage.getItem(chatKey(learnerId)) || "null") || null; } catch { return null; }
-  }
-  function saveMsgs(learnerId, arr) { localStorage.setItem(chatKey(learnerId), JSON.stringify(arr)); }
-
-  const [messagesByLearner, setMessagesByLearner] = useState({
-    alex:   [{ from: "them", text: "Hi! Looking forward to our next session." }, { from: "me", text: "Me too! I'll send you the sheet music." }],
-    sophie: [{ from: "them", text: "Can we reschedule Thursday?" }],
-  });
+  const [messagesByLearner, setMessagesByLearner] = useState({});
 
   const [lastSeenByLearner, setLastSeenByLearner] = useState({});
 
-  // Real teacher, real (non-mock) learner: load the shared direct_messages
-  // thread and poll it. This replaces the old localStorage-only sync, which
-  // only ever reached another tab on the same device — the learner's own
-  // device never saw a teacher's message under that scheme.
+  // Load the shared direct_messages thread and poll it.
   React.useEffect(() => {
-    if (!isReal || MOCK_IDS.includes(activeLearner.id)) return;
+    if (!activeLearner) return;
     let live = true;
     async function load() {
       const { data, error } = await supabase
@@ -14154,32 +13403,16 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
     load();
     const id = setInterval(load, 8000);
     return () => { live = false; clearInterval(id); };
-  }, [isReal, tid, activeLearner.id]);
-
-  // Demo fallback only (no real teacherId): the old localStorage cross-tab sync.
-  React.useEffect(() => {
-    if (isReal || MOCK_IDS.includes(activeLearner.id)) return;
-    function sync() {
-      const saved = loadMsgs(activeLearner.id);
-      if (saved) {
-        const flipped = saved.map((m) => m.from === "teacher" ? { ...m, from: "me" } : { ...m, from: "them" });
-        setMessagesByLearner((prev) => ({ ...prev, [activeLearner.id]: flipped }));
-      }
-    }
-    sync();
-    const id = setInterval(sync, 1500);
-    window.addEventListener("storage", sync);
-    return () => { clearInterval(id); window.removeEventListener("storage", sync); };
-  }, [isReal, activeLearner.id]);
+  }, [tid, activeLearner?.id]);
 
   // Mark the open learner thread's incoming messages read, same as the
   // top-level Messages/LessonRoom side.
   React.useEffect(() => {
-    if (!isReal || MOCK_IDS.includes(activeLearner.id) || tab !== "chat") return;
+    if (!activeLearner || tab !== "chat") return;
     supabase.from("direct_messages").update({ read_at: new Date().toISOString() })
       .eq("recipient_id", tid).eq("sender_id", activeLearner.id).is("read_at", null)
       .then(({ error }) => { if (error) console.error("mark messages read failed", error.message); });
-  }, [isReal, tid, activeLearner.id, tab]);
+  }, [tid, activeLearner?.id, tab]);
   const [selectedSessionId, setSelectedSessionId] = useState(null);
   const [showPropose, setShowPropose] = useState(false);
   const [proposeErr, setProposeErr] = useState("");
@@ -14187,7 +13420,6 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
   // scopes the rows to this teacher; amounts shown are what actually moved.
   const [paymentsBySession, setPaymentsBySession] = useState({});
   React.useEffect(() => {
-    if (!isReal) return;
     let live = true;
     async function load() {
       try {
@@ -14203,7 +13435,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
     load();
     const id = setInterval(load, 15000);
     return () => { live = false; clearInterval(id); };
-  }, [isReal]);
+  }, []);
   const [newDate, setNewDate] = useState("");
   const [newTime, setNewTime] = useState("");
   const [recurring, setRecurring] = useState("none");
@@ -14219,35 +13451,24 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
   const [agendaBySession, setAgendaBySession] = useState({});
   const [sessionDetailTab, setSessionDetailTab] = useState({});
   const [agendaDraft, setAgendaDraft] = useState({});
-  function agendaKey(learnerId, sessionId) { return `artium_agenda_${tid}_${learnerId}_${sessionId}`; }
-  // Real teacher, real (non-mock) learner: agenda_notes is the source of
-  // truth, written through below and mirrored into agendaBySession so the
-  // textarea reads the same state either way. Demo/mock pairs keep the old
-  // localStorage-only behavior (see loadAgenda).
+  // agenda_notes is the source of truth, written through below and
+  // mirrored into agendaBySession so the textarea reads the same state.
   function saveAgenda(learnerId, sessionId, text) {
     setAgendaBySession(prev => ({ ...prev, [`${learnerId}_${sessionId}`]: text }));
-    if (isRealSessionPair) {
-      // Manual upsert, not .upsert(): agenda_notes' UPDATE grant only covers
-      // `content` (see migration) — an .upsert() merge would also try to SET
-      // session_id/teacher_id/learner_id on conflict and get rejected by the
-      // column-level grant even though those values never actually change.
-      // So: UPDATE first, and only INSERT the full row if nothing existed to
-      // update.
-      supabase.from("agenda_notes").update({ content: text, updated_at: new Date().toISOString() }).eq("session_id", sessionId).select("id").then(({ data, error }) => {
-        if (error) { console.error("saveAgenda", error.message); return; }
-        if (!data || data.length === 0) {
-          supabase.from("agenda_notes").insert({ session_id: sessionId, teacher_id: tid, learner_id: learnerId, content: text }).then(({ error }) => {
-            if (error) console.error("saveAgenda", error.message);
-          });
-        }
-      });
-    } else {
-      localStorage.setItem(agendaKey(learnerId, sessionId), text);
-    }
-  }
-  function loadAgenda(learnerId, sessionId) {
-    if (isRealSessionPair) return ""; // real pair: agendaBySession is filled by the DB poller below, never localStorage
-    return localStorage.getItem(agendaKey(learnerId, sessionId)) || "";
+    // Manual upsert, not .upsert(): agenda_notes' UPDATE grant only covers
+    // `content` (see migration) — an .upsert() merge would also try to SET
+    // session_id/teacher_id/learner_id on conflict and get rejected by the
+    // column-level grant even though those values never actually change.
+    // So: UPDATE first, and only INSERT the full row if nothing existed to
+    // update.
+    supabase.from("agenda_notes").update({ content: text, updated_at: new Date().toISOString() }).eq("session_id", sessionId).select("id").then(({ data, error }) => {
+      if (error) { console.error("saveAgenda", error.message); return; }
+      if (!data || data.length === 0) {
+        supabase.from("agenda_notes").insert({ session_id: sessionId, teacher_id: tid, learner_id: learnerId, content: text }).then(({ error }) => {
+          if (error) console.error("saveAgenda", error.message);
+        });
+      }
+    });
   }
   const [confirmRemoveId, setConfirmRemoveId] = useState(null);
   const [cancelLockH, setCancelLockH] = useState(24);
@@ -14255,49 +13476,19 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
   const [cancelFeesPct, setCancelFeesPct] = useState(50);
 
   const [openMonths, setOpenMonths] = useState({ "2026-07": true, "2026-08": false, "2026-09": false });
-  const MOCK_PLANNING = [
-    { id:"p1",  name:"Élise Marchand",   instrument:"Piano",   price:55, sessions:[{date:"2026-07-22",time:"10:00",status:"confirmed",paid:true},{date:"2026-08-05",time:"10:00",status:"teacher_proposed",paid:false}] },
-    { id:"p2",  name:"Théo Lambert",     instrument:"Piano",   price:45, sessions:[{date:"2026-07-25",time:"14:00",status:"confirmed",paid:false}] },
-    { id:"p3",  name:"Lukas Brunner",    instrument:"Piano",   price:60, sessions:[{date:"2026-07-28",time:"09:00",status:"confirmed",paid:true},{date:"2026-08-18",time:"10:00",status:"confirmed",paid:true}] },
-    { id:"p4",  name:"Polina Sokolova",  instrument:"Piano",   price:70, sessions:[{date:"2026-08-01",time:"11:00",status:"teacher_proposed",paid:false}] },
-    { id:"p5",  name:"Maya Chen",        instrument:"Piano",   price:65, sessions:[{date:"2026-08-03",time:"16:00",status:"confirmed",paid:true}] },
-    { id:"p6",  name:"Daniel Osei",      instrument:"Piano",   price:50, sessions:[{date:"2026-08-07",time:"15:00",status:"confirmed",paid:false}] },
-    { id:"p7",  name:"Freya Whitlock",   instrument:"Piano",   price:48, sessions:[{date:"2026-08-09",time:"10:00",status:"student_proposed",paid:false}] },
-    { id:"p8",  name:"Wei Zhang",        instrument:"Piano",   price:55, sessions:[{date:"2026-08-12",time:"17:00",status:"confirmed",paid:true}] },
-    { id:"p9",  name:"Haruto Sato",      instrument:"Piano",   price:60, sessions:[{date:"2026-08-14",time:"09:00",status:"confirmed",paid:true}] },
-    { id:"p10", name:"Ji-woo Kang",      instrument:"Piano",   price:45, sessions:[{date:"2026-08-15",time:"13:00",status:"teacher_proposed",paid:false}] },
-    { id:"p11", name:"Anneliese Voss",   instrument:"Piano",   price:60, sessions:[{date:"2026-08-20",time:"14:00",status:"confirmed",paid:false}] },
-    { id:"p12", name:"Nathan Boucher",   instrument:"Piano",   price:40, sessions:[{date:"2026-08-22",time:"11:00",status:"confirmed",paid:true}] },
-    { id:"p13", name:"Isla Cooper",      instrument:"Piano",   price:52, sessions:[{date:"2026-08-24",time:"09:00",status:"student_proposed",paid:false}] },
-    { id:"p14", name:"Sofia Reyes",      instrument:"Violin",  price:58, sessions:[{date:"2026-08-26",time:"16:00",status:"confirmed",paid:true}] },
-    { id:"p15", name:"Léon Dupont",      instrument:"Cello",   price:55, sessions:[{date:"2026-08-28",time:"10:00",status:"confirmed",paid:true}] },
-    { id:"p16", name:"Amara Diallo",     instrument:"Voice",   price:50, sessions:[{date:"2026-09-01",time:"13:00",status:"confirmed",paid:false}] },
-    { id:"p17", name:"Ryo Nakamura",     instrument:"Guitar",  price:45, sessions:[{date:"2026-09-03",time:"15:00",status:"confirmed",paid:true}] },
-    { id:"p18", name:"Ingrid Larsson",   instrument:"Flute",   price:48, sessions:[{date:"2026-09-05",time:"09:00",status:"confirmed",paid:true}] },
-    { id:"p19", name:"Carlos Mendez",    instrument:"Trumpet", price:52, sessions:[{date:"2026-09-08",time:"11:00",status:"teacher_proposed",paid:false}] },
-    { id:"p20", name:"Yuna Park",        instrument:"Harp",    price:60, sessions:[{date:"2026-09-12",time:"14:00",status:"confirmed",paid:true}] },
-  ];
 
-  const sessions = sessionsByLearner[activeLearner.id] || [];
-  const msgs = messagesByLearner[activeLearner.id] || [];
+  const sessions = activeLearner ? (sessionsByLearner[activeLearner.id] || []) : [];
+  const msgs = activeLearner ? (messagesByLearner[activeLearner.id] || []) : [];
   const teacherThemCount = msgs.filter(m => m.from === "them").length;
-  const teacherUnread = Math.max(0, teacherThemCount - (lastSeenByLearner[activeLearner.id] || 0));
+  const teacherUnread = activeLearner ? Math.max(0, teacherThemCount - (lastSeenByLearner[activeLearner.id] || 0)) : 0;
   React.useEffect(() => {
-    if (tab === "chat") setLastSeenByLearner(prev => ({ ...prev, [activeLearner.id]: teacherThemCount }));
-  }, [tab, activeLearner.id, teacherThemCount]);
+    if (tab === "chat" && activeLearner) setLastSeenByLearner(prev => ({ ...prev, [activeLearner.id]: teacherThemCount }));
+  }, [tab, activeLearner?.id, teacherThemCount]);
 
-  const MOCK_IDS = MOCK_LESSON_LEARNERS.map((l) => l.id);
-  // Whether this session belongs to a real teacher/learner pair that has an
-  // actual lesson_sessions row behind it — same split direct_messages above
-  // already uses for this teacher room.
-  const isRealSessionPair = isReal && !MOCK_IDS.includes(activeLearner.id);
-
-  // Real teacher, real (non-mock) learner: load this pair's agenda notes and
-  // poll — same cadence as the direct_messages loader above, scoped to
-  // whichever learner is currently open. Replaces the old localStorage-only
-  // store, which never reached the learner's own device.
+  // Load this pair's agenda notes and poll — same cadence as the
+  // direct_messages loader above, scoped to whichever learner is open.
   React.useEffect(() => {
-    if (!isRealSessionPair) return;
+    if (!activeLearner) return;
     let live = true;
     async function load() {
       const grouped = await fetchAgendaNotes(tid, activeLearner.id);
@@ -14311,21 +13502,15 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
     load();
     const id = setInterval(load, 8000);
     return () => { live = false; clearInterval(id); };
-  }, [isRealSessionPair, tid, activeLearner.id]);
+  }, [tid, activeLearner?.id]);
 
   function setSessions(fn) {
-    setSessionsByLearner((prev) => {
-      const next = fn(prev[activeLearner.id] || []);
-      // Persist to localStorage for the demo-teacher / non-mock-learner case
-      // only — a real pair is persisted to the DB by each call site below,
-      // and re-derived from there on the next poll.
-      if (!isReal && !MOCK_IDS.includes(activeLearner.id)) saveSessions(activeLearner.id, next);
-      return { ...prev, [activeLearner.id]: next };
-    });
+    if (!activeLearner) return;
+    setSessionsByLearner((prev) => ({ ...prev, [activeLearner.id]: fn(prev[activeLearner.id] || []) }));
   }
 
   function proposeSession() {
-    if (!newDate || !newTime) return;
+    if (!newDate || !newTime || !activeLearner) return;
     const intervalDays = { none: 0, weekly: 7, biweekly: 14, monthly: 30 }[recurring];
     const count = recurring === "none" ? 1 : recurringCount;
     const dates = [];
@@ -14334,32 +13519,25 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
       d.setDate(d.getDate() + i * intervalDays);
       dates.push(d.toISOString().slice(0, 10));
     }
-    if (isRealSessionPair) {
-      // Real teacher, real learner: insert and let the DB hand back real
-      // ids — a client-side Date.now() id wouldn't match anything a later
-      // approve/counter/cancel tried to update or delete by id.
-      const rows = dates.map((dateStr) => ({ teacher_id: tid, learner_id: activeLearner.id, session_date: dateStr, session_time: newTime, status: "teacher_proposed", proposed_by: "teacher", paid: false }));
-      supabase.from("lesson_sessions").insert(rows).select("id, session_date, session_time, status, proposed_by, paid").then(({ data, error }) => {
-        if (error) { console.error("proposeSession", error.message); setProposeErr(error.message); return; }
-        setProposeErr("");
-        const inserted = (data || []).map(dbRowToSession);
-        setSessionsByLearner((prev) => ({ ...prev, [activeLearner.id]: [...(prev[activeLearner.id] || []), ...inserted] }));
-      });
-    } else {
-      const newSessions = dates.map((dateStr, i) => ({ id: Date.now() + i, date: dateStr, time: newTime, status: "teacher_proposed", paid: false, recurring: recurring !== "none" ? recurring : undefined }));
-      setSessions((prev) => [...prev, ...newSessions]);
-    }
+    // Insert and let the DB hand back real ids — a client-side Date.now()
+    // id wouldn't match anything a later approve/counter/cancel tried to
+    // update or delete by id.
+    const rows = dates.map((dateStr) => ({ teacher_id: tid, learner_id: activeLearner.id, session_date: dateStr, session_time: newTime, status: "teacher_proposed", proposed_by: "teacher", paid: false }));
+    supabase.from("lesson_sessions").insert(rows).select("id, session_date, session_time, status, proposed_by, paid").then(({ data, error }) => {
+      if (error) { console.error("proposeSession", error.message); setProposeErr(error.message); return; }
+      setProposeErr("");
+      const inserted = (data || []).map(dbRowToSession);
+      setSessionsByLearner((prev) => ({ ...prev, [activeLearner.id]: [...(prev[activeLearner.id] || []), ...inserted] }));
+    });
     setNewDate(""); setNewTime(""); setRecurring("none"); setRecurringCount(4); setShowPropose(false);
   }
 
   function approveCounter(id) {
     setSessions((prev) => prev.map((s) => s.id === id ? { ...s, status: "confirmed" } : s));
     setShowCounter((prev) => ({ ...prev, [id]: false }));
-    if (isRealSessionPair) {
-      supabase.from("lesson_sessions").update({ status: "confirmed" }).eq("id", id).then(({ error }) => {
-        if (error) console.error("approveCounter", error.message);
-      });
-    }
+    supabase.from("lesson_sessions").update({ status: "confirmed" }).eq("id", id).then(({ error }) => {
+      if (error) console.error("approveCounter", error.message);
+    });
   }
 
   function proposeNewTime(id) {
@@ -14367,20 +13545,16 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
     if (!d || !t) return;
     setSessions((prev) => prev.map((s) => s.id === id ? { ...s, date: d, time: t, status: "teacher_proposed" } : s));
     setShowCounter((prev) => ({ ...prev, [id]: false }));
-    if (isRealSessionPair) {
-      supabase.from("lesson_sessions").update({ session_date: d, session_time: t, status: "teacher_proposed", proposed_by: "teacher" }).eq("id", id).then(({ error }) => {
-        if (error) console.error("proposeNewTime", error.message);
-      });
-    }
+    supabase.from("lesson_sessions").update({ session_date: d, session_time: t, status: "teacher_proposed", proposed_by: "teacher" }).eq("id", id).then(({ error }) => {
+      if (error) console.error("proposeNewTime", error.message);
+    });
   }
 
   function cancelSession(id) {
     setSessions((prev) => prev.filter((s) => s.id !== id));
-    if (isRealSessionPair) {
-      supabase.from("lesson_sessions").delete().eq("id", id).then(({ error }) => {
-        if (error) console.error("cancelSession", error.message);
-      });
-    }
+    supabase.from("lesson_sessions").delete().eq("id", id).then(({ error }) => {
+      if (error) console.error("cancelSession", error.message);
+    });
   }
 
   function timeUntil(s) { return new Date(s.date + "T" + s.time).getTime() - Date.now(); }
@@ -14389,19 +13563,12 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
 
   function sendMsg(text) {
     const body = text.trim();
-    if (!body) return;
+    if (!body || !activeLearner) return;
     setMessagesByLearner((prev) => ({ ...prev, [activeLearner.id]: [...(prev[activeLearner.id] || []), { from: "me", text: body }] }));
-    if (MOCK_IDS.includes(activeLearner.id)) return; // mock thread: display-only
-    if (isReal) {
-      // Real teacher, real learner: the shared table both sides poll.
-      supabase.from("direct_messages").insert({ sender_id: tid, recipient_id: activeLearner.id, body }).then(({ error }) => {
-        if (error) console.error("send message failed", error.message);
-      });
-      return;
-    }
-    // Demo teacher account: old localStorage cross-tab behaviour.
-    const stored = loadMsgs(activeLearner.id) || [];
-    saveMsgs(activeLearner.id, [...stored, { from: "teacher", text: body }]);
+    // The shared table both sides poll.
+    supabase.from("direct_messages").insert({ sender_id: tid, recipient_id: activeLearner.id, body }).then(({ error }) => {
+      if (error) console.error("send message failed", error.message);
+    });
   }
 
   // One bar for five destinations. My Rules and My Planning used to be two
@@ -14479,7 +13646,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
               <button onClick={() => {
                 const remaining = allLearners.filter(l => l.id !== confirmRemoveId);
                 setRemovedStudentIds(prev => new Set([...prev, confirmRemoveId]));
-                if (activeLearner.id === confirmRemoveId && remaining.length > 0) setActiveLearner(remaining[0]);
+                if (activeLearner?.id === confirmRemoveId) setActiveLearner(remaining[0]);
                 setConfirmRemoveId(null);
               }}
                 style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "none", background: "#c0392b", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
@@ -14525,7 +13692,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
                 {pageLearners.map((l) => (
                   <div key={l.id} style={{ position: "relative", display: "inline-flex" }}>
                     <button onClick={() => { setActiveLearner(l); setSelectedSessionId(null); setTab("chat"); }}
-                      style={{ padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: activeLearner.id === l.id ? 700 : 500, border: activeLearner.id === l.id ? `2px solid ${C.brass}` : "none", background: "rgba(176,146,98,0.05)", color: activeLearner.id === l.id ? C.ivory : C.ivoryDim, cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.06)" }}>
+                      style={{ padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: activeLearner?.id === l.id ? 700 : 500, border: activeLearner?.id === l.id ? `2px solid ${C.brass}` : "none", background: "rgba(176,146,98,0.05)", color: activeLearner?.id === l.id ? C.ivory : C.ivoryDim, cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.06)" }}>
                       {l.name.split(" ")[0]}
                     </button>
                     <button onClick={(e) => { e.stopPropagation(); setConfirmRemoveId(l.id); }}
@@ -14553,6 +13720,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
           );
         })()}
         {/* Active learner info */}
+        {activeLearner ? (
         <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", background: "rgba(176,146,98,0.05)", borderRadius: 12, border: "none", boxShadow: "0 1px 6px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04)", marginBottom: 16, marginTop: 0 }}>
           <Avatar name={activeLearner.name} id={activeLearner.id} size={40} online />
           <div>
@@ -14560,6 +13728,9 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
             <p style={{ fontSize: 12, color: C.ivoryDim, margin: "2px 0 0" }}>{activeLearner.instrument} · {activeLearner.level}</p>
           </div>
         </div>
+        ) : (
+          <p style={{ fontSize: 13, color: C.ivoryDim, textAlign: "center", padding: "20px 0" }}>No students yet — accepted teaching requests will show up here.</p>
+        )}
         </>)}
       </div>
 
@@ -14598,18 +13769,12 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
 
       {/* ── My Planning ── */}
       {roomView === "planning" && (() => {
-        // Merge MOCK_PLANNING with real sessions from sessionsByLearner (non-mock learners)
-        const mockSessions = MOCK_PLANNING.flatMap(s =>
-          s.sessions.map(sess => ({ ...sess, student: s }))
-        );
-        const realSessions = Object.entries(sessionsByLearner).flatMap(([learnerId, sessList]) => {
+        const allSessions = Object.entries(sessionsByLearner).flatMap(([learnerId, sessList]) => {
           const learner = allLearners.find(l => l.id === learnerId);
           if (!learner) return [];
           const student = { id: learnerId, name: learner.name, instrument: learner.instrument, price: 60 };
           return (sessList || []).map(sess => ({ ...sess, student }));
-        });
-        const allSessions = [...mockSessions, ...realSessions]
-          .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+        }).sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
         const byMonth = {};
         allSessions.forEach(sess => {
           const key = sess.date.slice(0, 7);
@@ -14702,8 +13867,8 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
         );
       })()}
 
-      {/* Inner tab bar — students view only */}
-      {roomView === "students" && (
+      {/* Inner tab bar — students view only, and only once a student exists */}
+      {roomView === "students" && activeLearner && (
         <React.Fragment> {/* Inner tab bar */}
       <div style={{ margin: "0 20px 20px", background: "rgba(176,146,98,0.05)", borderRadius: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06)", overflow: "hidden", minHeight: 320 }}>
       <RoomTabs />
@@ -14773,11 +13938,6 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
                     </div>
                   )}
                   {proposeErr && <p style={{ fontSize: 12, color: "#B3261E", margin: "0 0 8px" }}>Could not save: {proposeErr}</p>}
-                  {/* Diagnostic while the demo-era stores are being retired:
-                      a thread the app will NOT persist says so out loud
-                      instead of silently saving into this device only. Its
-                      absence on screen also proves which build is running. */}
-                  {!isRealSessionPair && <p style={{ fontSize: 11, color: C.ivoryDim, margin: "0 0 8px" }}>Practice thread — proposals here stay on this device (learner id: {String(activeLearner.id)})</p>}
                   <div style={{ display: "flex", gap: 8 }}>
                     <button onClick={proposeSession} disabled={!newDate || !newTime}
                       style={{ flex: 1, padding: "8px 0", borderRadius: 9, background: C.brass, color: C.brassText, fontSize: 13, fontWeight: 600, border: "none", cursor: !newDate || !newTime ? "not-allowed" : "pointer", opacity: !newDate || !newTime ? 0.5 : 1 }}>
@@ -14895,7 +14055,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
                   {/* Agenda tab — confirmed sessions only */}
                   {isConfirmed && (() => {
                     const detailTab = sessionDetailTab[sel.id] || "details";
-                    const agendaText = agendaBySession[`${activeLearner.id}_${sel.id}`] ?? loadAgenda(activeLearner.id, sel.id);
+                    const agendaText = agendaBySession[`${activeLearner.id}_${sel.id}`] ?? "";
                     return (
                       <div style={{ marginBottom: 12 }}>
                         <div style={{ display: "flex", gap: 0, borderBottom: `1px solid ${C.inkLine}`, marginBottom: 10 }}>
