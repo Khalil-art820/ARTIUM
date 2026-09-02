@@ -14225,7 +14225,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
       // column-level grant even though those values never actually change.
       // So: UPDATE first, and only INSERT the full row if nothing existed to
       // update.
-      supabase.from("agenda_notes").update({ content: text }).eq("session_id", sessionId).select("id").then(({ data, error }) => {
+      supabase.from("agenda_notes").update({ content: text, updated_at: new Date().toISOString() }).eq("session_id", sessionId).select("id").then(({ data, error }) => {
         if (error) { console.error("saveAgenda", error.message); return; }
         if (!data || data.length === 0) {
           supabase.from("agenda_notes").insert({ session_id: sessionId, teacher_id: tid, learner_id: learnerId, content: text }).then(({ error }) => {
