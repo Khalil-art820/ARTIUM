@@ -10950,9 +10950,9 @@ function LearnerNotificationBell({ authUser, teachers, learnerSessionsByTeacher,
     setAckAgendaTs(now);
   }
 
-  function goTo(teacherId) {
+  function goTo(teacherId, sessionId) {
     setOpen(false);
-    onGoToTeacherRoom && onGoToTeacherRoom(teacherId);
+    onGoToTeacherRoom && onGoToTeacherRoom(teacherId, sessionId);
   }
 
   function Row({ icon, tileBg, tileColor, title, subtitle, onClick }) {
@@ -11019,7 +11019,7 @@ function LearnerNotificationBell({ authUser, teachers, learnerSessionsByTeacher,
                   tileBg="rgba(201,150,46,0.14)" tileColor={C.brass}
                   title={`${teacherName(p.teacherId)} proposed ${p.date} · ${p.time}`}
                   subtitle="Awaiting your reply"
-                  onClick={() => goTo(p.teacherId)}
+                  onClick={() => goTo(p.teacherId, p.id)}
                 />
               ))}
               {newAgendaRows.map((r) => (
@@ -11048,6 +11048,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
   const [activeLessonTeacherId, setActiveLessonTeacherId] = useState(null);
   const [learnerRoomView, setLearnerRoomView] = useState("teachers"); // "teachers" | "planning"
   const [teacherQ, setTeacherQ] = useState("");
+  const [focusSessionReq, setFocusSessionReq] = useState(null);
   const [learnerOpenMonths, setLearnerOpenMonths] = useState({});
   const [learnerSessionsByTeacher, setLearnerSessionsByTeacher] = useState({});
 
@@ -11235,11 +11236,14 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
             authUser={authUser}
             teachers={teachers}
             learnerSessionsByTeacher={learnerSessionsByTeacher}
-            onGoToTeacherRoom={(teacherId) => {
+            onGoToTeacherRoom={(teacherId, sessionId) => {
               setSelectedId(null);
               setLearnerRoomView("teachers");
               setActiveLessonTeacherId(teacherId);
               setAppTab("lesson");
+              // A proposal notification lands ON the proposed session card,
+              // Schedule & Payments open, so acting takes one tap not four.
+              setFocusSessionReq(sessionId ? { sessionId, at: Date.now() } : null);
             }}
           />
           <button
@@ -11620,6 +11624,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
             <div style={{ margin: "0 20px 20px", background: "rgba(176,146,98,0.05)", borderRadius: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06)", overflow: "hidden", minHeight: 320 }}>
               <LessonRoom
                 teacher={activeLessonTeacher}
+                focusSession={focusSessionReq}
                 messages={conversations[activeLessonTeacher.id] || []}
                 onSend={(t) => (onSendTo ? onSendTo(activeLessonTeacher.id, t) : onSend(t))}
                 onPayLesson={payForLesson}
@@ -11858,8 +11863,16 @@ function VideoSessionTab({ sessions, teacher, zoomLink, meetLink }) {
   );
 }
 
-function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payError, authUser }) {
+function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payError, authUser, focusSession }) {
   const [tab, setTab] = useState("chat");
+  // A bell notification can ask this room to open straight onto one session
+  // card — Schedule & Payments tab, that session selected. Keyed on `at` so
+  // tapping the same notification twice still refocuses.
+  React.useEffect(() => {
+    if (!focusSession?.sessionId) return;
+    setTab("schedule");
+    setSelectedSessionId(focusSession.sessionId);
+  }, [focusSession?.at]);
   // Real learner, real teacher: sessions live in lesson_sessions, keyed by
   // the learner's own id — replacing the localStorage key below, which was
   // hardcoded to a literal "demo-learner" and so never matched anything a
