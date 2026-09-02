@@ -2080,22 +2080,6 @@ export default function App() {
     try { return JSON.parse(localStorage.getItem("teachRequests") || "{}"); } catch { return {}; }
   });
 
-  // Names map for MyProfile's payment history: {learnerId: name}, built from
-  // the same incoming teach_requests row this teacher already reads for the
-  // notification bell. Only fetched while the profile tab is open — no point
-  // keeping it warm on every screen.
-  const [myPaymentNames, setMyPaymentNames] = useState({});
-  React.useEffect(() => {
-    if (appTab !== "profile" || !myProfile?.id) return;
-    let cancelled = false;
-    fetchIncomingTeachRequests(myProfile.id).then((reqs) => {
-      if (cancelled) return;
-      const map = {};
-      reqs.forEach((r) => { if (r.learnerId && r.name) map[r.learnerId] = r.name; });
-      setMyPaymentNames(map);
-    });
-    return () => { cancelled = true; };
-  }, [appTab, myProfile?.id]);
 
   // Cross-tab sync: when teacher accepts/declines in their tab, update learner's state live
   React.useEffect(() => {
@@ -4859,7 +4843,6 @@ export default function App() {
           )}
           {appTab === "profile" && !selectedStudentId && myProfile && (
             <MyProfile profile={myProfile} onEdit={editProfile} onLogout={handleLogout}
-              authUser={authUser} paymentNames={myPaymentNames}
               onUpdateCoverVideo={async (coverVideoUrl) => {
                 await supabase.from("profiles").update({ cover_video_url: coverVideoUrl || null }).eq("id", myProfile.id);
                 const updated = { ...myProfile, coverVideoUrl };
@@ -9928,125 +9911,7 @@ function StudentProfile({ student, conservatory, onBack, onMessage, locked, onAp
   );
 }
 
-/* ---------------------------------------------------------------- */
-/* PAYMENT HISTORY                                                    */
-/* ---------------------------------------------------------------- */
-// Shared by both roles' profile screens. RLS on `payments` already scopes
-// the rows to whichever side of a payment the signed-in user is on (payer
-// or receiving teacher), so a plain select with no filters is enough — no
-// separate learner/teacher query to keep in sync. `names` is an optional
-// {profileId: name} map the caller builds from data it already has (teach
-// requests on the teacher side, the teachers list on the learner side);
-// this component never queries other people's profiles itself, since RLS
-// may not let a teacher read a learner's profile row (or vice versa).
-const PAYMENT_STATUS_STYLE = {
-  paid: { bg: "rgba(26,158,110,0.14)", fg: "#1A9E6E" },
-  pending: { bg: C.brassDim, fg: C.brassLabel },
-  failed: { bg: "rgba(178,59,59,0.12)", fg: C.burgundy },
-  refunded: { bg: "rgba(106,112,128,0.14)", fg: C.ivoryDim },
-};
-function PaymentStatusChip({ status }) {
-  const s = PAYMENT_STATUS_STYLE[status] || PAYMENT_STATUS_STYLE.refunded;
-  return (
-    <span style={{
-      display: "inline-block", padding: "3px 8px", borderRadius: 999,
-      background: s.bg, color: s.fg,
-      fontFamily: FONT_BODY, fontSize: 11, fontWeight: 700,
-      textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap",
-    }}>
-      {status}
-    </span>
-  );
-}
-function centsToEuro(cents) { return `€${(Number(cents || 0) / 100).toFixed(2)}`; }
-
-function PaymentHistory({ authUser, names = {} }) {
-  const [rows, setRows] = React.useState([]);
-  const [loaded, setLoaded] = React.useState(false);
-
-  React.useEffect(() => {
-    let cancelled = false;
-    if (!authUser?.id) { setLoaded(true); return; }
-    supabase.from("payments").select("*").order("created_at", { ascending: false })
-      .then(({ data, error }) => {
-        if (cancelled) return;
-        setRows(!error && Array.isArray(data) ? data : []);
-        setLoaded(true);
-      })
-      .catch(() => { if (!cancelled) { setRows([]); setLoaded(true); } });
-    return () => { cancelled = true; };
-  }, [authUser?.id]);
-
-  if (!authUser?.id) return null;
-
-  return (
-    <div style={{ marginTop: 28 }}>
-      <p style={{
-        fontSize: 11, fontWeight: 600, color: C.brassLabel, textTransform: "uppercase",
-        letterSpacing: "0.08em", margin: "0 0 10px",
-      }}>
-        Payments
-      </p>
-      {loaded && rows.length === 0 && (
-        <p className="artium-aw-empty" style={{ padding: "18px 4px" }}>No payments yet.</p>
-      )}
-      {rows.length > 0 && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {rows.map((row) => {
-            const dateStr = row.created_at
-              ? new Date(row.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
-              : "";
-            const isIncoming = row.teacher_profile_id === authUser.id;
-            const counterpartId = isIncoming ? row.payer_user_id : row.teacher_profile_id;
-            const counterpartName = names[counterpartId];
-
-            return (
-              <div key={row.id} style={{
-                background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 12,
-                padding: "12px 14px", display: "flex", alignItems: "center",
-                justifyContent: "space-between", gap: 10, minWidth: 0,
-              }}>
-                <div style={{ minWidth: 0, flex: 1 }}>
-                  <p style={{ fontSize: 14, fontWeight: 600, color: C.ivory, margin: 0, lineHeight: 1.4 }}>
-                    {isIncoming
-                      ? <span style={{ fontFamily: FONT_MONO, fontVariantNumeric: "tabular-nums" }}>
-                          {`+${centsToEuro(row.teacher_amount_cents)}`}
-                        </span>
-                      : (row.kind === "promotion" ? "aclassicaltone promotion" : "Lesson payment")}
-                  </p>
-                  {isIncoming && (
-                    <p style={{ fontSize: 12, color: C.ivoryDim, margin: "2px 0 0" }}>
-                      {centsToEuro(row.gross_amount_cents)} lesson − {centsToEuro(row.commission_cents)} Artium (10%)
-                    </p>
-                  )}
-                  <p style={{ fontSize: 12, color: C.ivoryDim, margin: "2px 0 0" }}>
-                    {[counterpartName, dateStr].filter(Boolean).join(" · ")}
-                  </p>
-                </div>
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, flexShrink: 0 }}>
-                  {!isIncoming && (
-                    <span style={{
-                      fontFamily: FONT_MONO, fontSize: 14, fontWeight: 600, color: C.ivory,
-                      fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap",
-                    }}>
-                      −{centsToEuro(row.gross_amount_cents)}
-                    </span>
-                  )}
-                  <PaymentStatusChip status={row.status} />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ---------------------------------------------------------------- */
-/* MY PROFILE                                                         */
-/* ---------------------------------------------------------------- */
-function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack, onUpdateCoverVideo, authUser, paymentNames }) {
+function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack, onUpdateCoverVideo }) {
   const cons = findConservatory(profile.conservatoryId);
   const [confirmDelete, setConfirmDelete] = React.useState(false);
   const [deleting, setDeleting] = React.useState(false);
@@ -10150,7 +10015,6 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack, onUpdat
         {profile.composerDay && <Row label="A day with a composer">{profile.composerDay}</Row>}
       </div>
 
-      <PaymentHistory authUser={authUser} names={paymentNames} />
     </>
   );
 
@@ -11031,13 +10895,28 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
     const id = setInterval(load, 8000);
     return () => { live = false; clearInterval(id); };
   }, [authUser?.id]);
-  // Names map for the payment history card below: teacher id -> name, built
-  // from the teachers list already loaded for this screen — no extra query.
-  const learnerPaymentNames = React.useMemo(() => {
-    const map = {};
-    (teachers || []).forEach((t) => { if (t.id && t.name) map[t.id] = t.name; });
-    return map;
-  }, [teachers]);
+  // The ledger's view of each session: {lesson_session_id: payment row}.
+  // RLS scopes the select to payments this account is party to; My Planning
+  // uses it so amounts are the money that actually moved, not price guesses.
+  const [paymentsBySession, setPaymentsBySession] = useState({});
+  React.useEffect(() => {
+    if (!authUser?.id) return;
+    let live = true;
+    async function load() {
+      try {
+        const { data } = await supabase.from("payments")
+          .select("lesson_session_id, status, gross_amount_cents, commission_cents, teacher_amount_cents")
+          .eq("kind", "lesson").not("lesson_session_id", "is", null);
+        if (!live || !data) return;
+        const map = {};
+        data.forEach((r) => { map[r.lesson_session_id] = r; });
+        setPaymentsBySession(map);
+      } catch { /* table reachable states only */ }
+    }
+    load();
+    const id = setInterval(load, 15000);
+    return () => { live = false; clearInterval(id); };
+  }, [authUser?.id]);
   const selected = teachers.find((t) => t.id === selectedId);
   const status = selectedId ? teachRequests[selectedId] : undefined;
   const acceptedTeachers = teachers.filter((t) => teachRequests[t.id] === "accepted");
@@ -11469,7 +11348,12 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
                 </button>
               </div>
               {Object.entries(byMonth).map(([monthKey, sessions]) => {
-                const spent = sessions.filter((s) => s.status === "confirmed" && s.paid).reduce((sum, s) => sum + s.teacher.price, 0);
+                const spent = sessions.reduce((sum, s) => {
+                  const pay = paymentsBySession[s.id];
+                  if (pay?.status === "paid") return sum + pay.gross_amount_cents / 100;
+                  if (!paymentsBySession[s.id] && s.status === "confirmed" && s.paid) return sum + s.teacher.price;
+                  return sum;
+                }, 0);
                 const [y, m] = monthKey.split("-");
                 const monthLabel = new Date(Number(y), Number(m) - 1, 1).toLocaleDateString("en-GB", { month: "long", year: "numeric" });
                 const isOpen = !!learnerOpenMonths[monthKey];
@@ -11479,7 +11363,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
                       style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "11px 16px", background: C.inkSoft, border: "none", cursor: "pointer" }}>
                       <span style={{ fontSize: 13, fontWeight: 700, color: C.ivory }}>{monthLabel}</span>
                       <span style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                        {spent > 0 && <span style={{ fontSize: 12, fontWeight: 700, color: "#1A9E6E" }}>€{spent} spent</span>}
+                        {spent > 0 && <span style={{ fontSize: 12, fontWeight: 700, color: "#1A9E6E" }}>€{spent.toFixed(2)} spent</span>}
                         <span style={{ fontSize: 11, color: C.ivoryDim }}>{sessions.length} session{sessions.length !== 1 ? "s" : ""}</span>
                         <span style={{ fontSize: 14, color: C.ivoryDim }}>{isOpen ? "▲" : "▼"}</span>
                       </span>
@@ -11496,7 +11380,10 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
                         <tbody>
                           {sessions.map((s, i) => {
                             const dt = new Date(s.date + "T" + s.time);
-                            const amount = s.status === "confirmed" && s.paid ? `€${s.teacher.price}` : "—";
+                            const pay = paymentsBySession[s.id];
+                            const amount = pay?.status === "paid"
+                              ? `€${(pay.gross_amount_cents / 100).toFixed(2)}`
+                              : s.status === "confirmed" && s.paid ? `€${s.teacher.price}` : "—";
                             return (
                               <tr key={i} style={{ borderBottom: `1px solid ${C.inkLine}`, background: i % 2 === 0 ? "transparent" : "rgba(176,146,98,0.05)" }}>
                                 <td style={{ padding: "9px 12px" }}>
@@ -11638,8 +11525,6 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
               {learner?.instrument && <Row label="Instrument">{learner.instrument}</Row>}
               {learner?.location && <Row label="Location">{learner.location}</Row>}
             </div>
-
-            <PaymentHistory authUser={authUser} names={learnerPaymentNames} />
 
             {/* Edit form (inline) */}
             {editingProfile && (
@@ -14095,6 +13980,27 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
   const [selectedSessionId, setSelectedSessionId] = useState(null);
   const [showPropose, setShowPropose] = useState(false);
   const [proposeErr, setProposeErr] = useState("");
+  // Ledger view for My Planning: {lesson_session_id: payment row}. RLS
+  // scopes the rows to this teacher; amounts shown are what actually moved.
+  const [paymentsBySession, setPaymentsBySession] = useState({});
+  React.useEffect(() => {
+    if (!isReal) return;
+    let live = true;
+    async function load() {
+      try {
+        const { data } = await supabase.from("payments")
+          .select("lesson_session_id, status, gross_amount_cents, commission_cents, teacher_amount_cents")
+          .eq("kind", "lesson").not("lesson_session_id", "is", null);
+        if (!live || !data) return;
+        const map = {};
+        data.forEach((r) => { map[r.lesson_session_id] = r; });
+        setPaymentsBySession(map);
+      } catch { /* defensive */ }
+    }
+    load();
+    const id = setInterval(load, 15000);
+    return () => { live = false; clearInterval(id); };
+  }, [isReal]);
   const [newDate, setNewDate] = useState("");
   const [newTime, setNewTime] = useState("");
   const [recurring, setRecurring] = useState("none");
@@ -14516,7 +14422,12 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
           </div>
           <div style={{ padding: "0 20px 32px" }}>
             {Object.entries(byMonth).map(([monthKey, sessions]) => {
-              const earned = sessions.filter(s => s.status === "confirmed" && s.paid).reduce((sum, s) => sum + s.student.price, 0);
+              const earned = sessions.reduce((sum, s) => {
+                const pay = paymentsBySession[s.id];
+                if (pay?.status === "paid") return sum + pay.teacher_amount_cents / 100;
+                if (!pay && s.status === "confirmed" && s.paid) return sum + s.student.price;
+                return sum;
+              }, 0);
               const [y, m] = monthKey.split("-");
               const monthLabel = new Date(Number(y), Number(m) - 1, 1).toLocaleDateString("en-GB", { month: "long", year: "numeric" });
               const isOpen = !!openMonths[monthKey];
@@ -14526,7 +14437,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
                     style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "11px 16px", background: C.inkSoft, border: "none", cursor: "pointer" }}>
                     <span style={{ fontSize: 13, fontWeight: 700, color: C.ivory }}>{monthLabel}</span>
                     <span style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                      {earned > 0 && <span style={{ fontSize: 12, fontWeight: 700, color: "#1A9E6E" }}>€{earned} earned</span>}
+                      {earned > 0 && <span style={{ fontSize: 12, fontWeight: 700, color: "#1A9E6E" }}>€{earned.toFixed(2)} earned</span>}
                       <span style={{ fontSize: 11, color: C.ivoryDim }}>{sessions.length} session{sessions.length !== 1 ? "s" : ""}</span>
                       <span style={{ fontSize: 14, color: C.ivoryDim }}>{isOpen ? "▲" : "▼"}</span>
                     </span>
@@ -14543,7 +14454,13 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
                       <tbody>
                         {sessions.map((sess, i) => {
                           const dt = new Date(sess.date + "T" + sess.time);
-                          const amount = (sess.status === "confirmed" && sess.paid) ? `€${sess.student.price}` : "—";
+                          const pay = paymentsBySession[sess.id];
+                          const amount = pay?.status === "paid"
+                            ? `+€${(pay.teacher_amount_cents / 100).toFixed(2)}`
+                            : (sess.status === "confirmed" && sess.paid) ? `€${sess.student.price}` : "—";
+                          const split = pay?.status === "paid"
+                            ? `€${(pay.gross_amount_cents / 100).toFixed(2)} − €${(pay.commission_cents / 100).toFixed(2)} Artium`
+                            : null;
                           return (
                             <tr key={i} style={{ borderBottom: `1px solid ${C.inkLine}`, background: i % 2 === 0 ? "transparent" : "rgba(176,146,98,0.05)" }}>
                               <td style={{ padding: "9px 12px" }}>
@@ -14564,8 +14481,9 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
                                   {STATUS_LABEL[sess.status] || sess.status}
                                 </span>
                               </td>
-                              <td style={{ padding: "9px 12px", fontWeight: 700, color: amount === "—" ? C.ivoryDim : "#1A9E6E" }}>
+                              <td style={{ padding: "9px 12px", fontWeight: 700, color: amount === "—" ? C.ivoryDim : "#1A9E6E", fontVariantNumeric: "tabular-nums" }}>
                                 {amount}
+                                {split && <p style={{ margin: "2px 0 0", fontSize: 9.5, fontWeight: 500, color: C.ivoryDim, whiteSpace: "nowrap" }}>{split}</p>}
                               </td>
                             </tr>
                           );
