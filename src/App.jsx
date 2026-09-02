@@ -8519,6 +8519,11 @@ async function fetchIncomingTeachRequests(teacherId) {
 // foreign key to profiles(id), so this is also a cheap way to know whether a
 // given side of a lesson pairing can have a real row at all.
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+// Whole euros stay whole: "€55", not "€55.00" — cents appear only when
+// the amount actually has them (fees like €1.98).
+function euroAmount(cents) {
+  return cents % 100 === 0 ? String(cents / 100) : (cents / 100).toFixed(2);
+}
 function isUuid(id) { return typeof id === "string" && UUID_RE.test(id); }
 
 // Shared by LessonRoom (learner side) and TeacherLessonRoom (teacher side):
@@ -11348,10 +11353,10 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
                 </button>
               </div>
               {Object.entries(byMonth).map(([monthKey, sessions]) => {
-                const spent = sessions.reduce((sum, s) => {
+                const spentCents = sessions.reduce((sum, s) => {
                   const pay = paymentsBySession[s.id];
-                  if (pay?.status === "paid") return sum + pay.gross_amount_cents / 100;
-                  if (!paymentsBySession[s.id] && s.status === "confirmed" && s.paid) return sum + s.teacher.price;
+                  if (pay?.status === "paid") return sum + pay.gross_amount_cents;
+                  if (!paymentsBySession[s.id] && s.status === "confirmed" && s.paid) return sum + s.teacher.price * 100;
                   return sum;
                 }, 0);
                 const [y, m] = monthKey.split("-");
@@ -11363,7 +11368,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
                       style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "11px 16px", background: C.inkSoft, border: "none", cursor: "pointer" }}>
                       <span style={{ fontSize: 13, fontWeight: 700, color: C.ivory }}>{monthLabel}</span>
                       <span style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                        {spent > 0 && <span style={{ fontSize: 12, fontWeight: 700, color: "#1A9E6E" }}>€{spent.toFixed(2)} spent</span>}
+                        {spentCents > 0 && <span style={{ fontSize: 12, fontWeight: 700, color: "#1A9E6E" }}>€{euroAmount(spentCents)} spent</span>}
                         <span style={{ fontSize: 11, color: C.ivoryDim }}>{sessions.length} session{sessions.length !== 1 ? "s" : ""}</span>
                         <span style={{ fontSize: 14, color: C.ivoryDim }}>{isOpen ? "▲" : "▼"}</span>
                       </span>
@@ -11382,7 +11387,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
                             const dt = new Date(s.date + "T" + s.time);
                             const pay = paymentsBySession[s.id];
                             const amount = pay?.status === "paid"
-                              ? `€${(pay.gross_amount_cents / 100).toFixed(2)}`
+                              ? `€${euroAmount(pay.gross_amount_cents)}`
                               : s.status === "confirmed" && s.paid ? `€${s.teacher.price}` : "—";
                             return (
                               <tr key={i} style={{ borderBottom: `1px solid ${C.inkLine}`, background: i % 2 === 0 ? "transparent" : "rgba(176,146,98,0.05)" }}>
@@ -14422,10 +14427,10 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
           </div>
           <div style={{ padding: "0 20px 32px" }}>
             {Object.entries(byMonth).map(([monthKey, sessions]) => {
-              const earned = sessions.reduce((sum, s) => {
+              const earnedCents = sessions.reduce((sum, s) => {
                 const pay = paymentsBySession[s.id];
-                if (pay?.status === "paid") return sum + pay.teacher_amount_cents / 100;
-                if (!pay && s.status === "confirmed" && s.paid) return sum + s.student.price;
+                if (pay?.status === "paid") return sum + pay.teacher_amount_cents;
+                if (!pay && s.status === "confirmed" && s.paid) return sum + s.student.price * 100;
                 return sum;
               }, 0);
               const [y, m] = monthKey.split("-");
@@ -14437,7 +14442,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
                     style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "11px 16px", background: C.inkSoft, border: "none", cursor: "pointer" }}>
                     <span style={{ fontSize: 13, fontWeight: 700, color: C.ivory }}>{monthLabel}</span>
                     <span style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                      {earned > 0 && <span style={{ fontSize: 12, fontWeight: 700, color: "#1A9E6E" }}>€{earned.toFixed(2)} earned</span>}
+                      {earnedCents > 0 && <span style={{ fontSize: 12, fontWeight: 700, color: "#1A9E6E" }}>€{euroAmount(earnedCents)} earned</span>}
                       <span style={{ fontSize: 11, color: C.ivoryDim }}>{sessions.length} session{sessions.length !== 1 ? "s" : ""}</span>
                       <span style={{ fontSize: 14, color: C.ivoryDim }}>{isOpen ? "▲" : "▼"}</span>
                     </span>
@@ -14456,10 +14461,10 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
                           const dt = new Date(sess.date + "T" + sess.time);
                           const pay = paymentsBySession[sess.id];
                           const amount = pay?.status === "paid"
-                            ? `+€${(pay.teacher_amount_cents / 100).toFixed(2)}`
+                            ? `+€${euroAmount(pay.teacher_amount_cents)}`
                             : (sess.status === "confirmed" && sess.paid) ? `€${sess.student.price}` : "—";
                           const split = pay?.status === "paid"
-                            ? `€${(pay.gross_amount_cents / 100).toFixed(2)} − €${(pay.commission_cents / 100).toFixed(2)} Artium`
+                            ? `€${euroAmount(pay.gross_amount_cents)} − €${euroAmount(pay.commission_cents)} Artium`
                             : null;
                           return (
                             <tr key={i} style={{ borderBottom: `1px solid ${C.inkLine}`, background: i % 2 === 0 ? "transparent" : "rgba(176,146,98,0.05)" }}>
