@@ -2728,13 +2728,17 @@ export default function App() {
     setConversations((c) => (c[id] ? c : { ...c, [id]: [] }));
     setActiveChatId(id); setSelectedStudentId(null); setAppTabPersist("messages");
   }
-  function sendMessage(text) {
-    if (!text.trim() || !activeChatId) return;
+  function sendMessage(text) { sendMessageTo(activeChatId, text); }
+  // The lesson room tracks its open teacher in its own state, not in
+  // activeChatId — a send from there names its recipient explicitly instead
+  // of trusting a selection variable that may never have been set.
+  function sendMessageTo(peerId, text) {
+    if (!text.trim() || !peerId) return;
     const body = text.trim();
     // Real account: persist to the database and let the poll above confirm
     // it back — appended locally first so the sender sees it immediately.
     if (authUser?.id) {
-      const peer = activeChatId;
+      const peer = peerId;
       setConversations((c) => ({ ...c, [peer]: [...(c[peer] || []), { from: "me", text: body }] }));
       supabase.from("direct_messages").insert({ sender_id: authUser.id, recipient_id: peer, body }).then(({ error }) => {
         if (error) console.error("send message failed", error.message);
@@ -2742,7 +2746,7 @@ export default function App() {
       return;
     }
     // Demo (no auth account): the old canned-reply behaviour, local only.
-    setConversations((c) => ({ ...c, [activeChatId]: [...(c[activeChatId] || []), { from: "me", text }] }));
+    setConversations((c) => ({ ...c, [peerId]: [...(c[peerId] || []), { from: "me", text }] }));
     const replies = [
       "Completely agree — want to run it together sometime this week?",
       "That's exactly the section I'm stuck on too.",
@@ -2751,7 +2755,7 @@ export default function App() {
       "Let's set up a call and compare fingerings.",
     ];
     setTimeout(() => {
-      setConversations((c) => ({ ...c, [activeChatId]: [...(c[activeChatId] || []), { from: "them", text: replies[Math.floor(Math.random() * replies.length)] }] }));
+      setConversations((c) => ({ ...c, [peerId]: [...(c[peerId] || []), { from: "them", text: replies[Math.floor(Math.random() * replies.length)] }] }));
     }, 1400);
   }
 
@@ -4518,6 +4522,7 @@ export default function App() {
           activeChatId={activeChatId}
           setActiveChatId={setActiveChatId}
           onSend={sendMessage}
+          onSendTo={sendMessageTo}
           onBack={backToEntry}
           onUpdateProfile={(updates) => {
             setLearnerProfile((p) => ({ ...p, ...updates }));
@@ -10849,7 +10854,7 @@ function TeacherMap({ teachers, selectedId, onSelect, height = 520 }) {
 }
 
 /* ---- Learner home: map + request + chat ---- */
-function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conversations, activeChatId, setActiveChatId, onSend, onBack, onUpdateProfile, onLogout, onDeleteAccount, memberCount, musicOn, onMusicToggle, avatarPhotoUrl, avatarName, initialTab = "map", authUser }) {
+function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conversations, activeChatId, setActiveChatId, onSend, onSendTo, onBack, onUpdateProfile, onLogout, onDeleteAccount, memberCount, musicOn, onMusicToggle, avatarPhotoUrl, avatarName, initialTab = "map", authUser }) {
   const [appTab, setAppTab] = useState(initialTab);
   const [selectedConsId, setSelectedConsId] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
@@ -11385,7 +11390,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
               <LessonRoom
                 teacher={activeLessonTeacher}
                 messages={conversations[activeLessonTeacher.id] || []}
-                onSend={onSend}
+                onSend={(t) => (onSendTo ? onSendTo(activeLessonTeacher.id, t) : onSend(t))}
                 onPayLesson={payForLesson}
                 payLoading={payLoading}
                 payError={payError}
