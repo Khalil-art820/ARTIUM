@@ -8504,8 +8504,8 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
 
   function acknowledgeAll() {
     if (!networkFeeds) return;
-    // Real requests carry the row's own uuid now; the demo/localStorage path
-    // still has none, so it falls back to learnerId as before.
+    // Rows carry the DB row's uuid; learnerId stays only as a defensive
+    // fallback for any row missing an id.
     const teachIds = pending.map((r) => r.id ?? r.learnerId);
     try {
       localStorage.setItem("artium_ack_teach_v1", JSON.stringify(teachIds));
