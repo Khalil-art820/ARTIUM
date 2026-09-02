@@ -10908,7 +10908,7 @@ function LearnerNotificationBell({ authUser, teachers, learnerSessionsByTeacher,
     async function load() {
       try {
         const { data, error } = await supabase.from("agenda_notes")
-          .select("id, teacher_id, updated_at").eq("learner_id", authUser.id);
+          .select("id, teacher_id, session_id, updated_at").eq("learner_id", authUser.id);
         if (live && !error && data) setAgendaRows(data);
       } catch { /* defensive: table/columns not reachable yet */ }
     }
@@ -10950,9 +10950,9 @@ function LearnerNotificationBell({ authUser, teachers, learnerSessionsByTeacher,
     setAckAgendaTs(now);
   }
 
-  function goTo(teacherId, sessionId) {
+  function goTo(teacherId, sessionId, detail) {
     setOpen(false);
-    onGoToTeacherRoom && onGoToTeacherRoom(teacherId, sessionId);
+    onGoToTeacherRoom && onGoToTeacherRoom(teacherId, sessionId, detail);
   }
 
   function Row({ icon, tileBg, tileColor, title, subtitle, onClick }) {
@@ -11029,7 +11029,7 @@ function LearnerNotificationBell({ authUser, teachers, learnerSessionsByTeacher,
                   tileBg="rgba(63,139,92,0.14)" tileColor={C.forest}
                   title={`${teacherName(r.teacher_id)} updated the session agenda`}
                   subtitle="New in your lesson room"
-                  onClick={() => goTo(r.teacher_id)}
+                  onClick={() => goTo(r.teacher_id, r.session_id, "agenda")}
                 />
               ))}
             </>
@@ -11236,14 +11236,14 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
             authUser={authUser}
             teachers={teachers}
             learnerSessionsByTeacher={learnerSessionsByTeacher}
-            onGoToTeacherRoom={(teacherId, sessionId) => {
+            onGoToTeacherRoom={(teacherId, sessionId, detail) => {
               setSelectedId(null);
               setLearnerRoomView("teachers");
               setActiveLessonTeacherId(teacherId);
               setAppTab("lesson");
-              // A proposal notification lands ON the proposed session card,
-              // Schedule & Payments open, so acting takes one tap not four.
-              setFocusSessionReq(sessionId ? { sessionId, at: Date.now() } : null);
+              // A notification lands ON its session card, Schedule & Payments
+              // open — and for agenda rows, the card's Agenda sub-tab too.
+              setFocusSessionReq(sessionId ? { sessionId, detail: detail || null, at: Date.now() } : null);
             }}
           />
           <button
@@ -11872,6 +11872,9 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
     if (!focusSession?.sessionId) return;
     setTab("schedule");
     setSelectedSessionId(focusSession.sessionId);
+    if (focusSession.detail) {
+      setLearnerSessionDetailTab((prev) => ({ ...prev, [focusSession.sessionId]: focusSession.detail }));
+    }
   }, [focusSession?.at]);
   // Real learner, real teacher: sessions live in lesson_sessions, keyed by
   // the learner's own id — replacing the localStorage key below, which was
