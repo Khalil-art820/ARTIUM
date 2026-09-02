@@ -10912,7 +10912,7 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
   const [payLoading, setPayLoading] = useState(false);
   const [payError, setPayError] = useState("");
 
-  async function payForLesson(teacher) {
+  async function payForLesson(teacher, sessionId) {
     setPayLoading(true);
     setPayError("");
     try {
@@ -10929,6 +10929,11 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
           body: JSON.stringify({
             kind: "lesson",
             teacherId: teacher.id,
+            // Real lesson_sessions row this checkout is for, if any (demo
+            // pairs have no real row — see LessonRoom's isRealPair). The
+            // webhook uses this to flip lesson_sessions.paid once Stripe
+            // actually confirms the charge; the client never sets it itself.
+            ...(sessionId ? { sessionId } : {}),
             successUrl: window.location.origin + "?payment=success",
             cancelUrl: window.location.origin + "?payment=cancel",
           }),
@@ -11758,6 +11763,22 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
   const [zoomSaved, setZoomSaved] = useState(false);
   const [learnerSessionDetailTab, setLearnerSessionDetailTab] = useState({});
   const [learnerAgenda, setLearnerAgenda] = useState({});
+  // Which session (if any) the learner most recently clicked "Pay" for and
+  // hasn't seen confirmed as paid yet — survives the redirect to Stripe and
+  // back via sessionStorage, purely to drive the "Payment processing…" hint
+  // below. Never itself the source of truth for `paid`.
+  const [pendingPayId, setPendingPayId] = useState(() => {
+    if (!isRealPair || !teacher) return null;
+    try { return sessionStorage.getItem(`artium_pending_pay_${teacher.id}`) || null; } catch { return null; }
+  });
+  React.useEffect(() => {
+    if (pendingPayId == null) return;
+    const s = sessions.find((x) => String(x.id) === String(pendingPayId));
+    if (s?.paid) {
+      try { sessionStorage.removeItem(`artium_pending_pay_${teacher?.id}`); } catch {}
+      setPendingPayId(null);
+    }
+  }, [sessions, pendingPayId, teacher?.id]);
   // Real learner: load the teacher's agenda notes for this pair and poll —
   // same cadence as the sessions loader above. Replaces the old
   // localStorage-only sync, which read a key hardcoded with a literal
@@ -11995,8 +12016,33 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
                       <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, background: "#DFF2E8", color: "#1A9E6E", fontSize: 12, fontWeight: 700, marginBottom: 8 }}>
                         <Check size={13} /> Paid
                       </span>
+                    ) : pendingPayId === sel.id ? (
+                      // Real pair only (see below): came back from Stripe but the
+                      // 8s lesson_sessions poll hasn't seen the webhook's write
+                      // yet. Purely a "hang on" hint — the actual tick above only
+                      // ever comes from that poll picking up paid=true.
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, background: "rgba(176,146,98,0.12)", color: C.brassLabel, fontSize: 12, fontWeight: 600, marginBottom: 8 }}>
+                        Payment processing…
+                      </span>
                     ) : (
-                      <button onClick={() => { onPayLesson(teacher); setSessions((prev) => prev.map((x) => x.id === sel.id ? { ...x, paid: true } : x)); if (isRealPair) { supabase.from("lesson_sessions").update({ paid: true }).eq("id", sel.id).then(({ error }) => { if (error) console.error("mark session paid failed", error.message); }); } }} disabled={payLoading}
+                      <button onClick={() => {
+                        if (isRealPair) {
+                          // No optimistic write: lesson_sessions.paid is set
+                          // only by stripe-webhook once Stripe confirms the
+                          // charge (the client's UPDATE grant on that column
+                          // was revoked). Remember which session we're paying
+                          // for so the "processing" hint survives the round
+                          // trip to Stripe and back.
+                          try { sessionStorage.setItem(`artium_pending_pay_${teacher.id}`, String(sel.id)); } catch {}
+                          setPendingPayId(sel.id);
+                          onPayLesson(teacher, sel.id);
+                        } else {
+                          // Demo/mock pair: no real payments row, no webhook
+                          // will ever fire — keep the old local-only behavior.
+                          onPayLesson(teacher);
+                          setSessions((prev) => prev.map((x) => x.id === sel.id ? { ...x, paid: true } : x));
+                        }
+                      }} disabled={payLoading}
                         style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, background: "none", border: `1px solid ${C.brass}`, color: C.brassLabel, fontSize: 12, fontWeight: 600, cursor: payLoading ? "not-allowed" : "pointer", opacity: payLoading ? 0.6 : 1, marginBottom: 8 }}>
                         <CreditCard size={13} />
                         {payLoading ? "Redirecting…" : `Pay €${teacher.teaching.price}`}

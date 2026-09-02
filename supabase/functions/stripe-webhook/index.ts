@@ -59,6 +59,28 @@ Deno.serve(async (req) => {
           { status: "paid", payment_intent_id: paymentIntentId || null }
         );
 
+        // Flip the lesson_sessions row itself — this is the only place
+        // lesson_sessions.paid is ever set (the client's UPDATE grant on
+        // that column was revoked; see 20260902400000_payments_link_session).
+        // Look the row up by whichever identifier we have and only touch it
+        // if it's actually a lesson payment with a linked session, and only
+        // if it isn't already paid — keeps this handler idempotent across
+        // Stripe retries.
+        {
+          const { data: paymentRow } = await adminClient
+            .from("payments")
+            .select("lesson_session_id")
+            .match(paymentId ? { id: paymentId } : { checkout_session_id: session.id })
+            .maybeSingle();
+          if (paymentRow?.lesson_session_id) {
+            await adminClient
+              .from("lesson_sessions")
+              .update({ paid: true, updated_at: new Date().toISOString() })
+              .eq("id", paymentRow.lesson_session_id)
+              .eq("paid", false);
+          }
+        }
+
         // Backfill the actual processing fee from the balance transaction —
         // this is never estimated or hard-coded elsewhere in the codebase.
         if (paymentIntentId) {

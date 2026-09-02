@@ -31,6 +31,8 @@ function isAllowedUrl(url: string) {
 // here, server-side, rather than trusted from the client.
 const PROMO_TOTAL_CENTS = 65 * 100;
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 async function commissionRateFor(adminClient: ReturnType<typeof createClient>, teacherId: string | null, category: string) {
   if (teacherId) {
     const { data: teacherAndCategory } = await adminClient
@@ -95,7 +97,7 @@ Deno.serve(async (req) => {
   );
 
   try {
-    const { kind, teacherId, successUrl, cancelUrl } = await req.json();
+    const { kind, teacherId, sessionId, successUrl, cancelUrl } = await req.json();
 
     if (!isAllowedUrl(successUrl) || !isAllowedUrl(cancelUrl)) {
       return new Response(JSON.stringify({ error: "Invalid redirect URL" }), { status: 400, headers: { ...CORS, "Content-Type": "application/json" } });
@@ -141,6 +143,30 @@ Deno.serve(async (req) => {
         .maybeSingle();
       if (!payout || payout.payout_status !== "ready" || !payout.stripe_account_id) {
         return new Response(JSON.stringify({ error: "This teacher can't accept paid bookings yet." }), { status: 400, headers: { ...CORS, "Content-Type": "application/json" } });
+      }
+
+      // Optional: pay for a specific lesson_sessions row rather than an
+      // untracked one-off charge. If a sessionId is given it must be a real
+      // uuid, belong to this teacher/learner pair, and not already be paid —
+      // otherwise the webhook has nothing legitimate to flip paid=true on,
+      // or would be double-charging an already-paid session.
+      if (sessionId !== undefined && sessionId !== null) {
+        if (typeof sessionId !== "string" || !UUID_RE.test(sessionId)) {
+          return new Response(JSON.stringify({ error: "Invalid sessionId" }), { status: 400, headers: { ...CORS, "Content-Type": "application/json" } });
+        }
+        const { data: lessonSession, error: lessonSessionError } = await adminClient
+          .from("lesson_sessions")
+          .select("id, paid")
+          .eq("id", sessionId)
+          .eq("teacher_id", teacherId)
+          .eq("learner_id", user.id)
+          .maybeSingle();
+        if (lessonSessionError || !lessonSession) {
+          return new Response(JSON.stringify({ error: "Session not found" }), { status: 400, headers: { ...CORS, "Content-Type": "application/json" } });
+        }
+        if (lessonSession.paid) {
+          return new Response(JSON.stringify({ error: "This session is already paid." }), { status: 400, headers: { ...CORS, "Content-Type": "application/json" } });
+        }
       }
 
       grossCents = Math.round(price * 100);
@@ -196,6 +222,7 @@ Deno.serve(async (req) => {
         gross_amount_cents: grossCents,
         commission_cents: commissionCents,
         teacher_amount_cents: teacherAmountCents,
+        lesson_session_id: kind === "lesson" ? (sessionId || null) : null,
         status: "pending",
       })
       .select()
