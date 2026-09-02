@@ -8568,6 +8568,21 @@ async function fetchLessonSessionsForLearner(learnerId) {
   return grouped;
 }
 
+// Shared by LessonRoom (learner side, read-only) and TeacherLessonRoom
+// (teacher side, read/write): one evolving agenda note per lesson_sessions
+// row, keyed by session_id — matches agenda_notes' unique(session_id).
+// RLS lets either side of the pair select, so this one query works for both.
+async function fetchAgendaNotes(teacherId, learnerId) {
+  if (!teacherId || !learnerId) return {};
+  const { data, error } = await supabase.from("agenda_notes")
+    .select("session_id, content")
+    .eq("teacher_id", teacherId).eq("learner_id", learnerId);
+  if (error || !data) return {};
+  const grouped = {};
+  for (const row of data) grouped[row.session_id] = row.content;
+  return grouped;
+}
+
 function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGoToAdmin, networkFeeds, puck, hireCount = 0, hireIds = [], onGoToConcerts, onGoToComposers, onGoToNews }) {
   const [open, setOpen] = React.useState(false);
   const [viewingLearner, setViewingLearner] = React.useState(null);
@@ -11740,8 +11755,27 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
   const [zoomSaved, setZoomSaved] = useState(false);
   const [learnerSessionDetailTab, setLearnerSessionDetailTab] = useState({});
   const [learnerAgenda, setLearnerAgenda] = useState({});
+  // Real learner: load the teacher's agenda notes for this pair and poll —
+  // same cadence as the sessions loader above. Replaces the old
+  // localStorage-only sync, which read a key hardcoded with a literal
+  // "demo-learner" — a real teacher's agenda never reached a real learner
+  // under that scheme, only another tab of the demo account.
   React.useEffect(() => {
-    if (!teacher) return;
+    if (!teacher || !isRealPair) return;
+    let live = true;
+    async function load() {
+      const grouped = await fetchAgendaNotes(teacher.id, authUser.id);
+      if (live) setLearnerAgenda(grouped);
+    }
+    load();
+    const id = setInterval(load, 8000);
+    return () => { live = false; clearInterval(id); };
+  }, [teacher?.id, authUser?.id, isRealPair]);
+
+  // Demo/local fallback only: the old localStorage cross-tab sync under the
+  // hardcoded "demo-learner" key the demo teacher room also still writes to.
+  React.useEffect(() => {
+    if (!teacher || isRealPair) return;
     function syncAgenda() {
       const updated = {};
       sessions.forEach(s => {
@@ -11755,7 +11789,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
     const id = setInterval(syncAgenda, 2000);
     window.addEventListener("storage", syncAgenda);
     return () => { clearInterval(id); window.removeEventListener("storage", syncAgenda); };
-  }, [teacher, sessions.length]);
+  }, [teacher, isRealPair, sessions.length]);
 
   const tabs = [
     { id: "chat", label: "Chat", Icon: MessageCircle },
@@ -13884,12 +13918,33 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
   const [sessionDetailTab, setSessionDetailTab] = useState({});
   const [agendaDraft, setAgendaDraft] = useState({});
   function agendaKey(learnerId, sessionId) { return `artium_agenda_${tid}_${learnerId}_${sessionId}`; }
+  // Real teacher, real (non-mock) learner: agenda_notes is the source of
+  // truth, written through below and mirrored into agendaBySession so the
+  // textarea reads the same state either way. Demo/mock pairs keep the old
+  // localStorage-only behavior (see loadAgenda).
   function saveAgenda(learnerId, sessionId, text) {
-    const key = agendaKey(learnerId, sessionId);
-    localStorage.setItem(key, text);
     setAgendaBySession(prev => ({ ...prev, [`${learnerId}_${sessionId}`]: text }));
+    if (isRealSessionPair) {
+      // Manual upsert, not .upsert(): agenda_notes' UPDATE grant only covers
+      // `content` (see migration) — an .upsert() merge would also try to SET
+      // session_id/teacher_id/learner_id on conflict and get rejected by the
+      // column-level grant even though those values never actually change.
+      // So: UPDATE first, and only INSERT the full row if nothing existed to
+      // update.
+      supabase.from("agenda_notes").update({ content: text }).eq("session_id", sessionId).select("id").then(({ data, error }) => {
+        if (error) { console.error("saveAgenda", error.message); return; }
+        if (!data || data.length === 0) {
+          supabase.from("agenda_notes").insert({ session_id: sessionId, teacher_id: tid, learner_id: learnerId, content: text }).then(({ error }) => {
+            if (error) console.error("saveAgenda", error.message);
+          });
+        }
+      });
+    } else {
+      localStorage.setItem(agendaKey(learnerId, sessionId), text);
+    }
   }
   function loadAgenda(learnerId, sessionId) {
+    if (isRealSessionPair) return ""; // real pair: agendaBySession is filled by the DB poller below, never localStorage
     return localStorage.getItem(agendaKey(learnerId, sessionId)) || "";
   }
   const [confirmRemoveId, setConfirmRemoveId] = useState(null);
@@ -13934,6 +13989,28 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
   // actual lesson_sessions row behind it — same split direct_messages above
   // already uses for this teacher room.
   const isRealSessionPair = isReal && !MOCK_IDS.includes(activeLearner.id);
+
+  // Real teacher, real (non-mock) learner: load this pair's agenda notes and
+  // poll — same cadence as the direct_messages loader above, scoped to
+  // whichever learner is currently open. Replaces the old localStorage-only
+  // store, which never reached the learner's own device.
+  React.useEffect(() => {
+    if (!isRealSessionPair) return;
+    let live = true;
+    async function load() {
+      const grouped = await fetchAgendaNotes(tid, activeLearner.id);
+      if (!live) return;
+      setAgendaBySession(prev => {
+        const next = { ...prev };
+        for (const sessionId of Object.keys(grouped)) next[`${activeLearner.id}_${sessionId}`] = grouped[sessionId];
+        return next;
+      });
+    }
+    load();
+    const id = setInterval(load, 8000);
+    return () => { live = false; clearInterval(id); };
+  }, [isRealSessionPair, tid, activeLearner.id]);
+
   function setSessions(fn) {
     setSessionsByLearner((prev) => {
       const next = fn(prev[activeLearner.id] || []);
