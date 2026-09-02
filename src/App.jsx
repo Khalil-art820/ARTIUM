@@ -11637,9 +11637,12 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
   const lsKey = teacher ? `artium_sessions_${teacher.id}_demo-learner` : null;
   const chatLsKey = teacher ? `artium_chat_${teacher.id}_demo-learner` : null;
 
-  // Live chat sync from localStorage
+  // Live chat sync from localStorage — DEMO PAIRS ONLY. For a real pair the
+  // `messages` prop (grouped from direct_messages by the app-level poll) is
+  // the one truth; this local layer used to shadow it and made real chat
+  // look dead in both directions.
   const [localMsgs, setLocalMsgs] = useState(() => {
-    if (chatLsKey) {
+    if (!isRealPair && chatLsKey) {
       try {
         const s = JSON.parse(localStorage.getItem(chatLsKey) || "null");
         if (s) return s.map((m) => m.from === "learner" ? { ...m, from: "me" } : m.from === "teacher" ? { ...m, from: "them" } : m);
@@ -11648,7 +11651,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
     return null;
   });
   React.useEffect(() => {
-    if (!chatLsKey) return;
+    if (isRealPair || !chatLsKey) return;
     function sync() {
       try {
         const s = JSON.parse(localStorage.getItem(chatLsKey) || "null");
@@ -11662,6 +11665,9 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
 
   function sendLearnerMsg(text) {
     if (!text.trim()) return;
+    // Real pair: straight to direct_messages via the parent's sender, which
+    // names this teacher as the recipient explicitly.
+    if (isRealPair) { onSend(text); return; }
     // Store with "learner" tag so teacher can flip perspective; display as "me"
     const stored = JSON.parse(localStorage.getItem(chatLsKey) || "null") || [];
     const nextStored = [...stored, { from: "learner", text }];
@@ -11671,7 +11677,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
   }
 
   // Map stored messages to learner display perspective
-  const activeMessages = (localMsgs || messages || []).map((m) =>
+  const activeMessages = ((isRealPair ? messages : (localMsgs || messages)) || []).map((m) =>
     m.from === "learner" ? { ...m, from: "me" } : m.from === "teacher" ? { ...m, from: "them" } : m
   );
   const themMsgCount = activeMessages.filter(m => m.from === "them").length;
