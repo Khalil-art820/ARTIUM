@@ -794,12 +794,10 @@ function Avatar({ name, id, size = 44, online, photoUrl }) {
           {initials(name)}
         </div>
       )}
-      {online && (
-        <span
-          className="absolute -bottom-0.5 -right-0.5 rounded-full"
-          style={{ width: size * 0.28, height: size * 0.28, background: "#1A9E6E", border: `2px solid ${C.ink}` }}
-        />
-      )}
+      {/* The presence dot is retired: is_online was stamped true at signup
+          and never updated, so the dot asserted presence nobody measured.
+          The prop is still accepted so call sites need no change; a real
+          heartbeat can revive this block someday. */}
     </div>
   );
 }
@@ -1904,7 +1902,12 @@ export default function App() {
   const [pianistEntry, setPianistEntry] = useState(() => sessionStorage.getItem("artium_entry_pianist") === "1");
   React.useEffect(() => { sessionStorage.setItem("artium_entry_pianist", pianistEntry ? "1" : "0"); }, [pianistEntry]);
 
-  const [students, setStudents] = useState(() => seedTeaching([...SAMPLE_STUDENTS, ...CURTIS_MOCK_STUDENTS]));
+  // Real rows only. SAMPLE_STUDENTS / CURTIS_MOCK_STUDENTS used to be seeded
+  // here "to see the map at volume" — but the app is auth-first now, so those
+  // ghosts reached real learners, who could request/message them into a
+  // silent void (non-uuid ids fail every insert). The arrays stay defined
+  // for the (unreachable) demo paths; they just never enter live state.
+  const [students, setStudents] = useState([]);
   const [myProfile, setMyProfile] = useState(null);
 
   // Returning signed-in user: load their profile and skip straight to the app
