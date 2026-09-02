@@ -2080,6 +2080,23 @@ export default function App() {
     try { return JSON.parse(localStorage.getItem("teachRequests") || "{}"); } catch { return {}; }
   });
 
+  // Names map for MyProfile's payment history: {learnerId: name}, built from
+  // the same incoming teach_requests row this teacher already reads for the
+  // notification bell. Only fetched while the profile tab is open — no point
+  // keeping it warm on every screen.
+  const [myPaymentNames, setMyPaymentNames] = useState({});
+  React.useEffect(() => {
+    if (appTab !== "profile" || !myProfile?.id) return;
+    let cancelled = false;
+    fetchIncomingTeachRequests(myProfile.id).then((reqs) => {
+      if (cancelled) return;
+      const map = {};
+      reqs.forEach((r) => { if (r.learnerId && r.name) map[r.learnerId] = r.name; });
+      setMyPaymentNames(map);
+    });
+    return () => { cancelled = true; };
+  }, [appTab, myProfile?.id]);
+
   // Cross-tab sync: when teacher accepts/declines in their tab, update learner's state live
   React.useEffect(() => {
     function onStorage(e) {
@@ -4842,6 +4859,7 @@ export default function App() {
           )}
           {appTab === "profile" && !selectedStudentId && myProfile && (
             <MyProfile profile={myProfile} onEdit={editProfile} onLogout={handleLogout}
+              authUser={authUser} paymentNames={myPaymentNames}
               onUpdateCoverVideo={async (coverVideoUrl) => {
                 await supabase.from("profiles").update({ cover_video_url: coverVideoUrl || null }).eq("id", myProfile.id);
                 const updated = { ...myProfile, coverVideoUrl };
@@ -9911,9 +9929,124 @@ function StudentProfile({ student, conservatory, onBack, onMessage, locked, onAp
 }
 
 /* ---------------------------------------------------------------- */
+/* PAYMENT HISTORY                                                    */
+/* ---------------------------------------------------------------- */
+// Shared by both roles' profile screens. RLS on `payments` already scopes
+// the rows to whichever side of a payment the signed-in user is on (payer
+// or receiving teacher), so a plain select with no filters is enough — no
+// separate learner/teacher query to keep in sync. `names` is an optional
+// {profileId: name} map the caller builds from data it already has (teach
+// requests on the teacher side, the teachers list on the learner side);
+// this component never queries other people's profiles itself, since RLS
+// may not let a teacher read a learner's profile row (or vice versa).
+const PAYMENT_STATUS_STYLE = {
+  paid: { bg: "rgba(26,158,110,0.14)", fg: "#1A9E6E" },
+  pending: { bg: C.brassDim, fg: C.brassLabel },
+  failed: { bg: "rgba(178,59,59,0.12)", fg: C.burgundy },
+  refunded: { bg: "rgba(106,112,128,0.14)", fg: C.ivoryDim },
+};
+function PaymentStatusChip({ status }) {
+  const s = PAYMENT_STATUS_STYLE[status] || PAYMENT_STATUS_STYLE.refunded;
+  return (
+    <span style={{
+      display: "inline-block", padding: "3px 8px", borderRadius: 999,
+      background: s.bg, color: s.fg,
+      fontFamily: FONT_BODY, fontSize: 11, fontWeight: 700,
+      textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap",
+    }}>
+      {status}
+    </span>
+  );
+}
+function centsToEuro(cents) { return `€${(Number(cents || 0) / 100).toFixed(2)}`; }
+
+function PaymentHistory({ authUser, names = {} }) {
+  const [rows, setRows] = React.useState([]);
+  const [loaded, setLoaded] = React.useState(false);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    if (!authUser?.id) { setLoaded(true); return; }
+    supabase.from("payments").select("*").order("created_at", { ascending: false })
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        setRows(!error && Array.isArray(data) ? data : []);
+        setLoaded(true);
+      })
+      .catch(() => { if (!cancelled) { setRows([]); setLoaded(true); } });
+    return () => { cancelled = true; };
+  }, [authUser?.id]);
+
+  if (!authUser?.id) return null;
+
+  return (
+    <div style={{ marginTop: 28 }}>
+      <p style={{
+        fontSize: 11, fontWeight: 600, color: C.brassLabel, textTransform: "uppercase",
+        letterSpacing: "0.08em", margin: "0 0 10px",
+      }}>
+        Payments
+      </p>
+      {loaded && rows.length === 0 && (
+        <p className="artium-aw-empty" style={{ padding: "18px 4px" }}>No payments yet.</p>
+      )}
+      {rows.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {rows.map((row) => {
+            const dateStr = row.created_at
+              ? new Date(row.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
+              : "";
+            const isIncoming = row.teacher_profile_id === authUser.id;
+            const counterpartId = isIncoming ? row.payer_user_id : row.teacher_profile_id;
+            const counterpartName = names[counterpartId];
+
+            return (
+              <div key={row.id} style={{
+                background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 12,
+                padding: "12px 14px", display: "flex", alignItems: "center",
+                justifyContent: "space-between", gap: 10, minWidth: 0,
+              }}>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <p style={{ fontSize: 14, fontWeight: 600, color: C.ivory, margin: 0, lineHeight: 1.4 }}>
+                    {isIncoming
+                      ? <span style={{ fontFamily: FONT_MONO, fontVariantNumeric: "tabular-nums" }}>
+                          {`+${centsToEuro(row.teacher_amount_cents)}`}
+                        </span>
+                      : (row.kind === "promotion" ? "aclassicaltone promotion" : "Lesson payment")}
+                  </p>
+                  {isIncoming && (
+                    <p style={{ fontSize: 12, color: C.ivoryDim, margin: "2px 0 0" }}>
+                      {centsToEuro(row.gross_amount_cents)} lesson − {centsToEuro(row.commission_cents)} Artium (10%)
+                    </p>
+                  )}
+                  <p style={{ fontSize: 12, color: C.ivoryDim, margin: "2px 0 0" }}>
+                    {[counterpartName, dateStr].filter(Boolean).join(" · ")}
+                  </p>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, flexShrink: 0 }}>
+                  {!isIncoming && (
+                    <span style={{
+                      fontFamily: FONT_MONO, fontSize: 14, fontWeight: 600, color: C.ivory,
+                      fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap",
+                    }}>
+                      −{centsToEuro(row.gross_amount_cents)}
+                    </span>
+                  )}
+                  <PaymentStatusChip status={row.status} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------- */
 /* MY PROFILE                                                         */
 /* ---------------------------------------------------------------- */
-function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack, onUpdateCoverVideo }) {
+function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack, onUpdateCoverVideo, authUser, paymentNames }) {
   const cons = findConservatory(profile.conservatoryId);
   const [confirmDelete, setConfirmDelete] = React.useState(false);
   const [deleting, setDeleting] = React.useState(false);
@@ -10016,6 +10149,8 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack, onUpdat
         <Row label="Teaching"><TeachingCell teaching={profile.teaching} /></Row>
         {profile.composerDay && <Row label="A day with a composer">{profile.composerDay}</Row>}
       </div>
+
+      <PaymentHistory authUser={authUser} names={paymentNames} />
     </>
   );
 
@@ -10896,6 +11031,13 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
     const id = setInterval(load, 8000);
     return () => { live = false; clearInterval(id); };
   }, [authUser?.id]);
+  // Names map for the payment history card below: teacher id -> name, built
+  // from the teachers list already loaded for this screen — no extra query.
+  const learnerPaymentNames = React.useMemo(() => {
+    const map = {};
+    (teachers || []).forEach((t) => { if (t.id && t.name) map[t.id] = t.name; });
+    return map;
+  }, [teachers]);
   const selected = teachers.find((t) => t.id === selectedId);
   const status = selectedId ? teachRequests[selectedId] : undefined;
   const acceptedTeachers = teachers.filter((t) => teachRequests[t.id] === "accepted");
@@ -11496,6 +11638,8 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
               {learner?.instrument && <Row label="Instrument">{learner.instrument}</Row>}
               {learner?.location && <Row label="Location">{learner.location}</Row>}
             </div>
+
+            <PaymentHistory authUser={authUser} names={learnerPaymentNames} />
 
             {/* Edit form (inline) */}
             {editingProfile && (
