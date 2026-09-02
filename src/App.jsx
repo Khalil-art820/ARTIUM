@@ -10875,6 +10875,171 @@ function TeacherMap({ teachers, selectedId, onSelect, height = 520 }) {
   );
 }
 
+// The learner side's own bell — same puck/badge/panel look as the student
+// NotificationBell above, but built around a learner's two real feeds
+// (session proposals awaiting their reply, agenda updates from a teacher)
+// instead of that component's teach/hire/composer/news mix. Kept separate
+// rather than bolted onto NotificationBell: that component is deeply
+// student-shaped (myProfile, hire counts, admin promo review, four fixed
+// rows), and threading a fifth, differently-shaped feed through it would
+// cost more clarity than a second, smaller component does.
+//
+// Same two-clock split as the student bell: the BADGE counts what's new
+// since last acknowledged (localStorage), the LIST shows what's truly
+// pending/unvisited. Proposals are "true pending" rows — like teach
+// requests, they stay listed until the learner actually acts on them in the
+// lesson room, regardless of ack state. Agenda updates are content, not a
+// task — once acknowledged (panel opened, or "Mark all as read" pressed)
+// they drop off the list entirely, same as composer/news rows would.
+function LearnerNotificationBell({ authUser, teachers, learnerSessionsByTeacher, onGoToTeacherRoom }) {
+  const [open, setOpen] = React.useState(false);
+  const [agendaRows, setAgendaRows] = React.useState([]); // {id, teacher_id, updated_at}
+  const [ackPropIds, setAckPropIds] = React.useState(() => readAckIds("artium_ack_learner_props_v1"));
+  const [ackAgendaTs, setAckAgendaTs] = React.useState(() => readTs("artium_ackts_agenda_v1"));
+  const ref = React.useRef(null);
+
+  // Learner-wide agenda_notes read — fetchAgendaNotes above is per teacher/
+  // learner pair (keyed by session_id, for a single lesson room), so this is
+  // a small sibling query scoped to just what the bell needs: which teacher,
+  // and when it last changed. RLS already restricts rows to this learner.
+  React.useEffect(() => {
+    if (!authUser?.id) return;
+    let live = true;
+    async function load() {
+      try {
+        const { data, error } = await supabase.from("agenda_notes")
+          .select("id, teacher_id, updated_at").eq("learner_id", authUser.id);
+        if (live && !error && data) setAgendaRows(data);
+      } catch { /* defensive: table/columns not reachable yet */ }
+    }
+    load();
+    const id = setInterval(load, 15000);
+    return () => { live = false; clearInterval(id); };
+  }, [authUser?.id]);
+
+  React.useEffect(() => {
+    function onClick(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, []);
+
+  if (!authUser?.id) return null; // demo/preview learners have no rows to read
+
+  const teacherName = (id) => teachers.find((t) => t.id === id)?.name || "Your teacher";
+
+  // One row per teacher_proposed session, across every teacher this learner
+  // has — drawn straight from learnerSessionsByTeacher, already polled by
+  // LearnerScreen for My Planning, so the bell adds no session query of its
+  // own.
+  const proposals = Object.entries(learnerSessionsByTeacher || {}).flatMap(([teacherId, sessions]) =>
+    (sessions || [])
+      .filter((s) => s.status === "teacher_proposed")
+      .map((s) => ({ id: s.id, teacherId, date: s.date, time: s.time }))
+  );
+  const newAgendaRows = agendaRows.filter((r) => new Date(r.updated_at).getTime() > ackAgendaTs);
+
+  const newPropCount = proposals.filter((p) => !ackPropIds.includes(p.id)).length;
+  const totalCount = newPropCount + newAgendaRows.length;
+
+  function acknowledgeAll() {
+    const propIds = proposals.map((p) => p.id);
+    try { localStorage.setItem("artium_ack_learner_props_v1", JSON.stringify(propIds)); } catch { /* private mode */ }
+    setAckPropIds(propIds);
+    const now = Date.now();
+    try { localStorage.setItem("artium_ackts_agenda_v1", String(now)); } catch { /* private mode */ }
+    setAckAgendaTs(now);
+  }
+
+  function goTo(teacherId) {
+    setOpen(false);
+    onGoToTeacherRoom && onGoToTeacherRoom(teacherId);
+  }
+
+  function Row({ icon, tileBg, tileColor, title, subtitle, onClick }) {
+    return (
+      <button
+        onClick={onClick}
+        style={{
+          width: "100%", display: "flex", alignItems: "center", gap: 12, textAlign: "left",
+          padding: "13px 16px", border: "none", borderBottom: `1px solid ${C.inkLine}`,
+          background: "transparent", cursor: "pointer", fontFamily: FONT_BODY,
+        }}
+      >
+        <span style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, background: tileBg, color: tileColor, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          {icon}
+        </span>
+        <span style={{ flex: 1, minWidth: 0 }}>
+          <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: C.ivory, lineHeight: 1.3 }}>{title}</p>
+          <p style={{ margin: "2px 0 0", fontSize: 13, color: C.ivoryDim, lineHeight: 1.3 }}>{subtitle}</p>
+        </span>
+        <ChevronRight size={15} color={C.ivoryDim} style={{ flexShrink: 0 }} />
+      </button>
+    );
+  }
+
+  return (
+    <div ref={ref} style={{ position: "relative" }}>
+      <button
+        onClick={() => setOpen((o) => {
+          const next = !o;
+          // Opening is looking — same instant-ack-on-open as the student
+          // bell; "Mark all as read" below just does the same thing
+          // explicitly.
+          if (next) acknowledgeAll();
+          return next;
+        })}
+        aria-label="Notifications"
+        className="artium-net-puck"
+      >
+        <Bell size={15} strokeWidth={2} color="currentColor" />
+        {totalCount > 0 && (
+          <span className="artium-net-bell-badge">{totalCount}</span>
+        )}
+      </button>
+      {open && (
+        <div style={{ position: "absolute", right: 0, top: "calc(100% + 8px)", width: 320, maxWidth: "calc(100vw - 32px)", background: "#FFFFFF", borderRadius: 20, boxShadow: "0 20px 40px -22px rgba(150,115,55,0.38), inset 0 1px 0 #fff", border: `1px solid ${C.inkLine}`, zIndex: 200, overflow: "hidden", maxHeight: 460, overflowY: "auto" }}>
+          <div style={{ padding: "14px 16px", borderBottom: `1px solid ${C.inkLine}`, display: "flex", alignItems: "center", gap: 8 }}>
+            <Bell size={14} color={C.brass} />
+            <p style={{ flex: 1, minWidth: 0, margin: 0, fontSize: 17, fontWeight: 600, color: C.ivory }}>Notifications</p>
+            <button
+              onClick={acknowledgeAll}
+              style={{ display: "flex", alignItems: "center", gap: 4, background: "none", border: "none", cursor: "pointer", color: C.brass, fontSize: 12.5, fontWeight: 600, padding: 0, flexShrink: 0 }}
+            >
+              <CheckCircle2 size={13} strokeWidth={2} /> Mark all as read
+            </button>
+          </div>
+          {proposals.length === 0 && newAgendaRows.length === 0 ? (
+            <p style={{ fontSize: 13, color: C.ivoryDim, padding: "16px", margin: 0 }}>Nothing new.</p>
+          ) : (
+            <>
+              {proposals.map((p) => (
+                <Row
+                  key={`prop-${p.id}`}
+                  icon={<Calendar size={18} strokeWidth={2} />}
+                  tileBg="rgba(201,150,46,0.14)" tileColor={C.brass}
+                  title={`${teacherName(p.teacherId)} proposed ${p.date} · ${p.time}`}
+                  subtitle="Awaiting your reply"
+                  onClick={() => goTo(p.teacherId)}
+                />
+              ))}
+              {newAgendaRows.map((r) => (
+                <Row
+                  key={`agenda-${r.id}`}
+                  icon={<FileText size={18} strokeWidth={2} />}
+                  tileBg="rgba(63,139,92,0.14)" tileColor={C.forest}
+                  title={`${teacherName(r.teacher_id)} updated the session agenda`}
+                  subtitle="New in your lesson room"
+                  onClick={() => goTo(r.teacher_id)}
+                />
+              ))}
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ---- Learner home: map + request + chat ---- */
 function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conversations, activeChatId, setActiveChatId, onSend, onSendTo, onBack, onUpdateProfile, onLogout, onDeleteAccount, memberCount, musicOn, onMusicToggle, avatarPhotoUrl, avatarName, initialTab = "map", authUser }) {
   const [appTab, setAppTab] = useState(initialTab);
@@ -11066,8 +11231,17 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
               </svg>
             )}
           </button>
-          {/* No notification bell here — it's built around a conservatory
-              student profile, which a learner doesn't have. */}
+          <LearnerNotificationBell
+            authUser={authUser}
+            teachers={teachers}
+            learnerSessionsByTeacher={learnerSessionsByTeacher}
+            onGoToTeacherRoom={(teacherId) => {
+              setSelectedId(null);
+              setLearnerRoomView("teachers");
+              setActiveLessonTeacherId(teacherId);
+              setAppTab("lesson");
+            }}
+          />
           <button
             onClick={selectedId ? undefined : () => setAppTab("profile")}
             title={selectedId ? undefined : "My profile"}
