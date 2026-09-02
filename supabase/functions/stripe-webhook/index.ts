@@ -84,24 +84,32 @@ Deno.serve(async (req) => {
         // Backfill the actual processing fee from the balance transaction —
         // this is never estimated or hard-coded elsewhere in the codebase.
         if (paymentIntentId) {
-          // The balance transaction can lag the completed event by a moment
-          // (observed on a destination charge: a one-shot lookup found
-          // nothing, the same lookup seconds later returned the fee) — so
-          // try a few times before giving up.
-          for (let attempt = 0; attempt < 3; attempt++) {
-            try {
-              const intent = await stripe.paymentIntents.retrieve(paymentIntentId, { expand: ["latest_charge.balance_transaction"] });
-              const charge = intent.latest_charge as Stripe.Charge | null;
-              const balanceTxn = charge?.balance_transaction as Stripe.BalanceTransaction | null;
-              if (balanceTxn && typeof balanceTxn === "object") {
-                await markPayment({ paymentId, sessionId: session.id }, { stripe_fee_cents: balanceTxn.fee });
-                break;
+          // The balance transaction lags the completed event — on destination
+          // charges by more than the few seconds a webhook can afford to
+          // block (Stripe times the delivery out). So: answer Stripe now,
+          // keep hunting the fee in the background. EdgeRuntime.waitUntil
+          // keeps the isolate alive after the response is returned.
+          const huntFee = async () => {
+            for (let attempt = 0; attempt < 8; attempt++) {
+              try {
+                const intent = await stripe.paymentIntents.retrieve(paymentIntentId, { expand: ["latest_charge.balance_transaction"] });
+                const charge = intent.latest_charge as Stripe.Charge | null;
+                const balanceTxn = charge?.balance_transaction as Stripe.BalanceTransaction | null;
+                if (balanceTxn && typeof balanceTxn === "object") {
+                  await markPayment({ paymentId, sessionId: session.id }, { stripe_fee_cents: balanceTxn.fee });
+                  return;
+                }
+              } catch (feeErr) {
+                console.error("fee lookup attempt", attempt + 1, "failed for", session.id, feeErr.message);
               }
-            } catch (feeErr) {
-              console.error("fee lookup attempt", attempt + 1, "failed for", session.id, feeErr.message);
+              await new Promise((r) => setTimeout(r, 8000));
             }
-            await new Promise((r) => setTimeout(r, 1500));
-          }
+            console.error("fee never resolved for", session.id);
+          };
+          try {
+            // deno-lint-ignore no-explicit-any
+            (globalThis as any).EdgeRuntime?.waitUntil ? (globalThis as any).EdgeRuntime.waitUntil(huntFee()) : await huntFee();
+          } catch { await huntFee(); }
         }
         break;
       }
