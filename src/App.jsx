@@ -10955,6 +10955,21 @@ function LearnerNotificationBell({ authUser, teachers, learnerSessionsByTeacher,
     onGoToTeacherRoom && onGoToTeacherRoom(teacherId, sessionId, detail);
   }
 
+  // Acking must NEVER happen on merely opening the panel: agenda rows leave
+  // the list once acknowledged, so an ack-on-open made them vanish before
+  // their first render — notifications nobody ever saw. Only "Mark all as
+  // read" and clicking a row acknowledge.
+  function ackProposal(id) {
+    const next = Array.from(new Set([...ackPropIds, id]));
+    try { localStorage.setItem("artium_ack_learner_props_v1", JSON.stringify(next)); } catch { /* private mode */ }
+    setAckPropIds(next);
+  }
+  function ackAgenda(updatedAt) {
+    const t = Math.max(ackAgendaTs, new Date(updatedAt).getTime());
+    try { localStorage.setItem("artium_ackts_agenda_v1", String(t)); } catch { /* private mode */ }
+    setAckAgendaTs(t);
+  }
+
   function Row({ icon, tileBg, tileColor, title, subtitle, onClick }) {
     return (
       <button
@@ -10980,14 +10995,7 @@ function LearnerNotificationBell({ authUser, teachers, learnerSessionsByTeacher,
   return (
     <div ref={ref} style={{ position: "relative" }}>
       <button
-        onClick={() => setOpen((o) => {
-          const next = !o;
-          // Opening is looking — same instant-ack-on-open as the student
-          // bell; "Mark all as read" below just does the same thing
-          // explicitly.
-          if (next) acknowledgeAll();
-          return next;
-        })}
+        onClick={() => setOpen((o) => !o)}
         aria-label="Notifications"
         className="artium-net-puck"
       >
@@ -11019,7 +11027,7 @@ function LearnerNotificationBell({ authUser, teachers, learnerSessionsByTeacher,
                   tileBg="rgba(201,150,46,0.14)" tileColor={C.brass}
                   title={`${teacherName(p.teacherId)} proposed ${p.date} · ${p.time}`}
                   subtitle="Awaiting your reply"
-                  onClick={() => goTo(p.teacherId, p.id)}
+                  onClick={() => { ackProposal(p.id); goTo(p.teacherId, p.id); }}
                 />
               ))}
               {newAgendaRows.map((r) => (
@@ -11029,7 +11037,7 @@ function LearnerNotificationBell({ authUser, teachers, learnerSessionsByTeacher,
                   tileBg="rgba(63,139,92,0.14)" tileColor={C.forest}
                   title={`${teacherName(r.teacher_id)} updated the session agenda`}
                   subtitle="New in your lesson room"
-                  onClick={() => goTo(r.teacher_id, r.session_id, "agenda")}
+                  onClick={() => { ackAgenda(r.updated_at); goTo(r.teacher_id, r.session_id, "agenda"); }}
                 />
               ))}
             </>
