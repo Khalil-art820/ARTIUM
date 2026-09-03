@@ -2112,19 +2112,41 @@ export default function App() {
   React.useEffect(() => {
     if (!authUser?.id) return;
     let live = true;
+    // Incremental sync: first load takes the history once; every poll after
+    // asks only for rows newer than the last seen — constant-size polls no
+    // matter how long histories grow.
+    let sinceTs = null;
     async function load() {
-      const { data, error } = await supabase
+      let q = supabase
         .from("direct_messages")
-        .select("sender_id, recipient_id, body, created_at")
+        .select("id, sender_id, recipient_id, body, created_at")
         .or(`sender_id.eq.${authUser.id},recipient_id.eq.${authUser.id}`)
         .order("created_at", { ascending: true });
-      if (!live || error || !data) return;
-      const grouped = {};
+      if (sinceTs) q = q.gt("created_at", sinceTs);
+      const { data, error } = await q;
+      if (!live || error || !data || data.length === 0) return;
+      sinceTs = data[data.length - 1].created_at;
+      const additions = {};
       for (const m of data) {
         const peer = m.sender_id === authUser.id ? m.recipient_id : m.sender_id;
-        (grouped[peer] = grouped[peer] || []).push({ from: m.sender_id === authUser.id ? "me" : "them", text: m.body });
+        (additions[peer] = additions[peer] || []).push({ id: m.id, from: m.sender_id === authUser.id ? "me" : "them", text: m.body });
       }
-      setConversations((prev) => ({ ...prev, ...grouped }));
+      setConversations((prev) => {
+        const next = { ...prev };
+        for (const [peer, msgs] of Object.entries(additions)) {
+          const thread = [...(next[peer] || [])];
+          for (const m of msgs) {
+            if (thread.some((t) => t.id === m.id)) continue;
+            if (m.from === "me") {
+              const oi = thread.findIndex((t) => t.optimistic && t.from === "me" && t.text === m.text);
+              if (oi !== -1) { thread[oi] = m; continue; }
+            }
+            thread.push(m);
+          }
+          next[peer] = thread;
+        }
+        return next;
+      });
     }
     load();
     const id = setInterval(load, 8000);
@@ -2641,7 +2663,7 @@ export default function App() {
     // Persist to the database and let the poll above confirm it back —
     // appended locally first so the sender sees it immediately.
     const peer = peerId;
-    setConversations((c) => ({ ...c, [peer]: [...(c[peer] || []), { from: "me", text: body }] }));
+    setConversations((c) => ({ ...c, [peer]: [...(c[peer] || []), { from: "me", text: body, optimistic: true }] }));
     supabase.from("direct_messages").insert({ sender_id: authUser.id, recipient_id: peer, body }).then(({ error }) => {
       if (error) console.error("send message failed", error.message);
     });
@@ -11590,6 +11612,12 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
       {/* Schedule & Pay */}
       {tab === "schedule" && (() => {
         const sel = sessions.find((s) => s.id === selectedSessionId);
+        // The strip carries only what still needs eyes: anything pending,
+        // plus confirmed sessions that haven't happened yet — soonest first.
+        // Past sessions live in My Planning, the archive with amounts.
+        const stripSessions = sessions
+          .filter((s) => s.status !== "confirmed" || new Date(s.date + "T" + (s.time || "00:00")) >= new Date(Date.now() - 2 * 3600 * 1000))
+          .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
         return (
           <div>
             {/* Horizontal scroll strip of square cards */}
@@ -11597,7 +11625,10 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
               {sessions.length === 0 && (
                 <p style={{ fontSize: 13, color: C.ivoryDim, padding: "0 4px" }}>No sessions yet — ask {teacher.name.split(" ")[0]} in Chat to schedule one.</p>
               )}
-              {sessions.map((s) => {
+              {sessions.length > 0 && stripSessions.length === 0 && (
+                <p style={{ fontSize: 13, color: C.ivoryDim, padding: "0 4px" }}>No upcoming sessions — past ones live in My Planning.</p>
+              )}
+              {stripSessions.map((s) => {
                 const dt = new Date(s.date + "T" + s.time);
                 const isConfirmed = s.status === "confirmed";
                 const isSelected = s.id === selectedSessionId;
@@ -13437,15 +13468,32 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
   React.useEffect(() => {
     if (!activeLearner) return;
     let live = true;
+    // Same incremental sync as the app-level poll, scoped to this pair.
+    let sinceTs = null;
+    const learnerId = activeLearner.id;
     async function load() {
-      const { data, error } = await supabase
+      let q = supabase
         .from("direct_messages")
-        .select("sender_id, recipient_id, body, created_at")
-        .or(`and(sender_id.eq.${tid},recipient_id.eq.${activeLearner.id}),and(sender_id.eq.${activeLearner.id},recipient_id.eq.${tid})`)
+        .select("id, sender_id, recipient_id, body, created_at")
+        .or(`and(sender_id.eq.${tid},recipient_id.eq.${learnerId}),and(sender_id.eq.${learnerId},recipient_id.eq.${tid})`)
         .order("created_at", { ascending: true });
-      if (!live || error || !data) return;
-      const msgs = data.map((m) => ({ from: m.sender_id === tid ? "me" : "them", text: m.body }));
-      setMessagesByLearner((prev) => ({ ...prev, [activeLearner.id]: msgs }));
+      if (sinceTs) q = q.gt("created_at", sinceTs);
+      const { data, error } = await q;
+      if (!live || error || !data || data.length === 0) return;
+      sinceTs = data[data.length - 1].created_at;
+      const incoming = data.map((m) => ({ id: m.id, from: m.sender_id === tid ? "me" : "them", text: m.body }));
+      setMessagesByLearner((prev) => {
+        const thread = [...(prev[learnerId] || [])];
+        for (const m of incoming) {
+          if (thread.some((t) => t.id === m.id)) continue;
+          if (m.from === "me") {
+            const oi = thread.findIndex((t) => t.optimistic && t.from === "me" && t.text === m.text);
+            if (oi !== -1) { thread[oi] = m; continue; }
+          }
+          thread.push(m);
+        }
+        return { ...prev, [learnerId]: thread };
+      });
     }
     load();
     const id = setInterval(load, 8000);
@@ -13611,7 +13659,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
   function sendMsg(text) {
     const body = text.trim();
     if (!body || !activeLearner) return;
-    setMessagesByLearner((prev) => ({ ...prev, [activeLearner.id]: [...(prev[activeLearner.id] || []), { from: "me", text: body }] }));
+    setMessagesByLearner((prev) => ({ ...prev, [activeLearner.id]: [...(prev[activeLearner.id] || []), { from: "me", text: body, optimistic: true }] }));
     // The shared table both sides poll.
     supabase.from("direct_messages").insert({ sender_id: tid, recipient_id: activeLearner.id, body }).then(({ error }) => {
       if (error) console.error("send message failed", error.message);
@@ -13946,6 +13994,12 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
       {/* Schedule & Payments */}
       {tab === "schedule" && (() => {
         const sel = sessions.find((s) => s.id === selectedSessionId);
+        // The strip carries only what still needs eyes: anything pending,
+        // plus confirmed sessions that haven't happened yet — soonest first.
+        // Past sessions live in My Planning, the archive with amounts.
+        const stripSessions = sessions
+          .filter((s) => s.status !== "confirmed" || new Date(s.date + "T" + (s.time || "00:00")) >= new Date(Date.now() - 2 * 3600 * 1000))
+          .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
         return (
           <div style={{ padding: "0 0 8px" }}>
             {/* Propose new session button */}
@@ -14004,7 +14058,10 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
               {sessions.length === 0 && (
                 <p style={{ fontSize: 13, color: C.ivoryDim }}>No sessions yet — propose one above.</p>
               )}
-              {sessions.map((s) => {
+              {sessions.length > 0 && stripSessions.length === 0 && (
+                <p style={{ fontSize: 13, color: C.ivoryDim }}>No upcoming sessions — past ones live in My Planning.</p>
+              )}
+              {stripSessions.map((s) => {
                 const dt = new Date(s.date + "T" + s.time);
                 const isConfirmed = s.status === "confirmed";
                 const isSelected = s.id === selectedSessionId;
