@@ -29,7 +29,19 @@ function isAllowedUrl(url: string) {
 
 // Same figure PROMO_RATE * 5 works out to in src/App.jsx (€13 * 5). Fixed
 // here, server-side, rather than trusted from the client.
-const PROMO_TOTAL_CENTS = 65 * 100;
+// Fallback only — the live price is the platform_settings row
+// 'promo_total_cents', changeable in the DB without a deploy.
+const PROMO_TOTAL_CENTS_FALLBACK = 65 * 100;
+
+async function promoTotalCents(adminClient: ReturnType<typeof createClient>) {
+  const { data } = await adminClient
+    .from("platform_settings")
+    .select("value")
+    .eq("key", "promo_total_cents")
+    .maybeSingle();
+  const cents = data?.value?.cents;
+  return Number.isInteger(cents) && cents > 0 ? cents : PROMO_TOTAL_CENTS_FALLBACK;
+}
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -196,7 +208,7 @@ Deno.serve(async (req) => {
       if (alreadyPaid && alreadyPaid.length) {
         return new Response(JSON.stringify({ error: "This promotion is already paid." }), { status: 409, headers: { ...CORS, "Content-Type": "application/json" } });
       }
-      grossCents = PROMO_TOTAL_CENTS;
+      grossCents = await promoTotalCents(adminClient);
       const rate = await commissionRateFor(adminClient, null, "promotion");
       commissionCents = Math.round(grossCents * rate);
       productName = "aclassicaltone promotion";

@@ -200,6 +200,9 @@ const PROMO_OFFER = [
   "Post on Threads",
 ];
 const PROMO_BONUS = "A second free post";
+// Display fallbacks only — the live price is the platform_settings row
+// 'promo_total_cents' (which the server also charges from); PromoteMe
+// fetches it and falls back to these if the row is unreadable.
 const PROMO_RATE = 13;
 const PROMO_TOTAL = PROMO_RATE * 5;
 
@@ -12090,6 +12093,20 @@ function ArtiumSoundCard({ myProfile, authUser }) {
 }
 
 function PromoteMe({ myProfile, authUser }) {
+  // The price the server will actually charge, from platform_settings —
+  // the same row stripe-checkout reads, so display and charge can't drift.
+  const [promoCents, setPromoCents] = useState(PROMO_TOTAL * 100);
+  React.useEffect(() => {
+    let live = true;
+    supabase.from("platform_settings").select("value").eq("key", "promo_total_cents").maybeSingle()
+      .then(({ data }) => {
+        const cents = data?.value?.cents;
+        if (live && Number.isInteger(cents) && cents > 0) setPromoCents(cents);
+      }, () => { /* row unreadable: fallback stands */ });
+    return () => { live = false; };
+  }, []);
+  const promoTotal = promoCents % 100 === 0 ? promoCents / 100 : (promoCents / 100).toFixed(2);
+  const promoRate = promoCents % 500 === 0 ? promoCents / 500 : (promoCents / 500).toFixed(2);
   // Two unrelated offers on one screen read as a single long form, so the tab
   // opens on a choice and each one gets the screen to itself.
   const [view, setView] = useState(null);   // null | "artium" | "aclassicaltone"
@@ -12196,7 +12213,7 @@ function PromoteMe({ myProfile, authUser }) {
           <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 4 }}>
             {[
               { v: "artium", t: "artium", d: "Your recording, played across the site. Free." },
-              { v: "aclassicaltone", t: "aclassicaltone", d: `A promotional video to their audience. €${PROMO_TOTAL}.` },
+              { v: "aclassicaltone", t: "aclassicaltone", d: `A promotional video to their audience. €${promoTotal}.` },
             ].map(({ v, t, d }) => (
               <button
                 key={v}
@@ -12244,8 +12261,8 @@ function PromoteMe({ myProfile, authUser }) {
             </li>
           </ul>
           <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${C.inkLine}`, display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-            <span style={{ fontSize: 13, color: C.ivoryDim }}>€{PROMO_RATE} / service · 5 services</span>
-            <span style={{ fontSize: 20, fontWeight: 800, color: C.ivory }}>€{PROMO_TOTAL}</span>
+            <span style={{ fontSize: 13, color: C.ivoryDim }}>€{promoRate} / service · 5 services</span>
+            <span style={{ fontSize: 20, fontWeight: 800, color: C.ivory }}>€{promoTotal}</span>
           </div>
         </div>
 
@@ -12327,7 +12344,7 @@ function PromoteMe({ myProfile, authUser }) {
               <button onClick={approved ? payForPromo : undefined} disabled={!approved || payLoading}
                 title={approved ? "" : "Available after approval"}
                 style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: "#635BFF", color: "#fff", fontSize: 15, fontWeight: 700, cursor: approved ? (payLoading ? "default" : "pointer") : "not-allowed", opacity: approved ? 1 : 0.4, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-                <CreditCard size={17} /> {payLoading ? "Redirecting…" : `Pay €${PROMO_TOTAL} with Stripe`}
+                <CreditCard size={17} /> {payLoading ? "Redirecting…" : `Pay €${promoTotal} with Stripe`}
               </button>
               )}
               {!approved && !promoPaid && <p style={{ fontSize: 11, color: C.ivoryDim, textAlign: "center", margin: "8px 0 0" }}>🔒 Unlocks once your video is approved</p>}
