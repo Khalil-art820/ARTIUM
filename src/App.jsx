@@ -11612,12 +11612,12 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
       {/* Schedule & Pay */}
       {tab === "schedule" && (() => {
         const sel = sessions.find((s) => s.id === selectedSessionId);
-        // The strip carries only what still needs action: pending proposals,
-        // and confirmed-but-unpaid sessions that haven't happened yet —
-        // soonest first. A paid session is settled; it (and everything past)
-        // lives in My Planning, the archive with amounts.
+        // Every session — paid included — stays on the strip until 24h after
+        // its own date/time: even a settled lesson may still need a time
+        // change or a cancellation, and hiding it early loses track of it.
+        // Only then does it retire to My Planning, the archive with amounts.
         const stripSessions = sessions
-          .filter((s) => s.status !== "confirmed" || (!s.paid && new Date(s.date + "T" + (s.time || "00:00")) >= new Date(Date.now() - 2 * 3600 * 1000)))
+          .filter((s) => new Date(s.date + "T" + (s.time || "00:00")) >= new Date(Date.now() - 24 * 3600 * 1000))
           .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
         return (
           <div>
@@ -13995,12 +13995,12 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
       {/* Schedule & Payments */}
       {tab === "schedule" && (() => {
         const sel = sessions.find((s) => s.id === selectedSessionId);
-        // The strip carries only what still needs action: pending proposals,
-        // and confirmed-but-unpaid sessions that haven't happened yet —
-        // soonest first. A paid session is settled; it (and everything past)
-        // lives in My Planning, the archive with amounts.
+        // Every session — paid included — stays on the strip until 24h after
+        // its own date/time: even a settled lesson may still need a time
+        // change or a cancellation, and hiding it early loses track of it.
+        // Only then does it retire to My Planning, the archive with amounts.
         const stripSessions = sessions
-          .filter((s) => s.status !== "confirmed" || (!s.paid && new Date(s.date + "T" + (s.time || "00:00")) >= new Date(Date.now() - 2 * 3600 * 1000)))
+          .filter((s) => new Date(s.date + "T" + (s.time || "00:00")) >= new Date(Date.now() - 24 * 3600 * 1000))
           .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
         return (
           <div style={{ padding: "0 0 8px" }}>
