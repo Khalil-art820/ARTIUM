@@ -12629,6 +12629,16 @@ function AdminScreen({ authUser, onlineCount }) {
   const pending = rows.filter((r) => r.status === "pending");
   const decided = rows.filter((r) => r.status !== "pending");
   const shown = tab === "pending" ? pending : decided;
+
+  // Wipe an entire Saturday: every free-spotlight request booked on that
+  // slot, whatever its status. Guarded by a confirm; needs the admin
+  // delete policy from 20260904200000_promotions_admin_delete.sql.
+  async function deleteWeek(slotDate, count) {
+    if (!window.confirm(`Delete all ${count} request${count === 1 ? "" : "s"} for Saturday ${slotDate}? This cannot be undone.`)) return;
+    const { error } = await supabase.from("promotions").delete().eq("kind", "free_weekly").eq("slot_date", slotDate);
+    if (error) { window.alert("Could not delete: " + error.message); return; }
+    setRows((prev) => prev.filter((r) => !(r.kind === "free_weekly" && r.slot_date === slotDate)));
+  }
   const card = { ...PANEL, padding: "16px 16px" };
   const STATUS_COLOR = { approved: "#1A9E6E", rejected: C.burgundy, pending: C.brassLabel };
 
@@ -12677,7 +12687,8 @@ function AdminScreen({ authUser, onlineCount }) {
           <div style={{ ...card, textAlign: "center" }}>
             <p style={{ fontSize: 14, color: C.ivoryDim, margin: 0 }}>{tab === "pending" ? "No submissions awaiting approval." : "No reviewed submissions yet."}</p>
           </div>
-        ) : shown.map((p) => {
+        ) : (() => {
+          const renderCard = (p) => {
           const isFree = p.kind === "free_weekly";
           return (
           <div key={p.id} style={card}>
@@ -12712,7 +12723,42 @@ function AdminScreen({ authUser, onlineCount }) {
             )}
           </div>
           );
-        })}
+          };
+          // Free requests gathered per Saturday, each week deletable whole;
+          // paid submissions keep their own flat section below.
+          const freeRows = shown.filter((p) => p.kind === "free_weekly");
+          const paidRows = shown.filter((p) => p.kind !== "free_weekly");
+          const byWeek = {};
+          freeRows.forEach((p) => { const k = p.slot_date || "unscheduled"; (byWeek[k] = byWeek[k] || []).push(p); });
+          const weeks = Object.keys(byWeek).sort();
+          const weekTotal = (wk) => rows.filter((r) => r.kind === "free_weekly" && (r.slot_date || "unscheduled") === wk).length;
+          return (
+            <>
+              {weeks.map((wk) => (
+                <div key={wk}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, margin: "18px 2px 8px" }}>
+                    <p style={{ fontSize: 13, fontWeight: 700, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em", margin: 0 }}>
+                      {wk === "unscheduled" ? "No date" : `Saturday ${wk}`} · {byWeek[wk].length} request{byWeek[wk].length === 1 ? "" : "s"}
+                    </p>
+                    <button onClick={() => deleteWeek(wk, weekTotal(wk))}
+                      style={{ padding: "6px 12px", borderRadius: 9, border: "1px solid rgba(179,38,30,0.35)", background: "rgba(179,38,30,0.06)", color: "#B3261E", fontSize: 12, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}>
+                      Delete week
+                    </button>
+                  </div>
+                  {byWeek[wk].map(renderCard)}
+                </div>
+              ))}
+              {paidRows.length > 0 && (
+                <>
+                  {freeRows.length > 0 && (
+                    <p style={{ fontSize: 13, fontWeight: 700, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em", margin: "18px 2px 8px" }}>Paid promotions</p>
+                  )}
+                  {paidRows.map(renderCard)}
+                </>
+              )}
+            </>
+          );
+        })()}
         </>}
       </div>
     </div>
