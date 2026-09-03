@@ -1804,6 +1804,8 @@ export default function App() {
   // every other entrance wants the map. Reset to "map" after profile use
   // happens at each entrance below.
   const [learnerStartTab, setLearnerStartTab] = useState("map");
+  // A gate-bell tap carries its destination across the screen switch.
+  const [learnerEntryFocus, setLearnerEntryFocus] = useState(null);
   const view = awaitingReview ? "pendingReview" : screen;
   // The document's own colour is set in index.css now that every screen is
   // dark; this used to flip it per screen and no longer has anything to say.
@@ -4353,7 +4355,17 @@ export default function App() {
           photoUrl={(myProfile || learnerProfile).photoUrl || accountPhotoUrl}
           online
         />
-      ) : null} bellSlot={myProfile ? (
+      ) : null} bellSlot={learnerProfile && !myProfile ? (
+        <LearnerNotificationBell
+          authUser={authUser}
+          teachers={students.filter((st) => st.teaching && st.teaching.open)}
+          onGoToTeacherRoom={(teacherId, sessionId, detail) => {
+            setLearnerStartTab("map");
+            setLearnerEntryFocus({ teacherId, sessionId: sessionId || null, detail: detail || null, at: Date.now() });
+            setScreen("learnerMap");
+          }}
+        />
+      ) : myProfile ? (
         <NotificationBell
           myProfile={myProfile}
           puck
@@ -4399,6 +4411,7 @@ export default function App() {
       {view === "learnerMap" && (
         <LearnerScreen
           initialTab={learnerStartTab}
+          entryFocus={learnerEntryFocus}
           authUser={authUser}
           learner={learnerProfile}
           teachers={students.filter((s) => s.teaching && s.teaching.open)}
@@ -10406,6 +10419,27 @@ function TeacherMap({ teachers, selectedId, onSelect, height = 520 }) {
 function LearnerNotificationBell({ authUser, teachers, learnerSessionsByTeacher, onGoToTeacherRoom }) {
   const [open, setOpen] = React.useState(false);
   const [agendaRows, setAgendaRows] = React.useState([]); // {id, teacher_id, updated_at}
+  // On screens that already poll sessions (the learner app), the map comes
+  // in as a prop. On the entry gate nothing polls, so the bell fetches its
+  // own pending proposals — same rows, same cadence.
+  const [selfProposals, setSelfProposals] = React.useState(null);
+  React.useEffect(() => {
+    if (learnerSessionsByTeacher || !authUser?.id) return;
+    let live = true;
+    async function load() {
+      try {
+        const { data, error } = await supabase.from("lesson_sessions")
+          .select("id, teacher_id, session_date, session_time, status")
+          .eq("learner_id", authUser.id).eq("status", "teacher_proposed");
+        if (live && !error && data) {
+          setSelfProposals(data.map((r) => ({ id: r.id, teacherId: r.teacher_id, date: r.session_date, time: r.session_time })));
+        }
+      } catch { /* defensive */ }
+    }
+    load();
+    const id = setInterval(load, 15000);
+    return () => { live = false; clearInterval(id); };
+  }, [authUser?.id, !!learnerSessionsByTeacher]);
   const [ackPropIds, setAckPropIds] = React.useState(() => readAckIds("artium_ack_learner_props_v1"));
   const [ackAgendaTs, setAckAgendaTs] = React.useState(() => readTs("artium_ackts_agenda_v1"));
   const ref = React.useRef(null);
@@ -10443,11 +10477,13 @@ function LearnerNotificationBell({ authUser, teachers, learnerSessionsByTeacher,
   // has — drawn straight from learnerSessionsByTeacher, already polled by
   // LearnerScreen for My Planning, so the bell adds no session query of its
   // own.
-  const proposals = Object.entries(learnerSessionsByTeacher || {}).flatMap(([teacherId, sessions]) =>
-    (sessions || [])
-      .filter((s) => s.status === "teacher_proposed")
-      .map((s) => ({ id: s.id, teacherId, date: s.date, time: s.time }))
-  );
+  const proposals = learnerSessionsByTeacher
+    ? Object.entries(learnerSessionsByTeacher).flatMap(([teacherId, sessions]) =>
+        (sessions || [])
+          .filter((s) => s.status === "teacher_proposed")
+          .map((s) => ({ id: s.id, teacherId, date: s.date, time: s.time }))
+      )
+    : (selfProposals || []);
   const newAgendaRows = agendaRows.filter((r) => new Date(r.updated_at).getTime() > ackAgendaTs);
 
   const newPropCount = proposals.filter((p) => !ackPropIds.includes(p.id)).length;
@@ -10561,7 +10597,7 @@ function LearnerNotificationBell({ authUser, teachers, learnerSessionsByTeacher,
 }
 
 /* ---- Learner home: map + request + chat ---- */
-function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conversations, activeChatId, setActiveChatId, onSend, onSendTo, onBack, onUpdateProfile, onLogout, onDeleteAccount, memberCount, musicOn, onMusicToggle, avatarPhotoUrl, avatarName, initialTab = "map", authUser }) {
+function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendRequest, conversations, activeChatId, setActiveChatId, onSend, onSendTo, onBack, onUpdateProfile, onLogout, onDeleteAccount, memberCount, musicOn, onMusicToggle, avatarPhotoUrl, avatarName, initialTab = "map", authUser }) {
   const [appTab, setAppTab] = useState(initialTab);
   const [selectedConsId, setSelectedConsId] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
@@ -10569,6 +10605,16 @@ function LearnerScreen({ learner, teachers, teachRequests, onSendRequest, conver
   const [learnerRoomView, setLearnerRoomView] = useState("teachers"); // "teachers" | "planning"
   const [teacherQ, setTeacherQ] = useState("");
   const [focusSessionReq, setFocusSessionReq] = useState(null);
+  // Arriving from the entry gate's bell: open the named teacher's lesson
+  // room and hand the session focus down, exactly as an in-app bell tap does.
+  React.useEffect(() => {
+    if (!entryFocus?.teacherId) return;
+    setSelectedId(null);
+    setLearnerRoomView("teachers");
+    setActiveLessonTeacherId(entryFocus.teacherId);
+    setAppTab("lesson");
+    setFocusSessionReq(entryFocus.sessionId ? { sessionId: entryFocus.sessionId, detail: entryFocus.detail || null, at: entryFocus.at } : null);
+  }, [entryFocus?.at]);
   const [learnerOpenMonths, setLearnerOpenMonths] = useState({});
   const [learnerSessionsByTeacher, setLearnerSessionsByTeacher] = useState({});
 
