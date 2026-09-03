@@ -11603,6 +11603,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
                 const isSelected = s.id === selectedSessionId;
                 return (
                   <button key={s.id} onClick={() => setSelectedSessionId(isSelected ? null : s.id)}
+                    ref={isSelected ? (el) => { if (el) try { el.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" }); } catch { /* older Safari */ } } : undefined}
                     style={{ flexShrink: 0, width: 110, height: 110, borderRadius: 14, border: isSelected ? `2px solid ${C.brass}` : `1px solid ${isConfirmed ? "#A8D5B5" : C.inkLine}`, background: isConfirmed ? "rgba(26,158,110,0.10)" : "rgba(176,146,98,0.06)", display: "flex", flexDirection: "column", alignItems: "flex-start", justifyContent: "space-between", padding: 12, cursor: "pointer", boxShadow: isSelected ? `0 0 0 3px ${C.brassDim}` : "none", transition: "box-shadow 0.15s" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", width: "100%", alignItems: "center" }}>
                       <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: isConfirmed ? "#1A9E6E" : "#D4810A" }}>
@@ -14009,6 +14010,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
                 const isSelected = s.id === selectedSessionId;
                 return (
                   <button key={s.id} onClick={() => setSelectedSessionId(isSelected ? null : s.id)}
+                    ref={isSelected ? (el) => { if (el) try { el.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" }); } catch { /* older Safari */ } } : undefined}
                     style={{ flexShrink: 0, width: 110, height: 110, borderRadius: 14, border: isSelected ? `2px solid ${C.brass}` : `1px solid ${isConfirmed ? "#A8D5B5" : C.inkLine}`, background: isConfirmed ? "rgba(26,158,110,0.10)" : "rgba(176,146,98,0.06)", display: "flex", flexDirection: "column", alignItems: "flex-start", justifyContent: "space-between", padding: 12, cursor: "pointer", boxShadow: isSelected ? `0 0 0 3px ${C.brassDim}` : "none", transition: "box-shadow 0.15s" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", width: "100%", alignItems: "center" }}>
                       <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: isConfirmed ? "#1A9E6E" : "#D4810A" }}>
