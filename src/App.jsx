@@ -787,6 +787,36 @@ function GhostBtn({ children, onClick, icon: Icon, tone = "light", disabled, sty
   );
 }
 
+// Shared empty-state block for lists that can legitimately be empty now that
+// the demo/mock profiles are gone — an ivory puck holding a gold icon, a
+// serif title, one muted line, and an optional gold pill action. Reused
+// across the teacher/student browsing lists, Messages, both lesson rooms
+// and My Planning so a real-but-sparse account never just sees blank space.
+function EmptyState({ icon: Icon, title, line, action, actionLabel, size = 52 }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 10, padding: "40px 16px" }}>
+      {Icon && (
+        <div style={{
+          width: size, height: size, borderRadius: "50%", flexShrink: 0,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          border: "1px solid rgba(255,255,255,.85)",
+          background: "radial-gradient(circle at 35% 28%, #FFFFFF 0%, #FCF8EF 55%, #F1E8D6 100%)",
+          boxShadow: "0 6px 10px -4px rgba(150,115,55,.38), 0 2px 4px rgba(150,115,55,.14), inset 0 2px 2px #fff, inset 0 -3px 5px rgba(176,146,98,.28)",
+        }}>
+          <Icon size={Math.round(size * 0.42)} color={C.brass} strokeWidth={1.8} />
+        </div>
+      )}
+      <h4 style={{ fontFamily: FONT_DISPLAY, fontSize: 18, fontWeight: 600, color: C.ivory, margin: 0 }}>{title}</h4>
+      {line && <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: C.ivoryDim, margin: 0, maxWidth: 300, lineHeight: 1.5 }}>{line}</p>}
+      {action && (
+        <div style={{ marginTop: 4 }}>
+          <PrimaryBtn onClick={action}>{actionLabel}</PrimaryBtn>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function HomeBtn({ onClick }) {
   return (
     <button onClick={onClick} className="inline-flex items-center gap-1.5 text-sm" style={{ color: C.ivoryDim, fontFamily: FONT_BODY, fontWeight: 500 }}>
@@ -9440,7 +9470,9 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
               <span className="artium-aw-badge"><b>{roster.length}</b><span>student{roster.length === 1 ? "" : "s"}</span></span>
             </div>
             <div className="artium-aw-list">
-              {roster.length === 0 && <p className="artium-aw-empty">No students from this conservatory yet.</p>}
+              {roster.length === 0 && (
+                <EmptyState icon={Users} title="No students yet" line="No students here yet — the network is growing." />
+              )}
               {roster.map((st) => (
                 <button key={st.id} className="artium-aw-row" onClick={() => { if (isGuest) { onGuestClick(); return; } onOpenStudent(st.id); }}>
                   <span style={{ filter: isGuest && st.id !== "me" ? "blur(4px)" : "none", pointerEvents: "none", flexShrink: 0 }}>
@@ -9920,7 +9952,9 @@ function Messages({ students, conversations, activeChatId, setActiveChatId, onSe
         <div className="px-5 pt-5 pb-2">
           <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.ivoryDim }}>CONVERSATIONS</p>
         </div>
-        {ids.length === 0 && <p className="px-5 text-sm" style={{ color: C.ivoryDim }}>Message someone from the map to start a thread.</p>}
+        {ids.length === 0 && (
+          <EmptyState icon={MessageCircle} title="No conversations yet" line="Message a student from their profile to start one." />
+        )}
         {ids.map((id) => {
           const s = students.find((st) => st.id === id);
           if (!s) return null;
@@ -10927,7 +10961,9 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
                 <span className="artium-aw-badge"><b>{consRoster.length}</b><span>teacher{consRoster.length === 1 ? "" : "s"}</span></span>
               </div>
               <div className="artium-aw-list">
-                {consRoster.length === 0 && <p className="artium-aw-empty">No teachers from this conservatory yet.</p>}
+                {consRoster.length === 0 && (
+                  <EmptyState icon={GraduationCap} title="No teachers here yet" line={`No one at ${cons.name} is teaching yet — check back soon.`} />
+                )}
                 {consRoster.map((t) => <TeacherRow key={t.id} t={t} onOpen={() => selectTeacher(t.id)} />)}
               </div>
             </>
@@ -10962,7 +10998,13 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
                   : teacherCons;
                 return (
               <div className="artium-aw-list">
-                {rows.length === 0 && <p className="artium-aw-empty">{q ? "No conservatory matches that search." : "No one is teaching here yet."}</p>}
+                {rows.length === 0 && (
+                  <EmptyState
+                    icon={GraduationCap}
+                    title={q ? "No matches" : "No teachers yet"}
+                    line={q ? "No conservatory matches that search." : "No one is teaching here yet — check back as more teachers join."}
+                  />
+                )}
                 {rows.map((c) => (
                   <button key={c.id} className="artium-aw-row" onClick={() => setSelectedConsId(c.id)}>
                     <ConsAvatar cons={c} />
@@ -11108,6 +11150,15 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
                   <ArrowLeft size={13} /> Lesson Room
                 </button>
               </div>
+              {allSessions.length === 0 && (
+                <EmptyState
+                  icon={Calendar}
+                  title="No sessions yet"
+                  line={acceptedTeachers.length === 0
+                    ? "Once you start lessons with a teacher, your sessions will show up here."
+                    : "Schedule a session from the Lesson Room to see it here."}
+                />
+              )}
               {Object.entries(byMonth).map(([monthKey, sessions]) => {
                 const spentCents = sessions.reduce((sum, s) => {
                   const pay = paymentsBySession[s.id];
@@ -11621,13 +11672,14 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
           .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
         return (
           <div>
+            {sessions.length === 0 && (
+              <EmptyState icon={Calendar} title="No sessions yet" line={`Ask ${teacher.name.split(" ")[0]} in Chat to schedule one.`} />
+            )}
             {/* Horizontal scroll strip of square cards */}
+            {sessions.length > 0 && (
             <div style={{ display: "flex", gap: 10, overflowX: "auto", padding: "16px 0 12px", scrollbarWidth: "none" }}>
-              {sessions.length === 0 && (
-                <p style={{ fontSize: 13, color: C.ivoryDim, padding: "0 4px" }}>No sessions yet — ask {teacher.name.split(" ")[0]} in Chat to schedule one.</p>
-              )}
-              {sessions.length > 0 && stripSessions.length === 0 && (
-                <p style={{ fontSize: 13, color: C.ivoryDim, padding: "0 4px" }}>No upcoming sessions — past ones live in My Planning.</p>
+              {stripSessions.length === 0 && (
+                <p style={{ fontSize: 13, color: C.ivoryDim, fontStyle: "italic", padding: "10px 4px" }}>No upcoming sessions — past ones live in My Planning.</p>
               )}
               {stripSessions.map((s) => {
                 const dt = new Date(s.date + "T" + s.time);
@@ -11651,6 +11703,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
                 );
               })}
             </div>
+            )}
 
             {/* Detail panel for selected session */}
             {sel && (() => {
@@ -13825,7 +13878,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
           </div>
         </div>
         ) : (
-          <p style={{ fontSize: 13, color: C.ivoryDim, textAlign: "center", padding: "20px 0" }}>No students yet — accepted teaching requests will show up here.</p>
+          <EmptyState icon={GraduationCap} title="No students yet" line="Accepted teaching requests will show up here." />
         )}
         </>)}
       </div>
