@@ -183,11 +183,21 @@ const PROMO_PROVIDERS = [
   { name: "YouTube", hosts: ["youtube.com", "youtu.be", "m.youtube.com"] },
   { name: "WeTransfer", hosts: ["wetransfer.com", "we.tl"] },
 ];
-function detectPromoProvider(url) {
+// The free weekly spotlight accepts a different, narrower set of providers
+// than the paid package (below) — Instagram and Facebook links are fine here
+// since the whole flow is Instagram-native, but the paid list is untouched.
+const PROMO_PROVIDERS_FREE = [
+  { name: "YouTube", hosts: ["youtube.com", "youtu.be", "m.youtube.com"] },
+  { name: "Facebook", hosts: ["facebook.com", "m.facebook.com", "fb.watch"] },
+  { name: "Google Drive", hosts: ["drive.google.com", "docs.google.com"] },
+  { name: "Dropbox", hosts: ["dropbox.com", "db.tt"] },
+  { name: "Instagram", hosts: ["instagram.com"] },
+];
+function detectPromoProvider(url, providers = PROMO_PROVIDERS) {
   let host;
   try { host = new URL(url.trim()).hostname.toLowerCase().replace(/^www\./, ""); }
   catch { return null; }
-  for (const p of PROMO_PROVIDERS) {
+  for (const p of providers) {
     if (p.hosts.some((h) => host === h || host.endsWith("." + h))) return p.name;
   }
   return null;
@@ -199,12 +209,36 @@ const PROMO_OFFER = [
   "A dedicated caption — your bio or anything you choose",
   "Post on Threads",
 ];
-const PROMO_BONUS = "A second free post";
 // Display fallbacks only — the live price is the platform_settings row
 // 'promo_total_cents' (which the server also charges from); PromoteMe
 // fetches it and falls back to these if the row is unreadable.
 const PROMO_RATE = 13;
 const PROMO_TOTAL = PROMO_RATE * 5;
+
+// Every Saturday, one free spot at 12:30 Europe/Paris. Rejection copy is
+// fixed so every rejected free applicant reads the exact same, kind reason.
+const FREE_SPOT_REJECTION_REASON =
+  "Thank you for sharing your playing with us. Each Saturday spotlight has just one spot, and this week another video was chosen among many strong submissions. We'd love to see you apply again for an upcoming Saturday — your music deserves its moment. Thank you for your patience!";
+
+// Local date (YYYY-MM-DD) of the next `count` upcoming Saturdays. Today's own
+// Saturday is skipped — once the day has arrived the 12:30 slot is either
+// already spoken for or too close to book — so the picker only ever offers
+// Saturdays that are genuinely still ahead.
+function nextSaturdays(count = 6) {
+  const out = [];
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  let diff = (6 - d.getDay() + 7) % 7;
+  if (diff === 0) diff = 7;
+  d.setDate(d.getDate() + diff);
+  for (let i = 0; i < count; i++) {
+    const dt = new Date(d);
+    dt.setDate(d.getDate() + i * 7);
+    const iso = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
+    out.push({ iso, label: `Saturday ${dt.toLocaleDateString("en-US", { day: "numeric", month: "long" })} · 12:30 (CET)` });
+  }
+  return out;
+}
 
 const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII"];
 
@@ -12110,6 +12144,8 @@ function PromoteMe({ myProfile, authUser }) {
   // Two unrelated offers on one screen read as a single long form, so the tab
   // opens on a choice and each one gets the screen to itself.
   const [view, setView] = useState(null);   // null | "artium" | "aclassicaltone"
+  // Inside "aclassicaltone" there are now two further, unrelated offers.
+  const [promoMode, setPromoMode] = useState(null); // null | "free" | "paid"
 
   const [videoLink, setVideoLink] = useState("");
   const [captionPref, setCaptionPref] = useState("bio");
@@ -12118,9 +12154,60 @@ function PromoteMe({ myProfile, authUser }) {
   const [time, setTime] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [mine, setMine] = useState(null);       // my latest submission
+  const [mine, setMine] = useState(null);       // my latest paid submission
   const [payLoading, setPayLoading] = useState(false);
   const [payError, setPayError] = useState("");
+
+  // Free weekly spotlight
+  const [freeLink, setFreeLink] = useState("");
+  const [freeSlot, setFreeSlot] = useState("");
+  const [freeError, setFreeError] = useState("");
+  const [freeSubmitting, setFreeSubmitting] = useState(false);
+  const [mineFree, setMineFree] = useState(null); // my latest free submission
+  const [closedSlots, setClosedSlots] = useState(new Set());
+  const saturdays = React.useMemo(() => nextSaturdays(6), []);
+  const freeProvider = detectPromoProvider(freeLink, PROMO_PROVIDERS_FREE);
+  const freeLinkValid = !!freeProvider;
+
+  async function loadMineFree() {
+    const { data } = await supabase.from("promotions").select("*").eq("user_id", authUser.id).eq("kind", "free_weekly").order("created_at", { ascending: false }).limit(1);
+    setMineFree(data && data[0] ? data[0] : null);
+  }
+  async function loadClosedSlots() {
+    const { data } = await supabase.from("promotions").select("slot_date").eq("kind", "free_weekly").eq("status", "approved");
+    setClosedSlots(new Set((data || []).map((r) => r.slot_date)));
+  }
+  React.useEffect(() => { loadMineFree(); loadClosedSlots(); const id = setInterval(() => { loadMineFree(); loadClosedSlots(); }, 4000); return () => clearInterval(id); /* eslint-disable-next-line */ }, []);
+
+  async function submitFree() {
+    setFreeError("");
+    if (!freeLinkValid) { setFreeError("Please use a link from YouTube, Facebook, Google Drive, Dropbox or Instagram only."); return; }
+    if (!freeSlot) { setFreeError("Please pick a Saturday."); return; }
+    if (closedSlots.has(freeSlot)) { setFreeError("That Saturday is already taken — please pick another."); return; }
+    setFreeSubmitting(true);
+    const row = {
+      user_id: authUser.id,
+      name: myProfile?.name || "Student",
+      video_link: freeLink.trim(),
+      provider: freeProvider,
+      kind: "free_weekly",
+      slot_date: freeSlot,
+      status: "pending",
+      created_at: new Date().toISOString(),
+    };
+    const { error: e } = await supabase.from("promotions").insert(row);
+    if (e) { setFreeError(e.message); setFreeSubmitting(false); return; }
+    setFreeSubmitting(false);
+    setFreeLink("");
+    setFreeSlot("");
+    loadMineFree();
+  }
+
+  const freeApproved = mineFree?.status === "approved";
+  const freeAwaiting = mineFree?.status === "pending";
+  const freeRejected = mineFree?.status === "rejected";
+  const freeSlotLabel = (iso) => saturdays.find((s) => s.iso === iso)?.label
+    || (iso ? new Date(iso + "T00:00:00").toLocaleDateString("en-US", { weekday: "long", day: "numeric", month: "long" }) : "");
   // Whether this account has already paid for a promotion. Read from the
   // payments ledger (RLS limits the query to the caller's own rows), not
   // from the ?promo=success redirect — the webhook is the authority. The
@@ -12138,7 +12225,7 @@ function PromoteMe({ myProfile, authUser }) {
   const linkValid = !!provider;
 
   async function loadMine() {
-    const { data } = await supabase.from("promotions").select("*").eq("user_id", authUser.id).order("created_at", { ascending: false }).limit(1);
+    const { data } = await supabase.from("promotions").select("*").eq("user_id", authUser.id).eq("kind", "paid").order("created_at", { ascending: false }).limit(1);
     setMine(data && data[0] ? data[0] : null);
   }
   React.useEffect(() => { loadMine(); const id = setInterval(loadMine, 4000); return () => clearInterval(id); /* eslint-disable-next-line */ }, []);
@@ -12154,6 +12241,7 @@ function PromoteMe({ myProfile, authUser }) {
       name: myProfile?.name || "Student",
       video_link: videoLink.trim(),
       provider,
+      kind: "paid",
       caption,
       proposed_date: date,
       proposed_time: time || null,
@@ -12237,16 +12325,126 @@ function PromoteMe({ myProfile, authUser }) {
 
         {view && (
           <button
-            onClick={() => setView(null)}
+            onClick={() => (view === "aclassicaltone" && promoMode ? setPromoMode(null) : setView(null))}
             style={{ alignSelf: "flex-start", display: "inline-flex", alignItems: "center", gap: 6, background: "none", border: "none", padding: 0, font: "inherit", fontSize: 13, fontWeight: 600, color: C.ivoryDim, cursor: "pointer" }}
           >
-            <ArrowLeft size={14} /> Both options
+            <ArrowLeft size={14} /> {view === "aclassicaltone" && promoMode ? "Free or €65" : "Both options"}
           </button>
         )}
 
         {view === "artium" && <ArtiumSoundCard myProfile={myProfile} authUser={authUser} />}
 
-        {view === "aclassicaltone" && (<>
+        {view === "aclassicaltone" && !promoMode && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 4 }}>
+            {[
+              { v: "free", t: "Free Saturday spotlight", d: "One free spot every Saturday, 12:30 (CET). Chosen by the aclassicaltone team." },
+              { v: "paid", t: "€65 package", d: "The full promotional package below — post, story, caption, on your own date." },
+            ].map(({ v, t, d }) => (
+              <button
+                key={v}
+                onClick={() => setPromoMode(v)}
+                style={{
+                  display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
+                  width: "100%", textAlign: "left", padding: "18px 20px", borderRadius: 999,
+                  border: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)", cursor: "pointer",
+                  font: "inherit", boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
+                }}
+              >
+                <span style={{ minWidth: 0 }}>
+                  <span style={{ display: "block", fontSize: 16, fontWeight: 800, color: C.ivory, letterSpacing: -0.3 }}>{t}</span>
+                  <span style={{ display: "block", fontSize: 13, color: C.ivoryDim, marginTop: 2 }}>{d}</span>
+                </span>
+                <ChevronRight size={18} color={C.brassLabel} style={{ flexShrink: 0 }} />
+              </button>
+            ))}
+          </div>
+        )}
+
+        {view === "aclassicaltone" && promoMode === "free" && (<>
+          {(!mineFree || freeRejected) && (
+            <div style={card}>
+              {label("Your video")}
+              <p style={{ fontSize: 12, color: C.ivoryDim, margin: "8px 0 10px", lineHeight: 1.5 }}>
+                Paste a link from <b>YouTube, Facebook, Google Drive, Dropbox</b> or <b>Instagram</b> only.
+              </p>
+              <input
+                value={freeLink}
+                onChange={(e) => setFreeLink(e.target.value)}
+                placeholder="https://youtube.com/..."
+                style={{ width: "100%", padding: "11px 12px", borderRadius: 10, border: `1.5px solid ${freeLink && !freeLinkValid ? C.burgundy : C.inkLine}`, fontSize: 14, fontFamily: FONT_BODY, boxSizing: "border-box", outline: "none" }}
+              />
+              {freeLink && (
+                <p style={{ fontSize: 12, margin: "6px 2px 0", color: freeLinkValid ? "#1A9E6E" : C.burgundy }}>
+                  {freeLinkValid ? `✓ ${freeProvider} link accepted` : "✕ Only YouTube, Facebook, Google Drive, Dropbox or Instagram links are accepted"}
+                </p>
+              )}
+
+              <div style={{ marginTop: 16 }}>{label("Pick a Saturday")}</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
+                {saturdays.map(({ iso, label: slotLabel }) => {
+                  const taken = closedSlots.has(iso);
+                  const selected = freeSlot === iso;
+                  return (
+                    <button
+                      key={iso}
+                      disabled={taken}
+                      onClick={() => setFreeSlot(iso)}
+                      title={taken ? "This Saturday is already taken" : undefined}
+                      style={{
+                        padding: "8px 14px", borderRadius: 20, fontSize: 13, fontWeight: 600,
+                        cursor: taken ? "not-allowed" : "pointer",
+                        background: taken ? "rgba(176,146,98,0.03)" : "rgba(176,146,98,0.05)",
+                        color: taken ? C.ivoryDim : (selected ? C.ivory : C.ivoryDim),
+                        border: selected && !taken ? `2px solid ${C.brass}` : `1px solid ${C.inkLine}`,
+                        opacity: taken ? 0.5 : 1,
+                        textDecoration: taken ? "line-through" : "none",
+                      }}
+                    >
+                      {slotLabel}{taken ? " · taken" : ""}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {freeError && <p style={{ fontSize: 13, color: C.burgundy, margin: "12px 0 0" }}>{freeError}</p>}
+              <button onClick={submitFree} disabled={freeSubmitting}
+                style={{ marginTop: 16, width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: C.brass, color: C.brassText, fontSize: 15, fontWeight: 700, cursor: freeSubmitting ? "default" : "pointer", opacity: freeSubmitting ? 0.7 : 1 }}>
+                {freeSubmitting ? "Submitting…" : "Submit for approval"}
+              </button>
+            </div>
+          )}
+
+          {mineFree && !freeRejected && (
+            <div style={card}>
+              {label("Status")}
+              <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "10px 0 4px" }}>
+                <span style={{ width: 9, height: 9, borderRadius: "50%", background: freeApproved ? "#1A9E6E" : C.brass, display: "inline-block" }} />
+                <span style={{ fontSize: 15, fontWeight: 700, color: freeApproved ? "#1A9E6E" : C.brassLabel }}>
+                  {freeApproved ? "Approved" : "Awaiting approval"}
+                </span>
+              </div>
+              <p style={{ fontSize: 13, color: C.ivoryDim, margin: "0 0 4px", lineHeight: 1.5 }}>
+                {freeApproved
+                  ? <>You're booked for {freeSlotLabel(mineFree.slot_date)}! Send your collaboration request on Instagram to <a href={ACT_INSTAGRAM} target="_blank" rel="noreferrer" style={{ color: C.brassLabel, fontWeight: 600, textDecoration: "none" }}>@aclassicaltone</a> at 12:30 that day.</>
+                  : `Your video link was received for ${freeSlotLabel(mineFree.slot_date)} and is awaiting approval by the Artium team.`}
+              </p>
+              <p style={{ fontSize: 12, color: C.ivoryDim, margin: "8px 0 0", wordBreak: "break-all" }}>
+                <b>{mineFree.provider}</b> · {mineFree.video_link}
+              </p>
+            </div>
+          )}
+
+          {freeRejected && (
+            <div style={{ ...card, background: "#FDECEC" }}>
+              <p style={{ fontSize: 14, color: C.burgundy, fontWeight: 600, margin: 0 }}>
+                {mineFree?.rejection_reason || "Your previous submission wasn't approved."}
+              </p>
+              <p style={{ fontSize: 13, color: C.burgundy, margin: "8px 0 0" }}>Please submit a new video link above for another Saturday.</p>
+            </div>
+          )}
+        </>)}
+
+        {view === "aclassicaltone" && promoMode === "paid" && (<>
         {/* Offer */}
         <div style={card}>
           {label("What you get")}
@@ -12256,9 +12454,6 @@ function PromoteMe({ myProfile, authUser }) {
                 <CheckIcon size={16} color="#1A9E6E" style={{ flexShrink: 0, marginTop: 2 }} /> {o}
               </li>
             ))}
-            <li style={{ display: "flex", alignItems: "flex-start", gap: 9, fontSize: 14, color: "#1A9E6E", fontWeight: 600, lineHeight: 1.4 }}>
-              <Plus size={16} color="#1A9E6E" style={{ flexShrink: 0, marginTop: 2 }} /> {PROMO_BONUS} <span style={{ color: C.ivoryDim, fontWeight: 500 }}>(free bonus)</span>
-            </li>
           </ul>
           <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${C.inkLine}`, display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
             <span style={{ fontSize: 13, color: C.ivoryDim }}>€{promoRate} / service · 5 services</span>
@@ -12397,6 +12592,40 @@ function AdminScreen({ authUser, onlineCount }) {
     load();
   }
 
+  // Approving a free Saturday submission is two extra steps a plain paid
+  // approval doesn't need: warn if this user has already had a past Saturday
+  // (the spot is meant to circulate), then close the slot by auto-rejecting
+  // every other still-pending submission for that same Saturday.
+  async function approveFree(promo) {
+    if (isRealUser) {
+      const { data: prevApproved } = await supabase.from("promotions").select("id")
+        .eq("user_id", promo.user_id).eq("kind", "free_weekly").eq("status", "approved").neq("id", promo.id);
+      if (prevApproved && prevApproved.length > 0) {
+        if (!window.confirm("This user has already been approved for a past spotlight. Approve them again?")) return;
+      }
+      await supabase.from("promotions").update({ status: "approved" }).eq("id", promo.id);
+      await supabase.from("promotions").update({ status: "rejected", rejection_reason: FREE_SPOT_REJECTION_REASON })
+        .eq("kind", "free_weekly").eq("slot_date", promo.slot_date).eq("status", "pending").neq("id", promo.id);
+    } else {
+      const local = readLocal();
+      const hasPrev = local.some((p) => p.user_id === promo.user_id && p.kind === "free_weekly" && p.status === "approved" && p.id !== promo.id);
+      if (hasPrev && !window.confirm("This user has already been approved for a past spotlight. Approve them again?")) return;
+      writeLocal(local.map((p) => {
+        if (p.id === promo.id) return { ...p, status: "approved" };
+        if (p.kind === "free_weekly" && p.slot_date === promo.slot_date && p.status === "pending") {
+          return { ...p, status: "rejected", rejection_reason: FREE_SPOT_REJECTION_REASON };
+        }
+        return p;
+      }));
+    }
+    load();
+  }
+
+  function approve(promo) {
+    if (promo.kind === "free_weekly") return approveFree(promo);
+    return setStatus(promo, "approved");
+  }
+
   const pending = rows.filter((r) => r.status === "pending");
   const decided = rows.filter((r) => r.status !== "pending");
   const shown = tab === "pending" ? pending : decided;
@@ -12448,20 +12677,33 @@ function AdminScreen({ authUser, onlineCount }) {
           <div style={{ ...card, textAlign: "center" }}>
             <p style={{ fontSize: 14, color: C.ivoryDim, margin: 0 }}>{tab === "pending" ? "No submissions awaiting approval." : "No reviewed submissions yet."}</p>
           </div>
-        ) : shown.map((p) => (
+        ) : shown.map((p) => {
+          const isFree = p.kind === "free_weekly";
+          return (
           <div key={p.id} style={card}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 8 }}>
               <p style={{ fontSize: 15, fontWeight: 700, color: C.ivory, margin: 0 }}>{p.name}</p>
               <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: STATUS_COLOR[p.status] || C.ivoryDim }}>{p.status}</span>
             </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+              <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", padding: "2px 8px", borderRadius: 999, background: isFree ? "rgba(26,158,110,0.12)" : "rgba(176,146,98,0.12)", color: isFree ? "#1A9E6E" : C.brassLabel }}>
+                {isFree ? "Free spotlight" : "Paid €65"}
+              </span>
+              {isFree && p.slot_date && <span style={{ fontSize: 12, color: C.ivoryDim }}>Saturday {p.slot_date}</span>}
+            </div>
             <p style={{ fontSize: 12, color: C.ivoryDim, margin: "0 0 4px" }}>
-              <b>{p.provider}</b> · post {p.proposed_date}{p.proposed_time ? ` · ${p.proposed_time}` : ""}
+              {isFree
+                ? <b>{p.provider}</b>
+                : <><b>{p.provider}</b> · post {p.proposed_date}{p.proposed_time ? ` · ${p.proposed_time}` : ""}</>}
             </p>
             <a href={p.video_link} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: C.brassLabel, wordBreak: "break-all" }}>{p.video_link}</a>
-            <p style={{ fontSize: 12, color: C.ivoryDim, margin: "6px 0 0" }}>Caption: {p.caption}</p>
+            {!isFree && <p style={{ fontSize: 12, color: C.ivoryDim, margin: "6px 0 0" }}>Caption: {p.caption}</p>}
+            {p.status === "rejected" && p.rejection_reason && (
+              <p style={{ fontSize: 12, color: C.burgundy, margin: "6px 0 0", lineHeight: 1.4 }}>Reason: {p.rejection_reason}</p>
+            )}
             {p.status === "pending" && (
               <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-                <button onClick={() => setStatus(p, "approved")} style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "none", background: "#1A9E6E", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Approve</button>
+                <button onClick={() => approve(p)} style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "none", background: "#1A9E6E", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Approve</button>
                 <button onClick={() => setStatus(p, "rejected")} style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)", color: C.burgundy, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Reject</button>
               </div>
             )}
@@ -12469,7 +12711,8 @@ function AdminScreen({ authUser, onlineCount }) {
               <button onClick={() => setStatus(p, "pending")} style={{ marginTop: 12, padding: "7px 14px", borderRadius: 9, border: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)", color: C.ivoryDim, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Reset to pending</button>
             )}
           </div>
-        ))}
+          );
+        })}
         </>}
       </div>
     </div>
