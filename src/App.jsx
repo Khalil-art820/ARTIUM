@@ -12280,15 +12280,15 @@ function PromoteMe({ myProfile, authUser, focus }) {
   const [freeSlot, setFreeSlot] = useState("");
   const [freeError, setFreeError] = useState("");
   const [freeSubmitting, setFreeSubmitting] = useState(false);
-  const [mineFree, setMineFree] = useState(null); // my latest free submission
+  const [mineFreeAll, setMineFreeAll] = useState([]); // every free submission, newest first
   const [closedSlots, setClosedSlots] = useState(new Set());
   const saturdays = React.useMemo(() => nextSaturdays(6), []);
   const freeProvider = detectPromoProvider(freeLink, PROMO_PROVIDERS_FREE);
   const freeLinkValid = !!freeProvider;
 
   async function loadMineFree() {
-    const { data } = await supabase.from("promotions").select("*").eq("user_id", authUser.id).eq("kind", "free_weekly").order("created_at", { ascending: false }).limit(1);
-    setMineFree(data && data[0] ? data[0] : null);
+    const { data } = await supabase.from("promotions").select("*").eq("user_id", authUser.id).eq("kind", "free_weekly").order("created_at", { ascending: false });
+    setMineFreeAll(data || []);
   }
   async function loadClosedSlots() {
     const { data } = await supabase.from("promotions").select("slot_date").eq("kind", "free_weekly").eq("status", "approved");
@@ -12320,9 +12320,12 @@ function PromoteMe({ myProfile, authUser, focus }) {
     loadMineFree();
   }
 
-  const freeApproved = mineFree?.status === "approved";
-  const freeAwaiting = mineFree?.status === "pending";
-  const freeRejected = mineFree?.status === "rejected";
+  // A student can hold several free submissions at once (a won Saturday
+  // plus a fresh application) — every ACTIVE one gets its own card, and a
+  // rejection card shows only when it's the newest word.
+  const freeApprovedRows = mineFreeAll.filter((r) => r.status === "approved");
+  const freePendingRow = mineFreeAll.find((r) => r.status === "pending") || null;
+  const freeRejected = mineFreeAll[0]?.status === "rejected" ? mineFreeAll[0] : null;
   const freeSlotLabel = (iso) => saturdays.find((s) => s.iso === iso)?.label
     || (iso ? new Date(iso + "T00:00:00").toLocaleDateString("en-US", { weekday: "long", day: "numeric", month: "long" }) : "");
   // Whether this account has already paid for a promotion. Read from the
@@ -12400,7 +12403,7 @@ function PromoteMe({ myProfile, authUser, focus }) {
   const card = PANEL;
 
   return (
-    <div style={{ padding: "20px 16px 40px", background: C.ink, minHeight: "100%", fontFamily: FONT_BODY }}>
+    <div style={{ padding: "20px 16px 120px", background: C.ink, minHeight: "100%", fontFamily: FONT_BODY }}>
       <div style={{ maxWidth: 560, margin: "0 auto", display: "flex", flexDirection: "column", gap: 16 }}>
 
         {/* Header */}
@@ -12481,7 +12484,7 @@ function PromoteMe({ myProfile, authUser, focus }) {
           {/* The form hides only while a submission is awaiting approval —
               an approved (or rejected) student can keep applying for the
               other open Saturdays. */}
-          {(!mineFree || freeRejected || freeApproved) && (
+          {!freePendingRow && (
             <div style={card}>
               {label("Your video")}
               <p style={{ fontSize: 12, color: C.ivoryDim, margin: "8px 0 10px", lineHeight: 1.5 }}>
@@ -12534,30 +12537,33 @@ function PromoteMe({ myProfile, authUser, focus }) {
             </div>
           )}
 
-          {mineFree && !freeRejected && (
-            <div style={card}>
+          {[...(freePendingRow ? [freePendingRow] : []), ...freeApprovedRows].map((row) => {
+            const rowApproved = row.status === "approved";
+            return (
+            <div key={row.id} style={card}>
               {label("Status")}
               <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "10px 0 4px" }}>
-                <span style={{ width: 9, height: 9, borderRadius: "50%", background: freeApproved ? "#1A9E6E" : C.brass, display: "inline-block" }} />
-                <span style={{ fontSize: 15, fontWeight: 700, color: freeApproved ? "#1A9E6E" : C.brassLabel }}>
-                  {freeApproved ? "Approved" : "Awaiting approval"}
+                <span style={{ width: 9, height: 9, borderRadius: "50%", background: rowApproved ? "#1A9E6E" : C.brass, display: "inline-block" }} />
+                <span style={{ fontSize: 15, fontWeight: 700, color: rowApproved ? "#1A9E6E" : C.brassLabel }}>
+                  {rowApproved ? "Approved" : "Awaiting approval"}
                 </span>
               </div>
               <p style={{ fontSize: 13, color: C.ivoryDim, margin: "0 0 4px", lineHeight: 1.5 }}>
-                {freeApproved
-                  ? <>You're booked for {freeSlotLabel(mineFree.slot_date)}! Send your collaboration request on Instagram to <a href={ACT_INSTAGRAM} target="_blank" rel="noreferrer" style={{ color: C.brassLabel, fontWeight: 600, textDecoration: "none" }}>@aclassicaltone</a> at 12:30 that day.</>
-                  : `Your video link was received for ${freeSlotLabel(mineFree.slot_date)} and is awaiting approval by the Artium team.`}
+                {rowApproved
+                  ? <>You're booked for {freeSlotLabel(row.slot_date)}! Send your collaboration request on Instagram to <a href={ACT_INSTAGRAM} target="_blank" rel="noreferrer" style={{ color: C.brassLabel, fontWeight: 600, textDecoration: "none" }}>@aclassicaltone</a> at 12:30 that day.</>
+                  : `Your video link was received for ${freeSlotLabel(row.slot_date)} and is awaiting approval by the Artium team.`}
               </p>
               <p style={{ fontSize: 12, color: C.ivoryDim, margin: "8px 0 0", wordBreak: "break-all" }}>
-                <b>{mineFree.provider}</b> · {mineFree.video_link}
+                <b>{row.provider}</b> · {row.video_link}
               </p>
             </div>
-          )}
+            );
+          })}
 
           {freeRejected && (
             <div style={{ ...card, background: "#FDECEC" }}>
               <p style={{ fontSize: 14, color: C.burgundy, fontWeight: 600, margin: 0 }}>
-                {mineFree?.rejection_reason || "Your previous submission wasn't approved."}
+                {freeRejected.rejection_reason || "Your previous submission wasn't approved."}
               </p>
               <p style={{ fontSize: 13, color: C.burgundy, margin: "8px 0 0" }}>Please submit a new video link above for another Saturday.</p>
             </div>
@@ -12775,7 +12781,7 @@ function AdminScreen({ authUser, onlineCount }) {
   const STATUS_COLOR = { approved: "#1A9E6E", rejected: C.burgundy, pending: C.brassLabel };
 
   return (
-    <div style={{ padding: "20px 16px 40px", background: C.ink, minHeight: "100%", fontFamily: FONT_BODY }}>
+    <div style={{ padding: "20px 16px 120px", background: C.ink, minHeight: "100%", fontFamily: FONT_BODY }}>
       <div style={{ maxWidth: 560, margin: "0 auto", display: "flex", flexDirection: "column", gap: 14 }}>
         <div style={{ textAlign: "center" }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
