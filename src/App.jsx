@@ -13086,7 +13086,7 @@ function AdminScreen({ authUser, onlineCount }) {
   // Module-level on purpose: defined inside AdminTracks it was a NEW component
 // type on every 5s poll render, so React remounted every card — killing any
 // playing <audio> within seconds ("plays 1-2s then stops").
-function AdminTrackList({ list, editable, card, names, busy, decide, publicUrl, STATUS_COLOR }) {
+function AdminTrackList({ list, editable, card, names, busy, decide, removeTrack, publicUrl, STATUS_COLOR }) {
     if (list.length === 0) {
       return (
         <div style={{ ...card, textAlign: "center" }}>
@@ -13144,6 +13144,10 @@ function AdminTrackList({ list, editable, card, names, busy, decide, publicUrl, 
                   Reset
                 </button>
               )}
+              <button disabled={busy === r.id} onClick={() => removeTrack(r)} title="Delete this recording permanently"
+                style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 5, padding: "7px 12px", borderRadius: 8, border: "1px solid rgba(179,38,30,0.35)", background: "rgba(179,38,30,0.06)", color: "#B3261E", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
+                <Trash2 size={12} /> Delete
+              </button>
             </div>
           </div>
         ))}
@@ -13190,17 +13194,30 @@ function AdminTracks({ card, STATUS_COLOR }) {
   const pending = rows.filter((r) => r.status === "pending");
   const decided = rows.filter((r) => r.status !== "pending");
 
+  // Hard delete: the row goes, and the audio file with it (best-effort —
+  // an orphaned file in the bucket is invisible, just wasted bytes).
+  async function removeTrack(r) {
+    if (!window.confirm(`Delete "${r.title || "this recording"}" permanently? This cannot be undone.`)) return;
+    setBusy(r.id);
+    const { error } = await supabase.from("student_tracks").delete().eq("id", r.id);
+    if (!error && r.audio_url) {
+      try { await supabase.storage.from("student-audio").remove([r.audio_url]); } catch { /* orphan tolerated */ }
+    }
+    setBusy("");
+    if (error) { alert(`Could not delete: ${error.message}`); return; }
+    load();
+  }
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brassLabel, letterSpacing: "0.06em", margin: 0 }}>
         PENDING ({pending.length})
       </p>
-      <AdminTrackList list={pending} editable card={card} names={names} busy={busy} decide={decide} publicUrl={publicUrl} STATUS_COLOR={STATUS_COLOR} />
+      <AdminTrackList list={pending} editable card={card} names={names} busy={busy} decide={decide} removeTrack={removeTrack} publicUrl={publicUrl} STATUS_COLOR={STATUS_COLOR} />
       <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brassLabel, letterSpacing: "0.06em", margin: "6px 0 0" }}>
         HISTORY ({decided.length})
       </p>
-      <AdminTrackList list={decided} editable={false} card={card} names={names} busy={busy} decide={decide} publicUrl={publicUrl} STATUS_COLOR={STATUS_COLOR} />
+      <AdminTrackList list={decided} editable={false} card={card} names={names} busy={busy} decide={decide} removeTrack={removeTrack} publicUrl={publicUrl} STATUS_COLOR={STATUS_COLOR} />
     </div>
   );
 }
