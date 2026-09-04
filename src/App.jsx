@@ -13294,6 +13294,9 @@ function AdminTracks({ card, STATUS_COLOR, authUser }) {
     setBusy("");
     if (error) { alert(`Could not delete: ${error.message}`); return; }
     if (r.status === "pending") sendTrackMessage(r.user_id, `Your recording "${r.title || "Untitled"}" was removed from the review queue. You're welcome to submit another one anytime.`);
+    // A retired approved track deserves a word too — the student was told
+    // it went live, so it must not simply vanish from the rotation.
+    if (r.status === "approved") sendTrackMessage(r.user_id, `Your recording "${r.title || "Untitled"}" has been retired from Artium Radio's rotation. Thank you for being the sound of Artium — you're welcome to submit a new one anytime.`);
     load();
   }
 
