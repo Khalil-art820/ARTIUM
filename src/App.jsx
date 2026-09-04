@@ -1020,9 +1020,10 @@ function ArtiumRadio({ open, controllerRef, onPlayingChange, onClose }) {
         // a corner: every bottom corner collides with the entry gate's triangle.
         // Opaque and above every page's stacking tricks — the translucent
         // first draft let the landing headline bleed through the panel.
-        position: "fixed", top: 72, right: 16, width: minimized ? "auto" : 300, maxWidth: "calc(100vw - 32px)", zIndex: 500,
-        background: "#FFFFFF", border: `1px solid ${C.inkLine}`, borderRadius: minimized ? 999 : 14,
-        boxShadow: "0 18px 40px -18px rgba(150,115,55,0.5), 0 2px 8px rgba(0,0,0,0.08)", padding: minimized ? 6 : 10,
+        position: "fixed", top: 72, right: 16, width: minimized ? "auto" : 320, maxWidth: "calc(100vw - 32px)", zIndex: 500,
+        background: "#FFFFFF", border: `1px solid ${C.inkLine}`, borderRadius: minimized ? 999 : 20,
+        boxShadow: "0 20px 40px -22px rgba(150,115,55,0.38), inset 0 1px 0 #fff", padding: minimized ? 6 : 0,
+        overflow: "hidden",
         opacity: open ? 1 : 0,
         visibility: open ? "visible" : "hidden",
         transform: open ? "translateY(0)" : "translateY(8px)",
@@ -1030,19 +1031,6 @@ function ArtiumRadio({ open, controllerRef, onPlayingChange, onClose }) {
         transition: "opacity 0.15s ease, transform 0.15s ease",
       }}
     >
-      {!minimized && (
-        <div style={{ position: "absolute", top: 6, right: 6, display: "flex", gap: 4, zIndex: 1 }}>
-          <button onClick={() => setMinimized(true)} title="Minimize — music keeps playing"
-            style={{ width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(176,146,98,0.12)", border: "none", borderRadius: "50%", cursor: "pointer", color: C.ivoryDim, fontSize: 13, fontWeight: 700, lineHeight: 1 }}>
-            –
-          </button>
-          <button onClick={onClose} title="Close"
-            style={{ width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(176,146,98,0.12)", border: "none", borderRadius: "50%", cursor: "pointer", color: C.ivoryDim }}>
-            <X size={13} />
-          </button>
-        </div>
-      )}
-
       <audio
         ref={audioRef}
         onEnded={next}
@@ -1065,83 +1053,80 @@ function ArtiumRadio({ open, controllerRef, onPlayingChange, onClose }) {
           </button>
         </div>
       ) : (<>
-      <p style={{ margin: "2px 50px 8px 4px", fontSize: 11, fontWeight: 700, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-        Artium Radio
-      </p>
+      {/* Header — the notification bell's own bar, note for bell. */}
+      <div style={{ padding: "14px 16px", borderBottom: `1px solid ${C.inkLine}`, display: "flex", alignItems: "center", gap: 8 }}>
+        <Music2 size={14} color={C.brass} />
+        <p style={{ flex: 1, minWidth: 0, margin: 0, fontSize: 17, fontWeight: 600, color: C.ivory, fontFamily: FONT_BODY }}>Artium Radio</p>
+        <button onClick={() => setMinimized(true)} title="Minimize — music keeps playing"
+          style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 22, height: 22, background: "none", border: "none", cursor: "pointer", color: C.brass, fontSize: 15, fontWeight: 700, lineHeight: 1, padding: 0 }}>
+          –
+        </button>
+        <button onClick={onClose} title="Close"
+          style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 22, height: 22, background: "none", border: "none", cursor: "pointer", color: C.brass, padding: 0 }}>
+          <X size={14} />
+        </button>
+      </div>
 
       {!tracks ? (
-        <p style={{ margin: "0 4px 4px", fontSize: 13, color: C.ivoryDim, fontFamily: FONT_BODY }}>Loading…</p>
+        <p style={{ margin: 0, padding: "16px", fontSize: 13, color: C.ivoryDim, fontFamily: FONT_BODY }}>Loading…</p>
       ) : tracks.length === 0 ? (
-        <p style={{ margin: "0 4px 4px", fontSize: 13, lineHeight: 1.5, color: C.ivoryDim, fontFamily: FONT_BODY }}>
+        <p style={{ margin: 0, padding: "16px", fontSize: 13, lineHeight: 1.5, color: C.ivoryDim, fontFamily: FONT_BODY }}>
           No recordings yet — approved student recordings will play here.
         </p>
       ) : (
-        <div style={{ padding: "2px 4px 4px" }}>
-          <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: C.ivoryDim, textTransform: "uppercase", letterSpacing: "0.06em" }}>
-            Now playing
-          </p>
-          <p style={{ margin: "4px 0 0", fontSize: 14, fontWeight: 700, color: C.ivory, fontFamily: FONT_BODY, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-            {current.title || "Untitled"}
-          </p>
-          {(currentName || current.composer) && (
-            <p style={{ margin: "2px 0 0", fontSize: 12, color: C.ivoryDim, fontFamily: FONT_BODY, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-              {currentName}{currentName && current.composer ? " · " : ""}{current.composer}
-            </p>
-          )}
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 12 }}>
-            <button
-              onClick={prev}
-              title="Previous"
-              aria-label="Previous recording"
-              style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 26, height: 26, padding: 0, background: "transparent", border: "none", cursor: "pointer", color: C.ivoryDim }}
-              disabled={tracks.length < 2}
-            >
+        <>
+          {/* Now playing — a bell row: tinted tile, title over status line. */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "13px 16px", borderBottom: `1px solid ${C.inkLine}` }}>
+            <span style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, background: "rgba(201,150,46,0.14)", color: C.brass, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Music2 size={18} strokeWidth={2} />
+            </span>
+            <span style={{ flex: 1, minWidth: 0, fontFamily: FONT_BODY }}>
+              <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: C.ivory, lineHeight: 1.3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                {current.title || "Untitled"}
+              </p>
+              <p style={{ margin: "2px 0 0", fontSize: 13, color: C.ivoryDim, lineHeight: 1.3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                {currentName}{currentName && current.composer ? " · " : ""}{current.composer || (currentName ? "" : "Now playing")}
+              </p>
+            </span>
+          </div>
+
+          {/* Transport */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", borderBottom: `1px solid ${C.inkLine}` }}>
+            <button onClick={prev} title="Previous" aria-label="Previous recording" disabled={tracks.length < 2}
+              style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 26, height: 26, padding: 0, background: "transparent", border: "none", cursor: "pointer", color: C.ivoryDim }}>
               <ChevronLeft size={18} />
             </button>
-            <button
-              onClick={() => controllerRef.current?.togglePlay()}
-              title={playing ? "Pause" : "Play"}
-              aria-label={playing ? "Pause" : "Play"}
-              style={{
-                display: "flex", alignItems: "center", justifyContent: "center",
-                width: 34, height: 34, padding: 0, borderRadius: "50%",
-                border: `1px solid ${C.inkLine}`, background: "#FFFFFF", cursor: "pointer", color: C.ivory,
-              }}
-            >
+            <button onClick={() => controllerRef.current?.togglePlay()} title={playing ? "Pause" : "Play"} aria-label={playing ? "Pause" : "Play"}
+              style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 34, height: 34, padding: 0, borderRadius: "50%", border: `1px solid ${C.inkLine}`, background: "#FFFFFF", cursor: "pointer", color: C.ivory }}>
               {playing ? <Pause size={16} /> : <Play size={16} style={{ marginLeft: 2 }} />}
             </button>
-            <button
-              onClick={next}
-              title="Next"
-              aria-label="Next recording"
-              style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 26, height: 26, padding: 0, background: "transparent", border: "none", cursor: "pointer", color: C.ivoryDim }}
-              disabled={tracks.length < 2}
-            >
+            <button onClick={next} title="Next" aria-label="Next recording" disabled={tracks.length < 2}
+              style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 26, height: 26, padding: 0, background: "transparent", border: "none", cursor: "pointer", color: C.ivoryDim }}>
               <ChevronRight size={18} />
             </button>
             <span style={{ marginLeft: "auto", fontSize: 11, color: C.ivoryDim, fontFamily: FONT_BODY }}>
               {index + 1} / {tracks.length}
             </span>
           </div>
-          {/* The whole programme, compact — built for a long catalogue:
-              small rows, its own scroll, the playing row highlighted. */}
+
+          {/* The programme — compact bell-style rows, scrolls on its own. */}
           {tracks.length > 1 && (
-            <div style={{ marginTop: 10, borderTop: `1px solid ${C.inkLine}`, maxHeight: 168, overflowY: "auto" }}>
+            <div style={{ maxHeight: 200, overflowY: "auto" }}>
               {tracks.map((t, i) => (
                 <button key={t.id} onClick={() => playAt(i)}
-                  style={{ width: "100%", display: "flex", alignItems: "center", gap: 8, padding: "7px 4px", background: i === index ? "rgba(201,150,46,0.10)" : "none", border: "none", borderRadius: 8, cursor: "pointer", textAlign: "left" }}>
-                  <span style={{ width: 14, flexShrink: 0, color: i === index ? C.brass : C.ivoryDim, display: "flex" }}>
-                    {i === index && playing ? <Pause size={11} /> : <Play size={11} />}
+                  style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "9px 16px", background: i === index ? "rgba(201,150,46,0.08)" : "transparent", border: "none", borderBottom: `1px solid ${C.inkLine}`, cursor: "pointer", textAlign: "left" }}>
+                  <span style={{ width: 28, height: 28, borderRadius: 9, flexShrink: 0, background: i === index ? "rgba(201,150,46,0.16)" : "rgba(176,146,98,0.08)", color: i === index ? C.brass : C.ivoryDim, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    {i === index && playing ? <Pause size={12} /> : <Play size={12} style={{ marginLeft: 1 }} />}
                   </span>
                   <span style={{ flex: 1, minWidth: 0, fontFamily: FONT_BODY }}>
-                    <span style={{ display: "block", fontSize: 12, fontWeight: i === index ? 700 : 500, color: C.ivory, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t.title || "Untitled"}</span>
-                    {names[t.user_id] && <span style={{ display: "block", fontSize: 10.5, color: C.ivoryDim, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{names[t.user_id]}</span>}
+                    <span style={{ display: "block", fontSize: 13, fontWeight: i === index ? 700 : 500, color: C.ivory, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t.title || "Untitled"}</span>
+                    {names[t.user_id] && <span style={{ display: "block", fontSize: 11, color: C.ivoryDim, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{names[t.user_id]}</span>}
                   </span>
                 </button>
               ))}
             </div>
           )}
-        </div>
+        </>
       )}
       </>)}
     </div>
