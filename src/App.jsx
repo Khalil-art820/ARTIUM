@@ -12573,16 +12573,20 @@ function PromoteMe({ myProfile, authUser, focus }) {
           })}
 
           {freeRejected && (
-            <div style={{ ...card, background: "#FDECEC" }}>
-              {freeRejected.slot_date && (
-                <p style={{ fontSize: 11, fontWeight: 700, color: C.burgundy, textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 6px" }}>
-                  Your application for {freeSlotLabel(freeRejected.slot_date)}
-                </p>
-              )}
-              <p style={{ fontSize: 14, color: C.burgundy, fontWeight: 600, margin: 0 }}>
+            <div style={card}>
+              {label("Status")}
+              <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "10px 0 4px" }}>
+                <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#B3261E", display: "inline-block" }} />
+                <span style={{ fontSize: 15, fontWeight: 700, color: "#B3261E" }}>
+                  Not selected{freeRejected.slot_date ? ` — ${freeSlotLabel(freeRejected.slot_date)}` : ""}
+                </span>
+              </div>
+              <p style={{ fontSize: 13, color: C.ivoryDim, margin: "0 0 4px", lineHeight: 1.5 }}>
                 {freeRejected.rejection_reason || "Your previous submission wasn't approved."}
               </p>
-              <p style={{ fontSize: 13, color: C.burgundy, margin: "8px 0 0" }}>Please submit a new video link above for another Saturday.</p>
+              <p style={{ fontSize: 12, color: C.ivoryDim, margin: "8px 0 0", wordBreak: "break-all" }}>
+                <b>{freeRejected.provider}</b> · {freeRejected.video_link}
+              </p>
             </div>
           )}
         </>)}
