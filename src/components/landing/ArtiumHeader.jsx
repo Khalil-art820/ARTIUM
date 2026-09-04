@@ -10,10 +10,10 @@ import { MusicBtn, MemberCount } from "../../App";
  * look for the controls, which is the point.
  *
  * MusicBtn and MemberCount are the gate's own components, imported rather
- * than redrawn: the playlist gating (an empty SPOTIFY_PLAYLIST_ID hides the
- * button entirely) and the live headcount both live inside them, and
- * duplicating that logic here would just be a second place for it to drift
- * out of sync with the one App.jsx actually reads from.
+ * than redrawn: MusicBtn's play/pause glyph and the live headcount both
+ * live inside them, and duplicating that logic here would just be a second
+ * place for it to drift out of sync with the one App.jsx actually reads
+ * from.
  */
 export default function ArtiumHeader({ musicOn, onMusicToggle, memberCount }) {
   const [menuOpen, setMenuOpen] = useState(false);

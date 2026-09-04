@@ -105,16 +105,6 @@ const FONT_DISPLAY = "'Cormorant Garamond', 'Didot', 'Bodoni 72', Georgia, serif
 const FONT_BODY = "'Manrope', -apple-system, 'Segoe UI', Roboto, sans-serif";
 const FONT_MONO = "'ui-monospace', monospace";
 
-// Spotify playlist behind the music toggle. To change it, take just the id from
-// a playlist share link — https://open.spotify.com/playlist/<ID>?si=... — and
-// drop the si/pi query params, which identify the share session rather than the
-// playlist. An empty string hides the music button everywhere.
-//
-// Note what the embed can and cannot do: there is no volume API, and listeners
-// who are not signed in to Spotify in the same browser get 30-second previews
-// behind a "Get Spotify" prompt rather than full tracks.
-const SPOTIFY_PLAYLIST_ID = "3ydc8YZVqfFW1Dj681FMMe";
-
 /**
  * The account that owns the admin screens.
  *
@@ -869,7 +859,6 @@ function HomeBtn({ onClick }) {
 // the icon alone says whether it is playing. Sized to HEADER_CONTROL so it
 // matches the avatar and the logo mark across every header.
 export function MusicBtn({ playing, onToggle, size = HEADER_CONTROL }) {
-  if (!SPOTIFY_PLAYLIST_ID) return null;
   // Black ring, black glyph, both stroked — the reference is drawn in outline,
   // so nothing here is filled. Ring weight and glyph size are fractions of the
   // diameter, keeping the proportion if HEADER_CONTROL moves.
@@ -905,55 +894,103 @@ export function MusicBtn({ playing, onToggle, size = HEADER_CONTROL }) {
 }
 
 /* ---------------------------------------------------------------- */
-/* SPOTIFY PLAYER (Iframe API)                                       */
+/* ARTIUM RADIO                                                       */
 /* ---------------------------------------------------------------- */
-const SPOTIFY_IFRAME_API_SRC = "https://open.spotify.com/embed/iframe-api/v1";
+// The site's own sound bed: approved student recordings from
+// student_tracks, once an admin has cleared them in the Recordings
+// review queue (see AdminTracks below). No external catalogue — just
+// what students themselves have chosen to share and consented to have
+// played here.
+//
+// Order is shuffled once per mount (session), then held steady so
+// prev/next and auto-advance walk a stable list rather than reshuffling
+// under the listener's feet.
+function shuffleOnce(list) {
+  const a = list.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 
-function SpotifyPlayer({ open, controllerRef, onPlayingChange, onClose }) {
-  const mountRef = useRef(null);
+function ArtiumRadio({ open, controllerRef, onPlayingChange, onClose }) {
+  const audioRef = useRef(null);
+  const [tracks, setTracks] = useState(null); // null = not fetched yet
+  const [names, setNames] = useState({});
+  const [index, setIndex] = useState(0);
+  const [playing, setPlaying] = useState(false);
+  const fetchedRef = useRef(false);
 
+  // Fetched once, on mount — the component lives at App level for the
+  // whole session, so "first open" and "mount" land at effectively the
+  // same moment.
   useEffect(() => {
-    if (!SPOTIFY_PLAYLIST_ID) return;
-
-    let cancelled = false;
-
-    function boot(IFrameAPI) {
-      if (cancelled || !mountRef.current) return;
-      IFrameAPI.createController(
-        mountRef.current,
-        { uri: `spotify:playlist:${SPOTIFY_PLAYLIST_ID}`, width: "100%", height: 152 },
-        (controller) => {
-          if (cancelled) return;
-          controllerRef.current = controller;
-          controller.addListener("playback_update", (e) => {
-            onPlayingChange(!e.data.isPaused);
-          });
-        }
-      );
-    }
-
-    if (window.Spotify && window.Spotify.Iframe) {
-      // Already loaded by a previous mount (e.g. StrictMode double-invoke).
-      boot(window.Spotify.Iframe);
-    } else {
-      const prevReady = window.onSpotifyIframeApiReady;
-      window.onSpotifyIframeApiReady = (IFrameAPI) => {
-        boot(IFrameAPI);
-        if (typeof prevReady === "function") prevReady(IFrameAPI);
-      };
-      if (!document.querySelector(`script[src="${SPOTIFY_IFRAME_API_SRC}"]`)) {
-        const script = document.createElement("script");
-        script.src = SPOTIFY_IFRAME_API_SRC;
-        script.async = true;
-        document.body.appendChild(script);
+    if (fetchedRef.current) return;
+    fetchedRef.current = true;
+    (async () => {
+      const { data, error } = await supabase.from("student_tracks")
+        .select("*").eq("status", "approved").order("created_at", { ascending: false });
+      if (error || !data) { setTracks([]); return; }
+      const shuffled = shuffleOnce(data);
+      setTracks(shuffled);
+      const ids = [...new Set(shuffled.map((t) => t.user_id).filter(Boolean))];
+      if (ids.length) {
+        const { data: people } = await supabase.from("profiles").select("id, name").in("id", ids);
+        if (people) setNames(Object.fromEntries(people.map((p) => [p.id, p.name])));
       }
-    }
-
-    return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    })();
   }, []);
 
-  if (!SPOTIFY_PLAYLIST_ID) return null;
+  function publicUrl(path) {
+    return supabase.storage.from("student-audio").getPublicUrl(path).data.publicUrl;
+  }
+
+  function playAt(i) {
+    if (!tracks || tracks.length === 0) return;
+    const n = ((i % tracks.length) + tracks.length) % tracks.length;
+    setIndex(n);
+    const el = audioRef.current;
+    if (!el) return;
+    el.src = publicUrl(tracks[n].audio_url);
+    el.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
+  }
+
+  // Reported up through onPlayingChange — every header's glyph reads
+  // musicPlaying, not this file.
+  useEffect(() => { onPlayingChange(playing); }, [playing]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Once tracks resolve, if the panel is already open (the listener
+  // clicked play while the fetch was still in flight), start the first
+  // track automatically rather than leaving the button looking dead.
+  useEffect(() => {
+    if (open && tracks && tracks.length > 0 && audioRef.current && !audioRef.current.src) {
+      playAt(0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, tracks]);
+
+  // Re-assigned every render (no dependency array) so the closure toggleMusic
+  // calls always sees the current tracks/index/playing state — mirrors how
+  // radioRef used to be handed the embed's controller.
+  useEffect(() => {
+    controllerRef.current = {
+      togglePlay() {
+        if (!tracks || tracks.length === 0) { setPlaying(false); return; }
+        const el = audioRef.current;
+        if (!el) return;
+        if (!el.src) { playAt(index); return; }
+        if (el.paused) el.play().then(() => setPlaying(true)).catch(() => {});
+        else { el.pause(); setPlaying(false); }
+      },
+    };
+  });
+
+  function next() { playAt(index + 1); }
+  function prev() { playAt(index - 1); }
+
+  const current = tracks && tracks.length > 0 ? tracks[index] : null;
+  const currentName = current ? (names[current.user_id] || "") : "";
 
   return (
     <div
@@ -982,25 +1019,75 @@ function SpotifyPlayer({ open, controllerRef, onPlayingChange, onClose }) {
       >
         <X size={13} />
       </button>
-      <div ref={mountRef} />
-      {/* Embeds play 30-second previews unless the iframe can see a logged-in
-          Premium session — and it reads that from a third-party cookie on
-          open.spotify.com, which Safari blocks, Chrome increasingly blocks,
-          and every private window blocks. Nothing here can change that, so
-          say so: without this, a visitor hears 30 seconds and concludes the
-          site is broken. */}
-      <p style={{ margin: "8px 4px 2px", fontSize: 11, lineHeight: 1.45, color: C.ivoryDim, fontFamily: FONT_BODY }}>
-        30-second previews.{" "}
-        <a
-          href={`https://open.spotify.com/playlist/${SPOTIFY_PLAYLIST_ID}`}
-          target="_blank"
-          rel="noreferrer"
-          style={{ color: C.brassLabel, fontWeight: 700, textDecoration: "underline" }}
-        >
-          Open in Spotify
-        </a>{" "}
-        for full tracks.
+
+      <audio
+        ref={audioRef}
+        onEnded={next}
+        onPause={() => setPlaying(false)}
+        onPlay={() => setPlaying(true)}
+        style={{ display: "none" }}
+      />
+
+      <p style={{ margin: "2px 20px 8px 4px", fontSize: 11, fontWeight: 700, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+        Artium Radio
       </p>
+
+      {!tracks ? (
+        <p style={{ margin: "0 4px 4px", fontSize: 13, color: C.ivoryDim, fontFamily: FONT_BODY }}>Loading…</p>
+      ) : tracks.length === 0 ? (
+        <p style={{ margin: "0 4px 4px", fontSize: 13, lineHeight: 1.5, color: C.ivoryDim, fontFamily: FONT_BODY }}>
+          No recordings yet — approved student recordings will play here.
+        </p>
+      ) : (
+        <div style={{ padding: "2px 4px 4px" }}>
+          <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: C.ivoryDim, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+            Now playing
+          </p>
+          <p style={{ margin: "4px 0 0", fontSize: 15, fontWeight: 700, color: C.ivory, fontFamily: FONT_BODY }}>
+            {current.title || "Untitled"}
+          </p>
+          {(currentName || current.composer) && (
+            <p style={{ margin: "2px 0 0", fontSize: 13, color: C.ivoryDim, fontFamily: FONT_BODY }}>
+              {currentName}{currentName && current.composer ? " · " : ""}{current.composer}
+            </p>
+          )}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 12 }}>
+            <button
+              onClick={prev}
+              title="Previous"
+              aria-label="Previous recording"
+              style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 26, height: 26, padding: 0, background: "transparent", border: "none", cursor: "pointer", color: C.ivoryDim }}
+              disabled={tracks.length < 2}
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <button
+              onClick={() => controllerRef.current?.togglePlay()}
+              title={playing ? "Pause" : "Play"}
+              aria-label={playing ? "Pause" : "Play"}
+              style={{
+                display: "flex", alignItems: "center", justifyContent: "center",
+                width: 34, height: 34, padding: 0, borderRadius: "50%",
+                border: `1px solid ${C.inkLine}`, background: "#FFFFFF", cursor: "pointer", color: C.ivory,
+              }}
+            >
+              {playing ? <Pause size={16} /> : <Play size={16} style={{ marginLeft: 2 }} />}
+            </button>
+            <button
+              onClick={next}
+              title="Next"
+              aria-label="Next recording"
+              style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 26, height: 26, padding: 0, background: "transparent", border: "none", cursor: "pointer", color: C.ivoryDim }}
+              disabled={tracks.length < 2}
+            >
+              <ChevronRight size={18} />
+            </button>
+            <span style={{ marginLeft: "auto", fontSize: 11, color: C.ivoryDim, fontFamily: FONT_BODY }}>
+              {index + 1} / {tracks.length}
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -2237,11 +2324,11 @@ export default function App() {
 
   const [musicOn, setMusicOn] = useState(false);
   const [musicPlaying, setMusicPlaying] = useState(false);
-  const spotifyRef = useRef(null);
+  const radioRef = useRef(null);
   function toggleMusic() {
     if (!musicOn) setMusicOn(true);
     try {
-      spotifyRef.current?.togglePlay();
+      radioRef.current?.togglePlay();
     } catch {
       // Controller may not be ready yet on the very first click.
     }
@@ -4425,9 +4512,9 @@ export default function App() {
 
       `}</style>
 
-      <SpotifyPlayer
+      <ArtiumRadio
         open={musicOn}
-        controllerRef={spotifyRef}
+        controllerRef={radioRef}
         onPlayingChange={setMusicPlaying}
         onClose={() => setMusicOn(false)}
       />
