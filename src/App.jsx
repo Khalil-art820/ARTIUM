@@ -13048,46 +13048,10 @@ function AdminScreen({ authUser, onlineCount }) {
  * approved tracks become the audio every visitor hears, so nothing reaches
  * the player without someone having actually played it here first.
  */
-function AdminTracks({ card, STATUS_COLOR }) {
-  const [rows, setRows] = useState([]);
-  const [names, setNames] = useState({});
-  const [busy, setBusy] = useState("");
-
-  async function load() {
-    const { data } = await supabase.from("student_tracks").select("*").order("created_at", { ascending: false });
-    const list = data || [];
-    setRows(list);
-    // student_tracks.user_id references auth.users, not profiles, so PostgREST
-    // has no relationship to embed — the names are fetched and joined here.
-    const ids = [...new Set(list.map((r) => r.user_id).filter(Boolean))];
-    if (ids.length) {
-      const { data: people } = await supabase.from("profiles").select("id, name").in("id", ids);
-      setNames(Object.fromEntries((people || []).map((p) => [p.id, p.name])));
-    }
-  }
-  React.useEffect(() => { load(); const id = setInterval(load, 5000); return () => clearInterval(id); /* eslint-disable-next-line */ }, []);
-
-  function publicUrl(path) {
-    return supabase.storage.from("student-audio").getPublicUrl(path).data.publicUrl;
-  }
-
-  async function decide(r, status) {
-    setBusy(r.id);
-    const { data, error } = await supabase.from("student_tracks")
-      .update({ status }).eq("id", r.id).select("id");
-    setBusy("");
-    if (error) { alert(`Could not update this recording: ${error.message}`); return; }
-    if (!data || data.length === 0) {
-      alert("No row was changed — row-level security blocked the write. The recording is unchanged.");
-      return;
-    }
-    load();
-  }
-
-  const pending = rows.filter((r) => r.status === "pending");
-  const decided = rows.filter((r) => r.status !== "pending");
-
-  function List({ list, editable }) {
+  // Module-level on purpose: defined inside AdminTracks it was a NEW component
+// type on every 5s poll render, so React remounted every card — killing any
+// playing <audio> within seconds ("plays 1-2s then stops").
+function AdminTrackList({ list, editable, card, names, busy, decide, publicUrl, STATUS_COLOR }) {
     if (list.length === 0) {
       return (
         <div style={{ ...card, textAlign: "center" }}>
@@ -13152,16 +13116,56 @@ function AdminTracks({ card, STATUS_COLOR }) {
     );
   }
 
+function AdminTracks({ card, STATUS_COLOR }) {
+  const [rows, setRows] = useState([]);
+  const [names, setNames] = useState({});
+  const [busy, setBusy] = useState("");
+
+  async function load() {
+    const { data } = await supabase.from("student_tracks").select("*").order("created_at", { ascending: false });
+    const list = data || [];
+    setRows(list);
+    // student_tracks.user_id references auth.users, not profiles, so PostgREST
+    // has no relationship to embed — the names are fetched and joined here.
+    const ids = [...new Set(list.map((r) => r.user_id).filter(Boolean))];
+    if (ids.length) {
+      const { data: people } = await supabase.from("profiles").select("id, name").in("id", ids);
+      setNames(Object.fromEntries((people || []).map((p) => [p.id, p.name])));
+    }
+  }
+  React.useEffect(() => { load(); const id = setInterval(load, 5000); return () => clearInterval(id); /* eslint-disable-next-line */ }, []);
+
+  function publicUrl(path) {
+    return supabase.storage.from("student-audio").getPublicUrl(path).data.publicUrl;
+  }
+
+  async function decide(r, status) {
+    setBusy(r.id);
+    const { data, error } = await supabase.from("student_tracks")
+      .update({ status }).eq("id", r.id).select("id");
+    setBusy("");
+    if (error) { alert(`Could not update this recording: ${error.message}`); return; }
+    if (!data || data.length === 0) {
+      alert("No row was changed — row-level security blocked the write. The recording is unchanged.");
+      return;
+    }
+    load();
+  }
+
+  const pending = rows.filter((r) => r.status === "pending");
+  const decided = rows.filter((r) => r.status !== "pending");
+
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brassLabel, letterSpacing: "0.06em", margin: 0 }}>
         PENDING ({pending.length})
       </p>
-      <List list={pending} editable />
+      <AdminTrackList list={pending} editable card={card} names={names} busy={busy} decide={decide} publicUrl={publicUrl} STATUS_COLOR={STATUS_COLOR} />
       <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brassLabel, letterSpacing: "0.06em", margin: "6px 0 0" }}>
         HISTORY ({decided.length})
       </p>
-      <List list={decided} editable={false} />
+      <AdminTrackList list={decided} editable={false} card={card} names={names} busy={busy} decide={decide} publicUrl={publicUrl} STATUS_COLOR={STATUS_COLOR} />
     </div>
   );
 }
