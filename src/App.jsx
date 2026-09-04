@@ -4605,13 +4605,83 @@ export default function App() {
       {view === "pendingReview" && (
         <PendingReview onHome={awaitingReview ? undefined : goHome} onLogout={handleLogout} />
       )}
-      {view === "app" && (
+      {view === "app" && (() => {
+          // The network page's own header (back puck / wordmark / member
+          // count / play-pause / bell / avatar), lifted out once so every
+          // app tab draws the exact same chrome instead of five copies
+          // drifting apart. Only the selected-student overlay (its own
+          // back arrow lives in AppShell's plain chrome) and pages the
+          // shell doesn't reach — pendingReview, etc. — go without it.
+          const netHeader = (
+            <header className="artium-net-bar">
+              <button className="artium-net-puck" onClick={goToLanding} aria-label="Back">
+                <ChevronLeft size={17} strokeWidth={2} />
+              </button>
+              <span className="artium-net-word" aria-label="ARTIUM">
+                <svg viewBox="0 0 15 15" aria-hidden="true">
+                  <path d="M7.5 0.9 L1.4 14.4 M7.5 0.9 L13.6 14.4" stroke="currentColor" strokeWidth="2.85" fill="none" />
+                </svg>
+                <span aria-hidden="true">RTIUM</span>
+              </span>
+              <span className="artium-net-right">
+                <span className="artium-net-count" title="Members" aria-label={`${Object.values(studentsByCons).flat().length} members`}>
+                  <Users size={15} strokeWidth={1.8} />
+                  {Object.values(studentsByCons).flat().length}
+                </span>
+                {/* The bell's own button, glyph swapped for the play
+                    triangle — same position as the landing header. */}
+                <button
+                  className="artium-net-puck"
+                  onClick={toggleMusic}
+                  title={musicPlaying ? "Pause" : "Play"}
+                  aria-label={musicPlaying ? "Pause playlist" : "Play playlist"}
+                >
+                  {musicPlaying ? (
+                    <Pause size={15} color={C.inkText} strokeWidth={2.4} />
+                  ) : (
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill={C.inkText} aria-hidden="true" style={{ marginLeft: 2 }}>
+                      <path d="M8 5.5v13l11-6.5z" />
+                    </svg>
+                  )}
+                </button>
+                {myProfile && (
+                  <NotificationBell
+                    myProfile={myProfile}
+                    puck
+                    networkFeeds
+                    hireCount={pianistAttentionCount}
+                    hireIds={pianistAttentionIds}
+                    onGoToLessonRoom={() => { setSelectedStudentId(null); setAppTabPersist("lessons"); }}
+                    onGoToConcerts={() => { setSelectedStudentId(null); setAppTabPersist("concerts"); }}
+                    onGoToPromote={() => { setSelectedStudentId(null); setAppTabPersist("promote"); }}
+                    onGoToComposers={() => setScreen("composers")}
+                    // Classical Events has no news feed yet — nowhere to
+                    // send a click. Marking the feed seen is still a real
+                    // action (it is what would clear the badge once there
+                    // is somewhere to read), so it stays wired.
+                    onGoToNews={() => {}}
+                    authUser={authUser}
+                    isAdmin={isAdmin}
+                    onGoToAdmin={() => { setSelectedStudentId(null); setAppTabPersist("admin"); }}
+                  />
+                )}
+                {myProfile ? (
+                  <button onClick={goToProfile} title="My profile" style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}>
+                    <Avatar name={myProfile.name} id="me" size={HEADER_CONTROL} photoUrl={myProfile.photoUrl} online />
+                  </button>
+                ) : (
+                  <Avatar name={accountName || "?"} id="me" size={HEADER_CONTROL} photoUrl={accountPhotoUrl} />
+                )}
+              </span>
+            </header>
+          );
+          return (
         <AppShell
           appTab={appTab} setAppTab={setAppTab} myProfile={myProfile}
           onApply={startApply} onHome={goHome} musicOn={musicPlaying} onMusicToggle={toggleMusic}
           onGuestTabClick={() => setShowGuestPrompt(true)} memberCount={Object.values(studentsByCons).flat().length} previewOnly={previewOnly}
           hideTabs={!!selectedStudentId || !!activeConcertInquiryId}
-          bare={appTab === "map" && !selectedStudentId}
+          bare={!selectedStudentId}
           authUser={authUser}
           isAdmin={isAdmin}
           onGoToAdmin={() => { setSelectedStudentId(null); setAppTabPersist("admin"); }}
@@ -4659,68 +4729,9 @@ export default function App() {
                   (.artium-net-*) since it's drawn here rather than by
                   Landing itself. "Welcome, {name}" used to sit above this;
                   it moves below, same as it sits below the header on every
-                  other screen the gate draws. */}
-              <header className="artium-net-bar">
-                <button className="artium-net-puck" onClick={goToLanding} aria-label="Back">
-                  <ChevronLeft size={17} strokeWidth={2} />
-                </button>
-                <span className="artium-net-word" aria-label="ARTIUM">
-                  <svg viewBox="0 0 15 15" aria-hidden="true">
-                    <path d="M7.5 0.9 L1.4 14.4 M7.5 0.9 L13.6 14.4" stroke="currentColor" strokeWidth="2.85" fill="none" />
-                  </svg>
-                  <span aria-hidden="true">RTIUM</span>
-                </span>
-                <span className="artium-net-right">
-                  <span className="artium-net-count" title="Members" aria-label={`${Object.values(studentsByCons).flat().length} members`}>
-                    <Users size={15} strokeWidth={1.8} />
-                    {Object.values(studentsByCons).flat().length}
-                  </span>
-                  {/* The bell's own button, glyph swapped for the play
-                      triangle — same position as the landing header. */}
-                  <button
-                    className="artium-net-puck"
-                    onClick={toggleMusic}
-                    title={musicPlaying ? "Pause" : "Play"}
-                    aria-label={musicPlaying ? "Pause playlist" : "Play playlist"}
-                  >
-                    {musicPlaying ? (
-                      <Pause size={15} color={C.inkText} strokeWidth={2.4} />
-                    ) : (
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill={C.inkText} aria-hidden="true" style={{ marginLeft: 2 }}>
-                        <path d="M8 5.5v13l11-6.5z" />
-                      </svg>
-                    )}
-                  </button>
-                  {myProfile && (
-                    <NotificationBell
-                      myProfile={myProfile}
-                      puck
-                      networkFeeds
-                      hireCount={pianistAttentionCount}
-                      hireIds={pianistAttentionIds}
-                      onGoToLessonRoom={() => { setSelectedStudentId(null); setAppTabPersist("lessons"); }}
-                      onGoToConcerts={() => { setSelectedStudentId(null); setAppTabPersist("concerts"); }}
-                      onGoToPromote={() => { setSelectedStudentId(null); setAppTabPersist("promote"); }}
-                      onGoToComposers={() => setScreen("composers")}
-                      // Classical Events has no news feed yet — nowhere to
-                      // send a click. Marking the feed seen is still a real
-                      // action (it is what would clear the badge once there
-                      // is somewhere to read), so it stays wired.
-                      onGoToNews={() => {}}
-                      authUser={authUser}
-                      isAdmin={isAdmin}
-                      onGoToAdmin={() => { setSelectedStudentId(null); setAppTabPersist("admin"); }}
-                    />
-                  )}
-                  {myProfile ? (
-                    <button onClick={goToProfile} title="My profile" style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}>
-                      <Avatar name={myProfile.name} id="me" size={HEADER_CONTROL} photoUrl={myProfile.photoUrl} online />
-                    </button>
-                  ) : (
-                    <Avatar name={accountName || "?"} id="me" size={HEADER_CONTROL} photoUrl={accountPhotoUrl} />
-                  )}
-                </span>
-              </header>
+                  other screen the gate draws. Lifted into `netHeader` above
+                  so every app tab, not just this one, draws the same bar. */}
+              {netHeader}
               {myProfile && (
                 <div className="px-6 pb-2" style={{ paddingTop: 30 }}>
                   {/* Back to the plain block by request — the white card and
@@ -4819,59 +4830,77 @@ export default function App() {
             </>
           )}
           {appTab === "messages" && !selectedStudentId && (
-            <Messages
-              students={students} conversations={conversations} activeChatId={activeChatId}
-              setActiveChatId={setActiveChatId} onSend={sendMessage}
-              onOpenProfile={(id) => openStudent(id, "chat")}
-              myProfile={myProfile}
-              onBack={() => setAppTabPersist("map")}
-            />
+            <>
+              {netHeader}
+              <Messages
+                students={students} conversations={conversations} activeChatId={activeChatId}
+                setActiveChatId={setActiveChatId} onSend={sendMessage}
+                onOpenProfile={(id) => openStudent(id, "chat")}
+                myProfile={myProfile}
+                onBack={() => setAppTabPersist("map")}
+              />
+            </>
           )}
           {appTab === "profile" && !selectedStudentId && myProfile && (
-            <MyProfile profile={myProfile} onEdit={editProfile} onLogout={handleLogout}
-              onUpdateCoverVideo={async (coverVideoUrl) => {
-                await supabase.from("profiles").update({ cover_video_url: coverVideoUrl || null }).eq("id", myProfile.id);
-                const updated = { ...myProfile, coverVideoUrl };
-                setMyProfile(updated);
-                setStudents((arr) => arr.map((s) => (s.id === myProfile.id ? updated : s)));
-              }}
-              onDeleteAccount={async () => {
-              await supabase.rpc("delete_own_account");
-              await supabase.auth.signOut();
-              setMyProfile(null);
-              setStudents((arr) => arr.filter((s) => s.id !== myProfile?.id));
-              setLearnerLoggedOut(false);
-              setStudentLoggedOut(false);
-              setScreen("landing");
-              setAppTabPersist("map");
-            }} onBack={() => setAppTabPersist("map")} />
+            <>
+              {netHeader}
+              <MyProfile profile={myProfile} onEdit={editProfile} onLogout={handleLogout}
+                onUpdateCoverVideo={async (coverVideoUrl) => {
+                  await supabase.from("profiles").update({ cover_video_url: coverVideoUrl || null }).eq("id", myProfile.id);
+                  const updated = { ...myProfile, coverVideoUrl };
+                  setMyProfile(updated);
+                  setStudents((arr) => arr.map((s) => (s.id === myProfile.id ? updated : s)));
+                }}
+                onDeleteAccount={async () => {
+                await supabase.rpc("delete_own_account");
+                await supabase.auth.signOut();
+                setMyProfile(null);
+                setStudents((arr) => arr.filter((s) => s.id !== myProfile?.id));
+                setLearnerLoggedOut(false);
+                setStudentLoggedOut(false);
+                setScreen("landing");
+                setAppTabPersist("map");
+              }} onBack={() => setAppTabPersist("map")} />
+            </>
           )}
           {appTab === "promote" && !selectedStudentId && myProfile && (
-            <PromoteMe myProfile={myProfile} authUser={authUser} />
+            <>
+              {netHeader}
+              <PromoteMe myProfile={myProfile} authUser={authUser} />
+            </>
           )}
           {appTab === "admin" && !selectedStudentId && isAdmin && (
-            <AdminScreen authUser={authUser} onlineCount={onlineCount} />
+            <>
+              {netHeader}
+              <AdminScreen authUser={authUser} onlineCount={onlineCount} />
+            </>
           )}
           {appTab === "lessons" && !selectedStudentId && myProfile && (
-            <TeacherLessonRoom teacherId={myProfile.id} roomView={teacherRoomView} setRoomView={setTeacherRoomView} />
+            <>
+              {netHeader}
+              <TeacherLessonRoom teacherId={myProfile.id} roomView={teacherRoomView} setRoomView={setTeacherRoomView} />
+            </>
           )}
           {appTab === "concerts" && !selectedStudentId && myProfile && isPianistUser && (
-            activeConcertInquiryId ? (
-              <ConcertConversation
-                inquiryId={activeConcertInquiryId} role="pianist" myId={myProfile.id} myName={myProfile.name}
-                otherName={pianistInquiries.find((q) => q.id === activeConcertInquiryId)?.hirerName}
-                students={students}
-                onBack={() => setActiveConcertInquiryId(null)}
-              />
-            ) : (
-              <div style={{ padding: "24px 0 0" }}>
-                <div className="px-6 pb-2">
-                  <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 600, color: C.ivory, margin: 0 }}>Concerts</h2>
-                  <p style={{ fontSize: 13, color: C.ivoryDim, marginTop: 4 }}>Hirers who have reached out about a booking.</p>
+            <>
+              {netHeader}
+              {activeConcertInquiryId ? (
+                <ConcertConversation
+                  inquiryId={activeConcertInquiryId} role="pianist" myId={myProfile.id} myName={myProfile.name}
+                  otherName={pianistInquiries.find((q) => q.id === activeConcertInquiryId)?.hirerName}
+                  students={students}
+                  onBack={() => setActiveConcertInquiryId(null)}
+                />
+              ) : (
+                <div style={{ padding: "24px 0 0" }}>
+                  <div className="px-6 pb-2">
+                    <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 600, color: C.ivory, margin: 0 }}>Concerts</h2>
+                    <p style={{ fontSize: 13, color: C.ivoryDim, marginTop: 4 }}>Hirers who have reached out about a booking.</p>
+                  </div>
+                  <BookingsList inquiries={pianistInquiries} role="pianist" students={students} onOpen={setActiveConcertInquiryId} />
                 </div>
-                <BookingsList inquiries={pianistInquiries} role="pianist" students={students} onOpen={setActiveConcertInquiryId} />
-              </div>
-            )
+              )}
+            </>
           )}
           {selectedStudentId && myProfile && (
             <StudentProfile
@@ -4884,7 +4913,8 @@ export default function App() {
             />
           )}
         </AppShell>
-      )}
+          );
+        })()}
       {/* One bar, drawn last so it sits over whatever screen is beneath it.
           Not on the gate. Not on signup, login or confirm-email either: those
           carry their own Back/Next footer, and stacking a tab bar under it
