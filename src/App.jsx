@@ -12326,9 +12326,14 @@ function PromoteMe({ myProfile, authUser, focus }) {
   // A student can hold several free submissions at once (a won Saturday
   // plus a fresh application) — every ACTIVE one gets its own card, and a
   // rejection card shows only when it's the newest word.
-  const freeApprovedRows = mineFreeAll.filter((r) => r.status === "approved");
+  // Cards retire on the session strip's 24h rule, so this page can never
+  // stack up over the months: an approved card leaves 24h after its
+  // Saturday 12:30 slot; a rejection leaves once its Saturday has passed;
+  // pending always shows (it needs a decision).
+  const slotAlive = (iso, graceHours) => !iso || new Date(iso + "T12:30:00") >= new Date(Date.now() - graceHours * 3600 * 1000);
+  const freeApprovedRows = mineFreeAll.filter((r) => r.status === "approved" && slotAlive(r.slot_date, 24));
   const freePendingRows = mineFreeAll.filter((r) => r.status === "pending");
-  const freeRejected = mineFreeAll[0]?.status === "rejected" ? mineFreeAll[0] : null;
+  const freeRejected = mineFreeAll[0]?.status === "rejected" && slotAlive(mineFreeAll[0].slot_date, 0) ? mineFreeAll[0] : null;
   // Saturdays this student already holds (pending or won) — one application
   // per Saturday per person, but as many Saturdays as they like.
   const myFreeSlots = new Set(mineFreeAll.filter((r) => r.status !== "rejected").map((r) => r.slot_date));
