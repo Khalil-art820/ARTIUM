@@ -12426,7 +12426,10 @@ function PromoteMe({ myProfile, authUser }) {
         )}
 
         {view === "aclassicaltone" && promoMode === "free" && (<>
-          {(!mineFree || freeRejected) && (
+          {/* The form hides only while a submission is awaiting approval —
+              an approved (or rejected) student can keep applying for the
+              other open Saturdays. */}
+          {(!mineFree || freeRejected || freeApproved) && (
             <div style={card}>
               {label("Your video")}
               <p style={{ fontSize: 12, color: C.ivoryDim, margin: "8px 0 10px", lineHeight: 1.5 }}>
