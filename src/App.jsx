@@ -920,6 +920,7 @@ function ArtiumRadio({ open, controllerRef, onPlayingChange, onClose }) {
   const [names, setNames] = useState({});
   const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
+  const [minimized, setMinimized] = useState(false);
   const fetchedRef = useRef(false);
 
   // Fetched once, on mount — the component lives at App level for the
@@ -997,9 +998,11 @@ function ArtiumRadio({ open, controllerRef, onPlayingChange, onClose }) {
       style={{
         // Anchored under the header pill that opens it, rather than floating in
         // a corner: every bottom corner collides with the entry gate's triangle.
-        position: "fixed", top: 72, right: 16, width: 320, zIndex: 60,
-        background: "rgba(176,146,98,0.05)", border: `1px solid ${C.inkLine}`, borderRadius: 12,
-        boxShadow: "0 8px 32px rgba(0,0,0,0.55)", padding: 8,
+        // Opaque and above every page's stacking tricks — the translucent
+        // first draft let the landing headline bleed through the panel.
+        position: "fixed", top: 72, right: 16, width: minimized ? "auto" : 300, maxWidth: "calc(100vw - 32px)", zIndex: 500,
+        background: "#FFFFFF", border: `1px solid ${C.inkLine}`, borderRadius: minimized ? 999 : 14,
+        boxShadow: "0 18px 40px -18px rgba(150,115,55,0.5), 0 2px 8px rgba(0,0,0,0.08)", padding: minimized ? 6 : 10,
         opacity: open ? 1 : 0,
         visibility: open ? "visible" : "hidden",
         transform: open ? "translateY(0)" : "translateY(8px)",
@@ -1007,18 +1010,18 @@ function ArtiumRadio({ open, controllerRef, onPlayingChange, onClose }) {
         transition: "opacity 0.15s ease, transform 0.15s ease",
       }}
     >
-      <button
-        onClick={onClose}
-        title="Close"
-        style={{
-          position: "absolute", top: 6, right: 6, width: 22, height: 22,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          background: "rgba(0,0,0,0.2)", border: "none", borderRadius: "50%",
-          cursor: "pointer", color: C.ivoryDim, zIndex: 1,
-        }}
-      >
-        <X size={13} />
-      </button>
+      {!minimized && (
+        <div style={{ position: "absolute", top: 6, right: 6, display: "flex", gap: 4, zIndex: 1 }}>
+          <button onClick={() => setMinimized(true)} title="Minimize — music keeps playing"
+            style={{ width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(176,146,98,0.12)", border: "none", borderRadius: "50%", cursor: "pointer", color: C.ivoryDim, fontSize: 13, fontWeight: 700, lineHeight: 1 }}>
+            –
+          </button>
+          <button onClick={onClose} title="Close"
+            style={{ width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(176,146,98,0.12)", border: "none", borderRadius: "50%", cursor: "pointer", color: C.ivoryDim }}>
+            <X size={13} />
+          </button>
+        </div>
+      )}
 
       <audio
         ref={audioRef}
@@ -1028,7 +1031,20 @@ function ArtiumRadio({ open, controllerRef, onPlayingChange, onClose }) {
         style={{ display: "none" }}
       />
 
-      <p style={{ margin: "2px 20px 8px 4px", fontSize: 11, fontWeight: 700, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+      {minimized ? (
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <button onClick={() => controllerRef.current?.togglePlay()} title={playing ? "Pause" : "Play"}
+            style={{ width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", border: `1px solid ${C.inkLine}`, background: "#FFFFFF", cursor: "pointer", color: C.ivory }}>
+            {playing ? <Pause size={13} /> : <Play size={13} style={{ marginLeft: 1 }} />}
+          </button>
+          <button onClick={() => setMinimized(false)} title="Open Artium Radio"
+            style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", color: C.ivoryDim, fontFamily: FONT_BODY, fontSize: 12, fontWeight: 600, padding: "0 4px 0 0", maxWidth: 150, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <Music2 size={13} style={{ flexShrink: 0, color: C.brass }} />
+            {current ? (current.title || "Artium Radio") : "Artium Radio"}
+          </button>
+        </div>
+      ) : (<>
+      <p style={{ margin: "2px 50px 8px 4px", fontSize: 11, fontWeight: 700, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em" }}>
         Artium Radio
       </p>
 
@@ -1043,11 +1059,11 @@ function ArtiumRadio({ open, controllerRef, onPlayingChange, onClose }) {
           <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: C.ivoryDim, textTransform: "uppercase", letterSpacing: "0.06em" }}>
             Now playing
           </p>
-          <p style={{ margin: "4px 0 0", fontSize: 15, fontWeight: 700, color: C.ivory, fontFamily: FONT_BODY }}>
+          <p style={{ margin: "4px 0 0", fontSize: 14, fontWeight: 700, color: C.ivory, fontFamily: FONT_BODY, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
             {current.title || "Untitled"}
           </p>
           {(currentName || current.composer) && (
-            <p style={{ margin: "2px 0 0", fontSize: 13, color: C.ivoryDim, fontFamily: FONT_BODY }}>
+            <p style={{ margin: "2px 0 0", fontSize: 12, color: C.ivoryDim, fontFamily: FONT_BODY, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
               {currentName}{currentName && current.composer ? " · " : ""}{current.composer}
             </p>
           )}
@@ -1086,8 +1102,27 @@ function ArtiumRadio({ open, controllerRef, onPlayingChange, onClose }) {
               {index + 1} / {tracks.length}
             </span>
           </div>
+          {/* The whole programme, compact — built for a long catalogue:
+              small rows, its own scroll, the playing row highlighted. */}
+          {tracks.length > 1 && (
+            <div style={{ marginTop: 10, borderTop: `1px solid ${C.inkLine}`, maxHeight: 168, overflowY: "auto" }}>
+              {tracks.map((t, i) => (
+                <button key={t.id} onClick={() => playAt(i)}
+                  style={{ width: "100%", display: "flex", alignItems: "center", gap: 8, padding: "7px 4px", background: i === index ? "rgba(201,150,46,0.10)" : "none", border: "none", borderRadius: 8, cursor: "pointer", textAlign: "left" }}>
+                  <span style={{ width: 14, flexShrink: 0, color: i === index ? C.brass : C.ivoryDim, display: "flex" }}>
+                    {i === index && playing ? <Pause size={11} /> : <Play size={11} />}
+                  </span>
+                  <span style={{ flex: 1, minWidth: 0, fontFamily: FONT_BODY }}>
+                    <span style={{ display: "block", fontSize: 12, fontWeight: i === index ? 700 : 500, color: C.ivory, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t.title || "Untitled"}</span>
+                    {names[t.user_id] && <span style={{ display: "block", fontSize: 10.5, color: C.ivoryDim, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{names[t.user_id]}</span>}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
+      </>)}
     </div>
   );
 }
