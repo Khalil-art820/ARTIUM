@@ -12366,7 +12366,7 @@ function PromoteMe({ myProfile, authUser }) {
           <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 4 }}>
             {[
               { v: "artium", t: "artium", d: "Your recording, played across the site. Free." },
-              { v: "aclassicaltone", t: "aclassicaltone", d: `A promotional video to their audience. €${promoTotal}.` },
+              { v: "aclassicaltone", t: "aclassicaltone", d: `Your video to their audience — a free Saturday spotlight, or the full €${promoTotal} package.` },
             ].map(({ v, t, d }) => (
               <button
                 key={v}
