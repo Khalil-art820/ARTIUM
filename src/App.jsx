@@ -8662,7 +8662,7 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
     setAckTeachIds(teachIds);
     setAckHireIds(hireIds);
     if (includePromos) {
-      const promoKeys = myPromoDecisions.map((p) => `${p.id}:${p.status}`);
+      const promoKeys = myPromoDecisions.map((p) => promoKeyOf(p));
       try { localStorage.setItem("artium_ack_mypromo_v1", JSON.stringify(promoKeys)); } catch { /* private mode */ }
       setAckPromoKeys(promoKeys);
     }
@@ -8682,7 +8682,7 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
     async function load() {
       try {
         const { data } = await supabase.from("promotions")
-          .select("id, kind, status, slot_date, rejection_reason")
+          .select("id, kind, status, slot_date, rejection_reason, decided_at")
           .eq("user_id", authUser.id).neq("status", "pending");
         if (alive && data) setMyPromoDecisions(data);
       } catch { /* defensive */ }
@@ -8753,7 +8753,8 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
   const newsBadgeCount = newsItems.filter((p) => p.createdAt > ackNewsTs).length;
   const newTeachCount = pending.filter((r) => !ackTeachIds.includes(r.id ?? r.learnerId)).length;
   const newHireCount = hireIds.filter((id) => !ackHireIds.includes(id)).length;
-  const newPromoDecisions = myPromoDecisions.filter((p) => !ackPromoKeys.includes(`${p.id}:${p.status}`));
+  const promoKeyOf = (p) => `${p.id}:${p.status}:${p.decided_at || ""}`;
+  const newPromoDecisions = myPromoDecisions.filter((p) => !ackPromoKeys.includes(promoKeyOf(p)));
   const feedTotal = newTeachCount + newHireCount + composerBadgeCount + newsBadgeCount + newPromoDecisions.length;
   const totalCount = networkFeeds ? feedTotal : pending.length + promoPending.length;
 
@@ -8865,8 +8866,8 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
             <>
               {/* Your own promotion verdicts, newest state per row; a row
                   leaves the panel once clicked or marked read. */}
-              {myPromoDecisions.filter((p) => !seenPromoKeys.includes(`${p.id}:${p.status}`)).map((p) => {
-                const key = `${p.id}:${p.status}`;
+              {myPromoDecisions.filter((p) => !seenPromoKeys.includes(promoKeyOf(p))).map((p) => {
+                const key = promoKeyOf(p);
                 const approved = p.status === "approved";
                 const isFree = p.kind === "free_weekly";
                 const ackOne = () => {
@@ -12301,6 +12302,7 @@ function PromoteMe({ myProfile, authUser, focus }) {
     if (!freeLinkValid) { setFreeError("Please use a link from YouTube, Facebook, Google Drive, Dropbox or Instagram only."); return; }
     if (!freeSlot) { setFreeError("Please pick a Saturday."); return; }
     if (closedSlots.has(freeSlot)) { setFreeError("That Saturday is already taken — please pick another."); return; }
+    if (myFreeSlots.has(freeSlot)) { setFreeError("You already have an application for that Saturday."); return; }
     setFreeSubmitting(true);
     const row = {
       user_id: authUser.id,
@@ -12324,8 +12326,11 @@ function PromoteMe({ myProfile, authUser, focus }) {
   // plus a fresh application) — every ACTIVE one gets its own card, and a
   // rejection card shows only when it's the newest word.
   const freeApprovedRows = mineFreeAll.filter((r) => r.status === "approved");
-  const freePendingRow = mineFreeAll.find((r) => r.status === "pending") || null;
+  const freePendingRows = mineFreeAll.filter((r) => r.status === "pending");
   const freeRejected = mineFreeAll[0]?.status === "rejected" ? mineFreeAll[0] : null;
+  // Saturdays this student already holds (pending or won) — one application
+  // per Saturday per person, but as many Saturdays as they like.
+  const myFreeSlots = new Set(mineFreeAll.filter((r) => r.status !== "rejected").map((r) => r.slot_date));
   const freeSlotLabel = (iso) => saturdays.find((s) => s.iso === iso)?.label
     || (iso ? new Date(iso + "T00:00:00").toLocaleDateString("en-US", { weekday: "long", day: "numeric", month: "long" }) : "");
   // Whether this account has already paid for a promotion. Read from the
@@ -12484,7 +12489,7 @@ function PromoteMe({ myProfile, authUser, focus }) {
           {/* The form hides only while a submission is awaiting approval —
               an approved (or rejected) student can keep applying for the
               other open Saturdays. */}
-          {!freePendingRow && (
+          {true && (
             <div style={card}>
               {label("Your video")}
               <p style={{ fontSize: 12, color: C.ivoryDim, margin: "8px 0 10px", lineHeight: 1.5 }}>
@@ -12505,25 +12510,26 @@ function PromoteMe({ myProfile, authUser, focus }) {
               <div style={{ marginTop: 16 }}>{label("Pick a Saturday")}</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
                 {saturdays.map(({ iso, label: slotLabel }) => {
-                  const taken = closedSlots.has(iso);
+                  const mine = myFreeSlots.has(iso);
+                  const taken = !mine && closedSlots.has(iso);
                   const selected = freeSlot === iso;
                   return (
                     <button
                       key={iso}
-                      disabled={taken}
+                      disabled={taken || mine}
                       onClick={() => setFreeSlot(iso)}
-                      title={taken ? "This Saturday is already taken" : undefined}
+                      title={mine ? "You already applied for this Saturday" : taken ? "This Saturday is already taken" : undefined}
                       style={{
                         padding: "8px 14px", borderRadius: 20, fontSize: 13, fontWeight: 600,
-                        cursor: taken ? "not-allowed" : "pointer",
-                        background: taken ? "rgba(176,146,98,0.03)" : "rgba(176,146,98,0.05)",
-                        color: taken ? C.ivoryDim : (selected ? C.ivory : C.ivoryDim),
+                        cursor: taken || mine ? "not-allowed" : "pointer",
+                        background: taken || mine ? "rgba(176,146,98,0.03)" : "rgba(176,146,98,0.05)",
+                        color: taken || mine ? C.ivoryDim : (selected ? C.ivory : C.ivoryDim),
                         border: selected && !taken ? `2px solid ${C.brass}` : `1px solid ${C.inkLine}`,
-                        opacity: taken ? 0.5 : 1,
+                        opacity: taken || mine ? 0.55 : 1,
                         textDecoration: taken ? "line-through" : "none",
                       }}
                     >
-                      {slotLabel}{taken ? " · taken" : ""}
+                      {slotLabel}{mine ? " · yours" : taken ? " · taken" : ""}
                     </button>
                   );
                 })}
@@ -12537,7 +12543,7 @@ function PromoteMe({ myProfile, authUser, focus }) {
             </div>
           )}
 
-          {[...(freePendingRow ? [freePendingRow] : []), ...freeApprovedRows].map((row) => {
+          {[...freePendingRows, ...freeApprovedRows].map((row) => {
             const rowApproved = row.status === "approved";
             return (
             <div key={row.id} style={card}>
@@ -12711,7 +12717,7 @@ function AdminScreen({ authUser, onlineCount }) {
 
   async function setStatus(promo, status) {
     if (isRealUser) {
-      await supabase.from("promotions").update({ status }).eq("id", promo.id);
+      await supabase.from("promotions").update({ status, decided_at: new Date().toISOString() }).eq("id", promo.id);
     } else {
       writeLocal(readLocal().map((p) => (p.id === promo.id ? { ...p, status } : p)));
     }
@@ -12737,10 +12743,10 @@ function AdminScreen({ authUser, onlineCount }) {
       if (prevApproved && prevApproved.length > 0) {
         if (!window.confirm("This user has already been approved for a past spotlight. Approve them again?")) return;
       }
-      await supabase.from("promotions").update({ status: "approved" }).eq("id", promo.id);
+      await supabase.from("promotions").update({ status: "approved", decided_at: new Date().toISOString() }).eq("id", promo.id);
       const { data: losers } = await supabase.from("promotions").select("user_id")
         .eq("kind", "free_weekly").eq("slot_date", promo.slot_date).eq("status", "pending").neq("id", promo.id);
-      await supabase.from("promotions").update({ status: "rejected", rejection_reason: FREE_SPOT_REJECTION_REASON })
+      await supabase.from("promotions").update({ status: "rejected", rejection_reason: FREE_SPOT_REJECTION_REASON, decided_at: new Date().toISOString() })
         .eq("kind", "free_weekly").eq("slot_date", promo.slot_date).eq("status", "pending").neq("id", promo.id);
       sendVerdictMessage(promo.user_id, `Congratulations — your Saturday spotlight was approved for ${promo.slot_date}! Send your collaboration request on Instagram to @aclassicaltone at 12:30 that day.`);
       (losers || []).forEach((l) => sendVerdictMessage(l.user_id, FREE_SPOT_REJECTION_REASON));
