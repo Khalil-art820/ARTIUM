@@ -4617,9 +4617,12 @@ export default function App() {
           // drifting apart. Only the selected-student overlay (its own
           // back arrow lives in AppShell's plain chrome) and pages the
           // shell doesn't reach — pendingReview, etc. — go without it.
-          const netHeader = (
+          // Same header everywhere; only the back puck's destination varies
+          // (tabs exit to the pin page, the student-profile overlay closes
+          // back to where it was opened from).
+          const netHeaderWith = (onBackFn) => (
             <header className="artium-net-bar">
-              <button className="artium-net-puck" onClick={goToLanding} aria-label="Back">
+              <button className="artium-net-puck" onClick={onBackFn} aria-label="Back">
                 <ChevronLeft size={17} strokeWidth={2} />
               </button>
               <span className="artium-net-word" aria-label="ARTIUM">
@@ -4680,13 +4683,14 @@ export default function App() {
               </span>
             </header>
           );
+          const netHeader = netHeaderWith(goToLanding);
           return (
         <AppShell
           appTab={appTab} setAppTab={setAppTab} myProfile={myProfile}
           onApply={startApply} onHome={goHome} musicOn={musicPlaying} onMusicToggle={toggleMusic}
           onGuestTabClick={() => setShowGuestPrompt(true)} memberCount={Object.values(studentsByCons).flat().length} previewOnly={previewOnly}
           hideTabs={!!selectedStudentId || !!activeConcertInquiryId}
-          bare={!selectedStudentId}
+          bare={true}
           authUser={authUser}
           isAdmin={isAdmin}
           onGoToAdmin={() => { setSelectedStudentId(null); setAppTabPersist("admin"); }}
@@ -4907,7 +4911,8 @@ export default function App() {
               )}
             </>
           )}
-          {selectedStudentId && myProfile && (
+          {selectedStudentId && myProfile && (<>
+            {netHeaderWith(backFromProfile)}
             <StudentProfile
               student={students.find((s) => s.id === selectedStudentId)}
               conservatory={findConservatory(students.find((s) => s.id === selectedStudentId)?.conservatoryId)}
@@ -4916,7 +4921,7 @@ export default function App() {
               locked={previewOnly && !myProfile}
               onApply={startApply}
             />
-          )}
+          </>)}
         </AppShell>
           );
         })()}
