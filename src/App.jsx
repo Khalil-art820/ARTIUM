@@ -9573,7 +9573,13 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
         <div className="artium-aw-stats">
           <div className="artium-aw-stat">
             <span className="artium-aw-stat-row">
-              <span className="artium-aw-stat-tile"><MapPin size={16} strokeWidth={2} /></span>
+              <span className="artium-aw-stat-tile">
+                {/* The columned-hall glyph from the greeting's conservatory
+                    button — one symbol for "conservatory" everywhere. */}
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M12 2.5 2.8 7.2v1.6h18.4V7.2L12 2.5zM4.2 10.3h2.4v7.2H4.2zM10.8 10.3h2.4v7.2h-2.4zM17.4 10.3h2.4v7.2h-2.4zM2.8 19h18.4v2H2.8z" />
+                </svg>
+              </span>
               <span className="artium-aw-stat-n">{nf(ALL_CONS.length)}</span>
             </span>
             <p className="artium-aw-stat-l">Verified conservatories</p>
