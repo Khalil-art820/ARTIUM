@@ -12331,6 +12331,7 @@ function PromoteMe({ myProfile, authUser, focus }) {
   // Saturdays this student already holds (pending or won) — one application
   // per Saturday per person, but as many Saturdays as they like.
   const myFreeSlots = new Set(mineFreeAll.filter((r) => r.status !== "rejected").map((r) => r.slot_date));
+  const myWonSlots = new Set(mineFreeAll.filter((r) => r.status === "approved").map((r) => r.slot_date));
   const freeSlotLabel = (iso) => saturdays.find((s) => s.iso === iso)?.label
     || (iso ? new Date(iso + "T00:00:00").toLocaleDateString("en-US", { weekday: "long", day: "numeric", month: "long" }) : "");
   // Whether this account has already paid for a promotion. Read from the
@@ -12518,7 +12519,7 @@ function PromoteMe({ myProfile, authUser, focus }) {
                       key={iso}
                       disabled={taken || mine}
                       onClick={() => setFreeSlot(iso)}
-                      title={mine ? "You already applied for this Saturday" : taken ? "This Saturday is already taken" : undefined}
+                      title={mine ? (myWonSlots.has(iso) ? "You're booked for this Saturday" : "Your application for this Saturday is awaiting approval") : taken ? "This Saturday is already taken" : undefined}
                       style={{
                         padding: "8px 14px", borderRadius: 20, fontSize: 13, fontWeight: 600,
                         cursor: taken || mine ? "not-allowed" : "pointer",
@@ -12529,7 +12530,7 @@ function PromoteMe({ myProfile, authUser, focus }) {
                         textDecoration: taken ? "line-through" : "none",
                       }}
                     >
-                      {slotLabel}{mine ? " · yours" : taken ? " · taken" : ""}
+                      {slotLabel}{mine ? (myWonSlots.has(iso) ? " · booked" : " · pending") : taken ? " · taken" : ""}
                     </button>
                   );
                 })}
