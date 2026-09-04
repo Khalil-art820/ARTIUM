@@ -4557,7 +4557,9 @@ export default function App() {
               ? [...STUDENT_TABS.slice(0, 5), { k: "concerts", label: "Concerts", Icon: CalendarEventIcon, attention: pianistNeedsAttention }, STUDENT_TABS[5]]
               : STUDENT_TABS
           }
-          active=""
+          // The pin-globe page is the network's antechamber — arriving here
+          // from the network page's back button keeps the Network tab lit.
+          active="map"
           dimmed={!myProfile}
           onTab={(k) => { if (k === "home") { setScreen("entry"); return; } setScreen("app"); setAppTabPersist(k); }}
         />
