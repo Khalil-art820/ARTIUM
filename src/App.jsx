@@ -1873,6 +1873,9 @@ export default function App() {
   const [learnerStartTab, setLearnerStartTab] = useState("map");
   // A gate-bell tap carries its destination across the screen switch.
   const [learnerEntryFocus, setLearnerEntryFocus] = useState(null);
+  // A promo-verdict bell tap opens PromoteMe directly on the right
+  // sub-screen (aclassicaltone free spotlight or paid package).
+  const [promoteFocus, setPromoteFocus] = useState(null);
   const view = awaitingReview ? "pendingReview" : screen;
   // The document's own colour is set in index.css now that every screen is
   // dark; this used to flip it per screen and no longer has anything to say.
@@ -4465,7 +4468,7 @@ export default function App() {
           onGoToConcerts={() => { setScreen("app"); setAppTabPersist("concerts"); }}
           onGoToComposers={() => setScreen("composers")}
           onGoToNews={() => {}}
-          onGoToPromote={() => { setScreen("app"); setAppTabPersist("promote"); }}
+          onGoToPromote={(kind) => { setScreen("app"); setAppTabPersist("promote"); setPromoteFocus({ kind: kind || null, at: Date.now() }); }}
           authUser={authUser}
           isAdmin={isAdmin}
           onGoToAdmin={() => { setScreen("app"); setAppTabPersist("admin"); }}
@@ -4544,7 +4547,7 @@ export default function App() {
         />
       )}
 
-      {view === "landing" && <Landing onApply={pianistEntry ? () => { setAuthError(""); setScreen("hirerSignup"); } : startApply} onBack={backToEntry} onPreview={startPreview} onProfile={goToProfile} onLogin={startLogin} myProfile={myProfile} studentLoggedOut={studentLoggedOut} musicOn={musicPlaying} onMusicToggle={toggleMusic} error={authError} onGoToLessonRoom={() => { setScreen("app"); setAppTabPersist("lessons"); }} onGoToPromote={() => { setScreen("app"); setAppTabPersist("promote"); }} studentsByCons={studentsByCons} avatarPhotoUrl={accountPhotoUrl} avatarName={accountName} hireCount={pianistAttentionCount} hireIds={pianistAttentionIds} onGoToConcerts={() => { setScreen("app"); setAppTabPersist("concerts"); }} onGoToComposers={() => setScreen("composers")} authUser={authUser} isAdmin={isAdmin} onGoToAdmin={() => { setScreen("app"); setAppTabPersist("admin"); }} />}
+      {view === "landing" && <Landing onApply={pianistEntry ? () => { setAuthError(""); setScreen("hirerSignup"); } : startApply} onBack={backToEntry} onPreview={startPreview} onProfile={goToProfile} onLogin={startLogin} myProfile={myProfile} studentLoggedOut={studentLoggedOut} musicOn={musicPlaying} onMusicToggle={toggleMusic} error={authError} onGoToLessonRoom={() => { setScreen("app"); setAppTabPersist("lessons"); }} onGoToPromote={(kind) => { setScreen("app"); setAppTabPersist("promote"); setPromoteFocus({ kind: kind || null, at: Date.now() }); }} studentsByCons={studentsByCons} avatarPhotoUrl={accountPhotoUrl} avatarName={accountName} hireCount={pianistAttentionCount} hireIds={pianistAttentionIds} onGoToConcerts={() => { setScreen("app"); setAppTabPersist("concerts"); }} onGoToComposers={() => setScreen("composers")} authUser={authUser} isAdmin={isAdmin} onGoToAdmin={() => { setScreen("app"); setAppTabPersist("admin"); }} />}
       {view === "landing" && (
         <BottomTabs
           light
@@ -4653,7 +4656,7 @@ export default function App() {
                     hireIds={pianistAttentionIds}
                     onGoToLessonRoom={() => { setSelectedStudentId(null); setAppTabPersist("lessons"); }}
                     onGoToConcerts={() => { setSelectedStudentId(null); setAppTabPersist("concerts"); }}
-                    onGoToPromote={() => { setSelectedStudentId(null); setAppTabPersist("promote"); }}
+                    onGoToPromote={(kind) => { setSelectedStudentId(null); setAppTabPersist("promote"); setPromoteFocus({ kind: kind || null, at: Date.now() }); }}
                     onGoToComposers={() => setScreen("composers")}
                     // Classical Events has no news feed yet — nowhere to
                     // send a click. Marking the feed seen is still a real
@@ -4866,7 +4869,7 @@ export default function App() {
           {appTab === "promote" && !selectedStudentId && myProfile && (
             <>
               {netHeader}
-              <PromoteMe myProfile={myProfile} authUser={authUser} />
+              <PromoteMe myProfile={myProfile} authUser={authUser} focus={promoteFocus} />
             </>
           )}
           {appTab === "admin" && !selectedStudentId && isAdmin && (
@@ -8647,7 +8650,7 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
     setter(now);
   }
 
-  function acknowledgeAll() {
+  function acknowledgeAll(includePromos = true) {
     if (!networkFeeds) return;
     // Rows carry the DB row's uuid; learnerId stays only as a defensive
     // fallback for any row missing an id.
@@ -8658,9 +8661,11 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
     } catch { /* private mode */ }
     setAckTeachIds(teachIds);
     setAckHireIds(hireIds);
-    const promoKeys = myPromoDecisions.map((p) => `${p.id}:${p.status}`);
-    try { localStorage.setItem("artium_ack_mypromo_v1", JSON.stringify(promoKeys)); } catch { /* private mode */ }
-    setAckPromoKeys(promoKeys);
+    if (includePromos) {
+      const promoKeys = myPromoDecisions.map((p) => `${p.id}:${p.status}`);
+      try { localStorage.setItem("artium_ack_mypromo_v1", JSON.stringify(promoKeys)); } catch { /* private mode */ }
+      setAckPromoKeys(promoKeys);
+    }
     // Ack-only — the row's own seen stamp is untouched here, and only moves
     // when a row is actually clicked through (see NetworkRow's onVisit).
     stampTs("artium_ackts_composers_v1", setAckComposersTs);
@@ -8799,7 +8804,10 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
           // Opening is looking — everything on screen counts as seen the
           // moment the panel is up, same as "Mark all as read" does
           // explicitly. Closing acknowledges nothing new.
-          if (next) acknowledgeAll();
+          // Opening acks the four feeds, but NOT promotion verdicts — their
+          // badge number must survive until the row is clicked or the
+          // explicit "Mark all as read" is pressed.
+          if (next) acknowledgeAll(false);
           return next;
         })}
         aria-label="Notifications"
@@ -8871,7 +8879,7 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
                 };
                 return (
                   <button key={key}
-                    onClick={() => { ackOne(); setOpen(false); onGoToPromote && onGoToPromote(); }}
+                    onClick={() => { ackOne(); setOpen(false); onGoToPromote && onGoToPromote(p.kind); }}
                     style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, textAlign: "left", padding: "13px 16px", border: "none", borderBottom: `1px solid ${C.inkLine}`, background: "transparent", cursor: "pointer", fontFamily: FONT_BODY }}>
                     <span style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, background: approved ? "rgba(26,158,110,0.14)" : "rgba(179,38,30,0.10)", color: approved ? "#1A9E6E" : "#B3261E", display: "flex", alignItems: "center", justifyContent: "center" }}>
                       <Megaphone size={18} strokeWidth={2} />
@@ -12229,7 +12237,13 @@ function ArtiumSoundCard({ myProfile, authUser }) {
   );
 }
 
-function PromoteMe({ myProfile, authUser }) {
+function PromoteMe({ myProfile, authUser, focus }) {
+  // A bell verdict tap lands on the exact sub-screen it spoke of.
+  React.useEffect(() => {
+    if (!focus?.at) return;
+    setView("aclassicaltone");
+    setPromoMode(focus.kind === "free_weekly" ? "free" : focus.kind === "paid" ? "paid" : null);
+  }, [focus?.at]);
   // The price the server will actually charge, from platform_settings —
   // the same row stripe-checkout reads, so display and charge can't drift.
   const [promoCents, setPromoCents] = useState(PROMO_TOTAL * 100);
@@ -12702,6 +12716,14 @@ function AdminScreen({ authUser, onlineCount }) {
   // approval doesn't need: warn if this user has already had a past Saturday
   // (the spot is meant to circulate), then close the slot by auto-rejecting
   // every other still-pending submission for that same Saturday.
+  // The verdict also lands in the student's Messages as a direct message
+  // from the admin — a notification row alone was too easy to lose.
+  function sendVerdictMessage(recipientId, body) {
+    if (!authUser?.id || !recipientId || recipientId === authUser.id) return;
+    supabase.from("direct_messages").insert({ sender_id: authUser.id, recipient_id: recipientId, body })
+      .then(({ error }) => { if (error) console.error("verdict message failed", error.message); });
+  }
+
   async function approveFree(promo) {
     if (isRealUser) {
       const { data: prevApproved } = await supabase.from("promotions").select("id")
@@ -12710,8 +12732,12 @@ function AdminScreen({ authUser, onlineCount }) {
         if (!window.confirm("This user has already been approved for a past spotlight. Approve them again?")) return;
       }
       await supabase.from("promotions").update({ status: "approved" }).eq("id", promo.id);
+      const { data: losers } = await supabase.from("promotions").select("user_id")
+        .eq("kind", "free_weekly").eq("slot_date", promo.slot_date).eq("status", "pending").neq("id", promo.id);
       await supabase.from("promotions").update({ status: "rejected", rejection_reason: FREE_SPOT_REJECTION_REASON })
         .eq("kind", "free_weekly").eq("slot_date", promo.slot_date).eq("status", "pending").neq("id", promo.id);
+      sendVerdictMessage(promo.user_id, `Congratulations — your Saturday spotlight was approved for ${promo.slot_date}! Send your collaboration request on Instagram to @aclassicaltone at 12:30 that day.`);
+      (losers || []).forEach((l) => sendVerdictMessage(l.user_id, FREE_SPOT_REJECTION_REASON));
     } else {
       const local = readLocal();
       const hasPrev = local.some((p) => p.user_id === promo.user_id && p.kind === "free_weekly" && p.status === "approved" && p.id !== promo.id);
