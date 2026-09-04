@@ -8621,6 +8621,11 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
   // stored wholesale like the id feeds above.
   const [myPromoDecisions, setMyPromoDecisions] = React.useState([]);
   const [ackPromoKeys, setAckPromoKeys] = React.useState(() => readAckIds("artium_ack_mypromo_v1"));
+  // Two clocks, like composers/news: the BADGE reads the ack list (stamped
+  // on open/mark-all), the ROW reads this seen list, stamped only when the
+  // row itself is clicked — otherwise open-acks would eat the row before
+  // its first paint, which is exactly the bug this split fixes.
+  const [seenPromoKeys, setSeenPromoKeys] = React.useState(() => readAckIds("artium_seen_mypromo_v1"));
   // Composers/news split the same way, but by two timestamps instead of one
   // set of ids (there's no per-item id for either feed, just a publish
   // time). The ROW stamp (artium_seen_*) only moves on an actual visit — a
@@ -8852,11 +8857,14 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
             <>
               {/* Your own promotion verdicts, newest state per row; a row
                   leaves the panel once clicked or marked read. */}
-              {newPromoDecisions.map((p) => {
+              {myPromoDecisions.filter((p) => !seenPromoKeys.includes(`${p.id}:${p.status}`)).map((p) => {
                 const key = `${p.id}:${p.status}`;
                 const approved = p.status === "approved";
                 const isFree = p.kind === "free_weekly";
                 const ackOne = () => {
+                  const nextSeen = Array.from(new Set([...seenPromoKeys, key]));
+                  try { localStorage.setItem("artium_seen_mypromo_v1", JSON.stringify(nextSeen)); } catch { /* private mode */ }
+                  setSeenPromoKeys(nextSeen);
                   const next = Array.from(new Set([...ackPromoKeys, key]));
                   try { localStorage.setItem("artium_ack_mypromo_v1", JSON.stringify(next)); } catch { /* private mode */ }
                   setAckPromoKeys(next);
