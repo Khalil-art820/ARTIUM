@@ -4465,6 +4465,7 @@ export default function App() {
           onGoToConcerts={() => { setScreen("app"); setAppTabPersist("concerts"); }}
           onGoToComposers={() => setScreen("composers")}
           onGoToNews={() => {}}
+          onGoToPromote={() => { setScreen("app"); setAppTabPersist("promote"); }}
           authUser={authUser}
           isAdmin={isAdmin}
           onGoToAdmin={() => { setScreen("app"); setAppTabPersist("admin"); }}
@@ -4543,7 +4544,7 @@ export default function App() {
         />
       )}
 
-      {view === "landing" && <Landing onApply={pianistEntry ? () => { setAuthError(""); setScreen("hirerSignup"); } : startApply} onBack={backToEntry} onPreview={startPreview} onProfile={goToProfile} onLogin={startLogin} myProfile={myProfile} studentLoggedOut={studentLoggedOut} musicOn={musicPlaying} onMusicToggle={toggleMusic} error={authError} onGoToLessonRoom={() => { setScreen("app"); setAppTabPersist("lessons"); }} studentsByCons={studentsByCons} avatarPhotoUrl={accountPhotoUrl} avatarName={accountName} hireCount={pianistAttentionCount} hireIds={pianistAttentionIds} onGoToConcerts={() => { setScreen("app"); setAppTabPersist("concerts"); }} onGoToComposers={() => setScreen("composers")} authUser={authUser} isAdmin={isAdmin} onGoToAdmin={() => { setScreen("app"); setAppTabPersist("admin"); }} />}
+      {view === "landing" && <Landing onApply={pianistEntry ? () => { setAuthError(""); setScreen("hirerSignup"); } : startApply} onBack={backToEntry} onPreview={startPreview} onProfile={goToProfile} onLogin={startLogin} myProfile={myProfile} studentLoggedOut={studentLoggedOut} musicOn={musicPlaying} onMusicToggle={toggleMusic} error={authError} onGoToLessonRoom={() => { setScreen("app"); setAppTabPersist("lessons"); }} onGoToPromote={() => { setScreen("app"); setAppTabPersist("promote"); }} studentsByCons={studentsByCons} avatarPhotoUrl={accountPhotoUrl} avatarName={accountName} hireCount={pianistAttentionCount} hireIds={pianistAttentionIds} onGoToConcerts={() => { setScreen("app"); setAppTabPersist("concerts"); }} onGoToComposers={() => setScreen("composers")} authUser={authUser} isAdmin={isAdmin} onGoToAdmin={() => { setScreen("app"); setAppTabPersist("admin"); }} />}
       {view === "landing" && (
         <BottomTabs
           light
@@ -4699,6 +4700,7 @@ export default function App() {
                       hireIds={pianistAttentionIds}
                       onGoToLessonRoom={() => { setSelectedStudentId(null); setAppTabPersist("lessons"); }}
                       onGoToConcerts={() => { setSelectedStudentId(null); setAppTabPersist("concerts"); }}
+                      onGoToPromote={() => { setSelectedStudentId(null); setAppTabPersist("promote"); }}
                       onGoToComposers={() => setScreen("composers")}
                       // Classical Events has no news feed yet — nowhere to
                       // send a click. Marking the feed seen is still a real
@@ -5072,7 +5074,7 @@ const IconMegaphone = (p) => (
   </IconBox>
 );
 
-function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, studentLoggedOut, musicOn, onMusicToggle, error, onGoToLessonRoom, studentsByCons, hireCount = 0, hireIds = [], onGoToConcerts, onGoToComposers, authUser, isAdmin, onGoToAdmin, avatarPhotoUrl, avatarName }) {
+function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, studentLoggedOut, musicOn, onMusicToggle, error, onGoToPromote, onGoToLessonRoom, studentsByCons, hireCount = 0, hireIds = [], onGoToConcerts, onGoToComposers, authUser, isAdmin, onGoToAdmin, avatarPhotoUrl, avatarName }) {
   const memberCount = Object.values(studentsByCons).flat().length;
   const steps = [
     { n: "1", t: "Build your profile", Icon: IconProfileDoc,
@@ -5156,6 +5158,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
               onGoToConcerts={onGoToConcerts}
               onGoToComposers={onGoToComposers}
               onGoToNews={() => {}}
+              onGoToPromote={onGoToPromote}
               authUser={authUser}
               isAdmin={isAdmin}
               onGoToAdmin={onGoToAdmin}
@@ -8568,7 +8571,7 @@ async function fetchAgendaNotes(teacherId, learnerId) {
   return grouped;
 }
 
-function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGoToAdmin, networkFeeds, puck, hireCount = 0, hireIds = [], onGoToConcerts, onGoToComposers, onGoToNews }) {
+function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGoToAdmin, networkFeeds, puck, hireCount = 0, hireIds = [], onGoToConcerts, onGoToComposers, onGoToNews, onGoToPromote }) {
   const [open, setOpen] = React.useState(false);
   const [viewingLearner, setViewingLearner] = React.useState(null);
   const [pending, setPending] = React.useState([]); // filled by the DB loader below
@@ -8583,6 +8586,11 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
   // list can't grow past what's currently pending.
   const [ackTeachIds, setAckTeachIds] = React.useState(() => readAckIds("artium_ack_teach_v1"));
   const [ackHireIds, setAckHireIds] = React.useState(() => readAckIds("artium_ack_hire_v1"));
+  // The student's own promotion verdicts (approved/rejected). Keyed by
+  // id:status so a reset-then-re-approval notifies again; acked keys are
+  // stored wholesale like the id feeds above.
+  const [myPromoDecisions, setMyPromoDecisions] = React.useState([]);
+  const [ackPromoKeys, setAckPromoKeys] = React.useState(() => readAckIds("artium_ack_mypromo_v1"));
   // Composers/news split the same way, but by two timestamps instead of one
   // set of ids (there's no per-item id for either feed, just a publish
   // time). The ROW stamp (artium_seen_*) only moves on an actual visit — a
@@ -8615,11 +8623,34 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
     } catch { /* private mode */ }
     setAckTeachIds(teachIds);
     setAckHireIds(hireIds);
+    const promoKeys = myPromoDecisions.map((p) => `${p.id}:${p.status}`);
+    try { localStorage.setItem("artium_ack_mypromo_v1", JSON.stringify(promoKeys)); } catch { /* private mode */ }
+    setAckPromoKeys(promoKeys);
     // Ack-only — the row's own seen stamp is untouched here, and only moves
     // when a row is actually clicked through (see NetworkRow's onVisit).
     stampTs("artium_ackts_composers_v1", setAckComposersTs);
     stampTs("artium_ackts_news_v1", setAckNewsTs);
   }
+
+  // The student's own decided promotions — feeds the "your spotlight was
+  // approved/rejected" rows. Filtered to the caller's own user_id
+  // explicitly, because the slot-closed policy also exposes OTHER people's
+  // approved free rows to everyone.
+  React.useEffect(() => {
+    if (!networkFeeds || !authUser?.id) return;
+    let alive = true;
+    async function load() {
+      try {
+        const { data } = await supabase.from("promotions")
+          .select("id, kind, status, slot_date, rejection_reason")
+          .eq("user_id", authUser.id).neq("status", "pending");
+        if (alive && data) setMyPromoDecisions(data);
+      } catch { /* defensive */ }
+    }
+    load();
+    const t = setInterval(load, 15000);
+    return () => { alive = false; clearInterval(t); };
+  }, [networkFeeds, authUser?.id]);
 
   // Admin-only: pending promotion submissions.
   React.useEffect(() => {
@@ -8682,7 +8713,8 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
   const newsBadgeCount = newsItems.filter((p) => p.createdAt > ackNewsTs).length;
   const newTeachCount = pending.filter((r) => !ackTeachIds.includes(r.id ?? r.learnerId)).length;
   const newHireCount = hireIds.filter((id) => !ackHireIds.includes(id)).length;
-  const feedTotal = newTeachCount + newHireCount + composerBadgeCount + newsBadgeCount;
+  const newPromoDecisions = myPromoDecisions.filter((p) => !ackPromoKeys.includes(`${p.id}:${p.status}`));
+  const feedTotal = newTeachCount + newHireCount + composerBadgeCount + newsBadgeCount + newPromoDecisions.length;
   const totalCount = networkFeeds ? feedTotal : pending.length + promoPending.length;
 
   // A ~40px tinted tile, its icon, a title over a status line, and a
@@ -8788,6 +8820,39 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
           ))}
           {networkFeeds ? (
             <>
+              {/* Your own promotion verdicts, newest state per row; a row
+                  leaves the panel once clicked or marked read. */}
+              {newPromoDecisions.map((p) => {
+                const key = `${p.id}:${p.status}`;
+                const approved = p.status === "approved";
+                const isFree = p.kind === "free_weekly";
+                const ackOne = () => {
+                  const next = Array.from(new Set([...ackPromoKeys, key]));
+                  try { localStorage.setItem("artium_ack_mypromo_v1", JSON.stringify(next)); } catch { /* private mode */ }
+                  setAckPromoKeys(next);
+                };
+                return (
+                  <button key={key}
+                    onClick={() => { ackOne(); setOpen(false); onGoToPromote && onGoToPromote(); }}
+                    style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, textAlign: "left", padding: "13px 16px", border: "none", borderBottom: `1px solid ${C.inkLine}`, background: "transparent", cursor: "pointer", fontFamily: FONT_BODY }}>
+                    <span style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, background: approved ? "rgba(26,158,110,0.14)" : "rgba(179,38,30,0.10)", color: approved ? "#1A9E6E" : "#B3261E", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <Megaphone size={18} strokeWidth={2} />
+                    </span>
+                    <span style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: C.ivory, lineHeight: 1.3 }}>
+                        {approved
+                          ? (isFree ? "Your Saturday spotlight was approved" : "Your promotion was approved")
+                          : (isFree ? "Your spotlight application wasn't selected" : "Your promotion wasn't approved")}
+                      </p>
+                      <p style={{ margin: "2px 0 0", fontSize: 13, color: C.ivoryDim, lineHeight: 1.3 }}>
+                        {approved
+                          ? (isFree ? `Send your collab request to @aclassicaltone at 12:30 on ${p.slot_date}` : "You can now complete your payment")
+                          : "Open Promote for the details"}
+                      </p>
+                    </span>
+                  </button>
+                );
+              })}
               <NetworkRow
                 icon={<GraduationCap size={18} strokeWidth={2} />}
                 tileBg="rgba(201,150,46,0.14)" tileColor={C.brass}
