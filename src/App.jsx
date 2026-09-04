@@ -927,21 +927,41 @@ function ArtiumRadio({ open, controllerRef, onPlayingChange, onClose }) {
   // whole session, so "first open" and "mount" land at effectively the
   // same moment.
   useEffect(() => {
-    if (fetchedRef.current) return;
-    fetchedRef.current = true;
-    (async () => {
+    let live = true;
+    async function loadTracks(first) {
       const { data, error } = await supabase.from("student_tracks")
         .select("*").eq("status", "approved").order("created_at", { ascending: false });
-      if (error || !data) { setTracks([]); return; }
-      const shuffled = shuffleOnce(data);
-      setTracks(shuffled);
-      const ids = [...new Set(shuffled.map((t) => t.user_id).filter(Boolean))];
+      if (!live || error || !data) { if (first && live && !error) setTracks([]); return; }
+      if (first || !fetchedRef.current) {
+        fetchedRef.current = true;
+        setTracks(shuffleOnce(data));
+      } else {
+        // Keep the session's shuffled order; drop tracks that were deleted
+        // or un-approved since, append newly approved ones at the end.
+        const liveIds = new Set(data.map((t) => t.id));
+        setTracks((prev) => {
+          if (!prev) return shuffleOnce(data);
+          const kept = prev.filter((t) => liveIds.has(t.id));
+          const known = new Set(kept.map((t) => t.id));
+          return [...kept, ...data.filter((t) => !known.has(t.id))];
+        });
+      }
+      const ids = [...new Set(data.map((t) => t.user_id).filter(Boolean))];
       if (ids.length) {
         const { data: people } = await supabase.from("profiles").select("id, name").in("id", ids);
-        if (people) setNames(Object.fromEntries(people.map((p) => [p.id, p.name])));
+        if (live && people) setNames(Object.fromEntries(people.map((p) => [p.id, p.name])));
       }
-    })();
+    }
+    loadTracks(true);
+    const id = setInterval(() => loadTracks(false), 60000);
+    return () => { live = false; clearInterval(id); };
   }, []);
+
+  // Deleting can shrink the list under the current index — clamp it.
+  useEffect(() => {
+    if (tracks && tracks.length > 0 && index >= tracks.length) setIndex(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tracks?.length]);
 
   function publicUrl(path) {
     return supabase.storage.from("student-audio").getPublicUrl(path).data.publicUrl;
@@ -1026,6 +1046,7 @@ function ArtiumRadio({ open, controllerRef, onPlayingChange, onClose }) {
       <audio
         ref={audioRef}
         onEnded={next}
+        onError={() => { if (tracks && tracks.length > 1) next(); else setPlaying(false); }}
         onPause={() => setPlaying(false)}
         onPlay={() => setPlaying(true)}
         style={{ display: "none" }}
