@@ -12574,6 +12574,11 @@ function PromoteMe({ myProfile, authUser, focus }) {
 
           {freeRejected && (
             <div style={{ ...card, background: "#FDECEC" }}>
+              {freeRejected.slot_date && (
+                <p style={{ fontSize: 11, fontWeight: 700, color: C.burgundy, textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 6px" }}>
+                  Your application for {freeSlotLabel(freeRejected.slot_date)}
+                </p>
+              )}
               <p style={{ fontSize: 14, color: C.burgundy, fontWeight: 600, margin: 0 }}>
                 {freeRejected.rejection_reason || "Your previous submission wasn't approved."}
               </p>
