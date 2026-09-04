@@ -12303,6 +12303,7 @@ function PromoteMe({ myProfile, authUser, focus }) {
     if (!freeSlot) { setFreeError("Please pick a Saturday."); return; }
     if (closedSlots.has(freeSlot)) { setFreeError("That Saturday is already taken — please pick another."); return; }
     if (myFreeSlots.has(freeSlot)) { setFreeError("You already have an application for that Saturday."); return; }
+    if (myRejectedSlots.has(freeSlot)) { setFreeError("That Saturday's spot went to another video — pick a different week."); return; }
     setFreeSubmitting(true);
     const row = {
       user_id: authUser.id,
@@ -12332,6 +12333,9 @@ function PromoteMe({ myProfile, authUser, focus }) {
   // per Saturday per person, but as many Saturdays as they like.
   const myFreeSlots = new Set(mineFreeAll.filter((r) => r.status !== "rejected").map((r) => r.slot_date));
   const myWonSlots = new Set(mineFreeAll.filter((r) => r.status === "approved").map((r) => r.slot_date));
+  // Saturdays where her application was rejected stay closed for her —
+  // one shot per Saturday per person.
+  const myRejectedSlots = new Set(mineFreeAll.filter((r) => r.status === "rejected" && !myFreeSlots.has(r.slot_date)).map((r) => r.slot_date));
   const freeSlotLabel = (iso) => saturdays.find((s) => s.iso === iso)?.label
     || (iso ? new Date(iso + "T00:00:00").toLocaleDateString("en-US", { weekday: "long", day: "numeric", month: "long" }) : "");
   // Whether this account has already paid for a promotion. Read from the
@@ -12512,25 +12516,26 @@ function PromoteMe({ myProfile, authUser, focus }) {
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
                 {saturdays.map(({ iso, label: slotLabel }) => {
                   const mine = myFreeSlots.has(iso);
-                  const taken = !mine && closedSlots.has(iso);
+                  const lost = !mine && myRejectedSlots.has(iso);
+                  const taken = !mine && !lost && closedSlots.has(iso);
                   const selected = freeSlot === iso;
                   return (
                     <button
                       key={iso}
-                      disabled={taken || mine}
+                      disabled={taken || mine || lost}
                       onClick={() => setFreeSlot(iso)}
-                      title={mine ? (myWonSlots.has(iso) ? "You're booked for this Saturday" : "Your application for this Saturday is awaiting approval") : taken ? "This Saturday is already taken" : undefined}
+                      title={mine ? (myWonSlots.has(iso) ? "You're booked for this Saturday" : "Your application for this Saturday is awaiting approval") : lost ? "This spot went to another video — pick a different Saturday" : taken ? "This Saturday is already taken" : undefined}
                       style={{
                         padding: "8px 14px", borderRadius: 20, fontSize: 13, fontWeight: 600,
-                        cursor: taken || mine ? "not-allowed" : "pointer",
-                        background: taken || mine ? "rgba(176,146,98,0.03)" : "rgba(176,146,98,0.05)",
-                        color: taken || mine ? C.ivoryDim : (selected ? C.ivory : C.ivoryDim),
+                        cursor: taken || mine || lost ? "not-allowed" : "pointer",
+                        background: taken || mine || lost ? "rgba(176,146,98,0.03)" : "rgba(176,146,98,0.05)",
+                        color: taken || mine || lost ? C.ivoryDim : (selected ? C.ivory : C.ivoryDim),
                         border: selected && !taken ? `2px solid ${C.brass}` : `1px solid ${C.inkLine}`,
-                        opacity: taken || mine ? 0.55 : 1,
-                        textDecoration: taken ? "line-through" : "none",
+                        opacity: taken || mine || lost ? 0.55 : 1,
+                        textDecoration: taken || lost ? "line-through" : "none",
                       }}
                     >
-                      {slotLabel}{mine ? (myWonSlots.has(iso) ? " · booked" : " · pending") : taken ? " · taken" : ""}
+                      {slotLabel}{mine ? (myWonSlots.has(iso) ? " · yours" : " · pending") : lost ? " · booked by another" : taken ? " · taken" : ""}
                     </button>
                   );
                 })}
@@ -12771,6 +12776,19 @@ function AdminScreen({ authUser, onlineCount }) {
     return setStatus(promo, "approved");
   }
 
+  // A manual free-spotlight rejection carries the same agreed reason (and
+  // the same direct message) as the automatic same-Saturday rejections.
+  async function rejectPromo(promo) {
+    if (promo.kind !== "free_weekly") return setStatus(promo, "rejected");
+    if (isRealUser) {
+      await supabase.from("promotions").update({ status: "rejected", rejection_reason: FREE_SPOT_REJECTION_REASON, decided_at: new Date().toISOString() }).eq("id", promo.id);
+      sendVerdictMessage(promo.user_id, FREE_SPOT_REJECTION_REASON);
+    } else {
+      writeLocal(readLocal().map((p) => (p.id === promo.id ? { ...p, status: "rejected", rejection_reason: FREE_SPOT_REJECTION_REASON } : p)));
+    }
+    load();
+  }
+
   const pending = rows.filter((r) => r.status === "pending");
   const decided = rows.filter((r) => r.status !== "pending");
   const shown = tab === "pending" ? pending : decided;
@@ -12860,7 +12878,7 @@ function AdminScreen({ authUser, onlineCount }) {
             {p.status === "pending" && (
               <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
                 <button onClick={() => approve(p)} style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "none", background: "#1A9E6E", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Approve</button>
-                <button onClick={() => setStatus(p, "rejected")} style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)", color: C.burgundy, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Reject</button>
+                <button onClick={() => rejectPromo(p)} style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)", color: C.burgundy, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Reject</button>
               </div>
             )}
             {p.status !== "pending" && (
