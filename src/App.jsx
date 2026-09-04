@@ -8773,7 +8773,10 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
   // id:status so a reset-then-re-approval notifies again; acked keys are
   // stored wholesale like the id feeds above.
   const [myPromoDecisions, setMyPromoDecisions] = React.useState([]);
+  const [myTrackDecisions, setMyTrackDecisions] = React.useState([]);
   const [ackPromoKeys, setAckPromoKeys] = React.useState(() => readAckIds("artium_ack_mypromo_v1"));
+  const [ackTrackKeys, setAckTrackKeys] = React.useState(() => readAckIds("artium_ack_mytracks_v1"));
+  const [seenTrackKeys, setSeenTrackKeys] = React.useState(() => readAckIds("artium_seen_mytracks_v1"));
   // Two clocks, like composers/news: the BADGE reads the ack list (stamped
   // on open/mark-all), the ROW reads this seen list, stamped only when the
   // row itself is clicked — otherwise open-acks would eat the row before
@@ -8815,6 +8818,9 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
       const promoKeys = myPromoDecisions.map((p) => promoKeyOf(p));
       try { localStorage.setItem("artium_ack_mypromo_v1", JSON.stringify(promoKeys)); } catch { /* private mode */ }
       setAckPromoKeys(promoKeys);
+      const trackKeys = myTrackDecisions.map((p) => promoKeyOf(p));
+      try { localStorage.setItem("artium_ack_mytracks_v1", JSON.stringify(trackKeys)); } catch { /* private mode */ }
+      setAckTrackKeys(trackKeys);
     }
     // Ack-only — the row's own seen stamp is untouched here, and only moves
     // when a row is actually clicked through (see NetworkRow's onVisit).
@@ -8835,6 +8841,10 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
           .select("id, kind, status, slot_date, rejection_reason, decided_at")
           .eq("user_id", authUser.id).neq("status", "pending");
         if (alive && data) setMyPromoDecisions(data);
+        const { data: trackData } = await supabase.from("student_tracks")
+          .select("id, title, status, decided_at")
+          .eq("user_id", authUser.id).neq("status", "pending").not("decided_at", "is", null);
+        if (alive && trackData) setMyTrackDecisions(trackData);
       } catch { /* defensive */ }
     }
     load();
@@ -8905,7 +8915,8 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
   const newHireCount = hireIds.filter((id) => !ackHireIds.includes(id)).length;
   const promoKeyOf = (p) => `${p.id}:${p.status}:${p.decided_at || ""}`;
   const newPromoDecisions = myPromoDecisions.filter((p) => !ackPromoKeys.includes(promoKeyOf(p)));
-  const feedTotal = newTeachCount + newHireCount + composerBadgeCount + newsBadgeCount + newPromoDecisions.length;
+  const newTrackDecisions = myTrackDecisions.filter((p) => !ackTrackKeys.includes(promoKeyOf(p)));
+  const feedTotal = newTeachCount + newHireCount + composerBadgeCount + newsBadgeCount + newPromoDecisions.length + newTrackDecisions.length;
   const totalCount = networkFeeds ? feedTotal : pending.length + promoPending.length;
 
   // A ~40px tinted tile, its icon, a title over a status line, and a
@@ -9045,6 +9056,36 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
                         {approved
                           ? (isFree ? `Send your collab request to @aclassicaltone at 12:30 on ${p.slot_date}` : "You can now complete your payment")
                           : "Open Promote for the details"}
+                      </p>
+                    </span>
+                  </button>
+                );
+              })}
+              {/* Recording verdicts — same two clocks as promo verdicts. */}
+              {myTrackDecisions.filter((p) => !seenTrackKeys.includes(promoKeyOf(p))).map((p) => {
+                const key = promoKeyOf(p);
+                const approved = p.status === "approved";
+                const ackOne = () => {
+                  const nextSeen = Array.from(new Set([...seenTrackKeys, key]));
+                  try { localStorage.setItem("artium_seen_mytracks_v1", JSON.stringify(nextSeen)); } catch { /* private mode */ }
+                  setSeenTrackKeys(nextSeen);
+                  const next = Array.from(new Set([...ackTrackKeys, key]));
+                  try { localStorage.setItem("artium_ack_mytracks_v1", JSON.stringify(next)); } catch { /* private mode */ }
+                  setAckTrackKeys(next);
+                };
+                return (
+                  <button key={`trk-${key}`}
+                    onClick={() => { ackOne(); setOpen(false); onGoToPromote && onGoToPromote("artium"); }}
+                    style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, textAlign: "left", padding: "13px 16px", border: "none", borderBottom: `1px solid ${C.inkLine}`, background: "transparent", cursor: "pointer", fontFamily: FONT_BODY }}>
+                    <span style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, background: approved ? "rgba(26,158,110,0.14)" : "rgba(179,38,30,0.10)", color: approved ? "#1A9E6E" : "#B3261E", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <Music2 size={18} strokeWidth={2} />
+                    </span>
+                    <span style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: C.ivory, lineHeight: 1.3 }}>
+                        {approved ? "Your recording is live on Artium" : "Your recording wasn't accepted"}
+                      </p>
+                      <p style={{ margin: "2px 0 0", fontSize: 13, color: C.ivoryDim, lineHeight: 1.3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {approved ? `"${p.title || "Untitled"}" now plays on Artium Radio` : "Open Promote for the reason"}
                       </p>
                     </span>
                   </button>
@@ -12313,7 +12354,7 @@ function ArtiumSoundCard({ myProfile, authUser }) {
             <span style={{ width: 9, height: 9, borderRadius: "50%", background: s.colour, display: "inline-block", flexShrink: 0 }} />
             <span style={{ fontSize: 14, fontWeight: 700, color: s.colour }}>{s.title}</span>
           </div>
-          <p style={{ fontSize: 13, color: C.ivoryDim, margin: "6px 0 0", lineHeight: 1.5 }}>{s.body}</p>
+          <p style={{ fontSize: 13, color: C.ivoryDim, margin: "6px 0 0", lineHeight: 1.5 }}>{mine.status === "rejected" && mine.rejection_reason ? mine.rejection_reason : s.body}</p>
           <p style={{ fontSize: 13, color: C.ivory, margin: "10px 0 0", fontWeight: 600 }}>
             {mine.title}{mine.composer ? ` · ${mine.composer}` : ""}
           </p>
@@ -12398,6 +12439,7 @@ function PromoteMe({ myProfile, authUser, focus }) {
   // A bell verdict tap lands on the exact sub-screen it spoke of.
   React.useEffect(() => {
     if (!focus?.at) return;
+    if (focus.kind === "artium") { setView("artium"); return; }
     setView("aclassicaltone");
     setPromoMode(focus.kind === "free_weekly" ? "free" : focus.kind === "paid" ? "paid" : null);
   }, [focus?.at]);
@@ -13006,7 +13048,7 @@ function AdminScreen({ authUser, onlineCount }) {
 
         {section === "verifications" && <AdminVerifications card={card} STATUS_COLOR={STATUS_COLOR} />}
         {section === "conservatories" && <AdminConservatories card={card} />}
-        {section === "tracks" && <AdminTracks card={card} STATUS_COLOR={STATUS_COLOR} />}
+        {section === "tracks" && <AdminTracks card={card} STATUS_COLOR={STATUS_COLOR} authUser={authUser} />}
 
         {section === "promotions" && <>
         <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
@@ -13176,7 +13218,9 @@ function AdminTrackList({ list, editable, card, names, busy, decide, removeTrack
     );
   }
 
-function AdminTracks({ card, STATUS_COLOR }) {
+const TRACK_REJECTION_DEFAULT = "Thank you for sharing your playing. This recording wasn't selected for the site's rotation — you're very welcome to submit a different one.";
+
+function AdminTracks({ card, STATUS_COLOR, authUser }) {
   const [rows, setRows] = useState([]);
   const [names, setNames] = useState({});
   const [busy, setBusy] = useState("");
@@ -13199,16 +13243,33 @@ function AdminTracks({ card, STATUS_COLOR }) {
     return supabase.storage.from("student-audio").getPublicUrl(path).data.publicUrl;
   }
 
+  // Verdicts land three ways, like spotlight decisions: on the row (with a
+  // reason and a decided_at stamp for the bell), on the student's card, and
+  // as a direct message from the admin.
+  function sendTrackMessage(recipientId, body) {
+    if (!authUser?.id || !recipientId || recipientId === authUser.id) return;
+    supabase.from("direct_messages").insert({ sender_id: authUser.id, recipient_id: recipientId, body })
+      .then(({ error }) => { if (error) console.error("track verdict message failed", error.message); });
+  }
+
   async function decide(r, status) {
+    let rejection_reason = null;
+    if (status === "rejected") {
+      rejection_reason = window.prompt("Reason shown and sent to the student (edit or keep):", TRACK_REJECTION_DEFAULT);
+      if (rejection_reason === null) return; // admin cancelled
+      rejection_reason = rejection_reason.trim() || TRACK_REJECTION_DEFAULT;
+    }
     setBusy(r.id);
     const { data, error } = await supabase.from("student_tracks")
-      .update({ status }).eq("id", r.id).select("id");
+      .update({ status, rejection_reason, decided_at: status === "pending" ? null : new Date().toISOString() }).eq("id", r.id).select("id");
     setBusy("");
     if (error) { alert(`Could not update this recording: ${error.message}`); return; }
     if (!data || data.length === 0) {
       alert("No row was changed — row-level security blocked the write. The recording is unchanged.");
       return;
     }
+    if (status === "approved") sendTrackMessage(r.user_id, `Your recording "${r.title || "Untitled"}" was approved — it's now live on Artium Radio for every visitor to hear!`);
+    if (status === "rejected") sendTrackMessage(r.user_id, rejection_reason);
     load();
   }
 
@@ -13218,6 +13279,12 @@ function AdminTracks({ card, STATUS_COLOR }) {
   // Hard delete: the row goes, and the audio file with it (best-effort —
   // an orphaned file in the bucket is invisible, just wasted bytes).
   async function removeTrack(r) {
+    // A pending recording still owes its student a verdict — steer toward a
+    // rejection (which explains itself) before allowing the silent delete.
+    if (r.status === "pending") {
+      const rejectInstead = window.confirm("This student is still waiting for a verdict. Press OK to REJECT it with a message to them instead (recommended). Press Cancel to continue toward deleting.");
+      if (rejectInstead) { decide(r, "rejected"); return; }
+    }
     if (!window.confirm(`Delete "${r.title || "this recording"}" permanently? This cannot be undone.`)) return;
     setBusy(r.id);
     const { error } = await supabase.from("student_tracks").delete().eq("id", r.id);
@@ -13226,6 +13293,7 @@ function AdminTracks({ card, STATUS_COLOR }) {
     }
     setBusy("");
     if (error) { alert(`Could not delete: ${error.message}`); return; }
+    if (r.status === "pending") sendTrackMessage(r.user_id, `Your recording "${r.title || "Untitled"}" was removed from the review queue. You're welcome to submit another one anytime.`);
     load();
   }
 
