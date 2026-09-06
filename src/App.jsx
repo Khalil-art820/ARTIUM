@@ -13237,6 +13237,17 @@ function AdminTracks({ card, STATUS_COLOR, authUser }) {
   }
 
   async function decide(r, status) {
+    // Approving over an existing live track replaces it — make that a
+    // deliberate click, not a surprise discovered in the student's chat.
+    let oldApproved = null;
+    if (status === "approved") {
+      const { data } = await supabase.from("student_tracks")
+        .select("id, audio_url, title").eq("user_id", r.user_id).eq("status", "approved").neq("id", r.id);
+      oldApproved = data || [];
+      if (oldApproved.length > 0) {
+        if (!window.confirm(`This student already has a live recording ("${oldApproved[0].title || "Untitled"}"). Approving this one will REPLACE it in the rotation. Continue?`)) return;
+      }
+    }
     let rejection_reason = null;
     if (status === "rejected") {
       rejection_reason = window.prompt("Reason shown and sent to the student (edit or keep):", TRACK_REJECTION_DEFAULT);
@@ -13256,8 +13267,7 @@ function AdminTracks({ card, STATUS_COLOR, authUser }) {
       // One live recording per student: approving a new one retires any
       // older approved track in the same stroke (row and file). No farewell
       // message for the old — the approval message tells the whole story.
-      const { data: olds } = await supabase.from("student_tracks")
-        .select("id, audio_url").eq("user_id", r.user_id).eq("status", "approved").neq("id", r.id);
+      const olds = oldApproved;
       for (const o of olds || []) {
         await supabase.from("student_tracks").delete().eq("id", o.id);
         if (o.audio_url) { try { await supabase.storage.from("student-audio").remove([o.audio_url]); } catch { /* orphan tolerated */ } }
