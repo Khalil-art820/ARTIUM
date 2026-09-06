@@ -1133,9 +1133,18 @@ function ArtiumRadio({ open, controllerRef, onPlayingChange, onClose }) {
   function reshuffle() {
     if (!tracks || tracks.length < 2) return;
     const cur = tracks[index];
-    const rest = shuffleOnce(tracks.filter((t) => t.id !== cur.id));
-    setTracks([cur, ...rest]);
-    setIndex(0);
+    // Re-deal the WHOLE order (the playing track moves too — playback is
+    // untouched, only its row number changes), and insist on an order that
+    // actually differs, so the button always visibly does something even
+    // with a two-track catalogue.
+    let dealt = tracks;
+    for (let tries = 0; tries < 8; tries++) {
+      const candidate = shuffleOnce(tracks);
+      if (candidate.some((t, i) => t.id !== tracks[i].id)) { dealt = candidate; break; }
+    }
+    if (dealt === tracks && tracks.length === 2) dealt = [tracks[1], tracks[0]];
+    setTracks(dealt);
+    setIndex(Math.max(0, dealt.findIndex((t) => t.id === cur.id)));
   }
 
   const fmt = (x) => { const n = Math.max(0, Math.floor(x || 0)); return `${Math.floor(n / 60)}:${String(n % 60).padStart(2, "0")}`; };
