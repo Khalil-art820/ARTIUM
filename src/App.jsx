@@ -1058,8 +1058,8 @@ function ArtiumRadio({ open, controllerRef, onPlayingChange, onClose }) {
       }
       const ids = [...new Set(data.map((t) => t.user_id).filter(Boolean))];
       if (ids.length) {
-        const { data: people } = await supabase.from("profiles").select("id, name").in("id", ids);
-        if (live && people) setNames(Object.fromEntries(people.map((p) => [p.id, p.name])));
+        const { data: people } = await supabase.from("profiles").select("id, name, photo_url").in("id", ids);
+        if (live && people) setNames(Object.fromEntries(people.map((p) => [p.id, { name: p.name, photoUrl: p.photo_url }])));
       }
     }
     loadTracks(true);
@@ -1149,7 +1149,7 @@ function ArtiumRadio({ open, controllerRef, onPlayingChange, onClose }) {
 
   const fmt = (x) => { const n = Math.max(0, Math.floor(x || 0)); return `${Math.floor(n / 60)}:${String(n % 60).padStart(2, "0")}`; };
   const current = tracks && tracks.length > 0 ? tracks[index] : null;
-  const currentName = current ? (names[current.user_id] || "") : "";
+  const currentName = current ? nameOf(current) : "";
   // Title carries the composer (owner's call); the student's name is the
   // credit line beneath.
   const titleOf = (t) => `${t.title || "Untitled"}${t.composer ? " · " + t.composer : ""}`;
@@ -1159,7 +1159,14 @@ function ArtiumRadio({ open, controllerRef, onPlayingChange, onClose }) {
     ? `${tracks.length} recording${tracks.length === 1 ? "" : "s"}${totalKnown && totalSecs > 0 ? ` · ${Math.floor(totalSecs / 3600) > 0 ? Math.floor(totalSecs / 3600) + "h " : ""}${Math.round((totalSecs % 3600) / 60)}m` : ""}`
     : "";
 
-  const ART = "/gate-hero.jpg"; // the house artwork until tracks carry their own
+  const ART = "/gate-hero.jpg"; // fallback artwork when a student has no photo
+  const photoOf = (t) => names[t.user_id]?.photoUrl || ART;
+  const nameOf = (t) => names[t.user_id]?.name || "";
+  const NamePill = ({ text, size = 11 }) => (
+    <span style={{ display: "inline-flex", alignItems: "center", maxWidth: "100%", background: "#FFFFFF", border: "1px solid rgba(176,146,98,0.45)", borderRadius: 999, padding: size > 10.5 ? "3px 10px" : "2px 8px", fontSize: size, fontWeight: 600, color: C.inkText, boxShadow: "0 3px 6px -3px rgba(150,115,55,.25)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+      {text}
+    </span>
+  );
 
   const skipBtn = (onClick, disabled, children, label) => (
     <button onClick={onClick} disabled={disabled} aria-label={label}
@@ -1245,16 +1252,16 @@ function ArtiumRadio({ open, controllerRef, onPlayingChange, onClose }) {
           <div style={{ padding: "14px 16px", borderBottom: `1px solid ${C.inkLine}`, flexShrink: 0 }}>
             <div style={{ display: "flex", gap: 12 }}>
               <div style={{ width: 84, height: 84, borderRadius: 14, overflow: "hidden", flexShrink: 0, position: "relative", boxShadow: "0 6px 14px -6px rgba(150,115,55,0.5)" }}>
-                <img src={ART} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                <img src={photoOf(current)} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
               </div>
               <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
                 <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: C.ivory, fontFamily: FONT_BODY, lineHeight: 1.25, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
                   {titleOf(current)}
                 </p>
                 {currentName && (
-                  <p style={{ margin: "3px 0 0", fontSize: 12.5, color: C.ivoryDim, fontFamily: FONT_BODY, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                    {currentName}
-                  </p>
+                  <span style={{ marginTop: 5, alignSelf: "flex-start", maxWidth: "100%", fontFamily: FONT_BODY }}>
+                    <NamePill text={currentName} size={11.5} />
+                  </span>
                 )}
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: "auto", paddingTop: 8 }}>
                   {skipBtn(prev, tracks.length < 2, SkipBackGlyph, "Previous recording")}
@@ -1290,11 +1297,11 @@ function ArtiumRadio({ open, controllerRef, onPlayingChange, onClose }) {
                   style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "9px 16px 9px 12px", background: isCur ? "rgba(201,150,46,0.08)" : "transparent", border: "none", borderLeft: isCur ? `3px solid ${C.brass}` : "3px solid transparent", borderBottom: `1px solid ${C.inkLine}`, cursor: "pointer", textAlign: "left" }}>
                   <span style={{ width: 20, flexShrink: 0, fontSize: 11, fontVariantNumeric: "tabular-nums", color: C.ivoryDim, fontFamily: FONT_BODY }}>{String(i + 1).padStart(2, "0")}</span>
                   <span style={{ width: 30, height: 30, borderRadius: 8, overflow: "hidden", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: isCur ? "rgba(201,150,46,0.16)" : "transparent", color: C.brass }}>
-                    {isCur ? EqGlyph : <img src={ART} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />}
+                    {isCur ? EqGlyph : <img src={photoOf(t)} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />}
                   </span>
                   <span style={{ flex: 1, minWidth: 0, fontFamily: FONT_BODY }}>
                     <span style={{ display: "block", fontSize: 13, fontWeight: isCur ? 700 : 600, color: C.ivory, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{titleOf(t)}</span>
-                    {names[t.user_id] && <span style={{ display: "block", fontSize: 11, color: C.ivoryDim, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{names[t.user_id]}</span>}
+                    {nameOf(t) && <span style={{ display: "block", marginTop: 2, fontFamily: FONT_BODY }}><NamePill text={nameOf(t)} size={10} /></span>}
                   </span>
                   <span style={{ flexShrink: 0, fontSize: 11, color: C.ivoryDim, fontFamily: FONT_BODY, fontVariantNumeric: "tabular-nums" }}>
                     {durations[t.id] ? fmt(durations[t.id]) : ""}
@@ -1308,11 +1315,11 @@ function ArtiumRadio({ open, controllerRef, onPlayingChange, onClose }) {
           {tracks.length > 3 && (
             <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", borderTop: `1px solid ${C.inkLine}`, background: "#FFFFFF", flexShrink: 0 }}>
               <span style={{ width: 34, height: 34, borderRadius: 9, overflow: "hidden", flexShrink: 0 }}>
-                <img src={ART} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                <img src={photoOf(current)} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
               </span>
               <span style={{ flex: 1, minWidth: 0, fontFamily: FONT_BODY }}>
                 <span style={{ display: "block", fontSize: 12.5, fontWeight: 700, color: C.ivory, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{titleOf(current)}</span>
-                {currentName && <span style={{ display: "block", fontSize: 11, color: C.ivoryDim, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{currentName}</span>}
+                {currentName && <span style={{ display: "block", marginTop: 2 }}><NamePill text={currentName} size={10} /></span>}
               </span>
               {skipBtn(prev, tracks.length < 2, SkipBackGlyph, "Previous recording")}
               {bigPlay(36)}
