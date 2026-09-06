@@ -12278,15 +12278,9 @@ function ArtiumSoundCard({ myProfile, authUser }) {
   async function submit() {
     if (!uid || !audio.url || !rights) return;
     setErr(""); setSaving(true);
-    // One submission at a time: a new file replaces one still awaiting review
-    // rather than queueing a second. Anything approved is left alone — it may
-    // be playing on the site right now.
-    // Replace the pending row AND its audio file — without the storage
-    // remove, every resubmission orphaned the old file in the bucket.
-    const { data: oldPending } = await supabase.from("student_tracks").select("audio_url").eq("user_id", uid).eq("status", "pending");
-    await supabase.from("student_tracks").delete().eq("user_id", uid).eq("status", "pending");
-    const oldFiles = (oldPending || []).map((o) => o.audio_url).filter(Boolean).filter((u) => u !== audio.url);
-    if (oldFiles.length) { try { await supabase.storage.from("student-audio").remove(oldFiles); } catch { /* orphan tolerated */ } }
+    // Every pending submission is KEPT (owner's call): the admin sees them
+    // all in the queue and approves whichever they prefer. Only approval
+    // retires anything (the one-live-track rule), never a resubmission.
     const { error } = await supabase.from("student_tracks").insert({
       user_id: uid,
       title: title.trim() || "Untitled",
@@ -12354,7 +12348,7 @@ function ArtiumSoundCard({ myProfile, authUser }) {
               onClick={() => setReplacing(true)}
               style={{ marginTop: 10, background: "none", border: "none", padding: 0, font: "inherit", fontSize: 13, fontWeight: 600, color: C.brassLabel, cursor: "pointer", textDecoration: "underline" }}
             >
-              {mine.status === "approved" ? "Submit a different recording" : "Replace it"}
+              {mine.status === "approved" ? "Submit a different recording" : "Submit another recording"}
             </button>
           )}
         </div>
