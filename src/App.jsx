@@ -12281,7 +12281,12 @@ function ArtiumSoundCard({ myProfile, authUser }) {
     // One submission at a time: a new file replaces one still awaiting review
     // rather than queueing a second. Anything approved is left alone — it may
     // be playing on the site right now.
+    // Replace the pending row AND its audio file — without the storage
+    // remove, every resubmission orphaned the old file in the bucket.
+    const { data: oldPending } = await supabase.from("student_tracks").select("audio_url").eq("user_id", uid).eq("status", "pending");
     await supabase.from("student_tracks").delete().eq("user_id", uid).eq("status", "pending");
+    const oldFiles = (oldPending || []).map((o) => o.audio_url).filter(Boolean).filter((u) => u !== audio.url);
+    if (oldFiles.length) { try { await supabase.storage.from("student-audio").remove(oldFiles); } catch { /* orphan tolerated */ } }
     const { error } = await supabase.from("student_tracks").insert({
       user_id: uid,
       title: title.trim() || "Untitled",
