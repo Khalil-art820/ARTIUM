@@ -12348,7 +12348,7 @@ function ArtiumSoundCard({ myProfile, authUser }) {
               onClick={() => setReplacing(true)}
               style={{ marginTop: 10, background: "none", border: "none", padding: 0, font: "inherit", fontSize: 13, fontWeight: 600, color: C.brassLabel, cursor: "pointer", textDecoration: "underline" }}
             >
-              {mine.status === "approved" ? "Submit a different recording" : "Submit another recording"}
+              {mine.status === "approved" ? "Replace my live recording" : "Submit another recording"}
             </button>
           )}
         </div>
@@ -12403,11 +12403,6 @@ function ArtiumSoundCard({ myProfile, authUser }) {
             </div>
           )}
 
-          {mine?.status === "approved" && (
-            <p style={{ margin: "14px 0 0", padding: "10px 12px", borderRadius: 10, background: "rgba(201,150,46,0.08)", border: `1px solid ${C.inkLine}`, fontSize: 12.5, color: C.ivoryDim, lineHeight: 1.5 }}>
-              Heads up: your current recording stays live while this one is reviewed — but if the new one is approved, it takes your spot in the rotation and replaces the old one.
-            </p>
-          )}
           <div style={{ marginTop: 14 }}>
             <PrimaryBtn disabled={!audio.url || !rights || saving} onClick={submit}>
               {saving ? "Submitting…" : "Submit for review"}
