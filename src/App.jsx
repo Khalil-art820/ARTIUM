@@ -13253,7 +13253,20 @@ function AdminTracks({ card, STATUS_COLOR, authUser }) {
       alert("No row was changed — row-level security blocked the write. The recording is unchanged.");
       return;
     }
-    if (status === "approved") sendTrackMessage(r.user_id, `Your recording "${r.title || "Untitled"}" was approved — it's now live on Artium Radio for every visitor to hear!`);
+    if (status === "approved") {
+      // One live recording per student: approving a new one retires any
+      // older approved track in the same stroke (row and file). No farewell
+      // message for the old — the approval message tells the whole story.
+      const { data: olds } = await supabase.from("student_tracks")
+        .select("id, audio_url").eq("user_id", r.user_id).eq("status", "approved").neq("id", r.id);
+      for (const o of olds || []) {
+        await supabase.from("student_tracks").delete().eq("id", o.id);
+        if (o.audio_url) { try { await supabase.storage.from("student-audio").remove([o.audio_url]); } catch { /* orphan tolerated */ } }
+      }
+      sendTrackMessage(r.user_id, (olds && olds.length)
+        ? `Your new recording "${r.title || "Untitled"}" is now live on Artium Radio — it replaces your previous recording in the rotation.`
+        : `Your recording "${r.title || "Untitled"}" was approved — it's now live on Artium Radio for every visitor to hear!`);
+    }
     if (status === "rejected") sendTrackMessage(r.user_id, rejection_reason);
     load();
   }
