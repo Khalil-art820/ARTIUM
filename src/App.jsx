@@ -12210,7 +12210,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
 /* ---------------------------------------------------------------- */
 /* PROMOTE ME — aclassicaltone promotion offer + approval flow        */
 /* ---------------------------------------------------------------- */
-const TRACK_MAX_SECONDS = 60;
+const TRACK_MAX_SECONDS = 120;
 const TRACK_MAX_BYTES = 12 * 1024 * 1024;
 
 /**
@@ -12327,7 +12327,7 @@ function ArtiumSoundCard({ myProfile, authUser }) {
       </div>
       <p style={{ fontSize: 15, fontWeight: 700, color: C.ivory, margin: "10px 0 4px" }}>Be the sound of Artium</p>
       <p style={{ fontSize: 13, color: C.ivoryDim, margin: 0, lineHeight: 1.5 }}>
-        Up to {TRACK_MAX_SECONDS} seconds of you playing. Approved recordings become the music
+        Up to 2 minutes of you playing. Approved recordings become the music
         visitors hear across the site — so choose the passage you'd want heard first.
         <b style={{ color: C.ivory }}> Free.</b>
       </p>
@@ -12415,7 +12415,7 @@ function ArtiumSoundCard({ myProfile, authUser }) {
           </div>
 
           <p className="text-xs" style={{ color: C.ivoryDim, marginTop: 12, fontFamily: FONT_MONO }}>
-            Audio only · max {TRACK_MAX_SECONDS}s · reviewed before it goes live
+            Audio only · max 2 min · reviewed before it goes live
           </p>
           {err && <p className="text-sm" style={{ color: C.burgundy, marginTop: 10 }}>{err}</p>}
         </div>
