@@ -1147,6 +1147,14 @@ function ArtiumRadio({ open, controllerRef, onPlayingChange, onClose }) {
     setIndex(Math.max(0, dealt.findIndex((t) => t.id === cur.id)));
   }
 
+  const ART = "/gate-hero.jpg"; // fallback artwork when a student has no photo
+  const photoOf = (t) => names[t.user_id]?.photoUrl || ART;
+  const nameOf = (t) => names[t.user_id]?.name || "";
+  const NamePill = ({ text, size = 11 }) => (
+    <span style={{ display: "inline-flex", alignItems: "center", maxWidth: "100%", background: "#FFFFFF", border: "1px solid rgba(176,146,98,0.45)", borderRadius: 999, padding: size > 10.5 ? "3px 10px" : "2px 8px", fontSize: size, fontWeight: 600, color: C.inkText, boxShadow: "0 3px 6px -3px rgba(150,115,55,.25)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+      {text}
+    </span>
+  );
   const fmt = (x) => { const n = Math.max(0, Math.floor(x || 0)); return `${Math.floor(n / 60)}:${String(n % 60).padStart(2, "0")}`; };
   const current = tracks && tracks.length > 0 ? tracks[index] : null;
   const currentName = current ? nameOf(current) : "";
@@ -1159,14 +1167,6 @@ function ArtiumRadio({ open, controllerRef, onPlayingChange, onClose }) {
     ? `${tracks.length} recording${tracks.length === 1 ? "" : "s"}${totalKnown && totalSecs > 0 ? ` · ${Math.floor(totalSecs / 3600) > 0 ? Math.floor(totalSecs / 3600) + "h " : ""}${Math.round((totalSecs % 3600) / 60)}m` : ""}`
     : "";
 
-  const ART = "/gate-hero.jpg"; // fallback artwork when a student has no photo
-  const photoOf = (t) => names[t.user_id]?.photoUrl || ART;
-  const nameOf = (t) => names[t.user_id]?.name || "";
-  const NamePill = ({ text, size = 11 }) => (
-    <span style={{ display: "inline-flex", alignItems: "center", maxWidth: "100%", background: "#FFFFFF", border: "1px solid rgba(176,146,98,0.45)", borderRadius: 999, padding: size > 10.5 ? "3px 10px" : "2px 8px", fontSize: size, fontWeight: 600, color: C.inkText, boxShadow: "0 3px 6px -3px rgba(150,115,55,.25)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-      {text}
-    </span>
-  );
 
   const skipBtn = (onClick, disabled, children, label) => (
     <button onClick={onClick} disabled={disabled} aria-label={label}
