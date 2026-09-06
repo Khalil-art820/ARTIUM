@@ -217,6 +217,39 @@ const FREE_SPOT_REJECTION_REASON =
 /* A month-grid picker for the free Saturday spotlight: only future
    Saturdays are interactive, each painted by its state. Everything else
    is quiet calendar furniture. */
+/* A recording preview player with a scrub thumb that never hides — the
+   native <audio controls> thumb comes and goes at the browser's whim. */
+function MiniAudioPlayer({ src }) {
+  const ref = React.useRef(null);
+  const [playing, setPlaying] = React.useState(false);
+  const [dur, setDur] = React.useState(0);
+  const [t, setT] = React.useState(0);
+  const fmt = (x) => { const n = Math.max(0, Math.floor(x || 0)); return `${Math.floor(n / 60)}:${String(n % 60).padStart(2, "0")}`; };
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 10, background: "rgba(176,146,98,0.07)", border: `1px solid ${C.inkLine}`, borderRadius: 999, padding: "8px 14px", marginTop: 12 }}>
+      <style>{`
+        .artium-audio-range { -webkit-appearance: none; appearance: none; height: 4px; border-radius: 2px; background: rgba(176,146,98,0.35); outline: none; cursor: pointer; }
+        .artium-audio-range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #C9962E; border: 2px solid #FFFFFF; box-shadow: 0 1px 3px rgba(0,0,0,0.25); }
+        .artium-audio-range::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: #C9962E; border: 2px solid #FFFFFF; box-shadow: 0 1px 3px rgba(0,0,0,0.25); }
+      `}</style>
+      <audio ref={ref} src={src} preload="metadata"
+        onLoadedMetadata={(e) => setDur(e.target.duration || 0)}
+        onTimeUpdate={(e) => setT(e.target.currentTime || 0)}
+        onEnded={() => setPlaying(false)} onPause={() => setPlaying(false)} onPlay={() => setPlaying(true)}
+        style={{ display: "none" }} />
+      <button onClick={() => { const el = ref.current; if (!el) return; if (el.paused) el.play().catch(() => {}); else el.pause(); }}
+        aria-label={playing ? "Pause" : "Play"}
+        style={{ width: 30, height: 30, borderRadius: "50%", border: `1px solid ${C.inkLine}`, background: "#FFFFFF", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: C.ivory, flexShrink: 0, padding: 0 }}>
+        {playing ? <Pause size={13} /> : <Play size={13} style={{ marginLeft: 1 }} />}
+      </button>
+      <span style={{ fontSize: 11, fontVariantNumeric: "tabular-nums", color: C.ivoryDim, flexShrink: 0, fontFamily: FONT_BODY }}>{fmt(t)} / {fmt(dur)}</span>
+      <input className="artium-audio-range" type="range" min={0} max={dur || 0} step="0.1" value={Math.min(t, dur || 0)}
+        onChange={(e) => { const el = ref.current; const v = Number(e.target.value); if (el) { el.currentTime = v; } setT(v); }}
+        style={{ flex: 1, minWidth: 0 }} aria-label="Seek" />
+    </div>
+  );
+}
+
 function SpotlightCalendar({ slotState, selected, onSelect }) {
   const [monthOffset, setMonthOffset] = React.useState(0);
   const today = new Date();
@@ -12423,7 +12456,7 @@ function ArtiumSoundCard({ myProfile, authUser }) {
           <p style={{ fontSize: 13, color: C.ivory, margin: "10px 0 0", fontWeight: 600 }}>
             {mine.title}{mine.composer ? ` · ${mine.composer}` : ""}
           </p>
-          <audio controls preload="none" src={publicUrl(mine.audio_url)} style={{ width: "100%", marginTop: 8 }} />
+          <MiniAudioPlayer src={publicUrl(mine.audio_url)} />
           {!showForm && (
             <button
               onClick={() => setReplacing(true)}
@@ -13228,7 +13261,7 @@ function AdminTrackList({ list, editable, card, names, busy, decide, removeTrack
               )}
             </div>
 
-            <audio controls preload="none" src={publicUrl(r.audio_url)} style={{ width: "100%", marginTop: 12 }} />
+            <MiniAudioPlayer src={publicUrl(r.audio_url)} />
 
             <p style={{ margin: "10px 0 0", fontSize: 11, fontFamily: FONT_MONO, color: r.rights_confirmed ? "#1A9E6E" : C.burgundy }}>
               {r.rights_confirmed
