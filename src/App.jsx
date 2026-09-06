@@ -1091,6 +1091,29 @@ function ArtiumRadio({ open, controllerRef, onPlayingChange, onClose }) {
 
   const [elapsed, setElapsed] = useState(0);
   const [dur, setDur] = useState(0);
+  // Premium scrubbing: timeupdate only ticks a few times a second, which
+  // makes a bound slider hop. A per-frame loop writes the position straight
+  // to the DOM (the input is uncontrolled), so the pearl glides at 60fps
+  // without re-rendering the panel every frame.
+  const seekRef = useRef(null);
+  const elapsedLabelRef = useRef(null);
+  useEffect(() => {
+    if (!playing) return;
+    let raf;
+    const tick = () => {
+      const el = audioRef.current;
+      if (el) {
+        if (seekRef.current) seekRef.current.value = String(el.currentTime || 0);
+        if (elapsedLabelRef.current) {
+          const n = Math.max(0, Math.floor(el.currentTime || 0));
+          elapsedLabelRef.current.textContent = `${Math.floor(n / 60)}:${String(n % 60).padStart(2, "0")}`;
+        }
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [playing]);
 
   function publicUrl(path) {
     return supabase.storage.from("student-audio").getPublicUrl(path).data.publicUrl;
@@ -1272,9 +1295,9 @@ function ArtiumRadio({ open, controllerRef, onPlayingChange, onClose }) {
                 .artium-audio-range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #C9962E; border: 2px solid #FFFFFF; box-shadow: 0 1px 3px rgba(0,0,0,0.25); }
                 .artium-audio-range::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: #C9962E; border: 2px solid #FFFFFF; box-shadow: 0 1px 3px rgba(0,0,0,0.25); }
               `}</style>
-              <span style={{ fontSize: 10.5, color: C.ivoryDim, fontFamily: FONT_BODY, fontVariantNumeric: "tabular-nums", flexShrink: 0 }}>{fmt(elapsed)}</span>
-              <input className="artium-audio-range" type="range" min={0} max={dur || 0} step="0.1" value={Math.min(elapsed, dur || 0)}
-                onChange={(e) => { const el = audioRef.current; const v = Number(e.target.value); if (el) el.currentTime = v; setElapsed(v); }}
+              <span ref={elapsedLabelRef} style={{ fontSize: 10.5, color: C.ivoryDim, fontFamily: FONT_BODY, fontVariantNumeric: "tabular-nums", flexShrink: 0, minWidth: 30 }}>{fmt(elapsed)}</span>
+              <input ref={seekRef} className="artium-audio-range" type="range" min={0} max={dur || 0} step="0.05" defaultValue={0}
+                onInput={(e) => { const el = audioRef.current; const v = Number(e.target.value); if (el) el.currentTime = v; setElapsed(v); }}
                 style={{ flex: 1, minWidth: 0 }} aria-label="Seek" />
               <span style={{ fontSize: 10.5, color: C.ivoryDim, fontFamily: FONT_BODY, fontVariantNumeric: "tabular-nums", flexShrink: 0 }}>{fmt(dur)}</span>
             </div>
