@@ -1095,25 +1095,38 @@ function ArtiumRadio({ open, controllerRef, onPlayingChange, onClose }) {
   // makes a bound slider hop. A per-frame loop writes the position straight
   // to the DOM (the input is uncontrolled), so the pearl glides at 60fps
   // without re-rendering the panel every frame.
-  const seekRef = useRef(null);
+  const trackRef = useRef(null);
+  const fillRef = useRef(null);
+  const thumbRef = useRef(null);
   const elapsedLabelRef = useRef(null);
+  const paintSeek = () => {
+    const el = audioRef.current;
+    if (!el) return;
+    const d = el.duration || 0;
+    const r = d > 0 ? Math.min(1, (el.currentTime || 0) / d) : 0;
+    if (fillRef.current) fillRef.current.style.transform = `scaleX(${r})`;
+    if (thumbRef.current) thumbRef.current.style.left = `${r * 100}%`;
+    if (elapsedLabelRef.current) {
+      const n = Math.max(0, Math.floor(el.currentTime || 0));
+      elapsedLabelRef.current.textContent = `${Math.floor(n / 60)}:${String(n % 60).padStart(2, "0")}`;
+    }
+  };
   useEffect(() => {
     if (!playing) return;
     let raf;
-    const tick = () => {
-      const el = audioRef.current;
-      if (el) {
-        if (seekRef.current) seekRef.current.value = String(el.currentTime || 0);
-        if (elapsedLabelRef.current) {
-          const n = Math.max(0, Math.floor(el.currentTime || 0));
-          elapsedLabelRef.current.textContent = `${Math.floor(n / 60)}:${String(n % 60).padStart(2, "0")}`;
-        }
-      }
-      raf = requestAnimationFrame(tick);
-    };
+    const tick = () => { paintSeek(); raf = requestAnimationFrame(tick); };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playing]);
+  const seekFromPointer = (clientX) => {
+    const track = trackRef.current; const el = audioRef.current;
+    if (!track || !el || !(el.duration > 0)) return;
+    const rect = track.getBoundingClientRect();
+    const r = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+    el.currentTime = r * el.duration;
+    paintSeek();
+  };
 
   function publicUrl(path) {
     return supabase.storage.from("student-audio").getPublicUrl(path).data.publicUrl;
@@ -1290,15 +1303,19 @@ function ArtiumRadio({ open, controllerRef, onPlayingChange, onClose }) {
               </div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12 }}>
-              <style>{`
-                .artium-audio-range { -webkit-appearance: none; appearance: none; height: 4px; border-radius: 2px; background: rgba(176,146,98,0.35); outline: none; cursor: pointer; }
-                .artium-audio-range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #C9962E; border: 2px solid #FFFFFF; box-shadow: 0 1px 3px rgba(0,0,0,0.25); }
-                .artium-audio-range::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: #C9962E; border: 2px solid #FFFFFF; box-shadow: 0 1px 3px rgba(0,0,0,0.25); }
-              `}</style>
               <span ref={elapsedLabelRef} style={{ fontSize: 10.5, color: C.ivoryDim, fontFamily: FONT_BODY, fontVariantNumeric: "tabular-nums", flexShrink: 0, minWidth: 30 }}>{fmt(elapsed)}</span>
-              <input ref={seekRef} className="artium-audio-range" type="range" min={0} max={dur || 0} step="0.05" defaultValue={0}
-                onInput={(e) => { const el = audioRef.current; const v = Number(e.target.value); if (el) el.currentTime = v; setElapsed(v); }}
-                style={{ flex: 1, minWidth: 0 }} aria-label="Seek" />
+              <div
+                ref={trackRef}
+                role="slider" aria-label="Seek" aria-valuemin={0} aria-valuemax={Math.round(dur || 0)} aria-valuenow={Math.round(elapsed)}
+                onPointerDown={(e) => { e.currentTarget.setPointerCapture?.(e.pointerId); seekFromPointer(e.clientX); }}
+                onPointerMove={(e) => { if (e.buttons & 1) seekFromPointer(e.clientX); }}
+                style={{ flex: 1, minWidth: 0, height: 18, display: "flex", alignItems: "center", cursor: "pointer", touchAction: "none", position: "relative" }}
+              >
+                <div style={{ width: "100%", height: 4, borderRadius: 2, background: "rgba(176,146,98,0.28)", overflow: "hidden" }}>
+                  <div ref={fillRef} style={{ width: "100%", height: "100%", borderRadius: 2, background: C.brass, transform: "scaleX(0)", transformOrigin: "left center", willChange: "transform" }} />
+                </div>
+                <div ref={thumbRef} style={{ position: "absolute", left: "0%", top: "50%", transform: "translate(-50%, -50%)", width: 14, height: 14, borderRadius: "50%", background: C.brass, border: "2px solid #FFFFFF", boxShadow: "0 1px 3px rgba(0,0,0,0.25)", pointerEvents: "none", willChange: "left" }} />
+              </div>
               <span style={{ fontSize: 10.5, color: C.ivoryDim, fontFamily: FONT_BODY, fontVariantNumeric: "tabular-nums", flexShrink: 0 }}>{fmt(dur)}</span>
             </div>
           </div>
