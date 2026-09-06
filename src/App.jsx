@@ -1231,12 +1231,8 @@ function ArtiumRadio({ open, controllerRef, onPlayingChange, onClose }) {
         </span>
         <p style={{ flex: 1, minWidth: 0, margin: 0, fontSize: 17, fontWeight: 700, color: C.ivory, fontFamily: FONT_BODY }}>Artium Radio</p>
         <button onClick={() => setMinimized(true)} title="Minimize — music keeps playing"
-          style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 22, height: 22, background: "none", border: "none", cursor: "pointer", color: C.brass, fontSize: 16, fontWeight: 700, lineHeight: 1, padding: 0 }}>
+          style={{ display: "flex", alignItems: "center", justifyContent: "center", background: "#FFFFFF", border: "1px solid rgba(176,146,98,0.45)", borderRadius: 999, padding: "3px 14px", cursor: "pointer", color: C.brass, fontSize: 16, fontWeight: 700, lineHeight: 1, boxShadow: "0 3px 6px -3px rgba(150,115,55,.25)" }}>
           –
-        </button>
-        <button onClick={onClose} title="Close"
-          style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 22, height: 22, background: "none", border: "none", cursor: "pointer", color: C.brass, padding: 0 }}>
-          <X size={15} />
         </button>
       </div>
 
@@ -1255,7 +1251,7 @@ function ArtiumRadio({ open, controllerRef, onPlayingChange, onClose }) {
                 <img src={photoOf(current)} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
               </div>
               <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
-                <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: C.ivory, fontFamily: FONT_BODY, lineHeight: 1.25, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
+                <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: C.ivory, fontFamily: FONT_BODY, lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
                   {titleOf(current)}
                 </p>
                 {currentName && (
@@ -1271,10 +1267,15 @@ function ArtiumRadio({ open, controllerRef, onPlayingChange, onClose }) {
               </div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12 }}>
+              <style>{`
+                .artium-audio-range { -webkit-appearance: none; appearance: none; height: 4px; border-radius: 2px; background: rgba(176,146,98,0.35); outline: none; cursor: pointer; }
+                .artium-audio-range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #C9962E; border: 2px solid #FFFFFF; box-shadow: 0 1px 3px rgba(0,0,0,0.25); }
+                .artium-audio-range::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: #C9962E; border: 2px solid #FFFFFF; box-shadow: 0 1px 3px rgba(0,0,0,0.25); }
+              `}</style>
               <span style={{ fontSize: 10.5, color: C.ivoryDim, fontFamily: FONT_BODY, fontVariantNumeric: "tabular-nums", flexShrink: 0 }}>{fmt(elapsed)}</span>
-              <div style={{ flex: 1, height: 4, borderRadius: 2, background: "rgba(176,146,98,0.22)", overflow: "hidden" }}>
-                <div style={{ width: dur > 0 ? `${Math.min(100, (elapsed / dur) * 100)}%` : "0%", height: "100%", borderRadius: 2, background: C.brass, transition: "width 0.3s linear" }} />
-              </div>
+              <input className="artium-audio-range" type="range" min={0} max={dur || 0} step="0.1" value={Math.min(elapsed, dur || 0)}
+                onChange={(e) => { const el = audioRef.current; const v = Number(e.target.value); if (el) el.currentTime = v; setElapsed(v); }}
+                style={{ flex: 1, minWidth: 0 }} aria-label="Seek" />
               <span style={{ fontSize: 10.5, color: C.ivoryDim, fontFamily: FONT_BODY, fontVariantNumeric: "tabular-nums", flexShrink: 0 }}>{fmt(dur)}</span>
             </div>
           </div>
