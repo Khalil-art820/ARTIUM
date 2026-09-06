@@ -1230,7 +1230,7 @@ function ArtiumRadio({ open, controllerRef, onPlayingChange, onClose }) {
           <Music2 size={15} strokeWidth={2} />
         </span>
         <p style={{ flex: 1, minWidth: 0, margin: 0, fontSize: 17, fontWeight: 700, color: C.ivory, fontFamily: FONT_BODY }}>Artium Radio</p>
-        <button onClick={() => setMinimized(true)} title="Minimize — music keeps playing"
+        <button onClick={onClose} title="Hide the playlist — music keeps playing"
           style={{ display: "flex", alignItems: "center", justifyContent: "center", background: "#FFFFFF", border: "1px solid rgba(176,146,98,0.45)", borderRadius: 999, padding: "3px 14px", cursor: "pointer", color: C.brass, fontSize: 16, fontWeight: 700, lineHeight: 1, boxShadow: "0 3px 6px -3px rgba(150,115,55,.25)" }}>
           –
         </button>
@@ -2566,7 +2566,12 @@ export default function App() {
   const [musicPlaying, setMusicPlaying] = useState(false);
   const radioRef = useRef(null);
   function toggleMusic() {
-    if (!musicOn) setMusicOn(true);
+    if (!musicOn) {
+      // Bringing the panel back: if music is already playing (panel was
+      // hidden with the "–"), just show it — don't pause the song.
+      setMusicOn(true);
+      if (musicPlaying) return;
+    }
     try {
       radioRef.current?.togglePlay();
     } catch {
