@@ -214,6 +214,87 @@ const FREE_SPOT_REJECTION_REASON =
 // Saturday is skipped — once the day has arrived the 12:30 slot is either
 // already spoken for or too close to book — so the picker only ever offers
 // Saturdays that are genuinely still ahead.
+/* A month-grid picker for the free Saturday spotlight: only future
+   Saturdays are interactive, each painted by its state. Everything else
+   is quiet calendar furniture. */
+function SpotlightCalendar({ slotState, selected, onSelect }) {
+  const [monthOffset, setMonthOffset] = React.useState(0);
+  const today = new Date();
+  const first = new Date(today.getFullYear(), today.getMonth() + monthOffset, 1);
+  const monthLabel = first.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+  const daysInMonth = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
+  const lead = (first.getDay() + 6) % 7; // Monday-first grid
+  const cells = [];
+  for (let i = 0; i < lead; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+  const iso = (d) => `${first.getFullYear()}-${String(first.getMonth() + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+  const STATE_STYLE = {
+    open:    { bg: "rgba(201,150,46,0.10)", color: "#232A3B", border: "1px solid rgba(201,150,46,0.45)", cursor: "pointer" },
+    mineWon: { bg: "rgba(26,158,110,0.16)", color: "#1A9E6E", border: "1px solid rgba(26,158,110,0.4)", cursor: "not-allowed" },
+    minePending: { bg: "rgba(201,150,46,0.16)", color: "#B3812A", border: "1px solid rgba(201,150,46,0.5)", cursor: "not-allowed" },
+    lost:    { bg: "rgba(179,38,30,0.07)", color: "rgba(179,38,30,0.55)", border: "1px solid rgba(179,38,30,0.2)", cursor: "not-allowed" },
+    taken:   { bg: "rgba(176,146,98,0.06)", color: "#9A9A9A", border: "1px solid rgba(176,146,98,0.25)", cursor: "not-allowed" },
+  };
+  const TITLES = {
+    open: "Open — tap to pick this Saturday",
+    mineWon: "Yours — you're booked for this Saturday",
+    minePending: "Your application is awaiting approval",
+    lost: "Booked by another video",
+    taken: "Already taken",
+  };
+  return (
+    <div style={{ marginTop: 8, border: "1px solid rgba(176,146,98,0.30)", borderRadius: 14, background: "#FFFFFF", padding: "12px 12px 10px" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+        <button onClick={() => setMonthOffset((m) => Math.max(0, m - 1))} disabled={monthOffset === 0}
+          style={{ width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: "none", cursor: monthOffset === 0 ? "default" : "pointer", color: monthOffset === 0 ? "#D8D2C6" : "#C9962E", padding: 0 }}>
+          <ChevronLeft size={16} />
+        </button>
+        <span style={{ fontSize: 13.5, fontWeight: 700, color: "#232A3B" }}>{monthLabel}</span>
+        <button onClick={() => setMonthOffset((m) => Math.min(2, m + 1))} disabled={monthOffset === 2}
+          style={{ width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: "none", cursor: monthOffset === 2 ? "default" : "pointer", color: monthOffset === 2 ? "#D8D2C6" : "#C9962E", padding: 0 }}>
+          <ChevronRight size={16} />
+        </button>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
+        {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => (
+          <span key={i} style={{ textAlign: "center", fontSize: 10, fontWeight: 700, color: i === 5 ? "#C9962E" : "#9A9A9A", letterSpacing: "0.04em", paddingBottom: 2 }}>{d}</span>
+        ))}
+        {cells.map((d, i) => {
+          if (d === null) return <span key={`e${i}`} />;
+          const dIso = iso(d);
+          const state = slotState(dIso); // null for non-selectable days
+          const isSel = selected === dIso;
+          const st = state ? STATE_STYLE[state] : null;
+          return (
+            <button key={dIso} disabled={!state || state !== "open"}
+              onClick={() => state === "open" && onSelect(dIso)}
+              title={state ? TITLES[state] : undefined}
+              style={{
+                aspectRatio: "1", minWidth: 0, display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 12, fontWeight: st ? 700 : 400, fontFamily: "inherit",
+                borderRadius: 10, padding: 0,
+                background: isSel ? "#C9962E" : st ? st.bg : "none",
+                color: isSel ? "#FFFFFF" : st ? st.color : "#B9B4A8",
+                border: isSel ? "1px solid #C9962E" : st ? st.border : "1px solid transparent",
+                cursor: st ? st.cursor : "default",
+              }}>
+              {d}
+            </button>
+          );
+        })}
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 12px", marginTop: 10 }}>
+        {[["open", "Open"], ["minePending", "Pending"], ["mineWon", "Yours"], ["taken", "Taken"], ["lost", "Not selected"]].map(([k, t]) => (
+          <span key={k} style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10.5, color: "#6A7080" }}>
+            <span style={{ width: 10, height: 10, borderRadius: 3, background: STATE_STYLE[k].bg, border: STATE_STYLE[k].border, display: "inline-block" }} />
+            {t}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function nextSaturdays(count = 6) {
   const out = [];
   const d = new Date();
@@ -12465,7 +12546,7 @@ function PromoteMe({ myProfile, authUser, focus }) {
   const [freeSubmitting, setFreeSubmitting] = useState(false);
   const [mineFreeAll, setMineFreeAll] = useState([]); // every free submission, newest first
   const [closedSlots, setClosedSlots] = useState(new Set());
-  const saturdays = React.useMemo(() => nextSaturdays(6), []);
+  const saturdays = React.useMemo(() => nextSaturdays(14), []);
   const freeProvider = detectPromoProvider(freeLink, PROMO_PROVIDERS_FREE);
   const freeLinkValid = !!freeProvider;
 
@@ -12700,33 +12781,19 @@ function PromoteMe({ myProfile, authUser, focus }) {
               )}
 
               <div style={{ marginTop: 16 }}>{label("Pick a Saturday")}</div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
-                {saturdays.map(({ iso, label: slotLabel }) => {
-                  const mine = myFreeSlots.has(iso);
-                  const lost = !mine && myRejectedSlots.has(iso);
-                  const taken = !mine && !lost && closedSlots.has(iso);
-                  const selected = freeSlot === iso;
-                  return (
-                    <button
-                      key={iso}
-                      disabled={taken || mine || lost}
-                      onClick={() => setFreeSlot(iso)}
-                      title={mine ? (myWonSlots.has(iso) ? "You're booked for this Saturday" : "Your application for this Saturday is awaiting approval") : lost ? "This spot went to another video — pick a different Saturday" : taken ? "This Saturday is already taken" : undefined}
-                      style={{
-                        padding: "8px 14px", borderRadius: 20, fontSize: 13, fontWeight: 600,
-                        cursor: taken || mine || lost ? "not-allowed" : "pointer",
-                        background: taken || mine || lost ? "rgba(176,146,98,0.03)" : "rgba(176,146,98,0.05)",
-                        color: taken || mine || lost ? C.ivoryDim : (selected ? C.ivory : C.ivoryDim),
-                        border: selected && !taken ? `2px solid ${C.brass}` : `1px solid ${C.inkLine}`,
-                        opacity: taken || mine || lost ? 0.55 : 1,
-                        textDecoration: taken || lost ? "line-through" : "none",
-                      }}
-                    >
-                      {slotLabel}{mine ? (myWonSlots.has(iso) ? " · yours" : " · pending") : lost ? " · booked by another" : taken ? " · taken" : ""}
-                    </button>
-                  );
-                })}
-              </div>
+              <SpotlightCalendar
+                selected={freeSlot}
+                onSelect={setFreeSlot}
+                slotState={(iso) => {
+                  // Only Saturdays inside the bookable horizon get a state.
+                  if (!saturdays.some((s) => s.iso === iso)) return null;
+                  if (myWonSlots.has(iso)) return "mineWon";
+                  if (myFreeSlots.has(iso)) return "minePending";
+                  if (myRejectedSlots.has(iso)) return "lost";
+                  if (closedSlots.has(iso)) return "taken";
+                  return "open";
+                }}
+              />
 
               {freeError && <p style={{ fontSize: 13, color: C.burgundy, margin: "12px 0 0" }}>{freeError}</p>}
               <button onClick={submitFree} disabled={freeSubmitting}
@@ -12744,7 +12811,7 @@ function PromoteMe({ myProfile, authUser, focus }) {
               <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "10px 0 4px" }}>
                 <span style={{ width: 9, height: 9, borderRadius: "50%", background: rowApproved ? "#1A9E6E" : C.brass, display: "inline-block" }} />
                 <span style={{ fontSize: 15, fontWeight: 700, color: rowApproved ? "#1A9E6E" : C.brassLabel }}>
-                  {rowApproved ? "Approved" : "Awaiting approval"}
+                  {rowApproved ? `Approved — ${freeSlotLabel(row.slot_date)}` : "Awaiting approval"}
                 </span>
               </div>
               <p style={{ fontSize: 13, color: C.ivoryDim, margin: "0 0 4px", lineHeight: 1.5 }}>
