@@ -5322,7 +5322,9 @@ export default function App() {
           // Nothing is lit on the landing page but Home, and nothing at all
           // while a student profile is open over the app — that is a page you
           // reached from a tab, not a tab.
-          active={selectedStudentId ? "" : appTab}
+          // A student's profile keeps its origin tab lit — Network when
+          // reached from the roster, Messages when reached from a chat.
+          active={selectedStudentId ? (profileBack === "chat" ? "messages" : "map") : appTab}
           onTab={goToTab}
         />
       )}
