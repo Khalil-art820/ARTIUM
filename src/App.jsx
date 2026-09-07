@@ -6947,18 +6947,29 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
               Editing keeps the old behaviour: Cancel sits beside it there, so
               leaving is already spoken for and the first step is where you
               came in. */}
+          {editing ? (
+            /* Edit-profile mode wears the app's own wordmark, arrowless —
+               the flow's footer buttons do all the walking. */
+            <span className="artium-net-word" aria-label="ARTIUM">
+              <svg viewBox="0 0 15 15" aria-hidden="true">
+                <path d="M7.5 0.9 L1.4 14.4 M7.5 0.9 L13.6 14.4" stroke="currentColor" strokeWidth="2.85" fill="none" />
+              </svg>
+              <span aria-hidden="true">RTIUM</span>
+            </span>
+          ) : (<>
           <button
-            onClick={step === 0 ? (editing ? onCancel : undefined) : () => setStep(step - 1)}
-            disabled={step === 0 && !editing}
+            onClick={step === 0 ? undefined : () => setStep(step - 1)}
+            disabled={step === 0}
             className="artium-aw-round"
             aria-label={step === 0 ? "You're on the first step" : "Back a step"}
-            style={step === 0 && !editing ? { opacity: 0.35, cursor: "default" } : undefined}
+            style={step === 0 ? { opacity: 0.35, cursor: "default" } : undefined}
           >
             <ChevronLeft size={17} strokeWidth={2} />
           </button>
           {/* The gate's lockup, so the flow reads as the same product the
               visitor just came through rather than a form it handed them to. */}
           <GateLogo word={20} />
+          </>)}
           {/* A way out, now that Back no longer is one.
               Quiet on purpose: it sits opposite the step ring rather than
               beside the wordmark, so it reads as an exit rather than an
