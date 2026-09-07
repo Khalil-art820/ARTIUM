@@ -11415,9 +11415,13 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
           was this screen's only chrome, so there is nothing left to
           duplicate now that this header covers the same ground. */}
       <header className="artium-net-bar">
-        <button className="artium-net-puck" onClick={onBack} aria-label="Back">
-          <ChevronLeft size={17} strokeWidth={2} />
-        </button>
+        {/* The profile tab (where editing lives) goes arrowless, matching
+            the student side — the bottom bar does the walking there. */}
+        {appTab !== "profile" && (
+          <button className="artium-net-puck" onClick={onBack} aria-label="Back">
+            <ChevronLeft size={17} strokeWidth={2} />
+          </button>
+        )}
         <span className="artium-net-word" aria-label="ARTIUM">
           <svg viewBox="0 0 15 15" aria-hidden="true">
             <path d="M7.5 0.9 L1.4 14.4 M7.5 0.9 L13.6 14.4" stroke="currentColor" strokeWidth="2.85" fill="none" />
