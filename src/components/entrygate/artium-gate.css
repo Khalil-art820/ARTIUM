@@ -88,10 +88,9 @@
   display:flex;align-items:center;justify-content:center;
   cursor:pointer;color:var(--ink);
 }
-.agate .puck.is-on{
-  background:radial-gradient(circle at 35% 28%, #F4DBA0 0%, #DBAB4C 55%, #C9962E 100%);
-  color:#3A2E10;
-}
+/* Playing no longer recolors the puck (the gold flip read as a different
+   button) — the pause glyph alone says the music is on. */
+.agate .puck.is-on{}
 
 /* ================= HEADER ================= */
 /* The reference keeps the header on a clean white band, above the photo. */
