@@ -4996,9 +4996,11 @@ export default function App() {
           // back to where it was opened from).
           const netHeaderWith = (onBackFn) => (
             <header className="artium-net-bar">
-              <button className="artium-net-puck" onClick={onBackFn} aria-label="Back">
-                <ChevronLeft size={17} strokeWidth={2} />
-              </button>
+              {onBackFn && (
+                <button className="artium-net-puck" onClick={onBackFn} aria-label="Back">
+                  <ChevronLeft size={17} strokeWidth={2} />
+                </button>
+              )}
               <span className="artium-net-word" aria-label="ARTIUM">
                 <svg viewBox="0 0 15 15" aria-hidden="true">
                   <path d="M7.5 0.9 L1.4 14.4 M7.5 0.9 L13.6 14.4" stroke="currentColor" strokeWidth="2.85" fill="none" />
@@ -5214,7 +5216,7 @@ export default function App() {
           )}
           {appTab === "messages" && !selectedStudentId && (
             <>
-              {netHeader}
+              {netHeaderWith(null)}
               <Messages
                 students={students} conversations={conversations} activeChatId={activeChatId}
                 setActiveChatId={setActiveChatId} onSend={sendMessage}
@@ -5226,7 +5228,7 @@ export default function App() {
           )}
           {appTab === "profile" && !selectedStudentId && myProfile && (
             <>
-              {netHeader}
+              {netHeaderWith(null)}
               <MyProfile profile={myProfile} onEdit={editProfile} onLogout={handleLogout}
                 onUpdateCoverVideo={async (coverVideoUrl) => {
                   await supabase.from("profiles").update({ cover_video_url: coverVideoUrl || null }).eq("id", myProfile.id);
@@ -5248,7 +5250,7 @@ export default function App() {
           )}
           {appTab === "promote" && !selectedStudentId && myProfile && (
             <>
-              {netHeader}
+              {netHeaderWith(null)}
               <PromoteMe myProfile={myProfile} authUser={authUser} focus={promoteFocus} />
             </>
           )}
@@ -5260,13 +5262,13 @@ export default function App() {
           )}
           {appTab === "lessons" && !selectedStudentId && myProfile && (
             <>
-              {netHeader}
+              {netHeaderWith(null)}
               <TeacherLessonRoom teacherId={myProfile.id} roomView={teacherRoomView} setRoomView={setTeacherRoomView} />
             </>
           )}
           {appTab === "concerts" && !selectedStudentId && myProfile && isPianistUser && (
             <>
-              {netHeader}
+              {netHeaderWith(null)}
               {activeConcertInquiryId ? (
                 <ConcertConversation
                   inquiryId={activeConcertInquiryId} role="pianist" myId={myProfile.id} myName={myProfile.name}
