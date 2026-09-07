@@ -5256,7 +5256,7 @@ export default function App() {
           )}
           {appTab === "admin" && !selectedStudentId && isAdmin && (
             <>
-              {netHeader}
+              {netHeaderWith(null)}
               <AdminScreen authUser={authUser} onlineCount={onlineCount} />
             </>
           )}
