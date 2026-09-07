@@ -1077,7 +1077,8 @@ function ArtiumRadio({ open, controllerRef, onPlayingChange, onClose }) {
   useEffect(() => {
     if (!tracks) return;
     tracks.forEach((t) => {
-      if (durations[t.id] !== undefined) return;
+      // Rows uploaded since duration_seconds exists need no probe at all.
+      if (t.duration_seconds != null || durations[t.id] !== undefined) return;
       try {
         const probe = new Audio();
         probe.preload = "metadata";
@@ -1197,8 +1198,9 @@ function ArtiumRadio({ open, controllerRef, onPlayingChange, onClose }) {
   // Title carries the composer (owner's call); the student's name is the
   // credit line beneath.
   const titleOf = (t) => `${t.title || "Untitled"}${t.composer ? " · " + t.composer : ""}`;
-  const totalKnown = tracks && tracks.every((t) => durations[t.id] !== undefined);
-  const totalSecs = totalKnown ? tracks.reduce((sum, t) => sum + (durations[t.id] || 0), 0) : 0;
+  const durOf = (t) => (t.duration_seconds != null ? t.duration_seconds : durations[t.id]);
+  const totalKnown = tracks && tracks.every((t) => durOf(t) !== undefined);
+  const totalSecs = totalKnown ? tracks.reduce((sum, t) => sum + (durOf(t) || 0), 0) : 0;
   const totalLabel = tracks
     ? `${tracks.length} recording${tracks.length === 1 ? "" : "s"}${totalKnown && totalSecs > 0 ? ` · ${Math.floor(totalSecs / 3600) > 0 ? Math.floor(totalSecs / 3600) + "h " : ""}${Math.round((totalSecs % 3600) / 60)}m` : ""}`
     : "";
@@ -1345,7 +1347,7 @@ function ArtiumRadio({ open, controllerRef, onPlayingChange, onClose }) {
                     {nameOf(t) && <span style={{ display: "block", marginTop: 2, fontFamily: FONT_BODY }}><NamePill text={nameOf(t)} size={10} /></span>}
                   </span>
                   <span style={{ flexShrink: 0, fontSize: 11, color: C.ivoryDim, fontFamily: FONT_BODY, fontVariantNumeric: "tabular-nums" }}>
-                    {durations[t.id] ? fmt(durations[t.id]) : ""}
+                    {durOf(t) ? fmt(durOf(t)) : ""}
                   </span>
                 </button>
               );
@@ -12516,7 +12518,7 @@ function ArtiumSoundCard({ myProfile, authUser }) {
     const { error } = await supabase.storage.from("student-audio").upload(path, file, { upsert: false, contentType: file.type || undefined });
     setUploading(false);
     if (error) { setErr("Upload failed: " + error.message); return; }
-    setAudio({ url: path, name: file.name });
+    setAudio({ url: path, name: file.name, seconds: Number.isFinite(seconds) ? Math.round(seconds) : null });
   }
 
   async function submit() {
@@ -12531,6 +12533,9 @@ function ArtiumSoundCard({ myProfile, authUser }) {
       composer: composer.trim(),
       audio_url: audio.url,
       audio_name: audio.name,
+      // Measured at upload (for the 2-minute check) — stored so the radio
+      // never has to probe the file for its length again.
+      duration_seconds: audio.seconds ?? null,
       rights_confirmed: true,
       status: "pending",
     });
