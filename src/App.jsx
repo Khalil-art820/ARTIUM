@@ -11983,7 +11983,9 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
               ? [{ k: "lesson", label: "Lessons", Icon: BookOpen }]
               : []),
           ]}
-          active={selectedId ? "" : appTab}
+          // A teacher's open profile keeps the tab it was reached from lit,
+          // same as the student side's rule.
+          active={selectedId ? "map" : appTab}
           onTab={(k) => {
             if (k === "home") { onBack(); return; }
             setSelectedId(null);
