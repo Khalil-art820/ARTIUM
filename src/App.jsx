@@ -9000,6 +9000,25 @@ async function fetchAgendaNotes(teacherId, learnerId) {
   return grouped;
 }
 
+// Fallback shown until a teacher's own row loads (or if they never touched
+// "My Rules" and no row exists yet) — matches the defaults the
+// teacher_rules migration gives every column.
+const DEFAULT_TEACHER_RULES = { cancel_lock_hours: 24, modify_lock_hours: 48, late_fee_pct: 50 };
+
+// Shared by LessonRoom (learner side, read-only display + cancel-fee math)
+// and TeacherLessonRoom (teacher side, the "My Rules" form itself). RLS lets
+// any authenticated user select any teacher's row — a learner has to be able
+// to see the rules before they book, same reasoning as this table's open
+// SELECT policy.
+async function fetchTeacherRules(teacherId) {
+  if (!teacherId) return DEFAULT_TEACHER_RULES;
+  const { data, error } = await supabase.from("teacher_rules")
+    .select("cancel_lock_hours, modify_lock_hours, late_fee_pct")
+    .eq("profile_id", teacherId).maybeSingle();
+  if (error || !data) return DEFAULT_TEACHER_RULES;
+  return data;
+}
+
 function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGoToAdmin, networkFeeds, puck, hireCount = 0, hireIds = [], onGoToConcerts, onGoToComposers, onGoToNews, onGoToPromote }) {
   const [open, setOpen] = React.useState(false);
   const [viewingLearner, setViewingLearner] = React.useState(null);
@@ -11290,7 +11309,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
     async function load() {
       try {
         const { data } = await supabase.from("payments")
-          .select("lesson_session_id, status, gross_amount_cents, commission_cents, teacher_amount_cents")
+          .select("lesson_session_id, status, gross_amount_cents, commission_cents, teacher_amount_cents, refunded_cents")
           .eq("kind", "lesson").not("lesson_session_id", "is", null);
         if (!live || !data) return;
         const map = {};
@@ -11759,6 +11778,9 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
                 const spentCents = sessions.reduce((sum, s) => {
                   const pay = paymentsBySession[s.id];
                   if (pay?.status === "paid") return sum + pay.gross_amount_cents;
+                  // A cancelled session's refund is money that came back —
+                  // net it out of what actually stayed spent this month.
+                  if (pay?.status === "partially_refunded") return sum + pay.gross_amount_cents - pay.refunded_cents;
                   if (!paymentsBySession[s.id] && s.status === "confirmed" && s.paid) return sum + s.teacher.price * 100;
                   return sum;
                 }, 0);
@@ -11789,7 +11811,10 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
                           {sessions.map((s, i) => {
                             const dt = new Date(s.date + "T" + s.time);
                             const pay = paymentsBySession[s.id];
-                            const amount = pay?.status === "paid"
+                            const isRefund = pay?.status === "refunded" || pay?.status === "partially_refunded";
+                            const amount = isRefund
+                              ? `−€${euroAmount(pay.refunded_cents)} refunded`
+                              : pay?.status === "paid"
                               ? `€${euroAmount(pay.gross_amount_cents)}`
                               : s.status === "confirmed" && s.paid ? `€${s.teacher.price}` : "—";
                             return (
@@ -11807,7 +11832,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
                                 <td style={{ padding: "9px 12px" }}>
                                   <span style={{ fontSize: 11, fontWeight: 600, color: STATUS_COLOR[s.status] || C.ivoryDim }}>{STATUS_LABEL[s.status] || s.status}</span>
                                 </td>
-                                <td style={{ padding: "9px 12px", fontWeight: 700, color: amount === "—" ? C.ivoryDim : "#1A9E6E" }}>{amount}</td>
+                                <td style={{ padding: "9px 12px", fontWeight: 700, color: amount === "—" ? C.ivoryDim : isRefund ? "#c0392b" : "#1A9E6E" }}>{amount}</td>
                               </tr>
                             );
                           })}
@@ -12179,6 +12204,19 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
     return () => { live = false; clearInterval(id); };
   }, [teacher?.id, authUser?.id]);
 
+  // The teacher's own cancel/modify-lock/fee settings — read-only here, used
+  // to show "Cancel free until…" and to work out the late-cancellation fee
+  // warning before calling cancel-session. Defensive defaults while it
+  // hasn't loaded yet, or if the teacher never touched "My Rules".
+  const [teacherRules, setTeacherRules] = useState(DEFAULT_TEACHER_RULES);
+  React.useEffect(() => {
+    if (!teacher?.id) return;
+    let live = true;
+    fetchTeacherRules(teacher.id).then((rules) => { if (live) setTeacherRules(rules); });
+    return () => { live = false; };
+  }, [teacher?.id]);
+  const [cancelBusy, setCancelBusy] = useState(false);
+
   const tabs = [
     { id: "chat", label: "Chat", Icon: MessageCircle },
     { id: "schedule", label: "Schedule & Payments", Icon: Calendar },
@@ -12207,14 +12245,64 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
   function timeUntil(s) {
     return new Date(s.date + "T" + s.time).getTime() - Date.now();
   }
-  function cancelLocked(s) { return s.status === "confirmed" && timeUntil(s) < 24 * 60 * 60 * 1000; }
-  function modifyLocked(s) { return s.status === "confirmed" && timeUntil(s) < 48 * 60 * 60 * 1000; }
+  function cancelLocked(s) { return s.status === "confirmed" && timeUntil(s) < teacherRules.cancel_lock_hours * 60 * 60 * 1000; }
+  function modifyLocked(s) { return s.status === "confirmed" && timeUntil(s) < teacherRules.modify_lock_hours * 60 * 60 * 1000; }
 
+  // Unpaid (or not-yet-confirmed) sessions: no money involved, same
+  // client-side delete as before this policy existed.
   function cancelSession(id) {
     persistSessions(sessions.filter((s) => s.id !== id));
     supabase.from("lesson_sessions").delete().eq("id", id).then(({ error }) => {
       if (error) console.error("cancelSession", error.message);
     });
+  }
+
+  // Paid + confirmed sessions: real money moved, so cancelling goes through
+  // the cancel-session edge function (server computes the refund and
+  // reverses the Stripe transfer/application fee) instead of a client
+  // DELETE — lesson_sessions RLS no longer even permits deleting a paid row.
+  async function doCancelSession(id) {
+    const s = sessions.find((x) => x.id === id);
+    if (!s || !s.paid || s.status !== "confirmed") {
+      cancelSession(id);
+      return;
+    }
+    setCancelBusy(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { window.alert("Please sign in again to cancel this session."); setCancelBusy(false); return; }
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/cancel-session`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.access_token}` },
+        body: JSON.stringify({ sessionId: id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Could not cancel this session.");
+      persistSessions(sessions.map((x) => x.id === id ? { ...x, status: "cancelled" } : x));
+      window.alert(`Cancelled — €${euroAmount(data.refundedCents)} refunded.`);
+    } catch (e) {
+      window.alert(e.message);
+    } finally {
+      setCancelBusy(false);
+    }
+  }
+
+  // Cancel button click: a paid, confirmed session inside the teacher's
+  // lock window still gets cancelled, but a fee is kept — warn with the
+  // computed numbers and get an explicit second confirmation before calling
+  // the server. Everything else goes through the normal "Cancel this
+  // session?" modal (see confirmCancelId below).
+  function handleCancelClick(s) {
+    if (s.paid && s.status === "confirmed" && cancelLocked(s)) {
+      const gross = parseFloat(String(teacher.teaching?.price ?? "").replace(/[^0-9.]/g, "")) || 0;
+      const refundEst = gross * (100 - teacherRules.late_fee_pct) / 100;
+      const ok = window.confirm(
+        `Late cancellation: ${teacherRules.late_fee_pct}% is kept per ${teacher.name}'s rules — you'll be refunded €${refundEst.toFixed(2)} of €${gross.toFixed(2)}. Continue?`
+      );
+      if (ok) doCancelSession(s.id);
+      return;
+    }
+    setConfirmCancelId(s.id);
   }
 
   return (
@@ -12266,12 +12354,17 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
         // change or a cancellation, and hiding it early loses track of it.
         // Only then does it retire to My Planning, the archive with amounts.
         const stripSessions = sessions
-          .filter((s) => new Date(s.date + "T" + (s.time || "00:00")) >= new Date(Date.now() - 24 * 3600 * 1000))
+          .filter((s) => s.status !== "cancelled" && new Date(s.date + "T" + (s.time || "00:00")) >= new Date(Date.now() - 24 * 3600 * 1000))
           .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
         return (
           <div>
             {sessions.length === 0 && (
               <EmptyState icon={Calendar} title="No sessions yet" line={`Ask ${teacher.name.split(" ")[0]} in Chat to schedule one.`} />
+            )}
+            {sessions.length > 0 && (
+              <p style={{ fontSize: 11, color: C.ivoryDim, fontStyle: "italic", padding: "10px 4px 0", margin: 0 }}>
+                Cancel free until {teacherRules.cancel_lock_hours}h before · late cancellations keep {teacherRules.late_fee_pct}%
+              </p>
             )}
             {/* Horizontal scroll strip of square cards */}
             {sessions.length > 0 && (
@@ -12423,15 +12516,20 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
                           Modify time
                         </button>
                       ) : (
-                        <span style={{ fontSize: 11, color: C.ivoryDim, display: "flex", alignItems: "center", gap: 4 }}>🔒 Modify locked (48h)</span>
+                        <span style={{ fontSize: 11, color: C.ivoryDim, display: "flex", alignItems: "center", gap: 4 }}>🔒 Modify locked ({teacherRules.modify_lock_hours}h)</span>
                       )}
-                      {!cancelLocked(sel) ? (
-                        <button onClick={() => setConfirmCancelId(sel.id)}
-                          style={{ fontSize: 12, color: "#c0392b", background: "none", border: "1px solid #c0392b", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontWeight: 600 }}>
-                          Cancel session
+                      {/* A paid session is never hard-locked from cancelling — a
+                          late cancellation still goes through, it just keeps a
+                          fee (see handleCancelClick's confirm). Only an unpaid
+                          session (no money on the line) keeps the old hard
+                          lock. */}
+                      {(sel.paid || !cancelLocked(sel)) ? (
+                        <button onClick={() => handleCancelClick(sel)} disabled={cancelBusy}
+                          style={{ fontSize: 12, color: "#c0392b", background: "none", border: "1px solid #c0392b", borderRadius: 8, padding: "6px 12px", cursor: cancelBusy ? "not-allowed" : "pointer", fontWeight: 600, opacity: cancelBusy ? 0.6 : 1 }}>
+                          {cancelBusy ? "Cancelling…" : "Cancel session"}
                         </button>
                       ) : (
-                        <span style={{ fontSize: 11, color: C.ivoryDim, display: "flex", alignItems: "center", gap: 4 }}>🔒 Cancel locked (24h)</span>
+                        <span style={{ fontSize: 11, color: C.ivoryDim, display: "flex", alignItems: "center", gap: 4 }}>🔒 Cancel locked ({teacherRules.cancel_lock_hours}h)</span>
                       )}
                     </div>
                   )}
@@ -12455,7 +12553,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
                 style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: `1px solid ${C.inkLine}`, background: "none", color: C.inkText, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
                 Keep it
               </button>
-              <button onClick={() => { cancelSession(confirmCancelId); setConfirmCancelId(null); }}
+              <button onClick={() => { doCancelSession(confirmCancelId); setConfirmCancelId(null); }}
                 style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "none", background: "#c0392b", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
                 Yes, cancel
               </button>
@@ -14567,7 +14665,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
     async function load() {
       try {
         const { data } = await supabase.from("payments")
-          .select("lesson_session_id, status, gross_amount_cents, commission_cents, teacher_amount_cents")
+          .select("lesson_session_id, status, gross_amount_cents, commission_cents, teacher_amount_cents, refunded_cents")
           .eq("kind", "lesson").not("lesson_session_id", "is", null);
         if (!live || !data) return;
         const map = {};
@@ -14617,6 +14715,49 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
   const [cancelLockH, setCancelLockH] = useState(24);
   const [modifyLockH, setModifyLockH] = useState(48);
   const [cancelFeesPct, setCancelFeesPct] = useState(50);
+  const [cancelBusy, setCancelBusy] = useState(false);
+
+  // teacher_rules is the real, server-checked source of truth these sliders
+  // used to just be local state for — cancel-session reads this same table
+  // (falling back to the same 24/48/50 defaults) when it decides a
+  // learner's refund. Load once per teacher, then debounce-save any slider
+  // change back to the row.
+  const [rulesReady, setRulesReady] = useState(false);
+  const [rulesSaved, setRulesSaved] = useState(false);
+  React.useEffect(() => {
+    if (!tid) return;
+    let live = true;
+    fetchTeacherRules(tid).then((rules) => {
+      if (!live) return;
+      setCancelLockH(rules.cancel_lock_hours);
+      setModifyLockH(rules.modify_lock_hours);
+      setCancelFeesPct(rules.late_fee_pct);
+      setRulesReady(true);
+    });
+    return () => { live = false; };
+  }, [tid]);
+  React.useEffect(() => {
+    if (!rulesReady || !tid) return;
+    setRulesSaved(false);
+    const timer = setTimeout(() => {
+      // Manual update-then-insert, not .upsert(): teacher_rules' UPDATE
+      // grant only covers the three value columns + updated_at (see
+      // migration) — same reasoning as agenda_notes' saveAgenda.
+      supabase.from("teacher_rules")
+        .update({ cancel_lock_hours: cancelLockH, modify_lock_hours: modifyLockH, late_fee_pct: cancelFeesPct, updated_at: new Date().toISOString() })
+        .eq("profile_id", tid).select("profile_id").then(({ data, error }) => {
+          if (error) { console.error("saveTeacherRules", error.message); return; }
+          if (!data || data.length === 0) {
+            supabase.from("teacher_rules")
+              .insert({ profile_id: tid, cancel_lock_hours: cancelLockH, modify_lock_hours: modifyLockH, late_fee_pct: cancelFeesPct })
+              .then(({ error }) => { if (error) console.error("saveTeacherRules insert", error.message); else setRulesSaved(true); });
+            return;
+          }
+          setRulesSaved(true);
+        });
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [cancelLockH, modifyLockH, cancelFeesPct, rulesReady, tid]);
 
   const [openMonths, setOpenMonths] = useState({ "2026-07": true, "2026-08": false, "2026-09": false });
 
@@ -14693,6 +14834,8 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
     });
   }
 
+  // Unpaid (or not-yet-confirmed) sessions: no money involved, same
+  // client-side delete as before this policy existed.
   function cancelSession(id) {
     setSessions((prev) => prev.filter((s) => s.id !== id));
     supabase.from("lesson_sessions").delete().eq("id", id).then(({ error }) => {
@@ -14700,9 +14843,39 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
     });
   }
 
+  // Paid + confirmed sessions: real money moved, so cancelling goes through
+  // the cancel-session edge function — a teacher-initiated cancellation is
+  // always a full refund, never locked (rule 3), so there's no fee warning
+  // to show here the way there is on the learner side.
+  async function doCancelSession(id) {
+    const s = sessions.find((x) => x.id === id);
+    if (!s || !s.paid || s.status !== "confirmed") {
+      cancelSession(id);
+      return;
+    }
+    setCancelBusy(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { window.alert("Please sign in again to cancel this session."); setCancelBusy(false); return; }
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/cancel-session`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.access_token}` },
+        body: JSON.stringify({ sessionId: id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Could not cancel this session.");
+      setSessions((prev) => prev.map((x) => x.id === id ? { ...x, status: "cancelled" } : x));
+      window.alert(`Cancelled — €${euroAmount(data.refundedCents)} refunded.`);
+    } catch (e) {
+      window.alert(e.message);
+    } finally {
+      setCancelBusy(false);
+    }
+  }
+
   function timeUntil(s) { return new Date(s.date + "T" + s.time).getTime() - Date.now(); }
-  function cancelLocked(s) { return s.status === "confirmed" && timeUntil(s) < 24 * 60 * 60 * 1000; }
-  function modifyLocked(s) { return s.status === "confirmed" && timeUntil(s) < 48 * 60 * 60 * 1000; }
+  function cancelLocked(s) { return s.status === "confirmed" && timeUntil(s) < cancelLockH * 60 * 60 * 1000; }
+  function modifyLocked(s) { return s.status === "confirmed" && timeUntil(s) < modifyLockH * 60 * 60 * 1000; }
 
   function sendMsg(text) {
     const body = text.trim();
@@ -14905,6 +15078,9 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
           <div style={{ padding: "14px 16px", background: "#FFF8E7", borderRadius: 12, border: `1px solid ${C.brass}`, fontSize: 12, color: C.ivory, lineHeight: 1.6 }}>
             <strong>Summary:</strong> Students must cancel ≥{cancelLockH}h before the session, modify ≥{modifyLockH}h before. Late cancellations are charged {cancelFeesPct}% of the lesson price.
           </div>
+          {rulesSaved && (
+            <p style={{ fontSize: 12, color: "#1A9E6E", margin: "10px 0 0", fontWeight: 600 }}>✓ Saved</p>
+          )}
         </div>
         </div>
         </div>
@@ -14936,6 +15112,14 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
               const earnedCents = sessions.reduce((sum, s) => {
                 const pay = paymentsBySession[s.id];
                 if (pay?.status === "paid") return sum + pay.teacher_amount_cents;
+                // A partial refund reverses the transfer proportionally to
+                // how the original charge was split — this recomputes that
+                // same ratio purely for display, the server/Stripe already
+                // did the real, authoritative split.
+                if (pay?.status === "partially_refunded" && pay.gross_amount_cents > 0) {
+                  const clawback = Math.round(pay.refunded_cents * pay.teacher_amount_cents / pay.gross_amount_cents);
+                  return sum + pay.teacher_amount_cents - clawback;
+                }
                 if (!pay && s.status === "confirmed" && s.paid) return sum + s.student.price * 100;
                 return sum;
               }, 0);
@@ -14966,7 +15150,10 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
                         {sessions.map((sess, i) => {
                           const dt = new Date(sess.date + "T" + sess.time);
                           const pay = paymentsBySession[sess.id];
-                          const amount = pay?.status === "paid"
+                          const isRefund = pay?.status === "refunded" || pay?.status === "partially_refunded";
+                          const amount = isRefund
+                            ? `−€${euroAmount(pay.refunded_cents)} refunded`
+                            : pay?.status === "paid"
                             ? `+€${euroAmount(pay.teacher_amount_cents)}`
                             : (sess.status === "confirmed" && sess.paid) ? `€${sess.student.price}` : "—";
                           const split = pay?.status === "paid"
@@ -14992,7 +15179,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
                                   {STATUS_LABEL[sess.status] || sess.status}
                                 </span>
                               </td>
-                              <td style={{ padding: "9px 12px", fontWeight: 700, color: amount === "—" ? C.ivoryDim : "#1A9E6E", fontVariantNumeric: "tabular-nums" }}>
+                              <td style={{ padding: "9px 12px", fontWeight: 700, color: amount === "—" ? C.ivoryDim : isRefund ? "#c0392b" : "#1A9E6E", fontVariantNumeric: "tabular-nums" }}>
                                 {amount}
                                 {split && <p style={{ margin: "2px 0 0", fontSize: 9.5, fontWeight: 500, color: C.ivoryDim, whiteSpace: "nowrap" }}>{split}</p>}
                               </td>
@@ -15047,7 +15234,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
         // change or a cancellation, and hiding it early loses track of it.
         // Only then does it retire to My Planning, the archive with amounts.
         const stripSessions = sessions
-          .filter((s) => new Date(s.date + "T" + (s.time || "00:00")) >= new Date(Date.now() - 24 * 3600 * 1000))
+          .filter((s) => s.status !== "cancelled" && new Date(s.date + "T" + (s.time || "00:00")) >= new Date(Date.now() - 24 * 3600 * 1000))
           .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
         return (
           <div style={{ padding: "0 0 8px" }}>
@@ -15258,16 +15445,17 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
                           Modify time
                         </button>
                       ) : (
-                        <span style={{ fontSize: 11, color: C.ivoryDim, display: "flex", alignItems: "center", gap: 4 }}>🔒 Modify locked (48h)</span>
+                        <span style={{ fontSize: 11, color: C.ivoryDim, display: "flex", alignItems: "center", gap: 4 }}>🔒 Modify locked ({modifyLockH}h)</span>
                       ))}
-                      {!cancelLocked(sel) ? (
-                        <button onClick={() => setConfirmCancelId(sel.id)}
-                          style={{ fontSize: 12, color: "#c0392b", background: "none", border: "1px solid #c0392b", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontWeight: 600 }}>
-                          Cancel session
-                        </button>
-                      ) : (
-                        <span style={{ fontSize: 11, color: C.ivoryDim, display: "flex", alignItems: "center", gap: 4 }}>🔒 Cancel locked (24h)</span>
-                      )}
+                      {/* Rule 3: a teacher cancelling a paid session is always
+                          a full refund, so unlike the learner side there's no
+                          lock/fee to gate this on — only an unpaid session's
+                          cancel-lock display is (still, purely visually) tied
+                          to cancelLockH. */}
+                      <button onClick={() => setConfirmCancelId(sel.id)} disabled={cancelBusy}
+                        style={{ fontSize: 12, color: "#c0392b", background: "none", border: "1px solid #c0392b", borderRadius: 8, padding: "6px 12px", cursor: cancelBusy ? "not-allowed" : "pointer", fontWeight: 600, opacity: cancelBusy ? 0.6 : 1 }}>
+                        {cancelBusy ? "Cancelling…" : "Cancel session"}
+                      </button>
                     </div>
                   )}
                 </div>
@@ -15332,7 +15520,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
                 style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: `1px solid ${C.inkLine}`, background: "none", color: C.inkText, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
                 Keep it
               </button>
-              <button onClick={() => { cancelSession(confirmCancelId); setSelectedSessionId(null); setConfirmCancelId(null); }}
+              <button onClick={() => { doCancelSession(confirmCancelId); setSelectedSessionId(null); setConfirmCancelId(null); }}
                 style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "none", background: "#c0392b", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
                 Yes, cancel
               </button>

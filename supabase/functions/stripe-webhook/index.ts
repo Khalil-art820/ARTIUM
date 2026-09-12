@@ -130,12 +130,26 @@ Deno.serve(async (req) => {
       }
 
       case "charge.refunded": {
+        // Fires on every refund, full or partial, and cancel-session already
+        // wrote its own definitive status+refunded_cents synchronously
+        // before the refund call even returned. This handler exists for
+        // refunds Stripe knows about that didn't go through cancel-session
+        // (dashboard refunds, disputes, etc.) and as an idempotent
+        // reconciliation pass — it always overwrites with what Stripe says
+        // is true of the charge as a whole, so it can never leave the ledger
+        // out of sync with Stripe even if it fires more than once or after
+        // cancel-session already ran.
         const charge = event.data.object as Stripe.Charge;
         const paymentIntentId = typeof charge.payment_intent === "string" ? charge.payment_intent : charge.payment_intent?.id;
         if (paymentIntentId) {
+          const fullyRefunded = charge.amount_refunded >= charge.amount;
           await adminClient
             .from("payments")
-            .update({ status: "refunded", updated_at: new Date().toISOString() })
+            .update({
+              status: fullyRefunded ? "refunded" : "partially_refunded",
+              refunded_cents: charge.amount_refunded,
+              updated_at: new Date().toISOString(),
+            })
             .eq("payment_intent_id", paymentIntentId);
         }
         break;
