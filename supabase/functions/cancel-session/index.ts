@@ -118,36 +118,55 @@ Deno.serve(async (req) => {
       return json({ error: "No payment intent on record for this session." }, 400);
     }
 
+    // late_fee_pct is the only teacher-editable knob left in this table —
+    // cancel_lock_hours and modify_lock_hours still exist as columns but are
+    // no longer read here; the ladder's boundaries are platform-fixed (see
+    // CANCEL_FULL_H / CANCEL_ZERO_H just below).
     const { data: rules } = await adminClient
       .from("teacher_rules")
-      .select("cancel_lock_hours, late_fee_pct")
+      .select("late_fee_pct")
       .eq("profile_id", lessonSession.teacher_id)
       .maybeSingle();
-    const cancelLockHours = rules?.cancel_lock_hours ?? 24;
     const lateFeePct = rules?.late_fee_pct ?? 50;
+
+    // Platform-fixed three-tier cancellation ladder (mirrors CANCEL_FULL_H /
+    // CANCEL_ZERO_H in src/App.jsx — keep the two in sync by hand, there's
+    // no shared import between the client and an edge function).
+    //   >= CANCEL_FULL_H hours before start → 100% refund
+    //   CANCEL_ZERO_H .. CANCEL_FULL_H      → (100 − teacher's late_fee_pct)%
+    //   < CANCEL_ZERO_H hours before start  → 0% refund, no Stripe call
+    const CANCEL_FULL_H = 24;
+    const CANCEL_ZERO_H = 12;
 
     const grossCents = payment.gross_amount_cents;
     let refundCents: number;
-    let late = false;
+    // "full" | "late" | "zero" | "teacher" — teacher's own cancellation is
+    // always a full refund and never counts as a late cancellation against
+    // the learner (there's no learner fault to log).
+    let tier: "full" | "late" | "zero" | "teacher";
 
     if (isTeacher) {
-      // Rule 3: teacher cancels a paid session anytime → full refund,
+      // Rule: teacher cancels a paid session anytime → full refund,
       // everything returned. No lock, no fee, regardless of timing.
       refundCents = grossCents;
+      tier = "teacher";
     } else {
-      // Rule 1/2: learner cancels. Outside the teacher's lock window → full
-      // refund. Inside it → partial refund keeping late_fee_pct for the
-      // teacher/platform split (which Stripe itself prorates via
-      // reverse_transfer + refund_application_fee on a partial refund).
       const sessionInstantUtc = parisWallClockToUtc(lessonSession.session_date, lessonSession.session_time);
-      const cutoffUtc = new Date(sessionInstantUtc.getTime() - cancelLockHours * 60 * 60 * 1000);
-      if (Date.now() < cutoffUtc.getTime()) {
+      const hoursUntil = (sessionInstantUtc.getTime() - Date.now()) / (60 * 60 * 1000);
+      if (hoursUntil >= CANCEL_FULL_H) {
         refundCents = grossCents;
-      } else {
-        late = true;
+        tier = "full";
+      } else if (hoursUntil >= CANCEL_ZERO_H) {
+        // Stripe itself prorates the teacher/platform split on a partial
+        // refund via reverse_transfer + refund_application_fee.
         refundCents = Math.round(grossCents * (100 - lateFeePct) / 100);
+        tier = "late";
+      } else {
+        refundCents = 0;
+        tier = "zero";
       }
     }
+    const late = tier === "late" || tier === "zero";
 
     if (refundCents > 0) {
       const refundParams: Stripe.RefundCreateParams = {
@@ -166,14 +185,19 @@ Deno.serve(async (req) => {
     const fullyRefunded = refundCents === grossCents;
     const nowIso = new Date().toISOString();
 
-    await adminClient
-      .from("payments")
-      .update({
-        refunded_cents: payment.refunded_cents + refundCents,
-        status: fullyRefunded ? "refunded" : "partially_refunded",
-        updated_at: nowIso,
-      })
-      .eq("id", payment.id).eq("status", "paid");
+    // The zero tier moves no money at all — leave the payment row exactly
+    // as "paid" rather than writing a no-op "partially_refunded" with
+    // refunded_cents unchanged; there's nothing to reconcile.
+    if (refundCents > 0) {
+      await adminClient
+        .from("payments")
+        .update({
+          refunded_cents: payment.refunded_cents + refundCents,
+          status: fullyRefunded ? "refunded" : "partially_refunded",
+          updated_at: nowIso,
+        })
+        .eq("id", payment.id).eq("status", "paid");
+    }
 
     // paid stays true — it's the historical record of "this session was
     // paid for"; status carries the fact that it's since been cancelled.
@@ -182,16 +206,46 @@ Deno.serve(async (req) => {
       .update({ status: "cancelled", updated_at: nowIso })
       .eq("id", sessionId);
 
+    // Abuse guard (cancellation_events): every learner-caused late tier —
+    // whether a partial or a zero refund — logs one row. stripe-checkout
+    // reads this table to temporarily restrict a serial late-canceller's
+    // future bookings; report-no-show logs the sibling 'no_show_report'
+    // kind into the same table.
+    if (isLearner && late) {
+      await adminClient.from("cancellation_events").insert({
+        learner_id: user.id,
+        session_id: sessionId,
+        kind: "late_cancel",
+      });
+    }
+
+    // Hand back this learner's trailing-30-day late-cancel count so the
+    // frontend can show a heads-up warning before the count reaches the
+    // threshold stripe-checkout actually enforces (see there).
+    let lateCancelCount: number | undefined;
+    if (isLearner) {
+      const thirtyDaysAgoIso = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+      const { count } = await adminClient
+        .from("cancellation_events")
+        .select("id", { count: "exact", head: true })
+        .eq("learner_id", user.id)
+        .eq("kind", "late_cancel")
+        .gte("created_at", thirtyDaysAgoIso);
+      lateCancelCount = count ?? 0;
+    }
+
     const otherPartyId = isTeacher ? lessonSession.learner_id : lessonSession.teacher_id;
     const refundEuros = (refundCents / 100).toFixed(2);
     const dateLabel = lessonSession.session_date;
     let body: string;
     if (isTeacher) {
       body = `This session on ${dateLabel} was cancelled by your teacher. €${refundEuros} has been refunded to you.`;
-    } else if (!late) {
+    } else if (tier === "full") {
       body = `This session on ${dateLabel} was cancelled. €${refundEuros} has been refunded.`;
+    } else if (tier === "late") {
+      body = `This session on ${dateLabel} was cancelled inside the 24h window, so a ${lateFeePct}% late fee was kept. €${refundEuros} has been refunded.`;
     } else {
-      body = `This session on ${dateLabel} was cancelled inside the cancellation window, so a ${lateFeePct}% late fee was kept. €${refundEuros} has been refunded.`;
+      body = `This session on ${dateLabel} was cancelled late; per policy no refund was due.`;
     }
     await adminClient.from("direct_messages").insert({
       sender_id: user.id,
@@ -199,7 +253,11 @@ Deno.serve(async (req) => {
       body,
     });
 
-    return json({ refundedCents: refundCents, status: fullyRefunded ? "refunded" : "partially_refunded" });
+    return json({
+      refundedCents: refundCents,
+      status: refundCents === 0 ? "paid" : fullyRefunded ? "refunded" : "partially_refunded",
+      lateCancelCount,
+    });
   } catch (err) {
     return json({ error: err.message }, 500);
   }

@@ -135,6 +135,23 @@ Deno.serve(async (req) => {
         return new Response(JSON.stringify({ error: "Missing teacherId" }), { status: 400, headers: { ...CORS, "Content-Type": "application/json" } });
       }
 
+      // Abuse guard: repeated late cancellations (12–24h or <12h before a
+      // paid session — see cancel-session) log a 'late_cancel' row in
+      // cancellation_events. Five or more in the trailing 30 days
+      // temporarily restricts this account from booking a new paid lesson.
+      // cancel-session's response separately surfaces a heads-up warning to
+      // the learner once their count reaches 3, well before this refusal.
+      const thirtyDaysAgoIso = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+      const { count: lateCancelCount } = await adminClient
+        .from("cancellation_events")
+        .select("id", { count: "exact", head: true })
+        .eq("learner_id", user.id)
+        .eq("kind", "late_cancel")
+        .gte("created_at", thirtyDaysAgoIso);
+      if ((lateCancelCount ?? 0) >= 5) {
+        return new Response(JSON.stringify({ error: "Booking temporarily restricted after repeated late cancellations — try again later." }), { status: 403, headers: { ...CORS, "Content-Type": "application/json" } });
+      }
+
       const { data: teacher, error: teacherError } = await adminClient
         .from("profiles")
         .select("id, name, teaching_open, teaching_price")
