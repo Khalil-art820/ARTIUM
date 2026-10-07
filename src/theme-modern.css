@@ -367,3 +367,73 @@ html.theme-modern input[type="range"]{accent-color:#086868}
 html.theme-modern input[type="date"],
 html.theme-modern input[type="time"],
 html.theme-modern input[type="number"]{font-family:inherit}
+
+/* ======================================================================
+   Phases 5-6: messages, promote, edit/signup steps, admin, auth, wall.
+   Most values ride tokens in App.jsx; this is what the inline style block
+   still hard-codes in gold.
+   ====================================================================== */
+
+/* ---- shared focus ring (inline style block paints it gold) ---- */
+html.theme-modern input:focus,
+html.theme-modern textarea:focus,
+html.theme-modern select:focus{
+  border-color:rgba(8,104,104,.6)!important;
+  box-shadow:0 0 0 3px rgba(8,104,104,.14)!important}
+
+/* ---- signup / edit step chrome ---- */
+html.theme-modern .artium-su-nav{
+  background:linear-gradient(180deg,rgba(247,244,242,0) 0%,rgba(247,244,242,.92) 26%,#F7F4F2 100%)}
+html.theme-modern .artium-su-card{border-radius:12px;box-shadow:none}
+html.theme-modern .artium-su-ring svg circle:first-child{stroke:#E8E2DC}
+html.theme-modern .artium-su-next{color:#6B6B6B}
+html.theme-modern .artium-su-door{border-radius:12px}
+html.theme-modern .artium-su-door-i{
+  border:none;border-radius:10px;background:rgba(8,104,104,.10);color:#086868}
+html.theme-modern .artium-su-door-d{color:#6B6B6B}
+html.theme-modern .artium-su-chosen{border-radius:12px}
+html.theme-modern .artium-su-change{border-radius:10px}
+html.theme-modern .artium-inst:hover:not(:disabled){background:#FAF8F6}
+html.theme-modern .artium-inst--on span{color:#1C1C1C}
+html.theme-modern .artium-su-globe .artium-aw-ring--a{border-color:rgba(8,104,104,.40)}
+html.theme-modern select option{color:#1C1C1C}
+html.theme-modern input[type="checkbox"],
+html.theme-modern input[type="radio"]{accent-color:#086868}
+
+/* ---- network list rows / hirer marketplace ("Find a Concert Pianist") ---- */
+html.theme-modern .artium-aw-teach{border-radius:6px;text-transform:uppercase}
+
+/* ---- map controls ---- */
+html.theme-modern .leaflet-control-zoom a:hover,
+html.theme-modern .leaflet-bar a:hover{background:#FAF8F6!important;color:#086868!important}
+html.theme-modern .leaflet-bar{border:1px solid #E8E2DC!important;box-shadow:0 2px 8px rgba(0,0,0,.12)!important}
+html.theme-modern .leaflet-control-zoom a,
+html.theme-modern .leaflet-bar a{border-bottom-color:#E8E2DC!important}
+
+/* ---- audio pill: teal range track ---- */
+html.theme-modern .artium-audio-range{background:rgba(8,104,104,.25)}
+
+/* ---- Wall of Composers (a page-level file shared with classic: restyled
+   by selector only, so classic output is untouched) ---- */
+html.theme-modern div.min-h-screen.bg-white[style*="color-scheme"]{background:#F7F4F2;font-family:'Fira Sans',system-ui,sans-serif}
+html.theme-modern div.min-h-screen.bg-white[style*="color-scheme"] *{font-family:'Fira Sans',system-ui,sans-serif!important}
+html.theme-modern div.min-h-screen.bg-white[style*="color-scheme"] .text-gold{color:#086868}
+html.theme-modern div.min-h-screen.bg-white[style*="color-scheme"] .text-ink{color:#1C1C1C}
+html.theme-modern div.min-h-screen.bg-white[style*="color-scheme"] .text-muted{color:#6B6B6B}
+html.theme-modern div.min-h-screen.bg-white[style*="color-scheme"] .bg-gold\/50{background:rgba(8,104,104,.45)}
+html.theme-modern div.min-h-screen.bg-white[style*="color-scheme"] header svg path{fill:#086868}
+html.theme-modern div.min-h-screen.bg-white[style*="color-scheme"] header > button{border-color:#E8E2DC;border-radius:50%}
+html.theme-modern div.min-h-screen.bg-white[style*="color-scheme"] header > button:hover{border-color:#086868}
+html.theme-modern div.min-h-screen.bg-white[style*="color-scheme"] h1{font-weight:700}
+html.theme-modern div.min-h-screen.bg-white[style*="color-scheme"] main p.uppercase{letter-spacing:.2em}
+html.theme-modern div.min-h-screen.bg-white[style*="color-scheme"] .rounded-\[22px\]{
+  background:#FFFFFF!important;border:1px solid #E8E2DC;border-radius:12px;box-shadow:none}
+
+/* ---- hirer marketplace header (GateLogo): the same full-bleed teal bar ---- */
+html.theme-modern .artium-aw-bar{
+  max-width:none;width:100%;margin:0;box-sizing:border-box;background:#086868;
+  padding:calc(12px + env(safe-area-inset-top,0px)) max(18px,calc((100% - 524px)/2)) 12px}
+html.theme-modern .artium-aw-bar svg path{fill:#FFFFFF!important}
+html.theme-modern .artium-aw-bar svg + span{color:#FFFFFF!important}
+html.theme-modern .artium-aw-bar .artium-aw-count,
+html.theme-modern .artium-aw-bar .artium-aw-count svg{color:#FFFFFF}

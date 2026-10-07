@@ -136,7 +136,7 @@ const brassA = (a) => MODERN ? `rgba(8,104,104,${a})` : `rgba(201,150,46,${a})`;
 const OK_C = MODERN ? "#2EAA6E" : "#1A9E6E";
 const AMBER_C = MODERN ? "#E8862E" : "#E07B00";
 const AMBER_D = MODERN ? "#E8862E" : "#D4810A";
-const RED_C = MODERN ? "#B3261E" : "#c0392b";
+const RED_C = MODERN ? "#B3261E" : RED_C;
 const OK_BG = MODERN ? "#E6F6EE" : "#DFF2E8";
 const OK_BG2 = MODERN ? "#F1FAF5" : "#F4FBF6";
 const OK_LINE = MODERN ? "rgba(46,170,110,0.35)" : "#A8D5B5";
@@ -333,7 +333,7 @@ function MiniAudioPlayer({ src }) {
   const [t, setT] = React.useState(0);
   const fmt = (x) => { const n = Math.max(0, Math.floor(x || 0)); return `${Math.floor(n / 60)}:${String(n % 60).padStart(2, "0")}`; };
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 10, background: warm("0.07"), border: `1px solid ${C.inkLine}`, borderRadius: 999, padding: "8px 14px", marginTop: 12 }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 10, background: MODERN ? "#F7F4F2" : warm("0.07"), border: `1px solid ${C.inkLine}`, borderRadius: 999, padding: "8px 14px", marginTop: 12 }}>
       <style>{`
         .artium-audio-range { -webkit-appearance: none; appearance: none; height: 4px; border-radius: 2px; background: rgba(176,146,98,0.35); outline: none; cursor: pointer; }
         .artium-audio-range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #C9962E; border: 2px solid #FFFFFF; box-shadow: 0 1px 3px rgba(0,0,0,0.25); }
@@ -346,7 +346,7 @@ function MiniAudioPlayer({ src }) {
         style={{ display: "none" }} />
       <button onClick={() => { const el = ref.current; if (!el) return; if (el.paused) el.play().catch(() => {}); else el.pause(); }}
         aria-label={playing ? "Pause" : "Play"}
-        style={{ width: 30, height: 30, borderRadius: "50%", border: `1px solid ${C.inkLine}`, background: "#FFFFFF", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: C.ivory, flexShrink: 0, padding: 0 }}>
+        style={{ width: 30, height: 30, borderRadius: "50%", border: MODERN ? "none" : `1px solid ${C.inkLine}`, background: MODERN ? C.brass : "#FFFFFF", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: MODERN ? "#FFFFFF" : C.ivory, flexShrink: 0, padding: 0 }}>
         {playing ? <Pause size={13} /> : <Play size={13} style={{ marginLeft: 1 }} />}
       </button>
       <span style={{ fontSize: 11, fontVariantNumeric: "tabular-nums", color: C.ivoryDim, flexShrink: 0, fontFamily: FONT_BODY }}>{fmt(t)} / {fmt(dur)}</span>
@@ -370,8 +370,8 @@ function SpotlightCalendar({ slotState, selected, onSelect }) {
   const iso = (d) => `${first.getFullYear()}-${String(first.getMonth() + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
   const STATE_STYLE = {
     open:    { bg: brassA("0.10"), color: C.ivory, border: `1px solid ${brassA("0.45")}`, cursor: "pointer" },
-    mineWon: { bg: "rgba(26,158,110,0.16)", color: "#1A9E6E", border: "1px solid rgba(26,158,110,0.4)", cursor: "not-allowed" },
-    minePending: { bg: brassA("0.16"), color: "#B3812A", border: `1px solid ${brassA("0.5")}`, cursor: "not-allowed" },
+    mineWon: { bg: okA("0.16"), color: OK_C, border: `1px solid ${okA("0.4")}`, cursor: "not-allowed" },
+    minePending: { bg: MODERN ? "rgba(232,134,46,0.14)" : brassA("0.16"), color: MODERN ? AMBER_D : "#B3812A", border: MODERN ? "1px solid rgba(232,134,46,0.5)" : `1px solid ${brassA("0.5")}`, cursor: "not-allowed" },
     lost:    { bg: "rgba(179,38,30,0.07)", color: "rgba(179,38,30,0.55)", border: "1px solid rgba(179,38,30,0.2)", cursor: "not-allowed" },
     taken:   { bg: warm("0.06"), color: "#9A9A9A", border: `1px solid ${warm("0.25")}`, cursor: "not-allowed" },
   };
@@ -946,10 +946,11 @@ function Chip({ active, onClick, children, disabled = false }) {
         // brassText, not inkText: inkText is the page's type colour, which is
         // white now — and white on champagne is a 1.6:1 chip.
         border: `1px solid ${active ? "transparent" : warm("0.30")}`,
-        background: active ? BRASS_GRAD : warm("0.06"),
+        background: active ? BRASS_GRAD : (MODERN ? "#FFFFFF" : warm("0.06")),
         color: active ? C.brassText : C.ivoryDim,
         fontWeight: active ? 700 : 500,
-        boxShadow: active ? "0 3px 14px rgba(233,200,141,0.20)" : "none",
+        boxShadow: (active && !MODERN) ? "0 3px 14px rgba(233,200,141,0.20)" : "none",
+        borderRadius: MODERN ? 10 : undefined,
         // Ruled out by another choice, not broken. Faded and unpressable, and
         // the chip that rules it out is lit right there to say why.
         cursor: disabled ? "default" : "pointer",
@@ -2114,8 +2115,8 @@ function AccessGate({ onUnlock }) {
     else { setError(true); setValue(""); }
   }
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: C.inkSoft, fontFamily: FONT_BODY, padding: 24 }}>
-      <div style={{ width: "100%", maxWidth: 400, background: warm("0.05"), border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: 40, boxShadow: "0 4px 24px rgba(0,0,0,0.28)" }}>
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: MODERN ? C.ink : C.inkSoft, fontFamily: FONT_BODY, padding: 24 }}>
+      <div style={{ width: "100%", maxWidth: 400, background: SURF, border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: 40, boxShadow: MODERN ? "0 1px 2px rgba(0,0,0,0.04), 0 8px 24px -16px rgba(0,0,0,0.14)" : "0 4px 24px rgba(0,0,0,0.28)" }}>
         <div style={{ marginBottom: 28 }}>
           <Logo size={22} markSize={HEADER_CONTROL} />
           <p style={{ color: C.ivoryDim, fontSize: 14, marginTop: 12 }}>Private beta — enter access key to continue.</p>
@@ -2261,7 +2262,7 @@ function AuthPrompt() {
             {mode === "signup" ? "One account for the whole Artium community." : "Log in to your Artium account."}
           </p>
         </div>
-        <div style={{ background: "#FFFFFF", border: "1px solid rgba(35,42,59,0.1)", borderRadius: 16, padding: "26px 24px", boxShadow: "0 10px 40px rgba(35,42,59,0.08)" }}>
+        <div style={{ background: "#FFFFFF", border: MODERN ? "1px solid #E8E2DC" : "1px solid rgba(35,42,59,0.1)", borderRadius: MODERN ? 12 : 16, padding: "26px 24px", boxShadow: MODERN ? "0 1px 2px rgba(0,0,0,0.04), 0 8px 24px -16px rgba(0,0,0,0.14)" : "0 10px 40px rgba(35,42,59,0.08)" }}>
           <button
             type="button"
             onClick={handleGoogle}
@@ -2307,7 +2308,7 @@ function AuthPrompt() {
               disabled={submitting}
               style={{
                 marginTop: 4, width: "100%", background: AP_GOLD, color: MODERN ? "#FFFFFF" : "#3A2E10", border: "none",
-                borderRadius: 999, padding: "12px 0", fontSize: 14.5, fontWeight: 700,
+                borderRadius: MODERN ? 10 : 999, padding: "12px 0", fontSize: 14.5, fontWeight: 700,
                 cursor: submitting ? "default" : "pointer", opacity: submitting ? 0.7 : 1,
               }}
             >
@@ -5875,7 +5876,7 @@ function StepRing({ step, total, size = 62 }) {
       <svg viewBox="0 0 44 44" aria-hidden="true">
         <circle cx="22" cy="22" r={R} fill="none" stroke={warm("0.30")} strokeWidth="3" />
         <circle
-          cx="22" cy="22" r={R} fill="none" stroke="#E9C88D" strokeWidth="3" strokeLinecap="round"
+          cx="22" cy="22" r={R} fill="none" stroke={MODERN ? C.brass : "#E9C88D"} strokeWidth="3" strokeLinecap="round"
           strokeDasharray={CIRC} strokeDashoffset={CIRC * (1 - done)}
           transform="rotate(-90 22 22)"
         />
@@ -5979,13 +5980,13 @@ function HirerSignup({ authUser, onBack, onDone }) {
                   the one the eye lands on. Leaving is a choice, not a default. */}
               <button
                 onClick={() => setConfirmLeave(false)}
-                style={{ flex: 1, padding: "10px 14px", borderRadius: 999, border: "none", background: BRASS_GRAD, color: C.brassText, fontFamily: FONT_BODY, fontSize: 13.5, fontWeight: 700, cursor: "pointer" }}
+                style={{ flex: 1, padding: "10px 14px", borderRadius: MODERN ? 10 : 999, border: "none", background: BRASS_GRAD, color: C.brassText, fontFamily: FONT_BODY, fontSize: 13.5, fontWeight: 700, cursor: "pointer" }}
               >
                 Keep filling it in
               </button>
               <button
                 onClick={() => { setConfirmLeave(false); onBack(); }}
-                style={{ flex: "0 0 auto", padding: "10px 16px", borderRadius: 999, border: `1px solid ${C.inkLine}`, background: warm("0.05"), color: C.ivoryDim, fontFamily: FONT_BODY, fontSize: 13.5, fontWeight: 600, cursor: "pointer" }}
+                style={{ flex: "0 0 auto", padding: "10px 16px", borderRadius: MODERN ? 10 : 999, border: `1px solid ${C.inkLine}`, background: warm("0.05"), color: C.ivoryDim, fontFamily: FONT_BODY, fontSize: 13.5, fontWeight: 600, cursor: "pointer" }}
               >
                 Leave
               </button>
@@ -6124,8 +6125,8 @@ const INQUIRY_STATUS_LABEL = {
   confirmed: "Confirmed", declined: "Declined", cancelled: "Cancelled",
 };
 const INQUIRY_STATUS_COLOR = {
-  open: C.brassLabel, negotiating: C.brassLabel, agreed: C.forest,
-  confirmed: "#1A9E6E", declined: C.burgundy, cancelled: C.ivoryDim,
+  open: C.brassLabel, negotiating: MODERN ? AMBER_D : C.brassLabel, agreed: C.forest,
+  confirmed: OK_C, declined: C.burgundy, cancelled: C.ivoryDim,
 };
 
 function StatusPill({ status }) {
@@ -6237,7 +6238,7 @@ function OfferCard({ offer, isMine, expanded, onToggle, onAccept, onDecline, onC
     .map(([k, label]) => [label, k === "durationMinutes" ? (offer[k] ? `${offer[k]} min` : null) : offer[k]])
     .filter(([, v]) => v);
   const fee = fmtEUR(offer.feeEur);
-  const statusColor = offer.status === "accepted" ? "#1A9E6E" : offer.status === "declined" ? C.burgundy : offer.status === "superseded" ? C.ivoryDim : C.brassLabel;
+  const statusColor = offer.status === "accepted" ? OK_C : offer.status === "declined" ? C.burgundy : offer.status === "superseded" ? C.ivoryDim : C.brassLabel;
   return (
     <div style={{ alignSelf: "stretch", border: `1px solid ${offer.status === "proposed" ? C.brass : C.inkLine}`, borderRadius: 14, padding: "16px 18px", background: C.parchment, opacity: superseded ? 0.6 : 1 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
@@ -6372,7 +6373,7 @@ function AgreementPanel({ inquiry, role, myName, onSign, signing, acceptedOffer 
         I agree to the terms above and wish to proceed with the booking.
       </p>
       {mySignedAt ? (
-        <p style={{ marginTop: 14, marginBottom: 0, fontSize: 13, color: "#1A9E6E", fontWeight: 600 }}>
+        <p style={{ marginTop: 14, marginBottom: 0, fontSize: 13, color: OK_C, fontWeight: 600 }}>
           Signed — {mySignedName}, {dateStr(mySignedAt)}
         </p>
       ) : (
@@ -6528,7 +6529,7 @@ function ConcertConversation({ inquiryId, role, myId, myName, otherName, student
           <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ fontSize: 12, color: C.ivoryDim }}>Are you sure?</span>
             <button onClick={leaveDeal}
-              style={{ fontSize: 12, fontWeight: 700, padding: "5px 10px", borderRadius: 999, border: "none", background: "#c0392b", color: "#fff", cursor: "pointer" }}>
+              style={{ fontSize: 12, fontWeight: 700, padding: "5px 10px", borderRadius: 999, border: "none", background: RED_C, color: "#fff", cursor: "pointer" }}>
               Yes, {role === "pianist" ? "decline" : "withdraw"}
             </button>
             <button onClick={() => setConfirmLeaveDeal(false)}
@@ -6676,7 +6677,7 @@ function PianistDiscover({ students, onOpen }) {
             <p className="artium-aw-stat-l">Conservatories</p>
           </div>
           <div className="artium-aw-stat">
-            <span className="artium-aw-stat-n"><span style={{ width: 8, height: 8, borderRadius: "50%", background: "#1A9E6E", display: "inline-block" }} />{availableCount}</span>
+            <span className="artium-aw-stat-n"><span style={{ width: 8, height: 8, borderRadius: "50%", background: OK_C, display: "inline-block" }} />{availableCount}</span>
             <p className="artium-aw-stat-l">Available now</p>
           </div>
         </div>
@@ -7042,13 +7043,13 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
                   the one the eye lands on. Leaving is a choice, not a default. */}
               <button
                 onClick={() => setConfirmLeave(false)}
-                style={{ flex: 1, padding: "10px 14px", borderRadius: 999, border: "none", background: BRASS_GRAD, color: C.brassText, fontFamily: FONT_BODY, fontSize: 13.5, fontWeight: 700, cursor: "pointer" }}
+                style={{ flex: 1, padding: "10px 14px", borderRadius: MODERN ? 10 : 999, border: "none", background: BRASS_GRAD, color: C.brassText, fontFamily: FONT_BODY, fontSize: 13.5, fontWeight: 700, cursor: "pointer" }}
               >
                 Keep filling it in
               </button>
               <button
                 onClick={() => { setConfirmLeave(false); onCancel(); }}
-                style={{ flex: "0 0 auto", padding: "10px 16px", borderRadius: 999, border: `1px solid ${C.inkLine}`, background: warm("0.05"), color: C.ivoryDim, fontFamily: FONT_BODY, fontSize: 13.5, fontWeight: 600, cursor: "pointer" }}
+                style={{ flex: "0 0 auto", padding: "10px 16px", borderRadius: MODERN ? 10 : 999, border: `1px solid ${C.inkLine}`, background: warm("0.05"), color: C.ivoryDim, fontFamily: FONT_BODY, fontSize: 13.5, fontWeight: 600, cursor: "pointer" }}
               >
                 Leave
               </button>
@@ -7101,14 +7102,14 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
             <button
               onClick={() => setConfirmLeave(true)}
               title="Your answers are saved — you can pick this up later"
-              style={{ marginLeft: "auto", fontSize: 12.5, fontWeight: 600, color: C.ivoryDim, background: warm("0.07"), border: `1px solid ${C.inkLine}`, borderRadius: 999, padding: "7px 15px", cursor: "pointer", whiteSpace: "nowrap" }}
+              style={{ marginLeft: "auto", fontSize: 12.5, fontWeight: 600, color: C.ivoryDim, background: warm("0.07"), border: `1px solid ${C.inkLine}`, borderRadius: MODERN ? 10 : 999, padding: "7px 15px", cursor: "pointer", whiteSpace: "nowrap" }}
             >
               Leave
             </button>
           )}
           {editing && (
             <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
-              <button onClick={onCancel} style={{ fontSize: 12.5, fontWeight: 600, color: C.ivoryDim, background: warm("0.07"), border: `1px solid ${C.inkLine}`, borderRadius: 999, padding: "7px 15px", cursor: "pointer" }}>
+              <button onClick={onCancel} style={{ fontSize: 12.5, fontWeight: 600, color: C.ivoryDim, background: warm("0.07"), border: `1px solid ${C.inkLine}`, borderRadius: MODERN ? 10 : 999, padding: "7px 15px", cursor: "pointer" }}>
                 Cancel
               </button>
               {/* Changing one line of a bio meant clicking Next through six
@@ -7119,7 +7120,7 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
                 disabled={!canSaveAll || submitting}
                 title={canSaveAll ? undefined : "Finish the highlighted step before saving"}
                 style={{
-                  fontSize: 12.5, fontWeight: 700, borderRadius: 999, padding: "7px 15px",
+                  fontSize: 12.5, fontWeight: 700, borderRadius: MODERN ? 10 : 999, padding: "7px 15px",
                   border: "none", whiteSpace: "nowrap",
                   cursor: canSaveAll && !submitting ? "pointer" : "not-allowed",
                   color: canSaveAll ? C.brassText : C.ivoryDim,
@@ -7136,7 +7137,7 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
             without telling them is its own small unpleasantness — they wonder
             where it came from, and whether it is really theirs. */}
         {resumed && !editing && (
-          <div style={{ marginTop: 14, padding: "11px 13px", borderRadius: 12, border: "1px solid rgba(239,208,155,0.35)", background: "rgba(239,208,155,0.06)" }}>
+          <div style={{ marginTop: 14, padding: "11px 13px", borderRadius: 12, border: MODERN ? "1px solid rgba(8,104,104,0.3)" : "1px solid rgba(239,208,155,0.35)", background: MODERN ? "rgba(8,104,104,0.06)" : "rgba(239,208,155,0.06)" }}>
             <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: C.brassLabel }}>Picked up where you left off</p>
             <p className="text-sm" style={{ margin: "4px 0 0", color: C.ivoryDim, lineHeight: 1.5 }}>
               Everything you filled in is still here. Set your password again — it's the one thing we don't keep — and carry on.
@@ -7203,7 +7204,7 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
 function Field({ label, children }) {
   return (
     <label className="block mb-5">
-      <span className="block mb-2" style={{ fontFamily: FONT_BODY, fontSize: 12.5, fontWeight: 600, letterSpacing: "0.01em", color: "#CFCFCF" }}>{label}</span>
+      <span className="block mb-2" style={{ fontFamily: FONT_BODY, fontSize: 12.5, fontWeight: 600, letterSpacing: "0.01em", color: MODERN ? "#333333" : "#CFCFCF" }}>{label}</span>
       {children}
     </label>
   );
@@ -7256,7 +7257,7 @@ function PhotoUpload({ name, photoUrl, onChange }) {
           type="button"
           onClick={() => inputRef.current && inputRef.current.click()}
           className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm"
-          style={{ fontFamily: FONT_BODY, fontWeight: 600, color: C.ivory, border: `1px solid ${C.inkLine}` }}
+          style={{ fontFamily: FONT_BODY, fontWeight: 600, color: MODERN ? C.brass : C.ivory, border: `1px solid ${MODERN ? C.brass : C.inkLine}`, borderRadius: MODERN ? 10 : undefined }}
         >
           <Upload size={14} /> {photoUrl ? "Change photo" : "Upload photo"}
         </button>
@@ -7511,7 +7512,7 @@ function StepAccount({ draft, update, error }) {
           value you do not recognise is alarming. This step reports the
           account instead. */}
       {isGoogle ? (
-        <div style={{ borderRadius: 14, border: `1px solid rgba(26,158,110,0.45)`, background: "rgba(26,158,110,0.07)", padding: "15px 16px", display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ borderRadius: 14, border: `1px solid ${okA("0.45")}`, background: okA("0.07"), padding: "15px 16px", display: "flex", alignItems: "center", gap: 12 }}>
           <GoogleMark />
           <span style={{ minWidth: 0 }}>
             <p style={{ margin: 0, fontSize: 13.5, fontWeight: 700, color: C.ivory }}>Signed up with Google</p>
@@ -7519,7 +7520,7 @@ function StepAccount({ draft, update, error }) {
               {draft.email || "your Google account"}
             </p>
           </span>
-          <CheckIcon size={18} color="#1A9E6E" style={{ marginLeft: "auto", flexShrink: 0 }} />
+          <CheckIcon size={18} color={OK_C} style={{ marginLeft: "auto", flexShrink: 0 }} />
         </div>
       ) : (
       <>
@@ -8288,7 +8289,7 @@ function StepConservatory({ draft, update, editing }) {
               name needed and pushing it onto a third line. */}
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
             <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brassLabel, letterSpacing: 0.5, margin: 0 }}>YOUR CONSERVATORY</p>
-            {verified ? <CheckIcon size={15} strokeWidth={2.6} color="#1A9E6E" /> : null}
+            {verified ? <CheckIcon size={15} strokeWidth={2.6} color={OK_C} /> : null}
           </div>
           {/* The school name and a long institutional address do not fit
               beside a monogram at phone width — "The Juilliard School" broke
@@ -8344,7 +8345,7 @@ function StepConservatory({ draft, update, editing }) {
       ) : (
       <>
       <div className="artium-su-chosen">
-        <CheckIcon size={16} strokeWidth={2.4} color="#EFD09B" style={{ flexShrink: 0 }} />
+        <CheckIcon size={16} strokeWidth={2.4} color={MODERN ? C.brass : "#EFD09B"} style={{ flexShrink: 0 }} />
         <p>{DOOR_LABEL[applicant]}</p>
         <button className="artium-su-change" onClick={() => chooseDoor("")}>Change</button>
       </div>
@@ -8364,7 +8365,7 @@ function StepConservatory({ draft, update, editing }) {
             const on = draft.conservatoryId === c.id;
             return (
               <button key={c.id} className="artium-aw-row" onClick={() => pickConservatory(c.id)}
-                style={on ? { borderColor: "rgba(239,208,155,0.55)", background: "rgba(239,208,155,0.07)" } : undefined}>
+                style={on ? { borderColor: MODERN ? "rgba(8,104,104,0.55)" : "rgba(239,208,155,0.55)", background: MODERN ? "rgba(8,104,104,0.07)" : "rgba(239,208,155,0.07)" } : undefined}>
                 <ConsAvatar cons={c} />
                 <span className="artium-aw-row-body">
                   <p className="artium-aw-row-t">{c.name}</p>
@@ -8380,7 +8381,7 @@ function StepConservatory({ draft, update, editing }) {
                   </p>
                 </span>
                 {on
-                  ? <CheckIcon size={17} strokeWidth={2.4} color="#EFD09B" />
+                  ? <CheckIcon size={17} strokeWidth={2.4} color={MODERN ? C.brass : "#EFD09B"} />
                   : <ChevronRight size={17} strokeWidth={2} />}
               </button>
             );
@@ -8416,9 +8417,9 @@ function StepConservatory({ draft, update, editing }) {
           database until the last step, and a request with no account behind
           it is a row nobody can approve anyone from. */}
       {!isDoc && draft.domainReq && (
-        <div className="mt-4" style={{ borderRadius: 16, border: "1px solid rgba(26,158,110,0.45)", background: "rgba(26,158,110,0.07)", padding: "15px 16px" }}>
+        <div className="mt-4" style={{ borderRadius: 16, border: `1px solid ${okA("0.45")}`, background: okA("0.07"), padding: "15px 16px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <CheckIcon size={17} strokeWidth={2.4} color="#1A9E6E" style={{ flexShrink: 0 }} />
+            <CheckIcon size={17} strokeWidth={2.4} color={OK_C} style={{ flexShrink: 0 }} />
             <p style={{ margin: 0, fontSize: 13.5, fontWeight: 700, color: C.ivory }}>We'll check this with you</p>
             <button className="artium-su-change" onClick={() => { update({ domainReq: null }); setShowReq(true); }}>Edit</button>
           </div>
@@ -8496,8 +8497,8 @@ function StepConservatory({ draft, update, editing }) {
           {reqVerified && (
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-                <CheckIcon size={18} color="#1A9E6E" />
-                <p style={{ fontSize: 14, color: "#1A9E6E", fontWeight: 600, margin: 0 }}>Address confirmed</p>
+                <CheckIcon size={18} color={OK_C} />
+                <p style={{ fontSize: 14, color: OK_C, fontWeight: 600, margin: 0 }}>Address confirmed</p>
               </div>
               <p className="text-sm" style={{ color: C.ivoryDim, marginBottom: 12, lineHeight: 1.55 }}>
                 We know the address is yours. Now we check that it belongs to the conservatory you named — that part is done by hand.
@@ -8528,7 +8529,7 @@ function StepConservatory({ draft, update, editing }) {
           Nor on !isGoogle — a Google account proves an email address, not
           enrolment, so the Google shortcut that skips OTP doesn't apply. */}
       {proving && isDoc && (
-        <div className="mt-5 rounded-2xl" style={{ border: `1px solid ${draft.proofDocUrl ? "#1A9E6E" : C.brass}`, background: C.inkSoft, padding: "18px 18px" }}>
+        <div className="mt-5 rounded-2xl" style={{ border: `1px solid ${draft.proofDocUrl ? OK_C : C.brass}`, background: C.inkSoft, padding: "18px 18px" }}>
           <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brassLabel, letterSpacing: 0.5, marginBottom: 8 }}>{applicant === "graduate" ? "UPLOAD YOUR DIPLOMA" : "UPLOAD YOUR PROOF"}</p>
           {/* Split by where the person is, not by document type. A graduate
               hunting for a "proof of enrolment" they no longer have was the
@@ -8548,8 +8549,8 @@ function StepConservatory({ draft, update, editing }) {
           </p>
           {draft.proofDocUrl ? (
             <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-              <CheckIcon size={18} color="#1A9E6E" />
-              <span style={{ fontSize: 14, color: "#1A9E6E", fontWeight: 600 }}>{draft.proofDocName || "Document uploaded"}</span>
+              <CheckIcon size={18} color={OK_C} />
+              <span style={{ fontSize: 14, color: OK_C, fontWeight: 600 }}>{draft.proofDocName || "Document uploaded"}</span>
               <label style={{ fontSize: 13, color: C.brassLabel, cursor: "pointer" }}>
                 Replace
                 <input type="file" accept="image/*,application/pdf" style={{ display: "none" }} onChange={(e) => uploadProof(e.target.files?.[0])} />
@@ -8568,12 +8569,12 @@ function StepConservatory({ draft, update, editing }) {
 
       {/* Conservatory email verification (OTP path) */}
       {selectedCons && !googleProvesSchool && proving && !isDoc && (
-        <div className="mt-5 rounded-2xl" style={{ border: `1px solid ${verified ? "#1A9E6E" : C.brass}`, background: C.inkSoft, padding: "18px 18px" }}>
+        <div className="mt-5 rounded-2xl" style={{ border: `1px solid ${verified ? OK_C : C.brass}`, background: C.inkSoft, padding: "18px 18px" }}>
           <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brassLabel, letterSpacing: 0.5, marginBottom: 8 }}>VERIFY YOUR {(selectedCons.short || selectedCons.name).toUpperCase()} STUDENT EMAIL</p>
           {verified ? (
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <CheckIcon size={18} color="#1A9E6E" />
-              <p style={{ fontSize: 14, color: "#1A9E6E", fontWeight: 600, margin: 0 }}>{draft.conservatoryEmail} verified</p>
+              <CheckIcon size={18} color={OK_C} />
+              <p style={{ fontSize: 14, color: OK_C, fontWeight: 600, margin: 0 }}>{draft.conservatoryEmail} verified</p>
             </div>
           ) : (
             <>
@@ -8613,9 +8614,9 @@ function StepConservatory({ draft, update, editing }) {
         </div>
       )}
       {selectedCons && googleProvesSchool && proving && (
-        <div className="mt-5 rounded-2xl" style={{ border: `1px solid #1A9E6E`, background: C.inkSoft, padding: "14px 18px", display: "flex", alignItems: "center", gap: 8 }}>
-          <CheckIcon size={18} color="#1A9E6E" />
-          <p style={{ fontSize: 14, color: "#1A9E6E", fontWeight: 600, margin: 0 }}>Verified via Google ({draft.email})</p>
+        <div className="mt-5 rounded-2xl" style={{ border: `1px solid ${OK_C}`, background: C.inkSoft, padding: "14px 18px", display: "flex", alignItems: "center", gap: 8 }}>
+          <CheckIcon size={18} color={OK_C} />
+          <p style={{ fontSize: 14, color: OK_C, fontWeight: 600, margin: 0 }}>Verified via Google ({draft.email})</p>
         </div>
       )}
 
@@ -8821,7 +8822,7 @@ function PendingReview({ onHome, onLogout }) {
       </div>
       <div className="flex-1 flex items-center justify-center px-6">
         <div className="max-w-md text-center lg-fade">
-          <div className="mx-auto mb-6 rounded-full flex items-center justify-center" style={{ width: 64, height: 64, border: `1px solid ${C.brass}` }}>
+          <div className="mx-auto mb-6 rounded-full flex items-center justify-center" style={{ width: 64, height: 64, border: `1px solid ${C.brass}`, ...(MODERN ? { borderRadius: 14, border: "none", background: "rgba(8,104,104,0.10)" } : {}) }}>
             <FileText color={C.brass} size={26} />
           </div>
           {/* Three kinds of application land here and the old copy described
@@ -8880,7 +8881,7 @@ function ConfirmEmail({ email, onLogin, onHome, pendingReview }) {
       </div>
       <div className="flex-1 flex items-center justify-center px-6">
         <div className="max-w-md text-center lg-fade">
-          <div className="mx-auto mb-6 rounded-full flex items-center justify-center lg-blink" style={{ width: 64, height: 64, border: `1px solid ${C.brass}` }}>
+          <div className="mx-auto mb-6 rounded-full flex items-center justify-center lg-blink" style={{ width: 64, height: 64, border: `1px solid ${C.brass}`, ...(MODERN ? { borderRadius: 14, border: "none", background: "rgba(8,104,104,0.10)" } : {}) }}>
             <Music2 color={C.brass} size={26} />
           </div>
           <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600 }}>Check your inbox</h2>
@@ -8900,7 +8901,7 @@ function ConfirmEmail({ email, onLogin, onHome, pendingReview }) {
             Didn't get it? <button onClick={resend} disabled={resending} style={{ color: C.brassLabel, fontWeight: 600 }}>{resending ? "Sending…" : "Send it again"}</button>
           </p>
           {note && (
-            <p className="mt-2 text-sm" style={{ color: note.bad ? C.burgundy : "#1A9E6E", lineHeight: 1.55 }}>{note.text}</p>
+            <p className="mt-2 text-sm" style={{ color: note.bad ? C.burgundy : OK_C, lineHeight: 1.55 }}>{note.text}</p>
           )}
           <p className="mt-4 text-sm" style={{ color: C.ivoryDim }}>
             Already confirmed? <button onClick={onLogin} style={{ color: C.brassLabel, fontWeight: 600 }}>Log in</button>
@@ -8921,7 +8922,7 @@ function LoginScreen({ onSubmit, onBack, error, unfinished, onResume }) {
     setSubmitting(false);
   }
   return (
-    <div className="min-h-full flex flex-col" style={{ background: C.inkSoft, color: C.ivory }}>
+    <div className="min-h-full flex flex-col" style={{ background: MODERN ? C.ink : C.inkSoft, color: C.ivory }}>
       <div style={{ background: warm("0.05"), borderBottom: `1px solid ${C.inkLine}`, padding: "0 32px", height: 60, display: "flex", alignItems: "center" }}>
         <button onClick={onBack} style={{ color: C.ivoryDim, background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", padding: 0, marginRight: 12 }}>
           <ChevronLeft size={18} />
@@ -8929,7 +8930,7 @@ function LoginScreen({ onSubmit, onBack, error, unfinished, onResume }) {
         <Logo size={20} />
       </div>
       <div className="flex-1 flex items-center justify-center px-6 py-12">
-        <div className="w-full max-w-md lg-fade" style={{ background: warm("0.05"), border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: 40, boxShadow: "0 4px 24px rgba(0,0,0,0.28)" }}>
+        <div className="w-full max-w-md lg-fade" style={{ background: SURF, border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: 40, boxShadow: MODERN ? "0 1px 2px rgba(0,0,0,0.04), 0 8px 24px -16px rgba(0,0,0,0.14)" : "0 4px 24px rgba(0,0,0,0.28)" }}>
           <h2 style={{ fontSize: 24, fontWeight: 700, letterSpacing: -0.3, marginBottom: 4 }}>Welcome back</h2>
           <p style={{ color: C.ivoryDim, fontSize: 15, marginBottom: 24 }}>Log in to your Artium account.</p>
 
@@ -8940,12 +8941,12 @@ function LoginScreen({ onSubmit, onBack, error, unfinished, onResume }) {
               something is broken. This is the one case where the person cannot
               tell which door is theirs, so the door says so. */}
           {unfinished && (
-            <div style={{ marginBottom: 22, padding: "13px 15px", borderRadius: 12, border: "1px solid rgba(239,208,155,0.35)", background: "rgba(239,208,155,0.06)" }}>
+            <div style={{ marginBottom: 22, padding: "13px 15px", borderRadius: 12, border: MODERN ? "1px solid rgba(8,104,104,0.3)" : "1px solid rgba(239,208,155,0.35)", background: MODERN ? "rgba(8,104,104,0.06)" : "rgba(239,208,155,0.06)" }}>
               <p style={{ margin: 0, fontSize: 13.5, fontWeight: 700, color: C.brassLabel }}>You didn't finish signing up</p>
               <p className="text-sm" style={{ margin: "4px 0 0", color: C.ivoryDim, lineHeight: 1.5 }}>
                 There's no account yet — it's only created at the last step. Everything you filled in is still here.
               </p>
-              <button onClick={onResume} style={{ marginTop: 10, padding: "8px 16px", borderRadius: 999, border: "none", background: BRASS_GRAD, color: C.brassText, fontFamily: FONT_BODY, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+              <button onClick={onResume} style={{ marginTop: 10, padding: "8px 16px", borderRadius: MODERN ? 10 : 999, border: "none", background: BRASS_GRAD, color: C.brassText, fontFamily: FONT_BODY, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
                 Carry on where you left off
               </button>
             </div>
@@ -8975,7 +8976,7 @@ function LearnerProfileModal({ learner, onClose }) {
   if (!learner) return null;
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={onClose}>
-      <div style={{ background: warm("0.05"), borderRadius: 16, padding: 32, width: 340, maxWidth: "90vw", boxShadow: "0 16px 48px rgba(0,0,0,0.18)" }} onClick={(e) => e.stopPropagation()}>
+      <div style={{ background: SURF, borderRadius: 16, padding: 32, width: 340, maxWidth: "90vw", boxShadow: "0 16px 48px rgba(0,0,0,0.18)" }} onClick={(e) => e.stopPropagation()}>
         <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20 }}>
           <Avatar name={learner.name} id={learner.learnerId} size={56} photoUrl={learner.photoUrl} />
           <div>
@@ -9453,7 +9454,7 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
                   <button key={key}
                     onClick={() => { ackOne(); setOpen(false); onGoToPromote && onGoToPromote(p.kind); }}
                     style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, textAlign: "left", padding: "13px 16px", border: "none", borderBottom: `1px solid ${C.inkLine}`, background: "transparent", cursor: "pointer", fontFamily: FONT_BODY }}>
-                    <span style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, background: approved ? "rgba(26,158,110,0.14)" : "rgba(179,38,30,0.10)", color: approved ? "#1A9E6E" : "#B3261E", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <span style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, background: approved ? okA("0.14") : "rgba(179,38,30,0.10)", color: approved ? OK_C : "#B3261E", display: "flex", alignItems: "center", justifyContent: "center" }}>
                       <Megaphone size={18} strokeWidth={2} />
                     </span>
                     <span style={{ flex: 1, minWidth: 0 }}>
@@ -9487,7 +9488,7 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
                   <button key={`trk-${key}`}
                     onClick={() => { ackOne(); setOpen(false); onGoToPromote && onGoToPromote("artium"); }}
                     style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, textAlign: "left", padding: "13px 16px", border: "none", borderBottom: `1px solid ${C.inkLine}`, background: "transparent", cursor: "pointer", fontFamily: FONT_BODY }}>
-                    <span style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, background: approved ? "rgba(26,158,110,0.14)" : "rgba(179,38,30,0.10)", color: approved ? "#1A9E6E" : "#B3261E", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <span style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, background: approved ? okA("0.14") : "rgba(179,38,30,0.10)", color: approved ? OK_C : "#B3261E", display: "flex", alignItems: "center", justifyContent: "center" }}>
                       <Music2 size={18} strokeWidth={2} />
                     </span>
                     <span style={{ flex: 1, minWidth: 0 }}>
@@ -9557,7 +9558,7 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
             <p style={{ fontSize: 13, color: C.ivoryDim, padding: "16px", margin: 0 }}>No new notifications</p>
           ) : (
             pending.map((r) => (
-              <div key={r.learnerId} style={{ padding: "12px 16px", background: "#FFF8E7", borderBottom: `1px solid ${C.inkLine}` }}>
+              <div key={r.learnerId} style={{ padding: "12px 16px", background: CREAM_BG, borderBottom: `1px solid ${C.inkLine}` }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
                   <Avatar name={r.name} id={r.learnerId} size={38} photoUrl={r.photoUrl} />
                   <div>
@@ -10614,13 +10615,13 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack, onUpdat
           <GhostBtn onClick={onEdit} icon={Pencil}>Edit</GhostBtn>
           {onLogout && <GhostBtn onClick={onLogout}>Log out</GhostBtn>}
           {onDeleteAccount && !confirmDelete && (
-            <GhostBtn onClick={() => setConfirmDelete(true)} style={{ color: "#c0392b", borderColor: "#c0392b" }}>Delete account</GhostBtn>
+            <GhostBtn onClick={() => setConfirmDelete(true)} style={{ color: RED_C, borderColor: RED_C }}>Delete account</GhostBtn>
           )}
           {confirmDelete && (
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <span style={{ fontSize: 12, color: C.ivoryDim }}>Are you sure?</span>
               <button onClick={async () => { setDeleting(true); await onDeleteAccount(); setDeleting(false); }} disabled={deleting}
-                style={{ fontSize: 12, padding: "6px 12px", borderRadius: 6, fontWeight: 600, background: "#c0392b", color: "#fff", border: "none", cursor: "pointer", opacity: deleting ? 0.6 : 1 }}>
+                style={{ fontSize: 12, padding: "6px 12px", borderRadius: 6, fontWeight: 600, background: RED_C, color: "#fff", border: "none", cursor: "pointer", opacity: deleting ? 0.6 : 1 }}>
                 {deleting ? "Deleting…" : "Yes, delete"}
               </button>
               <button onClick={() => setConfirmDelete(false)}
@@ -10706,7 +10707,7 @@ function Messages({ students, conversations, activeChatId, setActiveChatId, onSe
     <div className="lg-split-chat h-full" style={{ minHeight: 520 }}>
       <div className="lg-scroll overflow-y-auto" style={{ borderRight: `1px solid ${C.inkLine}` }}>
         <div className="px-5 pt-5 pb-2">
-          <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.ivoryDim }}>CONVERSATIONS</p>
+          <p style={MODERN ? { fontSize: 11, color: C.brass, fontWeight: 700, letterSpacing: "0.08em" } : { fontFamily: FONT_MONO, fontSize: 11, color: C.ivoryDim }}>CONVERSATIONS</p>
         </div>
         {ids.length === 0 && (
           <EmptyState icon={MessageCircle} title="No conversations yet" line="Message a student from their profile to start one." />
@@ -10716,7 +10717,7 @@ function Messages({ students, conversations, activeChatId, setActiveChatId, onSe
           if (!s) return null;
           const last = conversations[id][conversations[id].length - 1];
           return (
-            <button key={id} onClick={() => setActiveChatId(id)} className="w-full text-left flex items-center gap-3 px-5 py-3" style={{ background: activeChatId === id ? "rgba(201,162,75,0.08)" : "transparent" }}>
+            <button key={id} onClick={() => setActiveChatId(id)} className="w-full text-left flex items-center gap-3 px-5 py-3" style={{ background: activeChatId === id ? (MODERN ? "rgba(8,104,104,0.08)" : "rgba(201,162,75,0.08)") : "transparent", ...(MODERN ? { borderBottom: "1px solid #E8E2DC" } : {}) }}>
               <Avatar name={s.name} id={s.id} size={38} photoUrl={s.photoUrl} online={s.online} />
               <div className="min-w-0 flex-1">
                 <p style={{ fontSize: 13, fontWeight: 600 }}>{s.name}</p>
@@ -10756,7 +10757,7 @@ function Messages({ students, conversations, activeChatId, setActiveChatId, onSe
                 onKeyDown={(e) => { if (e.key === "Enter") { onSend(text); setText(""); } }}
                 placeholder={`Message ${active.name.split(" ")[0]}…`}
               />
-              <button onClick={() => { onSend(text); setText(""); }} className="rounded-full p-3" style={{ background: C.brass }}><Send size={16} color={C.inkText} /></button>
+              <button onClick={() => { onSend(text); setText(""); }} className="rounded-full p-3" style={{ background: C.brass }}><Send size={16} color={MODERN ? "#FFFFFF" : C.inkText} /></button>
             </div>
           </>
         )}
@@ -10868,7 +10869,7 @@ function TeachingPayoutsPanel({ profileId }) {
           type="button"
           onClick={startOnboarding}
           disabled={loading}
-          style={{ fontSize: 12.5, fontWeight: 700, borderRadius: 999, padding: "7px 15px", border: "none", cursor: loading ? "not-allowed" : "pointer", color: C.brassText, background: BRASS_GRAD, opacity: loading ? 0.7 : 1 }}
+          style={{ fontSize: 12.5, fontWeight: 700, borderRadius: MODERN ? 10 : 999, padding: "7px 15px", border: "none", cursor: loading ? "not-allowed" : "pointer", color: C.brassText, background: BRASS_GRAD, opacity: loading ? 0.7 : 1 }}
         >
           {loading ? "Redirecting…" : label}
         </button>
@@ -12932,8 +12933,8 @@ function ArtiumSoundCard({ myProfile, authUser }) {
   const publicUrl = (p) => supabase.storage.from("student-audio").getPublicUrl(p).data.publicUrl;
 
   const STATE = {
-    pending:  { colour: C.brassLabel, title: "Waiting for review", body: "Our team listens to every recording before it goes live. This usually takes a day or two." },
-    approved: { colour: "#1A9E6E",    title: "Live on Artium",     body: "Visitors hear this when they play the music on Artium." },
+    pending:  { colour: MODERN ? AMBER_D : C.brassLabel, title: "Waiting for review", body: "Our team listens to every recording before it goes live. This usually takes a day or two." },
+    approved: { colour: OK_C,    title: "Live on Artium",     body: "Visitors hear this when they play the music on Artium." },
     rejected: { colour: C.burgundy,   title: "Not accepted",       body: "This one wasn't right for the site — you're welcome to submit a different recording." },
   };
 
@@ -13001,8 +13002,8 @@ function ArtiumSoundCard({ myProfile, authUser }) {
 
           {audio.url ? (
             <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-              <CheckIcon size={18} color="#1A9E6E" />
-              <span style={{ fontSize: 14, color: "#1A9E6E", fontWeight: 600 }}>{audio.name}</span>
+              <CheckIcon size={18} color={OK_C} />
+              <span style={{ fontSize: 14, color: OK_C, fontWeight: 600 }}>{audio.name}</span>
               <button
                 onClick={() => setAudio({ url: "", name: "" })}
                 style={{ background: "none", border: "none", padding: 0, font: "inherit", fontSize: 13, color: C.ivoryDim, cursor: "pointer", textDecoration: "underline" }}
@@ -13256,9 +13257,9 @@ function PromoteMe({ myProfile, authUser, focus }) {
                 onClick={() => setView(v)}
                 style={{
                   display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
-                  width: "100%", textAlign: "left", padding: "18px 20px", borderRadius: 999,
-                  border: `1px solid ${C.inkLine}`, background: warm("0.05"), cursor: "pointer",
-                  font: "inherit", boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
+                  width: "100%", textAlign: "left", padding: "18px 20px", borderRadius: MODERN ? 12 : 999,
+                  border: `1px solid ${C.inkLine}`, background: SURF, cursor: "pointer",
+                  font: "inherit", boxShadow: MODERN ? "none" : "0 2px 12px rgba(0,0,0,0.06)",
                 }}
               >
                 <span style={{ minWidth: 0 }}>
@@ -13293,9 +13294,9 @@ function PromoteMe({ myProfile, authUser, focus }) {
                 onClick={() => setPromoMode(v)}
                 style={{
                   display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
-                  width: "100%", textAlign: "left", padding: "18px 20px", borderRadius: 999,
-                  border: `1px solid ${C.inkLine}`, background: warm("0.05"), cursor: "pointer",
-                  font: "inherit", boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
+                  width: "100%", textAlign: "left", padding: "18px 20px", borderRadius: MODERN ? 12 : 999,
+                  border: `1px solid ${C.inkLine}`, background: SURF, cursor: "pointer",
+                  font: "inherit", boxShadow: MODERN ? "none" : "0 2px 12px rgba(0,0,0,0.06)",
                 }}
               >
                 <span style={{ minWidth: 0 }}>
@@ -13325,7 +13326,7 @@ function PromoteMe({ myProfile, authUser, focus }) {
                 style={{ width: "100%", padding: "11px 12px", borderRadius: 10, border: `1.5px solid ${freeLink && !freeLinkValid ? C.burgundy : C.inkLine}`, fontSize: 14, fontFamily: FONT_BODY, boxSizing: "border-box", outline: "none" }}
               />
               {freeLink && (
-                <p style={{ fontSize: 12, margin: "6px 2px 0", color: freeLinkValid ? "#1A9E6E" : C.burgundy }}>
+                <p style={{ fontSize: 12, margin: "6px 2px 0", color: freeLinkValid ? OK_C : C.burgundy }}>
                   {freeLinkValid ? `✓ ${freeProvider} link accepted` : "✕ Only YouTube, Facebook, Google Drive, Dropbox or Instagram links are accepted"}
                 </p>
               )}
@@ -13359,8 +13360,8 @@ function PromoteMe({ myProfile, authUser, focus }) {
             <div key={row.id} style={card}>
               {label("Status")}
               <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "10px 0 4px" }}>
-                <span style={{ width: 9, height: 9, borderRadius: "50%", background: rowApproved ? "#1A9E6E" : C.brass, display: "inline-block" }} />
-                <span style={{ fontSize: 15, fontWeight: 700, color: rowApproved ? "#1A9E6E" : C.brassLabel }}>
+                <span style={{ width: 9, height: 9, borderRadius: "50%", background: rowApproved ? OK_C : (MODERN ? AMBER_D : C.brass), display: "inline-block" }} />
+                <span style={{ fontSize: 15, fontWeight: 700, color: rowApproved ? OK_C : (MODERN ? AMBER_D : C.brassLabel) }}>
                   {rowApproved ? `Approved — ${freeSlotLabel(row.slot_date)}` : "Awaiting approval"}
                 </span>
               </div>
@@ -13402,7 +13403,7 @@ function PromoteMe({ myProfile, authUser, focus }) {
           <ul style={{ margin: "12px 0 0", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 9 }}>
             {PROMO_OFFER.map((o, i) => (
               <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 9, fontSize: 14, color: C.ivory, lineHeight: 1.4 }}>
-                <CheckIcon size={16} color="#1A9E6E" style={{ flexShrink: 0, marginTop: 2 }} /> {o}
+                <CheckIcon size={16} color={OK_C} style={{ flexShrink: 0, marginTop: 2 }} /> {o}
               </li>
             ))}
           </ul>
@@ -13426,7 +13427,7 @@ function PromoteMe({ myProfile, authUser, focus }) {
               style={{ width: "100%", padding: "11px 12px", borderRadius: 10, border: `1.5px solid ${videoLink && !linkValid ? C.burgundy : C.inkLine}`, fontSize: 14, fontFamily: FONT_BODY, boxSizing: "border-box", outline: "none" }}
             />
             {videoLink && (
-              <p style={{ fontSize: 12, margin: "6px 2px 0", color: linkValid ? "#1A9E6E" : C.burgundy }}>
+              <p style={{ fontSize: 12, margin: "6px 2px 0", color: linkValid ? OK_C : C.burgundy }}>
                 {linkValid ? `✓ ${provider} link accepted` : "✕ Only Google Drive, Dropbox, OneDrive, YouTube or WeTransfer links are accepted"}
               </p>
             )}
@@ -13435,7 +13436,7 @@ function PromoteMe({ myProfile, authUser, focus }) {
             <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
               {[{ v: "bio", t: "Use my bio" }, { v: "custom", t: "Custom text" }].map(({ v, t }) => (
                 <button key={v} onClick={() => setCaptionPref(v)}
-                  style={{ padding: "7px 14px", borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: "pointer", background: warm("0.05"), color: captionPref === v ? C.ivory : C.ivoryDim, border: captionPref === v ? `2px solid ${C.brass}` : `1px solid ${C.inkLine}` }}>{t}</button>
+                  style={{ padding: "7px 14px", borderRadius: MODERN ? 10 : 20, fontSize: 13, fontWeight: 600, cursor: "pointer", background: SURF, color: captionPref === v ? C.ivory : C.ivoryDim, border: captionPref === v ? `2px solid ${C.brass}` : `1px solid ${C.inkLine}` }}>{t}</button>
               ))}
             </div>
             {captionPref === "custom" && (
@@ -13465,8 +13466,8 @@ function PromoteMe({ myProfile, authUser, focus }) {
           <div style={card}>
             {label("Status")}
             <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "10px 0 4px" }}>
-              <span style={{ width: 9, height: 9, borderRadius: "50%", background: approved ? "#1A9E6E" : C.brass, display: "inline-block" }} />
-              <span style={{ fontSize: 15, fontWeight: 700, color: approved ? "#1A9E6E" : C.brassLabel }}>
+              <span style={{ width: 9, height: 9, borderRadius: "50%", background: approved ? OK_C : (MODERN ? AMBER_D : C.brass), display: "inline-block" }} />
+              <span style={{ fontSize: 15, fontWeight: 700, color: approved ? OK_C : (MODERN ? AMBER_D : C.brassLabel) }}>
                 {approved ? "Approved" : "Awaiting approval"}
               </span>
             </div>
@@ -13483,7 +13484,7 @@ function PromoteMe({ myProfile, authUser, focus }) {
 
             <div style={{ marginTop: 16, position: "relative" }}>
               {promoPaid ? (
-                <div style={{ width: "100%", padding: "13px 0", borderRadius: 12, background: "#EAF3DE", color: "#3B6D11", fontSize: 15, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                <div style={{ width: "100%", padding: "13px 0", borderRadius: 12, background: MODERN ? OK_BG : "#EAF3DE", color: MODERN ? "#1F7A4D" : "#3B6D11", fontSize: 15, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
                   <CheckCircle2 size={17} /> Paid — promotion booked
                 </div>
               ) : (
@@ -13616,7 +13617,7 @@ function AdminScreen({ authUser, onlineCount }) {
     setRows((prev) => prev.filter((r) => !(r.kind === "free_weekly" && r.slot_date === slotDate)));
   }
   const card = { ...PANEL, padding: "16px 16px" };
-  const STATUS_COLOR = { approved: "#1A9E6E", rejected: C.burgundy, pending: C.brassLabel };
+  const STATUS_COLOR = { approved: OK_C, rejected: C.burgundy, pending: MODERN ? AMBER_D : C.brassLabel };
 
   return (
     <div style={{ padding: "20px 16px 120px", background: C.ink, minHeight: "100%", fontFamily: FONT_BODY }}>
@@ -13633,7 +13634,7 @@ function AdminScreen({ authUser, onlineCount }) {
               else. The green dot is the same mark it always carried. */}
           {onlineCount != null && (
             <span style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 10, padding: "5px 12px", borderRadius: 999, background: warm("0.06"), border: `1px solid ${C.inkLine}`, fontSize: 12, color: C.ivoryDim }}>
-              <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#1A9E6E", display: "inline-block", flexShrink: 0 }} />
+              <span style={{ width: 7, height: 7, borderRadius: "50%", background: OK_C, display: "inline-block", flexShrink: 0 }} />
               <span style={{ color: C.ivory, fontWeight: 600 }}>{onlineCount}</span> online now
             </span>
           )}
@@ -13643,7 +13644,7 @@ function AdminScreen({ authUser, onlineCount }) {
         <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
           {[{ v: "verifications", t: "Student verifications" }, { v: "conservatories", t: "Conservatories" }, { v: "tracks", t: "Recordings" }, { v: "promotions", t: "Promotions" }].map(({ v, t }) => (
             <button key={v} onClick={() => setSection(v)}
-              style={{ padding: "9px 18px", borderRadius: 999, fontSize: 13, fontWeight: 700, cursor: "pointer", background: section === v ? BRASS_GRAD : warm("0.07"), color: section === v ? C.brassText : C.ivoryDim, border: section === v ? "none" : `1px solid ${C.inkLine}` }}>{t}</button>
+              style={{ padding: "9px 18px", borderRadius: MODERN ? 10 : 999, fontSize: 13, fontWeight: 700, cursor: "pointer", background: section === v ? BRASS_GRAD : (MODERN ? "#FFFFFF" : warm("0.07")), color: section === v ? C.brassText : C.ivoryDim, border: section === v ? "none" : `1px solid ${C.inkLine}` }}>{t}</button>
           ))}
         </div>
 
@@ -13655,7 +13656,7 @@ function AdminScreen({ authUser, onlineCount }) {
         <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
           {[{ v: "pending", t: `Pending (${pending.length})` }, { v: "history", t: `History (${decided.length})` }].map(({ v, t }) => (
             <button key={v} onClick={() => setTab(v)}
-              style={{ padding: "8px 16px", borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: "pointer", background: warm("0.05"), color: tab === v ? C.ivory : C.ivoryDim, border: tab === v ? `2px solid ${C.brass}` : `1px solid ${C.inkLine}` }}>{t}</button>
+              style={{ padding: "8px 16px", borderRadius: MODERN ? 10 : 20, fontSize: 13, fontWeight: 600, cursor: "pointer", background: SURF, color: tab === v ? C.ivory : C.ivoryDim, border: tab === v ? `2px solid ${C.brass}` : `1px solid ${C.inkLine}` }}>{t}</button>
           ))}
         </div>
 
@@ -13673,7 +13674,7 @@ function AdminScreen({ authUser, onlineCount }) {
               <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: STATUS_COLOR[p.status] || C.ivoryDim }}>{p.status}</span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-              <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", padding: "2px 8px", borderRadius: 999, background: isFree ? "rgba(26,158,110,0.12)" : warm("0.12"), color: isFree ? "#1A9E6E" : C.brassLabel }}>
+              <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", padding: "2px 8px", borderRadius: 999, background: isFree ? okA("0.12") : warm("0.12"), color: isFree ? OK_C : C.brassLabel }}>
                 {isFree ? "Free spotlight" : "Paid €65"}
               </span>
               {isFree && p.slot_date && <span style={{ fontSize: 12, color: C.ivoryDim }}>Saturday {p.slot_date}</span>}
@@ -13690,8 +13691,8 @@ function AdminScreen({ authUser, onlineCount }) {
             )}
             {p.status === "pending" && (
               <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-                <button onClick={() => approve(p)} style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "none", background: "#1A9E6E", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Approve</button>
-                <button onClick={() => rejectPromo(p)} style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: `1px solid ${C.inkLine}`, background: warm("0.05"), color: C.burgundy, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Reject</button>
+                <button onClick={() => approve(p)} style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "none", background: OK_C, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Approve</button>
+                <button onClick={() => rejectPromo(p)} style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: `1px solid ${MODERN ? C.burgundy : C.inkLine}`, background: SURF, color: C.burgundy, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Reject</button>
               </div>
             )}
             {p.status !== "pending" && (
@@ -13780,7 +13781,7 @@ function AdminTrackList({ list, editable, card, names, busy, decide, removeTrack
 
             <MiniAudioPlayer src={publicUrl(r.audio_url)} />
 
-            <p style={{ margin: "10px 0 0", fontSize: 11, fontFamily: FONT_MONO, color: r.rights_confirmed ? "#1A9E6E" : C.burgundy }}>
+            <p style={{ margin: "10px 0 0", fontSize: 11, fontFamily: FONT_MONO, color: r.rights_confirmed ? OK_C : C.burgundy }}>
               {r.rights_confirmed
                 ? "✓ Confirmed as their own performance, cleared for use"
                 : "✕ No permission recorded — do not publish"}
@@ -13793,12 +13794,12 @@ function AdminTrackList({ list, editable, card, names, busy, decide, removeTrack
                     disabled={busy === r.id || !r.rights_confirmed}
                     onClick={() => decide(r, "approved")}
                     title={r.rights_confirmed ? undefined : "No permission was recorded for this recording"}
-                    style={{ padding: "8px 14px", borderRadius: 8, border: "none", background: r.rights_confirmed ? "#1A9E6E" : C.inkLine, color: "#fff", fontSize: 12, fontWeight: 700, cursor: r.rights_confirmed ? "pointer" : "not-allowed" }}
+                    style={{ padding: "8px 14px", borderRadius: 8, border: "none", background: r.rights_confirmed ? OK_C : C.inkLine, color: "#fff", fontSize: 12, fontWeight: 700, cursor: r.rights_confirmed ? "pointer" : "not-allowed" }}
                   >
                     Approve
                   </button>
                   <button disabled={busy === r.id} onClick={() => decide(r, "rejected")}
-                    style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: warm("0.05"), color: C.burgundy, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                    style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${MODERN ? C.burgundy : C.inkLine}`, background: SURF, color: C.burgundy, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
                     Reject
                   </button>
                 </>
@@ -13926,11 +13927,11 @@ function AdminTracks({ card, STATUS_COLOR, authUser }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-      <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brassLabel, letterSpacing: "0.06em", margin: 0 }}>
+      <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brassLabel, letterSpacing: "0.06em", margin: 0, ...(MODERN ? { fontWeight: 700 } : {}) }}>
         PENDING ({pending.length})
       </p>
       <AdminTrackList list={pending} editable card={card} names={names} busy={busy} decide={decide} removeTrack={removeTrack} publicUrl={publicUrl} STATUS_COLOR={STATUS_COLOR} />
-      <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brassLabel, letterSpacing: "0.06em", margin: "6px 0 0" }}>
+      <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brassLabel, letterSpacing: "0.06em", margin: "6px 0 0", ...(MODERN ? { fontWeight: 700 } : {}) }}>
         HISTORY ({decided.length})
       </p>
       <AdminTrackList list={decided} editable={false} card={card} names={names} busy={busy} decide={decide} removeTrack={removeTrack} publicUrl={publicUrl} STATUS_COLOR={STATUS_COLOR} />
@@ -14055,8 +14056,8 @@ function AdminConservatories({ card }) {
 
   const chip = (on) => ({
     display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 10px", borderRadius: 999,
-    border: `1px solid ${on ? "rgba(26,158,110,0.55)" : C.inkLine}`,
-    background: on ? "rgba(26,158,110,0.12)" : warm("0.07"),
+    border: `1px solid ${on ? okA("0.55") : C.inkLine}`,
+    background: on ? okA("0.12") : warm("0.07"),
     color: on ? C.ivory : C.ivoryDim, fontSize: 12, fontWeight: 600, cursor: "pointer",
   });
 
@@ -14073,7 +14074,7 @@ function AdminConservatories({ card }) {
       </span>
 
       {note && (
-        <p className="text-sm" style={{ margin: "0 0 10px", color: note.bad ? C.burgundy : "#1A9E6E" }}>{note.text}</p>
+        <p className="text-sm" style={{ margin: "0 0 10px", color: note.bad ? C.burgundy : OK_C }}>{note.text}</p>
       )}
 
       {shown.length === 0 && <p className="text-sm" style={{ color: C.ivoryDim }}>No school matches that.</p>}
@@ -14522,7 +14523,7 @@ function AdminVerifications({ card, STATUS_COLOR }) {
     const d = x.document;
     const c = x.checks || {};
     const agrees = c.conservatory_matches_claim;
-    const tone = agrees === false ? C.burgundy : agrees === true ? "#1A9E6E" : C.brassLabel;
+    const tone = agrees === false ? C.burgundy : agrees === true ? OK_C : C.brassLabel;
 
     const flags = [];
     if (agrees === false) flags.push(`Claimed ${c.claimed_conservatory || "—"}, document says ${d.conservatory_name || "nothing"}`);
@@ -14633,7 +14634,7 @@ function AdminVerifications({ card, STATUS_COLOR }) {
                         const suggested = looksLike(fieldVal(r, "conservatory_name"), fieldVal(r, "conservatory_address"));
                         if (!pick) {
                           return (
-                            <div style={{ padding: "9px 10px", borderRadius: 10, border: `1px solid ${suggested.length ? "rgba(239,208,155,0.35)" : C.inkLine}`, background: suggested.length ? "rgba(239,208,155,0.06)" : warm("0.05") }}>
+                            <div style={{ padding: "9px 10px", borderRadius: 10, border: `1px solid ${suggested.length ? (MODERN ? "rgba(8,104,104,0.35)" : "rgba(239,208,155,0.35)") : C.inkLine}`, background: suggested.length ? (MODERN ? "rgba(8,104,104,0.06)" : "rgba(239,208,155,0.06)") : warm("0.05") }}>
                               <p style={{ margin: "0 0 3px", fontSize: 11, fontWeight: 700, color: C.brassLabel }}>
                                 {suggested.length ? "Looks like a school we already have" : "Which school is this?"}
                               </p>
@@ -14672,8 +14673,8 @@ function AdminVerifications({ card, STATUS_COLOR }) {
                         }
                         if (pick.mode === "existing") {
                           return (
-                            <div style={{ padding: "9px 10px", borderRadius: 10, border: "1px solid #1A9E6E", background: "rgba(26,158,110,0.08)" }}>
-                              <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: "#1A9E6E" }}>Approving as an existing school</p>
+                            <div style={{ padding: "9px 10px", borderRadius: 10, border: `1px solid ${OK_C}`, background: okA("0.08") }}>
+                              <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: OK_C }}>Approving as an existing school</p>
                               <p style={{ margin: "3px 0 0", fontSize: 12, color: C.ivory, fontWeight: 600 }}>{pick.name}</p>
                               {pick.where ? <p style={{ margin: "2px 0 0", fontSize: 10.5, color: C.ivoryDim }}>{pick.where}</p> : null}
                               <p style={{ margin: "6px 0 0", fontSize: 10.5, color: C.ivoryDim, lineHeight: 1.45 }}>
@@ -14684,7 +14685,7 @@ function AdminVerifications({ card, STATUS_COLOR }) {
                           );
                         }
                         return (
-                          <div style={{ padding: "9px 10px", borderRadius: 10, border: `1px solid ${C.brass}`, background: "rgba(239,208,155,0.05)" }}>
+                          <div style={{ padding: "9px 10px", borderRadius: 10, border: `1px solid ${C.brass}`, background: MODERN ? "rgba(8,104,104,0.05)" : "rgba(239,208,155,0.05)" }}>
                             <p style={{ margin: "0 0 6px", fontSize: 11, fontWeight: 700, color: C.brassLabel }}>Adding a new school</p>
                             <input style={inp} value={fieldVal(r, "conservatory_name")} onChange={(e) => setField(r, "conservatory_name", e.target.value)} placeholder="Conservatory name" />
                             <input style={inp} value={fieldVal(r, "conservatory_address")} onChange={(e) => setField(r, "conservatory_address", e.target.value)} placeholder="Address — street, city, country" />
@@ -14715,7 +14716,7 @@ function AdminVerifications({ card, STATUS_COLOR }) {
                             disabled={busy === r.id || !ready}
                             onClick={() => decide(r, "approved")}
                             title={ready ? undefined : "Choose the school first"}
-                            style={{ padding: "8px 10px", borderRadius: 8, border: "none", background: ready ? "#1A9E6E" : warm("0.12"), color: ready ? "#fff" : C.ivoryDim, fontSize: 12, fontWeight: 700, cursor: ready ? "pointer" : "not-allowed" }}
+                            style={{ padding: "8px 10px", borderRadius: 8, border: "none", background: ready ? OK_C : warm("0.12"), color: ready ? "#fff" : C.ivoryDim, fontSize: 12, fontWeight: 700, cursor: ready ? "pointer" : "not-allowed" }}
                           >Approve</button>
                         );
                       })()}
@@ -14758,7 +14759,7 @@ function AdminVerifications({ card, STATUS_COLOR }) {
                               type="checkbox"
                               checked={!!keepDomains[r.id]}
                               onChange={(e) => setKeepDomains((x) => ({ ...x, [r.id]: e.target.checked }))}
-                              style={{ marginTop: 1, accentColor: "#EFD09B" }}
+                              style={{ marginTop: 1, accentColor: MODERN ? C.brass : "#EFD09B" }}
                             />
                             <span>
                               Keep <b style={{ color: C.ivory }}>{existing.map((d) => "@" + d).join(", ")}</b> working too
@@ -15822,7 +15823,7 @@ function LearnerChat({ teacher, messages, onSend }) {
       </div>
       <div className="px-3 py-3 flex items-center gap-2" style={{ borderTop: `1px solid ${C.inkLine}` }}>
         <input style={{ ...inputStyle, flex: 1 }} value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") submit(); }} placeholder={`Message ${teacher.name.split(" ")[0]}…`} />
-        <button onClick={submit} className="rounded-full p-3" style={{ background: C.brass }}><Send size={16} color={C.inkText} /></button>
+        <button onClick={submit} className="rounded-full p-3" style={{ background: C.brass }}><Send size={16} color={MODERN ? "#FFFFFF" : C.inkText} /></button>
       </div>
     </div>
   );
