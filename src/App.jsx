@@ -4990,7 +4990,7 @@ export default function App() {
           onTab={(k) => { if (k === "home") return; setScreen("app"); setAppTabPersist(k); }}
         />
       )}
-      {view === "composers" && <WallOfComposers onBack={backToEntry} />}
+      {view === "composers" && <WallOfComposers onBack={backToEntry} modern={MODERN} />}
       {view === "learnerSignup" && <LearnerSignup onSubmit={submitLearner} onBack={backToEntry} authUser={authUser} error={authError} />}
       {view === "learnerMap" && (
         <LearnerScreen
@@ -12031,7 +12031,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
               />
             </div>
             {/* Bottom nav — My Planning */}
-            <div style={{ display: "flex", justifyContent: "center", gap: 40, padding: "20px 20px 12px", background: SURF, borderTop: `1px solid ${C.inkLine}` }}>
+            <div style={{ display: "flex", justifyContent: "center", gap: 40, padding: "20px 20px 12px", background: MODERN ? "transparent" : SURF, borderTop: MODERN ? "none" : `1px solid ${C.inkLine}` }}>
               {[{ v: "planning", Icon: LayoutList, label: "My Planning" }].map(({ v, Icon, label }) => (
                 <button key={v} onClick={() => setLearnerRoomView(v)}
                   style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5, background: "none", border: "none", cursor: "pointer", color: C.ivoryDim }}>

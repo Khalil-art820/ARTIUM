@@ -437,3 +437,13 @@ html.theme-modern .artium-aw-bar svg path{fill:#FFFFFF!important}
 html.theme-modern .artium-aw-bar svg + span{color:#FFFFFF!important}
 html.theme-modern .artium-aw-bar .artium-aw-count,
 html.theme-modern .artium-aw-bar .artium-aw-count svg{color:#FFFFFF}
+
+/* ---- polish after the logged-in screenshot pass ---- */
+/* Learner screen root was painted white and stopped short of the viewport,
+   leaving white bands between the page-coloured sections. */
+html.theme-modern .artium-has-tabs{background:#F7F4F2 !important}
+/* Instrument drawings read faint at .72 opacity on white tiles. */
+html.theme-modern .artium-inst img{opacity:1}
+/* Wall of Composers: page ground to match the app. */
+html.theme-modern [style*="color-scheme: light"].min-h-screen{background:#F7F4F2}
+html.theme-modern [style*="color-scheme: light"].min-h-screen > main{padding-top:32px}

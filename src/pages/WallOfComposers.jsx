@@ -1,5 +1,6 @@
 import React from "react";
 import { ChevronLeft } from "lucide-react";
+import { CARDS } from "../components/entrygate/ArtiumGate";
 
 // Twelve, curated rather than exhaustive — a wall that names names instead
 // of trying to be a music history syllabus. Years and one line of legacy
@@ -24,7 +25,7 @@ const COMPOSERS = [
  * read. Same light material and serif/sans pairing as the rest of the
  * rebuilt gate, so leaving it doesn't feel like leaving Artium.
  */
-export default function WallOfComposers({ onBack }) {
+export default function WallOfComposers({ onBack, modern }) {
   // The app around this page is dark, and so is the body behind it. On iOS,
   // rubber-band overscroll shows the body — a black flash framing a white
   // editorial page. Own the body while mounted; put it back on the way out.
@@ -35,7 +36,22 @@ export default function WallOfComposers({ onBack }) {
   }, []);
   return (
     <div className="min-h-screen bg-white" style={{ colorScheme: "light" }}>
-      <header className="flex items-center gap-4 px-6 py-6 md:px-12 md:py-8">
+{modern ? (
+        /* The app's shared teal header: back disc, brand icon, ARTIUM wordmark. */
+        <header className="artium-net-bar">
+          <button className="artium-net-puck" onClick={onBack} aria-label="Back">
+            <ChevronLeft size={17} strokeWidth={2} />
+          </button>
+          {(() => { const BrandIcon = CARDS[0].Icon; return <span className="tm-brand-icon" aria-hidden="true"><BrandIcon /></span>; })()}
+          <span className="artium-net-word" aria-label="ARTIUM">
+            <svg viewBox="0 0 15 15" aria-hidden="true">
+              <path d="M7.5 0.9 L1.4 14.4 M7.5 0.9 L13.6 14.4" stroke="currentColor" strokeWidth="2.85" fill="none" />
+            </svg>
+            <span aria-hidden="true">RTIUM</span>
+          </span>
+        </header>
+      ) : (
+            <header className="flex items-center gap-4 px-6 py-6 md:px-12 md:py-8">
         <button
           onClick={onBack}
           aria-label="Back"
@@ -55,6 +71,7 @@ export default function WallOfComposers({ onBack }) {
           </span>
         </span>
       </header>
+      )}
 
       <main className="mx-auto max-w-5xl px-6 pb-16 md:px-10">
         <div className="mb-12 text-center">
