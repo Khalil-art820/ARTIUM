@@ -265,3 +265,26 @@ html.theme-modern a:focus-visible,
 html.theme-modern input:focus-visible,
 html.theme-modern textarea:focus-visible,
 html.theme-modern select:focus-visible{outline:2px solid #086868;outline-offset:2px}
+
+/* ---- fit fixes (seen on a 375px phone) ---- */
+/* Seven tabs (pianists carry Concerts) must share the width: let buttons
+   shrink and cap the pill to the button. */
+.artium-aw-tabs.artium-aw-tabs--modern button{min-width:0}
+.artium-aw-tabs.artium-aw-tabs--modern button > span:first-child{width:100%;max-width:56px}
+.artium-aw-tabs.artium-aw-tabs--modern{padding-left:2px;padding-right:2px}
+/* Header with a back puck: tighten so the avatar never clips. */
+html.theme-modern .artium-net-bar,
+html.theme-modern .artium-lp-bar{gap:6px;padding-left:max(10px,calc((100% - 536px)/2));padding-right:max(10px,calc((100% - 536px)/2))}
+html.theme-modern .artium-net-right,
+html.theme-modern .artium-lp-right{gap:6px;flex-shrink:1;min-width:0}
+@media (max-width:420px){
+  html.theme-modern .artium-net-bar .artium-net-word,
+  html.theme-modern .artium-lp-bar .artium-lp-word{font-size:18px;letter-spacing:.14em}
+  html.theme-modern .tm-brand-icon{width:32px;height:32px}
+  html.theme-modern .tm-brand-icon svg,
+  html.theme-modern .tm-brand-icon > span{width:22px!important;height:22px!important}
+  html.theme-modern .artium-net-bar .artium-net-puck,
+  html.theme-modern .artium-lp-bar .artium-net-puck{width:34px;height:34px}
+  html.theme-modern .artium-net-bar .artium-net-count,
+  html.theme-modern .artium-lp-bar .artium-gx-count{padding:0 2px;font-size:14px}
+}

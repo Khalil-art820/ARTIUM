@@ -2291,7 +2291,7 @@ function AuthPrompt() {
               type="submit"
               disabled={submitting}
               style={{
-                marginTop: 4, width: "100%", background: AP_GOLD, color: "#3A2E10", border: "none",
+                marginTop: 4, width: "100%", background: AP_GOLD, color: MODERN ? "#FFFFFF" : "#3A2E10", border: "none",
                 borderRadius: 999, padding: "12px 0", fontSize: 14.5, fontWeight: 700,
                 cursor: submitting ? "default" : "pointer", opacity: submitting ? 0.7 : 1,
               }}
