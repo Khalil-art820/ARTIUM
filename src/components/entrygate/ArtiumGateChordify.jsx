@@ -73,9 +73,7 @@ export default function ArtiumGateChordify({
     <div className="cgate">
       <header className="cg-head">
         <div className="cg-head-in">
-          <button type="button" className="cg-icon" aria-label="Explore" onClick={onLearner}>
-            <Svg><circle cx="11" cy="11" r="6.5" /><path d="M20 20l-4.2-4.2" /></Svg>
-          </button>
+          <span className="cg-head-spacer" aria-hidden="true" />
           <div className="cg-word" aria-label="ARTIUM">
             {/* The house wordmark, kept from the original gate: Jost caps,
                 wide tracking, and the crossbar-less A drawn as a glyph. */}
@@ -105,21 +103,9 @@ export default function ArtiumGateChordify({
         </div>
       </header>
 
-      <div className="cg-promo">
-        <div className="cg-promo-in">
-          <span className="cg-promo-text">Classical music's home for students, teachers and audiences</span>
-          <button type="button" className="cg-pill" onClick={goStudent} disabled={medallionOff}>Join the network</button>
-          <span className="cg-rate">{count} musicians</span>
-        </div>
-      </div>
-
       <section className="cg-hero">
         <div className="cg-hero-in">
           <h1>Discover, connect and play classical music</h1>
-          <button type="button" className="cg-search" onClick={onLearner} aria-label="Find a teacher">
-            <span>Who are you looking for?</span>
-            <span className="cg-search-go"><Svg size={24}><circle cx="11" cy="11" r="6.5" /><path d="M20 20l-4.2-4.2" /></Svg></span>
-          </button>
         </div>
       </section>
 
