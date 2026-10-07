@@ -38,6 +38,16 @@ const CHIP_FALLBACKS = [
   { initials: "LM", name: "Lucas M.", meta: "Violin · Vienna" },
 ];
 
+const KEYS = [
+  { t: "Piano", check: true },
+  { t: "Violin" },
+  { t: "Masters", check: true },
+  { t: "Cello" },
+  { t: "Voice", check: true },
+  { t: "Bachelor" },
+  { t: "Flute" },
+];
+
 export default function ArtiumGateChordify({
   onLearner, onStudent, onPianist, onComposers, onNews,
   learnerProfile, studentLoggedIn, musicOn, onMusicToggle, memberCount,
@@ -128,9 +138,16 @@ export default function ArtiumGateChordify({
           onClick={activateStudent}
           onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") activateStudent(e); }}
         >
+          <div className="cg-illo" aria-hidden="true">
+            {KEYS.map((k, i) => (
+              <span key={k.t} className={`cg-key cg-key-${i}`}>
+                {k.t}
+                {k.check && <i className="cg-check"><svg viewBox="0 0 12 12" width="10" height="10"><path d="M2.5 6.3l2.3 2.3 4.7-5" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg></i>}
+              </span>
+            ))}
+          </div>
           <div className="cg-student-head">
-            <span className="cg-num">05</span>
-            <h2>I am a Conservatory Student | Graduate</h2>
+            <h2>I am a Conservatory Student or Graduate</h2>
           </div>
           <div className="cg-chips">
             {CHIP_FALLBACKS.map((fb, i) => {
@@ -148,9 +165,9 @@ export default function ArtiumGateChordify({
             })}
           </div>
           <p>A verified community. Connect, collaborate, grow.</p>
-          <button type="button" className="cg-btn" aria-label="Join the community" disabled={medallionOff}
+          <button type="button" className="cg-btn" aria-label="Join as a student or graduate" disabled={medallionOff}
             onClick={(e) => { e.stopPropagation(); activateStudent(e); }}>
-            Join the community
+            Join as a student or graduate
           </button>
         </article>
 
