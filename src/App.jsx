@@ -5213,12 +5213,14 @@ export default function App() {
               and a tab everybody sees for a room almost nobody can open is
               worse than a strip the two of them learn. */}
           {myProfile && !selectedStudentId && isAdmin && (
-            <div className="flex" style={{ borderBottom: `1px solid ${C.inkLine}`, background: warm("0.05") }}>
+            <div className="flex" style={{ borderBottom: MODERN ? "none" : `1px solid ${C.inkLine}`, background: MODERN ? "#054F4F" : warm("0.05") }}>
               {[
                 { key: "admin", label: "Admin", Icon: ShieldCheck },
               ].map(({ key, label, Icon }) => (
                 <button key={key} onClick={() => setAppTabPersist(key)}
-                  style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2, padding: "8px 4px 6px", fontWeight: appTab === key ? 600 : 400, fontSize: 12, color: appTab === key ? C.ivory : C.ivoryDim, borderBottom: appTab === key ? `2px solid ${C.brass}` : "2px solid transparent", background: "transparent", border: "none", cursor: "pointer" }}>
+                  style={MODERN
+                    ? { flex: 1, display: "flex", flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 6, padding: "7px 4px", fontWeight: 600, fontSize: 12, color: "#FFFFFF", opacity: appTab === key ? 1 : 0.8, background: "transparent", border: "none", cursor: "pointer" }
+                    : { flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2, padding: "8px 4px 6px", fontWeight: appTab === key ? 600 : 400, fontSize: 12, color: appTab === key ? C.ivory : C.ivoryDim, borderBottom: appTab === key ? `2px solid ${C.brass}` : "2px solid transparent", background: "transparent", border: "none", cursor: "pointer" }}>
                   <Icon size={16} />
                   {label}
                 </button>
@@ -13641,7 +13643,7 @@ function AdminScreen({ authUser, onlineCount }) {
         </div>
 
         {/* Section toggle */}
-        <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+        <div style={MODERN ? { display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" } : { display: "flex", gap: 8, justifyContent: "center" }}>
           {[{ v: "verifications", t: "Student verifications" }, { v: "conservatories", t: "Conservatories" }, { v: "tracks", t: "Recordings" }, { v: "promotions", t: "Promotions" }].map(({ v, t }) => (
             <button key={v} onClick={() => setSection(v)}
               style={{ padding: "9px 18px", borderRadius: MODERN ? 10 : 999, fontSize: 13, fontWeight: 700, cursor: "pointer", background: section === v ? BRASS_GRAD : (MODERN ? "#FFFFFF" : warm("0.07")), color: section === v ? C.brassText : C.ivoryDim, border: section === v ? "none" : `1px solid ${C.inkLine}` }}>{t}</button>
