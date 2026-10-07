@@ -17,6 +17,7 @@ const GatePreview = import.meta.env.DEV && new URLSearchParams(location.search).
   ? React.lazy(() => import("./components/entrygate/ArtiumGateChordify.jsx").then((m) => {
       const Wrapper = () => {
         const [musicOn, setMusicOn] = React.useState(false);
+        const [tab, setTab] = React.useState("home");
         const a = (n) => () => alert(n);
         return (
           <>
@@ -39,7 +40,7 @@ const GatePreview = import.meta.env.DEV && new URLSearchParams(location.search).
             onNews={a("onNews")}
             onLogout={a("onLogout")}
           />
-          <BottomTabs light modern items={STUDENT_TABS} active="home" onTab={() => {}} />
+          <BottomTabs light modern items={STUDENT_TABS} active={tab} onTab={setTab} />
           </>
         );
       };

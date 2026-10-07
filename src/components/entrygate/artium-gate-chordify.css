@@ -148,10 +148,36 @@
   color:#6B6B6B;gap:4px;padding:4px 2px;
 }
 .artium-aw-tabs.artium-aw-tabs--modern button > span:first-child{
-  width:52px;height:30px;border-radius:999px;justify-content:center;align-items:center;
-  transition:background .2s ease;
+  width:56px;height:32px;border-radius:999px;justify-content:center;align-items:center;
+  transition:transform .18s cubic-bezier(.3,1.6,.6,1);
+}
+/* Icons: larger, firmer strokes than the old 19px/1.7 hairlines. */
+.artium-aw-tabs.artium-aw-tabs--modern button svg{
+  width:23px;height:23px;stroke-width:1.9;position:relative;z-index:1;
+  transition:stroke-width .2s ease, fill-opacity .25s ease;
+  fill:currentColor;fill-opacity:0;
+}
+/* The pill: grows out from behind the icon when a tab becomes active. */
+.artium-aw-tabs.artium-aw-tabs--modern button > span:first-child::before{
+  content:"";position:absolute;inset:0;border-radius:999px;
+  background:rgba(8,104,104,.13);
+  transform:scaleX(.3);opacity:0;
+  transition:transform .3s cubic-bezier(.3,1.4,.5,1), opacity .2s ease;
 }
 .artium-aw-tabs.artium-aw-tabs--modern button[data-on="1"]{color:#086868;font-weight:600}
-.artium-aw-tabs.artium-aw-tabs--modern button[data-on="1"] > span:first-child{background:rgba(8,104,104,.12)}
+.artium-aw-tabs.artium-aw-tabs--modern button[data-on="1"] > span:first-child::before{transform:scaleX(1);opacity:1}
+/* Active icon fills in and pops once. */
+.artium-aw-tabs.artium-aw-tabs--modern button[data-on="1"] svg{
+  stroke-width:2.2;fill-opacity:.2;
+  animation:cg-tab-pop .42s cubic-bezier(.3,1.6,.5,1);
+}
 .artium-aw-tabs.artium-aw-tabs--modern button[data-on="1"]::after{display:none}
-.artium-aw-tabs.artium-aw-tabs--modern button:hover > span:first-child{background:rgba(8,104,104,.06)}
+/* Press feedback: the icon dips under the finger. */
+.artium-aw-tabs.artium-aw-tabs--modern button:active > span:first-child{transform:scale(.86)}
+.artium-aw-tabs.artium-aw-tabs--modern button:hover:not([data-on="1"]) > span:first-child::before{transform:scaleX(.85);opacity:.45}
+@keyframes cg-tab-pop{0%{transform:scale(.7)}55%{transform:scale(1.18) translateY(-2px)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){
+  .artium-aw-tabs.artium-aw-tabs--modern button svg,
+  .artium-aw-tabs.artium-aw-tabs--modern button > span:first-child,
+  .artium-aw-tabs.artium-aw-tabs--modern button > span:first-child::before{animation:none;transition:none}
+}
