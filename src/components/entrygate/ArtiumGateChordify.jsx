@@ -172,6 +172,7 @@ export default function ArtiumGateChordify({
         </article>
 
         <article className="cg-card cg-list">
+          <h2>Explore Artium</h2>
           <ul>
             {CARDS.map((card, i) => {
               const off = studentLoggedIn && (card.id === 1 || card.id === 2);
