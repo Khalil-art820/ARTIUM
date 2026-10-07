@@ -1,8 +1,10 @@
-import React from "react";
+import React, { useRef } from "react";
+import { CARDS, useTourActivation, useSpotlightTour, TourSpotlight, TourCard } from "./ArtiumGate";
 import "./artium-gate-chordify.css";
 
 // Alternative entry gate in Chordify's design language (flat, teal, one sans).
-// Same props as ArtiumGate. Local design trial — not wired into App.jsx.
+// Same props, copy and behaviour as ArtiumGate (reshape only); shares its
+// spotlight-tour hooks/components and the card marks. Dev-only trial.
 
 const ARTIUM_INSTAGRAM = "https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==";
 const FONT_HREF = "https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600;700&display=swap";
@@ -19,33 +21,27 @@ const Svg = ({ children, size = 22, fill = "none", sw = 2 }) => (
     strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{children}</svg>
 );
 
-const KEYS = [
-  { t: "Piano", check: true },
-  { t: "Violin" },
-  { t: "Masters", check: true },
-  { t: "Cello" },
-  { t: "Voice", check: true },
-  { t: "Bachelor" },
-  { t: "Flute" },
-];
+// Plain-text titles (the original's JSX titles break across two lines with
+// <br/>; same words). Order/ids/icons/aria-labels come from ArtiumGate's CARDS.
+const TITLES = ["Find a Classical Music Teacher", "Find a Concert Musician", "News | Classical Music Events", "Tomorrow's Composers"];
+const ACCENTS = ["#086868", "#6B57E8", "#E8862E", "#2EAA6E"];
 
-// Flat colour tiles with a white glyph, Chordify-fashion — photo crops of
-// the existing assets read as near-blank at 56px.
-const ROWS = [
-  { key: "onLearner", bg: "#086868", title: "Find a classical music teacher", tag: "Lessons", text: "Top conservatory musicians",
-    icon: <><circle cx="12" cy="7" r="3.2" /><path d="M5.5 20c1.2-3.6 3.6-5.4 6.5-5.4s5.3 1.8 6.5 5.4" /></> },
-  { key: "onPianist", bg: "#6B57E8", title: "Hire a concert musician", tag: "Concerts", text: "For events and performances",
-    icon: <><path d="M3 20h18" /><path d="M5 20V10l7-5 7 5v10" /><path d="M10 20v-5h4v5" /></> },
-  { key: "onNews", bg: "#E8862E", title: "Classical news and events", tag: "News", text: "Concerts, competitions, news",
-    icon: <><rect x="4" y="5" width="16" height="15" rx="2" /><path d="M8 3v4M16 3v4M4 10h16" /></> },
-  { key: "onComposers", bg: "#2EAA6E", title: "Tomorrow's composers", tag: "New music", text: "Living composers' newest works",
-    icon: <><path d="M9 18V6l10-2v12" /><circle cx="6.5" cy="18" r="2.5" /><circle cx="16.5" cy="16" r="2.5" /></> },
+const Seal = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+    <circle cx="12" cy="12" r="11" fill="#2EAA6E" />
+    <path d="M7.4 12.3l3 3 6.2-6.3" stroke="#fff" strokeWidth="2.2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const CHIP_FALLBACKS = [
+  { initials: "AD", name: "Amélie D.", meta: "Piano · Paris" },
+  { initials: "LM", name: "Lucas M.", meta: "Violin · Vienna" },
 ];
 
 export default function ArtiumGateChordify({
   onLearner, onStudent, onPianist, onComposers, onNews,
   learnerProfile, studentLoggedIn, musicOn, onMusicToggle, memberCount,
-  avatarPhotoUrl, avatarName, onAvatar, onLogout, bellSlot, avatarNode,
+  avatarPhotoUrl, avatarName, onAvatar, onLogout, memberChips, bellSlot, avatarNode,
 }) {
   React.useEffect(() => {
     const id = "cgate-font";
@@ -64,10 +60,17 @@ export default function ArtiumGateChordify({
     };
   }, []);
 
+  // Same first-visit spotlight tour as the original (same flag, captions, rules).
+  const { active: tourActive, delay: tourDelay, markSeen: tourMarkSeen } = useTourActivation();
+  const tourAllowed = tourActive && !studentLoggedIn;
+  const medallionRef = useRef(null);
+  const cardRefs = useRef([]);
+  const tour = useSpotlightTour(tourActive, tourDelay, tourMarkSeen, medallionRef, cardRefs);
+
   const handlers = { onLearner, onPianist, onComposers, onNews: onNews || (() => {}) };
   const count = memberCount ?? 40;
   const medallionOff = !!learnerProfile && !studentLoggedIn;
-  const goStudent = () => { if (!medallionOff && onStudent) onStudent(); };
+  const activateStudent = (e) => { if (e && e.preventDefault) e.preventDefault(); if (!medallionOff && onStudent) onStudent(); };
 
   return (
     <div className="cgate">
@@ -97,7 +100,7 @@ export default function ArtiumGateChordify({
             {bellSlot}
             <button type="button" className="cg-avatar" onClick={onAvatar} disabled={!onAvatar}
               title={avatarName || "Your account"} aria-label={avatarName ? `${avatarName} — your account` : "Your account"}>
-              {avatarNode || (avatarPhotoUrl ? <img src={avatarPhotoUrl} alt="" /> : <span>{accountInitials(avatarName)}</span>)}
+              {avatarNode || (avatarPhotoUrl ? <img src={avatarPhotoUrl} alt="" /> : <span aria-hidden="true">{accountInitials(avatarName)}</span>)}
             </button>
           </div>
         </div>
@@ -105,37 +108,66 @@ export default function ArtiumGateChordify({
 
       <section className="cg-hero">
         <div className="cg-hero-in">
-          <h1>Discover, connect and play classical music</h1>
+          <h1>
+            <span>Discover.</span>{" "}
+            <span className="cg-accent">Connect.</span>{" "}
+            <span>Elevate.</span>
+          </h1>
+          <p className="cg-sub">A trusted community for classical music students, teachers, artists and lovers.</p>
         </div>
       </section>
 
       <main className="cg-main">
-        <article className={`cg-card cg-student${medallionOff ? " cg-off" : ""}`} aria-disabled={medallionOff || undefined}>
-          <div className="cg-illo" aria-hidden="true">
-            {KEYS.map((k, i) => (
-              <span key={k.t} className={`cg-key cg-key-${i}`}>
-                {k.t}
-                {k.check && <i className="cg-check"><svg viewBox="0 0 12 12" width="10" height="10"><path d="M2.5 6.3l2.3 2.3 4.7-5" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg></i>}
-              </span>
-            ))}
+        <article
+          ref={medallionRef}
+          className={`cg-card cg-student${medallionOff ? " cg-off" : ""}`}
+          role="link"
+          aria-disabled={medallionOff || undefined}
+          tabIndex={medallionOff ? -1 : 0}
+          aria-label="I am a conservatory student or graduate"
+          onClick={activateStudent}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") activateStudent(e); }}
+        >
+          <div className="cg-student-head">
+            <span className="cg-num">05</span>
+            <h2>I am a Conservatory Student | Graduate</h2>
           </div>
-          <h2>I am a conservatory student or graduate</h2>
-          <p>Create your profile, put yourself on the map and meet musicians from conservatories around the world.</p>
-          <button type="button" className="cg-btn" onClick={goStudent} disabled={medallionOff}>Join as a student</button>
+          <div className="cg-chips">
+            {CHIP_FALLBACKS.map((fb, i) => {
+              const c = memberChips?.[i];
+              return (
+                <div className="cg-chip" key={fb.initials}>
+                  <span className="cg-chip-av">{c?.photoUrl ? <img src={c.photoUrl} alt="" /> : fb.initials}</span>
+                  <span className="cg-chip-who">
+                    <span className="cg-chip-name">{c?.name || fb.name}</span>
+                    <span className="cg-chip-meta">{c?.meta || fb.meta}</span>
+                  </span>
+                  <Seal />
+                </div>
+              );
+            })}
+          </div>
+          <p>A verified community. Connect, collaborate, grow.</p>
+          <button type="button" className="cg-btn" aria-label="Join the community" disabled={medallionOff}
+            onClick={(e) => { e.stopPropagation(); activateStudent(e); }}>
+            Join the community
+          </button>
         </article>
 
         <article className="cg-card cg-list">
-          <h2>Explore Artium</h2>
           <ul>
-            {ROWS.map((r, i) => {
-              const off = studentLoggedIn && i < 2;
+            {CARDS.map((card, i) => {
+              const off = studentLoggedIn && (card.id === 1 || card.id === 2);
+              const Icon = card.Icon;
               return (
-                <li key={r.key} className={off ? "cg-off" : undefined}>
-                  <button type="button" className="cg-row" disabled={off} onClick={handlers[r.key]}>
-                    <span className="cg-row-tile" style={{ background: r.bg }}><Svg size={26}>{r.icon}</Svg></span>
+                <li key={card.id} className={off ? "cg-off" : undefined}>
+                  <button type="button" className="cg-row" ref={(el) => { cardRefs.current[i] = el; }}
+                    aria-label={card.ariaLabel} aria-disabled={off || undefined} disabled={off}
+                    onClick={handlers[card.propKey]}>
+                    <span className="cg-row-tile" style={{ color: ACCENTS[i] }}><Icon /></span>
                     <span className="cg-row-body">
-                      <span className="cg-row-title">{r.title}</span>
-                      <span className="cg-row-meta"><em className="cg-tag">{r.tag}</em><span>{r.text}</span></span>
+                      <span className="cg-row-title">{TITLES[i]}</span>
+                      <span className="cg-row-meta"><em className="cg-tag">{String(card.id).padStart(2, "0")}</em><span>{card.text}</span></span>
                     </span>
                     <Svg size={20}><path d="M9 5l7 7-7 7" /></Svg>
                   </button>
@@ -144,6 +176,26 @@ export default function ArtiumGateChordify({
             })}
           </ul>
         </article>
+
+        <section className="cg-card cg-trust" aria-label="Why Artium">
+          <div className="cg-trust-cell">
+            <span className="cg-trust-ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><circle cx="9" cy="8" r="3" /><path d="M3 19c1-3.2 3.2-4.8 6-4.8s5 1.6 6 4.8" /><circle cx="17" cy="7" r="2.4" /><path d="M15.5 12.7c2.6.1 4.5 1.5 5.3 4.3" /></svg></span>
+            <span><h4>Trusted Community</h4><p>Verified conservatory students</p></span>
+          </div>
+          <div className="cg-trust-cell">
+            <span className="cg-trust-ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 2l8 3v6c0 5-3.4 8.6-8 11-4.6-2.4-8-6-8-11V5z" /><path d="M8.6 12l2.3 2.3 4.5-4.6" /></svg></span>
+            <span><h4>Safe | Secure</h4><p>Private, secure, reliable.</p></span>
+          </div>
+          <div className="cg-trust-cell">
+            <span className="cg-trust-ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M5 20v-5M10 20v-9M15 20v-6M20 20V7" /></svg></span>
+            <span><h4>Grow Together</h4><p>Opportunities and real connections.</p></span>
+          </div>
+        </section>
+
+        <button type="button" className="cg-logout" onClick={onLogout}>
+          Log out
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 12h15M13 6l6 6-6 6" /></svg>
+        </button>
 
         <article className="cg-card cg-partners">
           <h3>Our partners</h3>
@@ -155,9 +207,20 @@ export default function ArtiumGateChordify({
       </main>
 
       <footer className="cg-foot">
-        {onLogout && <button type="button" className="cg-link" onClick={onLogout}>Log out</button>}
+        <div className="cg-foot-links">
+          <a href="#">About Us</a><span aria-hidden="true">•</span>
+          <a href="#">Help Center</a><span aria-hidden="true">•</span>
+          <a href="#">Contact</a>
+        </div>
         <div>© 2026 Artium. All rights reserved.</div>
       </footer>
+
+      {tourAllowed && tour.visible && tour.spot && (
+        <div className="tour-overlay" role="dialog" aria-modal="true" aria-label="Guided tour">
+          <TourSpotlight tour={tour} shape="rect" radius={14} />
+          <TourCard tour={tour} />
+        </div>
+      )}
     </div>
   );
 }

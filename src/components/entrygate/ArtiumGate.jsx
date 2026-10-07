@@ -51,7 +51,7 @@ const TOUR_CARD_H_ESTIMATE = 150;
 const TOUR_DELAY_AUTO = 800;
 const TOUR_DELAY_FORCED = 400;
 
-function useTourActivation() {
+export function useTourActivation() {
   const forced = (() => {
     try { return new URLSearchParams(window.location.search).get("intro") === "tour"; } catch { return false; }
   })();
@@ -68,7 +68,7 @@ function useTourActivation() {
   return { active, delay: forced ? TOUR_DELAY_FORCED : TOUR_DELAY_AUTO, markSeen };
 }
 
-function useSpotlightTour(active, delayMs, onEnd, medallionRef, cardRefs) {
+export function useSpotlightTour(active, delayMs, onEnd, medallionRef, cardRefs) {
   const [visible, setVisible] = useState(false);
   const [step, setStep] = useState(0);
   const [spot, setSpot] = useState(null); // {top,left,width,height,radius}
@@ -227,7 +227,7 @@ const GoldBallGradient = ({ id }) => (
 // a currentColor box cut to the artwork's silhouette via CSS mask, not an
 // <img>, so it inherits --gold like every other line icon in this set.
 const TEACHER_MARK = "/teacher-mark.png";
-const TeacherIcon = () => (
+export const TeacherIcon = () => (
   <span
     aria-hidden="true"
     style={{
@@ -249,7 +249,7 @@ const TeacherIcon = () => (
    here. Bold, simple massing per the brief, not fine linework. */
 const CREAM = "#F4F4F3";
 
-const ConcertIcon = () => (
+export const ConcertIcon = () => (
   <svg width="64" height="64" viewBox="0 0 96 96" fill="currentColor">
     {/* Proscenium stage: arched header band, two swagged curtain masses, a
         floor bar — reads as "a stage", not a specific instrument. */}
@@ -260,7 +260,7 @@ const ConcertIcon = () => (
   </svg>
 );
 
-const NewsIcon = () => (
+export const NewsIcon = () => (
   <svg width="64" height="64" viewBox="0 0 96 96">
     {/* Folded broadsheet, solid, with a knocked-out (cream) fold triangle,
         three text bars and a note glyph. */}
@@ -274,7 +274,7 @@ const NewsIcon = () => (
   </svg>
 );
 
-const ComposerIcon = () => (
+export const ComposerIcon = () => (
   <svg width="58" height="64" viewBox="0 0 96 108">
     {/* Solid quill (the tested feather silhouette from before, now filled
         and closed) with its spine/barb knocked out in cream, over one
@@ -286,7 +286,7 @@ const ComposerIcon = () => (
   </svg>
 );
 
-const CARDS = [
+export const CARDS = [
   {
     id: 1,
     numSide: "left",
@@ -798,10 +798,34 @@ export default function ArtiumGate({
    (vector-effect="non-scaling-stroke" keeps its 1.5px regardless of the
    scale factor). Only the transform is animated (glide between steps);
    the shape itself swaps instantly at the step change. */
-function TourSpotlight({ tour }) {
+export function TourSpotlight({ tour, shape, radius = 12 }) {
   const { step, spot, reduceMotion } = tour;
   const maskId = useId();
   if (!spot) return null;
+
+  // Optional rounded-rect hole (used by the Chordify trial gate, whose
+  // targets are plain rectangles). Default (no `shape`) is unchanged.
+  if (shape === "rect") {
+    const INSET = 8;
+    const w = Math.max(0, spot.width - INSET * 2);
+    const h = Math.max(0, spot.height - INSET * 2);
+    const rectStyle = {
+      transform: `translate(${spot.left + INSET}px, ${spot.top + INSET}px)`,
+      transition: reduceMotion ? "none" : "transform .45s ease",
+    };
+    return (
+      <svg className="tour-dim" aria-hidden="true">
+        <defs>
+          <mask id={maskId} maskUnits="userSpaceOnUse" x="0" y="0" width="100%" height="100%">
+            <rect x="0" y="0" width="100%" height="100%" fill="white" />
+            <g style={rectStyle}><rect width={w} height={h} rx={radius} fill="black" /></g>
+          </mask>
+        </defs>
+        <rect x="0" y="0" width="100%" height="100%" fill="rgba(35,42,59,.45)" mask={`url(#${maskId})`} />
+        <g style={rectStyle}><rect width={w} height={h} rx={radius} fill="none" stroke="rgba(255,255,255,.95)" strokeWidth="2" /></g>
+      </svg>
+    );
+  }
 
   const isMedallion = step === 0;
   const LOCAL_W = isMedallion ? 380 : 260;
@@ -841,7 +865,7 @@ function TourSpotlight({ tour }) {
    isn't enough room underneath, and clamped horizontally to stay on
    screen. Recomputed on every step/spot change — no CSS transform tricks,
    since its own height is content-dependent. */
-function TourCard({ tour }) {
+export function TourCard({ tour }) {
   const { spot, step, caption, isLast, next, skip, nextBtnRef } = tour;
   const vw = typeof window !== "undefined" ? window.innerWidth : 1024;
   const vh = typeof window !== "undefined" ? window.innerHeight : 768;

@@ -31,6 +31,20 @@ import { MapContainer, TileLayer, Marker, Tooltip, Popup, useMap } from "react-l
 // into ArtiumGate — .stage{max-width:94vw} was clamping the gate's 840px
 // stage on phones. The files stay on disk for reference.
 import ArtiumGate from "./components/entrygate/ArtiumGate";
+// Dev-only design trial: ?gate=chordify (persisted) swaps in the Chordify-style
+// entry gate; ?gate=classic clears it. Always false in production builds.
+const useChordifyGate = import.meta.env.DEV && (() => {
+  try {
+    const g = new URLSearchParams(location.search).get("gate");
+    if (g === "chordify") localStorage.setItem("artium_gate_variant", "chordify");
+    if (g === "classic") localStorage.removeItem("artium_gate_variant");
+    return g === "chordify" || localStorage.getItem("artium_gate_variant") === "chordify";
+  } catch { return false; }
+})();
+const ChordifyGateLazy = import.meta.env.DEV ? lazy(() => import("./components/entrygate/ArtiumGateChordify.jsx")) : null;
+const EntryGate = useChordifyGate
+  ? (props) => <Suspense fallback={null}><ChordifyGateLazy {...props} /></Suspense>
+  : ArtiumGate;
 import WallOfComposers from "./pages/WallOfComposers";
 // three.js is ~1.9MB of the bundle. Loading it lazily keeps it out of the
 // initial download and out of the entry chunk, which otherwise blew past the
@@ -4828,7 +4842,7 @@ export default function App() {
         />
       )}
 
-      {view === "entry" && <ArtiumGate onLearner={chooseLearner} onStudent={() => chooseStudent("otp")} onPianist={choosePianist} onLogin={startLogin} onComposers={() => setScreen("composers")} learnerProfile={learnerProfile} learnerLoggedOut={learnerLoggedOut} studentLoggedIn={!!myProfile} musicOn={musicPlaying} onMusicToggle={toggleMusic} memberCount={Object.values(studentsByCons).flat().length} avatarPhotoUrl={accountPhotoUrl} avatarName={accountName} avatarNode={(myProfile || learnerProfile) ? (
+      {view === "entry" && <EntryGate onLearner={chooseLearner} onStudent={() => chooseStudent("otp")} onPianist={choosePianist} onLogin={startLogin} onComposers={() => setScreen("composers")} learnerProfile={learnerProfile} learnerLoggedOut={learnerLoggedOut} studentLoggedIn={!!myProfile} musicOn={musicPlaying} onMusicToggle={toggleMusic} memberCount={Object.values(studentsByCons).flat().length} avatarPhotoUrl={accountPhotoUrl} avatarName={accountName} avatarNode={(myProfile || learnerProfile) ? (
         <Avatar
           name={(myProfile || learnerProfile).name}
           id="me"
@@ -15720,3 +15734,5 @@ function LearnerChat({ teacher, messages, onSend }) {
     </div>
   );
 }
+
+export { BottomTabs, STUDENT_TABS, NotificationBell };
