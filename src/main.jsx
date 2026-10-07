@@ -39,7 +39,7 @@ const GatePreview = import.meta.env.DEV && new URLSearchParams(location.search).
             onNews={a("onNews")}
             onLogout={a("onLogout")}
           />
-          <BottomTabs light items={STUDENT_TABS} active="home" onTab={() => {}} />
+          <BottomTabs light modern items={STUDENT_TABS} active="home" onTab={() => {}} />
           </>
         );
       };

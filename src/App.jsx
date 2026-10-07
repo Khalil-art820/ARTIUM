@@ -4899,6 +4899,7 @@ export default function App() {
           }
           active="home"
           dimmed={!myProfile}
+          modern={useChordifyGate}
           onTab={(k) => { if (k === "home") return; setScreen("app"); setAppTabPersist(k); }}
         />
       )}
@@ -10257,12 +10258,12 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
  * Promote and Lessons take the space, since those were reachable only from
  * the strip that this replaces.
  */
-function BottomTabs({ items, active, onTab, light, dimmed }) {
+function BottomTabs({ items, active, onTab, light, dimmed, modern }) {
   // filter/pointer-events go on the nav itself: a wrapper div with filter
   // would become the containing block for this position:fixed bar and pull
   // it out of the viewport corner.
   return (
-    <nav className={`artium-aw-tabs${light ? " artium-aw-tabs--light" : ""}`} style={dimmed ? { opacity: .45, filter: "saturate(.6)", pointerEvents: "none" } : undefined} aria-hidden={dimmed || undefined}>
+    <nav className={`artium-aw-tabs${light ? " artium-aw-tabs--light" : ""}${modern ? " artium-aw-tabs--modern" : ""}`} style={dimmed ? { opacity: .45, filter: "saturate(.6)", pointerEvents: "none" } : undefined} aria-hidden={dimmed || undefined}>
       {items.map(({ k, label, Icon, attention }) => (
         <button key={k} data-on={k === active ? "1" : "0"} onClick={() => onTab(k)} aria-label={label}>
           <span style={{ position: "relative", display: "inline-flex" }}>

@@ -130,3 +130,28 @@
 .cgate .cg-row-meta{align-items:flex-start}
 .cgate .cg-row-meta span{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.3}
 .cgate .cg-tag{margin-top:0}
+
+/* ---------------------------------------------------------------------
+   Modern tab bar (trial). Not scoped under .cgate because App renders the
+   bar as the gate's sibling; namespaced by the --modern modifier instead,
+   and this file only loads when the trial gate does. Chordify-style: flat
+   white bar glued to the bottom edge, hairline top border, teal active
+   state with a soft pill behind the icon. */
+.artium-aw-tabs.artium-aw-tabs--modern{
+  left:0;right:0;bottom:0;border-radius:0;
+  background:#FFFFFF;border:none;border-top:1px solid #E8E2DC;
+  box-shadow:0 -4px 16px -10px rgba(0,0,0,.18);
+  padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px));
+}
+.artium-aw-tabs.artium-aw-tabs--modern button{
+  font-family:'Fira Sans',system-ui,sans-serif;font-size:11px;font-weight:500;
+  color:#6B6B6B;gap:4px;padding:4px 2px;
+}
+.artium-aw-tabs.artium-aw-tabs--modern button > span:first-child{
+  width:52px;height:30px;border-radius:999px;justify-content:center;align-items:center;
+  transition:background .2s ease;
+}
+.artium-aw-tabs.artium-aw-tabs--modern button[data-on="1"]{color:#086868;font-weight:600}
+.artium-aw-tabs.artium-aw-tabs--modern button[data-on="1"] > span:first-child{background:rgba(8,104,104,.12)}
+.artium-aw-tabs.artium-aw-tabs--modern button[data-on="1"]::after{display:none}
+.artium-aw-tabs.artium-aw-tabs--modern button:hover > span:first-child{background:rgba(8,104,104,.06)}
