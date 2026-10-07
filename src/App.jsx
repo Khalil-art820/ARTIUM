@@ -15736,4 +15736,4 @@ function LearnerChat({ teacher, messages, onSend }) {
   );
 }
 
-export { BottomTabs, STUDENT_TABS, NotificationBell };
+export { BottomTabs, STUDENT_TABS, NotificationBell, ArtiumRadio };

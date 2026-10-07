@@ -182,8 +182,12 @@
 
 /* ---- header polish ---- */
 .cgate .cg-brand{display:flex;align-items:center;gap:10px;min-width:0}
-.cgate .cg-brand-icon{width:34px;height:34px;border-radius:50%;display:block;flex:none;
-  box-shadow:0 0 0 2px rgba(255,255,255,.9), 0 4px 10px -3px rgba(0,0,0,.35)}
+/* Card 01's mark, same cream ground and teal glyph — but round. */
+.cgate .cg-brand-icon{width:38px;height:38px;border-radius:50%;flex:none;
+  display:flex;align-items:center;justify-content:center;
+  background:#F4F4F3;color:#086868;border:1px solid var(--line);
+  box-shadow:0 4px 10px -3px rgba(0,0,0,.35)}
+.cgate .cg-brand-icon svg,.cgate .cg-brand-icon > span{width:26px!important;height:26px!important}
 .cgate .cg-word{font-size:21px;margin-right:0}
 /* Play and bell share one shape: a soft translucent white disc, solid glyph. */
 .cgate .cg-round,

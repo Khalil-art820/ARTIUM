@@ -88,7 +88,9 @@ export default function ArtiumGateChordify({
         <div className="cg-head-in">
           <div className="cg-brand">
           {/* The app's own icon beside the wordmark marks it as the app name. */}
-          <img className="cg-brand-icon" src="/icon-192.png" alt="" width="34" height="34" />
+          {(() => { const BrandIcon = CARDS[0].Icon; return (
+            <span className="cg-brand-icon" aria-hidden="true"><BrandIcon /></span>
+          ); })()}
           <div className="cg-word" aria-label="ARTIUM">
             {/* The house wordmark, kept from the original gate: Jost caps,
                 wide tracking, and the crossbar-less A drawn as a glyph. */}

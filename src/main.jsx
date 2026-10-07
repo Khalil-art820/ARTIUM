@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import App, { BottomTabs, STUDENT_TABS, NotificationBell } from "./App.jsx";
+import App, { BottomTabs, STUDENT_TABS, NotificationBell, ArtiumRadio } from "./App.jsx";
 import ErrorBoundary from "./ErrorBoundary.jsx";
 import { AuthProvider } from "./contexts/AuthContext.jsx";
 import "./index.css";
@@ -16,7 +16,14 @@ const TAB_CSS = `.artium-aw-tabs{position:fixed;z-index:40;display:flex;align-it
 const GatePreview = import.meta.env.DEV && new URLSearchParams(location.search).has("gatepreview")
   ? React.lazy(() => import("./components/entrygate/ArtiumGateChordify.jsx").then((m) => {
       const Wrapper = () => {
+        // Mirrors App.jsx's toggleMusic exactly, driving the real ArtiumRadio.
         const [musicOn, setMusicOn] = React.useState(false);
+        const [musicPlaying, setMusicPlaying] = React.useState(false);
+        const radioRef = React.useRef(null);
+        const toggleMusic = () => {
+          if (!musicOn) { setMusicOn(true); if (musicPlaying) return; }
+          try { radioRef.current?.togglePlay(); } catch { /* not ready yet */ }
+        };
         const [tab, setTab] = React.useState("home");
         const a = (n) => () => alert(n);
         return (
@@ -29,8 +36,8 @@ const GatePreview = import.meta.env.DEV && new URLSearchParams(location.search).
               { name: "Lucas M.", meta: "Violin · Vienna" },
             ]}
             bellSlot={<NotificationBell myProfile={{ id: "preview", name: "Khalil Tannous" }} puck networkFeeds authUser={null} />}
-            musicOn={musicOn}
-            onMusicToggle={() => setMusicOn((v) => !v)}
+            musicOn={musicPlaying}
+            onMusicToggle={toggleMusic}
             avatarName="Khalil Tannous"
             onAvatar={a("onAvatar")}
             onLearner={a("onLearner")}
@@ -41,6 +48,7 @@ const GatePreview = import.meta.env.DEV && new URLSearchParams(location.search).
             onLogout={a("onLogout")}
           />
           <BottomTabs light modern items={STUDENT_TABS} active={tab} onTab={setTab} />
+          <ArtiumRadio open={musicOn} controllerRef={radioRef} onPlayingChange={setMusicPlaying} onClose={() => setMusicOn(false)} />
           </>
         );
       };
