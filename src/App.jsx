@@ -132,6 +132,21 @@ const C = MODERN ? {
 const BRASS_GRAD = MODERN ? "#086868" : "linear-gradient(180deg, #EFD08A 0%, #DBAB4C 55%, #C9962E 100%)";
 const warm = (a) => MODERN ? `rgba(110,100,90,${(parseFloat(a) * 0.55).toFixed(3)})` : `rgba(176,146,98,${a})`;
 const brassA = (a) => MODERN ? `rgba(8,104,104,${a})` : `rgba(201,150,46,${a})`;
+// Lesson/learner-side tokens: classic value is byte-identical to the literal each one replaces.
+const OK_C = MODERN ? "#2EAA6E" : "#1A9E6E";
+const AMBER_C = MODERN ? "#E8862E" : "#E07B00";
+const AMBER_D = MODERN ? "#E8862E" : "#D4810A";
+const RED_C = MODERN ? "#B3261E" : "#c0392b";
+const OK_BG = MODERN ? "#E6F6EE" : "#DFF2E8";
+const OK_BG2 = MODERN ? "#F1FAF5" : "#F4FBF6";
+const OK_LINE = MODERN ? "rgba(46,170,110,0.35)" : "#A8D5B5";
+const AMBER_BG = MODERN ? "#FDF0E3" : "#FFF4E5";
+const CREAM_BG = MODERN ? "rgba(8,104,104,0.06)" : "#FFF8E7";
+const THEAD_BG = MODERN ? "#F7F4F2" : "#FAFAFA";
+const SURF = MODERN ? "#FFFFFF" : warm("0.05");
+const PAGE_BG = MODERN ? "#F7F4F2" : "#FFFFFF";
+const HAIR_RING = "0 0 0 1px #E8E2DC";
+const okA = (a) => MODERN ? `rgba(46,170,110,${a})` : `rgba(26,158,110,${a})`;
 const FONT_JOST = MODERN ? "'Fira Sans', system-ui, sans-serif" : "'Jost', system-ui, sans-serif";
 const FONT_PLAYFAIR = MODERN ? "'Fira Sans', system-ui, sans-serif" : "'Playfair Display', serif";
 const FONT_LIBRE = MODERN ? "'Fira Sans', system-ui, sans-serif" : "'Libre Baskerville', serif";
@@ -167,7 +182,7 @@ const FONT_WORDMARK = "-apple-system, 'SF Pro Display', BlinkMacSystemFont, 'Seg
 // already loaded in index.html, so this costs no extra request.
 const FONT_DISPLAY = MODERN ? "'Fira Sans', system-ui, sans-serif" : "'Cormorant Garamond', 'Didot', 'Bodoni 72', Georgia, serif";
 const FONT_BODY = MODERN ? "'Fira Sans', system-ui, sans-serif" : "'Manrope', -apple-system, 'Segoe UI', Roboto, sans-serif";
-const FONT_MONO = "'ui-monospace', monospace";
+const FONT_MONO = MODERN ? "'Fira Sans', system-ui, sans-serif" : "'ui-monospace', monospace";
 
 /**
  * The account that owns the admin screens.
@@ -8467,7 +8482,7 @@ function StepConservatory({ draft, update, editing }) {
             <div>
               <p className="text-sm" style={{ color: C.ivoryDim, marginBottom: 8 }}>Enter the code sent to <b>{reqEmail.trim()}</b>.</p>
               <input
-                style={{ width: "100%", maxWidth: 260, padding: "12px 16px", borderRadius: 10, border: `1.5px solid ${C.inkLine}`, background: warm("0.05"), color: C.ivory, fontFamily: FONT_MONO, fontSize: 22, fontWeight: 600, letterSpacing: 8, textAlign: "center", outline: "none", boxSizing: "border-box" }}
+                style={{ width: "100%", maxWidth: 260, padding: "12px 16px", borderRadius: 10, border: `1.5px solid ${C.inkLine}`, background: warm("0.05"), color: C.ivory, fontFamily: "'ui-monospace', monospace", fontSize: 22, fontWeight: 600, letterSpacing: 8, textAlign: "center", outline: "none", boxSizing: "border-box" }}
                 value={reqCode}
                 onChange={(e) => { setReqCode(e.target.value.replace(/\D/g, "").slice(0, 10)); setReqErr(""); }}
                 placeholder="••••••••" inputMode="numeric" autoFocus />
@@ -8582,7 +8597,7 @@ function StepConservatory({ draft, update, editing }) {
                 <div style={{ marginTop: 12 }}>
                   <p className="text-sm" style={{ color: C.ivoryDim, marginBottom: 8 }}>Enter the code sent to <b>{email}</b>.</p>
                   <input
-                    style={{ width: "100%", maxWidth: 260, padding: "12px 16px", borderRadius: 10, border: `1.5px solid ${C.inkLine}`, background: warm("0.05"), color: C.ivory, fontFamily: FONT_MONO, fontSize: 22, fontWeight: 600, letterSpacing: 8, textAlign: "center", outline: "none", boxSizing: "border-box" }}
+                    style={{ width: "100%", maxWidth: 260, padding: "12px 16px", borderRadius: 10, border: `1.5px solid ${C.inkLine}`, background: warm("0.05"), color: C.ivory, fontFamily: "'ui-monospace', monospace", fontSize: 22, fontWeight: 600, letterSpacing: 8, textAlign: "center", outline: "none", boxSizing: "border-box" }}
                     value={code}
                     onChange={(e) => { setCode(e.target.value.replace(/\D/g, "").slice(0, 10)); setErr(""); }}
                     placeholder="••••••••" inputMode="numeric" autoFocus />
@@ -11775,8 +11790,8 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
       {(appTab === "map" || (appTab === "lesson" && selectedId === activeLessonTeacher?.id)) && selectedId && selected && (() => {
         const selCons = findConservatory(selected.conservatoryId);
         const Row = ({ label, children }) => (
-          <div style={{ background: warm("0.05"), border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
-            <span style={{ fontSize: 11, fontWeight: 600, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
+          <div style={{ background: SURF, border: `1px solid ${C.inkLine}`, borderRadius: MODERN ? 12 : 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
+            <span style={{ fontSize: 11, fontWeight: MODERN ? 700 : 600, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
             <div style={{ fontSize: 15, color: C.inkText, lineHeight: 1.6 }}>{children}</div>
           </div>
         );
@@ -11888,9 +11903,9 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
           const byMonth = {};
           allSessions.forEach((s) => { const k = s.date.slice(0, 7); (byMonth[k] = byMonth[k] || []).push(s); });
           const STATUS_LABEL = { confirmed: "Confirmed", teacher_proposed: "Awaiting confirm", student_proposed: "Pending", cancelled: "Cancelled", no_show: "No-show — refunded" };
-          const STATUS_COLOR = { confirmed: "#1A9E6E", teacher_proposed: C.brass, student_proposed: "#E07B00", cancelled: "#c0392b", no_show: C.burgundy };
+          const STATUS_COLOR = { confirmed: OK_C, teacher_proposed: MODERN ? AMBER_C : C.brass, student_proposed: AMBER_C, cancelled: RED_C, no_show: C.burgundy };
           return (
-            <div style={{ padding: "16px 20px 32px", background: C.parchment, minHeight: "100%" }}>
+            <div style={{ padding: "16px 20px 32px", background: PAGE_BG, minHeight: "100%" }}>
               <div className="artium-aw-listhead">
                 <button className="artium-aw-sort" style={{ marginLeft: 0 }} onClick={() => setLearnerRoomView("teachers")}>
                   <ArrowLeft size={13} /> Lesson Room
@@ -11924,7 +11939,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
                       style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "11px 16px", background: C.inkSoft, border: "none", cursor: "pointer" }}>
                       <span style={{ fontSize: 13, fontWeight: 700, color: C.ivory }}>{monthLabel}</span>
                       <span style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                        {spentCents > 0 && <span style={{ fontSize: 12, fontWeight: 700, color: "#1A9E6E" }}>€{euroAmount(spentCents)} spent</span>}
+                        {spentCents > 0 && <span style={{ fontSize: 12, fontWeight: 700, color: OK_C }}>€{euroAmount(spentCents)} spent</span>}
                         <span style={{ fontSize: 11, color: C.ivoryDim }}>{sessions.length} session{sessions.length !== 1 ? "s" : ""}</span>
                         <span style={{ fontSize: 14, color: C.ivoryDim }}>{isOpen ? "▲" : "▼"}</span>
                       </span>
@@ -11932,7 +11947,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
                     {isOpen && (
                       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
                         <thead>
-                          <tr style={{ background: "#FAFAFA" }}>
+                          <tr style={{ background: THEAD_BG }}>
                             {["Teacher", "Date · Time", "Status", "Amount"].map((h) => (
                               <th key={h} style={{ padding: "8px 12px", textAlign: "left", fontSize: 10, fontWeight: 700, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.06em", borderBottom: `1px solid ${C.inkLine}` }}>{h}</th>
                             ))}
@@ -11963,7 +11978,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
                                 <td style={{ padding: "9px 12px" }}>
                                   <span style={{ fontSize: 11, fontWeight: 600, color: STATUS_COLOR[s.status] || C.ivoryDim }}>{STATUS_LABEL[s.status] || s.status}</span>
                                 </td>
-                                <td style={{ padding: "9px 12px", fontWeight: 700, color: amount === "—" ? C.ivoryDim : isRefund ? "#c0392b" : "#1A9E6E" }}>{amount}</td>
+                                <td style={{ padding: "9px 12px", fontWeight: 700, color: amount === "—" ? C.ivoryDim : isRefund ? RED_C : OK_C }}>{amount}</td>
                               </tr>
                             );
                           })}
@@ -11979,21 +11994,21 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
 
         // ── Teachers view (default) ──
         return (
-          <div style={{ padding: "0 0 32px", background: C.parchment, minHeight: "100%" }}>
-            <div style={{ padding: "20px 20px 0", background: C.parchment }}>
+          <div style={{ padding: "0 0 32px", background: PAGE_BG, minHeight: "100%" }}>
+            <div style={{ padding: "20px 20px 0", background: PAGE_BG }}>
               <p style={{ fontSize: 13, color: C.ivoryDim, margin: "0 0 16px", textAlign: "center" }}>
                 {acceptedTeachers.length} active teacher{acceptedTeachers.length !== 1 ? "s" : ""}
               </p>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap", padding: "12px 0 16px" }}>
                 {acceptedTeachers.map((t) => (
                   <button key={t.id} onClick={() => setActiveLessonTeacherId(t.id)}
-                    style={{ padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: t.id === activeLessonTeacher.id ? 700 : 500, border: t.id === activeLessonTeacher.id ? `2px solid ${C.brass}` : "none", background: warm("0.05"), color: t.id === activeLessonTeacher.id ? C.ivory : C.ivoryDim, cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.06)" }}>
+                    style={{ padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: t.id === activeLessonTeacher.id ? 700 : 500, border: t.id === activeLessonTeacher.id ? `2px solid ${C.brass}` : "none", background: SURF, color: t.id === activeLessonTeacher.id ? C.ivory : C.ivoryDim, cursor: "pointer", boxShadow: MODERN ? HAIR_RING : "0 2px 8px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.06)" }}>
                     {t.name.split(" ")[0]}
                   </button>
                 ))}
               </div>
               <button onClick={() => selectTeacher(activeLessonTeacher.id)}
-                style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", background: warm("0.05"), borderRadius: 12, border: "none", boxShadow: "0 1px 6px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04)", marginBottom: 16, width: "100%", cursor: "pointer", textAlign: "left" }}>
+                style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", background: SURF, borderRadius: 12, border: "none", boxShadow: MODERN ? HAIR_RING : "0 1px 6px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04)", marginBottom: 16, width: "100%", cursor: "pointer", textAlign: "left" }}>
                 <Avatar name={activeLessonTeacher.name} id={activeLessonTeacher.id} size={40} photoUrl={activeLessonTeacher.photoUrl} online={activeLessonTeacher.online} />
                 <div style={{ flex: 1 }}>
                   <p style={{ fontSize: 14, fontWeight: 700, color: C.ivory, margin: 0 }}>{activeLessonTeacher.name}</p>
@@ -12002,7 +12017,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
                 <ChevronRight size={16} color={C.ivoryDim} />
               </button>
             </div>
-            <div style={{ margin: "0 20px 20px", background: warm("0.05"), borderRadius: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06)", overflow: "hidden", minHeight: 320 }}>
+            <div style={{ margin: "0 20px 20px", background: SURF, borderRadius: MODERN ? 12 : 16, boxShadow: MODERN ? HAIR_RING : "0 2px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06)", overflow: "hidden", minHeight: 320 }}>
               <LessonRoom
                 teacher={activeLessonTeacher}
                 focusSession={focusSessionReq}
@@ -12015,11 +12030,11 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
               />
             </div>
             {/* Bottom nav — My Planning */}
-            <div style={{ display: "flex", justifyContent: "center", gap: 40, padding: "20px 20px 12px", background: warm("0.05"), borderTop: `1px solid ${C.inkLine}` }}>
+            <div style={{ display: "flex", justifyContent: "center", gap: 40, padding: "20px 20px 12px", background: SURF, borderTop: `1px solid ${C.inkLine}` }}>
               {[{ v: "planning", Icon: LayoutList, label: "My Planning" }].map(({ v, Icon, label }) => (
                 <button key={v} onClick={() => setLearnerRoomView(v)}
                   style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5, background: "none", border: "none", cursor: "pointer", color: C.ivoryDim }}>
-                  <div style={{ width: 52, height: 52, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: warm("0.05"), border: "2px solid transparent", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07)" }}>
+                  <div style={{ width: 52, height: 52, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: SURF, border: "2px solid transparent", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07)" }}>
                     <Icon size={22} color={C.ivoryDim} />
                   </div>
                   <span style={{ fontSize: 11, fontWeight: 600 }}>{label}</span>
@@ -12032,8 +12047,8 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
 
       {appTab === "profile" && (() => {
         const Row = ({ label, children }) => (
-          <div style={{ background: warm("0.05"), border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
-            <span style={{ fontSize: 11, fontWeight: 600, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
+          <div style={{ background: SURF, border: `1px solid ${C.inkLine}`, borderRadius: MODERN ? 12 : 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
+            <span style={{ fontSize: 11, fontWeight: MODERN ? 700 : 600, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
             <div style={{ fontSize: 15, color: C.inkText, lineHeight: 1.6 }}>{children}</div>
           </div>
         );
@@ -12062,13 +12077,13 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
                 <GhostBtn onClick={() => setEditingProfile(true)} icon={Pencil}>Edit</GhostBtn>
                 {onLogout && <GhostBtn onClick={onLogout}>Log out</GhostBtn>}
                 {onDeleteAccount && !confirmDelete && (
-                  <GhostBtn onClick={() => setConfirmDelete(true)} style={{ color: "#c0392b", borderColor: "#c0392b" }}>Delete account</GhostBtn>
+                  <GhostBtn onClick={() => setConfirmDelete(true)} style={{ color: RED_C, borderColor: RED_C }}>Delete account</GhostBtn>
                 )}
                 {confirmDelete && (
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <span style={{ fontSize: 12, color: C.ivoryDim }}>Are you sure?</span>
                     <button onClick={async () => { setDeleting(true); await onDeleteAccount(); setDeleting(false); }} disabled={deleting}
-                      style={{ fontSize: 12, padding: "6px 12px", borderRadius: 6, fontWeight: 600, background: "#c0392b", color: "#fff", border: "none", cursor: "pointer", opacity: deleting ? 0.6 : 1 }}>
+                      style={{ fontSize: 12, padding: "6px 12px", borderRadius: 6, fontWeight: 600, background: RED_C, color: "#fff", border: "none", cursor: "pointer", opacity: deleting ? 0.6 : 1 }}>
                       {deleting ? "Deleting…" : "Yes, delete"}
                     </button>
                     <button onClick={() => setConfirmDelete(false)}
@@ -12170,10 +12185,10 @@ function VideoSessionTab({ sessions, teacher, zoomLink, meetLink }) {
       ? `In ${hoursUntil} hour${hoursUntil !== 1 ? "s" : ""}`
       : `In ${Math.round(hoursUntil / 24)} day${Math.round(hoursUntil / 24) !== 1 ? "s" : ""}`;
     nextBanner = (
-      <div style={{ borderRadius: 12, padding: "14px 16px", background: "#DFF2E8", border: "1px solid #A8D5B5" }}>
-        <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#1A9E6E", margin: "0 0 4px" }}>Next session</p>
+      <div style={{ borderRadius: 12, padding: "14px 16px", background: OK_BG, border: `1px solid ${OK_LINE}` }}>
+        <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: OK_C, margin: "0 0 4px" }}>Next session</p>
         <p style={{ fontSize: 15, fontWeight: 700, color: C.inkText, margin: 0 }}>{dateStr} at {nextSession.time}</p>
-        <p style={{ fontSize: 12, color: "#1A9E6E", margin: "3px 0 0" }}>{countdown} · Paid ✓</p>
+        <p style={{ fontSize: 12, color: OK_C, margin: "3px 0 0" }}>{countdown} · Paid ✓</p>
       </div>
     );
   } else {
@@ -12476,10 +12491,10 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
   return (
     <div style={{ overflow: "hidden", background: C.parchment }}>
       {/* Tab bar */}
-      <div style={{ display: "flex", borderBottom: `1px solid ${C.inkLine}`, background: warm("0.05") }}>
+      <div style={{ display: "flex", borderBottom: `1px solid ${C.inkLine}`, background: SURF }}>
         {tabs.map(({ id, label, Icon }) => (
           <button key={id} onClick={() => setTab(id)}
-            style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "10px 4px", fontSize: 11, fontWeight: tab === id ? 700 : 400, color: tab === id ? C.ivory : C.ivoryDim, background: "none", border: "none", cursor: "pointer", borderBottom: tab === id ? `2px solid ${C.brass}` : "2px solid transparent" }}>
+            style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "10px 4px", fontSize: 11, fontWeight: tab === id ? 700 : 400, color: tab === id ? (MODERN ? C.brass : C.ivory) : C.ivoryDim, background: "none", border: "none", cursor: "pointer", borderBottom: tab === id ? `2px solid ${C.brass}` : "2px solid transparent" }}>
             <div style={{ position: "relative", display: "inline-flex" }}>
               <Icon size={15} />
               {id === "chat" && unreadCount > 0 && (
@@ -12497,7 +12512,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
           <div className="lg-scroll overflow-y-auto px-4 py-3 flex flex-col gap-2" style={{ maxHeight: 280 }}>
             {activeMessages.length === 0 && <p style={{ fontSize: 13, color: C.ivoryDim, textAlign: "center", padding: "24px 0" }}>Start the conversation with {teacher.name.split(" ")[0]}</p>}
             {activeMessages.map((m, i) => (
-              <div key={i} className="px-3.5 py-2 rounded-2xl text-sm" style={{ maxWidth: "80%", alignSelf: m.from === "me" ? "flex-end" : "flex-start", background: m.from === "me" ? C.brass : C.inkSoft, color: m.from === "me" ? C.brassText : C.inkText }}>
+              <div key={i} className="px-3.5 py-2 rounded-2xl text-sm" style={{ maxWidth: "80%", alignSelf: m.from === "me" ? "flex-end" : "flex-start", background: m.from === "me" ? C.brass : C.inkSoft, color: m.from === "me" ? C.brassText : C.inkText, ...(MODERN && m.from !== "me" ? { border: "1px solid #E8E2DC" } : null) }}>
                 {m.text}
               </div>
             ))}
@@ -12547,12 +12562,12 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
                 return (
                   <button key={s.id} onClick={() => setSelectedSessionId(isSelected ? null : s.id)}
                     ref={isSelected ? (el) => { if (el) try { el.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" }); } catch { /* older Safari */ } } : undefined}
-                    style={{ flexShrink: 0, width: 110, height: 110, borderRadius: 14, border: isSelected ? `2px solid ${C.brass}` : `1px solid ${isConfirmed ? "#A8D5B5" : C.inkLine}`, background: isConfirmed ? "rgba(26,158,110,0.10)" : warm("0.06"), display: "flex", flexDirection: "column", alignItems: "flex-start", justifyContent: "space-between", padding: 12, cursor: "pointer", boxShadow: isSelected ? `0 0 0 3px ${C.brassDim}` : "none", transition: "box-shadow 0.15s" }}>
+                    style={{ flexShrink: 0, width: 110, height: 110, borderRadius: MODERN ? 12 : 14, border: isSelected ? `2px solid ${C.brass}` : `1px solid ${isConfirmed ? OK_LINE : C.inkLine}`, background: MODERN ? "#FFFFFF" : (isConfirmed ? okA("0.10") : warm("0.06")), display: "flex", flexDirection: "column", alignItems: "flex-start", justifyContent: "space-between", padding: 12, cursor: "pointer", boxShadow: isSelected ? `0 0 0 3px ${C.brassDim}` : "none", transition: "box-shadow 0.15s" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", width: "100%", alignItems: "center" }}>
-                      <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: isConfirmed ? "#1A9E6E" : "#D4810A" }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: isConfirmed ? OK_C : AMBER_D }}>
                         {isConfirmed ? "Confirmed" : "Awaiting"}
                       </span>
-                      {s.paid && <span style={{ fontSize: 9, fontWeight: 700, color: "#fff", background: "#1A9E6E", borderRadius: 20, padding: "2px 6px" }}>Paid</span>}
+                      {s.paid && <span style={{ fontSize: 9, fontWeight: 700, color: "#fff", background: OK_C, borderRadius: 20, padding: "2px 6px" }}>Paid</span>}
                     </div>
                     <div style={{ textAlign: "left" }}>
                       <p style={{ fontSize: 18, fontWeight: 800, color: C.inkText, margin: 0, lineHeight: 1 }}>{dt.getDate()}</p>
@@ -12580,7 +12595,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
                   {isPending && !isCounter && (
                     <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
                       <button onClick={() => approveSession(sel.id)}
-                        style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "6px 13px", borderRadius: 8, background: "#1A9E6E", color: "#fff", fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer" }}>
+                        style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "6px 13px", borderRadius: 8, background: OK_C, color: "#fff", fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer" }}>
                         <Check size={12} /> Approve
                       </button>
                       <button onClick={() => setShowCounter((prev) => ({ ...prev, [sel.id]: true }))}
@@ -12645,7 +12660,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
 
                   {isConfirmed && teacher.teaching?.open && teacher.teaching?.price && (
                     sel.paid ? (
-                      <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, background: "#DFF2E8", color: "#1A9E6E", fontSize: 12, fontWeight: 700, marginBottom: 8 }}>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, background: OK_BG, color: OK_C, fontSize: 12, fontWeight: 700, marginBottom: 8 }}>
                         <Check size={13} /> Paid
                       </span>
                     ) : pendingPayId === sel.id ? (
@@ -12674,7 +12689,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
                       </button>
                     )
                   )}
-                  {isConfirmed && payError && <p style={{ fontSize: 12, color: "#E34234", marginBottom: 6 }}>{payError}</p>}
+                  {isConfirmed && payError && <p style={{ fontSize: 12, color: MODERN ? "#B3261E" : "#E34234", marginBottom: 6 }}>{payError}</p>}
 
                   {isConfirmed && (
                     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -12693,7 +12708,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
                           (no money on the line) keeps the old hard lock. */}
                       {(sel.paid || !cancelLocked(sel)) ? (
                         <button onClick={() => handleCancelClick(sel)} disabled={cancelBusy}
-                          style={{ fontSize: 12, color: "#c0392b", background: "none", border: "1px solid #c0392b", borderRadius: 8, padding: "6px 12px", cursor: cancelBusy ? "not-allowed" : "pointer", fontWeight: 600, opacity: cancelBusy ? 0.6 : 1 }}>
+                          style={{ fontSize: 12, color: RED_C, background: "none", border: `1px solid ${RED_C}`, borderRadius: 8, padding: "6px 12px", cursor: cancelBusy ? "not-allowed" : "pointer", fontWeight: 600, opacity: cancelBusy ? 0.6 : 1 }}>
                           {cancelBusy ? "Cancelling…" : "Cancel session"}
                         </button>
                       ) : (
@@ -12734,7 +12749,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
         return (
           <div style={{ position: "fixed", inset: 0, background: "rgba(10,20,40,0.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999 }}
             onClick={() => setCancelPreviewId(null)}>
-            <div style={{ background: warm("0.05"), borderRadius: 16, padding: "28px 28px 24px", maxWidth: 340, width: "90%", boxShadow: "0 8px 32px rgba(0,0,0,0.18)", textAlign: "center" }}
+            <div style={{ background: SURF, borderRadius: 16, padding: "28px 28px 24px", maxWidth: 340, width: "90%", boxShadow: "0 8px 32px rgba(0,0,0,0.18)", textAlign: "center" }}
               onClick={(e) => e.stopPropagation()}>
               <p style={{ fontSize: 16, fontWeight: 700, color: C.inkText, margin: "0 0 8px" }}>Cancel this lesson?</p>
               <p style={{ fontSize: 13, color: C.ivoryDim, margin: "0 0 6px", lineHeight: 1.5 }}>
@@ -12744,7 +12759,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
                 Refund: €{refund.toFixed(2)} of €{gross.toFixed(2)}
               </p>
               {tier !== "full" && (
-                <p style={{ fontSize: 12.5, color: "#c0392b", margin: "0 0 16px", lineHeight: 1.5 }}>
+                <p style={{ fontSize: 12.5, color: RED_C, margin: "0 0 16px", lineHeight: 1.5 }}>
                   This will be considered a late cancellation.
                 </p>
               )}
@@ -12755,7 +12770,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
                   Keep lesson
                 </button>
                 <button onClick={() => { doCancelSession(cancelPreviewId); setCancelPreviewId(null); }} disabled={cancelBusy}
-                  style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "none", background: "#c0392b", color: "#fff", fontSize: 13, fontWeight: 600, cursor: cancelBusy ? "not-allowed" : "pointer", opacity: cancelBusy ? 0.6 : 1 }}>
+                  style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "none", background: RED_C, color: "#fff", fontSize: 13, fontWeight: 600, cursor: cancelBusy ? "not-allowed" : "pointer", opacity: cancelBusy ? 0.6 : 1 }}>
                   Cancel lesson
                 </button>
               </div>
@@ -12768,7 +12783,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
       {confirmNoShowId !== null && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(10,20,40,0.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999 }}
           onClick={() => setConfirmNoShowId(null)}>
-          <div style={{ background: warm("0.05"), borderRadius: 16, padding: "28px 28px 24px", maxWidth: 340, width: "90%", boxShadow: "0 8px 32px rgba(0,0,0,0.18)", textAlign: "center" }}
+          <div style={{ background: SURF, borderRadius: 16, padding: "28px 28px 24px", maxWidth: 340, width: "90%", boxShadow: "0 8px 32px rgba(0,0,0,0.18)", textAlign: "center" }}
             onClick={(e) => e.stopPropagation()}>
             <p style={{ fontSize: 16, fontWeight: 700, color: C.inkText, margin: "0 0 8px" }}>Report a no-show?</p>
             <p style={{ fontSize: 13, color: C.ivoryDim, margin: "0 0 20px", lineHeight: 1.5 }}>
@@ -12780,7 +12795,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
                 Never mind
               </button>
               <button onClick={() => { doReportNoShow(confirmNoShowId); setConfirmNoShowId(null); }} disabled={noShowBusy}
-                style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "none", background: "#c0392b", color: "#fff", fontSize: 13, fontWeight: 600, cursor: noShowBusy ? "not-allowed" : "pointer", opacity: noShowBusy ? 0.6 : 1 }}>
+                style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "none", background: RED_C, color: "#fff", fontSize: 13, fontWeight: 600, cursor: noShowBusy ? "not-allowed" : "pointer", opacity: noShowBusy ? 0.6 : 1 }}>
                 Report it
               </button>
             </div>
@@ -12792,7 +12807,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
       {confirmCancelId !== null && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(10,20,40,0.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999 }}
           onClick={() => setConfirmCancelId(null)}>
-          <div style={{ background: warm("0.05"), borderRadius: 16, padding: "28px 28px 24px", maxWidth: 320, width: "90%", boxShadow: "0 8px 32px rgba(0,0,0,0.18)", textAlign: "center" }}
+          <div style={{ background: SURF, borderRadius: 16, padding: "28px 28px 24px", maxWidth: 320, width: "90%", boxShadow: "0 8px 32px rgba(0,0,0,0.18)", textAlign: "center" }}
             onClick={(e) => e.stopPropagation()}>
             <p style={{ fontSize: 16, fontWeight: 700, color: C.inkText, margin: "0 0 8px" }}>Cancel this session?</p>
             <p style={{ fontSize: 13, color: C.ivoryDim, margin: "0 0 20px", lineHeight: 1.5 }}>Are you sure you want to remove this proposal? This cannot be undone.</p>
@@ -12802,7 +12817,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
                 Keep it
               </button>
               <button onClick={() => { doCancelSession(confirmCancelId); setConfirmCancelId(null); }}
-                style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "none", background: "#c0392b", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "none", background: RED_C, color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
                 Yes, cancel
               </button>
             </div>
@@ -15169,13 +15184,13 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
   }
 
   const RoomTabs = () => (
-    <div style={{ display: "flex", borderBottom: `1px solid ${C.inkLine}`, background: warm("0.05") }}>
+    <div style={{ display: "flex", borderBottom: `1px solid ${C.inkLine}`, background: SURF }}>
       {tabs.map((t) => {
         const { id, label, Icon } = t;
         const on = activeTab === id;
         return (
           <button key={id} onClick={() => openTab(t)}
-            style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "10px 4px", fontSize: 11, fontWeight: on ? 700 : 400, color: on ? C.ivory : C.ivoryDim, background: "none", border: "none", cursor: "pointer", borderBottom: on ? `2px solid ${C.brass}` : "2px solid transparent" }}>
+            style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "10px 4px", fontSize: 11, fontWeight: on ? 700 : 400, color: on ? (MODERN ? C.brass : C.ivory) : C.ivoryDim, background: "none", border: "none", cursor: "pointer", borderBottom: on ? `2px solid ${C.brass}` : "2px solid transparent" }}>
             <div style={{ position: "relative", display: "inline-flex" }}>
               <Icon size={15} />
               {id === "chat" && teacherUnread > 0 && (
@@ -15195,7 +15210,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
   const nextSession = upcomingSessions[0];
 
   return (
-    <div style={{ padding: "0 0 32px", fontFamily: FONT_BODY, background: C.parchment, minHeight: "100%" }}>
+    <div style={{ padding: "0 0 32px", fontFamily: FONT_BODY, background: PAGE_BG, minHeight: "100%" }}>
       {/* Pending requests banner */}
       <LearnerProfileModal learner={viewingLearner} onClose={() => setViewingLearner(null)} />
 
@@ -15203,7 +15218,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
       {confirmRemoveId && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 600, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}
           onClick={() => setConfirmRemoveId(null)}>
-          <div style={{ background: warm("0.05"), borderRadius: 16, padding: 24, maxWidth: 340, width: "100%" }} onClick={e => e.stopPropagation()}>
+          <div style={{ background: SURF, borderRadius: 16, padding: 24, maxWidth: 340, width: "100%" }} onClick={e => e.stopPropagation()}>
             <p style={{ fontSize: 15, fontWeight: 700, color: C.ivory, margin: "0 0 10px" }}>Remove student?</p>
             <p style={{ fontSize: 13, color: C.ivoryDim, lineHeight: 1.6, margin: "0 0 20px" }}>
               Are you sure you want to remove this student? They will need to send you a new teaching request in order to connect again.
@@ -15219,7 +15234,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
                 if (activeLearner?.id === confirmRemoveId) setActiveLearner(remaining[0]);
                 setConfirmRemoveId(null);
               }}
-                style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "none", background: "#c0392b", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "none", background: RED_C, color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
                 Remove
               </button>
             </div>
@@ -15227,7 +15242,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
         </div>
       )}
       {pendingRequests.length > 0 && (
-        <div style={{ margin: "16px 20px 0", background: "#FFF8E7", border: `1.5px solid ${C.brass}`, borderRadius: 12, padding: "14px 16px" }}>
+        <div style={{ margin: "16px 20px 0", background: CREAM_BG, border: `1.5px solid ${C.brass}`, borderRadius: 12, padding: "14px 16px" }}>
           <p style={{ fontSize: 13, fontWeight: 700, color: C.brassLabel, margin: "0 0 10px" }}>New lesson request{pendingRequests.length > 1 ? "s" : ""}</p>
           {pendingRequests.map((r) => (
             <div key={r.learnerId} style={{ marginBottom: 12 }}>
@@ -15248,7 +15263,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
         </div>
       )}
       {/* Header */}
-      <div style={{ padding: "20px 20px 0", background: C.parchment }}>
+      <div style={{ padding: "20px 20px 0", background: PAGE_BG }}>
         <p style={{ fontSize: 13, color: C.ivoryDim, margin: "0 0 16px", textAlign: "center" }}>{allLearners.length} active student{allLearners.length !== 1 ? "s" : ""}</p>
         {roomView === "students" && (<>
         {/* Learner pill picker */}
@@ -15258,11 +15273,11 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
           const pageLearners = allLearners.slice(safePage * PILLS_PER_PAGE, (safePage + 1) * PILLS_PER_PAGE);
           return (
             <>
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 0, background: C.parchment, padding: "12px 0 16px" }}>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 0, background: PAGE_BG, padding: "12px 0 16px" }}>
                 {pageLearners.map((l) => (
                   <div key={l.id} style={{ position: "relative", display: "inline-flex" }}>
                     <button onClick={() => { setActiveLearner(l); setSelectedSessionId(null); setTab("chat"); }}
-                      style={{ padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: activeLearner?.id === l.id ? 700 : 500, border: activeLearner?.id === l.id ? `2px solid ${C.brass}` : "none", background: warm("0.05"), color: activeLearner?.id === l.id ? C.ivory : C.ivoryDim, cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.06)" }}>
+                      style={{ padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: activeLearner?.id === l.id ? 700 : 500, border: activeLearner?.id === l.id ? `2px solid ${C.brass}` : "none", background: SURF, color: activeLearner?.id === l.id ? C.ivory : C.ivoryDim, cursor: "pointer", boxShadow: MODERN ? HAIR_RING : "0 2px 8px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.06)" }}>
                       {l.name.split(" ")[0]}
                     </button>
                     <button onClick={(e) => { e.stopPropagation(); setConfirmRemoveId(l.id); }}
@@ -15291,7 +15306,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
         })()}
         {/* Active learner info */}
         {activeLearner ? (
-        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", background: warm("0.05"), borderRadius: 12, border: "none", boxShadow: "0 1px 6px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04)", marginBottom: 16, marginTop: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", background: SURF, borderRadius: 12, border: "none", boxShadow: MODERN ? HAIR_RING : "0 1px 6px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04)", marginBottom: 16, marginTop: 0 }}>
           <Avatar name={activeLearner.name} id={activeLearner.id} size={40} online />
           <div>
             <p style={{ fontSize: 14, fontWeight: 700, color: C.ivory, margin: 0 }}>{activeLearner.name}</p>
@@ -15307,13 +15322,13 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
       {/* ── Teaching Preferences ── */}
       {roomView === "preferences" && (
         <div>
-        <div style={{ margin: "0 20px 20px", background: warm("0.05"), borderRadius: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06)", overflow: "hidden" }}>
+        <div style={{ margin: "0 20px 20px", background: SURF, borderRadius: MODERN ? 12 : 16, boxShadow: MODERN ? HAIR_RING : "0 2px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06)", overflow: "hidden" }}>
           <RoomTabs />
         <div style={{ padding: "24px 20px" }}>
           {/* The cancellation and modification windows are platform policy
               now, not a per-teacher setting — see the read-only summary
               below. The fee on the middle tier is still yours to set. */}
-          <div style={{ padding: "14px 16px", background: "#FFF8E7", borderRadius: 12, border: `1px solid ${C.brass}`, fontSize: 12, color: C.ivory, lineHeight: 1.6, marginBottom: 24 }}>
+          <div style={{ padding: "14px 16px", background: CREAM_BG, borderRadius: 12, border: `1px solid ${C.brass}`, fontSize: 12, color: C.ivory, lineHeight: 1.6, marginBottom: 24 }}>
             Platform policy: free cancellation until {CANCEL_FULL_H}h before the session; your late fee applies {CANCEL_ZERO_H}–{CANCEL_FULL_H}h before; under {CANCEL_ZERO_H}h, no refund. Changes lock {MODIFY_LOCK_H}h before.
           </div>
           {[
@@ -15334,7 +15349,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
             </div>
           ))}
           {rulesSaved && (
-            <p style={{ fontSize: 12, color: "#1A9E6E", margin: "10px 0 0", fontWeight: 600 }}>✓ Saved</p>
+            <p style={{ fontSize: 12, color: OK_C, margin: "10px 0 0", fontWeight: 600 }}>✓ Saved</p>
           )}
         </div>
         </div>
@@ -15356,10 +15371,10 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
           byMonth[key].push(sess);
         });
         const STATUS_LABEL = { confirmed: "Confirmed", teacher_proposed: "Awaiting student", student_proposed: "Counter-proposal", cancelled: "Cancelled", no_show: "No-show — refunded" };
-        const STATUS_COLOR = { confirmed: "#1A9E6E", teacher_proposed: C.brass, student_proposed: "#E07B00", cancelled: "#c0392b", no_show: C.burgundy };
+        const STATUS_COLOR = { confirmed: OK_C, teacher_proposed: MODERN ? AMBER_C : C.brass, student_proposed: AMBER_C, cancelled: RED_C, no_show: C.burgundy };
         return (
           <div>
-          <div style={{ margin: "0 20px 20px", background: warm("0.05"), borderRadius: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06)", overflow: "hidden" }}>
+          <div style={{ margin: "0 20px 20px", background: SURF, borderRadius: MODERN ? 12 : 16, boxShadow: MODERN ? HAIR_RING : "0 2px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06)", overflow: "hidden" }}>
             <RoomTabs />
           </div>
           <div style={{ padding: "0 20px 32px" }}>
@@ -15387,7 +15402,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
                     style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "11px 16px", background: C.inkSoft, border: "none", cursor: "pointer" }}>
                     <span style={{ fontSize: 13, fontWeight: 700, color: C.ivory }}>{monthLabel}</span>
                     <span style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                      {earnedCents > 0 && <span style={{ fontSize: 12, fontWeight: 700, color: "#1A9E6E" }}>€{euroAmount(earnedCents)} earned</span>}
+                      {earnedCents > 0 && <span style={{ fontSize: 12, fontWeight: 700, color: OK_C }}>€{euroAmount(earnedCents)} earned</span>}
                       <span style={{ fontSize: 11, color: C.ivoryDim }}>{sessions.length} session{sessions.length !== 1 ? "s" : ""}</span>
                       <span style={{ fontSize: 14, color: C.ivoryDim }}>{isOpen ? "▲" : "▼"}</span>
                     </span>
@@ -15395,7 +15410,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
                   {isOpen && (
                     <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
                       <thead>
-                        <tr style={{ background: "#FAFAFA" }}>
+                        <tr style={{ background: THEAD_BG }}>
                           {["Student", "Date · Time", "Status", "Amount"].map(h => (
                             <th key={h} style={{ padding: "8px 12px", textAlign: "left", fontSize: 10, fontWeight: 700, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.06em", borderBottom: `1px solid ${C.inkLine}` }}>{h}</th>
                           ))}
@@ -15434,7 +15449,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
                                   {STATUS_LABEL[sess.status] || sess.status}
                                 </span>
                               </td>
-                              <td style={{ padding: "9px 12px", fontWeight: 700, color: amount === "—" ? C.ivoryDim : isRefund ? "#c0392b" : "#1A9E6E", fontVariantNumeric: "tabular-nums" }}>
+                              <td style={{ padding: "9px 12px", fontWeight: 700, color: amount === "—" ? C.ivoryDim : isRefund ? RED_C : OK_C, fontVariantNumeric: "tabular-nums" }}>
                                 {amount}
                                 {split && <p style={{ margin: "2px 0 0", fontSize: 9.5, fontWeight: 500, color: C.ivoryDim, whiteSpace: "nowrap" }}>{split}</p>}
                               </td>
@@ -15455,7 +15470,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
       {/* Inner tab bar — students view only, and only once a student exists */}
       {roomView === "students" && activeLearner && (
         <React.Fragment> {/* Inner tab bar */}
-      <div style={{ margin: "0 20px 20px", background: warm("0.05"), borderRadius: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06)", overflow: "hidden", minHeight: 320 }}>
+      <div style={{ margin: "0 20px 20px", background: SURF, borderRadius: MODERN ? 12 : 16, boxShadow: MODERN ? HAIR_RING : "0 2px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06)", overflow: "hidden", minHeight: 320 }}>
       <RoomTabs />
 
       {/* Chat */}
@@ -15464,13 +15479,13 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
           <div className="lg-scroll overflow-y-auto px-4 py-3 flex flex-col gap-2" style={{ maxHeight: 300 }}>
             {msgs.length === 0 && <p style={{ fontSize: 13, color: C.ivoryDim, textAlign: "center", padding: "24px 0" }}>Start the conversation with {activeLearner.name.split(" ")[0]}</p>}
             {msgs.map((m, i) => (
-              <div key={i} className="px-3.5 py-2 rounded-2xl text-sm" style={{ maxWidth: "80%", alignSelf: m.from === "me" ? "flex-end" : "flex-start", background: m.from === "me" ? C.brass : C.inkSoft, color: m.from === "me" ? C.brassText : C.inkText }}>
+              <div key={i} className="px-3.5 py-2 rounded-2xl text-sm" style={{ maxWidth: "80%", alignSelf: m.from === "me" ? "flex-end" : "flex-start", background: m.from === "me" ? C.brass : C.inkSoft, color: m.from === "me" ? C.brassText : C.inkText, ...(MODERN && m.from !== "me" ? { border: "1px solid #E8E2DC" } : null) }}>
                 {m.text}
               </div>
             ))}
           </div>
           <div className="px-3 py-3 flex items-center gap-2" style={{ borderTop: `1px solid ${C.inkLine}` }}>
-            <input style={{ flex: 1, background: warm("0.05"), border: "1px solid rgba(255,255,255,0.10)", borderRadius: 999, padding: "11px 15px", fontSize: 14, color: C.ivory, outline: "none" }}
+            <input style={{ flex: 1, background: SURF, border: MODERN ? "1px solid #E8E2DC" : "1px solid rgba(255,255,255,0.10)", borderRadius: 999, padding: "11px 15px", fontSize: 14, color: C.ivory, outline: "none" }}
               placeholder={`Message ${activeLearner.name.split(" ")[0]}…`}
               onKeyDown={(e) => { if (e.key === "Enter" && e.target.value.trim()) { sendMsg(e.target.value); e.target.value = ""; } }} />
             <button onClick={(e) => { const inp = e.currentTarget.previousSibling; if (inp.value.trim()) { sendMsg(inp.value); inp.value = ""; } }}
@@ -15501,7 +15516,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
                   <Plus size={14} /> Propose a session
                 </button>
               ) : (
-                <div style={{ background: warm("0.05"), border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: 16, marginBottom: 14 }}>
+                <div style={{ background: SURF, border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: 16, marginBottom: 14 }}>
                   <p style={{ fontSize: 13, fontWeight: 600, color: C.ivory, margin: "0 0 10px" }}>Propose a time for {activeLearner.name.split(" ")[0]}</p>
                   <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
                     <input type="date" value={newDate} onChange={(e) => setNewDate(e.target.value)}
@@ -15559,12 +15574,12 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
                 return (
                   <button key={s.id} onClick={() => setSelectedSessionId(isSelected ? null : s.id)}
                     ref={isSelected ? (el) => { if (el) try { el.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" }); } catch { /* older Safari */ } } : undefined}
-                    style={{ flexShrink: 0, width: 110, height: 110, borderRadius: 14, border: isSelected ? `2px solid ${C.brass}` : `1px solid ${isConfirmed ? "#A8D5B5" : C.inkLine}`, background: isConfirmed ? "rgba(26,158,110,0.10)" : warm("0.06"), display: "flex", flexDirection: "column", alignItems: "flex-start", justifyContent: "space-between", padding: 12, cursor: "pointer", boxShadow: isSelected ? `0 0 0 3px ${C.brassDim}` : "none", transition: "box-shadow 0.15s" }}>
+                    style={{ flexShrink: 0, width: 110, height: 110, borderRadius: MODERN ? 12 : 14, border: isSelected ? `2px solid ${C.brass}` : `1px solid ${isConfirmed ? OK_LINE : C.inkLine}`, background: MODERN ? "#FFFFFF" : (isConfirmed ? okA("0.10") : warm("0.06")), display: "flex", flexDirection: "column", alignItems: "flex-start", justifyContent: "space-between", padding: 12, cursor: "pointer", boxShadow: isSelected ? `0 0 0 3px ${C.brassDim}` : "none", transition: "box-shadow 0.15s" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", width: "100%", alignItems: "center" }}>
-                      <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: isConfirmed ? "#1A9E6E" : "#D4810A" }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: isConfirmed ? OK_C : AMBER_D }}>
                         {isConfirmed ? "Confirmed" : s.status === "student_counter" ? "Counter" : "Pending"}
                       </span>
-                      {s.paid && <span style={{ fontSize: 9, fontWeight: 700, color: "#fff", background: "#1A9E6E", borderRadius: 20, padding: "2px 6px" }}>Paid</span>}
+                      {s.paid && <span style={{ fontSize: 9, fontWeight: 700, color: "#fff", background: OK_C, borderRadius: 20, padding: "2px 6px" }}>Paid</span>}
                     </div>
                     <div style={{ textAlign: "left" }}>
                       <p style={{ fontSize: 18, fontWeight: 800, color: C.inkText, margin: 0, lineHeight: 1 }}>{dt.getDate()}</p>
@@ -15594,7 +15609,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
                       <p style={{ fontSize: 11, color: C.brassLabel, margin: "0 0 8px" }}>{activeLearner.name.split(" ")[0]} suggested this time — awaiting your response</p>
                       <div style={{ display: "flex", gap: 8 }}>
                         <button onClick={() => approveCounter(sel.id)}
-                          style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "6px 13px", borderRadius: 8, background: "#1A9E6E", color: "#fff", fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer" }}>
+                          style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "6px 13px", borderRadius: 8, background: OK_C, color: "#fff", fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer" }}>
                           <Check size={12} /> Accept
                         </button>
                         <button onClick={() => setShowCounter((p) => ({ ...p, [sel.id]: true }))}
@@ -15637,11 +15652,11 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
                   {isConfirmed && (
                     <div style={{ marginBottom: 10 }}>
                       {sel.paid ? (
-                        <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, background: "#DFF2E8", color: "#1A9E6E", fontSize: 12, fontWeight: 700 }}>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, background: OK_BG, color: OK_C, fontSize: 12, fontWeight: 700 }}>
                           <Check size={13} /> Payment received
                         </span>
                       ) : (
-                        <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, background: "#FFF4E5", color: "#D4810A", fontSize: 12, fontWeight: 600 }}>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, background: AMBER_BG, color: AMBER_D, fontSize: 12, fontWeight: 600 }}>
                           ⏳ Awaiting payment from {activeLearner.name.split(" ")[0]}
                         </span>
                       )}
@@ -15681,7 +15696,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
                                   {submitted ? "Update agenda" : "Send agenda"}
                                 </button>
                                 {submitted && !isDirty && (
-                                  <span style={{ fontSize: 11, color: "#1A9E6E" }}>✓ Sent to {activeLearner.name.split(" ")[0]}</span>
+                                  <span style={{ fontSize: 11, color: OK_C }}>✓ Sent to {activeLearner.name.split(" ")[0]}</span>
                                 )}
                               </div>
                             </div>
@@ -15708,7 +15723,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
                           cancel-lock display is (still, purely visually) tied
                           to CANCEL_FULL_H. */}
                       <button onClick={() => setConfirmCancelId(sel.id)} disabled={cancelBusy}
-                        style={{ fontSize: 12, color: "#c0392b", background: "none", border: "1px solid #c0392b", borderRadius: 8, padding: "6px 12px", cursor: cancelBusy ? "not-allowed" : "pointer", fontWeight: 600, opacity: cancelBusy ? 0.6 : 1 }}>
+                        style={{ fontSize: 12, color: RED_C, background: "none", border: `1px solid ${RED_C}`, borderRadius: 8, padding: "6px 12px", cursor: cancelBusy ? "not-allowed" : "pointer", fontWeight: 600, opacity: cancelBusy ? 0.6 : 1 }}>
                         {cancelBusy ? "Cancelling…" : "Cancel session"}
                       </button>
                     </div>
@@ -15726,8 +15741,8 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
           {nextSession ? (() => {
             const dt = new Date(nextSession.date + "T" + nextSession.time);
             return (
-              <div style={{ background: "#F4FBF6", border: "1px solid #A8D5B5", borderRadius: 12, padding: "16px 20px", marginBottom: 20 }}>
-                <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#1A9E6E", margin: "0 0 4px" }}>Next session with {activeLearner.name.split(" ")[0]}</p>
+              <div style={{ background: OK_BG2, border: `1px solid ${OK_LINE}`, borderRadius: 12, padding: "16px 20px", marginBottom: 20 }}>
+                <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: OK_C, margin: "0 0 4px" }}>Next session with {activeLearner.name.split(" ")[0]}</p>
                 <p style={{ fontSize: 16, fontWeight: 700, color: C.ivory, margin: 0 }}>{dt.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })} at {nextSession.time}</p>
               </div>
             );
@@ -15743,11 +15758,11 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
                 placeholder="Paste your Zoom or Meet link…"
                 style={{ flex: 1, background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "10px 14px", fontSize: 13, color: C.inkText, outline: "none" }} />
               <button onClick={() => setZoomSaved(true)} disabled={!zoomLink.trim()}
-                style={{ padding: "10px 16px", borderRadius: 10, background: zoomSaved ? "#1A9E6E" : C.brass, color: zoomSaved ? "#fff" : C.brassText, fontSize: 13, fontWeight: 600, border: "none", cursor: !zoomLink.trim() ? "not-allowed" : "pointer", opacity: !zoomLink.trim() ? 0.5 : 1 }}>
+                style={{ padding: "10px 16px", borderRadius: 10, background: zoomSaved ? OK_C : C.brass, color: zoomSaved ? "#fff" : C.brassText, fontSize: 13, fontWeight: 600, border: "none", cursor: !zoomLink.trim() ? "not-allowed" : "pointer", opacity: !zoomLink.trim() ? 0.5 : 1 }}>
                 {zoomSaved ? "Saved ✓" : "Save"}
               </button>
             </div>
-            {zoomSaved && <p style={{ fontSize: 12, color: "#1A9E6E", marginTop: 6 }}>Link shared with {activeLearner.name.split(" ")[0]}</p>}
+            {zoomSaved && <p style={{ fontSize: 12, color: OK_C, marginTop: 6 }}>Link shared with {activeLearner.name.split(" ")[0]}</p>}
           </div>
           <div style={{ background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: "20px", textAlign: "center" }}>
             <Video size={28} color={C.ivoryDim} style={{ marginBottom: 8 }} />
@@ -15766,7 +15781,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
       {confirmCancelId !== null && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(10,20,40,0.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999 }}
           onClick={() => setConfirmCancelId(null)}>
-          <div style={{ background: warm("0.05"), borderRadius: 16, padding: "28px 28px 24px", maxWidth: 320, width: "90%", boxShadow: "0 8px 32px rgba(0,0,0,0.18)", textAlign: "center" }}
+          <div style={{ background: SURF, borderRadius: 16, padding: "28px 28px 24px", maxWidth: 320, width: "90%", boxShadow: "0 8px 32px rgba(0,0,0,0.18)", textAlign: "center" }}
             onClick={(e) => e.stopPropagation()}>
             <p style={{ fontSize: 16, fontWeight: 700, color: C.inkText, margin: "0 0 8px" }}>Cancel this session?</p>
             <p style={{ fontSize: 13, color: C.ivoryDim, margin: "0 0 20px", lineHeight: 1.5 }}>Are you sure you want to cancel? This cannot be undone.</p>
@@ -15776,7 +15791,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
                 Keep it
               </button>
               <button onClick={() => { doCancelSession(confirmCancelId); setSelectedSessionId(null); setConfirmCancelId(null); }}
-                style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "none", background: "#c0392b", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "none", background: RED_C, color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
                 Yes, cancel
               </button>
             </div>
@@ -15799,7 +15814,7 @@ function LearnerChat({ teacher, messages, onSend }) {
       </div>
       <div className="lg-scroll overflow-y-auto px-4 py-3 flex flex-col gap-2" style={{ maxHeight: 240 }}>
         {messages.map((m, i) => (
-          <div key={i} className="px-3.5 py-2 rounded-2xl text-sm" style={{ maxWidth: "80%", alignSelf: m.from === "me" ? "flex-end" : "flex-start", background: m.from === "me" ? C.brass : C.inkSoft, color: m.from === "me" ? C.brassText : C.ivory }}>
+          <div key={i} className="px-3.5 py-2 rounded-2xl text-sm" style={{ maxWidth: "80%", alignSelf: m.from === "me" ? "flex-end" : "flex-start", background: m.from === "me" ? C.brass : C.inkSoft, color: m.from === "me" ? C.brassText : C.ivory, ...(MODERN && m.from !== "me" ? { border: "1px solid #E8E2DC" } : null) }}>
             {m.text}
           </div>
         ))}

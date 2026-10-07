@@ -359,3 +359,11 @@ html.theme-modern .artium-lp--light .artium-globepin-hand img{filter:brightness(
 html.theme-modern .artium-lp--light .artium-globepin-register{color:#FFFFFF;font-weight:600}
 html.theme-modern .artium-lp--light .artium-lp-partner-lbl{font-size:15px;font-weight:700;letter-spacing:.12em}
 html.theme-modern .artium-lp--light .artium-lp-partner-name{color:#6B6B6B}
+
+/* ======================================================================
+   Phases 3-4: learner side and lesson rooms (most values ride tokens in App.jsx).
+   ====================================================================== */
+html.theme-modern input[type="range"]{accent-color:#086868}
+html.theme-modern input[type="date"],
+html.theme-modern input[type="time"],
+html.theme-modern input[type="number"]{font-family:inherit}
