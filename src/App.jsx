@@ -31,24 +31,26 @@ import { MapContainer, TileLayer, Marker, Tooltip, Popup, useMap } from "react-l
 // into ArtiumGate — .stage{max-width:94vw} was clamping the gate's 840px
 // stage on phones. The files stay on disk for reference.
 import ArtiumGate, { CARDS as GATE_CARDS } from "./components/entrygate/ArtiumGate";
-// Dev-only design trial: ?gate=chordify (persisted) swaps in the Chordify-style
-// entry gate; ?gate=classic clears it. Always false in production builds.
-const useChordifyGate = import.meta.env.DEV && (() => {
+// The modern (Chordify-style) design is the live design. Production always
+// gets it; in local development only, ?gate=classic (persisted) shows the
+// previous design for comparison and ?gate=modern restores the default.
+const useChordifyGate = (() => {
+  if (!import.meta.env.DEV) return true;
   try {
     const g = new URLSearchParams(location.search).get("gate");
-    if (g === "chordify") localStorage.setItem("artium_gate_variant", "chordify");
-    if (g === "classic") localStorage.removeItem("artium_gate_variant");
-    return g === "chordify" || localStorage.getItem("artium_gate_variant") === "chordify";
-  } catch { return false; }
+    if (g === "classic") localStorage.setItem("artium_gate_variant", "classic");
+    if (g === "modern" || g === "chordify") localStorage.removeItem("artium_gate_variant");
+    return localStorage.getItem("artium_gate_variant") !== "classic";
+  } catch { return true; }
 })();
-const ChordifyGateLazy = import.meta.env.DEV ? lazy(() => import("./components/entrygate/ArtiumGateChordify.jsx")) : null;
+const ChordifyGateLazy = lazy(() => import("./components/entrygate/ArtiumGateChordify.jsx"));
 const EntryGate = useChordifyGate
   ? (props) => <Suspense fallback={null}><ChordifyGateLazy {...props} /></Suspense>
   : ArtiumGate;
-// The "modern" (Chordify-style) theme rides the same dev-only trial flag, so it
-// is false in every production build and the classic look is untouched. Every
-// modern value below is chosen at module load from this one constant; the
-// stylesheet half lives in ./theme-modern.css, scoped under html.theme-modern.
+// Every modern value below is chosen at module load from this one constant;
+// the stylesheet half lives in ./theme-modern.css, scoped under
+// html.theme-modern. The classic values remain beside them for the local
+// ?gate=classic comparison.
 const MODERN = useChordifyGate;
 if (MODERN) {
   try {
