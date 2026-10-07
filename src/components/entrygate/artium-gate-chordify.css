@@ -1,0 +1,86 @@
+.cgate{--teal:#086868;--teal2:#2E7F7F;--bg:#F7F4F2;--line:#E8E2DC;--ink:#1C1C1C;--body:#333;
+  min-height:100vh;background:var(--bg);color:var(--body);font-family:"Fira Sans",system-ui,-apple-system,sans-serif;
+  padding-bottom:90px;-webkit-font-smoothing:antialiased;text-align:left}
+.cgate *{box-sizing:border-box}
+.cgate button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit}
+.cgate button:disabled{cursor:default}
+.cgate .cg-off{opacity:.45;filter:saturate(.6);pointer-events:none}
+
+.cgate .cg-head{background:var(--teal);color:#fff}
+.cgate .cg-head-in{max-width:720px;margin:0 auto;height:60px;padding:0 12px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.cgate .cg-icon{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;color:#fff}
+.cgate .cg-icon:hover{background:rgba(255,255,255,.14)}
+.cgate .cg-word{font-size:28px;font-weight:400;letter-spacing:-.01em;line-height:1}
+.cgate .cg-word b{font-weight:700}
+.cgate .cg-actions{display:flex;align-items:center;gap:4px}
+.cgate .cg-count{display:inline-flex;align-items:center;gap:4px;font-size:15px;font-weight:500;padding:0 6px;opacity:.9}
+.cgate .cg-avatar{width:36px;height:36px;border-radius:50%;background:#fff;color:var(--teal);font-weight:600;font-size:14px;
+  display:grid;place-items:center;overflow:hidden;margin-left:2px}
+.cgate .cg-avatar img{width:100%;height:100%;object-fit:cover}
+
+.cgate .cg-promo{background:#2B2B2B;color:#fff}
+.cgate .cg-promo-in{max-width:720px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:15px}
+.cgate .cg-promo-text{flex:1 1 220px;line-height:1.3}
+.cgate .cg-pill{background:var(--teal2);color:#fff;border-radius:999px;padding:6px 14px;font-size:14px;font-weight:600}
+.cgate .cg-pill:disabled{opacity:.5}
+.cgate .cg-rate{border:1px solid rgba(255,255,255,.6);border-radius:999px;padding:5px 12px;font-size:14px;font-weight:500;white-space:nowrap}
+
+.cgate .cg-hero{background:var(--teal);color:#fff;padding:28px 16px 40px}
+.cgate .cg-hero-in{max-width:720px;margin:0 auto}
+.cgate .cg-hero h1{font-size:40px;line-height:1.12;font-weight:400;letter-spacing:-.015em;margin:0 0 28px}
+.cgate .cg-search{width:100%;height:60px;background:#fff;border-radius:10px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 0 0 18px;font-size:18px;color:#777;text-align:left;overflow:hidden}
+.cgate .cg-search-go{width:60px;height:60px;background:var(--teal2);color:#fff;display:grid;place-items:center;margin:0;border-left:3px solid #fff}
+.cgate .cg-search:hover .cg-search-go{background:#0a7a7a}
+
+.cgate .cg-main{max-width:720px;margin:0 auto;padding:16px 12px 0;display:flex;flex-direction:column;gap:16px}
+.cgate .cg-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:20px}
+.cgate h2{font-size:22px;line-height:1.25;font-weight:700;color:var(--ink);margin:0 0 8px}
+.cgate h3{font-size:18px;font-weight:700;color:var(--ink);margin:0 0 12px}
+.cgate .cg-student p{font-size:17px;line-height:1.5;margin:0 0 18px}
+.cgate .cg-illo{position:relative;height:190px;border-radius:10px;background:linear-gradient(160deg,#C9C3F5,#9E92F0 70%,#6B57E8);margin:-4px -4px 18px;overflow:hidden}
+.cgate .cg-key{position:absolute;background:#fff;color:var(--ink);font-weight:600;font-size:15px;border-radius:12px;padding:12px 16px;
+  box-shadow:0 3px 0 rgba(60,40,160,.25),0 8px 16px rgba(60,40,160,.18)}
+.cgate .cg-check{position:absolute;top:-7px;right:-7px;width:20px;height:20px;border-radius:50%;background:#2EAA6E;display:grid;place-items:center;border:2px solid #fff}
+.cgate .cg-key-0{left:6%;top:14%;transform:rotate(-5deg);font-size:20px;padding:16px 22px}
+.cgate .cg-key-1{left:40%;top:8%;transform:rotate(4deg)}
+.cgate .cg-key-2{right:6%;top:22%;transform:rotate(-3deg);font-size:18px;padding:14px 18px}
+.cgate .cg-key-3{left:14%;bottom:12%;transform:rotate(3deg)}
+.cgate .cg-key-4{left:44%;bottom:10%;transform:rotate(-4deg)}
+.cgate .cg-key-5{right:5%;bottom:8%;transform:rotate(5deg)}
+.cgate .cg-key-6{display:none}
+.cgate .cg-btn{display:block;width:100%;background:var(--teal);color:#fff;font-size:18px;font-weight:600;border-radius:10px;padding:16px 20px;transition:background .15s}
+.cgate .cg-btn:hover:not(:disabled){background:var(--teal2)}
+
+.cgate .cg-list{padding:20px 0 8px}
+.cgate .cg-list h2{padding:0 20px;margin-bottom:6px}
+.cgate .cg-list ul{list-style:none;margin:0;padding:0}
+.cgate .cg-list li+li{border-top:1px solid var(--line)}
+.cgate .cg-row{width:100%;display:flex;align-items:center;gap:14px;padding:12px 20px;text-align:left;color:#999}
+.cgate .cg-row:hover{background:#FAF8F6}
+.cgate .cg-row img{width:56px;height:56px;border-radius:6px;object-fit:cover;flex:none;background:var(--line)}
+.cgate .cg-row-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
+.cgate .cg-row-title{font-size:17px;font-weight:600;color:var(--ink);line-height:1.25}
+.cgate .cg-row-meta{display:flex;align-items:center;gap:8px;font-size:14px;color:#777;min-width:0}
+.cgate .cg-row-meta span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cgate .cg-tag{font-style:normal;background:#E2EEFB;color:#2F7FD8;border-radius:6px;padding:1px 8px;font-size:14px;font-weight:500;flex:none}
+
+.cgate .cg-partners a{display:inline-flex;align-items:center;gap:12px;color:var(--ink);font-size:17px;font-weight:500;text-decoration:none}
+.cgate .cg-partners img{border-radius:50%;object-fit:cover}
+.cgate .cg-foot{max-width:720px;margin:0 auto;padding:24px 16px 0;text-align:center;font-size:14px;color:#777;display:flex;flex-direction:column;gap:12px;align-items:center}
+.cgate .cg-link{color:var(--teal);font-size:16px;font-weight:600;padding:6px 10px}
+.cgate .cg-link:hover{text-decoration:underline}
+.cgate button:focus-visible,.cgate a:focus-visible{outline:2px solid #6B57E8;outline-offset:2px}
+
+@media (min-width:640px){
+  .cgate .cg-hero{padding:48px 16px 56px}
+  .cgate .cg-hero h1{font-size:52px}
+  .cgate .cg-main{padding-top:24px;gap:20px}
+  .cgate .cg-illo{height:230px}
+  .cgate .cg-key-6{display:block;left:70%;top:62%;transform:rotate(-6deg)}
+  .cgate .cg-key-5{right:auto;left:68%;bottom:6%}
+}
+@media (max-width:380px){.cgate .cg-hero h1{font-size:34px}.cgate .cg-count{display:none}}
+
+/* Colour icon tiles replacing the photo thumbnails */
+.cgate .cg-row-tile{width:52px;height:52px;border-radius:10px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:inset 0 -3px 0 rgba(0,0,0,.12)}
