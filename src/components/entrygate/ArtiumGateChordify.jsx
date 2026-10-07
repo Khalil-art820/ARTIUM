@@ -86,7 +86,9 @@ export default function ArtiumGateChordify({
     <div className="cgate">
       <header className="cg-head">
         <div className="cg-head-in">
-          <span className="cg-head-spacer" aria-hidden="true" />
+          <div className="cg-brand">
+          {/* The app's own icon beside the wordmark marks it as the app name. */}
+          <img className="cg-brand-icon" src="/icon-192.png" alt="" width="34" height="34" />
           <div className="cg-word" aria-label="ARTIUM">
             {/* The house wordmark, kept from the original gate: Jost caps,
                 wide tracking, and the crossbar-less A drawn as a glyph. */}
@@ -95,16 +97,25 @@ export default function ArtiumGateChordify({
             </svg>
             <span aria-hidden="true">RTIUM</span>
           </div>
+          </div>
           <div className="cg-actions">
             <span className="cg-count" title="Members" aria-label={`${count} members`}>
               <Svg size={16}><circle cx="12" cy="8" r="3.6" /><path d="M4.5 20c1.4-3.4 4.2-5 7.5-5s6.1 1.6 7.5 5" /></Svg>
               {count}
             </span>
             {onMusicToggle && (
-              <button type="button" className="cg-icon" onClick={onMusicToggle} aria-pressed={!!musicOn}
+              <button type="button" className={`cg-icon cg-round${musicOn ? " is-on" : ""}`} onClick={onMusicToggle} aria-pressed={!!musicOn}
                 aria-label={musicOn ? "Pause ambient music" : "Play ambient music"}>
-                {musicOn ? <Svg size={18} sw={2.6}><path d="M9 5v14M15 5v14" /></Svg>
-                  : <Svg size={18} fill="currentColor"><path d="M8 5.5v13l11-6.5z" /></Svg>}
+                {musicOn ? (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <rect x="6" y="5" width="4.2" height="14" rx="1.6" /><rect x="13.8" y="5" width="4.2" height="14" rx="1.6" />
+                  </svg>
+                ) : (
+                  /* Soft-cornered triangle, nudged right to sit optically centred. */
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style={{ marginLeft: 2 }}>
+                    <path d="M8 6.2c0-1.2 1.3-1.9 2.3-1.3l9.1 5.8c.9.6.9 2 0 2.6l-9.1 5.8c-1 .6-2.3-.1-2.3-1.3z" />
+                  </svg>
+                )}
               </button>
             )}
             {bellSlot}

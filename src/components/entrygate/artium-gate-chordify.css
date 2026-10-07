@@ -75,8 +75,6 @@
 /* Colour icon tiles replacing the photo thumbnails */
 .cgate .cg-row-tile{width:52px;height:52px;border-radius:10px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:inset 0 -3px 0 rgba(0,0,0,.12)}
 
-/* Left slot balances the right-hand actions so the wordmark sits centred. */
-.cgate .cg-head-spacer{width:40px;flex:none}
 
 /* ---- parity pass ---- */
 .cgate .cg-hero h1{font-size:38px}
@@ -181,3 +179,33 @@
   .artium-aw-tabs.artium-aw-tabs--modern button > span:first-child,
   .artium-aw-tabs.artium-aw-tabs--modern button > span:first-child::before{animation:none;transition:none}
 }
+
+/* ---- header polish ---- */
+.cgate .cg-brand{display:flex;align-items:center;gap:10px;min-width:0}
+.cgate .cg-brand-icon{width:34px;height:34px;border-radius:50%;display:block;flex:none;
+  box-shadow:0 0 0 2px rgba(255,255,255,.9), 0 4px 10px -3px rgba(0,0,0,.35)}
+.cgate .cg-word{font-size:21px;margin-right:0}
+/* Play and bell share one shape: a soft translucent white disc, solid glyph. */
+.cgate .cg-round,
+.cgate .cg-actions .artium-net-puck{
+  width:38px;height:38px;border-radius:50%;padding:0;
+  display:inline-flex;align-items:center;justify-content:center;position:relative;
+  background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.22);box-shadow:none;
+  color:#fff;cursor:pointer;transition:background .2s ease, transform .15s ease;
+}
+.cgate .cg-round:hover,
+.cgate .cg-actions .artium-net-puck:hover{background:rgba(255,255,255,.26)}
+.cgate .cg-round:active,
+.cgate .cg-actions .artium-net-puck:active{transform:scale(.92)}
+.cgate .cg-round.is-on{background:#fff;color:#086868;border-color:#fff}
+/* Solid bell instead of the outline glyph */
+.cgate .cg-actions .artium-net-puck svg{width:18px;height:18px;fill:currentColor;stroke:currentColor;stroke-width:1.4}
+.cgate .cg-actions .artium-net-bell-badge{
+  position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;padding:0 4px;border-radius:999px;
+  display:flex;align-items:center;justify-content:center;
+  background:#F2CE7E;color:#3A2E10;font-size:10.5px;font-weight:700;border:2px solid #086868;
+}
+.cgate .cg-actions{gap:8px}
+/* Centred hero */
+.cgate .cg-hero-in{text-align:center}
+.cgate .cg-sub{margin-left:auto;margin-right:auto}
