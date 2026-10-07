@@ -76,7 +76,14 @@ export default function ArtiumGateChordify({
           <button type="button" className="cg-icon" aria-label="Explore" onClick={onLearner}>
             <Svg><circle cx="11" cy="11" r="6.5" /><path d="M20 20l-4.2-4.2" /></Svg>
           </button>
-          <div className="cg-word" aria-label="artium"><b>art</b>ium</div>
+          <div className="cg-word" aria-label="ARTIUM">
+            {/* The house wordmark, kept from the original gate: Jost caps,
+                wide tracking, and the crossbar-less A drawn as a glyph. */}
+            <svg className="cg-lambda" viewBox="0 0 15 15" aria-hidden="true">
+              <path d="M7.5 0.9 L1.4 14.4 M7.5 0.9 L13.6 14.4" stroke="currentColor" strokeWidth="2.85" fill="none" />
+            </svg>
+            <span aria-hidden="true">RTIUM</span>
+          </div>
           <div className="cg-actions">
             <span className="cg-count" title="Members" aria-label={`${count} members`}>
               <Svg size={16}><circle cx="12" cy="8" r="3.6" /><path d="M4.5 20c1.4-3.4 4.2-5 7.5-5s6.1 1.6 7.5 5" /></Svg>

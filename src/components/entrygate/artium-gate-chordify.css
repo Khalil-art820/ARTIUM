@@ -10,8 +10,8 @@
 .cgate .cg-head-in{max-width:720px;margin:0 auto;height:60px;padding:0 12px;display:flex;align-items:center;justify-content:space-between;gap:8px}
 .cgate .cg-icon{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;color:#fff}
 .cgate .cg-icon:hover{background:rgba(255,255,255,.14)}
-.cgate .cg-word{font-size:28px;font-weight:400;letter-spacing:-.01em;line-height:1}
-.cgate .cg-word b{font-weight:700}
+.cgate .cg-word{font-family:'Jost',system-ui,sans-serif;font-size:22px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;line-height:1;display:inline-flex;align-items:center;color:#fff;margin-right:-.2em}
+.cgate .cg-lambda{width:.74em;height:.74em;margin-right:.2em;display:block}
 .cgate .cg-actions{display:flex;align-items:center;gap:4px}
 .cgate .cg-count{display:inline-flex;align-items:center;gap:4px;font-size:15px;font-weight:500;padding:0 6px;opacity:.9}
 .cgate .cg-avatar{width:36px;height:36px;border-radius:50%;background:#fff;color:var(--teal);font-weight:600;font-size:14px;
