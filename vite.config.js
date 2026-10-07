@@ -10,7 +10,7 @@ export default defineConfig({
       // Registration lives in src/pwa.js, which also forces the reload that
       // autoUpdate on its own does not do for an already-open page.
       injectRegister: null,
-      includeAssets: ["icon-512-v2.png", "icon-192-v2.png", "icon-512-maskable-v2.png", "apple-touch-icon-v2.png"],
+      includeAssets: ["icon-512-v3.png", "icon-192-v3.png", "icon-512-maskable-v3.png", "apple-touch-icon-v3.png"],
       manifest: {
         name: "Artium — A World Connected by Music",
         short_name: "Artium",
@@ -23,13 +23,13 @@ export default defineConfig({
         start_url: "/",
         icons: [
           {
-            src: "icon-192-v2.png",
+            src: "icon-192-v3.png",
             sizes: "192x192",
             type: "image/png",
             purpose: "any",
           },
           {
-            src: "icon-512-v2.png",
+            src: "icon-512-v3.png",
             sizes: "512x512",
             type: "image/png",
             purpose: "any",
@@ -38,7 +38,7 @@ export default defineConfig({
           // edge, and Android crops maskable icons to its own shape, which
           // would slice the ring off. This one is full-bleed with no ring.
           {
-            src: "icon-512-maskable-v2.png",
+            src: "icon-512-maskable-v3.png",
             sizes: "512x512",
             type: "image/png",
             purpose: "maskable",
