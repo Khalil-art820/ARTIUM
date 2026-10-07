@@ -48,7 +48,7 @@ const GatePreview = import.meta.env.DEV && new URLSearchParams(location.search).
             onLogout={a("onLogout")}
           />
           <BottomTabs light modern items={STUDENT_TABS} active={tab} onTab={setTab} />
-          <ArtiumRadio open={musicOn} controllerRef={radioRef} onPlayingChange={setMusicPlaying} onClose={() => setMusicOn(false)} />
+          <ArtiumRadio modern open={musicOn} controllerRef={radioRef} onPlayingChange={setMusicPlaying} onClose={() => setMusicOn(false)} />
           </>
         );
       };

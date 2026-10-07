@@ -1057,7 +1057,14 @@ function shuffleOnce(list) {
   return a;
 }
 
-function ArtiumRadio({ open, controllerRef, onPlayingChange, onClose }) {
+function ArtiumRadio({ open, controllerRef, onPlayingChange, onClose, modern }) {
+  // One palette for every colour and font below. "classic" is today's exact
+  // gold/ivory look; "modern" is the trial gate's teal language.
+  const P = modern
+    ? { accent: "#086868", ink: "#1C1C1C", dim: "#6B6B6B", line: "#E8E2DC", font: "'Fira Sans', system-ui, sans-serif",
+        washRgb: "8,104,104", lineRgb: "200,192,184", shadowRgb: "0,0,0" }
+    : { accent: C.brass, ink: C.ivory, dim: C.ivoryDim, line: C.inkLine, font: FONT_BODY,
+        washRgb: "201,150,46", lineRgb: "176,146,98", shadowRgb: "150,115,55" };
   const audioRef = useRef(null);
   const [tracks, setTracks] = useState(null); // null = not fetched yet
   const [names, setNames] = useState({});
@@ -1217,7 +1224,7 @@ function ArtiumRadio({ open, controllerRef, onPlayingChange, onClose }) {
   const photoOf = (t) => names[t.user_id]?.photoUrl || ART;
   const nameOf = (t) => names[t.user_id]?.name || "";
   const NamePill = ({ text, size = 11 }) => (
-    <span style={{ display: "inline-flex", alignItems: "center", maxWidth: "100%", background: "#FFFFFF", border: "1px solid rgba(176,146,98,0.45)", borderRadius: 999, padding: size > 10.5 ? "3px 10px" : "2px 8px", fontSize: size, fontWeight: 600, color: C.inkText, boxShadow: "0 3px 6px -3px rgba(150,115,55,.25)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+    <span style={{ display: "inline-flex", alignItems: "center", maxWidth: "100%", background: "#FFFFFF", border: `1px solid rgba(${P.lineRgb},0.45)`, borderRadius: 999, padding: size > 10.5 ? "3px 10px" : "2px 8px", fontSize: size, fontWeight: 600, color: P.ink, boxShadow: `0 3px 6px -3px rgba(${P.shadowRgb},.25)`, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
       {text}
     </span>
   );
@@ -1237,13 +1244,13 @@ function ArtiumRadio({ open, controllerRef, onPlayingChange, onClose }) {
 
   const skipBtn = (onClick, disabled, children, label) => (
     <button onClick={onClick} disabled={disabled} aria-label={label}
-      style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 30, height: 30, padding: 0, background: "transparent", border: "none", cursor: disabled ? "default" : "pointer", color: C.ivory }}>
+      style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 30, height: 30, padding: 0, background: "transparent", border: "none", cursor: disabled ? "default" : "pointer", color: P.ink }}>
       {children}
     </button>
   );
   const bigPlay = (size) => (
     <button onClick={() => controllerRef.current?.togglePlay()} title={playing ? "Pause" : "Play"} aria-label={playing ? "Pause" : "Play"}
-      style={{ display: "flex", alignItems: "center", justifyContent: "center", width: size, height: size, padding: 0, borderRadius: "50%", border: "none", background: "#FFFFFF", boxShadow: "0 8px 18px -6px rgba(150,115,55,0.45), 0 0 0 1px rgba(176,146,98,0.18)", cursor: "pointer", color: C.ivory }}>
+      style={{ display: "flex", alignItems: "center", justifyContent: "center", width: size, height: size, padding: 0, borderRadius: "50%", border: "none", background: "#FFFFFF", boxShadow: `0 8px 18px -6px rgba(${P.shadowRgb},0.45), 0 0 0 1px rgba(${P.lineRgb},0.18)`, cursor: "pointer", color: P.ink }}>
       {playing ? <Pause size={size * 0.42} /> : <Play size={size * 0.42} style={{ marginLeft: 2 }} />}
     </button>
   );
@@ -1257,8 +1264,8 @@ function ArtiumRadio({ open, controllerRef, onPlayingChange, onClose }) {
     <div
       style={{
         position: "fixed", top: 72, right: 16, width: minimized ? "auto" : 340, maxWidth: "calc(100vw - 32px)", zIndex: 500,
-        background: "#FFFFFF", border: `1px solid ${C.inkLine}`, borderRadius: minimized ? 999 : 20,
-        boxShadow: "0 20px 40px -22px rgba(150,115,55,0.38), inset 0 1px 0 #fff", padding: minimized ? 6 : 0,
+        background: "#FFFFFF", border: `1px solid ${P.line}`, borderRadius: minimized ? 999 : 20,
+        boxShadow: `0 20px 40px -22px rgba(${P.shadowRgb},0.38), inset 0 1px 0 #fff`, padding: minimized ? 6 : 0,
         overflow: "hidden", display: "flex", flexDirection: "column", maxHeight: minimized ? "none" : "calc(100vh - 140px)",
         opacity: open ? 1 : 0,
         visibility: open ? "visible" : "hidden",
@@ -1281,48 +1288,48 @@ function ArtiumRadio({ open, controllerRef, onPlayingChange, onClose }) {
       {minimized ? (
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <button onClick={() => controllerRef.current?.togglePlay()} title={playing ? "Pause" : "Play"}
-            style={{ width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", border: `1px solid ${C.inkLine}`, background: "#FFFFFF", cursor: "pointer", color: C.ivory }}>
+            style={{ width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", border: `1px solid ${P.line}`, background: "#FFFFFF", cursor: "pointer", color: P.ink }}>
             {playing ? <Pause size={13} /> : <Play size={13} style={{ marginLeft: 1 }} />}
           </button>
           <button onClick={() => setMinimized(false)} title="Open Artium Radio"
-            style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", color: C.ivoryDim, fontFamily: FONT_BODY, fontSize: 12, fontWeight: 600, padding: "0 4px 0 0", maxWidth: 150, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            <Music2 size={13} style={{ flexShrink: 0, color: C.brass }} />
+            style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", color: P.dim, fontFamily: P.font, fontSize: 12, fontWeight: 600, padding: "0 4px 0 0", maxWidth: 150, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <Music2 size={13} style={{ flexShrink: 0, color: P.accent }} />
             {current ? (current.title || "Artium Radio") : "Artium Radio"}
           </button>
         </div>
       ) : (<>
       {/* Header */}
-      <div style={{ padding: "12px 16px", borderBottom: `1px solid ${C.inkLine}`, display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
-        <span style={{ width: 30, height: 30, borderRadius: 9, background: "rgba(201,150,46,0.14)", color: C.brass, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+      <div style={{ padding: "12px 16px", borderBottom: `1px solid ${P.line}`, display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+        <span style={{ width: 30, height: 30, borderRadius: 9, background: `rgba(${P.washRgb},0.14)`, color: P.accent, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
           <Music2 size={15} strokeWidth={2} />
         </span>
-        <p style={{ flex: 1, minWidth: 0, margin: 0, fontSize: 17, fontWeight: 700, color: C.ivory, fontFamily: FONT_BODY }}>Artium Radio</p>
+        <p style={{ flex: 1, minWidth: 0, margin: 0, fontSize: 17, fontWeight: 700, color: P.ink, fontFamily: P.font }}>Artium Radio</p>
         <button onClick={onClose} title="Hide the playlist — music keeps playing"
-          style={{ display: "flex", alignItems: "center", justifyContent: "center", background: "#FFFFFF", border: "1px solid rgba(176,146,98,0.45)", borderRadius: 999, padding: "3px 14px", cursor: "pointer", color: C.brass, fontSize: 16, fontWeight: 700, lineHeight: 1, boxShadow: "0 3px 6px -3px rgba(150,115,55,.25)" }}>
+          style={{ display: "flex", alignItems: "center", justifyContent: "center", background: "#FFFFFF", border: `1px solid rgba(${P.lineRgb},0.45)`, borderRadius: 999, padding: "3px 14px", cursor: "pointer", color: P.accent, fontSize: 16, fontWeight: 700, lineHeight: 1, boxShadow: `0 3px 6px -3px rgba(${P.shadowRgb},.25)` }}>
           –
         </button>
       </div>
 
       {!tracks ? (
-        <p style={{ margin: 0, padding: "16px", fontSize: 13, color: C.ivoryDim, fontFamily: FONT_BODY }}>Loading…</p>
+        <p style={{ margin: 0, padding: "16px", fontSize: 13, color: P.dim, fontFamily: P.font }}>Loading…</p>
       ) : tracks.length === 0 ? (
-        <p style={{ margin: 0, padding: "16px", fontSize: 13, lineHeight: 1.5, color: C.ivoryDim, fontFamily: FONT_BODY }}>
+        <p style={{ margin: 0, padding: "16px", fontSize: 13, lineHeight: 1.5, color: P.dim, fontFamily: P.font }}>
           No recordings yet — approved student recordings will play here.
         </p>
       ) : (
         <>
           {/* Hero: artwork, piece · composer, credit, transport, progress */}
-          <div style={{ padding: "14px 16px", borderBottom: `1px solid ${C.inkLine}`, flexShrink: 0 }}>
+          <div style={{ padding: "14px 16px", borderBottom: `1px solid ${P.line}`, flexShrink: 0 }}>
             <div style={{ display: "flex", gap: 12 }}>
-              <div style={{ width: 84, height: 84, borderRadius: 14, overflow: "hidden", flexShrink: 0, position: "relative", boxShadow: "0 6px 14px -6px rgba(150,115,55,0.5)" }}>
+              <div style={{ width: 84, height: 84, borderRadius: 14, overflow: "hidden", flexShrink: 0, position: "relative", boxShadow: `0 6px 14px -6px rgba(${P.shadowRgb},0.5)` }}>
                 <img src={photoOf(current)} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
               </div>
               <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
-                <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: C.ivory, fontFamily: FONT_BODY, lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
+                <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: P.ink, fontFamily: P.font, lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
                   {titleOf(current)}
                 </p>
                 {currentName && (
-                  <span style={{ marginTop: 5, alignSelf: "flex-start", maxWidth: "100%", fontFamily: FONT_BODY }}>
+                  <span style={{ marginTop: 5, alignSelf: "flex-start", maxWidth: "100%", fontFamily: P.font }}>
                     <NamePill text={currentName} size={11.5} />
                   </span>
                 )}
@@ -1334,7 +1341,7 @@ function ArtiumRadio({ open, controllerRef, onPlayingChange, onClose }) {
               </div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12 }}>
-              <span ref={elapsedLabelRef} style={{ fontSize: 10.5, color: C.ivoryDim, fontFamily: FONT_BODY, fontVariantNumeric: "tabular-nums", flexShrink: 0, minWidth: 30 }}>{fmt(elapsed)}</span>
+              <span ref={elapsedLabelRef} style={{ fontSize: 10.5, color: P.dim, fontFamily: P.font, fontVariantNumeric: "tabular-nums", flexShrink: 0, minWidth: 30 }}>{fmt(elapsed)}</span>
               <div
                 ref={trackRef}
                 role="slider" aria-label="Seek" aria-valuemin={0} aria-valuemax={Math.round(dur || 0)} aria-valuenow={Math.round(elapsed)}
@@ -1342,22 +1349,22 @@ function ArtiumRadio({ open, controllerRef, onPlayingChange, onClose }) {
                 onPointerMove={(e) => { if (e.buttons & 1) seekFromPointer(e.clientX); }}
                 style={{ flex: 1, minWidth: 0, height: 18, display: "flex", alignItems: "center", cursor: "pointer", touchAction: "none", position: "relative" }}
               >
-                <div style={{ width: "100%", height: 4, borderRadius: 2, background: "rgba(176,146,98,0.28)", overflow: "hidden" }}>
-                  <div ref={fillRef} style={{ width: "100%", height: "100%", borderRadius: 2, background: C.brass, transform: "scaleX(0)", transformOrigin: "left center", willChange: "transform" }} />
+                <div style={{ width: "100%", height: 4, borderRadius: 2, background: `rgba(${P.lineRgb},0.28)`, overflow: "hidden" }}>
+                  <div ref={fillRef} style={{ width: "100%", height: "100%", borderRadius: 2, background: P.accent, transform: "scaleX(0)", transformOrigin: "left center", willChange: "transform" }} />
                 </div>
-                <div ref={thumbRef} style={{ position: "absolute", left: "0%", top: "50%", transform: "translate(-50%, -50%)", width: 14, height: 14, borderRadius: "50%", background: C.brass, border: "2px solid #FFFFFF", boxShadow: "0 1px 3px rgba(0,0,0,0.25)", pointerEvents: "none", willChange: "left" }} />
+                <div ref={thumbRef} style={{ position: "absolute", left: "0%", top: "50%", transform: "translate(-50%, -50%)", width: 14, height: 14, borderRadius: "50%", background: P.accent, border: "2px solid #FFFFFF", boxShadow: "0 1px 3px rgba(0,0,0,0.25)", pointerEvents: "none", willChange: "left" }} />
               </div>
-              <span style={{ fontSize: 10.5, color: C.ivoryDim, fontFamily: FONT_BODY, fontVariantNumeric: "tabular-nums", flexShrink: 0 }}>{fmt(dur)}</span>
+              <span style={{ fontSize: 10.5, color: P.dim, fontFamily: P.font, fontVariantNumeric: "tabular-nums", flexShrink: 0 }}>{fmt(dur)}</span>
             </div>
           </div>
 
           {/* Toolbar: shuffle chip + catalogue summary (no downloads, ever) */}
-          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 16px", borderBottom: `1px solid ${C.inkLine}`, flexShrink: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 16px", borderBottom: `1px solid ${P.line}`, flexShrink: 0 }}>
             <button onClick={reshuffle} title="Shuffle the programme" disabled={!tracks || tracks.length < 2}
-              style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 40, height: 26, borderRadius: 999, border: "1px solid rgba(201,150,46,0.45)", background: "rgba(201,150,46,0.08)", color: C.brass, cursor: "pointer", padding: 0 }}>
+              style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 40, height: 26, borderRadius: 999, border: `1px solid rgba(${P.washRgb},0.45)`, background: `rgba(${P.washRgb},0.08)`, color: P.accent, cursor: "pointer", padding: 0 }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M16 3h5v5" /><path d="M4 20 21 3" /><path d="M21 16v5h-5" /><path d="m15 15 6 6" /><path d="m4 4 5 5" /></svg>
             </button>
-            <span style={{ marginLeft: "auto", fontSize: 11, color: C.ivoryDim, fontFamily: FONT_BODY }}>{totalLabel}</span>
+            <span style={{ marginLeft: "auto", fontSize: 11, color: P.dim, fontFamily: P.font }}>{totalLabel}</span>
           </div>
 
           {/* The programme */}
@@ -1366,16 +1373,16 @@ function ArtiumRadio({ open, controllerRef, onPlayingChange, onClose }) {
               const isCur = i === index;
               return (
                 <button key={t.id} onClick={() => playAt(i)}
-                  style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "9px 16px 9px 12px", background: isCur ? "rgba(201,150,46,0.08)" : "transparent", border: "none", borderLeft: isCur ? `3px solid ${C.brass}` : "3px solid transparent", borderBottom: `1px solid ${C.inkLine}`, cursor: "pointer", textAlign: "left" }}>
-                  <span style={{ width: 20, flexShrink: 0, fontSize: 11, fontVariantNumeric: "tabular-nums", color: C.ivoryDim, fontFamily: FONT_BODY }}>{String(i + 1).padStart(2, "0")}</span>
-                  <span style={{ width: 30, height: 30, borderRadius: 8, overflow: "hidden", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: isCur ? "rgba(201,150,46,0.16)" : "transparent", color: C.brass }}>
+                  style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "9px 16px 9px 12px", background: isCur ? `rgba(${P.washRgb},0.08)` : "transparent", border: "none", borderLeft: isCur ? `3px solid ${P.accent}` : "3px solid transparent", borderBottom: `1px solid ${P.line}`, cursor: "pointer", textAlign: "left" }}>
+                  <span style={{ width: 20, flexShrink: 0, fontSize: 11, fontVariantNumeric: "tabular-nums", color: P.dim, fontFamily: P.font }}>{String(i + 1).padStart(2, "0")}</span>
+                  <span style={{ width: 30, height: 30, borderRadius: 8, overflow: "hidden", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: isCur ? `rgba(${P.washRgb},0.16)` : "transparent", color: P.accent }}>
                     {isCur ? EqGlyph : <img src={photoOf(t)} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />}
                   </span>
-                  <span style={{ flex: 1, minWidth: 0, fontFamily: FONT_BODY }}>
-                    <span style={{ display: "block", fontSize: 13, fontWeight: isCur ? 700 : 600, color: C.ivory, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{titleOf(t)}</span>
-                    {nameOf(t) && <span style={{ display: "block", marginTop: 2, fontFamily: FONT_BODY }}><NamePill text={nameOf(t)} size={10} /></span>}
+                  <span style={{ flex: 1, minWidth: 0, fontFamily: P.font }}>
+                    <span style={{ display: "block", fontSize: 13, fontWeight: isCur ? 700 : 600, color: P.ink, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{titleOf(t)}</span>
+                    {nameOf(t) && <span style={{ display: "block", marginTop: 2, fontFamily: P.font }}><NamePill text={nameOf(t)} size={10} /></span>}
                   </span>
-                  <span style={{ flexShrink: 0, fontSize: 11, color: C.ivoryDim, fontFamily: FONT_BODY, fontVariantNumeric: "tabular-nums" }}>
+                  <span style={{ flexShrink: 0, fontSize: 11, color: P.dim, fontFamily: P.font, fontVariantNumeric: "tabular-nums" }}>
                     {durOf(t) ? fmt(durOf(t)) : ""}
                   </span>
                 </button>
@@ -1385,12 +1392,12 @@ function ArtiumRadio({ open, controllerRef, onPlayingChange, onClose }) {
 
           {/* Sticky footer mini-bar, as the mock draws it */}
           {tracks.length > 3 && (
-            <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", borderTop: `1px solid ${C.inkLine}`, background: "#FFFFFF", flexShrink: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", borderTop: `1px solid ${P.line}`, background: "#FFFFFF", flexShrink: 0 }}>
               <span style={{ width: 34, height: 34, borderRadius: 9, overflow: "hidden", flexShrink: 0 }}>
                 <img src={photoOf(current)} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
               </span>
-              <span style={{ flex: 1, minWidth: 0, fontFamily: FONT_BODY }}>
-                <span style={{ display: "block", fontSize: 12.5, fontWeight: 700, color: C.ivory, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{titleOf(current)}</span>
+              <span style={{ flex: 1, minWidth: 0, fontFamily: P.font }}>
+                <span style={{ display: "block", fontSize: 12.5, fontWeight: 700, color: P.ink, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{titleOf(current)}</span>
                 {currentName && <span style={{ display: "block", marginTop: 2 }}><NamePill text={currentName} size={10} /></span>}
               </span>
               {skipBtn(prev, tracks.length < 2, SkipBackGlyph, "Previous recording")}
@@ -4833,6 +4840,7 @@ export default function App() {
         controllerRef={radioRef}
         onPlayingChange={setMusicPlaying}
         onClose={() => setMusicOn(false)}
+        modern={useChordifyGate}
       />
 
       {showGuestPrompt && (
