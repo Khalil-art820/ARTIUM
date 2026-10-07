@@ -288,3 +288,74 @@ html.theme-modern .artium-lp-right{gap:6px;flex-shrink:1;min-width:0}
   html.theme-modern .artium-net-bar .artium-net-count,
   html.theme-modern .artium-lp-bar .artium-gx-count{padding:0 2px;font-size:14px}
 }
+
+
+/* ======================================================================
+   Phase 2: network (welcome) page, landing, profiles.
+   ====================================================================== */
+
+/* ---- network: stats bar as three flat white cells with teal tiles ---- */
+html.theme-modern .artium-aw-stats{gap:10px;padding:10px;border-radius:12px}
+html.theme-modern .artium-aw-stat{background:#FFFFFF;border:1px solid #E8E2DC;border-radius:10px}
+html.theme-modern .artium-aw-stat + .artium-aw-stat::before{display:none}
+html.theme-modern .artium-aw-stat-tile{
+  width:34px;height:34px;border-radius:10px;border:none;
+  background:rgba(8,104,104,.10);color:#086868;box-shadow:none}
+html.theme-modern .artium-aw-stat-n{font-size:22px;font-weight:700;color:#1C1C1C}
+html.theme-modern .artium-aw-stat-l{color:#6B6B6B;letter-spacing:.06em;font-weight:500}
+html.theme-modern .artium-aw-stat-l::after{width:24px;height:3px;margin-top:8px}
+/* The globe's halo: neutral and soft, no gold wash. */
+html.theme-modern .artium-aw-glow{box-shadow:0 0 60px 8px rgba(8,104,104,.06)}
+html.theme-modern .artium-aw-explore-copy b{color:#1C1C1C}
+html.theme-modern .artium-aw-explore-copy span{color:#6B6B6B}
+html.theme-modern .artium-aw-eyebrow{letter-spacing:.2em;font-weight:600}
+html.theme-modern .artium-aw-sub,
+html.theme-modern .artium-aw-hint{color:#6B6B6B}
+html.theme-modern .artium-aw-h1{color:#1C1C1C}
+html.theme-modern .artium-aw-field{border-radius:12px}
+html.theme-modern .artium-aw-field input{color:#1C1C1C}
+html.theme-modern .artium-aw-field svg{color:#6B6B6B}
+html.theme-modern .artium-aw-sort{border-radius:10px}
+
+/* Conservatory and roster lists: one white card, hairline separators, chevron. */
+html.theme-modern .artium-aw-list{
+  gap:0;background:#FFFFFF;border:1px solid #E8E2DC;border-radius:12px;overflow:hidden}
+html.theme-modern .artium-aw-list > .artium-aw-row{
+  border:none;border-bottom:1px solid #E8E2DC;border-radius:0;background:#FFFFFF}
+html.theme-modern .artium-aw-list > .artium-aw-row:last-child{border-bottom:none}
+html.theme-modern .artium-aw-list > .artium-aw-row:hover{background:#FAF8F6;border-color:#E8E2DC}
+html.theme-modern .artium-aw-list > .artium-aw-row:hover:not(:last-child){border-bottom-color:#E8E2DC}
+html.theme-modern .artium-aw-row > svg:last-child{color:#086868}
+html.theme-modern .artium-aw-mono{border-radius:10px}
+html.theme-modern .artium-aw-badge{background:rgba(8,104,104,.08);border:1px solid rgba(8,104,104,.18);border-radius:10px}
+html.theme-modern .artium-aw-badge b{color:#086868}
+html.theme-modern .artium-aw-badge span,
+html.theme-modern .artium-aw-row-c{color:#6B6B6B}
+html.theme-modern .artium-aw-row-t{color:#1C1C1C}
+html.theme-modern .artium-aw-teach{background:#086868;color:#FFFFFF}
+html.theme-modern .artium-aw-inst-name{color:#6B6B6B;font-weight:500}
+html.theme-modern .artium-aw-inst img{filter:drop-shadow(0 1px 2px rgba(0,0,0,.12))}
+html.theme-modern .artium-aw-row:hover .artium-aw-inst img{filter:drop-shadow(0 2px 4px rgba(0,0,0,.18))}
+html.theme-modern .artium-aw-empty{color:#6B6B6B}
+
+/* ---- landing: flat page, no gold artwork ---- */
+html.theme-modern .artium-lp--light .artium-lp-bd{display:none}
+html.theme-modern .artium-lp--light .artium-lp-stage::after{background:radial-gradient(ellipse at center,rgba(0,0,0,.14),rgba(0,0,0,.04) 40%,transparent 72%)}
+html.theme-modern .artium-lp--light .artium-globepin img{filter:drop-shadow(0 6px 12px rgba(0,0,0,.16))}
+html.theme-modern .artium-lp--light .artium-lp-eyebrow{font-weight:600;letter-spacing:.2em}
+html.theme-modern .artium-lp--light .artium-lp-step{padding:14px;gap:12px;border-radius:12px;box-shadow:none}
+html.theme-modern .artium-lp--light .artium-lp-num{
+  width:44px;height:44px;border-radius:12px;border:none;box-shadow:none;
+  background:rgba(8,104,104,.10);color:#086868;font-size:19px;font-weight:700}
+html.theme-modern .artium-lp--light .artium-lp-step-t{color:#1C1C1C;font-weight:700;font-size:16px}
+html.theme-modern .artium-lp--light .artium-lp-step-d{color:#6B6B6B;font-size:14px}
+html.theme-modern .artium-lp--light .artium-lp-step-i{color:#086868}
+html.theme-modern .artium-lp--light .artium-lp-cap{color:#6B6B6B}
+html.theme-modern .artium-lp--light .artium-globepin-count{color:#4A4A4A}
+/* The Register disc: solid teal primary, manicule drawn in white. */
+html.theme-modern .artium-lp--light .artium-globepin-hand{
+  background:#086868;border:none;color:#FFFFFF;box-shadow:0 6px 14px -4px rgba(8,104,104,.55)}
+html.theme-modern .artium-lp--light .artium-globepin-hand img{filter:brightness(0) invert(1)}
+html.theme-modern .artium-lp--light .artium-globepin-register{color:#FFFFFF;font-weight:600}
+html.theme-modern .artium-lp--light .artium-lp-partner-lbl{font-size:15px;font-weight:700;letter-spacing:.12em}
+html.theme-modern .artium-lp--light .artium-lp-partner-name{color:#6B6B6B}

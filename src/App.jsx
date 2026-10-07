@@ -5254,7 +5254,7 @@ export default function App() {
                     <span style={{
                       display: "inline-flex", alignItems: "center", justifyContent: "center",
                       width: 34, height: 34, borderRadius: "50%",
-                      background: MODERN ? "#FFFFFF" : "radial-gradient(circle at 35% 28%, #FFFFFF 0%, #FCF8EF 55%, #F1E8D6 100%)",
+                      background: MODERN ? "rgba(8,104,104,.10)" : "radial-gradient(circle at 35% 28%, #FFFFFF 0%, #FCF8EF 55%, #F1E8D6 100%)",
                       boxShadow: MODERN ? "none" : "0 6px 10px -4px rgba(150,115,55,.38), 0 2px 4px rgba(150,115,55,.14), inset 0 2px 2px #fff, inset 0 -3px 5px rgba(176,146,98,.28)",
                       color: C.brass, flexShrink: 0,
                     }}>
@@ -5263,7 +5263,7 @@ export default function App() {
                       </svg>
                     </span>
                   </button>
-                  <div style={{ display: "flex", flexWrap: "nowrap", justifyContent: "center", gap: 5, marginTop: 14, opacity: .45, filter: "saturate(.6)" }}>
+                  <div style={{ display: "flex", flexWrap: "nowrap", justifyContent: "center", gap: 5, marginTop: 14, opacity: MODERN ? 1 : .45, filter: MODERN ? "none" : "saturate(.6)" }}>
                     {(myProfile.year || "").split(",").map((t) => t.trim()).filter(Boolean).map((label) => {
                       const low = label.toLowerCase();
                       const isYear = /year/.test(low);
@@ -6715,8 +6715,8 @@ function PianistDiscover({ students, onOpen }) {
 function HirerPianistProfile({ student, conservatory, onBack, onContact }) {
   if (!student) return null;
   const Row = ({ label, children }) => (
-    <div style={{ background: warm("0.05"), border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
-      <span style={{ fontSize: 11, fontWeight: 600, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
+    <div style={{ background: MODERN ? "#FFFFFF" : warm("0.05"), border: `1px solid ${C.inkLine}`, borderRadius: MODERN ? 12 : 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
+      <span style={{ fontSize: 11, fontWeight: MODERN ? 700 : 600, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
       <div style={{ fontSize: 15, color: C.ivory, lineHeight: 1.6 }}>{children}</div>
     </div>
   );
@@ -6757,7 +6757,7 @@ function HirerPianistProfile({ student, conservatory, onBack, onContact }) {
         {(student.tastes || []).length > 0 && (
           <Row label="Preferences">
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 4 }}>
-              {student.tastes.map((t) => <span key={t} style={{ fontSize: 12, padding: "3px 10px", borderRadius: 20, border: `1px solid ${C.inkLine}`, color: C.ivory, background: C.inkSoft }}>{t}</span>)}
+              {student.tastes.map((t) => <span key={t} style={{ fontSize: 12, padding: "3px 10px", borderRadius: 20, border: MODERN ? "1px solid #E2EEFB" : `1px solid ${C.inkLine}`, color: MODERN ? "#2F7FD8" : C.ivory, background: MODERN ? "#E2EEFB" : C.inkSoft }}>{t}</span>)}
             </div>
           </Row>
         )}
@@ -9943,7 +9943,7 @@ function WorldGlobe({ pins, selectedId, onSelect, onCluster, height = 320, pinSc
             // ball.
             bumpImageUrl="/earth-topology.png"
             backgroundColor="rgba(0,0,0,0)"
-            atmosphereColor="#EFD09B"
+            atmosphereColor={MODERN ? "#8CCACA" : "#EFD09B"}
             atmosphereAltitude={0.17}
             // Borders in the same champagne as everything else, and no fill:
             // a filled country would sit over the satellite image, which is
@@ -9952,7 +9952,7 @@ function WorldGlobe({ pins, selectedId, onSelect, onCluster, height = 320, pinSc
             polygonAltitude={0.004}
             polygonCapColor={() => "rgba(0,0,0,0)"}
             polygonSideColor={() => "rgba(0,0,0,0)"}
-            polygonStrokeColor={() => "rgba(239,208,155,0.55)"}
+            polygonStrokeColor={() => (MODERN ? "rgba(190,230,230,0.55)" : "rgba(239,208,155,0.55)")}
             polygonsTransitionDuration={0}
             // Names, biggest country first, more of them the closer you get.
             labelsData={labels}
@@ -9986,10 +9986,10 @@ function WorldGlobe({ pins, selectedId, onSelect, onCluster, height = 320, pinSc
                   <div style="
                     width:${size}px;height:${size}px;border-radius:50%;
                     display:flex;align-items:center;justify-content:center;
-                    background:radial-gradient(circle at 38% 32%, #F6E3BC, #D5A860);
+                    background:${MODERN ? "#086868" : "radial-gradient(circle at 38% 32%, #F6E3BC, #D5A860)"};
                     border:1.5px solid rgba(255,255,255,0.55);
-                    box-shadow:0 0 0 ${Math.round(size * 0.16)}px rgba(239,208,155,0.16), 0 3px 10px rgba(0,0,0,0.55);
-                    color:#241A0E;font-family:'Manrope',sans-serif;
+                    box-shadow:0 0 0 ${Math.round(size * 0.16)}px ${MODERN ? "rgba(140,202,202,0.22)" : "rgba(239,208,155,0.16)"}, 0 3px 10px rgba(0,0,0,0.55);
+                    color:${MODERN ? "#FFFFFF" : "#241A0E"};font-family:'Manrope',sans-serif;
                     font-size:${Math.round(size * 0.38)}px;font-weight:800;line-height:1;
                   ">${d.schools}</div>`;
                 el.onclick = () => handleCluster(d);
@@ -10003,7 +10003,7 @@ function WorldGlobe({ pins, selectedId, onSelect, onCluster, height = 320, pinSc
               // punched through by evenodd.
               el.innerHTML = `
                 <svg width="${size}" height="${size * 1.32}" viewBox="0 0 28 37" style="display:block;filter:drop-shadow(0 2px 6px rgba(0,0,0,.6))">
-                  <path fill-rule="evenodd" fill="${on ? "#FFFFFF" : "#EFD09B"}"
+                  <path fill-rule="evenodd" fill="${on ? "#FFFFFF" : (MODERN ? "#7FD6D0" : "#EFD09B")}"
                     d="M14 .9C6.82.9 1.4 6.28 1.4 13.2c0 3.35 1.3 6.36 3.2 9.36 1.6 2.53 3.63 5.02 5.53 7.62 1.35 1.85 2.6 3.72 3.28 5.98a.62.62 0 0 0 1.18 0c.68-2.26 1.93-4.13 3.28-5.98 1.9-2.6 3.93-5.09 5.53-7.62 1.9-3 3.2-6.01 3.2-9.36C26.6 6.28 21.18.9 14 .9zm0 7.68a5.04 5.04 0 1 0 0 10.08 5.04 5.04 0 0 0 0-10.08z" />
                 </svg>`;
               el.onclick = () => onSelect(d.id);
@@ -10221,7 +10221,7 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
                   </span>
                   <span className="artium-aw-row-body">
                     <p className="artium-aw-row-t" style={{ fontSize: 15, filter: isGuest && st.id !== "me" ? "blur(5px)" : "none" }}>
-                      {st.name}{st.id === "me" && <span style={{ color: "#E6DAB0" }}> (you)</span>}
+                      {st.name}{st.id === "me" && <span style={{ color: MODERN ? "#086868" : "#E6DAB0" }}> (you)</span>}
                     </p>
                     <p className="artium-aw-row-c" style={{ filter: isGuest && st.id !== "me" ? "blur(4px)" : "none" }}>
                       {/* Ahead of the year, because it is the only thing in the
@@ -10457,8 +10457,8 @@ function ProfileLinks({ links }) {
           style={{
             display: "inline-flex", alignItems: "center", gap: 7,
             padding: "8px 13px", borderRadius: 999,
-            border: `1px solid ${C.inkLine}`, background: warm("0.05"),
-            color: C.ivory, textDecoration: "none",
+            border: MODERN ? "1px solid rgba(8,104,104,.35)" : `1px solid ${C.inkLine}`, background: MODERN ? "#FFFFFF" : warm("0.05"),
+            color: MODERN ? "#086868" : C.ivory, textDecoration: "none",
             fontFamily: FONT_BODY, fontSize: 13, fontWeight: 500,
           }}>
           <Icon size={14} strokeWidth={1.8} />
@@ -10474,8 +10474,8 @@ function StudentProfile({ student, conservatory, onBack, onMessage, locked, onAp
   if (!student) return null;
 
   const Row = ({ label, children }) => (
-    <div style={{ background: warm("0.05"), border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
-      <span style={{ fontSize: 11, fontWeight: 600, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
+    <div style={{ background: MODERN ? "#FFFFFF" : warm("0.05"), border: `1px solid ${C.inkLine}`, borderRadius: MODERN ? 12 : 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
+      <span style={{ fontSize: 11, fontWeight: MODERN ? 700 : 600, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
       <div style={{ fontSize: 15, color: C.ivory, lineHeight: 1.6 }}>{children}</div>
     </div>
   );
@@ -10523,7 +10523,7 @@ function StudentProfile({ student, conservatory, onBack, onMessage, locked, onAp
           <Row label="Musical preferences">
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 4 }}>
               {student.tastes.map((t) => (
-                <span key={t} style={{ fontSize: 12, padding: "3px 10px", borderRadius: 20, border: `1px solid ${C.inkLine}`, color: C.ivory, background: C.inkSoft }}>{t}</span>
+                <span key={t} style={{ fontSize: 12, padding: "3px 10px", borderRadius: 20, border: MODERN ? "1px solid #E2EEFB" : `1px solid ${C.inkLine}`, color: MODERN ? "#2F7FD8" : C.ivory, background: MODERN ? "#E2EEFB" : C.inkSoft }}>{t}</span>
               ))}
             </div>
           </Row>
@@ -10565,8 +10565,8 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack, onUpdat
   const [deleting, setDeleting] = React.useState(false);
 
   const Row = ({ label, children }) => (
-    <div style={{ background: warm("0.05"), border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
-      <span style={{ fontSize: 11, fontWeight: 600, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
+    <div style={{ background: MODERN ? "#FFFFFF" : warm("0.05"), border: `1px solid ${C.inkLine}`, borderRadius: MODERN ? 12 : 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
+      <span style={{ fontSize: 11, fontWeight: MODERN ? 700 : 600, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
       <div style={{ fontSize: 15, color: C.ivory, lineHeight: 1.6 }}>{children}</div>
     </div>
   );
@@ -10640,7 +10640,7 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack, onUpdat
           <Row label="Musical preferences">
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 4 }}>
               {profile.tastes.map((t) => (
-                <span key={t} style={{ fontSize: 12, padding: "3px 10px", borderRadius: 20, border: `1px solid ${C.inkLine}`, color: C.ivory, background: C.inkSoft }}>{t}</span>
+                <span key={t} style={{ fontSize: 12, padding: "3px 10px", borderRadius: 20, border: MODERN ? "1px solid #E2EEFB" : `1px solid ${C.inkLine}`, color: MODERN ? "#2F7FD8" : C.ivory, background: MODERN ? "#E2EEFB" : C.inkSoft }}>{t}</span>
               ))}
             </div>
           </Row>
