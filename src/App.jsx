@@ -30,7 +30,7 @@ import { MapContainer, TileLayer, Marker, Tooltip, Popup, useMap } from "react-l
 // stylesheets, whose unscoped selectors (.stage, .hero, .rule, .trust …) leak
 // into ArtiumGate — .stage{max-width:94vw} was clamping the gate's 840px
 // stage on phones. The files stay on disk for reference.
-import ArtiumGate from "./components/entrygate/ArtiumGate";
+import ArtiumGate, { CARDS as GATE_CARDS } from "./components/entrygate/ArtiumGate";
 // Dev-only design trial: ?gate=chordify (persisted) swaps in the Chordify-style
 // entry gate; ?gate=classic clears it. Always false in production builds.
 const useChordifyGate = import.meta.env.DEV && (() => {
@@ -45,12 +45,29 @@ const ChordifyGateLazy = import.meta.env.DEV ? lazy(() => import("./components/e
 const EntryGate = useChordifyGate
   ? (props) => <Suspense fallback={null}><ChordifyGateLazy {...props} /></Suspense>
   : ArtiumGate;
+// The "modern" (Chordify-style) theme rides the same dev-only trial flag, so it
+// is false in every production build and the classic look is untouched. Every
+// modern value below is chosen at module load from this one constant; the
+// stylesheet half lives in ./theme-modern.css, scoped under html.theme-modern.
+const MODERN = useChordifyGate;
+if (MODERN) {
+  try {
+    document.documentElement.classList.add("theme-modern");
+    if (!document.getElementById("cgate-font")) {
+      const l = document.createElement("link");
+      l.id = "cgate-font"; l.rel = "stylesheet";
+      l.href = "https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600;700&display=swap";
+      document.head.appendChild(l);
+    }
+  } catch { /* non-browser */ }
+}
 import WallOfComposers from "./pages/WallOfComposers";
 // three.js is ~1.9MB of the bundle. Loading it lazily keeps it out of the
 // initial download and out of the entry chunk, which otherwise blew past the
 // service worker's 2MiB precache ceiling and failed the build.
 const Globe = lazy(() => import("react-globe.gl"));
 import "leaflet/dist/leaflet.css";
+import "./theme-modern.css";
 
 /* ---------------------------------------------------------------- */
 /* THEME                                                              */
@@ -70,7 +87,25 @@ import "leaflet/dist/leaflet.css";
 // THOSE GROUNDS (was white, is now ink) — flipping both to the same thing
 // would have erased the surface/text distinction that makes any of this
 // legible.
-const C = {
+const C = MODERN ? {
+  // Modern (trial): Chordify's palette, same roles as the classic tokens.
+  ink: "#F7F4F2",
+  inkSoft: "#FFFFFF",
+  inkLine: "#E8E2DC",
+  parchment: "#FFFFFF",
+  parchmentDim: "#F3EFEB",
+  parchmentLine: "#E8E2DC",
+  ivory: "#1C1C1C",
+  ivoryDim: "#6B6B6B",
+  inkText: "#1C1C1C",
+  inkTextDim: "#6B6B6B",
+  brass: "#086868",
+  brassText: "#FFFFFF",
+  brassLabel: "#0A6E6E",
+  brassDim: "rgba(8,104,104,0.12)",
+  burgundy: "#B3261E",
+  forest: "#2EAA6E",
+} : {
   ink: "#F4F4F3",              // the page — was the dark ground, now the gate's grey
   inkSoft: "#FFFFFF",          // a surface raised off it — was a lighter dark, now white
   inkLine: "rgba(176,146,98,0.30)",   // the gate's --contour
@@ -92,6 +127,15 @@ const C = {
   forest: "#3F8B5C",
 };
 
+// Tokens whose classic value is byte-identical to the literal they replace in
+// the screens below (so classic output is unchanged); modern swaps the value.
+const BRASS_GRAD = MODERN ? "#086868" : "linear-gradient(180deg, #EFD08A 0%, #DBAB4C 55%, #C9962E 100%)";
+const warm = (a) => MODERN ? `rgba(110,100,90,${(parseFloat(a) * 0.55).toFixed(3)})` : `rgba(176,146,98,${a})`;
+const brassA = (a) => MODERN ? `rgba(8,104,104,${a})` : `rgba(201,150,46,${a})`;
+const FONT_JOST = MODERN ? "'Fira Sans', system-ui, sans-serif" : "'Jost', system-ui, sans-serif";
+const FONT_PLAYFAIR = MODERN ? "'Fira Sans', system-ui, sans-serif" : "'Playfair Display', serif";
+const FONT_LIBRE = MODERN ? "'Fira Sans', system-ui, sans-serif" : "'Libre Baskerville', serif";
+
 // The gate's card, as a style object — back to an actual white box now that
 // the app is light again, not the white-tinted glass this was rebuilt as
 // for the dark screens in between (that fill, and its black hairline/drop
@@ -99,7 +143,13 @@ const C = {
 // into the page the same way the white-on-white original did). Same rim
 // recipe as .artium-su-card / the student landing's step pills: white
 // fill, a warm contour border, a warm drop shadow.
-const PANEL = {
+const PANEL = MODERN ? {
+  borderRadius: 12,
+  border: "1px solid #E8E2DC",
+  background: "#FFFFFF",
+  boxShadow: "0 1px 2px rgba(0,0,0,0.04), 0 8px 24px -16px rgba(0,0,0,0.14)",
+  padding: "18px 18px",
+} : {
   borderRadius: 18,
   border: "1px solid rgba(176,146,98,0.30)",
   background: "#FFFFFF",
@@ -115,8 +165,8 @@ const FONT_WORDMARK = "-apple-system, 'SF Pro Display', BlinkMacSystemFont, 'Seg
 // The gate's pair, carried through the app: Cormorant for anything that
 // behaves like a heading, Manrope for everything read as prose. Both are
 // already loaded in index.html, so this costs no extra request.
-const FONT_DISPLAY = "'Cormorant Garamond', 'Didot', 'Bodoni 72', Georgia, serif";
-const FONT_BODY = "'Manrope', -apple-system, 'Segoe UI', Roboto, sans-serif";
+const FONT_DISPLAY = MODERN ? "'Fira Sans', system-ui, sans-serif" : "'Cormorant Garamond', 'Didot', 'Bodoni 72', Georgia, serif";
+const FONT_BODY = MODERN ? "'Fira Sans', system-ui, sans-serif" : "'Manrope', -apple-system, 'Segoe UI', Roboto, sans-serif";
 const FONT_MONO = "'ui-monospace', monospace";
 
 /**
@@ -147,7 +197,20 @@ const HEADER_CONTROL = 32;
  * Kept as its own object (not merged into C) only because call sites still
  * reference GATE.* by name throughout this file.
  */
-const GATE = {
+const GATE = MODERN ? {
+  bg: "#F7F4F2",
+  card: "#FFFFFF",
+  cardGlass: "rgba(8,104,104,0.05)",
+  cardLine: "#E8E2DC",
+  gold: "#086868",
+  goldSolid: "#086868",
+  goldSoft: "#0A6E6E",
+  goldDeep: "#065656",
+  text: "#1C1C1C",
+  text2: "#333333",
+  muted: "#6B6B6B",
+  divider: "#E8E2DC",
+} : {
   bg: "#F4F4F3",
   card: "#FFFFFF",
   cardGlass: "rgba(176,146,98,0.05)",
@@ -168,12 +231,12 @@ const GATE = {
 // Both loaded in index.html. The fallbacks are the elegant serifs Apple and
 // Windows ship, so the gate still reads as intended in the moment before the
 // web font lands — or if it never does.
-const GATE_SERIF = "'Cormorant Garamond', 'Didot', 'Bodoni 72', Georgia, serif";
+const GATE_SERIF = MODERN ? "'Fira Sans', system-ui, sans-serif" : "'Cormorant Garamond', 'Didot', 'Bodoni 72', Georgia, serif";
 // The partner's own channels. Named, because the Instagram address was
 // pasted inline in five places and the footer now needs two of them.
 const ACT_INSTAGRAM = "https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==";
 const ACT_FACEBOOK = "https://www.facebook.com/share/1Q4piEHHN7/";
-const GATE_SANS = "'Manrope', -apple-system, 'Segoe UI', Roboto, sans-serif";
+const GATE_SANS = MODERN ? "'Fira Sans', system-ui, sans-serif" : "'Manrope', -apple-system, 'Segoe UI', Roboto, sans-serif";
 
 // Brass, not black: the reference's black was the only black in a header of
 // brass and navy, and it dominated. The outlined shape is kept.
@@ -255,7 +318,7 @@ function MiniAudioPlayer({ src }) {
   const [t, setT] = React.useState(0);
   const fmt = (x) => { const n = Math.max(0, Math.floor(x || 0)); return `${Math.floor(n / 60)}:${String(n % 60).padStart(2, "0")}`; };
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 10, background: "rgba(176,146,98,0.07)", border: `1px solid ${C.inkLine}`, borderRadius: 999, padding: "8px 14px", marginTop: 12 }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 10, background: warm("0.07"), border: `1px solid ${C.inkLine}`, borderRadius: 999, padding: "8px 14px", marginTop: 12 }}>
       <style>{`
         .artium-audio-range { -webkit-appearance: none; appearance: none; height: 4px; border-radius: 2px; background: rgba(176,146,98,0.35); outline: none; cursor: pointer; }
         .artium-audio-range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #C9962E; border: 2px solid #FFFFFF; box-shadow: 0 1px 3px rgba(0,0,0,0.25); }
@@ -291,11 +354,11 @@ function SpotlightCalendar({ slotState, selected, onSelect }) {
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
   const iso = (d) => `${first.getFullYear()}-${String(first.getMonth() + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
   const STATE_STYLE = {
-    open:    { bg: "rgba(201,150,46,0.10)", color: "#232A3B", border: "1px solid rgba(201,150,46,0.45)", cursor: "pointer" },
+    open:    { bg: brassA("0.10"), color: C.ivory, border: `1px solid ${brassA("0.45")}`, cursor: "pointer" },
     mineWon: { bg: "rgba(26,158,110,0.16)", color: "#1A9E6E", border: "1px solid rgba(26,158,110,0.4)", cursor: "not-allowed" },
-    minePending: { bg: "rgba(201,150,46,0.16)", color: "#B3812A", border: "1px solid rgba(201,150,46,0.5)", cursor: "not-allowed" },
+    minePending: { bg: brassA("0.16"), color: "#B3812A", border: `1px solid ${brassA("0.5")}`, cursor: "not-allowed" },
     lost:    { bg: "rgba(179,38,30,0.07)", color: "rgba(179,38,30,0.55)", border: "1px solid rgba(179,38,30,0.2)", cursor: "not-allowed" },
-    taken:   { bg: "rgba(176,146,98,0.06)", color: "#9A9A9A", border: "1px solid rgba(176,146,98,0.25)", cursor: "not-allowed" },
+    taken:   { bg: warm("0.06"), color: "#9A9A9A", border: `1px solid ${warm("0.25")}`, cursor: "not-allowed" },
   };
   const TITLES = {
     open: "Open — tap to pick this Saturday",
@@ -305,21 +368,21 @@ function SpotlightCalendar({ slotState, selected, onSelect }) {
     taken: "Already taken",
   };
   return (
-    <div style={{ marginTop: 8, border: "1px solid rgba(176,146,98,0.30)", borderRadius: 14, background: "#FFFFFF", padding: "12px 12px 10px" }}>
+    <div style={{ marginTop: 8, border: `1px solid ${warm("0.30")}`, borderRadius: 14, background: "#FFFFFF", padding: "12px 12px 10px" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
         <button onClick={() => setMonthOffset((m) => Math.max(0, m - 1))} disabled={monthOffset === 0}
-          style={{ width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: "none", cursor: monthOffset === 0 ? "default" : "pointer", color: monthOffset === 0 ? "#D8D2C6" : "#C9962E", padding: 0 }}>
+          style={{ width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: "none", cursor: monthOffset === 0 ? "default" : "pointer", color: monthOffset === 0 ? "#D8D2C6" : C.brass, padding: 0 }}>
           <ChevronLeft size={16} />
         </button>
-        <span style={{ fontSize: 13.5, fontWeight: 700, color: "#232A3B" }}>{monthLabel}</span>
+        <span style={{ fontSize: 13.5, fontWeight: 700, color: C.ivory }}>{monthLabel}</span>
         <button onClick={() => setMonthOffset((m) => Math.min(2, m + 1))} disabled={monthOffset === 2}
-          style={{ width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: "none", cursor: monthOffset === 2 ? "default" : "pointer", color: monthOffset === 2 ? "#D8D2C6" : "#C9962E", padding: 0 }}>
+          style={{ width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: "none", cursor: monthOffset === 2 ? "default" : "pointer", color: monthOffset === 2 ? "#D8D2C6" : C.brass, padding: 0 }}>
           <ChevronRight size={16} />
         </button>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
         {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => (
-          <span key={i} style={{ textAlign: "center", fontSize: 10, fontWeight: 700, color: i === 5 ? "#C9962E" : "#9A9A9A", letterSpacing: "0.04em", paddingBottom: 2 }}>{d}</span>
+          <span key={i} style={{ textAlign: "center", fontSize: 10, fontWeight: 700, color: i === 5 ? C.brass : "#9A9A9A", letterSpacing: "0.04em", paddingBottom: 2 }}>{d}</span>
         ))}
         {cells.map((d, i) => {
           if (d === null) return <span key={`e${i}`} />;
@@ -335,9 +398,9 @@ function SpotlightCalendar({ slotState, selected, onSelect }) {
                 aspectRatio: "1", minWidth: 0, display: "flex", alignItems: "center", justifyContent: "center",
                 fontSize: 12, fontWeight: st ? 700 : 400, fontFamily: "inherit",
                 borderRadius: 10, padding: 0,
-                background: isSel ? "#C9962E" : st ? st.bg : "none",
+                background: isSel ? C.brass : st ? st.bg : "none",
                 color: isSel ? "#FFFFFF" : st ? st.color : "#B9B4A8",
-                border: isSel ? "1px solid #C9962E" : st ? st.border : "1px solid transparent",
+                border: isSel ? `1px solid ${C.brass}` : st ? st.border : "1px solid transparent",
                 cursor: st ? st.cursor : "default",
               }}>
               {d}
@@ -347,7 +410,7 @@ function SpotlightCalendar({ slotState, selected, onSelect }) {
       </div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 12px", marginTop: 10 }}>
         {[["open", "Open"], ["minePending", "Pending"], ["mineWon", "Yours"], ["taken", "Taken"], ["lost", "Not selected"]].map(([k, t]) => (
-          <span key={k} style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10.5, color: "#6A7080" }}>
+          <span key={k} style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10.5, color: C.ivoryDim }}>
             <span style={{ width: 10, height: 10, borderRadius: 3, background: STATE_STYLE[k].bg, border: STATE_STYLE[k].border, display: "inline-block" }} />
             {t}
           </span>
@@ -867,8 +930,8 @@ function Chip({ active, onClick, children, disabled = false }) {
         fontFamily: FONT_BODY,
         // brassText, not inkText: inkText is the page's type colour, which is
         // white now — and white on champagne is a 1.6:1 chip.
-        border: `1px solid ${active ? "transparent" : "rgba(176,146,98,0.30)"}`,
-        background: active ? "linear-gradient(180deg, #EFD08A 0%, #DBAB4C 55%, #C9962E 100%)" : "rgba(176,146,98,0.06)",
+        border: `1px solid ${active ? "transparent" : warm("0.30")}`,
+        background: active ? BRASS_GRAD : warm("0.06"),
         color: active ? C.brassText : C.ivoryDim,
         fontWeight: active ? 700 : 500,
         boxShadow: active ? "0 3px 14px rgba(233,200,141,0.20)" : "none",
@@ -917,12 +980,12 @@ function PrimaryBtn({ children, onClick, disabled, full, icon: Icon }) {
       className={`inline-flex items-center justify-center gap-2 ${full ? "w-full" : ""}`}
       style={{
         fontFamily: FONT_BODY, fontWeight: 500, fontSize: 15,
-        background: disabled ? "rgba(176,146,98,0.15)" : C.brass,
+        background: disabled ? (MODERN ? "#ECE7E2" : warm("0.15")) : C.brass,
         color: disabled ? "#6E6E6E" : C.brassText,
         border: "none",
-        borderRadius: 8,
+        borderRadius: MODERN ? 10 : 8,
         padding: "10px 20px",
-        boxShadow: disabled ? "none" : "0 2px 14px rgba(233,200,141,0.22)",
+        boxShadow: (disabled || MODERN) ? "none" : "0 2px 14px rgba(233,200,141,0.22)",
         cursor: disabled ? "not-allowed" : "pointer",
         transition: "opacity 0.15s",
         opacity: disabled ? 0.7 : 1,
@@ -943,7 +1006,7 @@ function GhostBtn({ children, onClick, icon: Icon, tone = "light", disabled, sty
         color: C.ivory,
         background: C.parchment,
         border: `1px solid ${C.inkLine}`,
-        borderRadius: 6,
+        borderRadius: MODERN ? 10 : 6,
         padding: "9px 18px",
         whiteSpace: "nowrap",
         opacity: disabled ? 0.5 : 1,
@@ -969,9 +1032,9 @@ function EmptyState({ icon: Icon, title, line, action, actionLabel, size = 52 })
         <div style={{
           width: size, height: size, borderRadius: "50%", flexShrink: 0,
           display: "flex", alignItems: "center", justifyContent: "center",
-          border: "1px solid rgba(255,255,255,.85)",
-          background: "radial-gradient(circle at 35% 28%, #FFFFFF 0%, #FCF8EF 55%, #F1E8D6 100%)",
-          boxShadow: "0 6px 10px -4px rgba(150,115,55,.38), 0 2px 4px rgba(150,115,55,.14), inset 0 2px 2px #fff, inset 0 -3px 5px rgba(176,146,98,.28)",
+          border: MODERN ? "1px solid #E8E2DC" : "1px solid rgba(255,255,255,.85)",
+          background: MODERN ? "#FFFFFF" : "radial-gradient(circle at 35% 28%, #FFFFFF 0%, #FCF8EF 55%, #F1E8D6 100%)",
+          boxShadow: MODERN ? "none" : "0 6px 10px -4px rgba(150,115,55,.38), 0 2px 4px rgba(150,115,55,.14), inset 0 2px 2px #fff, inset 0 -3px 5px rgba(176,146,98,.28)",
         }}>
           <Icon size={Math.round(size * 0.42)} color={C.brass} strokeWidth={1.8} />
         </div>
@@ -1017,9 +1080,9 @@ export function MusicBtn({ playing, onToggle, size = HEADER_CONTROL }) {
         // disc read larger than its equal-diameter neighbours.
         display: "inline-flex", alignItems: "center", justifyContent: "center",
         width: size, height: size, padding: 0, boxSizing: "border-box",
-        border: "1px solid rgba(255,255,255,.85)", borderRadius: "50%",
-        background: "radial-gradient(circle at 35% 28%, #FFFFFF 0%, #FCF8EF 55%, #F1E8D6 100%)",
-        boxShadow: "0 6px 10px -4px rgba(150,115,55,.38), 0 2px 4px rgba(150,115,55,.14), inset 0 2px 2px #fff, inset 0 -3px 5px rgba(176,146,98,.28)",
+        border: MODERN ? "1px solid #E8E2DC" : "1px solid rgba(255,255,255,.85)", borderRadius: "50%",
+        background: MODERN ? "#FFFFFF" : "radial-gradient(circle at 35% 28%, #FFFFFF 0%, #FCF8EF 55%, #F1E8D6 100%)",
+        boxShadow: MODERN ? "none" : "0 6px 10px -4px rgba(150,115,55,.38), 0 2px 4px rgba(150,115,55,.14), inset 0 2px 2px #fff, inset 0 -3px 5px rgba(176,146,98,.28)",
         cursor: "pointer", flexShrink: 0, lineHeight: 0,
       }}
     >
@@ -1858,7 +1921,7 @@ function GlobeMap({ selectedId, onSelect, studentsByCons, height = 640, onOpenSt
         <div
           style={{
             position: "absolute", top: 12, left: 12, width: 268, zIndex: 5,
-            background: "rgba(176,146,98,0.05)", border: `1px solid ${C.inkLine}`, borderRadius: 12,
+            background: warm("0.05"), border: `1px solid ${C.inkLine}`, borderRadius: 12,
             boxShadow: "0 8px 32px rgba(0,0,0,0.55)", padding: "10px 12px",
           }}
         >
@@ -1884,7 +1947,7 @@ function GlobeMap({ selectedId, onSelect, studentsByCons, height = 640, onOpenSt
       <div style={{
         position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 4,
         display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
-        background: "rgba(176,146,98,0.05)", borderTop: `1px solid ${C.inkLine}`, padding: "7px 12px", pointerEvents: "none",
+        background: warm("0.05"), borderTop: `1px solid ${C.inkLine}`, padding: "7px 12px", pointerEvents: "none",
       }}>
         {/* Same two pin marks the flat map's legend used — without them the
             colours on the globe have nothing to key against. */}
@@ -2037,7 +2100,7 @@ function AccessGate({ onUnlock }) {
   }
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: C.inkSoft, fontFamily: FONT_BODY, padding: 24 }}>
-      <div style={{ width: "100%", maxWidth: 400, background: "rgba(176,146,98,0.05)", border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: 40, boxShadow: "0 4px 24px rgba(0,0,0,0.28)" }}>
+      <div style={{ width: "100%", maxWidth: 400, background: warm("0.05"), border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: 40, boxShadow: "0 4px 24px rgba(0,0,0,0.28)" }}>
         <div style={{ marginBottom: 28 }}>
           <Logo size={22} markSize={HEADER_CONTROL} />
           <p style={{ color: C.ivoryDim, fontSize: 14, marginTop: 12 }}>Private beta — enter access key to continue.</p>
@@ -2080,8 +2143,8 @@ function AuthWordmark({ size = 24 }) {
       aria-label="ARTIUM"
       style={{
         display: "inline-flex", alignItems: "center", justifyContent: "center",
-        fontFamily: "'Jost', system-ui, sans-serif", fontWeight: 500,
-        fontSize: size, letterSpacing: "0.02em", color: "#232A3B",
+        fontFamily: FONT_JOST, fontWeight: 500,
+        fontSize: size, letterSpacing: "0.02em", color: C.ivory,
       }}
     >
       <svg width={size * 0.62} height={size * 0.62} viewBox="0 0 15 15" aria-hidden="true" style={{ marginRight: 2 }}>
@@ -2093,7 +2156,7 @@ function AuthWordmark({ size = 24 }) {
 }
 
 function AuthPrompt() {
-  const AP_INK = "#232A3B", AP_GOLD = "#C9962E", AP_BG = "#F4F4F3", AP_MUTED = "#6B7280";
+  const AP_INK = C.ivory, AP_GOLD = C.brass, AP_BG = C.ink, AP_MUTED = "#6B7280";
   const [mode, setMode] = useState("signup"); // "signup" | "login"
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -2153,10 +2216,10 @@ function AuthPrompt() {
 
   if (checkEmail) {
     return (
-      <div style={{ minHeight: "100vh", width: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: AP_BG, fontFamily: "'Jost', system-ui, sans-serif", padding: 24 }}>
+      <div style={{ minHeight: "100vh", width: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: AP_BG, fontFamily: FONT_JOST, padding: 24 }}>
         <div style={{ width: "100%", maxWidth: 400, textAlign: "center" }}>
           <AuthWordmark />
-          <p style={{ marginTop: 22, fontFamily: "'Playfair Display', serif", fontSize: 21, color: AP_INK }}>Check your email</p>
+          <p style={{ marginTop: 22, fontFamily: FONT_PLAYFAIR, fontSize: 21, color: AP_INK }}>Check your email</p>
           <p style={{ marginTop: 10, fontSize: 14, color: AP_MUTED, lineHeight: 1.6 }}>
             We sent a confirmation link to <b style={{ color: AP_INK }}>{email}</b>. Follow it, then come back here and log in.
           </p>
@@ -2172,11 +2235,11 @@ function AuthPrompt() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", width: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: AP_BG, fontFamily: "'Jost', system-ui, sans-serif", padding: 24 }}>
+    <div style={{ minHeight: "100vh", width: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: AP_BG, fontFamily: FONT_JOST, padding: 24 }}>
       <div style={{ width: "100%", maxWidth: 400 }}>
         <div style={{ textAlign: "center", marginBottom: 26 }}>
           <AuthWordmark />
-          <p style={{ marginTop: 12, fontFamily: "'Playfair Display', serif", fontWeight: 500, fontSize: 21, color: AP_INK }}>
+          <p style={{ marginTop: 12, fontFamily: FONT_PLAYFAIR, fontWeight: 500, fontSize: 21, color: AP_INK }}>
             {mode === "signup" ? "Join Artium" : "Welcome back"}
           </p>
           <p style={{ marginTop: 6, fontSize: 13.5, color: AP_MUTED, lineHeight: 1.5 }}>
@@ -3159,7 +3222,7 @@ export default function App() {
   // to already be signed in. Keyed on authUser alone, not on `screen`: a
   // sign-out anywhere in the app clears authUser and this same check sends
   // them straight back here, whatever screen they were last on.
-  if (authLoading) return <div style={{ minHeight: "100vh", width: "100%", background: "#F4F4F3" }} />;
+  if (authLoading) return <div style={{ minHeight: "100vh", width: "100%", background: C.ink }} />;
   if (!authUser) return <AuthPrompt />;
 
   // The one avatar, wherever the header has a slot for it: a student/hirer's
@@ -4840,7 +4903,7 @@ export default function App() {
         controllerRef={radioRef}
         onPlayingChange={setMusicPlaying}
         onClose={() => setMusicOn(false)}
-        modern={useChordifyGate}
+        modern={MODERN}
       />
 
       {showGuestPrompt && (
@@ -4907,7 +4970,7 @@ export default function App() {
           }
           active="home"
           dimmed={!myProfile}
-          modern={useChordifyGate}
+          modern={MODERN}
           onTab={(k) => { if (k === "home") return; setScreen("app"); setAppTabPersist(k); }}
         />
       )}
@@ -4962,6 +5025,7 @@ export default function App() {
       {view === "landing" && <Landing onApply={pianistEntry ? () => { setAuthError(""); setScreen("hirerSignup"); } : startApply} onBack={backToEntry} onPreview={startPreview} onProfile={goToProfile} onLogin={startLogin} myProfile={myProfile} studentLoggedOut={studentLoggedOut} musicOn={musicPlaying} onMusicToggle={toggleMusic} error={authError} onGoToLessonRoom={() => { setScreen("app"); setAppTabPersist("lessons"); }} onGoToPromote={(kind) => { setScreen("app"); setAppTabPersist("promote"); setPromoteFocus({ kind: kind || null, at: Date.now() }); }} studentsByCons={studentsByCons} avatarPhotoUrl={accountPhotoUrl} avatarName={accountName} hireCount={pianistAttentionCount} hireIds={pianistAttentionIds} onGoToConcerts={() => { setScreen("app"); setAppTabPersist("concerts"); }} onGoToComposers={() => setScreen("composers")} authUser={authUser} isAdmin={isAdmin} onGoToAdmin={() => { setScreen("app"); setAppTabPersist("admin"); }} />}
       {view === "landing" && (
         <BottomTabs
+          modern={MODERN}
           light
           items={
             !myProfile ? STUDENT_TABS :
@@ -5039,6 +5103,7 @@ export default function App() {
                   <ChevronLeft size={17} strokeWidth={2} />
                 </button>
               )}
+              {MODERN && <span className="tm-brand-icon" aria-hidden="true">{React.createElement(GATE_CARDS[0].Icon)}</span>}
               <span className="artium-net-word" aria-label="ARTIUM">
                 <svg viewBox="0 0 15 15" aria-hidden="true">
                   <path d="M7.5 0.9 L1.4 14.4 M7.5 0.9 L13.6 14.4" stroke="currentColor" strokeWidth="2.85" fill="none" />
@@ -5132,7 +5197,7 @@ export default function App() {
               and a tab everybody sees for a room almost nobody can open is
               worse than a strip the two of them learn. */}
           {myProfile && !selectedStudentId && isAdmin && (
-            <div className="flex" style={{ borderBottom: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)" }}>
+            <div className="flex" style={{ borderBottom: `1px solid ${C.inkLine}`, background: warm("0.05") }}>
               {[
                 { key: "admin", label: "Admin", Icon: ShieldCheck },
               ].map(({ key, label, Icon }) => (
@@ -5167,8 +5232,8 @@ export default function App() {
                       display: "inline-flex", alignItems: "center", justifyContent: "center",
                       width: 30, height: 30, borderRadius: "50%", marginLeft: 8,
                       verticalAlign: "middle", position: "relative", top: -4,
-                      background: "radial-gradient(circle at 35% 28%, #FFFFFF 0%, #FCF8EF 55%, #F1E8D6 100%)",
-                      boxShadow: "0 4px 8px -3px rgba(150,115,55,.35), inset 0 1px 1px #fff",
+                      background: MODERN ? "#FFFFFF" : "radial-gradient(circle at 35% 28%, #FFFFFF 0%, #FCF8EF 55%, #F1E8D6 100%)",
+                      boxShadow: MODERN ? "none" : "0 4px 8px -3px rgba(150,115,55,.35), inset 0 1px 1px #fff",
                       fontSize: 15, lineHeight: 1,
                     }}>{"\uD83D\uDC4B"}</span>
                   </h2>
@@ -5189,8 +5254,8 @@ export default function App() {
                     <span style={{
                       display: "inline-flex", alignItems: "center", justifyContent: "center",
                       width: 34, height: 34, borderRadius: "50%",
-                      background: "radial-gradient(circle at 35% 28%, #FFFFFF 0%, #FCF8EF 55%, #F1E8D6 100%)",
-                      boxShadow: "0 6px 10px -4px rgba(150,115,55,.38), 0 2px 4px rgba(150,115,55,.14), inset 0 2px 2px #fff, inset 0 -3px 5px rgba(176,146,98,.28)",
+                      background: MODERN ? "#FFFFFF" : "radial-gradient(circle at 35% 28%, #FFFFFF 0%, #FCF8EF 55%, #F1E8D6 100%)",
+                      boxShadow: MODERN ? "none" : "0 6px 10px -4px rgba(150,115,55,.38), 0 2px 4px rgba(150,115,55,.14), inset 0 2px 2px #fff, inset 0 -3px 5px rgba(176,146,98,.28)",
                       color: C.brass, flexShrink: 0,
                     }}>
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -5206,10 +5271,10 @@ export default function App() {
                       return (
                         <span key={label} style={{
                           display: "inline-flex", alignItems: "center", gap: 5, flexShrink: 0,
-                          background: "#FFFFFF", border: "1px solid rgba(176,146,98,0.45)",
+                          background: "#FFFFFF", border: `1px solid ${warm("0.45")}`,
                           borderRadius: 999, padding: "4px 9px",
                           fontFamily: FONT_BODY, fontSize: 11, fontWeight: 600, color: C.inkText,
-                          boxShadow: "0 4px 8px -4px rgba(150,115,55,.25)",
+                          boxShadow: MODERN ? "none" : "0 4px 8px -4px rgba(150,115,55,.25)",
                         }}>
                           {isYear ? (
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.brass} strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M6 20v-6M12 20v-10M18 20V6" /></svg>
@@ -5225,10 +5290,10 @@ export default function App() {
                     {myProfile.teaching?.open && (
                       <span style={{
                         display: "inline-flex", alignItems: "center", gap: 5, flexShrink: 0,
-                        background: "#FFFFFF", border: "1px solid rgba(176,146,98,0.45)",
+                        background: "#FFFFFF", border: `1px solid ${warm("0.45")}`,
                         borderRadius: 999, padding: "4px 9px",
                         fontFamily: FONT_BODY, fontSize: 11, fontWeight: 600, color: C.inkText,
-                        boxShadow: "0 4px 8px -4px rgba(150,115,55,.25)",
+                        boxShadow: MODERN ? "none" : "0 4px 8px -4px rgba(150,115,55,.25)",
                       }}>
                         <span style={{ color: C.brass, display: "inline-flex" }}><IconTeacher size={12} /></span>
                         Open to teach
@@ -5348,6 +5413,7 @@ export default function App() {
           check, which is the Saved problem again. */}
       {view === "app" && (
         <BottomTabs
+          modern={MODERN}
           light
           items={
             !myProfile ? GUEST_TABS :
@@ -5417,7 +5483,7 @@ function PinGlobe() {
   return (
     // The white disc is the wrapper itself, so the sphere sits in the
     // artwork's ring the way the painted globe did, and covers it entirely.
-    <span ref={wrapRef} style={{ position: "absolute", inset: 0, borderRadius: "50%", background: "rgba(176,146,98,0.05)", overflow: "hidden" }}>
+    <span ref={wrapRef} style={{ position: "absolute", inset: 0, borderRadius: "50%", background: warm("0.05"), overflow: "hidden" }}>
       {size > 0 && (
         <Suspense fallback={null}>
           <Globe
@@ -5573,6 +5639,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
             not <GateLogo>, which is the OLD dark gate's champagne pin+serif
             mark and colors itself inline (can't be re-themed by CSS). Same
             "A" glyph as src/components/entrygate/ArtiumGate.jsx's header. */}
+        {MODERN && <span className="tm-brand-icon" aria-hidden="true">{React.createElement(GATE_CARDS[0].Icon)}</span>}
         <span className="artium-lp-word" aria-label="ARTIUM">
           <svg className="artium-lp-word-a" viewBox="0 0 15 15" aria-hidden="true">
             <path d="M7.5 0.9 L1.4 14.4 M7.5 0.9 L13.6 14.4" stroke="currentColor" strokeWidth="2.85" fill="none" />
@@ -5791,7 +5858,7 @@ function StepRing({ step, total, size = 62 }) {
   return (
     <span className="artium-su-ring" style={{ width: size, height: size }}>
       <svg viewBox="0 0 44 44" aria-hidden="true">
-        <circle cx="22" cy="22" r={R} fill="none" stroke="rgba(176,146,98,0.30)" strokeWidth="3" />
+        <circle cx="22" cy="22" r={R} fill="none" stroke={warm("0.30")} strokeWidth="3" />
         <circle
           cx="22" cy="22" r={R} fill="none" stroke="#E9C88D" strokeWidth="3" strokeLinecap="round"
           strokeDasharray={CIRC} strokeDashoffset={CIRC * (1 - done)}
@@ -5897,13 +5964,13 @@ function HirerSignup({ authUser, onBack, onDone }) {
                   the one the eye lands on. Leaving is a choice, not a default. */}
               <button
                 onClick={() => setConfirmLeave(false)}
-                style={{ flex: 1, padding: "10px 14px", borderRadius: 999, border: "none", background: "linear-gradient(180deg, #EFD08A 0%, #DBAB4C 55%, #C9962E 100%)", color: C.brassText, fontFamily: FONT_BODY, fontSize: 13.5, fontWeight: 700, cursor: "pointer" }}
+                style={{ flex: 1, padding: "10px 14px", borderRadius: 999, border: "none", background: BRASS_GRAD, color: C.brassText, fontFamily: FONT_BODY, fontSize: 13.5, fontWeight: 700, cursor: "pointer" }}
               >
                 Keep filling it in
               </button>
               <button
                 onClick={() => { setConfirmLeave(false); onBack(); }}
-                style={{ flex: "0 0 auto", padding: "10px 16px", borderRadius: 999, border: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)", color: C.ivoryDim, fontFamily: FONT_BODY, fontSize: 13.5, fontWeight: 600, cursor: "pointer" }}
+                style={{ flex: "0 0 auto", padding: "10px 16px", borderRadius: 999, border: `1px solid ${C.inkLine}`, background: warm("0.05"), color: C.ivoryDim, fontFamily: FONT_BODY, fontSize: 13.5, fontWeight: 600, cursor: "pointer" }}
               >
                 Leave
               </button>
@@ -5981,7 +6048,7 @@ function HirerSignup({ authUser, onBack, onDone }) {
         )}
         {step === 2 && (
           <div style={{ maxWidth: 560 }}>
-            <div style={{ background: "rgba(176,146,98,0.05)", border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: "18px 22px", display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ background: warm("0.05"), border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: "18px 22px", display: "flex", flexDirection: "column", gap: 10 }}>
               {[
                 ["Account", authUser?.email || ""],
                 ["Hiring as", `${d.name} — ${d.org}`],
@@ -6118,7 +6185,7 @@ function ConcertMessageBubble({ m, mine }) {
             <img src={attachmentHref} alt={m.attachmentName || ""} style={{ maxWidth: 220, borderRadius: 12, border: `1px solid ${C.inkLine}`, display: "block" }} />
           </a>
         ) : (
-          <a href={attachmentHref} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 12px", borderRadius: 10, border: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.07)", color: C.ivory, textDecoration: "none", fontSize: 12.5 }}>
+          <a href={attachmentHref} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 12px", borderRadius: 10, border: `1px solid ${C.inkLine}`, background: warm("0.07"), color: C.ivory, textDecoration: "none", fontSize: 12.5 }}>
             <FileText size={14} /> {m.attachmentName || "Attachment"}
           </a>
         )
@@ -6648,7 +6715,7 @@ function PianistDiscover({ students, onOpen }) {
 function HirerPianistProfile({ student, conservatory, onBack, onContact }) {
   if (!student) return null;
   const Row = ({ label, children }) => (
-    <div style={{ background: "rgba(176,146,98,0.05)", border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
+    <div style={{ background: warm("0.05"), border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
       <span style={{ fontSize: 11, fontWeight: 600, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
       <div style={{ fontSize: 15, color: C.ivory, lineHeight: 1.6 }}>{children}</div>
     </div>
@@ -6863,7 +6930,7 @@ function HirerApp({ authUser, students, onHome }) {
         )}
       </div>
       {!overlayOpen && (
-        <BottomTabs light items={items} active={tab} onTab={(k) => { if (k === "home") { onHome(); return; } setTab(k); }} />
+        <BottomTabs light modern={MODERN} items={items} active={tab} onTab={(k) => { if (k === "home") { onHome(); return; } setTab(k); }} />
       )}
     </div>
   );
@@ -6960,13 +7027,13 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
                   the one the eye lands on. Leaving is a choice, not a default. */}
               <button
                 onClick={() => setConfirmLeave(false)}
-                style={{ flex: 1, padding: "10px 14px", borderRadius: 999, border: "none", background: "linear-gradient(180deg, #EFD08A 0%, #DBAB4C 55%, #C9962E 100%)", color: C.brassText, fontFamily: FONT_BODY, fontSize: 13.5, fontWeight: 700, cursor: "pointer" }}
+                style={{ flex: 1, padding: "10px 14px", borderRadius: 999, border: "none", background: BRASS_GRAD, color: C.brassText, fontFamily: FONT_BODY, fontSize: 13.5, fontWeight: 700, cursor: "pointer" }}
               >
                 Keep filling it in
               </button>
               <button
                 onClick={() => { setConfirmLeave(false); onCancel(); }}
-                style={{ flex: "0 0 auto", padding: "10px 16px", borderRadius: 999, border: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)", color: C.ivoryDim, fontFamily: FONT_BODY, fontSize: 13.5, fontWeight: 600, cursor: "pointer" }}
+                style={{ flex: "0 0 auto", padding: "10px 16px", borderRadius: 999, border: `1px solid ${C.inkLine}`, background: warm("0.05"), color: C.ivoryDim, fontFamily: FONT_BODY, fontSize: 13.5, fontWeight: 600, cursor: "pointer" }}
               >
                 Leave
               </button>
@@ -7019,14 +7086,14 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
             <button
               onClick={() => setConfirmLeave(true)}
               title="Your answers are saved — you can pick this up later"
-              style={{ marginLeft: "auto", fontSize: 12.5, fontWeight: 600, color: C.ivoryDim, background: "rgba(176,146,98,0.07)", border: `1px solid ${C.inkLine}`, borderRadius: 999, padding: "7px 15px", cursor: "pointer", whiteSpace: "nowrap" }}
+              style={{ marginLeft: "auto", fontSize: 12.5, fontWeight: 600, color: C.ivoryDim, background: warm("0.07"), border: `1px solid ${C.inkLine}`, borderRadius: 999, padding: "7px 15px", cursor: "pointer", whiteSpace: "nowrap" }}
             >
               Leave
             </button>
           )}
           {editing && (
             <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
-              <button onClick={onCancel} style={{ fontSize: 12.5, fontWeight: 600, color: C.ivoryDim, background: "rgba(176,146,98,0.07)", border: `1px solid ${C.inkLine}`, borderRadius: 999, padding: "7px 15px", cursor: "pointer" }}>
+              <button onClick={onCancel} style={{ fontSize: 12.5, fontWeight: 600, color: C.ivoryDim, background: warm("0.07"), border: `1px solid ${C.inkLine}`, borderRadius: 999, padding: "7px 15px", cursor: "pointer" }}>
                 Cancel
               </button>
               {/* Changing one line of a bio meant clicking Next through six
@@ -7041,7 +7108,7 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
                   border: "none", whiteSpace: "nowrap",
                   cursor: canSaveAll && !submitting ? "pointer" : "not-allowed",
                   color: canSaveAll ? C.brassText : C.ivoryDim,
-                  background: canSaveAll ? "linear-gradient(180deg, #EFD08A 0%, #DBAB4C 55%, #C9962E 100%)" : "rgba(176,146,98,0.05)",
+                  background: canSaveAll ? BRASS_GRAD : warm("0.05"),
                   opacity: submitting ? 0.7 : 1,
                 }}
               >
@@ -7129,7 +7196,7 @@ function Field({ label, children }) {
 // The gate's field: glass over the page with a hairline, not a white card
 // re-tinted. The focus ring is a CSS rule further down — an inline style
 // cannot express :focus.
-const inputStyle = { width: "100%", background: "#FFFFFF", border: "1px solid rgba(176,146,98,0.30)", borderRadius: 11, padding: "12px 15px", color: "#232A3B", fontFamily: FONT_BODY, fontSize: 15, outline: "none", boxShadow: "none" };
+const inputStyle = { width: "100%", background: "#FFFFFF", border: MODERN ? "1px solid #E8E2DC" : `1px solid ${warm("0.30")}`, borderRadius: MODERN ? 10 : 11, padding: "12px 15px", color: MODERN ? "#1C1C1C" : C.ivory, fontFamily: FONT_BODY, fontSize: 15, outline: "none", boxShadow: "none" };
 
 function PasswordField({ value, onChange, placeholder, autoComplete }) {
   const [visible, setVisible] = useState(false);
@@ -7368,7 +7435,7 @@ function GoogleBtn({ label = "Continue with Google", role = "student" }) {
       disabled={loading}
       style={{
         width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
-        background: "rgba(176,146,98,0.05)", color: C.ivory, border: `1px solid ${C.inkLine}`,
+        background: warm("0.05"), color: C.ivory, border: `1px solid ${C.inkLine}`,
         borderRadius: 6, padding: "10px 16px", fontSize: 14, fontWeight: 500,
         boxShadow: "0 1px 2px rgba(0,0,0,0.16)",
         cursor: loading ? "default" : "pointer", opacity: loading ? 0.7 : 1,
@@ -7403,7 +7470,7 @@ function StepAccount({ draft, update, error }) {
           Which one applies is the visitor's own fact about themselves, and
           knowing it now is what stops the document route feeling like a
           rejection when they reach it. */}
-      <div className="mb-6" style={{ marginTop: 14, borderRadius: 14, border: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)", padding: "13px 15px" }}>
+      <div className="mb-6" style={{ marginTop: 14, borderRadius: 14, border: `1px solid ${C.inkLine}`, background: warm("0.05"), padding: "13px 15px" }}>
         <p style={{ fontFamily: FONT_MONO, fontSize: 10.5, letterSpacing: 0.5, color: C.brassLabel, margin: 0 }}>
           PROVING YOU'RE A CONSERVATORY MUSICIAN
         </p>
@@ -8200,7 +8267,7 @@ function StepConservatory({ draft, update, editing }) {
       )}
 
       {editing && selectedCons && !changingSchool ? (
-        <div className="mt-2 rounded-2xl" style={{ border: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)", padding: "16px 18px" }}>
+        <div className="mt-2 rounded-2xl" style={{ border: `1px solid ${C.inkLine}`, background: warm("0.05"), padding: "16px 18px" }}>
           {/* The tick rides with the label rather than the name: beside a
               school called "The Juilliard School" it was taking the width the
               name needed and pushing it onto a third line. */}
@@ -8310,7 +8377,7 @@ function StepConservatory({ draft, update, editing }) {
           said so once the list came back empty — which never happens on the
           email route, where 110 schools are listed and yours simply is not
           one of them. Said plainly, always. */}
-      <div style={{ marginTop: 14, borderRadius: 14, border: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)", padding: "13px 15px" }}>
+      <div style={{ marginTop: 14, borderRadius: 14, border: `1px solid ${C.inkLine}`, background: warm("0.05"), padding: "13px 15px" }}>
         <p className="text-sm" style={{ margin: 0, color: C.ivory, fontWeight: 600, fontSize: 13 }}>
           {isDoc ? "Can't find your conservatory?" : "Can't find your conservatory, or having trouble with your email?"}
         </p>
@@ -8400,7 +8467,7 @@ function StepConservatory({ draft, update, editing }) {
             <div>
               <p className="text-sm" style={{ color: C.ivoryDim, marginBottom: 8 }}>Enter the code sent to <b>{reqEmail.trim()}</b>.</p>
               <input
-                style={{ width: "100%", maxWidth: 260, padding: "12px 16px", borderRadius: 10, border: `1.5px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)", color: C.ivory, fontFamily: FONT_MONO, fontSize: 22, fontWeight: 600, letterSpacing: 8, textAlign: "center", outline: "none", boxSizing: "border-box" }}
+                style={{ width: "100%", maxWidth: 260, padding: "12px 16px", borderRadius: 10, border: `1.5px solid ${C.inkLine}`, background: warm("0.05"), color: C.ivory, fontFamily: FONT_MONO, fontSize: 22, fontWeight: 600, letterSpacing: 8, textAlign: "center", outline: "none", boxSizing: "border-box" }}
                 value={reqCode}
                 onChange={(e) => { setReqCode(e.target.value.replace(/\D/g, "").slice(0, 10)); setReqErr(""); }}
                 placeholder="••••••••" inputMode="numeric" autoFocus />
@@ -8474,7 +8541,7 @@ function StepConservatory({ draft, update, editing }) {
               </label>
             </div>
           ) : (
-            <label style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "11px 18px", borderRadius: 10, border: `1.5px dashed ${C.inkLine}`, background: "rgba(176,146,98,0.05)", cursor: uploading ? "default" : "pointer", color: C.ivory, fontWeight: 600, fontSize: 14 }}>
+            <label style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "11px 18px", borderRadius: 10, border: `1.5px dashed ${C.inkLine}`, background: warm("0.05"), cursor: uploading ? "default" : "pointer", color: C.ivory, fontWeight: 600, fontSize: 14 }}>
               <Upload size={16} /> {uploading ? "Uploading…" : "Choose a file"}
               <input type="file" accept="image/*,application/pdf" style={{ display: "none" }} disabled={uploading} onChange={(e) => uploadProof(e.target.files?.[0])} />
             </label>
@@ -8515,7 +8582,7 @@ function StepConservatory({ draft, update, editing }) {
                 <div style={{ marginTop: 12 }}>
                   <p className="text-sm" style={{ color: C.ivoryDim, marginBottom: 8 }}>Enter the code sent to <b>{email}</b>.</p>
                   <input
-                    style={{ width: "100%", maxWidth: 260, padding: "12px 16px", borderRadius: 10, border: `1.5px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)", color: C.ivory, fontFamily: FONT_MONO, fontSize: 22, fontWeight: 600, letterSpacing: 8, textAlign: "center", outline: "none", boxSizing: "border-box" }}
+                    style={{ width: "100%", maxWidth: 260, padding: "12px 16px", borderRadius: 10, border: `1.5px solid ${C.inkLine}`, background: warm("0.05"), color: C.ivory, fontFamily: FONT_MONO, fontSize: 22, fontWeight: 600, letterSpacing: 8, textAlign: "center", outline: "none", boxSizing: "border-box" }}
                     value={code}
                     onChange={(e) => { setCode(e.target.value.replace(/\D/g, "").slice(0, 10)); setErr(""); }}
                     placeholder="••••••••" inputMode="numeric" autoFocus />
@@ -8544,7 +8611,7 @@ function StepConservatory({ draft, update, editing }) {
           only escape is off-screen behind everything they just read. An exit
           is no use where the trouble is not. */}
       {changingSchool && !draft.conservatoryVerified && !draft.proofDocUrl && !draft.domainReq && (
-        <div className="mt-5 rounded-2xl" style={{ border: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)", padding: "14px 16px" }}>
+        <div className="mt-5 rounded-2xl" style={{ border: `1px solid ${C.inkLine}`, background: warm("0.05"), padding: "14px 16px" }}>
           <p className="text-sm" style={{ margin: 0, color: C.ivoryDim, lineHeight: 1.55 }}>
             Changed your mind? Nothing has moved yet — your conservatory is still
             the one you had.
@@ -8682,7 +8749,7 @@ function StepReview({ draft }) {
   const cons = findConservatory(draft.conservatoryId);
 
   const Card = ({ label, children }) => (
-    <div style={{ background: "rgba(176,146,98,0.05)", border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "14px 18px", display: "flex", flexDirection: "column", gap: 6 }}>
+    <div style={{ background: warm("0.05"), border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "14px 18px", display: "flex", flexDirection: "column", gap: 6 }}>
       <span style={{ fontSize: 11, fontWeight: 600, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
       <div style={{ fontSize: 14, color: C.ivory, lineHeight: 1.6 }}>{children}</div>
     </div>
@@ -8840,14 +8907,14 @@ function LoginScreen({ onSubmit, onBack, error, unfinished, onResume }) {
   }
   return (
     <div className="min-h-full flex flex-col" style={{ background: C.inkSoft, color: C.ivory }}>
-      <div style={{ background: "rgba(176,146,98,0.05)", borderBottom: `1px solid ${C.inkLine}`, padding: "0 32px", height: 60, display: "flex", alignItems: "center" }}>
+      <div style={{ background: warm("0.05"), borderBottom: `1px solid ${C.inkLine}`, padding: "0 32px", height: 60, display: "flex", alignItems: "center" }}>
         <button onClick={onBack} style={{ color: C.ivoryDim, background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", padding: 0, marginRight: 12 }}>
           <ChevronLeft size={18} />
         </button>
         <Logo size={20} />
       </div>
       <div className="flex-1 flex items-center justify-center px-6 py-12">
-        <div className="w-full max-w-md lg-fade" style={{ background: "rgba(176,146,98,0.05)", border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: 40, boxShadow: "0 4px 24px rgba(0,0,0,0.28)" }}>
+        <div className="w-full max-w-md lg-fade" style={{ background: warm("0.05"), border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: 40, boxShadow: "0 4px 24px rgba(0,0,0,0.28)" }}>
           <h2 style={{ fontSize: 24, fontWeight: 700, letterSpacing: -0.3, marginBottom: 4 }}>Welcome back</h2>
           <p style={{ color: C.ivoryDim, fontSize: 15, marginBottom: 24 }}>Log in to your Artium account.</p>
 
@@ -8863,7 +8930,7 @@ function LoginScreen({ onSubmit, onBack, error, unfinished, onResume }) {
               <p className="text-sm" style={{ margin: "4px 0 0", color: C.ivoryDim, lineHeight: 1.5 }}>
                 There's no account yet — it's only created at the last step. Everything you filled in is still here.
               </p>
-              <button onClick={onResume} style={{ marginTop: 10, padding: "8px 16px", borderRadius: 999, border: "none", background: "linear-gradient(180deg, #EFD08A 0%, #DBAB4C 55%, #C9962E 100%)", color: C.brassText, fontFamily: FONT_BODY, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+              <button onClick={onResume} style={{ marginTop: 10, padding: "8px 16px", borderRadius: 999, border: "none", background: BRASS_GRAD, color: C.brassText, fontFamily: FONT_BODY, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
                 Carry on where you left off
               </button>
             </div>
@@ -8893,7 +8960,7 @@ function LearnerProfileModal({ learner, onClose }) {
   if (!learner) return null;
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={onClose}>
-      <div style={{ background: "rgba(176,146,98,0.05)", borderRadius: 16, padding: 32, width: 340, maxWidth: "90vw", boxShadow: "0 16px 48px rgba(0,0,0,0.18)" }} onClick={(e) => e.stopPropagation()}>
+      <div style={{ background: warm("0.05"), borderRadius: 16, padding: 32, width: 340, maxWidth: "90vw", boxShadow: "0 16px 48px rgba(0,0,0,0.18)" }} onClick={(e) => e.stopPropagation()}>
         <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20 }}>
           <Avatar name={learner.name} id={learner.learnerId} size={56} photoUrl={learner.photoUrl} />
           <div>
@@ -9315,7 +9382,7 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
         )}
       </button>
       {open && (
-        <div style={{ position: "absolute", right: 0, top: "calc(100% + 8px)", width: 320, background: networkFeeds ? "#FFFFFF" : "rgba(176,146,98,0.05)", borderRadius: networkFeeds ? 20 : 12, boxShadow: networkFeeds ? "0 20px 40px -22px rgba(150,115,55,0.38), inset 0 1px 0 #fff" : "0 8px 32px rgba(0,0,0,0.14)", border: `1px solid ${C.inkLine}`, zIndex: 200, overflow: "hidden", maxHeight: 460, overflowY: "auto" }}>
+        <div style={{ position: "absolute", right: 0, top: "calc(100% + 8px)", width: 320, background: networkFeeds ? "#FFFFFF" : warm("0.05"), borderRadius: networkFeeds ? (MODERN ? 12 : 20) : 12, boxShadow: networkFeeds ? PANEL.boxShadow : "0 8px 32px rgba(0,0,0,0.14)", border: `1px solid ${C.inkLine}`, zIndex: 200, overflow: "hidden", maxHeight: 460, overflowY: "auto" }}>
           {networkFeeds ? (
             <div style={{ padding: "14px 16px", borderBottom: `1px solid ${C.inkLine}`, display: "flex", alignItems: "center", gap: 8 }}>
               <Bell size={14} color={C.brass} />
@@ -9421,7 +9488,7 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
               })}
               <NetworkRow
                 icon={<GraduationCap size={18} strokeWidth={2} />}
-                tileBg="rgba(201,150,46,0.14)" tileColor={C.brass}
+                tileBg={brassA("0.14")} tileColor={C.brass}
                 title="Teaching requests"
                 count={pending.length}
                 activeText={`${pending.length} new request${pending.length === 1 ? "" : "s"}`}
@@ -9511,7 +9578,7 @@ function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, mus
     // Room for the fixed bottom bar. The bare branch needs none: the page it
     // wraps is the Network screen, which already reserves the same height.
     <div className="min-h-full flex flex-col artium-has-tabs" style={{ background: C.inkSoft, color: C.ivory }}>
-      <div className="px-6 flex items-center gap-4" style={{ height: 60, background: "rgba(176,146,98,0.05)", borderBottom: `1px solid ${C.inkLine}` }}>
+      <div className="px-6 flex items-center gap-4" style={{ height: 60, background: warm("0.05"), borderBottom: `1px solid ${C.inkLine}` }}>
         <div className="flex items-center gap-3">
           {(previewOnly || onBack) && (
             <button onClick={previewOnly ? onHome : onBack} style={{ color: C.ivoryDim, background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 2, padding: 0 }}>
@@ -10138,7 +10205,7 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
             <div className="artium-aw-row" style={{ cursor: "default", marginBottom: 12 }}>
               <ConsAvatar cons={cons} />
               <span className="artium-aw-row-body">
-                <p className="artium-aw-row-t" style={{ fontSize: 13, fontFamily: "'Libre Baskerville', serif", fontWeight: 700 }}>{cons.name}</p>
+                <p className="artium-aw-row-t" style={{ fontSize: 13, fontFamily: FONT_LIBRE, fontWeight: 700 }}>{cons.name}</p>
                 <p className="artium-aw-row-c" style={{ fontSize: 14 }}><span aria-hidden="true" style={{ fontSize: 11, lineHeight: 1 }}>{"\uD83D\uDCCD"}</span>{[cons.city, cons.country].filter(Boolean).join(", ")}</p>
               </span>
               <span className="artium-aw-badge"><b>{roster.length}</b><span>student{roster.length === 1 ? "" : "s"}</span></span>
@@ -10229,7 +10296,7 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
                   <button key={c.id} className="artium-aw-row" onClick={() => setSelectedConsId(c.id)}>
                     <ConsAvatar cons={c} />
                     <span className="artium-aw-row-body">
-                      <p className="artium-aw-row-t" style={{ fontSize: 13, fontFamily: "'Libre Baskerville', serif", fontWeight: 700 }}>{c.name}</p>
+                      <p className="artium-aw-row-t" style={{ fontSize: 13, fontFamily: FONT_LIBRE, fontWeight: 700 }}>{c.name}</p>
                       <p className="artium-aw-row-c" style={{ fontSize: 14 }}><span aria-hidden="true" style={{ fontSize: 11, lineHeight: 1 }}>{"\uD83D\uDCCD"}</span>{[c.city, c.country].filter(Boolean).join(", ")}</p>
                     </span>
                     <span className="artium-aw-badge"><b>{n}</b><span>student{n === 1 ? "" : "s"}</span></span>
@@ -10390,7 +10457,7 @@ function ProfileLinks({ links }) {
           style={{
             display: "inline-flex", alignItems: "center", gap: 7,
             padding: "8px 13px", borderRadius: 999,
-            border: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)",
+            border: `1px solid ${C.inkLine}`, background: warm("0.05"),
             color: C.ivory, textDecoration: "none",
             fontFamily: FONT_BODY, fontSize: 13, fontWeight: 500,
           }}>
@@ -10407,7 +10474,7 @@ function StudentProfile({ student, conservatory, onBack, onMessage, locked, onAp
   if (!student) return null;
 
   const Row = ({ label, children }) => (
-    <div style={{ background: "rgba(176,146,98,0.05)", border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
+    <div style={{ background: warm("0.05"), border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
       <span style={{ fontSize: 11, fontWeight: 600, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
       <div style={{ fontSize: 15, color: C.ivory, lineHeight: 1.6 }}>{children}</div>
     </div>
@@ -10498,7 +10565,7 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack, onUpdat
   const [deleting, setDeleting] = React.useState(false);
 
   const Row = ({ label, children }) => (
-    <div style={{ background: "rgba(176,146,98,0.05)", border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
+    <div style={{ background: warm("0.05"), border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
       <span style={{ fontSize: 11, fontWeight: 600, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
       <div style={{ fontSize: 15, color: C.ivory, lineHeight: 1.6 }}>{children}</div>
     </div>
@@ -10777,7 +10844,7 @@ function TeachingPayoutsPanel({ profileId }) {
     : "Set up payouts";
 
   return (
-    <div style={{ marginTop: 14, padding: "12px 14px", borderRadius: 10, border: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)" }}>
+    <div style={{ marginTop: 14, padding: "12px 14px", borderRadius: 10, border: `1px solid ${C.inkLine}`, background: warm("0.05") }}>
       <p style={{ margin: "0 0 8px", fontSize: 12.5, color: C.ivoryDim, lineHeight: 1.5 }}>
         To be paid for lessons booked through Artium, connect a Stripe account.
       </p>
@@ -10786,7 +10853,7 @@ function TeachingPayoutsPanel({ profileId }) {
           type="button"
           onClick={startOnboarding}
           disabled={loading}
-          style={{ fontSize: 12.5, fontWeight: 700, borderRadius: 999, padding: "7px 15px", border: "none", cursor: loading ? "not-allowed" : "pointer", color: C.brassText, background: "linear-gradient(180deg, #EFD08A 0%, #DBAB4C 55%, #C9962E 100%)", opacity: loading ? 0.7 : 1 }}
+          style={{ fontSize: 12.5, fontWeight: 700, borderRadius: 999, padding: "7px 15px", border: "none", cursor: loading ? "not-allowed" : "pointer", color: C.brassText, background: BRASS_GRAD, opacity: loading ? 0.7 : 1 }}
         >
           {loading ? "Redirecting…" : label}
         </button>
@@ -11283,7 +11350,7 @@ function LearnerNotificationBell({ authUser, teachers, learnerSessionsByTeacher,
         )}
       </button>
       {open && (
-        <div style={{ position: "absolute", right: 0, top: "calc(100% + 8px)", width: 320, maxWidth: "calc(100vw - 32px)", background: "#FFFFFF", borderRadius: 20, boxShadow: "0 20px 40px -22px rgba(150,115,55,0.38), inset 0 1px 0 #fff", border: `1px solid ${C.inkLine}`, zIndex: 200, overflow: "hidden", maxHeight: 460, overflowY: "auto" }}>
+        <div style={{ position: "absolute", right: 0, top: "calc(100% + 8px)", width: 320, maxWidth: "calc(100vw - 32px)", background: "#FFFFFF", borderRadius: MODERN ? 12 : 20, boxShadow: PANEL.boxShadow, border: `1px solid ${C.inkLine}`, zIndex: 200, overflow: "hidden", maxHeight: 460, overflowY: "auto" }}>
           <div style={{ padding: "14px 16px", borderBottom: `1px solid ${C.inkLine}`, display: "flex", alignItems: "center", gap: 8 }}>
             <Bell size={14} color={C.brass} />
             <p style={{ flex: 1, minWidth: 0, margin: 0, fontSize: 17, fontWeight: 600, color: C.ivory }}>Notifications</p>
@@ -11302,7 +11369,7 @@ function LearnerNotificationBell({ authUser, teachers, learnerSessionsByTeacher,
                 <Row
                   key={`prop-${p.id}`}
                   icon={<Calendar size={18} strokeWidth={2} />}
-                  tileBg="rgba(201,150,46,0.14)" tileColor={C.brass}
+                  tileBg={brassA("0.14")} tileColor={C.brass}
                   title={`${teacherName(p.teacherId)} proposed ${p.date} · ${p.time}`}
                   subtitle="Awaiting your reply"
                   onClick={() => { ackProposal(p.id); goTo(p.teacherId, p.id); }}
@@ -11506,6 +11573,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
             <ChevronLeft size={17} strokeWidth={2} />
           </button>
         )}
+        {MODERN && <span className="tm-brand-icon" aria-hidden="true">{React.createElement(GATE_CARDS[0].Icon)}</span>}
         <span className="artium-net-word" aria-label="ARTIUM">
           <svg viewBox="0 0 15 15" aria-hidden="true">
             <path d="M7.5 0.9 L1.4 14.4 M7.5 0.9 L13.6 14.4" stroke="currentColor" strokeWidth="2.85" fill="none" />
@@ -11707,7 +11775,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
       {(appTab === "map" || (appTab === "lesson" && selectedId === activeLessonTeacher?.id)) && selectedId && selected && (() => {
         const selCons = findConservatory(selected.conservatoryId);
         const Row = ({ label, children }) => (
-          <div style={{ background: "rgba(176,146,98,0.05)", border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ background: warm("0.05"), border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
             <span style={{ fontSize: 11, fontWeight: 600, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
             <div style={{ fontSize: 15, color: C.inkText, lineHeight: 1.6 }}>{children}</div>
           </div>
@@ -11881,7 +11949,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
                               ? `€${euroAmount(pay.gross_amount_cents)}`
                               : s.status === "confirmed" && s.paid ? `€${s.teacher.price}` : "—";
                             return (
-                              <tr key={i} style={{ borderBottom: `1px solid ${C.inkLine}`, background: i % 2 === 0 ? "transparent" : "rgba(176,146,98,0.05)" }}>
+                              <tr key={i} style={{ borderBottom: `1px solid ${C.inkLine}`, background: i % 2 === 0 ? "transparent" : warm("0.05") }}>
                                 <td style={{ padding: "9px 12px" }}>
                                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                                     <Avatar name={s.teacher.name} id={s.teacher.id} size={26} />
@@ -11919,13 +11987,13 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap", padding: "12px 0 16px" }}>
                 {acceptedTeachers.map((t) => (
                   <button key={t.id} onClick={() => setActiveLessonTeacherId(t.id)}
-                    style={{ padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: t.id === activeLessonTeacher.id ? 700 : 500, border: t.id === activeLessonTeacher.id ? `2px solid ${C.brass}` : "none", background: "rgba(176,146,98,0.05)", color: t.id === activeLessonTeacher.id ? C.ivory : C.ivoryDim, cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.06)" }}>
+                    style={{ padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: t.id === activeLessonTeacher.id ? 700 : 500, border: t.id === activeLessonTeacher.id ? `2px solid ${C.brass}` : "none", background: warm("0.05"), color: t.id === activeLessonTeacher.id ? C.ivory : C.ivoryDim, cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.06)" }}>
                     {t.name.split(" ")[0]}
                   </button>
                 ))}
               </div>
               <button onClick={() => selectTeacher(activeLessonTeacher.id)}
-                style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", background: "rgba(176,146,98,0.05)", borderRadius: 12, border: "none", boxShadow: "0 1px 6px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04)", marginBottom: 16, width: "100%", cursor: "pointer", textAlign: "left" }}>
+                style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", background: warm("0.05"), borderRadius: 12, border: "none", boxShadow: "0 1px 6px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04)", marginBottom: 16, width: "100%", cursor: "pointer", textAlign: "left" }}>
                 <Avatar name={activeLessonTeacher.name} id={activeLessonTeacher.id} size={40} photoUrl={activeLessonTeacher.photoUrl} online={activeLessonTeacher.online} />
                 <div style={{ flex: 1 }}>
                   <p style={{ fontSize: 14, fontWeight: 700, color: C.ivory, margin: 0 }}>{activeLessonTeacher.name}</p>
@@ -11934,7 +12002,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
                 <ChevronRight size={16} color={C.ivoryDim} />
               </button>
             </div>
-            <div style={{ margin: "0 20px 20px", background: "rgba(176,146,98,0.05)", borderRadius: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06)", overflow: "hidden", minHeight: 320 }}>
+            <div style={{ margin: "0 20px 20px", background: warm("0.05"), borderRadius: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06)", overflow: "hidden", minHeight: 320 }}>
               <LessonRoom
                 teacher={activeLessonTeacher}
                 focusSession={focusSessionReq}
@@ -11947,11 +12015,11 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
               />
             </div>
             {/* Bottom nav — My Planning */}
-            <div style={{ display: "flex", justifyContent: "center", gap: 40, padding: "20px 20px 12px", background: "rgba(176,146,98,0.05)", borderTop: `1px solid ${C.inkLine}` }}>
+            <div style={{ display: "flex", justifyContent: "center", gap: 40, padding: "20px 20px 12px", background: warm("0.05"), borderTop: `1px solid ${C.inkLine}` }}>
               {[{ v: "planning", Icon: LayoutList, label: "My Planning" }].map(({ v, Icon, label }) => (
                 <button key={v} onClick={() => setLearnerRoomView(v)}
                   style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5, background: "none", border: "none", cursor: "pointer", color: C.ivoryDim }}>
-                  <div style={{ width: 52, height: 52, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(176,146,98,0.05)", border: "2px solid transparent", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07)" }}>
+                  <div style={{ width: 52, height: 52, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: warm("0.05"), border: "2px solid transparent", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07)" }}>
                     <Icon size={22} color={C.ivoryDim} />
                   </div>
                   <span style={{ fontSize: 11, fontWeight: 600 }}>{label}</span>
@@ -11964,7 +12032,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
 
       {appTab === "profile" && (() => {
         const Row = ({ label, children }) => (
-          <div style={{ background: "rgba(176,146,98,0.05)", border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ background: warm("0.05"), border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
             <span style={{ fontSize: 11, fontWeight: 600, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
             <div style={{ fontSize: 15, color: C.inkText, lineHeight: 1.6 }}>{children}</div>
           </div>
@@ -12063,6 +12131,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
           that page has its own way back and no tab of its own to light. */}
       {!(selectedId && appTab === "lesson") && (
         <BottomTabs
+          modern={MODERN}
           light
           items={[
             { k: "home", label: "Home", Icon: Home },
@@ -12407,7 +12476,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
   return (
     <div style={{ overflow: "hidden", background: C.parchment }}>
       {/* Tab bar */}
-      <div style={{ display: "flex", borderBottom: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)" }}>
+      <div style={{ display: "flex", borderBottom: `1px solid ${C.inkLine}`, background: warm("0.05") }}>
         {tabs.map(({ id, label, Icon }) => (
           <button key={id} onClick={() => setTab(id)}
             style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "10px 4px", fontSize: 11, fontWeight: tab === id ? 700 : 400, color: tab === id ? C.ivory : C.ivoryDim, background: "none", border: "none", cursor: "pointer", borderBottom: tab === id ? `2px solid ${C.brass}` : "2px solid transparent" }}>
@@ -12478,7 +12547,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
                 return (
                   <button key={s.id} onClick={() => setSelectedSessionId(isSelected ? null : s.id)}
                     ref={isSelected ? (el) => { if (el) try { el.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" }); } catch { /* older Safari */ } } : undefined}
-                    style={{ flexShrink: 0, width: 110, height: 110, borderRadius: 14, border: isSelected ? `2px solid ${C.brass}` : `1px solid ${isConfirmed ? "#A8D5B5" : C.inkLine}`, background: isConfirmed ? "rgba(26,158,110,0.10)" : "rgba(176,146,98,0.06)", display: "flex", flexDirection: "column", alignItems: "flex-start", justifyContent: "space-between", padding: 12, cursor: "pointer", boxShadow: isSelected ? `0 0 0 3px ${C.brassDim}` : "none", transition: "box-shadow 0.15s" }}>
+                    style={{ flexShrink: 0, width: 110, height: 110, borderRadius: 14, border: isSelected ? `2px solid ${C.brass}` : `1px solid ${isConfirmed ? "#A8D5B5" : C.inkLine}`, background: isConfirmed ? "rgba(26,158,110,0.10)" : warm("0.06"), display: "flex", flexDirection: "column", alignItems: "flex-start", justifyContent: "space-between", padding: 12, cursor: "pointer", boxShadow: isSelected ? `0 0 0 3px ${C.brassDim}` : "none", transition: "box-shadow 0.15s" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", width: "100%", alignItems: "center" }}>
                       <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: isConfirmed ? "#1A9E6E" : "#D4810A" }}>
                         {isConfirmed ? "Confirmed" : "Awaiting"}
@@ -12584,7 +12653,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
                       // hasn't seen the webhook's write yet. Purely a "hang on"
                       // hint — the actual tick above only ever comes from that
                       // poll picking up paid=true.
-                      <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, background: "rgba(176,146,98,0.12)", color: C.brassLabel, fontSize: 12, fontWeight: 600, marginBottom: 8 }}>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, background: warm("0.12"), color: C.brassLabel, fontSize: 12, fontWeight: 600, marginBottom: 8 }}>
                         Payment processing…
                       </span>
                     ) : (
@@ -12665,7 +12734,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
         return (
           <div style={{ position: "fixed", inset: 0, background: "rgba(10,20,40,0.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999 }}
             onClick={() => setCancelPreviewId(null)}>
-            <div style={{ background: "rgba(176,146,98,0.05)", borderRadius: 16, padding: "28px 28px 24px", maxWidth: 340, width: "90%", boxShadow: "0 8px 32px rgba(0,0,0,0.18)", textAlign: "center" }}
+            <div style={{ background: warm("0.05"), borderRadius: 16, padding: "28px 28px 24px", maxWidth: 340, width: "90%", boxShadow: "0 8px 32px rgba(0,0,0,0.18)", textAlign: "center" }}
               onClick={(e) => e.stopPropagation()}>
               <p style={{ fontSize: 16, fontWeight: 700, color: C.inkText, margin: "0 0 8px" }}>Cancel this lesson?</p>
               <p style={{ fontSize: 13, color: C.ivoryDim, margin: "0 0 6px", lineHeight: 1.5 }}>
@@ -12699,7 +12768,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
       {confirmNoShowId !== null && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(10,20,40,0.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999 }}
           onClick={() => setConfirmNoShowId(null)}>
-          <div style={{ background: "rgba(176,146,98,0.05)", borderRadius: 16, padding: "28px 28px 24px", maxWidth: 340, width: "90%", boxShadow: "0 8px 32px rgba(0,0,0,0.18)", textAlign: "center" }}
+          <div style={{ background: warm("0.05"), borderRadius: 16, padding: "28px 28px 24px", maxWidth: 340, width: "90%", boxShadow: "0 8px 32px rgba(0,0,0,0.18)", textAlign: "center" }}
             onClick={(e) => e.stopPropagation()}>
             <p style={{ fontSize: 16, fontWeight: 700, color: C.inkText, margin: "0 0 8px" }}>Report a no-show?</p>
             <p style={{ fontSize: 13, color: C.ivoryDim, margin: "0 0 20px", lineHeight: 1.5 }}>
@@ -12723,7 +12792,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
       {confirmCancelId !== null && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(10,20,40,0.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999 }}
           onClick={() => setConfirmCancelId(null)}>
-          <div style={{ background: "rgba(176,146,98,0.05)", borderRadius: 16, padding: "28px 28px 24px", maxWidth: 320, width: "90%", boxShadow: "0 8px 32px rgba(0,0,0,0.18)", textAlign: "center" }}
+          <div style={{ background: warm("0.05"), borderRadius: 16, padding: "28px 28px 24px", maxWidth: 320, width: "90%", boxShadow: "0 8px 32px rgba(0,0,0,0.18)", textAlign: "center" }}
             onClick={(e) => e.stopPropagation()}>
             <p style={{ fontSize: 16, fontWeight: 700, color: C.inkText, margin: "0 0 8px" }}>Cancel this session?</p>
             <p style={{ fontSize: 13, color: C.ivoryDim, margin: "0 0 20px", lineHeight: 1.5 }}>Are you sure you want to remove this proposal? This cannot be undone.</p>
@@ -12931,7 +13000,7 @@ function ArtiumSoundCard({ myProfile, authUser }) {
               title={rights ? undefined : "Tick the box above first"}
               style={{
                 display: "inline-flex", alignItems: "center", gap: 8, padding: "11px 18px",
-                borderRadius: 10, border: `1.5px dashed ${C.inkLine}`, background: "rgba(176,146,98,0.05)",
+                borderRadius: 10, border: `1.5px dashed ${C.inkLine}`, background: warm("0.05"),
                 fontWeight: 600, fontSize: 14,
                 color: rights ? C.ivory : C.ivoryDim,
                 opacity: rights ? 1 : 0.55,
@@ -13173,7 +13242,7 @@ function PromoteMe({ myProfile, authUser, focus }) {
                 style={{
                   display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
                   width: "100%", textAlign: "left", padding: "18px 20px", borderRadius: 999,
-                  border: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)", cursor: "pointer",
+                  border: `1px solid ${C.inkLine}`, background: warm("0.05"), cursor: "pointer",
                   font: "inherit", boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
                 }}
               >
@@ -13210,7 +13279,7 @@ function PromoteMe({ myProfile, authUser, focus }) {
                 style={{
                   display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
                   width: "100%", textAlign: "left", padding: "18px 20px", borderRadius: 999,
-                  border: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)", cursor: "pointer",
+                  border: `1px solid ${C.inkLine}`, background: warm("0.05"), cursor: "pointer",
                   font: "inherit", boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
                 }}
               >
@@ -13351,7 +13420,7 @@ function PromoteMe({ myProfile, authUser, focus }) {
             <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
               {[{ v: "bio", t: "Use my bio" }, { v: "custom", t: "Custom text" }].map(({ v, t }) => (
                 <button key={v} onClick={() => setCaptionPref(v)}
-                  style={{ padding: "7px 14px", borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: "pointer", background: "rgba(176,146,98,0.05)", color: captionPref === v ? C.ivory : C.ivoryDim, border: captionPref === v ? `2px solid ${C.brass}` : `1px solid ${C.inkLine}` }}>{t}</button>
+                  style={{ padding: "7px 14px", borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: "pointer", background: warm("0.05"), color: captionPref === v ? C.ivory : C.ivoryDim, border: captionPref === v ? `2px solid ${C.brass}` : `1px solid ${C.inkLine}` }}>{t}</button>
               ))}
             </div>
             {captionPref === "custom" && (
@@ -13548,7 +13617,7 @@ function AdminScreen({ authUser, onlineCount }) {
               a visitor needs on the way in — so it lives here and nowhere
               else. The green dot is the same mark it always carried. */}
           {onlineCount != null && (
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 10, padding: "5px 12px", borderRadius: 999, background: "rgba(176,146,98,0.06)", border: `1px solid ${C.inkLine}`, fontSize: 12, color: C.ivoryDim }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 10, padding: "5px 12px", borderRadius: 999, background: warm("0.06"), border: `1px solid ${C.inkLine}`, fontSize: 12, color: C.ivoryDim }}>
               <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#1A9E6E", display: "inline-block", flexShrink: 0 }} />
               <span style={{ color: C.ivory, fontWeight: 600 }}>{onlineCount}</span> online now
             </span>
@@ -13559,7 +13628,7 @@ function AdminScreen({ authUser, onlineCount }) {
         <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
           {[{ v: "verifications", t: "Student verifications" }, { v: "conservatories", t: "Conservatories" }, { v: "tracks", t: "Recordings" }, { v: "promotions", t: "Promotions" }].map(({ v, t }) => (
             <button key={v} onClick={() => setSection(v)}
-              style={{ padding: "9px 18px", borderRadius: 999, fontSize: 13, fontWeight: 700, cursor: "pointer", background: section === v ? "linear-gradient(180deg, #EFD08A 0%, #DBAB4C 55%, #C9962E 100%)" : "rgba(176,146,98,0.07)", color: section === v ? C.brassText : C.ivoryDim, border: section === v ? "none" : `1px solid ${C.inkLine}` }}>{t}</button>
+              style={{ padding: "9px 18px", borderRadius: 999, fontSize: 13, fontWeight: 700, cursor: "pointer", background: section === v ? BRASS_GRAD : warm("0.07"), color: section === v ? C.brassText : C.ivoryDim, border: section === v ? "none" : `1px solid ${C.inkLine}` }}>{t}</button>
           ))}
         </div>
 
@@ -13571,7 +13640,7 @@ function AdminScreen({ authUser, onlineCount }) {
         <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
           {[{ v: "pending", t: `Pending (${pending.length})` }, { v: "history", t: `History (${decided.length})` }].map(({ v, t }) => (
             <button key={v} onClick={() => setTab(v)}
-              style={{ padding: "8px 16px", borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: "pointer", background: "rgba(176,146,98,0.05)", color: tab === v ? C.ivory : C.ivoryDim, border: tab === v ? `2px solid ${C.brass}` : `1px solid ${C.inkLine}` }}>{t}</button>
+              style={{ padding: "8px 16px", borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: "pointer", background: warm("0.05"), color: tab === v ? C.ivory : C.ivoryDim, border: tab === v ? `2px solid ${C.brass}` : `1px solid ${C.inkLine}` }}>{t}</button>
           ))}
         </div>
 
@@ -13589,7 +13658,7 @@ function AdminScreen({ authUser, onlineCount }) {
               <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: STATUS_COLOR[p.status] || C.ivoryDim }}>{p.status}</span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-              <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", padding: "2px 8px", borderRadius: 999, background: isFree ? "rgba(26,158,110,0.12)" : "rgba(176,146,98,0.12)", color: isFree ? "#1A9E6E" : C.brassLabel }}>
+              <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", padding: "2px 8px", borderRadius: 999, background: isFree ? "rgba(26,158,110,0.12)" : warm("0.12"), color: isFree ? "#1A9E6E" : C.brassLabel }}>
                 {isFree ? "Free spotlight" : "Paid €65"}
               </span>
               {isFree && p.slot_date && <span style={{ fontSize: 12, color: C.ivoryDim }}>Saturday {p.slot_date}</span>}
@@ -13607,11 +13676,11 @@ function AdminScreen({ authUser, onlineCount }) {
             {p.status === "pending" && (
               <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
                 <button onClick={() => approve(p)} style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "none", background: "#1A9E6E", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Approve</button>
-                <button onClick={() => rejectPromo(p)} style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)", color: C.burgundy, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Reject</button>
+                <button onClick={() => rejectPromo(p)} style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: `1px solid ${C.inkLine}`, background: warm("0.05"), color: C.burgundy, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Reject</button>
               </div>
             )}
             {p.status !== "pending" && (
-              <button onClick={() => setStatus(p, "pending")} style={{ marginTop: 12, padding: "7px 14px", borderRadius: 9, border: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)", color: C.ivoryDim, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Reset to pending</button>
+              <button onClick={() => setStatus(p, "pending")} style={{ marginTop: 12, padding: "7px 14px", borderRadius: 9, border: `1px solid ${C.inkLine}`, background: warm("0.05"), color: C.ivoryDim, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Reset to pending</button>
             )}
           </div>
           );
@@ -13714,13 +13783,13 @@ function AdminTrackList({ list, editable, card, names, busy, decide, removeTrack
                     Approve
                   </button>
                   <button disabled={busy === r.id} onClick={() => decide(r, "rejected")}
-                    style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)", color: C.burgundy, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                    style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: warm("0.05"), color: C.burgundy, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
                     Reject
                   </button>
                 </>
               ) : (
                 <button onClick={() => decide(r, "pending")}
-                  style={{ padding: "7px 12px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)", color: C.ivoryDim, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
+                  style={{ padding: "7px 12px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: warm("0.05"), color: C.ivoryDim, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
                   Reset
                 </button>
               )}
@@ -13972,7 +14041,7 @@ function AdminConservatories({ card }) {
   const chip = (on) => ({
     display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 10px", borderRadius: 999,
     border: `1px solid ${on ? "rgba(26,158,110,0.55)" : C.inkLine}`,
-    background: on ? "rgba(26,158,110,0.12)" : "rgba(176,146,98,0.07)",
+    background: on ? "rgba(26,158,110,0.12)" : warm("0.07"),
     color: on ? C.ivory : C.ivoryDim, fontSize: 12, fontWeight: 600, cursor: "pointer",
   });
 
@@ -14001,7 +14070,7 @@ function AdminConservatories({ card }) {
           // moment ago can be put back without retyping it.
           const universe = [...new Set([...c.builtIn, ...c.domains, ...d])];
           return (
-            <div key={c.id} style={{ border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: "11px 13px", background: "rgba(176,146,98,0.03)" }}>
+            <div key={c.id} style={{ border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: "11px 13px", background: warm("0.03") }}>
               <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
                 <p style={{ margin: 0, fontWeight: 700, color: C.ivory, fontSize: 14 }}>{c.name}</p>
                 {c.where && <p style={{ margin: 0, fontSize: 11.5, color: C.ivoryDim }}>{c.where}</p>}
@@ -14026,14 +14095,14 @@ function AdminConservatories({ card }) {
                   onChange={(e) => setAdding((x) => ({ ...x, [c.id]: e.target.value }))}
                   onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addDomain(c); } }}
                   placeholder="add a domain, e.g. stud.school.edu"
-                  style={{ flex: "1 1 180px", minWidth: 150, padding: "7px 10px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)", color: C.ivory, fontSize: 12, outline: "none" }}
+                  style={{ flex: "1 1 180px", minWidth: 150, padding: "7px 10px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: warm("0.05"), color: C.ivory, fontSize: 12, outline: "none" }}
                 />
-                <button onClick={() => addDomain(c)} style={{ padding: "7px 12px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)", color: C.ivoryDim, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Add</button>
+                <button onClick={() => addDomain(c)} style={{ padding: "7px 12px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: warm("0.05"), color: C.ivoryDim, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Add</button>
                 <button
                   onClick={() => save(c)}
                   disabled={!dirty(c) || busy === c.id}
                   style={{ padding: "7px 14px", borderRadius: 8, border: "none", fontSize: 12, fontWeight: 700,
-                    background: dirty(c) ? "linear-gradient(180deg, #EFD08A 0%, #DBAB4C 55%, #C9962E 100%)" : "rgba(176,146,98,0.05)",
+                    background: dirty(c) ? BRASS_GRAD : warm("0.05"),
                     color: dirty(c) ? C.brassText : C.ivoryDim, cursor: dirty(c) ? "pointer" : "not-allowed" }}
                 >{busy === c.id ? "Saving…" : "Save"}</button>
               </div>
@@ -14549,7 +14618,7 @@ function AdminVerifications({ card, STATUS_COLOR }) {
                         const suggested = looksLike(fieldVal(r, "conservatory_name"), fieldVal(r, "conservatory_address"));
                         if (!pick) {
                           return (
-                            <div style={{ padding: "9px 10px", borderRadius: 10, border: `1px solid ${suggested.length ? "rgba(239,208,155,0.35)" : C.inkLine}`, background: suggested.length ? "rgba(239,208,155,0.06)" : "rgba(176,146,98,0.05)" }}>
+                            <div style={{ padding: "9px 10px", borderRadius: 10, border: `1px solid ${suggested.length ? "rgba(239,208,155,0.35)" : C.inkLine}`, background: suggested.length ? "rgba(239,208,155,0.06)" : warm("0.05") }}>
                               <p style={{ margin: "0 0 3px", fontSize: 11, fontWeight: 700, color: C.brassLabel }}>
                                 {suggested.length ? "Looks like a school we already have" : "Which school is this?"}
                               </p>
@@ -14570,7 +14639,7 @@ function AdminVerifications({ card, STATUS_COLOR }) {
                                 <button
                                   key={k.id}
                                   onClick={() => choose(r, k)}
-                                  style={{ display: "block", width: "100%", textAlign: "left", marginBottom: 4, padding: "6px 8px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)", color: C.ivory, fontSize: 11.5, cursor: "pointer" }}
+                                  style={{ display: "block", width: "100%", textAlign: "left", marginBottom: 4, padding: "6px 8px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: warm("0.05"), color: C.ivory, fontSize: 11.5, cursor: "pointer" }}
                                 >
                                   {k.name}
                                   {k.where ? <span style={{ color: C.ivoryDim }}> · {k.where}</span> : null}
@@ -14595,7 +14664,7 @@ function AdminVerifications({ card, STATUS_COLOR }) {
                               <p style={{ margin: "6px 0 0", fontSize: 10.5, color: C.ivoryDim, lineHeight: 1.45 }}>
                                 Its domain joins that school. No new row.
                               </p>
-                              <button onClick={() => clearPick(r)} style={{ marginTop: 7, padding: "5px 9px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)", color: C.ivoryDim, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Change</button>
+                              <button onClick={() => clearPick(r)} style={{ marginTop: 7, padding: "5px 9px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: warm("0.05"), color: C.ivoryDim, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Change</button>
                             </div>
                           );
                         }
@@ -14607,7 +14676,7 @@ function AdminVerifications({ card, STATUS_COLOR }) {
                             <p style={{ margin: "2px 0 0", fontSize: 10.5, color: C.ivoryDim, lineHeight: 1.45 }}>
                               Use the school's own spelling. Every later request is matched against this.
                             </p>
-                            <button onClick={() => clearPick(r)} style={{ marginTop: 7, padding: "5px 9px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)", color: C.ivoryDim, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Change</button>
+                            <button onClick={() => clearPick(r)} style={{ marginTop: 7, padding: "5px 9px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: warm("0.05"), color: C.ivoryDim, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Change</button>
                           </div>
                         );
                       })()}
@@ -14631,7 +14700,7 @@ function AdminVerifications({ card, STATUS_COLOR }) {
                             disabled={busy === r.id || !ready}
                             onClick={() => decide(r, "approved")}
                             title={ready ? undefined : "Choose the school first"}
-                            style={{ padding: "8px 10px", borderRadius: 8, border: "none", background: ready ? "#1A9E6E" : "rgba(176,146,98,0.12)", color: ready ? "#fff" : C.ivoryDim, fontSize: 12, fontWeight: 700, cursor: ready ? "pointer" : "not-allowed" }}
+                            style={{ padding: "8px 10px", borderRadius: 8, border: "none", background: ready ? "#1A9E6E" : warm("0.12"), color: ready ? "#fff" : C.ivoryDim, fontSize: 12, fontWeight: 700, cursor: ready ? "pointer" : "not-allowed" }}
                           >Approve</button>
                         );
                       })()}
@@ -14645,7 +14714,7 @@ function AdminVerifications({ card, STATUS_COLOR }) {
                             disabled={busy === r.id || !has}
                             onClick={() => decide(r, "rejected")}
                             title={has ? undefined : "Write a reason first — it is sent to the applicant"}
-                            style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)", color: has ? C.burgundy : C.ivoryDim, fontSize: 12, fontWeight: 700, cursor: has ? "pointer" : "not-allowed" }}
+                            style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: warm("0.05"), color: has ? C.burgundy : C.ivoryDim, fontSize: 12, fontWeight: 700, cursor: has ? "pointer" : "not-allowed" }}
                           >Reject</button>
                         );
                       })()}
@@ -14695,7 +14764,7 @@ function AdminVerifications({ card, STATUS_COLOR }) {
                   ) : (
                     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                       <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: STATUS_COLOR[r.status] || C.ivoryDim }}>{r.status}</span>
-                      <button onClick={() => decide(r, "pending")} style={{ padding: "6px 8px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)", color: C.ivoryDim, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Reset</button>
+                      <button onClick={() => decide(r, "pending")} style={{ padding: "6px 8px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: warm("0.05"), color: C.ivoryDim, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Reset</button>
                     </div>
                   )}
                 </td>
@@ -15100,7 +15169,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
   }
 
   const RoomTabs = () => (
-    <div style={{ display: "flex", borderBottom: `1px solid ${C.inkLine}`, background: "rgba(176,146,98,0.05)" }}>
+    <div style={{ display: "flex", borderBottom: `1px solid ${C.inkLine}`, background: warm("0.05") }}>
       {tabs.map((t) => {
         const { id, label, Icon } = t;
         const on = activeTab === id;
@@ -15134,7 +15203,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
       {confirmRemoveId && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 600, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}
           onClick={() => setConfirmRemoveId(null)}>
-          <div style={{ background: "rgba(176,146,98,0.05)", borderRadius: 16, padding: 24, maxWidth: 340, width: "100%" }} onClick={e => e.stopPropagation()}>
+          <div style={{ background: warm("0.05"), borderRadius: 16, padding: 24, maxWidth: 340, width: "100%" }} onClick={e => e.stopPropagation()}>
             <p style={{ fontSize: 15, fontWeight: 700, color: C.ivory, margin: "0 0 10px" }}>Remove student?</p>
             <p style={{ fontSize: 13, color: C.ivoryDim, lineHeight: 1.6, margin: "0 0 20px" }}>
               Are you sure you want to remove this student? They will need to send you a new teaching request in order to connect again.
@@ -15193,7 +15262,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
                 {pageLearners.map((l) => (
                   <div key={l.id} style={{ position: "relative", display: "inline-flex" }}>
                     <button onClick={() => { setActiveLearner(l); setSelectedSessionId(null); setTab("chat"); }}
-                      style={{ padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: activeLearner?.id === l.id ? 700 : 500, border: activeLearner?.id === l.id ? `2px solid ${C.brass}` : "none", background: "rgba(176,146,98,0.05)", color: activeLearner?.id === l.id ? C.ivory : C.ivoryDim, cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.06)" }}>
+                      style={{ padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: activeLearner?.id === l.id ? 700 : 500, border: activeLearner?.id === l.id ? `2px solid ${C.brass}` : "none", background: warm("0.05"), color: activeLearner?.id === l.id ? C.ivory : C.ivoryDim, cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.06)" }}>
                       {l.name.split(" ")[0]}
                     </button>
                     <button onClick={(e) => { e.stopPropagation(); setConfirmRemoveId(l.id); }}
@@ -15222,7 +15291,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
         })()}
         {/* Active learner info */}
         {activeLearner ? (
-        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", background: "rgba(176,146,98,0.05)", borderRadius: 12, border: "none", boxShadow: "0 1px 6px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04)", marginBottom: 16, marginTop: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", background: warm("0.05"), borderRadius: 12, border: "none", boxShadow: "0 1px 6px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04)", marginBottom: 16, marginTop: 0 }}>
           <Avatar name={activeLearner.name} id={activeLearner.id} size={40} online />
           <div>
             <p style={{ fontSize: 14, fontWeight: 700, color: C.ivory, margin: 0 }}>{activeLearner.name}</p>
@@ -15238,7 +15307,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
       {/* ── Teaching Preferences ── */}
       {roomView === "preferences" && (
         <div>
-        <div style={{ margin: "0 20px 20px", background: "rgba(176,146,98,0.05)", borderRadius: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06)", overflow: "hidden" }}>
+        <div style={{ margin: "0 20px 20px", background: warm("0.05"), borderRadius: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06)", overflow: "hidden" }}>
           <RoomTabs />
         <div style={{ padding: "24px 20px" }}>
           {/* The cancellation and modification windows are platform policy
@@ -15290,7 +15359,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
         const STATUS_COLOR = { confirmed: "#1A9E6E", teacher_proposed: C.brass, student_proposed: "#E07B00", cancelled: "#c0392b", no_show: C.burgundy };
         return (
           <div>
-          <div style={{ margin: "0 20px 20px", background: "rgba(176,146,98,0.05)", borderRadius: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06)", overflow: "hidden" }}>
+          <div style={{ margin: "0 20px 20px", background: warm("0.05"), borderRadius: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06)", overflow: "hidden" }}>
             <RoomTabs />
           </div>
           <div style={{ padding: "0 20px 32px" }}>
@@ -15346,7 +15415,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
                             ? `€${euroAmount(pay.gross_amount_cents)} − €${euroAmount(pay.commission_cents)} Artium`
                             : null;
                           return (
-                            <tr key={i} style={{ borderBottom: `1px solid ${C.inkLine}`, background: i % 2 === 0 ? "transparent" : "rgba(176,146,98,0.05)" }}>
+                            <tr key={i} style={{ borderBottom: `1px solid ${C.inkLine}`, background: i % 2 === 0 ? "transparent" : warm("0.05") }}>
                               <td style={{ padding: "9px 12px" }}>
                                 <div onClick={() => { setActiveLearner(allLearners.find(l => l.id === sess.student.id) || allLearners[0]); setRoomView("students"); setSelectedSessionId(null); setTab("chat"); }}
                                   style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
@@ -15386,7 +15455,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
       {/* Inner tab bar — students view only, and only once a student exists */}
       {roomView === "students" && activeLearner && (
         <React.Fragment> {/* Inner tab bar */}
-      <div style={{ margin: "0 20px 20px", background: "rgba(176,146,98,0.05)", borderRadius: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06)", overflow: "hidden", minHeight: 320 }}>
+      <div style={{ margin: "0 20px 20px", background: warm("0.05"), borderRadius: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06)", overflow: "hidden", minHeight: 320 }}>
       <RoomTabs />
 
       {/* Chat */}
@@ -15401,7 +15470,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
             ))}
           </div>
           <div className="px-3 py-3 flex items-center gap-2" style={{ borderTop: `1px solid ${C.inkLine}` }}>
-            <input style={{ flex: 1, background: "rgba(176,146,98,0.05)", border: "1px solid rgba(255,255,255,0.10)", borderRadius: 999, padding: "11px 15px", fontSize: 14, color: C.ivory, outline: "none" }}
+            <input style={{ flex: 1, background: warm("0.05"), border: "1px solid rgba(255,255,255,0.10)", borderRadius: 999, padding: "11px 15px", fontSize: 14, color: C.ivory, outline: "none" }}
               placeholder={`Message ${activeLearner.name.split(" ")[0]}…`}
               onKeyDown={(e) => { if (e.key === "Enter" && e.target.value.trim()) { sendMsg(e.target.value); e.target.value = ""; } }} />
             <button onClick={(e) => { const inp = e.currentTarget.previousSibling; if (inp.value.trim()) { sendMsg(inp.value); inp.value = ""; } }}
@@ -15432,7 +15501,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
                   <Plus size={14} /> Propose a session
                 </button>
               ) : (
-                <div style={{ background: "rgba(176,146,98,0.05)", border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: 16, marginBottom: 14 }}>
+                <div style={{ background: warm("0.05"), border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: 16, marginBottom: 14 }}>
                   <p style={{ fontSize: 13, fontWeight: 600, color: C.ivory, margin: "0 0 10px" }}>Propose a time for {activeLearner.name.split(" ")[0]}</p>
                   <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
                     <input type="date" value={newDate} onChange={(e) => setNewDate(e.target.value)}
@@ -15490,7 +15559,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
                 return (
                   <button key={s.id} onClick={() => setSelectedSessionId(isSelected ? null : s.id)}
                     ref={isSelected ? (el) => { if (el) try { el.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" }); } catch { /* older Safari */ } } : undefined}
-                    style={{ flexShrink: 0, width: 110, height: 110, borderRadius: 14, border: isSelected ? `2px solid ${C.brass}` : `1px solid ${isConfirmed ? "#A8D5B5" : C.inkLine}`, background: isConfirmed ? "rgba(26,158,110,0.10)" : "rgba(176,146,98,0.06)", display: "flex", flexDirection: "column", alignItems: "flex-start", justifyContent: "space-between", padding: 12, cursor: "pointer", boxShadow: isSelected ? `0 0 0 3px ${C.brassDim}` : "none", transition: "box-shadow 0.15s" }}>
+                    style={{ flexShrink: 0, width: 110, height: 110, borderRadius: 14, border: isSelected ? `2px solid ${C.brass}` : `1px solid ${isConfirmed ? "#A8D5B5" : C.inkLine}`, background: isConfirmed ? "rgba(26,158,110,0.10)" : warm("0.06"), display: "flex", flexDirection: "column", alignItems: "flex-start", justifyContent: "space-between", padding: 12, cursor: "pointer", boxShadow: isSelected ? `0 0 0 3px ${C.brassDim}` : "none", transition: "box-shadow 0.15s" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", width: "100%", alignItems: "center" }}>
                       <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: isConfirmed ? "#1A9E6E" : "#D4810A" }}>
                         {isConfirmed ? "Confirmed" : s.status === "student_counter" ? "Counter" : "Pending"}
@@ -15697,7 +15766,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
       {confirmCancelId !== null && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(10,20,40,0.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999 }}
           onClick={() => setConfirmCancelId(null)}>
-          <div style={{ background: "rgba(176,146,98,0.05)", borderRadius: 16, padding: "28px 28px 24px", maxWidth: 320, width: "90%", boxShadow: "0 8px 32px rgba(0,0,0,0.18)", textAlign: "center" }}
+          <div style={{ background: warm("0.05"), borderRadius: 16, padding: "28px 28px 24px", maxWidth: 320, width: "90%", boxShadow: "0 8px 32px rgba(0,0,0,0.18)", textAlign: "center" }}
             onClick={(e) => e.stopPropagation()}>
             <p style={{ fontSize: 16, fontWeight: 700, color: C.inkText, margin: "0 0 8px" }}>Cancel this session?</p>
             <p style={{ fontSize: 13, color: C.ivoryDim, margin: "0 0 20px", lineHeight: 1.5 }}>Are you sure you want to cancel? This cannot be undone.</p>
