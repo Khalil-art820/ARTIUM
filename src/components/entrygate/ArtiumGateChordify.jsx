@@ -62,7 +62,7 @@ function InstallAppBanner() {
   return (
     <section className="cg-app" aria-label="Get the Artium app">
       <div className="cg-app-in">
-        <h2>Want Artium one tap away?</h2>
+        <h2>Want <ArtiumWord /> one tap away?</h2>
         <div className="cg-app-btns">
           {order.map((t) => (
             <button key={t} type="button" className="cg-app-btn" onClick={() => getApp(t)} aria-expanded={help === t}>{label[t]}</button>
@@ -81,11 +81,20 @@ function InstallAppBanner() {
             )}
           </p>
         )}
-        <p className="cg-app-for">Artium for iPhone and Android</p>
+        <p className="cg-app-for"><ArtiumWord /> for iPhone and Android</p>
       </div>
     </section>
   );
 }
+// The top bar's wordmark, inline in running text.
+const ArtiumWord = () => (
+  <span className="cg-word cg-word-inline" role="img" aria-label="Artium">
+    <svg className="cg-lambda" viewBox="0 0 15 15" aria-hidden="true">
+      <path d="M7.5 0.9 L1.4 14.4 M7.5 0.9 L13.6 14.4" stroke="currentColor" strokeWidth="2.85" fill="none" />
+    </svg>
+    <span aria-hidden="true">RTIUM</span>
+  </span>
+);
 const ShareGlyph = () => (
   <svg className="cg-app-share" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-label="Share">
     <path d="M12 3v12M7.5 7.5 12 3l4.5 4.5" /><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7" />
