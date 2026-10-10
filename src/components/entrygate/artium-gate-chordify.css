@@ -244,3 +244,5 @@
 .cgate .cg-word.cg-word-inline{font-weight:800;margin:0 .14em 0 .2em;letter-spacing:.16em}
 .cgate .cg-word.cg-word-inline .cg-lambda path{stroke-width:3.6}
 .cgate .cg-app h2{max-width:none;white-space:nowrap;font-size:clamp(17px,5.4vw,24px)}
+/* Sit the wordmark on the sentence's baseline. */
+.cgate .cg-word.cg-word-inline{vertical-align:-.1em}
