@@ -17,7 +17,7 @@ export default defineConfig({
         description: "Connect with conservatory musicians worldwide",
         // Android paints its bottom system bar from this; the top status bar
         // follows the page's theme-color meta (teal) instead.
-        theme_color: "#FFFFFF",
+        theme_color: "#000000",
         background_color: "#086868",
         display: "standalone",
         orientation: "portrait",

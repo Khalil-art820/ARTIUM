@@ -512,3 +512,11 @@ html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button:hover:not([data-
 html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern::after{
   content:"";position:absolute;left:0;right:0;top:100%;height:120px;background:#FFFFFF;pointer-events:none;
 }
+/* Black bar with white icons, so it runs straight into the phone's own
+   black navigation strip; the selected tab in a green bright enough for black. */
+html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern{background:#000000;border-top:1px solid #000000}
+html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern::after{background:#000000}
+html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button{color:#FFFFFF}
+html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button[data-on="1"]{color:#3FC1AE}
+html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button::after{background:#3FC1AE}
+html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button:hover:not([data-on="1"]){background:#161616}
