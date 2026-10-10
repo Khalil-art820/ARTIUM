@@ -221,16 +221,15 @@
 .cgate .cg-avatar > div{width:34px!important;height:34px!important}
 .cgate .cg-avatar > div img{border:0!important}
 /* ---- Get the app (Chordify's app banner) ---- */
-.cgate .cg-app{position:relative;margin:0 -12px;overflow:hidden;color:#fff;text-align:center;
-  background:#0B0B0B url(/gate-hall.webp) center 26%/cover no-repeat}
-.cgate .cg-app::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.18),rgba(0,0,0,.5))}
-.cgate .cg-app-in{position:relative;padding:56px 24px 44px;display:flex;flex-direction:column;align-items:center}
-.cgate .cg-app h2{color:#fff;margin:0;max-width:14em;font-size:28px;line-height:1.25;font-weight:600;letter-spacing:-.01em;text-shadow:0 1px 12px rgba(0,0,0,.45)}
-.cgate .cg-app-btn{margin-top:24px;background:#086868;color:#fff;font-size:17px;font-weight:600;border-radius:8px;padding:13px 28px;
-  box-shadow:0 6px 18px -6px rgba(0,0,0,.6);transition:background .15s}
-.cgate .cg-app-btn:hover{background:#2E7F7F}
-.cgate .cg-app-help{margin:16px 0 0;max-width:22em;font-size:15px;line-height:1.5;background:rgba(255,255,255,.12);
-  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.18);border-radius:10px;padding:12px 16px}
+.cgate .cg-app{position:relative;margin:4px -12px;overflow:hidden;color:#fff;text-align:center;
+  background:#6E6A66 url(/gate-hero.jpg) center 24%/cover no-repeat}
+/* Chordify's muted, greyed photo: a soft dark veil, not a blackout. */
+.cgate .cg-app::before{content:"";position:absolute;inset:0;background:rgba(48,46,44,.42)}
+.cgate .cg-app-in{position:relative;min-height:340px;padding:64px 24px 40px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.cgate .cg-app h2{color:#fff;margin:0;max-width:13em;font-size:27px;line-height:1.3;font-weight:600;text-shadow:0 1px 6px rgba(0,0,0,.25)}
+.cgate .cg-app-btn{margin-top:26px;background:#2E7F7F;color:#fff;font-size:16.5px;font-weight:600;border-radius:6px;padding:12px 22px;transition:background .15s}
+.cgate .cg-app-btn:hover{background:#086868}
+.cgate .cg-app-help{margin:14px 0 0;max-width:22em;font-size:14.5px;line-height:1.5;background:rgba(0,0,0,.28);border-radius:6px;padding:10px 14px}
 .cgate .cg-app-share{display:inline-block;vertical-align:-2px}
-.cgate .cg-app-for{margin:24px 0 0;font-size:16px;font-weight:600;opacity:.92;text-shadow:0 1px 8px rgba(0,0,0,.5)}
-@media (min-width:744px){.cgate .cg-app{margin:0;border-radius:12px}}
+.cgate .cg-app-for{margin:26px 0 0;font-size:16.5px;font-weight:600;text-shadow:0 1px 6px rgba(0,0,0,.3)}
+@media (min-width:744px){.cgate .cg-app{margin:4px 0;border-radius:12px}}

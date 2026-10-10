@@ -43,6 +43,7 @@ function InstallAppBanner() {
   }, []);
   if (installState.installed) return null;
   const platform = platformOf();
+  const device = platform === "ios" ? "iPhone" : platform === "android" ? "Android" : null;
   async function getApp() {
     const p = installState.prompt;
     if (p) {
@@ -60,7 +61,7 @@ function InstallAppBanner() {
     <section className="cg-app" aria-label="Get the Artium app">
       <div className="cg-app-in">
         <h2>Want Artium one tap away?</h2>
-        <button type="button" className="cg-app-btn" onClick={getApp} aria-expanded={help}>Get the app</button>
+        <button type="button" className="cg-app-btn" onClick={getApp} aria-expanded={help}>{device ? `Get the ${device} app` : "Get the app"}</button>
         {help && (
           <p className="cg-app-help">
             {platform === "ios" ? (
@@ -72,7 +73,7 @@ function InstallAppBanner() {
             )}
           </p>
         )}
-        <p className="cg-app-for">Artium for iPhone and Android</p>
+        <p className="cg-app-for">{device ? `Artium for ${device}` : "Artium for iPhone and Android"}</p>
       </div>
     </section>
   );
