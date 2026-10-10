@@ -507,3 +507,8 @@ html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button::after{
 }
 html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button[data-on="1"]::after{transform:scaleX(1)}
 html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button:hover:not([data-on="1"]){background:#F4F5F7}
+/* White runs on past the bar's bottom edge, so wherever the page is drawn
+   under the phone's gesture bar it is the bar's white, not a dark strip. */
+html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern::after{
+  content:"";position:absolute;left:0;right:0;top:100%;height:120px;background:#FFFFFF;pointer-events:none;
+}

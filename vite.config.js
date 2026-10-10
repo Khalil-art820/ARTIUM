@@ -15,7 +15,9 @@ export default defineConfig({
         name: "Artium — A World Connected by Music",
         short_name: "Artium",
         description: "Connect with conservatory musicians worldwide",
-        theme_color: "#086868",
+        // Android paints its bottom system bar from this; the top status bar
+        // follows the page's theme-color meta (teal) instead.
+        theme_color: "#FFFFFF",
         background_color: "#086868",
         display: "standalone",
         orientation: "portrait",
