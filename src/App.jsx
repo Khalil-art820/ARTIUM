@@ -2370,6 +2370,13 @@ export default function App() {
   const [appTab, setAppTab] = useState(() => localStorage.getItem("artium_app_tab") || "map");
   const setAppTabPersist = (tab) => { localStorage.setItem("artium_app_tab", tab); setAppTab(tab); };
   const [teacherRoomView, setTeacherRoomView] = useState("students");
+  // A bell row asking the teacher's lesson room to open one learner's session.
+  const [teacherFocus, setTeacherFocus] = useState(null);
+  const goToTeacherSession = (learnerId, sessionId) => {
+    setTeacherRoomView("students");
+    setTeacherFocus({ learnerId, sessionId, at: Date.now() });
+    setScreen("app"); setAppTabPersist("lessons");
+  };
   // The pianist's side of "Find a Concert Pianist" — a booking inbox that
   // only ever exists for someone who plays piano, mirroring how Lessons only
   // shows up for someone who teaches.
@@ -4959,6 +4966,7 @@ export default function App() {
           hireCount={pianistAttentionCount}
           hireIds={pianistAttentionIds}
           onGoToLessonRoom={() => { setScreen("app"); setAppTabPersist("lessons"); }}
+          onGoToSession={goToTeacherSession}
           onGoToConcerts={() => { setScreen("app"); setAppTabPersist("concerts"); }}
           onGoToComposers={() => setScreen("composers")}
           onGoToNews={() => {}}
@@ -5042,7 +5050,7 @@ export default function App() {
         />
       )}
 
-      {view === "landing" && <Landing onApply={pianistEntry ? () => { setAuthError(""); setScreen("hirerSignup"); } : startApply} onBack={backToEntry} onPreview={startPreview} onProfile={goToProfile} onLogin={startLogin} myProfile={myProfile} studentLoggedOut={studentLoggedOut} musicOn={musicPlaying} onMusicToggle={toggleMusic} error={authError} onGoToLessonRoom={() => { setScreen("app"); setAppTabPersist("lessons"); }} onGoToPromote={(kind) => { setScreen("app"); setAppTabPersist("promote"); setPromoteFocus({ kind: kind || null, at: Date.now() }); }} studentsByCons={studentsByCons} avatarPhotoUrl={accountPhotoUrl} avatarName={accountName} hireCount={pianistAttentionCount} hireIds={pianistAttentionIds} onGoToConcerts={() => { setScreen("app"); setAppTabPersist("concerts"); }} onGoToComposers={() => setScreen("composers")} authUser={authUser} isAdmin={isAdmin} onGoToAdmin={() => { setScreen("app"); setAppTabPersist("admin"); }} />}
+      {view === "landing" && <Landing onApply={pianistEntry ? () => { setAuthError(""); setScreen("hirerSignup"); } : startApply} onBack={backToEntry} onPreview={startPreview} onProfile={goToProfile} onLogin={startLogin} myProfile={myProfile} studentLoggedOut={studentLoggedOut} musicOn={musicPlaying} onMusicToggle={toggleMusic} error={authError} onGoToLessonRoom={() => { setScreen("app"); setAppTabPersist("lessons"); }} onGoToSession={goToTeacherSession} onGoToPromote={(kind) => { setScreen("app"); setAppTabPersist("promote"); setPromoteFocus({ kind: kind || null, at: Date.now() }); }} studentsByCons={studentsByCons} avatarPhotoUrl={accountPhotoUrl} avatarName={accountName} hireCount={pianistAttentionCount} hireIds={pianistAttentionIds} onGoToConcerts={() => { setScreen("app"); setAppTabPersist("concerts"); }} onGoToComposers={() => setScreen("composers")} authUser={authUser} isAdmin={isAdmin} onGoToAdmin={() => { setScreen("app"); setAppTabPersist("admin"); }} />}
       {view === "landing" && (
         <BottomTabs
           modern={MODERN}
@@ -5159,6 +5167,7 @@ export default function App() {
                     hireCount={pianistAttentionCount}
                     hireIds={pianistAttentionIds}
                     onGoToLessonRoom={() => { setSelectedStudentId(null); setAppTabPersist("lessons"); }}
+                    onGoToSession={(lid, sid) => { setSelectedStudentId(null); goToTeacherSession(lid, sid); }}
                     onGoToConcerts={() => { setSelectedStudentId(null); setAppTabPersist("concerts"); }}
                     onGoToPromote={(kind) => { setSelectedStudentId(null); setAppTabPersist("promote"); setPromoteFocus({ kind: kind || null, at: Date.now() }); }}
                     onGoToComposers={() => setScreen("composers")}
@@ -5388,7 +5397,7 @@ export default function App() {
           {appTab === "lessons" && !selectedStudentId && myProfile && (
             <>
               {netHeaderWith(null)}
-              <TeacherLessonRoom teacherId={myProfile.id} roomView={teacherRoomView} setRoomView={setTeacherRoomView} />
+              <TeacherLessonRoom teacherId={myProfile.id} roomView={teacherRoomView} setRoomView={setTeacherRoomView} focus={teacherFocus} />
             </>
           )}
           {appTab === "concerts" && !selectedStudentId && myProfile && isPianistUser && (
@@ -5618,7 +5627,7 @@ const IconMegaphone = (p) => (
   </IconBox>
 );
 
-function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, studentLoggedOut, musicOn, onMusicToggle, error, onGoToPromote, onGoToLessonRoom, studentsByCons, hireCount = 0, hireIds = [], onGoToConcerts, onGoToComposers, authUser, isAdmin, onGoToAdmin, avatarPhotoUrl, avatarName }) {
+function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, studentLoggedOut, musicOn, onMusicToggle, error, onGoToPromote, onGoToLessonRoom, onGoToSession, studentsByCons, hireCount = 0, hireIds = [], onGoToConcerts, onGoToComposers, authUser, isAdmin, onGoToAdmin, avatarPhotoUrl, avatarName }) {
   const memberCount = Object.values(studentsByCons).flat().length;
   const steps = [
     { n: "1", t: "Build your profile", Icon: IconProfileDoc,
@@ -5700,6 +5709,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
               hireCount={hireCount}
               hireIds={hireIds}
               onGoToLessonRoom={onGoToLessonRoom}
+              onGoToSession={onGoToSession}
               onGoToConcerts={onGoToConcerts}
               onGoToComposers={onGoToComposers}
               onGoToNews={() => {}}
@@ -9074,12 +9084,15 @@ function dbRowToSession(row) {
     status: row.status,
     proposedBy: row.proposed_by === "learner" ? "student" : "teacher",
     paid: row.paid,
+    // Set when the learner counter-proposes: the time it replaced, so the
+    // teacher sees what changed rather than a silently different card.
+    changedFrom: row.details?.changed_from || null,
   };
 }
 async function fetchLessonSessions(teacherId, learnerId) {
   if (!teacherId || !learnerId) return [];
   const { data, error } = await supabase.from("lesson_sessions")
-    .select("id, session_date, session_time, status, proposed_by, paid")
+    .select("id, session_date, session_time, status, proposed_by, paid, details")
     .eq("teacher_id", teacherId).eq("learner_id", learnerId)
     .order("session_date", { ascending: true });
   if (error || !data) return [];
@@ -9090,7 +9103,7 @@ async function fetchLessonSessions(teacherId, learnerId) {
 async function fetchLessonSessionsForTeacher(teacherId) {
   if (!teacherId) return {};
   const { data, error } = await supabase.from("lesson_sessions")
-    .select("id, learner_id, session_date, session_time, status, proposed_by, paid")
+    .select("id, learner_id, session_date, session_time, status, proposed_by, paid, details")
     .eq("teacher_id", teacherId)
     .order("session_date", { ascending: true });
   if (error || !data) return {};
@@ -9103,7 +9116,7 @@ async function fetchLessonSessionsForTeacher(teacherId) {
 async function fetchLessonSessionsForLearner(learnerId) {
   if (!learnerId) return {};
   const { data, error } = await supabase.from("lesson_sessions")
-    .select("id, teacher_id, session_date, session_time, status, proposed_by, paid")
+    .select("id, teacher_id, session_date, session_time, status, proposed_by, paid, details")
     .eq("learner_id", learnerId)
     .order("session_date", { ascending: true });
   if (error || !data) return {};
@@ -9222,7 +9235,7 @@ function NotifShell({ onClose, onMarkAll, panelStyle, header, children }) {
   );
 }
 
-function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGoToAdmin, networkFeeds, puck, hireCount = 0, hireIds = [], onGoToConcerts, onGoToComposers, onGoToNews, onGoToPromote }) {
+function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGoToAdmin, networkFeeds, puck, hireCount = 0, hireIds = [], onGoToConcerts, onGoToComposers, onGoToNews, onGoToPromote, onGoToSession }) {
   const [open, setOpen] = React.useState(false);
   const [viewingLearner, setViewingLearner] = React.useState(null);
   const [pending, setPending] = React.useState([]); // filled by the DB loader below
@@ -9263,6 +9276,11 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
   const [seenNewsTs, setSeenNewsTs] = React.useState(() => readTs("artium_seen_news_v1"));
   const [ackComposersTs, setAckComposersTs] = React.useState(() => readTs("artium_ackts_composers_v1"));
   const [ackNewsTs, setAckNewsTs] = React.useState(() => readTs("artium_ackts_news_v1"));
+  // Learners' counter-proposals waiting on this teacher. Keyed by
+  // id:date:time so a learner changing the time again notifies again.
+  const [counters, setCounters] = React.useState([]);
+  const [ackCounterKeys, setAckCounterKeys] = React.useState(() => readAckIds("artium_ack_counters_v1"));
+  const counterKeyOf = (c) => `${c.id}:${c.date}:${c.time}`;
   const ref = React.useRef(null);
 
   function stampTs(key, setter) {
@@ -9282,6 +9300,9 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
     } catch { /* private mode */ }
     setAckTeachIds(teachIds);
     setAckHireIds(hireIds);
+    const counterKeys = counters.map(counterKeyOf);
+    try { localStorage.setItem("artium_ack_counters_v1", JSON.stringify(counterKeys)); } catch { /* private mode */ }
+    setAckCounterKeys(counterKeys);
     if (includePromos) {
       const promoKeys = myPromoDecisions.map((p) => promoKeyOf(p));
       try { localStorage.setItem("artium_ack_mypromo_v1", JSON.stringify(promoKeys)); } catch { /* private mode */ }
@@ -9319,6 +9340,28 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
     const t = setInterval(load, 15000);
     return () => { alive = false; clearInterval(t); };
   }, [networkFeeds, authUser?.id]);
+
+  React.useEffect(() => {
+    if (!networkFeeds || !myProfile?.id) return;
+    let live = true;
+    async function load() {
+      try {
+        const { data, error } = await supabase.from("lesson_sessions")
+          .select("id, learner_id, session_date, session_time, details")
+          .eq("teacher_id", myProfile.id).eq("status", "student_proposed");
+        if (!live || error || !data) return;
+        const names = {};
+        if (data.length) (await fetchIncomingTeachRequests(myProfile.id)).forEach((r) => { names[r.learnerId] = r.name; });
+        if (live) setCounters(data.map((r) => ({
+          id: r.id, learnerId: r.learner_id, name: names[r.learner_id] || "A learner",
+          date: r.session_date, time: r.session_time, changedFrom: r.details?.changed_from || null,
+        })));
+      } catch { /* defensive */ }
+    }
+    load();
+    const t = setInterval(load, 15000);
+    return () => { live = false; clearInterval(t); };
+  }, [networkFeeds, myProfile?.id]);
 
   // Admin-only: pending promotion submissions.
   React.useEffect(() => {
@@ -9384,7 +9427,8 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
   const promoKeyOf = (p) => `${p.id}:${p.status}:${p.decided_at || ""}`;
   const newPromoDecisions = myPromoDecisions.filter((p) => !ackPromoKeys.includes(promoKeyOf(p)));
   const newTrackDecisions = myTrackDecisions.filter((p) => !ackTrackKeys.includes(promoKeyOf(p)));
-  const feedTotal = newTeachCount + newHireCount + composerBadgeCount + newsBadgeCount + newPromoDecisions.length + newTrackDecisions.length;
+  const newCounterCount = counters.filter((c) => !ackCounterKeys.includes(counterKeyOf(c))).length;
+  const feedTotal = newCounterCount + newTeachCount + newHireCount + composerBadgeCount + newsBadgeCount + newPromoDecisions.length + newTrackDecisions.length;
   const totalCount = networkFeeds ? feedTotal : pending.length + promoPending.length;
 
   // A ~40px tinted tile, its icon, a title over a status line, and a
@@ -9559,6 +9603,36 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
                       </p>
                       <p className="tm-nsub" style={{ margin: "2px 0 0", fontSize: 13, color: C.ivoryDim, lineHeight: 1.3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                         {approved ? `"${p.title || "Untitled"}" now plays on Artium Radio` : "Open Promote for the reason"}
+                      </p>
+                    </span>
+                  </button>
+                );
+              })}
+              {/* A learner moved a proposed lesson time — the row stays while
+                  the counter awaits an answer, and opens that session. */}
+              {counters.map((c) => {
+                const key = counterKeyOf(c);
+                const label = (d, t) => `${new Date(d + "T00:00").toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })} at ${t}`;
+                return (
+                  <button key={`ctr-${key}`}
+                    className={`tm-nrow${ackCounterKeys.includes(key) ? "" : " is-unread"}`}
+                    onClick={() => {
+                      const next = Array.from(new Set([...ackCounterKeys, key]));
+                      try { localStorage.setItem("artium_ack_counters_v1", JSON.stringify(next)); } catch { /* private mode */ }
+                      setAckCounterKeys(next);
+                      setOpen(false);
+                      if (onGoToSession) onGoToSession(c.learnerId, c.id); else if (onGoToLessonRoom) onGoToLessonRoom();
+                    }}
+                    style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, textAlign: "left", padding: "13px 16px", border: "none", borderBottom: `1px solid ${C.inkLine}`, background: "transparent", cursor: "pointer", fontFamily: FONT_BODY }}>
+                    <span className="tm-ntile" style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, background: "rgba(232,134,46,0.14)", color: AMBER_C, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <Calendar size={18} strokeWidth={2} />
+                    </span>
+                    <span style={{ flex: 1, minWidth: 0 }}>
+                      <p className="tm-ntitle" style={{ margin: 0, fontSize: 15, fontWeight: 600, color: C.ivory, lineHeight: 1.3 }}>
+                        {c.name.split(" ")[0]} suggested a new lesson time
+                      </p>
+                      <p className="tm-nsub" style={{ margin: "2px 0 0", fontSize: 13, color: C.ivoryDim, lineHeight: 1.3 }}>
+                        Now {label(c.date, c.time)}{c.changedFrom ? ` · was ${label(c.changedFrom.date, c.changedFrom.time)}` : ""}
                       </p>
                     </span>
                   </button>
@@ -12460,11 +12534,26 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
   function submitCounter(id) {
     const d = counterDate[id]; const t = counterTime[id];
     if (!d || !t) return;
-    const next = sessions.map((s) => s.id === id ? { ...s, date: d, time: t, status: "student_proposed", proposedBy: "student" } : s);
+    const before = sessions.find((s) => s.id === id);
+    // Re-countering your own counter keeps the teacher's time as the
+    // "was", since that is the one the teacher last agreed to look at.
+    const changedFrom = before
+      ? (before.status === "student_proposed" && before.changedFrom ? before.changedFrom : { date: before.date, time: before.time })
+      : null;
+    const next = sessions.map((s) => s.id === id ? { ...s, date: d, time: t, status: "student_proposed", proposedBy: "student", changedFrom } : s);
     persistSessions(next);
     setShowCounter((prev) => ({ ...prev, [id]: false }));
-    supabase.from("lesson_sessions").update({ session_date: d, session_time: t, status: "student_proposed", proposed_by: "learner" }).eq("id", id).then(({ error }) => {
-      if (error) console.error("submitCounter", error.message);
+    supabase.from("lesson_sessions").update({
+      session_date: d, session_time: t, status: "student_proposed", proposed_by: "learner",
+      details: { changed_from: changedFrom, changed_at: new Date().toISOString() },
+    }).eq("id", id).then(({ error }) => {
+      if (error) { console.error("submitCounter", error.message); return; }
+      if (!authUser?.id || !teacher?.id || !changedFrom) return;
+      const label = (dd, tt) => `${new Date(dd + "T00:00").toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })} at ${tt}`;
+      supabase.from("direct_messages").insert({
+        sender_id: authUser.id, recipient_id: teacher.id,
+        body: `I suggested a new time for our lesson: ${label(d, t)} (instead of ${label(changedFrom.date, changedFrom.time)}).`,
+      }).then(({ error: e2 }) => { if (e2) console.error("submitCounter notice", e2.message); });
     });
   }
 
@@ -14877,7 +14966,7 @@ function AdminVerifications({ card, STATUS_COLOR }) {
   );
 }
 
-function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
+function TeacherLessonRoom({ teacherId, roomView, setRoomView, focus }) {
   // teacherId is only ever passed as myProfile.id (see the one call site),
   // which only exists for a real signed-in profile — always a real uuid here.
   const tid = teacherId;
@@ -15028,6 +15117,19 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
   const [zoomSaved, setZoomSaved] = useState(false);
   const [agendaBySession, setAgendaBySession] = useState({});
   const [sessionDetailTab, setSessionDetailTab] = useState({});
+  // Arriving from a bell row: open that learner, Schedule & Payments, and the
+  // session itself — once the learner list has loaded.
+  const appliedFocusRef = React.useRef(null);
+  React.useEffect(() => {
+    if (!focus?.learnerId || appliedFocusRef.current === focus.at) return;
+    const l = allLearners.find((x) => x.id === focus.learnerId);
+    if (!l) return;
+    appliedFocusRef.current = focus.at;
+    setRoomView && setRoomView("students");
+    setActiveLearner(l);
+    setTab("schedule");
+    setSelectedSessionId(focus.sessionId || null);
+  }, [focus?.at, allLearners.length]);
   const [agendaDraft, setAgendaDraft] = useState({});
   // agenda_notes is the source of truth, written through below and
   // mirrored into agendaBySession so the textarea reads the same state.
@@ -15150,7 +15252,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
     // id wouldn't match anything a later approve/counter/cancel tried to
     // update or delete by id.
     const rows = dates.map((dateStr) => ({ teacher_id: tid, learner_id: activeLearner.id, session_date: dateStr, session_time: newTime, status: "teacher_proposed", proposed_by: "teacher", paid: false }));
-    supabase.from("lesson_sessions").insert(rows).select("id, session_date, session_time, status, proposed_by, paid").then(({ data, error }) => {
+    supabase.from("lesson_sessions").insert(rows).select("id, session_date, session_time, status, proposed_by, paid, details").then(({ data, error }) => {
       if (error) { console.error("proposeSession", error.message); setProposeErr(error.message); return; }
       setProposeErr("");
       const inserted = (data || []).map(dbRowToSession);
@@ -15681,6 +15783,18 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView }) {
                   {isCounter && !showingCounter && (
                     <div style={{ marginBottom: 10 }}>
                       <p style={{ fontSize: 11, color: C.brassLabel, margin: "0 0 8px" }}>{activeLearner.name.split(" ")[0]} suggested this time — awaiting your response</p>
+                      {sel.changedFrom && (sel.changedFrom.date !== sel.date || sel.changedFrom.time !== sel.time) && (
+                        <p style={{ fontSize: 12, color: C.ivoryDim, margin: "0 0 10px", display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6 }}>
+                          <span>Changed from</span>
+                          <span style={{ textDecoration: "line-through" }}>
+                            {new Date(sel.changedFrom.date + "T00:00").toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })} at {sel.changedFrom.time}
+                          </span>
+                          <span aria-hidden="true">→</span>
+                          <span style={{ color: C.inkText, fontWeight: 600 }}>
+                            {dt.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })} at {sel.time}
+                          </span>
+                        </p>
+                      )}
                       <div style={{ display: "flex", gap: 8 }}>
                         <button onClick={() => approveCounter(sel.id)}
                           style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "6px 13px", borderRadius: 8, background: OK_C, color: "#fff", fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer" }}>
