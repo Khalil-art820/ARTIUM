@@ -113,3 +113,26 @@ if (import.meta.env.PROD) {
     }
   });
 }
+
+/**
+ * Chrome's "install this app" offer. It fires once, early — usually before the
+ * lazily-loaded entry gate exists — so it is caught here and parked for the
+ * gate's "Get the app" banner, which listens for artium-install-change.
+ */
+export const installState = { prompt: null, installed: false };
+function isStandalone() {
+  try {
+    return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+  } catch { return false; }
+}
+installState.installed = isStandalone();
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  installState.prompt = e;
+  window.dispatchEvent(new Event("artium-install-change"));
+});
+window.addEventListener("appinstalled", () => {
+  installState.prompt = null;
+  installState.installed = true;
+  window.dispatchEvent(new Event("artium-install-change"));
+});

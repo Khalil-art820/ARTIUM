@@ -1,5 +1,6 @@
 import React, { useRef } from "react";
 import { CARDS, useTourActivation, useSpotlightTour, TourSpotlight, TourCard } from "./ArtiumGate";
+import { installState } from "../../pwa.js";
 import "./artium-gate-chordify.css";
 
 // Alternative entry gate in Chordify's design language (flat, teal, one sans).
@@ -23,6 +24,65 @@ const Svg = ({ children, size = 22, fill = "none", sw = 2 }) => (
 
 // Plain-text titles (the original's JSX titles break across two lines with
 // <br/>; same words). Order/ids/icons/aria-labels come from ArtiumGate's CARDS.
+// "Get the app" — Chordify's app banner, for the app as it exists today:
+// installed straight from the website. Android/Chrome gets the browser's own
+// install prompt; iPhone (no prompt there) and anything else get the steps.
+// Hidden inside the installed app itself.
+function platformOf() {
+  const ua = navigator.userAgent || "";
+  if (/iPhone|iPad|iPod/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) return "ios";
+  if (/Android/i.test(ua)) return "android";
+  return "desktop";
+}
+function InstallAppBanner() {
+  const [, bump] = React.useReducer((n) => n + 1, 0);
+  const [help, setHelp] = React.useState(false);
+  React.useEffect(() => {
+    window.addEventListener("artium-install-change", bump);
+    return () => window.removeEventListener("artium-install-change", bump);
+  }, []);
+  if (installState.installed) return null;
+  const platform = platformOf();
+  async function getApp() {
+    const p = installState.prompt;
+    if (p) {
+      try {
+        p.prompt();
+        await p.userChoice;
+      } catch { /* prompt already used */ }
+      installState.prompt = null;
+      bump();
+      return;
+    }
+    setHelp((h) => !h);
+  }
+  return (
+    <section className="cg-app" aria-label="Get the Artium app">
+      <div className="cg-app-in">
+        <h2>Want Artium one tap away?</h2>
+        <button type="button" className="cg-app-btn" onClick={getApp} aria-expanded={help}>Get the app</button>
+        {help && (
+          <p className="cg-app-help">
+            {platform === "ios" ? (
+              <>Tap the <strong>Share</strong> button <ShareGlyph />, then <strong>Add to Home Screen</strong>.</>
+            ) : platform === "android" ? (
+              <>Open your browser&rsquo;s menu <strong>&#8942;</strong>, then <strong>Install app</strong> or <strong>Add to Home screen</strong>.</>
+            ) : (
+              <>Open <strong>art-ium.com</strong> on your phone and add it to your home screen, or install it here from your browser&rsquo;s address bar.</>
+            )}
+          </p>
+        )}
+        <p className="cg-app-for">Artium for iPhone and Android</p>
+      </div>
+    </section>
+  );
+}
+const ShareGlyph = () => (
+  <svg className="cg-app-share" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-label="Share">
+    <path d="M12 3v12M7.5 7.5 12 3l4.5 4.5" /><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7" />
+  </svg>
+);
+
 const TITLES = ["Find a Classical Music Teacher", "Find a Concert Musician", "News | Classical Music Events", "Tomorrow's Composers"];
 const ACCENTS = ["#086868", "#6B57E8", "#E8862E", "#2EAA6E"];
 
@@ -207,6 +267,8 @@ export default function ArtiumGateChordify({
             })}
           </ul>
         </article>
+
+        <InstallAppBanner />
 
         <section className="cg-card cg-trust" aria-label="Why Artium">
           <div className="cg-trust-cell">
