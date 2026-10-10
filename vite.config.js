@@ -10,7 +10,7 @@ export default defineConfig({
       // Registration lives in src/pwa.js, which also forces the reload that
       // autoUpdate on its own does not do for an already-open page.
       injectRegister: null,
-      includeAssets: ["icon-512-v3.png", "icon-192-v3.png", "icon-512-maskable-v3.png", "apple-touch-icon-v3.png"],
+      includeAssets: ["icon-1024-v4.png", "icon-512-v4.png", "icon-192-v4.png", "icon-1024-maskable-v4.png", "icon-512-maskable-v4.png", "apple-touch-icon-v4.png"],
       manifest: {
         name: "Artium — A World Connected by Music",
         short_name: "Artium",
@@ -23,28 +23,15 @@ export default defineConfig({
         orientation: "portrait",
         scope: "/",
         start_url: "/",
+        // Drawn from a vector trace of the teacher mark, up to 1024px: Android's
+        // launch screen blows the icon up to ~800px on dense phones, and the
+        // old 512px files went soft there.
         icons: [
-          {
-            src: "icon-192-v3.png",
-            sizes: "192x192",
-            type: "image/png",
-            purpose: "any",
-          },
-          {
-            src: "icon-512-v3.png",
-            sizes: "512x512",
-            type: "image/png",
-            purpose: "any",
-          },
-          // Separate file on purpose: the ringed icon puts white at the very
-          // edge, and Android crops maskable icons to its own shape, which
-          // would slice the ring off. This one is full-bleed with no ring.
-          {
-            src: "icon-512-maskable-v3.png",
-            sizes: "512x512",
-            type: "image/png",
-            purpose: "maskable",
-          },
+          { src: "icon-192-v4.png", sizes: "192x192", type: "image/png", purpose: "any" },
+          { src: "icon-512-v4.png", sizes: "512x512", type: "image/png", purpose: "any" },
+          { src: "icon-1024-v4.png", sizes: "1024x1024", type: "image/png", purpose: "any" },
+          { src: "icon-512-maskable-v4.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+          { src: "icon-1024-maskable-v4.png", sizes: "1024x1024", type: "image/png", purpose: "maskable" },
         ],
       },
       workbox: {
