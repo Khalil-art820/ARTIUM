@@ -1347,6 +1347,7 @@ function ArtiumRadio({ open, controllerRef, onPlayingChange, onClose, modern }) 
       style={{
         position: "fixed", top: 72, right: 16, width: minimized ? "auto" : 340, maxWidth: "calc(100vw - 32px)", zIndex: 500,
         background: modern ? "rgba(255,255,255,0.2)" : "#FFFFFF", border: `1px solid ${P.line}`, borderRadius: minimized ? 999 : 20,
+        ...(modern ? { backdropFilter: "blur(14px) saturate(1.4)", WebkitBackdropFilter: "blur(14px) saturate(1.4)" } : null),
         boxShadow: `0 20px 40px -22px rgba(${P.shadowRgb},0.38), inset 0 1px 0 #fff`, padding: minimized ? 6 : 0,
         overflow: "hidden", display: "flex", flexDirection: "column", maxHeight: minimized ? "none" : "calc(100vh - 140px)",
         opacity: open ? 1 : 0,
