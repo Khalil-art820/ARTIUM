@@ -36,17 +36,16 @@ function platformOf() {
 }
 function InstallAppBanner() {
   const [, bump] = React.useReducer((n) => n + 1, 0);
-  const [help, setHelp] = React.useState(false);
+  const [help, setHelp] = React.useState(null); // null | "ios" | "android"
   React.useEffect(() => {
     window.addEventListener("artium-install-change", bump);
     return () => window.removeEventListener("artium-install-change", bump);
   }, []);
   if (installState.installed) return null;
   const platform = platformOf();
-  const device = platform === "ios" ? "iPhone" : platform === "android" ? "Android" : null;
-  async function getApp() {
+  async function getApp(target) {
     const p = installState.prompt;
-    if (p) {
+    if (target === "android" && platform === "android" && p) {
       try {
         p.prompt();
         await p.userChoice;
@@ -55,25 +54,34 @@ function InstallAppBanner() {
       bump();
       return;
     }
-    setHelp((h) => !h);
+    setHelp((h) => (h === target ? null : target));
   }
+  // The visitor's own phone first, like Chordify leading with Android.
+  const order = platform === "ios" ? ["ios", "android"] : ["android", "ios"];
+  const label = { ios: "Get the iPhone app", android: "Get the Android app" };
   return (
     <section className="cg-app" aria-label="Get the Artium app">
       <div className="cg-app-in">
         <h2>Want Artium one tap away?</h2>
-        <button type="button" className="cg-app-btn" onClick={getApp} aria-expanded={help}>{device ? `Get the ${device} app` : "Get the app"}</button>
+        <div className="cg-app-btns">
+          {order.map((t) => (
+            <button key={t} type="button" className="cg-app-btn" onClick={() => getApp(t)} aria-expanded={help === t}>{label[t]}</button>
+          ))}
+        </div>
         {help && (
           <p className="cg-app-help">
-            {platform === "ios" ? (
-              <>Tap the <strong>Share</strong> button <ShareGlyph />, then <strong>Add to Home Screen</strong>.</>
-            ) : platform === "android" ? (
-              <>Open your browser&rsquo;s menu <strong>&#8942;</strong>, then <strong>Install app</strong> or <strong>Add to Home screen</strong>.</>
+            {help === "ios" ? (
+              platform === "ios"
+                ? <>Tap the <strong>Share</strong> button <ShareGlyph />, then <strong>Add to Home Screen</strong>.</>
+                : <>On your iPhone, open <strong>art-ium.com</strong>, tap <strong>Share</strong> <ShareGlyph />, then <strong>Add to Home Screen</strong>.</>
             ) : (
-              <>Open <strong>art-ium.com</strong> on your phone and add it to your home screen, or install it here from your browser&rsquo;s address bar.</>
+              platform === "android"
+                ? <>Open your browser&rsquo;s menu <strong>&#8942;</strong>, then <strong>Install app</strong> or <strong>Add to Home screen</strong>.</>
+                : <>On your Android phone, open <strong>art-ium.com</strong> in Chrome, then menu <strong>&#8942;</strong> &rarr; <strong>Install app</strong>.</>
             )}
           </p>
         )}
-        <p className="cg-app-for">{device ? `Artium for ${device}` : "Artium for iPhone and Android"}</p>
+        <p className="cg-app-for">Artium for iPhone and Android</p>
       </div>
     </section>
   );

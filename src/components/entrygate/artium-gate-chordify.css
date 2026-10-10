@@ -222,9 +222,9 @@
 .cgate .cg-avatar > div img{border:0!important}
 /* ---- Get the app (Chordify's app banner) ---- */
 .cgate .cg-app{position:relative;margin:4px -12px;overflow:hidden;color:#fff;text-align:center;
-  background:#6E6A66 url(/gate-hero.jpg) center 24%/cover no-repeat}
+  background:#5A4A3C url(/app-banner.jpg) 42% 55%/cover no-repeat}
 /* Chordify's muted, greyed photo: a soft dark veil, not a blackout. */
-.cgate .cg-app::before{content:"";position:absolute;inset:0;background:rgba(48,46,44,.42)}
+.cgate .cg-app::before{content:"";position:absolute;inset:0;background:rgba(40,36,32,.5)}
 .cgate .cg-app-in{position:relative;min-height:340px;padding:64px 24px 40px;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .cgate .cg-app h2{color:#fff;margin:0;max-width:13em;font-size:27px;line-height:1.3;font-weight:600;text-shadow:0 1px 6px rgba(0,0,0,.25)}
 .cgate .cg-app-btn{margin-top:26px;background:#2E7F7F;color:#fff;font-size:16.5px;font-weight:600;border-radius:6px;padding:12px 22px;transition:background .15s}
@@ -233,3 +233,5 @@
 .cgate .cg-app-share{display:inline-block;vertical-align:-2px}
 .cgate .cg-app-for{margin:26px 0 0;font-size:16.5px;font-weight:600;text-shadow:0 1px 6px rgba(0,0,0,.3)}
 @media (min-width:744px){.cgate .cg-app{margin:4px 0;border-radius:12px}}
+.cgate .cg-app-btns{margin-top:26px;display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
+.cgate .cg-app-btns .cg-app-btn{margin-top:0}
