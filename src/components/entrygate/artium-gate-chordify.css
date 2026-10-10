@@ -238,3 +238,9 @@
 /* The wordmark inside banner text: same Jost caps and crossbar-less A as the
    top bar, sized to the line it sits in. */
 .cgate .cg-word.cg-word-inline{font-size:.86em;letter-spacing:.18em;margin-right:.02em;color:inherit;vertical-align:.04em}
+/* Inline wordmark weight and spacing: heavier so it holds its own against
+   the heading, a thicker A, and clear space either side. The question stays
+   on one line, a size smaller. */
+.cgate .cg-word.cg-word-inline{font-weight:800;margin:0 .14em 0 .2em;letter-spacing:.16em}
+.cgate .cg-word.cg-word-inline .cg-lambda path{stroke-width:3.6}
+.cgate .cg-app h2{max-width:none;white-space:nowrap;font-size:clamp(17px,5.4vw,24px)}
