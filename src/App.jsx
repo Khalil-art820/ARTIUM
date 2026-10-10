@@ -12571,10 +12571,27 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
   // Unpaid (or not-yet-confirmed) sessions: no money involved, same
   // client-side delete as before this policy existed.
   function cancelSession(id) {
+    const gone = sessions.find((s) => s.id === id);
     persistSessions(sessions.filter((s) => s.id !== id));
     supabase.from("lesson_sessions").delete().eq("id", id).then(({ error }) => {
-      if (error) console.error("cancelSession", error.message);
+      if (error) { console.error("cancelSession", error.message); return; }
+      // The teacher's strip loses the card on its next poll; say so in chat
+      // so it doesn't just vanish from their side.
+      if (!gone || !authUser?.id || !teacher?.id) return;
+      const when = `${new Date(gone.date + "T00:00").toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })} at ${gone.time}`;
+      supabase.from("direct_messages").insert({
+        sender_id: authUser.id, recipient_id: teacher.id,
+        body: gone.status === "student_proposed"
+          ? `I withdrew the lesson time I suggested (${when}) and removed the session.`
+          : `I removed the lesson session on ${when}.`,
+      }).then(({ error: e2 }) => { if (e2) console.error("cancelSession notice", e2.message); });
     });
+  }
+  function startEditCounter(s) {
+    setSelectedSessionId(s.id);
+    setCounterDate((p) => ({ ...p, [s.id]: s.date }));
+    setCounterTime((p) => ({ ...p, [s.id]: s.time }));
+    setShowCounter((p) => ({ ...p, [s.id]: true }));
   }
 
   // Paid + confirmed sessions: real money moved, so cancelling goes through
@@ -12722,10 +12739,25 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
                 const dt = new Date(s.date + "T" + s.time);
                 const isConfirmed = s.status === "confirmed";
                 const isSelected = s.id === selectedSessionId;
+                const ownCounter = s.status === "student_proposed" && !s.paid;
+                const cardIcon = (label, Icon, act) => (
+                  <span role="button" tabIndex={0} aria-label={label} title={label}
+                    onClick={(e) => { e.stopPropagation(); act(); }}
+                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); act(); } }}
+                    style={{ width: 18, height: 20, borderRadius: 6, display: "inline-flex", alignItems: "center", justifyContent: "center", color: C.ivoryDim, cursor: "pointer" }}>
+                    <Icon size={12.5} strokeWidth={2} />
+                  </span>
+                );
                 return (
                   <button key={s.id} onClick={() => setSelectedSessionId(isSelected ? null : s.id)}
                     ref={isSelected ? (el) => { if (el) try { el.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" }); } catch { /* older Safari */ } } : undefined}
-                    style={{ flexShrink: 0, width: 110, height: 110, borderRadius: MODERN ? 12 : 14, border: isSelected ? `2px solid ${C.brass}` : `1px solid ${isConfirmed ? OK_LINE : C.inkLine}`, background: MODERN ? "#FFFFFF" : (isConfirmed ? okA("0.10") : warm("0.06")), display: "flex", flexDirection: "column", alignItems: "flex-start", justifyContent: "space-between", padding: 12, cursor: "pointer", boxShadow: isSelected ? `0 0 0 3px ${C.brassDim}` : "none", transition: "box-shadow 0.15s" }}>
+                    style={{ flexShrink: 0, width: 110, height: 110, borderRadius: MODERN ? 12 : 14, border: isSelected ? `2px solid ${C.brass}` : `1px solid ${isConfirmed ? OK_LINE : C.inkLine}`, background: MODERN ? "#FFFFFF" : (isConfirmed ? okA("0.10") : warm("0.06")), display: "flex", flexDirection: "column", alignItems: "flex-start", justifyContent: "space-between", padding: 12, cursor: "pointer", boxShadow: isSelected ? `0 0 0 3px ${C.brassDim}` : "none", transition: "box-shadow 0.15s", position: "relative" }}>
+                    {ownCounter && (
+                      <span style={{ position: "absolute", top: 7, right: 4, display: "flex", gap: 0 }}>
+                        {cardIcon("Edit your suggested time", Pencil, () => startEditCounter(s))}
+                        {cardIcon("Delete this session", Trash2, () => setConfirmCancelId(s.id))}
+                      </span>
+                    )}
                     <div style={{ display: "flex", justifyContent: "space-between", width: "100%", alignItems: "center" }}>
                       <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: isConfirmed ? OK_C : AMBER_D }}>
                         {isConfirmed ? "Confirmed" : "Awaiting"}
@@ -12747,6 +12779,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
               const dt = new Date(sel.date + "T" + sel.time);
               const isConfirmed = sel.status === "confirmed";
               const isPending = sel.status === "teacher_proposed";
+              const isOwnCounter = sel.status === "student_proposed";
               const isCounter = showCounter[sel.id];
               return (
                 <div style={{ borderTop: `1px solid ${C.inkLine}`, padding: "16px 4px 8px" }}>
@@ -12768,7 +12801,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
                     </div>
                   )}
 
-                  {(isPending && isCounter) || (isConfirmed && showCounter[sel.id]) ? (
+                  {((isPending || isOwnCounter) && isCounter) || (isConfirmed && showCounter[sel.id]) ? (
                     <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
                       <p style={{ fontSize: 12, color: C.ivoryDim, margin: 0 }}>
                         {isConfirmed ? "Suggest a new time (requires teacher re-confirmation):" : "Suggest a different time:"}
