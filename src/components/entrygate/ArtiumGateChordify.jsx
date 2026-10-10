@@ -62,7 +62,7 @@ function InstallAppBanner() {
   return (
     <section className="cg-app" aria-label="Get the Artium app">
       <div className="cg-app-in">
-        <h2>Want <ArtiumWord /> one tap away?</h2>
+        <h2><ArtiumWord /><span className="cg-app-line">is one tap away</span></h2>
         <div className="cg-app-btns">
           {order.map((t) => (
             <button key={t} type="button" className="cg-app-btn" onClick={() => getApp(t)} aria-expanded={help === t}>{label[t]}</button>
@@ -81,7 +81,7 @@ function InstallAppBanner() {
             )}
           </p>
         )}
-        <p className="cg-app-for"><ArtiumWord /> for iPhone and Android</p>
+        <p className="cg-app-for"><ArtiumWord /><span className="cg-app-line">for iPhone and Android</span></p>
       </div>
     </section>
   );

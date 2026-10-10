@@ -246,3 +246,9 @@
 .cgate .cg-app h2{max-width:none;white-space:nowrap;font-size:clamp(17px,5.4vw,24px)}
 /* Sit the wordmark on the sentence's baseline. */
 .cgate .cg-word.cg-word-inline{vertical-align:-.1em}
+/* ARTIUM on its own line, the rest of the sentence beneath it. */
+.cgate .cg-app h2,.cgate .cg-app-for{display:flex;flex-direction:column;align-items:center}
+.cgate .cg-word.cg-word-inline{display:flex;margin:0 0 .22em;vertical-align:baseline}
+.cgate .cg-app h2 .cg-word.cg-word-inline{font-size:1.15em;letter-spacing:.2em;margin-right:-.2em}
+.cgate .cg-app-for .cg-word.cg-word-inline{margin-right:-.16em}
+.cgate .cg-app-line{display:block}
