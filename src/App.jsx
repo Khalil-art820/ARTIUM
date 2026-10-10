@@ -1346,7 +1346,7 @@ function ArtiumRadio({ open, controllerRef, onPlayingChange, onClose, modern }) 
     <div
       style={{
         position: "fixed", top: 72, right: 16, width: minimized ? "auto" : 340, maxWidth: "calc(100vw - 32px)", zIndex: 500,
-        background: "#FFFFFF", border: `1px solid ${P.line}`, borderRadius: minimized ? 999 : 20,
+        background: modern ? "rgba(255,255,255,0.2)" : "#FFFFFF", border: `1px solid ${P.line}`, borderRadius: minimized ? 999 : 20,
         boxShadow: `0 20px 40px -22px rgba(${P.shadowRgb},0.38), inset 0 1px 0 #fff`, padding: minimized ? 6 : 0,
         overflow: "hidden", display: "flex", flexDirection: "column", maxHeight: minimized ? "none" : "calc(100vh - 140px)",
         opacity: open ? 1 : 0,
@@ -1474,7 +1474,7 @@ function ArtiumRadio({ open, controllerRef, onPlayingChange, onClose, modern }) 
 
           {/* Sticky footer mini-bar, as the mock draws it */}
           {tracks.length > 3 && (
-            <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", borderTop: `1px solid ${P.line}`, background: "#FFFFFF", flexShrink: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", borderTop: `1px solid ${P.line}`, background: modern ? "transparent" : "#FFFFFF", flexShrink: 0 }}>
               <span style={{ width: 34, height: 34, borderRadius: 9, overflow: "hidden", flexShrink: 0 }}>
                 <img src={photoOf(current)} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
               </span>
