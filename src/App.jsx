@@ -10417,7 +10417,9 @@ function BottomTabs({ items, active, onTab, light, dimmed, modern }) {
   // it out of the viewport corner.
   return (
     <nav className={`artium-aw-tabs${light ? " artium-aw-tabs--light" : ""}${modern ? " artium-aw-tabs--modern" : ""}`} style={dimmed ? { opacity: .45, filter: "saturate(.6)", pointerEvents: "none" } : undefined} aria-hidden={dimmed || undefined}>
-      {items.map(({ k, label, Icon, attention }) => (
+      {/* Modern: the avatar in every top bar is the way to the profile, so
+          the bar doesn't repeat it. */}
+      {items.filter((it) => !(modern && it.k === "profile")).map(({ k, label, Icon, attention }) => (
         <button key={k} data-on={k === active ? "1" : "0"} onClick={() => onTab(k)} aria-label={label}>
           <span style={{ position: "relative", display: "inline-flex" }}>
             <Icon size={19} strokeWidth={1.7} />
