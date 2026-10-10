@@ -9174,10 +9174,17 @@ function formatTimeUntilLabel(msUntil) {
 // own full page over the screen (the bottom tab bar stays on top of it), with
 // a back arrow; the phone's back gesture closes it too.
 function NotifShell({ onClose, onMarkAll, panelStyle, header, children }) {
+  const [tabH, setTabH] = React.useState(0);
+  React.useLayoutEffect(() => {
+    if (!MODERN) return;
+    const bar = document.querySelector(".artium-aw-tabs");
+    setTabH(bar ? Math.round(bar.getBoundingClientRect().height) : 0);
+  }, []);
   React.useEffect(() => {
     if (!MODERN) return;
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    document.body.classList.add("tm-notif-open");
     let poppedByBack = false;
     try { history.pushState({ artiumNotif: true }, ""); } catch { /* sandboxed */ }
     const onPop = () => { poppedByBack = true; onClose(); };
@@ -9186,6 +9193,7 @@ function NotifShell({ onClose, onMarkAll, panelStyle, header, children }) {
     document.addEventListener("click", onTab, true);
     return () => {
       document.body.style.overflow = prevOverflow;
+      document.body.classList.remove("tm-notif-open");
       window.removeEventListener("popstate", onPop);
       document.removeEventListener("click", onTab, true);
       if (!poppedByBack && history.state?.artiumNotif) { try { history.back(); } catch { /* sandboxed */ } }
@@ -9195,7 +9203,7 @@ function NotifShell({ onClose, onMarkAll, panelStyle, header, children }) {
     return <div style={panelStyle}>{header}{children}</div>;
   }
   return ReactDOM.createPortal(
-    <div className="tm-notif-page" role="dialog" aria-label="Notifications" onMouseDown={(e) => e.stopPropagation()}>
+    <div className="tm-notif-page" role="dialog" aria-label="Notifications" style={{ bottom: tabH }} onMouseDown={(e) => e.stopPropagation()}>
       <div className="tm-notif-head">
         <button type="button" className="tm-notif-back" onClick={onClose} aria-label="Back">
           <ChevronLeft size={24} strokeWidth={2.2} />

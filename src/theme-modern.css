@@ -450,8 +450,8 @@ html.theme-modern [style*="color-scheme: light"].min-h-screen > main{padding-top
 
 /* ---- Notifications: a full page, Facebook-style ---- */
 html.theme-modern .tm-notif-page{
-  position:fixed;inset:0;z-index:39;background:#fff;overflow-y:auto;-webkit-overflow-scrolling:touch;
-  padding-bottom:calc(80px + env(safe-area-inset-bottom, 0px));
+  position:fixed;inset:0;z-index:330;background:#fff;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding-bottom:16px;
   font-family:"Fira Sans",system-ui,-apple-system,sans-serif;color:#1C1C1C;
   animation:tmNotifIn .22s ease-out;
 }
@@ -479,3 +479,6 @@ html.theme-modern .tm-notif-page .tm-nrow > svg:last-child,
 html.theme-modern .tm-notif-page .tm-nrow > span:last-child > svg{display:none}
 html.theme-modern .tm-notif-page .tm-nviewall{display:none}
 html.theme-modern .tm-notif-page .tm-nempty{text-align:center;padding:48px 16px !important;font-size:15px !important;color:#6B6B6B !important}
+/* Above every screen's top bar (they sit at 320); the bottom tab bar is
+   lifted over the page while it is open so it stays usable. */
+body.tm-notif-open .artium-aw-tabs{z-index:340 !important}
