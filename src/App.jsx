@@ -4985,7 +4985,7 @@ export default function App() {
           items={
             !myProfile ? STUDENT_TABS :
             isPianistUser
-              ? [...STUDENT_TABS.slice(0, 5), { k: "concerts", label: "Concerts", Icon: CalendarEventIcon, attention: pianistNeedsAttention }, STUDENT_TABS[5]]
+              ? [...STUDENT_TABS.slice(0, 5), { k: "concerts", label: "Concerts", Icon: MODERN ? IconStage : CalendarEventIcon, attention: pianistNeedsAttention }, STUDENT_TABS[5]]
               : STUDENT_TABS
           }
           active="home"
@@ -5050,7 +5050,7 @@ export default function App() {
           items={
             !myProfile ? STUDENT_TABS :
             isPianistUser
-              ? [...STUDENT_TABS.slice(0, 5), { k: "concerts", label: "Concerts", Icon: CalendarEventIcon, attention: pianistNeedsAttention }, STUDENT_TABS[5]]
+              ? [...STUDENT_TABS.slice(0, 5), { k: "concerts", label: "Concerts", Icon: MODERN ? IconStage : CalendarEventIcon, attention: pianistNeedsAttention }, STUDENT_TABS[5]]
               : STUDENT_TABS
           }
           // The pin-globe page is the network's antechamber — arriving here
@@ -5442,7 +5442,7 @@ export default function App() {
             isPianistUser
               // Concerts sits after Lessons and before Profile — one more
               // room off the same corridor, not a second app bolted on.
-              ? [...STUDENT_TABS.slice(0, 5), { k: "concerts", label: "Concerts", Icon: CalendarEventIcon, attention: pianistNeedsAttention }, STUDENT_TABS[5]]
+              ? [...STUDENT_TABS.slice(0, 5), { k: "concerts", label: "Concerts", Icon: MODERN ? IconStage : CalendarEventIcon, attention: pianistNeedsAttention }, STUDENT_TABS[5]]
               : STUDENT_TABS
           }
           // Nothing is lit on the landing page but Home, and nothing at all
@@ -10420,7 +10420,7 @@ function BottomTabs({ items, active, onTab, light, dimmed, modern }) {
       {/* Modern: the avatar in every top bar is the way to the profile, so
           the bar doesn't repeat it. */}
       {items.filter((it) => !(modern && it.k === "profile")).map(({ k, label, Icon, attention }) => (
-        <button key={k} data-on={k === active ? "1" : "0"} onClick={() => onTab(k)} aria-label={label}>
+        <button key={k} data-k={k} data-on={k === active ? "1" : "0"} onClick={() => onTab(k)} aria-label={label}>
           <span style={{ position: "relative", display: "inline-flex" }}>
             <Icon size={19} strokeWidth={1.7} />
             {/* A booking waiting on a signature, or an offer waiting on a
@@ -10467,10 +10467,10 @@ const CalendarEventIcon = ({ size = 24, strokeWidth = 2, ...props }) => (
 
 const STUDENT_TABS = [
   { k: "home", label: "Home", Icon: Home },
-  { k: "map", label: "Network", Icon: GlobeIcon },
+  { k: "map", label: "Network", Icon: MODERN ? IconGlobePin : GlobeIcon },
   { k: "messages", label: "Messages", Icon: MessageCircle },
-  { k: "promote", label: "Promote", Icon: Megaphone },
-  { k: "lessons", label: "Lessons", Icon: BookOpen },
+  { k: "promote", label: "Promote", Icon: MODERN ? IconMegaphone : Megaphone },
+  { k: "lessons", label: "Lessons", Icon: MODERN ? IconTeacher : BookOpen },
   { k: "profile", label: "Profile", Icon: User },
 ];
 
@@ -10479,7 +10479,7 @@ const STUDENT_TABS = [
 // honest shape of the app before signing up.
 const GUEST_TABS = [
   { k: "home", label: "Home", Icon: Home },
-  { k: "map", label: "Network", Icon: GlobeIcon },
+  { k: "map", label: "Network", Icon: MODERN ? IconGlobePin : GlobeIcon },
 ];
 
 /* ---------------------------------------------------------------- */
@@ -12224,9 +12224,9 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
           light
           items={[
             { k: "home", label: "Home", Icon: Home },
-            { k: "map", label: "Teachers", Icon: Map },
+            { k: "map", label: "Teachers", Icon: MODERN ? IconGlobePin : Map },
             ...(Object.values(teachRequests).some((s) => s === "accepted")
-              ? [{ k: "lesson", label: "Lessons", Icon: BookOpen }]
+              ? [{ k: "lesson", label: "Lessons", Icon: MODERN ? IconTeacher : BookOpen }]
               : []),
           ]}
           // A teacher's open profile keeps the tab it was reached from lit,

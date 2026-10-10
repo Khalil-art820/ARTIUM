@@ -520,3 +520,13 @@ html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button{color:#FFFFFF}
 html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button[data-on="1"]{color:#3FC1AE}
 html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button::after{background:#3FC1AE}
 html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button:hover:not([data-on="1"]){background:#161616}
+/* The selected icon is exactly the line's green: no tinted fill, and the
+   line sits wholly inside the black bar rather than poking onto the page. */
+html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button[data-on="1"] svg{fill-opacity:0}
+html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button::after{top:0}
+/* How-it-works marks in the bar: the stage is a solid shape, the teacher a
+   masked silhouette, so both keep their fill and get sized here. */
+html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button[data-k="concerts"] svg,
+html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button[data-k="concerts"][data-on="1"] svg{fill-opacity:1;width:27px;height:27px}
+html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button > span:first-child > span[aria-hidden="true"]{width:24px !important;height:29px !important}
+html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button svg mask *{fill-opacity:1}
