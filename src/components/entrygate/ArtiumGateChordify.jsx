@@ -27,7 +27,7 @@ const Svg = ({ children, size = 22, fill = "none", sw = 2 }) => (
 // "Get the app" — Chordify's app banner, for the app as it exists today:
 // installed straight from the website. Android/Chrome gets the browser's own
 // install prompt; iPhone (no prompt there) and anything else get the steps.
-// Hidden inside the installed app itself.
+// Shown inside the installed app too, at the owner's request.
 function platformOf() {
   const ua = navigator.userAgent || "";
   if (/iPhone|iPad|iPod/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) return "ios";
@@ -41,7 +41,6 @@ function InstallAppBanner() {
     window.addEventListener("artium-install-change", bump);
     return () => window.removeEventListener("artium-install-change", bump);
   }, []);
-  if (installState.installed) return null;
   const platform = platformOf();
   async function getApp(target) {
     const p = installState.prompt;
