@@ -213,3 +213,10 @@
 /* Centred hero */
 .cgate .cg-hero-in{text-align:center}
 .cgate .cg-sub{margin-left:auto;margin-right:auto}
+/* White hero under the teal header bar */
+.cgate .cg-hero{background:#fff;color:var(--ink);border-bottom:1px solid var(--line)}
+.cgate .cg-hero h1 .cg-accent{color:var(--teal)}
+.cgate .cg-sub{color:var(--body)}
+/* Thin 1px ring around the profile photo */
+.cgate .cg-avatar > div{width:34px!important;height:34px!important}
+.cgate .cg-avatar > div img{border:0!important}
