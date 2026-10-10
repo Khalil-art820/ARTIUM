@@ -447,3 +447,35 @@ html.theme-modern .artium-inst img{opacity:1}
 /* Wall of Composers: page ground to match the app. */
 html.theme-modern [style*="color-scheme: light"].min-h-screen{background:#F7F4F2}
 html.theme-modern [style*="color-scheme: light"].min-h-screen > main{padding-top:32px}
+
+/* ---- Notifications: a full page, Facebook-style ---- */
+html.theme-modern .tm-notif-page{
+  position:fixed;inset:0;z-index:39;background:#fff;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding-bottom:calc(80px + env(safe-area-inset-bottom, 0px));
+  font-family:"Fira Sans",system-ui,-apple-system,sans-serif;color:#1C1C1C;
+  animation:tmNotifIn .22s ease-out;
+}
+@keyframes tmNotifIn{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+html.theme-modern .tm-notif-head{
+  position:sticky;top:0;z-index:2;background:#fff;display:flex;align-items:center;gap:6px;
+  padding:calc(10px + env(safe-area-inset-top, 0px)) 12px 10px 6px;border-bottom:1px solid #F0ECE8;
+}
+html.theme-modern .tm-notif-head h1{flex:1;min-width:0;margin:0;font-size:26px;font-weight:700;letter-spacing:-.01em;color:#1C1C1C}
+html.theme-modern .tm-notif-back{width:40px;height:40px;border-radius:50%;border:0;background:none;color:#1C1C1C;display:grid;place-items:center;cursor:pointer;flex:none}
+html.theme-modern .tm-notif-back:hover{background:#F4F1EE}
+html.theme-modern .tm-notif-markall{display:flex;align-items:center;gap:5px;border:0;background:#E6F0F0;color:#086868;font:600 13.5px "Fira Sans",sans-serif;border-radius:999px;padding:7px 12px;cursor:pointer;flex:none}
+html.theme-modern .tm-notif-list{max-width:720px;margin:0 auto}
+html.theme-modern .tm-notif-page .tm-nrow{
+  padding:12px 16px !important;gap:14px !important;border-bottom:0 !important;background:#fff !important;transition:background .15s;
+}
+html.theme-modern .tm-notif-page .tm-nrow.is-unread{background:#E9F3F3 !important}
+html.theme-modern .tm-notif-page button.tm-nrow:hover{background:#F4F1EE !important}
+html.theme-modern .tm-notif-page button.tm-nrow.is-unread:hover{background:#DDEDED !important}
+html.theme-modern .tm-notif-page .tm-ntile{width:56px !important;height:56px !important;border-radius:50% !important}
+html.theme-modern .tm-notif-page .tm-ntile svg{width:24px;height:24px}
+html.theme-modern .tm-notif-page .tm-ntitle{font-size:16px !important;font-weight:600 !important;color:#1C1C1C !important;line-height:1.3 !important}
+html.theme-modern .tm-notif-page .tm-nsub{font-size:13.5px !important;color:#6B6B6B !important;margin-top:3px !important}
+html.theme-modern .tm-notif-page .tm-nrow > svg:last-child,
+html.theme-modern .tm-notif-page .tm-nrow > span:last-child > svg{display:none}
+html.theme-modern .tm-notif-page .tm-nviewall{display:none}
+html.theme-modern .tm-notif-page .tm-nempty{text-align:center;padding:48px 16px !important;font-size:15px !important;color:#6B6B6B !important}

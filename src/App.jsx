@@ -3,6 +3,7 @@
           already were. */}
 
 import React, { useState, useEffect, useRef, lazy, Suspense } from "react";
+import ReactDOM from "react-dom";
 import {
   Search, Send,
   ChevronRight, Check, X, Instagram, Facebook, Youtube,
@@ -9169,6 +9170,49 @@ function formatTimeUntilLabel(msUntil) {
   return `${hours}h ${minutes}m`;
 }
 
+// The bell's panel. Classic: the dropdown card under the bell. Modern: its
+// own full page over the screen (the bottom tab bar stays on top of it), with
+// a back arrow; the phone's back gesture closes it too.
+function NotifShell({ onClose, onMarkAll, panelStyle, header, children }) {
+  React.useEffect(() => {
+    if (!MODERN) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    let poppedByBack = false;
+    try { history.pushState({ artiumNotif: true }, ""); } catch { /* sandboxed */ }
+    const onPop = () => { poppedByBack = true; onClose(); };
+    window.addEventListener("popstate", onPop);
+    const onTab = (e) => { if (e.target.closest && e.target.closest(".artium-aw-tabs")) onClose(); };
+    document.addEventListener("click", onTab, true);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener("popstate", onPop);
+      document.removeEventListener("click", onTab, true);
+      if (!poppedByBack && history.state?.artiumNotif) { try { history.back(); } catch { /* sandboxed */ } }
+    };
+  }, []);
+  if (!MODERN) {
+    return <div style={panelStyle}>{header}{children}</div>;
+  }
+  return ReactDOM.createPortal(
+    <div className="tm-notif-page" role="dialog" aria-label="Notifications" onMouseDown={(e) => e.stopPropagation()}>
+      <div className="tm-notif-head">
+        <button type="button" className="tm-notif-back" onClick={onClose} aria-label="Back">
+          <ChevronLeft size={24} strokeWidth={2.2} />
+        </button>
+        <h1>Notifications</h1>
+        {onMarkAll && (
+          <button type="button" className="tm-notif-markall" onClick={() => onMarkAll()}>
+            <CheckCircle2 size={15} strokeWidth={2} /> Mark all as read
+          </button>
+        )}
+      </div>
+      <div className="tm-notif-list">{children}</div>
+    </div>,
+    document.body
+  );
+}
+
 function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGoToAdmin, networkFeeds, puck, hireCount = 0, hireIds = [], onGoToConcerts, onGoToComposers, onGoToNews, onGoToPromote }) {
   const [open, setOpen] = React.useState(false);
   const [viewingLearner, setViewingLearner] = React.useState(null);
@@ -9296,7 +9340,7 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
   }, [myProfile?.id]);
 
   React.useEffect(() => {
-    function onClick(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }
+    function onClick(e) { if (MODERN) return; if (ref.current && !ref.current.contains(e.target)) setOpen(false); }
     document.addEventListener("mousedown", onClick);
     return () => document.removeEventListener("mousedown", onClick);
   }, []);
@@ -9350,6 +9394,7 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
     const active = count > 0;
     return (
       <button
+        className={`tm-nrow${active ? " is-unread" : ""}`}
         onClick={() => { markFeedSeen(seenKey); onVisit && onVisit(); setOpen(false); onGo && onGo(); }}
         style={{
           width: "100%", display: "flex", alignItems: "center", gap: 12, textAlign: "left",
@@ -9357,12 +9402,12 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
           background: "transparent", cursor: "pointer", fontFamily: FONT_BODY,
         }}
       >
-        <span style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, background: tileBg, color: tileColor, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <span className="tm-ntile" style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, background: tileBg, color: tileColor, display: "flex", alignItems: "center", justifyContent: "center" }}>
           {icon}
         </span>
         <span style={{ flex: 1, minWidth: 0 }}>
-          <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: C.ivory, lineHeight: 1.3 }}>{title}</p>
-          <p style={{ margin: "2px 0 0", fontSize: 13, color: C.ivoryDim, lineHeight: 1.3 }}>{active ? activeText : inactiveText}</p>
+          <p className="tm-ntitle" style={{ margin: 0, fontSize: 15, fontWeight: 600, color: C.ivory, lineHeight: 1.3 }}>{title}</p>
+          <p className="tm-nsub" style={{ margin: "2px 0 0", fontSize: 13, color: C.ivoryDim, lineHeight: 1.3 }}>{active ? activeText : inactiveText}</p>
         </span>
         <span style={{ display: "flex", alignItems: "center", gap: 3, flexShrink: 0 }}>
           <span style={{ fontSize: 15, fontWeight: 700, color: active ? tileColor : C.ivoryDim }}>{count}</span>
@@ -9402,8 +9447,11 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
         )}
       </button>
       {open && (
-        <div style={{ position: "absolute", right: 0, top: "calc(100% + 8px)", width: 320, background: networkFeeds ? "#FFFFFF" : warm("0.05"), borderRadius: networkFeeds ? (MODERN ? 12 : 20) : 12, boxShadow: networkFeeds ? PANEL.boxShadow : "0 8px 32px rgba(0,0,0,0.14)", border: `1px solid ${C.inkLine}`, zIndex: 200, overflow: "hidden", maxHeight: 460, overflowY: "auto" }}>
-          {networkFeeds ? (
+        <NotifShell
+          onClose={() => setOpen(false)}
+          onMarkAll={networkFeeds ? acknowledgeAll : null}
+          panelStyle={{ position: "absolute", right: 0, top: "calc(100% + 8px)", width: 320, background: networkFeeds ? "#FFFFFF" : warm("0.05"), borderRadius: networkFeeds ? (MODERN ? 12 : 20) : 12, boxShadow: networkFeeds ? PANEL.boxShadow : "0 8px 32px rgba(0,0,0,0.14)", border: `1px solid ${C.inkLine}`, zIndex: 200, overflow: "hidden", maxHeight: 460, overflowY: "auto" }}
+          header={networkFeeds ? (
             <div style={{ padding: "14px 16px", borderBottom: `1px solid ${C.inkLine}`, display: "flex", alignItems: "center", gap: 8 }}>
               <Bell size={14} color={C.brass} />
               <p style={{ flex: 1, minWidth: 0, margin: 0, fontSize: 17, fontWeight: 600, color: C.ivory }}>Notifications</p>
@@ -9422,11 +9470,12 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
               <p style={{ fontSize: 13, fontWeight: 700, color: C.ivory, margin: 0 }}>Notifications</p>
             </div>
           )}
+        >
           {/* Owner-only: promotion approval requests, in either panel format */}
           {promoPending.map((p) => (
-            <div key={p.id} style={{ padding: "12px 16px", background: "#EEF4FF", borderBottom: `1px solid ${C.inkLine}` }}>
+            <div key={p.id} className="tm-nrow tm-nrow-card is-unread" style={{ padding: "12px 16px", background: "#EEF4FF", borderBottom: `1px solid ${C.inkLine}` }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
-                <div style={{ width: 38, height: 38, borderRadius: "50%", background: C.brassDim, color: C.brass, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Megaphone size={18} /></div>
+                <div className="tm-ntile" style={{ width: 38, height: 38, borderRadius: "50%", background: C.brassDim, color: C.brass, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Megaphone size={18} /></div>
                 <div>
                   <p style={{ fontSize: 13, fontWeight: 700, color: C.ivory, margin: "0 0 2px" }}>{p.name} submitted a promo video</p>
                   <p style={{ fontSize: 12, color: C.ivoryDim, margin: 0 }}>{p.provider} · awaiting your approval</p>
@@ -9457,17 +9506,17 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
                 return (
                   <button key={key}
                     onClick={() => { ackOne(); setOpen(false); onGoToPromote && onGoToPromote(p.kind); }}
-                    style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, textAlign: "left", padding: "13px 16px", border: "none", borderBottom: `1px solid ${C.inkLine}`, background: "transparent", cursor: "pointer", fontFamily: FONT_BODY }}>
-                    <span style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, background: approved ? okA("0.14") : "rgba(179,38,30,0.10)", color: approved ? OK_C : "#B3261E", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    className="tm-nrow is-unread" style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, textAlign: "left", padding: "13px 16px", border: "none", borderBottom: `1px solid ${C.inkLine}`, background: "transparent", cursor: "pointer", fontFamily: FONT_BODY }}>
+                    <span className="tm-ntile" style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, background: approved ? okA("0.14") : "rgba(179,38,30,0.10)", color: approved ? OK_C : "#B3261E", display: "flex", alignItems: "center", justifyContent: "center" }}>
                       <Megaphone size={18} strokeWidth={2} />
                     </span>
                     <span style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: C.ivory, lineHeight: 1.3 }}>
+                      <p className="tm-ntitle" style={{ margin: 0, fontSize: 15, fontWeight: 600, color: C.ivory, lineHeight: 1.3 }}>
                         {approved
                           ? (isFree ? "Your Saturday spotlight was approved" : "Your promotion was approved")
                           : (isFree ? "Your spotlight application wasn't selected" : "Your promotion wasn't approved")}
                       </p>
-                      <p style={{ margin: "2px 0 0", fontSize: 13, color: C.ivoryDim, lineHeight: 1.3 }}>
+                      <p className="tm-nsub" style={{ margin: "2px 0 0", fontSize: 13, color: C.ivoryDim, lineHeight: 1.3 }}>
                         {approved
                           ? (isFree ? `Send your collab request to @aclassicaltone at 12:30 on ${p.slot_date}` : "You can now complete your payment")
                           : "Open Promote for the details"}
@@ -9491,15 +9540,15 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
                 return (
                   <button key={`trk-${key}`}
                     onClick={() => { ackOne(); setOpen(false); onGoToPromote && onGoToPromote("artium"); }}
-                    style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, textAlign: "left", padding: "13px 16px", border: "none", borderBottom: `1px solid ${C.inkLine}`, background: "transparent", cursor: "pointer", fontFamily: FONT_BODY }}>
-                    <span style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, background: approved ? okA("0.14") : "rgba(179,38,30,0.10)", color: approved ? OK_C : "#B3261E", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    className="tm-nrow is-unread" style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, textAlign: "left", padding: "13px 16px", border: "none", borderBottom: `1px solid ${C.inkLine}`, background: "transparent", cursor: "pointer", fontFamily: FONT_BODY }}>
+                    <span className="tm-ntile" style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, background: approved ? okA("0.14") : "rgba(179,38,30,0.10)", color: approved ? OK_C : "#B3261E", display: "flex", alignItems: "center", justifyContent: "center" }}>
                       <Music2 size={18} strokeWidth={2} />
                     </span>
                     <span style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: C.ivory, lineHeight: 1.3 }}>
+                      <p className="tm-ntitle" style={{ margin: 0, fontSize: 15, fontWeight: 600, color: C.ivory, lineHeight: 1.3 }}>
                         {approved ? "Your recording is live on Artium" : "Your recording wasn't accepted"}
                       </p>
-                      <p style={{ margin: "2px 0 0", fontSize: 13, color: C.ivoryDim, lineHeight: 1.3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      <p className="tm-nsub" style={{ margin: "2px 0 0", fontSize: 13, color: C.ivoryDim, lineHeight: 1.3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                         {approved ? `"${p.title || "Untitled"}" now plays on Artium Radio` : "Open Promote for the reason"}
                       </p>
                     </span>
@@ -9552,17 +9601,17 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
                   are the whole list, so "view all" has nowhere further to
                   go. Kept per the mock as an inert link rather than dropped,
                   ready to wire once there is a fuller notifications screen. */}
-              <div style={{ padding: "11px 16px", textAlign: "center" }}>
+              <div className="tm-nviewall" style={{ padding: "11px 16px", textAlign: "center" }}>
                 <button onClick={() => {}} style={{ background: "none", border: "none", cursor: "pointer", color: C.brass, fontSize: 12.5, fontWeight: 600, padding: 0 }}>
                   View all notifications ›
                 </button>
               </div>
             </>
           ) : totalCount === 0 ? (
-            <p style={{ fontSize: 13, color: C.ivoryDim, padding: "16px", margin: 0 }}>No new notifications</p>
+            <p className="tm-nempty" style={{ fontSize: 13, color: C.ivoryDim, padding: "16px", margin: 0 }}>No new notifications</p>
           ) : (
             pending.map((r) => (
-              <div key={r.learnerId} style={{ padding: "12px 16px", background: CREAM_BG, borderBottom: `1px solid ${C.inkLine}` }}>
+              <div key={r.learnerId} className="tm-nrow tm-nrow-card is-unread" style={{ padding: "12px 16px", background: CREAM_BG, borderBottom: `1px solid ${C.inkLine}` }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
                   <Avatar name={r.name} id={r.learnerId} size={38} photoUrl={r.photoUrl} />
                   <div>
@@ -9583,7 +9632,7 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
               </div>
             ))
           )}
-        </div>
+        </NotifShell>
       )}
     </div>
   );
@@ -11281,7 +11330,7 @@ function LearnerNotificationBell({ authUser, teachers, learnerSessionsByTeacher,
   }, [authUser?.id]);
 
   React.useEffect(() => {
-    function onClick(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }
+    function onClick(e) { if (MODERN) return; if (ref.current && !ref.current.contains(e.target)) setOpen(false); }
     document.addEventListener("mousedown", onClick);
     return () => document.removeEventListener("mousedown", onClick);
   }, []);
@@ -11335,9 +11384,10 @@ function LearnerNotificationBell({ authUser, teachers, learnerSessionsByTeacher,
     setAckAgendaTs(t);
   }
 
-  function Row({ icon, tileBg, tileColor, title, subtitle, onClick }) {
+  function Row({ icon, tileBg, tileColor, title, subtitle, onClick, unread }) {
     return (
       <button
+        className={`tm-nrow${unread ? " is-unread" : ""}`}
         onClick={onClick}
         style={{
           width: "100%", display: "flex", alignItems: "center", gap: 12, textAlign: "left",
@@ -11345,12 +11395,12 @@ function LearnerNotificationBell({ authUser, teachers, learnerSessionsByTeacher,
           background: "transparent", cursor: "pointer", fontFamily: FONT_BODY,
         }}
       >
-        <span style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, background: tileBg, color: tileColor, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <span className="tm-ntile" style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, background: tileBg, color: tileColor, display: "flex", alignItems: "center", justifyContent: "center" }}>
           {icon}
         </span>
         <span style={{ flex: 1, minWidth: 0 }}>
-          <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: C.ivory, lineHeight: 1.3 }}>{title}</p>
-          <p style={{ margin: "2px 0 0", fontSize: 13, color: C.ivoryDim, lineHeight: 1.3 }}>{subtitle}</p>
+          <p className="tm-ntitle" style={{ margin: 0, fontSize: 15, fontWeight: 600, color: C.ivory, lineHeight: 1.3 }}>{title}</p>
+          <p className="tm-nsub" style={{ margin: "2px 0 0", fontSize: 13, color: C.ivoryDim, lineHeight: 1.3 }}>{subtitle}</p>
         </span>
         <ChevronRight size={15} color={C.ivoryDim} style={{ flexShrink: 0 }} />
       </button>
@@ -11370,7 +11420,11 @@ function LearnerNotificationBell({ authUser, teachers, learnerSessionsByTeacher,
         )}
       </button>
       {open && (
-        <div style={{ position: "absolute", right: 0, top: "calc(100% + 8px)", width: 320, maxWidth: "calc(100vw - 32px)", background: "#FFFFFF", borderRadius: MODERN ? 12 : 20, boxShadow: PANEL.boxShadow, border: `1px solid ${C.inkLine}`, zIndex: 200, overflow: "hidden", maxHeight: 460, overflowY: "auto" }}>
+        <NotifShell
+          onClose={() => setOpen(false)}
+          onMarkAll={acknowledgeAll}
+          panelStyle={{ position: "absolute", right: 0, top: "calc(100% + 8px)", width: 320, maxWidth: "calc(100vw - 32px)", background: "#FFFFFF", borderRadius: MODERN ? 12 : 20, boxShadow: PANEL.boxShadow, border: `1px solid ${C.inkLine}`, zIndex: 200, overflow: "hidden", maxHeight: 460, overflowY: "auto" }}
+          header={(
           <div style={{ padding: "14px 16px", borderBottom: `1px solid ${C.inkLine}`, display: "flex", alignItems: "center", gap: 8 }}>
             <Bell size={14} color={C.brass} />
             <p style={{ flex: 1, minWidth: 0, margin: 0, fontSize: 17, fontWeight: 600, color: C.ivory }}>Notifications</p>
@@ -11381,8 +11435,10 @@ function LearnerNotificationBell({ authUser, teachers, learnerSessionsByTeacher,
               <CheckCircle2 size={13} strokeWidth={2} /> Mark all as read
             </button>
           </div>
+          )}
+        >
           {proposals.length === 0 && newAgendaRows.length === 0 ? (
-            <p style={{ fontSize: 13, color: C.ivoryDim, padding: "16px", margin: 0 }}>Nothing new.</p>
+            <p className="tm-nempty" style={{ fontSize: 13, color: C.ivoryDim, padding: "16px", margin: 0 }}>Nothing new.</p>
           ) : (
             <>
               {proposals.map((p) => (
@@ -11392,6 +11448,7 @@ function LearnerNotificationBell({ authUser, teachers, learnerSessionsByTeacher,
                   tileBg={brassA("0.14")} tileColor={C.brass}
                   title={`${teacherName(p.teacherId)} proposed ${p.date} · ${p.time}`}
                   subtitle="Awaiting your reply"
+                  unread={!ackPropIds.includes(p.id)}
                   onClick={() => { ackProposal(p.id); goTo(p.teacherId, p.id); }}
                 />
               ))}
@@ -11402,12 +11459,13 @@ function LearnerNotificationBell({ authUser, teachers, learnerSessionsByTeacher,
                   tileBg="rgba(63,139,92,0.14)" tileColor={C.forest}
                   title={`${teacherName(r.teacher_id)} updated the session agenda`}
                   subtitle="New in your lesson room"
+                  unread
                   onClick={() => { ackAgenda(r.updated_at); goTo(r.teacher_id, r.session_id, "agenda"); }}
                 />
               ))}
             </>
           )}
-        </div>
+        </NotifShell>
       )}
     </div>
   );
