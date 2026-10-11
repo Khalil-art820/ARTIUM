@@ -206,6 +206,19 @@ const isAdminEmail = (email) => (email || "").trim().toLowerCase() === ADMIN_EMA
 // button and the logo mark. They each carried their own number before, so
 // they never quite lined up.
 const HEADER_CONTROL = 32;
+// Modern play control: an audio waveform in place of the triangle. The bars
+// sway while music plays, which is what says "on"; tapping still pauses.
+const WAVE_BARS = [[3, 9], [7.5, 15], [12, 20], [16.5, 13], [21, 7]];
+function WaveGlyph({ playing, size = 20 }) {
+  return (
+    <svg className={`tm-wave${playing ? " is-playing" : ""}`} width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
+      {WAVE_BARS.map(([x, h], i) => (
+        <line key={i} x1={x} x2={x} y1={12 - h / 2} y2={12 + h / 2} stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"
+          style={{ animationDelay: `${i * 0.12}s` }} />
+      ))}
+    </svg>
+  );
+}
 
 /**
  * Used to run on its own dark palette, separate from C — a lit room rather
@@ -5263,11 +5276,12 @@ export default function App() {
                 {/* The bell's own button, glyph swapped for the play
                     triangle — same position as the landing header. */}
                 <button
-                  className="artium-net-puck"
+                  className={`artium-net-puck${MODERN ? " tm-play" : ""}${MODERN && musicPlaying ? " is-on" : ""}`}
                   onClick={toggleMusic}
                   title={musicPlaying ? "Pause" : "Play"}
                   aria-label={musicPlaying ? "Pause playlist" : "Play playlist"}
                 >
+                  {MODERN ? <WaveGlyph playing={!!musicPlaying} /> : (<>
                   {musicPlaying ? (
                     <Pause size={15} color={C.inkText} strokeWidth={2.4} />
                   ) : (
@@ -5275,6 +5289,7 @@ export default function App() {
                       <path d="M8 5.5v13l11-6.5z" />
                     </svg>
                   )}
+                  </>)}
                 </button>
                 {myProfile && (
                   <NotificationBell
@@ -5810,11 +5825,12 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
           </span>
           {onMusicToggle && (
             <button
-              className="artium-net-puck"
+              className={`artium-net-puck${MODERN ? " tm-play" : ""}${MODERN && musicOn ? " is-on" : ""}`}
               onClick={onMusicToggle}
               title={musicOn ? "Pause" : "Play"}
               aria-label={musicOn ? "Pause playlist" : "Play playlist"}
             >
+              {MODERN ? <WaveGlyph playing={!!musicOn} /> : (<>
               {musicOn ? (
                 <Pause size={15} color={C.inkText} strokeWidth={2.4} />
               ) : (
@@ -5822,6 +5838,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
                   <path d="M8 5.5v13l11-6.5z" />
                 </svg>
               )}
+              </>)}
             </button>
           )}
           {myProfile && (
@@ -11898,11 +11915,12 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
             {memberCount}
           </span>
           <button
-            className="artium-net-puck"
+            className={`artium-net-puck${MODERN ? " tm-play" : ""}${MODERN && musicOn ? " is-on" : ""}`}
             onClick={onMusicToggle}
             title={musicOn ? "Pause" : "Play"}
             aria-label={musicOn ? "Pause playlist" : "Play playlist"}
           >
+            {MODERN ? <WaveGlyph playing={!!musicOn} /> : (<>
             {musicOn ? (
               <Pause size={15} color={C.inkText} strokeWidth={2.4} />
             ) : (
@@ -11910,6 +11928,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
                 <path d="M8 5.5v13l11-6.5z" />
               </svg>
             )}
+            </>)}
           </button>
           <LearnerNotificationBell
             authUser={authUser}

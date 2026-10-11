@@ -186,16 +186,12 @@ export default function ArtiumGateChordify({
             {onMusicToggle && (
               <button type="button" className={`cg-icon cg-round${musicOn ? " is-on" : ""}`} onClick={onMusicToggle} aria-pressed={!!musicOn}
                 aria-label={musicOn ? "Pause ambient music" : "Play ambient music"}>
-                {musicOn ? (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <rect x="6" y="5" width="4.2" height="14" rx="1.6" /><rect x="13.8" y="5" width="4.2" height="14" rx="1.6" />
-                  </svg>
-                ) : (
-                  /* Soft-cornered triangle, nudged right to sit optically centred. */
-                  <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style={{ marginLeft: 2 }}>
-                    <path d="M8 6.2c0-1.2 1.3-1.9 2.3-1.3l9.1 5.8c.9.6.9 2 0 2.6l-9.1 5.8c-1 .6-2.3-.1-2.3-1.3z" />
-                  </svg>
-                )}
+                <svg className={`tm-wave${musicOn ? " is-playing" : ""}`} width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+                  {[[3, 9], [7.5, 15], [12, 20], [16.5, 13], [21, 7]].map(([x, h], i) => (
+                    <line key={i} x1={x} x2={x} y1={12 - h / 2} y2={12 + h / 2} stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"
+                      style={{ animationDelay: `${i * 0.12}s` }} />
+                  ))}
+                </svg>
               </button>
             )}
             {bellSlot}

@@ -554,3 +554,41 @@ html.theme-modern .artium-net-puck.tm-back-plain svg{width:26px;height:26px;stro
 html.theme-modern .artium-net-puck.tm-back-plain:hover{opacity:.8}
 /* Same "seen story" band around the avatar in every top bar. */
 html.theme-modern .tm-head-avatar{box-shadow:0 0 0 2.5px #086868, 0 0 0 4px rgba(225,225,225,.9);margin-left:4px;margin-right:4px}
+
+/* ---- Top-bar play + bell: green filled circles (option 1), waveform play
+   and outline bell (option 24). The back arrow stays plain. ---- */
+html.theme-modern .artium-net-bar .artium-net-puck:not(.tm-back-plain),
+html.theme-modern .artium-lp-bar .artium-net-puck:not(.tm-back-plain),
+html.theme-modern .cgate .cg-actions .cg-round,
+html.theme-modern .cgate .cg-actions .artium-net-puck{
+  width:38px;height:38px;border-radius:50%;padding:0;border:0 !important;
+  display:inline-flex;align-items:center;justify-content:center;position:relative;
+  background:linear-gradient(150deg,#41B48F 0%,#1F8B6D 55%,#13705A 100%) !important;
+  color:#FFFFFF !important;
+  box-shadow:0 3px 10px -3px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.28) !important;
+  transition:filter .15s ease, transform .15s ease;
+}
+html.theme-modern .artium-net-bar .artium-net-puck:not(.tm-back-plain):hover,
+html.theme-modern .artium-lp-bar .artium-net-puck:not(.tm-back-plain):hover,
+html.theme-modern .cgate .cg-actions .cg-round:hover,
+html.theme-modern .cgate .cg-actions .artium-net-puck:hover{filter:brightness(1.08)}
+html.theme-modern .artium-net-bar .artium-net-puck:not(.tm-back-plain):active,
+html.theme-modern .artium-lp-bar .artium-net-puck:not(.tm-back-plain):active,
+html.theme-modern .cgate .cg-actions .cg-round:active,
+html.theme-modern .cgate .cg-actions .artium-net-puck:active{transform:scale(.94)}
+/* Outline bell, white. */
+html.theme-modern .artium-net-bar .artium-net-puck svg.lucide-bell,
+html.theme-modern .artium-lp-bar .artium-net-puck svg.lucide-bell,
+html.theme-modern .cgate .cg-actions .artium-net-puck svg{
+  width:19px;height:19px;fill:none !important;stroke:currentColor;stroke-width:1.9;color:#FFFFFF;
+}
+/* Count badge: white on green, ringed in the bar's teal. */
+html.theme-modern .artium-net-bell-badge{
+  background:#FFFFFF !important;color:#086868 !important;border:2px solid #086868 !important;
+}
+/* Waveform play: bars sway while music plays. */
+html.theme-modern .tm-wave{color:#FFFFFF;display:block}
+html.theme-modern .tm-wave line{transform-box:fill-box;transform-origin:center}
+html.theme-modern .tm-wave.is-playing line{animation:tmWave .9s ease-in-out infinite alternate}
+@keyframes tmWave{0%{transform:scaleY(1)}50%{transform:scaleY(.45)}100%{transform:scaleY(1.08)}}
+@media (prefers-reduced-motion:reduce){html.theme-modern .tm-wave.is-playing line{animation:none}}
