@@ -268,3 +268,8 @@
 /* Account avatar with a "seen story" band (Instagram / the partner logo):
    a bar-coloured gap, then a thin light-grey ring — reads as tappable. */
 .cgate .cg-avatar{box-shadow:0 0 0 2.5px #086868, 0 0 0 4px rgba(225,225,225,.9)}
+/* Title stays centred; partners line up from the left edge, so future ones
+   simply join the row. */
+.cgate .cg-partners{text-align:left}
+.cgate .cg-partners h3{text-align:center}
+.cgate .cg-partners a{margin-right:20px;vertical-align:top}
