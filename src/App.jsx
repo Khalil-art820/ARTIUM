@@ -5244,7 +5244,7 @@ export default function App() {
           const netHeaderWith = (onBackFn) => (
             <header className="artium-net-bar">
               {onBackFn && (
-                <button className="artium-net-puck" onClick={onBackFn} aria-label="Back">
+                <button className={`artium-net-puck${MODERN ? " tm-back-plain" : ""}`} onClick={onBackFn} aria-label="Back">
                   <ChevronLeft size={17} strokeWidth={2} />
                 </button>
               )}
@@ -11881,7 +11881,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
         {/* The profile tab (where editing lives) goes arrowless, matching
             the student side — the bottom bar does the walking there. */}
         {appTab !== "profile" && (
-          <button className="artium-net-puck" onClick={onBack} aria-label="Back">
+          <button className={`artium-net-puck${MODERN ? " tm-back-plain" : ""}`} onClick={onBack} aria-label="Back">
             <ChevronLeft size={17} strokeWidth={2} />
           </button>
         )}

@@ -38,7 +38,7 @@ export default function WallOfComposers({ onBack, modern, avatarNode }) {
 {modern ? (
         /* The app's shared teal header: back disc, your avatar, ARTIUM wordmark. */
         <header className="artium-net-bar">
-          <button className="artium-net-puck" onClick={onBack} aria-label="Back">
+          <button className="artium-net-puck tm-back-plain" onClick={onBack} aria-label="Back">
             <ChevronLeft size={17} strokeWidth={2} />
           </button>
           {avatarNode}

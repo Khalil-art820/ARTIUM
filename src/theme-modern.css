@@ -545,3 +545,10 @@ html.theme-modern .tm-head-avatar{flex:none;display:inline-flex;align-items:cent
 html.theme-modern .tm-head-avatar{box-shadow:none;width:34px;height:34px}
 html.theme-modern .tm-head-avatar > div{width:34px !important;height:34px !important}
 html.theme-modern .tm-head-avatar img{border:0 !important}
+/* Top-bar back: just the arrow, no disc around it. */
+html.theme-modern .artium-net-puck.tm-back-plain{
+  background:none !important;border:0 !important;box-shadow:none !important;
+  width:auto;min-width:28px;height:34px;padding:0 2px;color:#FFFFFF !important;
+}
+html.theme-modern .artium-net-puck.tm-back-plain svg{width:26px;height:26px;stroke-width:2.2;color:#FFFFFF}
+html.theme-modern .artium-net-puck.tm-back-plain:hover{opacity:.8}
