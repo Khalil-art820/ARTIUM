@@ -273,3 +273,10 @@
 .cgate .cg-partners{text-align:left}
 .cgate .cg-partners h3{text-align:center}
 .cgate .cg-partners a{margin-right:20px;vertical-align:top}
+/* Partners on a near-black ground (as on the reference), with the title in a
+   wide, heavy rounded display face — Unbounded, a free Google font in the
+   spirit of F1's proprietary one. */
+.cgate .cg-partners{background:#1E1E26;border-color:#1E1E26;color:#FFFFFF;padding:28px 22px 26px}
+.cgate .cg-partners h3{font-family:'Unbounded','Fira Sans',system-ui,sans-serif;font-weight:900;font-size:24px;
+  letter-spacing:-.01em;text-transform:uppercase;color:#FFFFFF;margin:0 0 22px;line-height:1}
+.cgate .cg-partners a{color:#FFFFFF}
