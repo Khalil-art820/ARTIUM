@@ -333,3 +333,5 @@
 .cgate .pr-sheet label.pr-sr{font-size:0;margin-bottom:6px}
 /* Real partner name and open-spot labels in one size. */
 .cgate .cg-partner-row > a span{font-size:14px;font-weight:600}
+/* Partner row centred under the title. */
+.cgate .cg-partner-row{justify-content:center}
