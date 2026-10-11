@@ -9076,6 +9076,12 @@ function euroAmount(cents) {
 // session state already used before this table existed
 // ({id, date, time, status, proposedBy, paid}), so wiring in a real table
 // didn't require touching the rendering code on either side.
+// An unanswered proposal whose time has come and gone is dead: nobody can
+// still meet then, so it must not notify, and can't be approved.
+function sessionTimePassed(date, time) {
+  const t = new Date(`${date}T${time || "00:00"}`).getTime();
+  return Number.isFinite(t) && t < Date.now();
+}
 function dbRowToSession(row) {
   return {
     id: row.id,
@@ -9352,7 +9358,7 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
         if (!live || error || !data) return;
         const names = {};
         if (data.length) (await fetchIncomingTeachRequests(myProfile.id)).forEach((r) => { names[r.learnerId] = r.name; });
-        if (live) setCounters(data.map((r) => ({
+        if (live) setCounters(data.filter((r) => !sessionTimePassed(r.session_date, r.session_time)).map((r) => ({
           id: r.id, learnerId: r.learner_id, name: names[r.learner_id] || "A learner",
           date: r.session_date, time: r.session_time, changedFrom: r.details?.changed_from || null,
         })));
@@ -11431,10 +11437,10 @@ function LearnerNotificationBell({ authUser, teachers, learnerSessionsByTeacher,
   const proposals = learnerSessionsByTeacher
     ? Object.entries(learnerSessionsByTeacher).flatMap(([teacherId, sessions]) =>
         (sessions || [])
-          .filter((s) => s.status === "teacher_proposed")
+          .filter((s) => s.status === "teacher_proposed" && !sessionTimePassed(s.date, s.time))
           .map((s) => ({ id: s.id, teacherId, date: s.date, time: s.time }))
       )
-    : (selfProposals || []);
+    : (selfProposals || []).filter((p) => !sessionTimePassed(p.date, p.time));
   const newAgendaRows = agendaRows.filter((r) => new Date(r.updated_at).getTime() > ackAgendaTs);
 
   const newPropCount = proposals.filter((p) => !ackPropIds.includes(p.id)).length;
@@ -12788,12 +12794,15 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
                   </p>
                   {sel.proposedBy === "student" && <p style={{ fontSize: 11, color: C.brassLabel, margin: "0 0 10px" }}>Your counter-proposal — awaiting teacher</p>}
 
+                  {isPending && !isCounter && sessionTimePassed(sel.date, sel.time) && (
+                    <p style={{ fontSize: 12, color: AMBER_D, margin: "0 0 8px" }}>This proposed time has already passed — suggest a new one or ask {teacher.name.split(" ")[0]} in Chat.</p>
+                  )}
                   {isPending && !isCounter && (
                     <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
-                      <button onClick={() => approveSession(sel.id)}
+                      {!sessionTimePassed(sel.date, sel.time) && <button onClick={() => approveSession(sel.id)}
                         style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "6px 13px", borderRadius: 8, background: OK_C, color: "#fff", fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer" }}>
                         <Check size={12} /> Approve
-                      </button>
+                      </button>}
                       <button onClick={() => setShowCounter((prev) => ({ ...prev, [sel.id]: true }))}
                         style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "6px 13px", borderRadius: 8, background: "none", border: `1px solid ${C.inkLine}`, color: C.ivoryDim, fontSize: 12, cursor: "pointer" }}>
                         Suggest another time
@@ -15815,7 +15824,11 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView, focus }) {
                   {/* Student counter-proposal: teacher can approve or re-propose */}
                   {isCounter && !showingCounter && (
                     <div style={{ marginBottom: 10 }}>
-                      <p style={{ fontSize: 11, color: C.brassLabel, margin: "0 0 8px" }}>{activeLearner.name.split(" ")[0]} suggested this time — awaiting your response</p>
+                      <p style={{ fontSize: 11, color: C.brassLabel, margin: "0 0 8px" }}>
+                        {sessionTimePassed(sel.date, sel.time)
+                          ? `${activeLearner.name.split(" ")[0]} suggested this time, but it has already passed — suggest a new one.`
+                          : `${activeLearner.name.split(" ")[0]} suggested this time — awaiting your response`}
+                      </p>
                       {sel.changedFrom && (sel.changedFrom.date !== sel.date || sel.changedFrom.time !== sel.time) && (
                         <p style={{ fontSize: 12, color: C.ivoryDim, margin: "0 0 10px", display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6 }}>
                           <span>Changed from</span>
@@ -15829,10 +15842,10 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView, focus }) {
                         </p>
                       )}
                       <div style={{ display: "flex", gap: 8 }}>
-                        <button onClick={() => approveCounter(sel.id)}
+                        {!sessionTimePassed(sel.date, sel.time) && <button onClick={() => approveCounter(sel.id)}
                           style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "6px 13px", borderRadius: 8, background: OK_C, color: "#fff", fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer" }}>
                           <Check size={12} /> Accept
-                        </button>
+                        </button>}
                         <button onClick={() => setShowCounter((p) => ({ ...p, [sel.id]: true }))}
                           style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "6px 13px", borderRadius: 8, background: "none", border: `1px solid ${C.inkLine}`, color: C.ivoryDim, fontSize: 12, cursor: "pointer" }}>
                           Suggest another time
