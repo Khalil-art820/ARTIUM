@@ -313,6 +313,9 @@ const PROMO_TOTAL = PROMO_RATE * 5;
 // no longer read for this.
 const CANCEL_FULL_H = 24;
 const CANCEL_ZERO_H = 12;
+// Teacher's late-cancellation fee bounds (teacher_rules has a matching check).
+const LATE_FEE_MIN = 50;
+const LATE_FEE_MAX = 100;
 const MODIFY_LOCK_H = 24;
 
 // Every Saturday, one free spot at 12:30 Europe/Paris. Rejection copy is
@@ -15332,6 +15335,8 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView, focus }) {
   // cancel-session and by this screen now) — only late_fee_pct is still a
   // teacher-editable knob.
   const [cancelFeesPct, setCancelFeesPct] = useState(50);
+  // What's in the typing box while it's being edited; null shows the value.
+  const [feeDraft, setFeeDraft] = useState(null);
   const [cancelBusy, setCancelBusy] = useState(false);
 
   // teacher_rules is the real, server-checked source of truth this slider
@@ -15346,7 +15351,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView, focus }) {
     let live = true;
     fetchTeacherRules(tid).then((rules) => {
       if (!live) return;
-      setCancelFeesPct(rules.late_fee_pct);
+      setCancelFeesPct(Math.min(LATE_FEE_MAX, Math.max(LATE_FEE_MIN, rules.late_fee_pct)));
       setRulesReady(true);
     });
     return () => { live = false; };
@@ -15684,15 +15689,33 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView, focus }) {
             Platform policy: free cancellation until {CANCEL_FULL_H}h before the session; your late fee applies {CANCEL_ZERO_H}–{CANCEL_FULL_H}h before; under {CANCEL_ZERO_H}h, no refund. Changes lock {MODIFY_LOCK_H}h before.
           </div>
           {[
-            { label: "Cancellation fee", sublabel: `Kept when a student cancels ${CANCEL_ZERO_H}–${CANCEL_FULL_H}h before the session`, value: cancelFeesPct, set: setCancelFeesPct, min: 0, max: 100, unit: "%" },
+            { label: "Cancellation fee", sublabel: `Kept when a student cancels ${CANCEL_ZERO_H}–${CANCEL_FULL_H}h before the session`, value: cancelFeesPct, set: setCancelFeesPct, min: LATE_FEE_MIN, max: LATE_FEE_MAX, unit: "%" },
           ].map(({ label, sublabel, value, set, min, max, unit }) => (
             <div key={label} style={{ marginBottom: 28 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4 }}>
                 <p style={{ fontSize: 14, fontWeight: 700, color: C.ivory, margin: 0 }}>{label}</p>
-                <span style={{ fontSize: 18, fontWeight: 700, color: C.brassLabel }}>{value}{unit}</span>
+                <label style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 18, fontWeight: 700, color: C.brassLabel }}>
+                  <input type="number" inputMode="numeric" min={min} max={max} step={1}
+                    aria-label={`${label} in percent`}
+                    value={feeDraft ?? value}
+                    onChange={(e) => {
+                      const raw = e.target.value;
+                      setFeeDraft(raw);
+                      const n = Number(raw);
+                      if (raw !== "" && Number.isInteger(n) && n >= min && n <= max) set(n);
+                    }}
+                    onBlur={() => {
+                      const n = Math.round(Number(feeDraft));
+                      if (feeDraft !== null && feeDraft !== "" && Number.isFinite(n)) set(Math.min(max, Math.max(min, n)));
+                      setFeeDraft(null);
+                    }}
+                    onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
+                    style={{ width: 64, textAlign: "right", fontSize: 18, fontWeight: 700, color: C.brassLabel, background: "#FFFFFF", border: `1px solid ${C.inkLine}`, borderRadius: 8, padding: "4px 8px", outline: "none", fontFamily: "inherit" }} />
+                  {unit}
+                </label>
               </div>
               <p style={{ fontSize: 12, color: C.ivoryDim, margin: "0 0 10px" }}>{sublabel}</p>
-              <input type="range" min={min} max={max} value={value} onChange={e => set(Number(e.target.value))}
+              <input type="range" min={min} max={max} value={value} onChange={e => { setFeeDraft(null); set(Number(e.target.value)); }}
                 style={{ width: "30%", accentColor: C.brass, height: 4, cursor: "pointer" }} />
               <div style={{ display: "flex", justifyContent: "space-between", width: "30%", marginTop: 4 }}>
                 <span style={{ fontSize: 10, color: C.ivoryDim }}>{min}{unit}</span>
