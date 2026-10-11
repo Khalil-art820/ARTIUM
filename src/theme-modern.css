@@ -552,3 +552,5 @@ html.theme-modern .artium-net-puck.tm-back-plain{
 }
 html.theme-modern .artium-net-puck.tm-back-plain svg{width:26px;height:26px;stroke-width:2.2;color:#FFFFFF}
 html.theme-modern .artium-net-puck.tm-back-plain:hover{opacity:.8}
+/* Same "seen story" band around the avatar in every top bar. */
+html.theme-modern .tm-head-avatar{box-shadow:0 0 0 2.5px #086868, 0 0 0 4px rgba(225,225,225,.9);margin-left:4px;margin-right:4px}
