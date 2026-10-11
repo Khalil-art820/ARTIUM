@@ -9514,6 +9514,20 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
     return () => { live = false; clearInterval(t); };
   }, [networkFeeds, myProfile?.id]);
 
+  // Admin-only: partnership requests nobody has handled yet.
+  const [partnerNew, setPartnerNew] = React.useState([]);
+  React.useEffect(() => {
+    if (!isAdmin) { setPartnerNew([]); return; }
+    let alive = true;
+    async function load() {
+      const { data, error } = await supabase.from("partner_requests").select("id, brand, created_at").eq("status", "new").order("created_at", { ascending: false });
+      if (alive && !error) setPartnerNew(data || []);
+    }
+    load();
+    const id = setInterval(load, 15000);
+    return () => { alive = false; clearInterval(id); };
+  }, [isAdmin]);
+
   // Admin-only: pending promotion submissions.
   React.useEffect(() => {
     if (!isAdmin) { setPromoPending([]); return; }
@@ -9580,7 +9594,7 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
   const newTrackDecisions = myTrackDecisions.filter((p) => !ackTrackKeys.includes(promoKeyOf(p)));
   const newCounterCount = counters.filter((c) => !ackCounterKeys.includes(counterKeyOf(c))).length;
   const feedTotal = newCounterCount + newTeachCount + newHireCount + composerBadgeCount + newsBadgeCount + newPromoDecisions.length + newTrackDecisions.length;
-  const totalCount = networkFeeds ? feedTotal : pending.length + promoPending.length;
+  const totalCount = (networkFeeds ? feedTotal : pending.length + promoPending.length) + partnerNew.length;
 
   // A ~40px tinted tile, its icon, a title over a status line, and a
   // right-aligned count in the tile's own colour — the mock's row, not the
@@ -9675,6 +9689,20 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
             </div>
           )}
         >
+          {/* Owner-only: new partnership requests from the gate. */}
+          {partnerNew.map((r) => (
+            <button key={`partner-${r.id}`} className="tm-nrow is-unread"
+              onClick={() => { try { sessionStorage.setItem("artium_admin_section", "partners"); } catch { /* private mode */ } setOpen(false); onGoToAdmin && onGoToAdmin(); }}
+              style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, textAlign: "left", padding: "13px 16px", border: "none", borderBottom: `1px solid ${C.inkLine}`, background: "transparent", cursor: "pointer", fontFamily: FONT_BODY }}>
+              <span className="tm-ntile" style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, background: "rgba(8,104,104,0.12)", color: C.brass, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Briefcase size={18} strokeWidth={2} />
+              </span>
+              <span style={{ flex: 1, minWidth: 0 }}>
+                <p className="tm-ntitle" style={{ margin: 0, fontSize: 15, fontWeight: 600, color: C.ivory, lineHeight: 1.3 }}>New partnership request</p>
+                <p className="tm-nsub" style={{ margin: "2px 0 0", fontSize: 13, color: C.ivoryDim, lineHeight: 1.3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.brand} wants to advertise on Artium</p>
+              </span>
+            </button>
+          ))}
           {/* Owner-only: promotion approval requests, in either panel format */}
           {promoPending.map((p) => (
             <div key={p.id} className="tm-nrow tm-nrow-card is-unread" style={{ padding: "12px 16px", background: "#EEF4FF", borderBottom: `1px solid ${C.inkLine}` }}>
@@ -13884,7 +13912,13 @@ function PromoteMe({ myProfile, authUser, focus }) {
 function AdminScreen({ authUser, onlineCount }) {
   const isRealUser = !!authUser?.id;
   const lsKey = "artium_promotions";
-  const [section, setSection] = useState("verifications");
+  const [section, setSection] = useState(() => {
+    try {
+      const s = sessionStorage.getItem("artium_admin_section");
+      if (s) { sessionStorage.removeItem("artium_admin_section"); return s; }
+    } catch { /* private mode */ }
+    return "verifications";
+  });
   const [tab, setTab] = useState("pending");
   const [rows, setRows] = useState([]);
 
@@ -14008,7 +14042,7 @@ function AdminScreen({ authUser, onlineCount }) {
 
         {/* Section toggle */}
         <div style={MODERN ? { display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" } : { display: "flex", gap: 8, justifyContent: "center" }}>
-          {[{ v: "verifications", t: "Student verifications" }, { v: "conservatories", t: "Conservatories" }, { v: "tracks", t: "Recordings" }, { v: "promotions", t: "Promotions" }].map(({ v, t }) => (
+          {[{ v: "verifications", t: "Student verifications" }, { v: "conservatories", t: "Conservatories" }, { v: "tracks", t: "Recordings" }, { v: "promotions", t: "Promotions" }, { v: "partners", t: "Partnerships" }].map(({ v, t }) => (
             <button key={v} onClick={() => setSection(v)}
               style={{ padding: "9px 18px", borderRadius: MODERN ? 10 : 999, fontSize: 13, fontWeight: 700, cursor: "pointer", background: section === v ? BRASS_GRAD : (MODERN ? "#FFFFFF" : warm("0.07")), color: section === v ? C.brassText : C.ivoryDim, border: section === v ? "none" : `1px solid ${C.inkLine}` }}>{t}</button>
           ))}
@@ -14017,6 +14051,7 @@ function AdminScreen({ authUser, onlineCount }) {
         {section === "verifications" && <AdminVerifications card={card} STATUS_COLOR={STATUS_COLOR} />}
         {section === "conservatories" && <AdminConservatories card={card} />}
         {section === "tracks" && <AdminTracks card={card} STATUS_COLOR={STATUS_COLOR} authUser={authUser} />}
+        {section === "partners" && <AdminPartners card={card} />}
 
         {section === "promotions" && <>
         <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
@@ -14187,6 +14222,79 @@ function AdminTrackList({ list, editable, card, names, busy, decide, removeTrack
   }
 
 const TRACK_REJECTION_DEFAULT = "Thank you for sharing your playing. This recording wasn't selected for the site's rotation — you're very welcome to submit a different one.";
+
+// Partnership / advertising requests sent from the gate's "Your brand here"
+// spots. Admin reads them, contacts the brand outside the app, and moves the
+// status along.
+const PARTNER_LABELS = {
+  category: { instruments: "Instruments & accessories", education: "Music education", venue_festival: "Venue or festival", publishing: "Sheet music & publishing", audio_recording: "Audio & recording", travel_lifestyle: "Travel & lifestyle", other: "Something else" },
+  placement: { partner_logo: "Partner logo", sponsored_spotlight: "Sponsored spotlight", both: "Logo + spotlight", not_sure: "Not sure yet" },
+  budget: { under_500: "Under €500", "500_2000": "€500–2,000", "2000_5000": "€2,000–5,000", over_5000: "€5,000+", discuss: "Let's discuss" },
+};
+const PARTNER_STATUSES = [["new", "New"], ["contacted", "Contacted"], ["accepted", "Accepted"], ["declined", "Declined"]];
+function AdminPartners({ card }) {
+  const [rows, setRows] = useState(null);
+  const [filter, setFilter] = useState("open");
+  const [err, setErr] = useState("");
+  async function load() {
+    const { data, error } = await supabase.from("partner_requests").select("*").order("created_at", { ascending: false });
+    if (error) { setErr(/partner_requests/.test(error.message) || error.code === "PGRST205" ? "The partner_requests table isn't set up yet — run its migration." : error.message); setRows([]); return; }
+    setErr(""); setRows(data || []);
+  }
+  React.useEffect(() => { load(); const id = setInterval(load, 10000); return () => clearInterval(id); }, []);
+  async function setStatus(r, status) {
+    setRows((cur) => cur.map((x) => x.id === r.id ? { ...x, status } : x));
+    const { error } = await supabase.from("partner_requests").update({ status, updated_at: new Date().toISOString() }).eq("id", r.id);
+    if (error) { window.alert(error.message); load(); }
+  }
+  if (rows === null) return <div style={{ ...card, textAlign: "center" }}><p style={{ margin: 0, fontSize: 14, color: C.ivoryDim }}>Loading…</p></div>;
+  const open = rows.filter((r) => r.status === "new" || r.status === "contacted");
+  const shown = filter === "open" ? open : rows;
+  const line = (label, value) => value ? (
+    <p style={{ margin: "0 0 4px", fontSize: 13, color: C.ivoryDim }}><span style={{ color: C.ivory, fontWeight: 600 }}>{label}:</span> {value}</p>
+  ) : null;
+  return (
+    <>
+      <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+        {[{ v: "open", t: `Open (${open.length})` }, { v: "all", t: `All (${rows.length})` }].map(({ v, t }) => (
+          <button key={v} onClick={() => setFilter(v)}
+            style={{ padding: "8px 16px", borderRadius: MODERN ? 10 : 20, fontSize: 13, fontWeight: 600, cursor: "pointer", background: SURF, color: filter === v ? C.ivory : C.ivoryDim, border: filter === v ? `2px solid ${C.brass}` : `1px solid ${C.inkLine}` }}>{t}</button>
+        ))}
+      </div>
+      {err && <div style={card}><p style={{ margin: 0, fontSize: 13, color: RED_C }}>{err}</p></div>}
+      {!err && shown.length === 0 && (
+        <div style={{ ...card, textAlign: "center" }}><p style={{ margin: 0, fontSize: 14, color: C.ivoryDim }}>{filter === "open" ? "No open partnership requests." : "No partnership requests yet."}</p></div>
+      )}
+      {shown.map((r) => (
+        <div key={r.id} style={card}>
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10, marginBottom: 8 }}>
+            <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: C.ivory }}>{r.brand}</p>
+            <span style={{ fontSize: 12, color: C.ivoryDim, flexShrink: 0 }}>{new Date(r.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</span>
+          </div>
+          {line("Contact", r.contact_name)}
+          <p style={{ margin: "0 0 4px", fontSize: 13, color: C.ivoryDim }}>
+            <span style={{ color: C.ivory, fontWeight: 600 }}>Email:</span>{" "}
+            <span style={{ userSelect: "all" }}>{r.email}</span>{" "}
+            <a href={`mailto:${encodeURIComponent(r.email)}?subject=${encodeURIComponent("Partnering with Artium")}`} style={{ color: C.brass, fontWeight: 600 }}>Write</a>
+          </p>
+          {line("Phone", r.phone)}
+          {line("Website", r.website)}
+          {line("Category", PARTNER_LABELS.category[r.category] || r.category)}
+          {line("Promoting", r.offering)}
+          {line("Placement", PARTNER_LABELS.placement[r.placement] || r.placement)}
+          {line("Budget", r.budget ? (PARTNER_LABELS.budget[r.budget] || r.budget) : "")}
+          <p style={{ margin: "10px 0 12px", padding: "10px 12px", borderRadius: 10, background: C.inkSoft, border: `1px solid ${C.inkLine}`, fontSize: 13.5, color: C.inkText, lineHeight: 1.55, whiteSpace: "pre-wrap" }}>{r.message}</p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            {PARTNER_STATUSES.map(([v, t]) => (
+              <button key={v} onClick={() => r.status !== v && setStatus(r, v)}
+                style={{ padding: "6px 12px", borderRadius: MODERN ? 8 : 999, fontSize: 12, fontWeight: 700, cursor: "pointer", border: r.status === v ? "none" : `1px solid ${C.inkLine}`, background: r.status === v ? (v === "declined" ? RED_C : v === "accepted" ? OK_C : C.brass) : "transparent", color: r.status === v ? "#fff" : C.ivoryDim }}>{t}</button>
+            ))}
+          </div>
+        </div>
+      ))}
+    </>
+  );
+}
 
 function AdminTracks({ card, STATUS_COLOR, authUser }) {
   const [rows, setRows] = useState([]);

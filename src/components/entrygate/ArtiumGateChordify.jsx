@@ -1,6 +1,7 @@
 import React, { useRef } from "react";
 import { CARDS, useTourActivation, useSpotlightTour, TourSpotlight, TourCard } from "./ArtiumGate";
 import { installState } from "../../pwa.js";
+import PartnerRequestSheet, { VacantPartnerTile } from "../PartnerRequest.jsx";
 import "./artium-gate-chordify.css";
 
 // Alternative entry gate in Chordify's design language (flat, teal, one sans).
@@ -157,6 +158,7 @@ export default function ArtiumGateChordify({
   const handlers = { onLearner, onPianist, onComposers, onNews: onNews || (() => {}) };
   const count = memberCount ?? 40;
   const medallionOff = !!learnerProfile && !studentLoggedIn;
+  const [partnerOpen, setPartnerOpen] = React.useState(false);
   const activateStudent = (e) => { if (e && e.preventDefault) e.preventDefault(); if (!medallionOff && onStudent) onStudent(); };
 
   return (
@@ -307,11 +309,16 @@ export default function ArtiumGateChordify({
 
         <article className="cg-card cg-partners">
           <h3>Our partners</h3>
-          <a href={ARTIUM_INSTAGRAM} target="_blank" rel="noreferrer" aria-label="aclassicaltone on Instagram">
-            <img src="/partner-aclassicaltone.png" alt="" width="44" height="44" />
-            <span>aclassicaltone</span>
-          </a>
+          <div className="cg-partner-row">
+            <a href={ARTIUM_INSTAGRAM} target="_blank" rel="noreferrer" aria-label="aclassicaltone on Instagram">
+              <img src="/partner-aclassicaltone.png" alt="" width="44" height="44" />
+              <span>aclassicaltone</span>
+            </a>
+            <VacantPartnerTile onClick={() => setPartnerOpen(true)} />
+            <VacantPartnerTile onClick={() => setPartnerOpen(true)} />
+          </div>
         </article>
+        <PartnerRequestSheet open={partnerOpen} onClose={() => setPartnerOpen(false)} />
       </main>
 
       <footer className="cg-foot">

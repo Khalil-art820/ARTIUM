@@ -280,3 +280,56 @@
 .cgate .cg-partners h3{font-family:'Unbounded','Fira Sans',system-ui,sans-serif;font-weight:900;font-size:24px;
   letter-spacing:-.01em;text-transform:uppercase;color:#FFFFFF;margin:0 0 22px;line-height:1}
 .cgate .cg-partners a{color:#FFFFFF}
+/* Title 25% smaller (24 → 18px). */
+.cgate .cg-partners h3{font-size:18px;margin-bottom:20px}
+/* One row: real partners first, then the open spots. */
+.cgate .cg-partner-row{display:flex;flex-wrap:wrap;align-items:flex-start;gap:18px 22px}
+.cgate .cg-partner-row > a{margin-right:0}
+.cgate .pr-vacant{display:inline-flex;flex-direction:column;align-items:center;gap:8px;color:rgba(255,255,255,.72);font-size:14px;font-weight:500}
+.cgate .pr-vacant-disc{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;
+  border:1.5px dashed rgba(255,255,255,.45);color:#FFFFFF;transition:border-color .2s, background .2s, transform .2s}
+.cgate .pr-vacant:hover .pr-vacant-disc,.cgate .pr-vacant:focus-visible .pr-vacant-disc{border-color:#FFFFFF;background:rgba(255,255,255,.08);transform:scale(1.04)}
+.cgate .pr-vacant-label{max-width:6.5em;line-height:1.2;text-align:center}
+
+/* ---- Partner request sheet ---- */
+.cgate .pr-overlay{position:fixed;inset:0;z-index:400;background:rgba(15,18,20,.55);display:flex;align-items:flex-end;justify-content:center;
+  animation:prFade .18s ease-out}
+@media (min-width:640px){.cgate .pr-overlay{align-items:center;padding:24px}}
+@keyframes prFade{from{opacity:0}to{opacity:1}}
+@keyframes prUp{from{transform:translateY(24px);opacity:.6}to{transform:none;opacity:1}}
+.cgate .pr-sheet{position:relative;width:100%;max-width:560px;max-height:92vh;overflow-y:auto;background:#FFFFFF;color:var(--ink);
+  border-radius:18px 18px 0 0;padding:26px 20px calc(22px + env(safe-area-inset-bottom,0px));animation:prUp .22s ease-out;-webkit-overflow-scrolling:touch}
+@media (min-width:640px){.cgate .pr-sheet{border-radius:18px}}
+.cgate .pr-close{position:absolute;top:14px;right:14px;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:#6B6B6B;background:#F4F1EE}
+.cgate .pr-kicker{margin:0 0 6px;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--teal)}
+.cgate .pr-sheet h2{margin:0 0 8px;font-family:'Unbounded','Fira Sans',sans-serif;font-weight:800;font-size:21px;line-height:1.2;color:var(--ink)}
+.cgate .pr-intro{margin:0 0 18px;font-size:15px;line-height:1.5;color:#555}
+.cgate .pr-sheet fieldset{border:0;margin:0 0 16px;padding:0}
+.cgate .pr-sheet legend{padding:0;margin:0 0 10px;font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#6B6B6B}
+.cgate .pr-sheet label{display:block;margin:0 0 12px;font-size:14px;font-weight:600;color:var(--ink)}
+.cgate .pr-sheet label > span,.cgate .pr-q > span{color:#C2410C;margin-left:2px}
+.cgate .pr-sheet em{font-style:normal;font-weight:400;color:#8A8A8A}
+.cgate .pr-sheet input:not([type=checkbox]),.cgate .pr-sheet textarea{display:block;width:100%;margin-top:6px;padding:11px 12px;font:inherit;font-weight:400;font-size:15px;
+  color:var(--ink);background:#FAF8F6;border:1px solid var(--line);border-radius:10px;outline:none;box-sizing:border-box}
+.cgate .pr-sheet input:focus,.cgate .pr-sheet textarea:focus{border-color:var(--teal);background:#FFFFFF;box-shadow:0 0 0 3px rgba(8,104,104,.12)}
+.cgate .pr-sheet textarea{resize:vertical;min-height:96px}
+.cgate .pr-row{display:grid;grid-template-columns:1fr;gap:0 12px}
+@media (min-width:480px){.cgate .pr-row{grid-template-columns:1fr 1fr}}
+.cgate .pr-q{margin:4px 0 8px;font-size:14px;font-weight:600}
+.cgate .pr-chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+.cgate .pr-chip{padding:8px 13px;border-radius:999px;border:1px solid var(--line);background:#FFFFFF;font-size:14px;color:#333;transition:all .15s}
+.cgate .pr-chip.is-on{background:var(--teal);border-color:var(--teal);color:#FFFFFF}
+.cgate .pr-count{margin:-6px 0 10px;text-align:right;font-size:12px;color:#8A8A8A}
+.cgate .pr-sr{font-size:0}
+.cgate .pr-consent{display:flex !important;align-items:flex-start;gap:10px;font-weight:400 !important;font-size:14px !important;color:#444 !important;line-height:1.4}
+.cgate .pr-consent input{margin-top:3px;width:18px;height:18px;accent-color:var(--teal);flex:none}
+.cgate .pr-err{margin:0 0 12px;padding:10px 12px;border-radius:10px;background:#FDECEA;color:#B3261E;font-size:14px}
+.cgate .pr-submit{display:block;width:100%;padding:14px 18px;border-radius:10px;background:var(--teal);color:#FFFFFF;font-size:17px;font-weight:600;transition:background .15s}
+.cgate .pr-submit:hover:not(:disabled){background:var(--teal2)}
+.cgate .pr-submit:disabled{opacity:.6}
+.cgate .pr-done{text-align:center;padding:18px 4px 4px}
+.cgate .pr-done-tick{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;margin:0 auto 14px;background:#E6F3EE;color:#1F8B6D}
+.cgate .pr-done p{margin:0 0 20px;font-size:15px;line-height:1.5;color:#444}
+.cgate .pr-sheet label.pr-sr{font-size:0;margin-bottom:6px}
+/* Real partner name and open-spot labels in one size. */
+.cgate .cg-partner-row > a span{font-size:14px;font-weight:600}
