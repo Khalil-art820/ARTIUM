@@ -535,3 +535,7 @@ html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern .tm-tab-dot{
   position:absolute;top:-1px;right:-3px;width:10px;height:10px;border-radius:50%;
   background:#FF3B30;border:2px solid #000;box-sizing:content-box;
 }
+/* Solid, smaller, and above the icon (the icon sits at z-index 1). */
+html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern .tm-tab-dot{
+  width:7px;height:7px;border:0;top:0;right:-2px;z-index:2;opacity:1;background:#FF3B30;
+}

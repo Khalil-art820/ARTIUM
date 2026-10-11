@@ -2358,7 +2358,7 @@ function useTabAttention({ authUser, myProfile, learnerProfile, students }) {
       try {
         const me = authUser.id;
         const { data: unread } = await supabase.from("direct_messages")
-          .select("sender_id").eq("recipient_id", me).is("read_at", null);
+          .select("sender_id").eq("recipient_id", me).neq("sender_id", me).is("read_at", null);
         const unreadFrom = new Set((unread || []).map((m) => m.sender_id));
         if (role === "learner") {
           const { data: sess } = await supabase.from("lesson_sessions")
