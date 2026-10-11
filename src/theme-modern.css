@@ -539,3 +539,5 @@ html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern .tm-tab-dot{
 html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern .tm-tab-dot{
   width:7px;height:7px;border:0;top:0;right:-2px;z-index:2;opacity:1;background:#FF3B30;
 }
+/* The account avatar now leads every top bar, before the wordmark. */
+html.theme-modern .tm-head-avatar{flex:none;display:inline-flex;align-items:center;border-radius:50%;box-shadow:0 0 0 1px rgba(255,255,255,.85)}

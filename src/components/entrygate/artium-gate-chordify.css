@@ -252,3 +252,5 @@
 .cgate .cg-app h2 .cg-word.cg-word-inline{font-size:1.15em;letter-spacing:.2em;margin-right:-.2em}
 .cgate .cg-app-for .cg-word.cg-word-inline{margin-right:-.16em}
 .cgate .cg-app-line{display:block}
+/* Avatar leads the bar now, in the brand icon's old place. */
+.cgate .cg-brand .cg-avatar{flex:none;margin-left:0}

@@ -164,10 +164,11 @@ export default function ArtiumGateChordify({
       <header className="cg-head">
         <div className="cg-head-in">
           <div className="cg-brand">
-          {/* The app's own icon beside the wordmark marks it as the app name. */}
-          {(() => { const BrandIcon = CARDS[0].Icon; return (
-            <span className="cg-brand-icon" aria-hidden="true"><BrandIcon /></span>
-          ); })()}
+          {/* Your avatar leads the bar, before the wordmark. */}
+          <button type="button" className="cg-avatar" onClick={onAvatar} disabled={!onAvatar}
+              title={avatarName || "Your account"} aria-label={avatarName ? `${avatarName} — your account` : "Your account"}>
+              {avatarNode || (avatarPhotoUrl ? <img src={avatarPhotoUrl} alt="" /> : <span aria-hidden="true">{accountInitials(avatarName)}</span>)}
+            </button>
           <div className="cg-word" aria-label="ARTIUM">
             {/* The house wordmark, kept from the original gate: Jost caps,
                 wide tracking, and the crossbar-less A drawn as a glyph. */}
@@ -198,10 +199,6 @@ export default function ArtiumGateChordify({
               </button>
             )}
             {bellSlot}
-            <button type="button" className="cg-avatar" onClick={onAvatar} disabled={!onAvatar}
-              title={avatarName || "Your account"} aria-label={avatarName ? `${avatarName} — your account` : "Your account"}>
-              {avatarNode || (avatarPhotoUrl ? <img src={avatarPhotoUrl} alt="" /> : <span aria-hidden="true">{accountInitials(avatarName)}</span>)}
-            </button>
           </div>
         </div>
       </header>

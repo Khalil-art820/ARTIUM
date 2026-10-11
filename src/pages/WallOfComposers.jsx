@@ -1,6 +1,5 @@
 import React from "react";
 import { ChevronLeft } from "lucide-react";
-import { CARDS } from "../components/entrygate/ArtiumGate";
 
 // Twelve, curated rather than exhaustive — a wall that names names instead
 // of trying to be a music history syllabus. Years and one line of legacy
@@ -25,7 +24,7 @@ const COMPOSERS = [
  * read. Same light material and serif/sans pairing as the rest of the
  * rebuilt gate, so leaving it doesn't feel like leaving Artium.
  */
-export default function WallOfComposers({ onBack, modern }) {
+export default function WallOfComposers({ onBack, modern, avatarNode }) {
   // The app around this page is dark, and so is the body behind it. On iOS,
   // rubber-band overscroll shows the body — a black flash framing a white
   // editorial page. Own the body while mounted; put it back on the way out.
@@ -37,12 +36,12 @@ export default function WallOfComposers({ onBack, modern }) {
   return (
     <div className="min-h-screen bg-white" style={{ colorScheme: "light" }}>
 {modern ? (
-        /* The app's shared teal header: back disc, brand icon, ARTIUM wordmark. */
+        /* The app's shared teal header: back disc, your avatar, ARTIUM wordmark. */
         <header className="artium-net-bar">
           <button className="artium-net-puck" onClick={onBack} aria-label="Back">
             <ChevronLeft size={17} strokeWidth={2} />
           </button>
-          {(() => { const BrandIcon = CARDS[0].Icon; return <span className="tm-brand-icon" aria-hidden="true"><BrandIcon /></span>; })()}
+          {avatarNode}
           <span className="artium-net-word" aria-label="ARTIUM">
             <svg viewBox="0 0 15 15" aria-hidden="true">
               <path d="M7.5 0.9 L1.4 14.4 M7.5 0.9 L13.6 14.4" stroke="currentColor" strokeWidth="2.85" fill="none" />

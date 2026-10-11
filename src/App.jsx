@@ -5104,7 +5104,11 @@ export default function App() {
           onTab={(k) => { if (k === "home") return; setScreen("app"); setAppTabPersist(k); }}
         />
       )}
-      {view === "composers" && <WallOfComposers onBack={backToEntry} modern={MODERN} />}
+      {view === "composers" && <WallOfComposers onBack={backToEntry} modern={MODERN} avatarNode={(myProfile || learnerProfile) ? (
+        <button onClick={myProfile ? goToProfile : () => { setLearnerStartTab("profile"); setScreen("learnerMap"); }} title="My profile" className="tm-head-avatar" style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}>
+          <Avatar name={(myProfile || learnerProfile).name} id="me" size={HEADER_CONTROL} photoUrl={(myProfile || learnerProfile).photoUrl || accountPhotoUrl} online />
+        </button>
+      ) : null} />}
       {view === "learnerSignup" && <LearnerSignup onSubmit={submitLearner} onBack={backToEntry} authUser={authUser} error={authError} />}
       {view === "learnerMap" && (
         <LearnerScreen
@@ -5228,6 +5232,15 @@ export default function App() {
           // Same header everywhere; only the back puck's destination varies
           // (tabs exit to the pin page, the student-profile overlay closes
           // back to where it was opened from).
+          // Modern: your avatar sits where the brand icon was, before the
+          // wordmark; the right side keeps count, play and bell.
+          const netAvatar = myProfile ? (
+            <button onClick={goToProfile} title="My profile" className={MODERN ? "tm-head-avatar" : undefined} style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}>
+              <Avatar name={myProfile.name} id="me" size={HEADER_CONTROL} photoUrl={myProfile.photoUrl} online />
+            </button>
+          ) : (
+            <span className={MODERN ? "tm-head-avatar" : undefined}><Avatar name={accountName || "?"} id="me" size={HEADER_CONTROL} photoUrl={accountPhotoUrl} /></span>
+          );
           const netHeaderWith = (onBackFn) => (
             <header className="artium-net-bar">
               {onBackFn && (
@@ -5235,7 +5248,7 @@ export default function App() {
                   <ChevronLeft size={17} strokeWidth={2} />
                 </button>
               )}
-              {MODERN && <span className="tm-brand-icon" aria-hidden="true">{React.createElement(GATE_CARDS[0].Icon)}</span>}
+              {MODERN && netAvatar}
               <span className="artium-net-word" aria-label="ARTIUM">
                 <svg viewBox="0 0 15 15" aria-hidden="true">
                   <path d="M7.5 0.9 L1.4 14.4 M7.5 0.9 L13.6 14.4" stroke="currentColor" strokeWidth="2.85" fill="none" />
@@ -5285,13 +5298,7 @@ export default function App() {
                     onGoToAdmin={() => { setSelectedStudentId(null); setAppTabPersist("admin"); }}
                   />
                 )}
-                {myProfile ? (
-                  <button onClick={goToProfile} title="My profile" style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}>
-                    <Avatar name={myProfile.name} id="me" size={HEADER_CONTROL} photoUrl={myProfile.photoUrl} online />
-                  </button>
-                ) : (
-                  <Avatar name={accountName || "?"} id="me" size={HEADER_CONTROL} photoUrl={accountPhotoUrl} />
-                )}
+                {!MODERN && netAvatar}
               </span>
             </header>
           );
@@ -5748,6 +5755,17 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
     { n: "6", t: "Marketing and Advertising", Icon: IconMegaphone,
       d: <>Claim your promotional video on <a href="https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==" target="_blank" rel="noreferrer">aclassicaltone</a> (may be subject to fees, as per our partnership agreement).</> },
   ];
+  // One account for the whole app: even mid-way through a role flow (before
+  // there's a profiles row), the session already has a face — Google's photo,
+  // or initials off whatever name is known yet. Modern: drawn before the
+  // wordmark instead of at the far right.
+  const lpAvatar = myProfile ? (
+    <button onClick={onProfile} title="My profile" className={MODERN ? "tm-head-avatar" : undefined} style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}>
+      <Avatar name={myProfile.name} id="me" size={HEADER_CONTROL} photoUrl={myProfile.photoUrl} online />
+    </button>
+  ) : (
+    <span className={MODERN ? "tm-head-avatar" : undefined}><Avatar name={avatarName || "?"} id="me" size={HEADER_CONTROL} photoUrl={avatarPhotoUrl} /></span>
+  );
   return (
     // Re-skinned into the gate's current light theme (grey ground, ink/gold,
     // Playfair + Jost) — this used to be "the gate's world, continued" in the
@@ -5775,7 +5793,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
             not <GateLogo>, which is the OLD dark gate's champagne pin+serif
             mark and colors itself inline (can't be re-themed by CSS). Same
             "A" glyph as src/components/entrygate/ArtiumGate.jsx's header. */}
-        {MODERN && <span className="tm-brand-icon" aria-hidden="true">{React.createElement(GATE_CARDS[0].Icon)}</span>}
+        {MODERN && lpAvatar}
         <span className="artium-lp-word" aria-label="ARTIUM">
           <svg className="artium-lp-word-a" viewBox="0 0 15 15" aria-hidden="true">
             <path d="M7.5 0.9 L1.4 14.4 M7.5 0.9 L13.6 14.4" stroke="currentColor" strokeWidth="2.85" fill="none" />
@@ -5824,17 +5842,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
               onGoToAdmin={onGoToAdmin}
             />
           )}
-          {myProfile ? (
-            <button onClick={onProfile} title="My profile" style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}>
-              <Avatar name={myProfile.name} id="me" size={HEADER_CONTROL} photoUrl={myProfile.photoUrl} online />
-            </button>
-          ) : (
-            // One account for the whole app: even mid-way through a role
-            // flow (before there's a profiles row to hang the button above
-            // off), the session behind this screen already has a face —
-            // Google's photo, or initials off whatever name is known yet.
-            <Avatar name={avatarName || "?"} id="me" size={HEADER_CONTROL} photoUrl={avatarPhotoUrl} />
-          )}
+          {!MODERN && lpAvatar}
         </div>
       </header>
 
@@ -11846,6 +11854,20 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
     setTimeout(() => setSaved(false), 2000);
   }
 
+  const learnerAvatar = (
+    <button
+      onClick={selectedId ? undefined : () => setAppTab("profile")}
+      title={selectedId ? undefined : "My profile"}
+      className={MODERN ? "tm-head-avatar" : undefined}
+      style={{ background: "none", border: "none", padding: 0, cursor: selectedId ? "default" : "pointer" }}
+    >
+      {learner ? (
+        <Avatar name={learner.name} id="me" size={HEADER_CONTROL} photoUrl={learner.photoUrl} online />
+      ) : (
+        <Avatar name={avatarName || "?"} id="me" size={HEADER_CONTROL} photoUrl={avatarPhotoUrl} />
+      )}
+    </button>
+  );
   return (
     <div className="min-h-full flex flex-col artium-has-tabs" style={{ background: C.inkSoft, color: C.ivory }}>
       {/* Same header the conservatory side draws on its network/welcome
@@ -11863,7 +11885,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
             <ChevronLeft size={17} strokeWidth={2} />
           </button>
         )}
-        {MODERN && <span className="tm-brand-icon" aria-hidden="true">{React.createElement(GATE_CARDS[0].Icon)}</span>}
+        {MODERN && learnerAvatar}
         <span className="artium-net-word" aria-label="ARTIUM">
           <svg viewBox="0 0 15 15" aria-hidden="true">
             <path d="M7.5 0.9 L1.4 14.4 M7.5 0.9 L13.6 14.4" stroke="currentColor" strokeWidth="2.85" fill="none" />
@@ -11903,17 +11925,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
               setFocusSessionReq(sessionId ? { sessionId, detail: detail || null, at: Date.now() } : null);
             }}
           />
-          <button
-            onClick={selectedId ? undefined : () => setAppTab("profile")}
-            title={selectedId ? undefined : "My profile"}
-            style={{ background: "none", border: "none", padding: 0, cursor: selectedId ? "default" : "pointer" }}
-          >
-            {learner ? (
-              <Avatar name={learner.name} id="me" size={HEADER_CONTROL} photoUrl={learner.photoUrl} online />
-            ) : (
-              <Avatar name={avatarName || "?"} id="me" size={HEADER_CONTROL} photoUrl={avatarPhotoUrl} />
-            )}
-          </button>
+          {!MODERN && learnerAvatar}
         </span>
       </header>
       <div className="flex-1">
