@@ -2335,6 +2335,88 @@ function AuthPrompt() {
   );
 }
 
+// Which bottom tabs still hold something waiting on this account: unread
+// chat, an unanswered request or proposal, a verdict not yet seen, a lesson
+// still to pay. Each flag clears once the thing is done. Polled; screens that
+// resolve something fire "artium-attention-refresh" to re-check at once.
+const PROMO_SEEN_KEY = "artium_seen_mypromo_v1";
+const TRACK_SEEN_KEY = "artium_seen_mytracks_v1";
+const promoVerdictKey = (p) => `${p.id}:${p.status}:${p.decided_at || ""}`;
+function useTabAttention({ authUser, myProfile, learnerProfile, students }) {
+  const [state, setState] = useState({ messages: false, lessons: false, promote: false });
+  const [tick, setTick] = useState(0);
+  React.useEffect(() => {
+    const bump = () => setTick((n) => n + 1);
+    window.addEventListener("artium-attention-refresh", bump);
+    return () => window.removeEventListener("artium-attention-refresh", bump);
+  }, []);
+  const role = myProfile ? "student" : learnerProfile ? "learner" : null;
+  React.useEffect(() => {
+    if (!authUser?.id || !role) { setState({ messages: false, lessons: false, promote: false }); return; }
+    let live = true;
+    async function load() {
+      try {
+        const me = authUser.id;
+        const { data: unread } = await supabase.from("direct_messages")
+          .select("sender_id").eq("recipient_id", me).is("read_at", null);
+        const unreadFrom = new Set((unread || []).map((m) => m.sender_id));
+        if (role === "learner") {
+          const { data: sess } = await supabase.from("lesson_sessions")
+            .select("teacher_id, session_date, session_time, status, paid").eq("learner_id", me);
+          const charges = (tid) => { const t = students.find((x) => x.id === tid); return !!(t?.teaching?.open && t?.teaching?.price); };
+          const sessionAction = (sess || []).some((r) => !sessionTimePassed(r.session_date, r.session_time) && (
+            r.status === "teacher_proposed" || (r.status === "confirmed" && !r.paid && charges(r.teacher_id))));
+          if (live) setState({ messages: false, promote: false, lessons: sessionAction || unreadFrom.size > 0 });
+          return;
+        }
+        const [{ data: reqs }, { data: counters }, { data: promos }, { data: tracks }] = await Promise.all([
+          supabase.from("teach_requests").select("learner_id, status").eq("teacher_id", me),
+          supabase.from("lesson_sessions").select("session_date, session_time").eq("teacher_id", me).eq("status", "student_proposed"),
+          supabase.from("promotions").select("id, kind, status, decided_at").eq("user_id", me).neq("status", "pending"),
+          supabase.from("student_tracks").select("id, status, decided_at").eq("user_id", me).neq("status", "pending").not("decided_at", "is", null),
+        ]);
+        const learnerIds = new Set((reqs || []).filter((r) => r.status === "accepted").map((r) => r.learner_id));
+        const lessons = (reqs || []).some((r) => r.status === "pending")
+          || (counters || []).some((r) => !sessionTimePassed(r.session_date, r.session_time))
+          || [...unreadFrom].some((id) => learnerIds.has(id));
+        const messages = [...unreadFrom].some((id) => !learnerIds.has(id));
+        const seenP = readAckIds(PROMO_SEEN_KEY), seenT = readAckIds(TRACK_SEEN_KEY);
+        let promote = (promos || []).some((p) => !seenP.includes(promoVerdictKey(p)))
+          || (tracks || []).some((t) => !seenT.includes(promoVerdictKey(t)));
+        if (!promote && (promos || []).some((p) => p.kind === "paid" && p.status === "approved")) {
+          const { data: paid } = await supabase.from("payments").select("id").eq("kind", "promotion").eq("status", "paid").limit(1);
+          promote = !(paid && paid.length);
+        }
+        if (live) setState({ messages, lessons, promote });
+      } catch { /* keep the last answer */ }
+    }
+    load();
+    const t = setInterval(load, 15000);
+    return () => { live = false; clearInterval(t); };
+  }, [authUser?.id, role, tick, students.length]);
+  return state;
+}
+
+// Opening Promote is seeing its verdicts: stamp them seen for the bell and
+// the tab dot alike.
+async function markPromoteVerdictsSeen(userId) {
+  if (!userId) return;
+  try {
+    const [{ data: promos }, { data: tracks }] = await Promise.all([
+      supabase.from("promotions").select("id, status, decided_at").eq("user_id", userId).neq("status", "pending"),
+      supabase.from("student_tracks").select("id, status, decided_at").eq("user_id", userId).neq("status", "pending").not("decided_at", "is", null),
+    ]);
+    const merge = (key, rows) => {
+      const next = Array.from(new Set([...readAckIds(key), ...(rows || []).map(promoVerdictKey)]));
+      localStorage.setItem(key, JSON.stringify(next));
+    };
+    merge(PROMO_SEEN_KEY, promos); merge("artium_ack_mypromo_v1", promos);
+    merge(TRACK_SEEN_KEY, tracks); merge("artium_ack_mytracks_v1", tracks);
+    window.dispatchEvent(new Event("artium-seen-change"));
+    window.dispatchEvent(new Event("artium-attention-refresh"));
+  } catch { /* private mode */ }
+}
+
 export default function App() {
   const [unlocked, setUnlocked] = useState(() => localStorage.getItem(ACCESS_KEY) === "1");
   const [onlineCount, setOnlineCount] = useState(1);
@@ -2722,12 +2804,19 @@ export default function App() {
   // there's no unread-badge consumer for this yet (the existing badges count
   // local "them" messages against a locally-remembered last-seen count), but
   // the truth belongs in the database for whenever one is built.
+  // Also re-runs as new messages land in the open thread, and only counts
+  // as reading while the student actually has Messages on screen.
+  const activeThreadLen = activeChatId ? (conversations[activeChatId] || []).length : 0;
   React.useEffect(() => {
     if (!authUser?.id || !activeChatId) return;
+    if (myProfile && !(screen === "app" && appTab === "messages")) return;
     supabase.from("direct_messages").update({ read_at: new Date().toISOString() })
       .eq("recipient_id", authUser.id).eq("sender_id", activeChatId).is("read_at", null)
-      .then(({ error }) => { if (error) console.error("mark messages read failed", error.message); });
-  }, [authUser?.id, activeChatId]);
+      .then(({ error }) => {
+        if (error) console.error("mark messages read failed", error.message);
+        else window.dispatchEvent(new Event("artium-attention-refresh"));
+      });
+  }, [authUser?.id, activeChatId, activeThreadLen, screen, appTab]);
   const [showGuestPrompt, setShowGuestPrompt] = useState(false);
 
   const [musicOn, setMusicOn] = useState(false);
@@ -2795,6 +2884,12 @@ export default function App() {
     (q.status === "agreed" && !q.pianistSignedAt) || pianistOfferAttention[q.id]).map((q) => q.id);
   const pianistAttentionCount = pianistAttentionIds.length;
   const pianistNeedsAttention = pianistAttentionCount > 0;
+
+  const tabAttention = useTabAttention({ authUser, myProfile, learnerProfile, students });
+  const tabDots = { ...tabAttention, concerts: pianistNeedsAttention };
+  React.useEffect(() => {
+    if (screen === "app" && appTab === "promote" && authUser?.id) markPromoteVerdictsSeen(authUser.id);
+  }, [screen, appTab, authUser?.id]);
 
   // Admin is now strictly profiles.is_admin — a real, signed-in account. The
   // demo teacher used to count too, which put the tab on screen while every
@@ -4999,6 +5094,7 @@ export default function App() {
           active="home"
           dimmed={!myProfile}
           modern={MODERN}
+          dots={tabDots}
           onTab={(k) => { if (k === "home") return; setScreen("app"); setAppTabPersist(k); }}
         />
       )}
@@ -5006,6 +5102,7 @@ export default function App() {
       {view === "learnerSignup" && <LearnerSignup onSubmit={submitLearner} onBack={backToEntry} authUser={authUser} error={authError} />}
       {view === "learnerMap" && (
         <LearnerScreen
+          lessonDot={tabAttention.lessons}
           initialTab={learnerStartTab}
           entryFocus={learnerEntryFocus}
           authUser={authUser}
@@ -5054,6 +5151,7 @@ export default function App() {
       {view === "landing" && (
         <BottomTabs
           modern={MODERN}
+          dots={tabDots}
           light
           items={
             !myProfile ? STUDENT_TABS :
@@ -5445,6 +5543,7 @@ export default function App() {
       {view === "app" && (
         <BottomTabs
           modern={MODERN}
+          dots={tabDots}
           light
           items={
             !myProfile ? GUEST_TABS :
@@ -9278,6 +9377,17 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
   // opening the bell quiets the badge, but the row keeps reading "3 new
   // posts" until the student actually goes and looks — the two stamps are
   // deliberately different clocks.
+  // Promote stamps verdicts seen when it's opened; pick that up live.
+  React.useEffect(() => {
+    const reread = () => {
+      setSeenPromoKeys(readAckIds("artium_seen_mypromo_v1"));
+      setAckPromoKeys(readAckIds("artium_ack_mypromo_v1"));
+      setSeenTrackKeys(readAckIds("artium_seen_mytracks_v1"));
+      setAckTrackKeys(readAckIds("artium_ack_mytracks_v1"));
+    };
+    window.addEventListener("artium-seen-change", reread);
+    return () => window.removeEventListener("artium-seen-change", reread);
+  }, []);
   const [seenComposersTs, setSeenComposersTs] = React.useState(() => readTs("artium_seen_composers_v1"));
   const [seenNewsTs, setSeenNewsTs] = React.useState(() => readTs("artium_seen_news_v1"));
   const [ackComposersTs, setAckComposersTs] = React.useState(() => readTs("artium_ackts_composers_v1"));
@@ -10491,7 +10601,7 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
  * Promote and Lessons take the space, since those were reachable only from
  * the strip that this replaces.
  */
-function BottomTabs({ items, active, onTab, light, dimmed, modern }) {
+function BottomTabs({ items, active, onTab, light, dimmed, modern, dots }) {
   // filter/pointer-events go on the nav itself: a wrapper div with filter
   // would become the containing block for this position:fixed bar and pull
   // it out of the viewport corner.
@@ -10499,7 +10609,7 @@ function BottomTabs({ items, active, onTab, light, dimmed, modern }) {
     <nav className={`artium-aw-tabs${light ? " artium-aw-tabs--light" : ""}${modern ? " artium-aw-tabs--modern" : ""}`} style={dimmed ? { opacity: .45, filter: "saturate(.6)", pointerEvents: "none" } : undefined} aria-hidden={dimmed || undefined}>
       {/* Modern: the avatar in every top bar is the way to the profile, so
           the bar doesn't repeat it. */}
-      {items.filter((it) => !(modern && it.k === "profile")).map(({ k, label, Icon, attention }) => (
+      {items.filter((it) => !(modern && it.k === "profile")).map(({ k, label, Icon, attention: own }) => { const attention = own || !!dots?.[k]; return (
         <button key={k} data-k={k} data-on={k === active ? "1" : "0"} onClick={() => onTab(k)} aria-label={label}>
           <span style={{ position: "relative", display: "inline-flex" }}>
             <Icon size={19} strokeWidth={1.7} />
@@ -10507,12 +10617,13 @@ function BottomTabs({ items, active, onTab, light, dimmed, modern }) {
                 response, is the one thing on this tab that costs something if
                 it sits — everything else can wait for a visit. */}
             {attention && (
-              <span style={{ position: "absolute", top: -2, right: -3, width: 8, height: 8, borderRadius: "50%", background: C.brass, border: `1.5px solid ${C.ink}` }} />
+              <span className={modern ? "tm-tab-dot" : undefined} aria-label="Needs your attention"
+                style={modern ? undefined : { position: "absolute", top: -2, right: -3, width: 8, height: 8, borderRadius: "50%", background: C.brass, border: `1.5px solid ${C.ink}` }} />
             )}
           </span>
           {label}
         </button>
-      ))}
+      ); })}
     </nav>
   );
 }
@@ -11563,7 +11674,7 @@ function LearnerNotificationBell({ authUser, teachers, learnerSessionsByTeacher,
 }
 
 /* ---- Learner home: map + request + chat ---- */
-function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendRequest, conversations, activeChatId, setActiveChatId, onSend, onSendTo, onBack, onUpdateProfile, onLogout, onDeleteAccount, memberCount, musicOn, onMusicToggle, avatarPhotoUrl, avatarName, initialTab = "map", authUser }) {
+function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendRequest, conversations, activeChatId, setActiveChatId, onSend, onSendTo, onBack, onUpdateProfile, onLogout, onDeleteAccount, memberCount, musicOn, onMusicToggle, avatarPhotoUrl, avatarName, initialTab = "map", authUser, lessonDot }) {
   const [appTab, setAppTab] = useState(initialTab);
   const [selectedConsId, setSelectedConsId] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
@@ -12301,6 +12412,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
       {!(selectedId && appTab === "lesson") && (
         <BottomTabs
           modern={MODERN}
+          dots={{ lesson: !!lessonDot }}
           light
           items={[
             { k: "home", label: "Home", Icon: Home },
@@ -12444,6 +12556,14 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
   const [lastSeenCount, setLastSeenCount] = useState(themMsgCount);
   const unreadCount = Math.max(0, themMsgCount - lastSeenCount);
   React.useEffect(() => { if (tab === "chat") setLastSeenCount(themMsgCount); }, [tab, themMsgCount]);
+  // Reading the chat here is reading it for real: mark it in the database so
+  // the Lessons tab dot and every other unread signal agree.
+  React.useEffect(() => {
+    if (tab !== "chat" || !authUser?.id || !teacher?.id) return;
+    supabase.from("direct_messages").update({ read_at: new Date().toISOString() })
+      .eq("recipient_id", authUser.id).eq("sender_id", teacher.id).is("read_at", null)
+      .then(({ error }) => { if (!error) window.dispatchEvent(new Event("artium-attention-refresh")); });
+  }, [tab, authUser?.id, teacher?.id, themMsgCount]);
 
   const [sessions, setSessions] = useState([]); // filled by the DB loader below
 
@@ -15116,12 +15236,16 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView, focus }) {
 
   // Mark the open learner thread's incoming messages read, same as the
   // top-level Messages/LessonRoom side.
+  const openThreadLen = activeLearner ? (messagesByLearner[activeLearner.id] || []).length : 0;
   React.useEffect(() => {
     if (!activeLearner || tab !== "chat") return;
     supabase.from("direct_messages").update({ read_at: new Date().toISOString() })
       .eq("recipient_id", tid).eq("sender_id", activeLearner.id).is("read_at", null)
-      .then(({ error }) => { if (error) console.error("mark messages read failed", error.message); });
-  }, [tid, activeLearner?.id, tab]);
+      .then(({ error }) => {
+        if (error) console.error("mark messages read failed", error.message);
+        else window.dispatchEvent(new Event("artium-attention-refresh"));
+      });
+  }, [tid, activeLearner?.id, tab, openThreadLen]);
   const [selectedSessionId, setSelectedSessionId] = useState(null);
   const [showPropose, setShowPropose] = useState(false);
   const [proposeErr, setProposeErr] = useState("");

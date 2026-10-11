@@ -530,3 +530,8 @@ html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button[data-k="concerts
 html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button[data-k="concerts"][data-on="1"] svg{fill-opacity:1;width:27px;height:27px}
 html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button > span:first-child > span[aria-hidden="true"]{width:24px !important;height:29px !important}
 html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button svg mask *{fill-opacity:1}
+/* Tab needs-your-action dot: red, ringed in the bar's black. */
+html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern .tm-tab-dot{
+  position:absolute;top:-1px;right:-3px;width:10px;height:10px;border-radius:50%;
+  background:#FF3B30;border:2px solid #000;box-sizing:content-box;
+}
