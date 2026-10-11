@@ -2379,7 +2379,10 @@ function useTabAttention({ authUser, myProfile, learnerProfile, students }) {
         const lessons = (reqs || []).some((r) => r.status === "pending")
           || (counters || []).some((r) => !sessionTimePassed(r.session_date, r.session_time))
           || [...unreadFrom].some((id) => learnerIds.has(id));
-        const messages = [...unreadFrom].some((id) => !learnerIds.has(id));
+        // Only conversations the Messages tab can actually open (it lists
+        // student profiles); anything else could never be cleared there.
+        const studentIds = new Set(students.map((x) => x.id));
+        const messages = [...unreadFrom].some((id) => !learnerIds.has(id) && studentIds.has(id));
         const seenP = readAckIds(PROMO_SEEN_KEY), seenT = readAckIds(TRACK_SEEN_KEY);
         let promote = (promos || []).some((p) => !seenP.includes(promoVerdictKey(p)))
           || (tracks || []).some((t) => !seenT.includes(promoVerdictKey(t)));
