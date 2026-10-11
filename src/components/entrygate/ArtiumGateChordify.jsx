@@ -182,7 +182,7 @@ export default function ArtiumGateChordify({
             <span className="cg-count" title="Members" aria-label={`${count} members`}>
               {/* Step 3's "Connect worldwide" mark — three figures, the middle one larger. */}
               <svg width="31" height="31" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <circle cx="12" cy="8.1" r="3.1" /><path d="M5.9 20.1a6.1 6.1 0 0 1 12.2 0z" />
+                <circle cx="12" cy="8.1" r="3.1" fill="currentColor" /><path d="M5.9 20.1a6.1 6.1 0 0 1 12.2 0z" fill="currentColor" />
                 <circle cx="4.6" cy="10.6" r="2.1" /><path d="M1.2 19.2a3.6 3.6 0 0 1 3.1-4.4" />
                 <circle cx="19.4" cy="10.6" r="2.1" /><path d="M22.8 19.2a3.6 3.6 0 0 0-3.1-4.4" />
               </svg>

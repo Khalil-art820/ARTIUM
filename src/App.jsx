@@ -5270,7 +5270,7 @@ export default function App() {
               </span>
               <span className="artium-net-right">
                 <span className="artium-net-count" title="Members" aria-label={`${Object.values(studentsByCons).flat().length} members`}>
-                  {MODERN ? <IconThreePeople size={31} strokeWidth={1.6} /> : <Users size={15} strokeWidth={1.8} />}
+                  {MODERN ? <IconThreePeople size={31} strokeWidth={1.6} solidMiddle /> : <Users size={15} strokeWidth={1.8} />}
                   {Object.values(studentsByCons).flat().length}
                 </span>
                 {/* The bell's own button, glyph swapped for the play
@@ -5723,10 +5723,10 @@ const IconGlobePin = (p) => (
     <circle cx="18.2" cy="6.2" r="1.35" />
   </IconBox>
 );
-const IconThreePeople = (p) => (
+const IconThreePeople = ({ solidMiddle, ...p }) => (
   <IconBox {...p}>
-    <circle cx="12" cy="8.1" r="3.1" />
-    <path d="M5.9 20.1a6.1 6.1 0 0 1 12.2 0z" />
+    <circle cx="12" cy="8.1" r="3.1" fill={solidMiddle ? "currentColor" : "none"} />
+    <path d="M5.9 20.1a6.1 6.1 0 0 1 12.2 0z" fill={solidMiddle ? "currentColor" : "none"} />
     <circle cx="4.6" cy="10.6" r="2.1" />
     <path d="M1.2 19.2a3.6 3.6 0 0 1 3.1-4.4" />
     <circle cx="19.4" cy="10.6" r="2.1" />
@@ -5820,7 +5820,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
               .artium-net-puck now, the bell's own class, so the two can
               never drift apart in size or material again. */}
           <span className="artium-gx-count">
-            {MODERN ? <IconThreePeople size={31} strokeWidth={1.6} /> : <Users size={16} strokeWidth={1.8} />}
+            {MODERN ? <IconThreePeople size={31} strokeWidth={1.6} solidMiddle /> : <Users size={16} strokeWidth={1.8} />}
             {memberCount}
           </span>
           {onMusicToggle && (
@@ -6804,7 +6804,7 @@ function PianistDiscover({ students, onOpen }) {
         <span />
         <GateLogo word={21} />
         <span className="artium-aw-bar-right">
-          <span className="artium-aw-count">{MODERN ? <IconThreePeople size={31} strokeWidth={1.6} /> : <Users size={16} strokeWidth={1.8} />}{students.length}</span>
+          <span className="artium-aw-count">{MODERN ? <IconThreePeople size={31} strokeWidth={1.6} solidMiddle /> : <Users size={16} strokeWidth={1.8} />}{students.length}</span>
         </span>
       </header>
 
@@ -11911,7 +11911,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
         </span>
         <span className="artium-net-right">
           <span className="artium-net-count" title="Members" aria-label={`${memberCount} members`}>
-            {MODERN ? <IconThreePeople size={31} strokeWidth={1.6} /> : <Users size={15} strokeWidth={1.8} />}
+            {MODERN ? <IconThreePeople size={31} strokeWidth={1.6} solidMiddle /> : <Users size={15} strokeWidth={1.8} />}
             {memberCount}
           </span>
           <button
