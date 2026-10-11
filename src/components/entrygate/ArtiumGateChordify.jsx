@@ -180,7 +180,12 @@ export default function ArtiumGateChordify({
           </div>
           <div className="cg-actions">
             <span className="cg-count" title="Members" aria-label={`${count} members`}>
-              <Svg size={16}><circle cx="12" cy="8" r="3.6" /><path d="M4.5 20c1.4-3.4 4.2-5 7.5-5s6.1 1.6 7.5 5" /></Svg>
+              {/* Step 3's "Connect worldwide" mark — three figures, the middle one larger. */}
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="12" cy="8.1" r="3.1" /><path d="M5.9 20.1a6.1 6.1 0 0 1 12.2 0z" />
+                <circle cx="4.6" cy="10.6" r="2.1" /><path d="M1.2 19.2a3.6 3.6 0 0 1 3.1-4.4" />
+                <circle cx="19.4" cy="10.6" r="2.1" /><path d="M22.8 19.2a3.6 3.6 0 0 0-3.1-4.4" />
+              </svg>
               {count}
             </span>
             {onMusicToggle && (
