@@ -541,3 +541,7 @@ html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern .tm-tab-dot{
 }
 /* The account avatar now leads every top bar, before the wordmark. */
 html.theme-modern .tm-head-avatar{flex:none;display:inline-flex;align-items:center;border-radius:50%;box-shadow:0 0 0 1px rgba(255,255,255,.85)}
+/* One avatar for every top bar: 34px, no ring, no border, photo edge to edge. */
+html.theme-modern .tm-head-avatar{box-shadow:none;width:34px;height:34px}
+html.theme-modern .tm-head-avatar > div{width:34px !important;height:34px !important}
+html.theme-modern .tm-head-avatar img{border:0 !important}

@@ -254,3 +254,9 @@
 .cgate .cg-app-line{display:block}
 /* Avatar leads the bar now, in the brand icon's old place. */
 .cgate .cg-brand .cg-avatar{flex:none;margin-left:0}
+/* Same avatar as every other top bar: 34px, no white disc around it. */
+.cgate .cg-avatar{width:34px;height:34px;background:transparent;padding:0}
+.cgate .cg-avatar > div{width:34px!important;height:34px!important}
+.cgate .cg-avatar img{border:0!important}
+/* Initials fallback (no Avatar node) keeps a filled disc of its own. */
+.cgate .cg-avatar > span{width:100%;height:100%;display:grid;place-items:center;border-radius:50%;background:#fff;color:var(--teal)}
