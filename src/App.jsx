@@ -5270,7 +5270,7 @@ export default function App() {
               </span>
               <span className="artium-net-right">
                 <span className="artium-net-count" title="Members" aria-label={`${Object.values(studentsByCons).flat().length} members`}>
-                  {MODERN ? <IconThreePeople size={20} strokeWidth={1.8} /> : <Users size={15} strokeWidth={1.8} />}
+                  {MODERN ? <IconThreePeople size={26} strokeWidth={1.7} /> : <Users size={15} strokeWidth={1.8} />}
                   {Object.values(studentsByCons).flat().length}
                 </span>
                 {/* The bell's own button, glyph swapped for the play
@@ -5820,7 +5820,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
               .artium-net-puck now, the bell's own class, so the two can
               never drift apart in size or material again. */}
           <span className="artium-gx-count">
-            {MODERN ? <IconThreePeople size={20} strokeWidth={1.8} /> : <Users size={16} strokeWidth={1.8} />}
+            {MODERN ? <IconThreePeople size={26} strokeWidth={1.7} /> : <Users size={16} strokeWidth={1.8} />}
             {memberCount}
           </span>
           {onMusicToggle && (
@@ -6804,7 +6804,7 @@ function PianistDiscover({ students, onOpen }) {
         <span />
         <GateLogo word={21} />
         <span className="artium-aw-bar-right">
-          <span className="artium-aw-count">{MODERN ? <IconThreePeople size={20} strokeWidth={1.8} /> : <Users size={16} strokeWidth={1.8} />}{students.length}</span>
+          <span className="artium-aw-count">{MODERN ? <IconThreePeople size={26} strokeWidth={1.7} /> : <Users size={16} strokeWidth={1.8} />}{students.length}</span>
         </span>
       </header>
 
@@ -11911,7 +11911,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
         </span>
         <span className="artium-net-right">
           <span className="artium-net-count" title="Members" aria-label={`${memberCount} members`}>
-            {MODERN ? <IconThreePeople size={20} strokeWidth={1.8} /> : <Users size={15} strokeWidth={1.8} />}
+            {MODERN ? <IconThreePeople size={26} strokeWidth={1.7} /> : <Users size={15} strokeWidth={1.8} />}
             {memberCount}
           </span>
           <button
