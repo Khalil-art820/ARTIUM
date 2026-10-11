@@ -9181,6 +9181,10 @@ function sessionTimePassed(date, time) {
   const t = new Date(`${date}T${time || "00:00"}`).getTime();
   return Number.isFinite(t) && t < Date.now();
 }
+function localTodayStr() {
+  const d = new Date();
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+}
 function dbRowToSession(row) {
   return {
     id: row.id,
@@ -12660,6 +12664,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
   function submitCounter(id) {
     const d = counterDate[id]; const t = counterTime[id];
     if (!d || !t) return;
+    if (sessionTimePassed(d, t)) { window.alert("That time has already passed — pick a date and time later than now."); return; }
     const before = sessions.find((s) => s.id === id);
     // Re-countering your own counter keeps the teacher's time as the
     // "was", since that is the one the teacher last agreed to look at.
@@ -12936,7 +12941,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
                         {isConfirmed ? "Suggest a new time (requires teacher re-confirmation):" : "Suggest a different time:"}
                       </p>
                       <div style={{ display: "flex", gap: 8 }}>
-                        <input type="date" value={counterDate[sel.id] || ""} onChange={(e) => setCounterDate((p) => ({ ...p, [sel.id]: e.target.value }))}
+                        <input type="date" min={localTodayStr()} value={counterDate[sel.id] || ""} onChange={(e) => setCounterDate((p) => ({ ...p, [sel.id]: e.target.value }))}
                           style={{ flex: 1, background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 9, padding: "8px 10px", fontSize: 13, color: C.inkText, outline: "none" }} />
                         <input type="time" value={counterTime[sel.id] || ""} onChange={(e) => setCounterTime((p) => ({ ...p, [sel.id]: e.target.value }))}
                           style={{ flex: 1, background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 9, padding: "8px 10px", fontSize: 13, color: C.inkText, outline: "none" }} />
@@ -15406,6 +15411,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView, focus }) {
 
   function proposeSession() {
     if (!newDate || !newTime || !activeLearner) return;
+    if (sessionTimePassed(newDate, newTime)) { setProposeErr("that time has already passed — pick a date and time later than now."); return; }
     const intervalDays = { none: 0, weekly: 7, biweekly: 14, monthly: 30 }[recurring];
     const count = recurring === "none" ? 1 : recurringCount;
     const dates = [];
@@ -15438,6 +15444,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView, focus }) {
   function proposeNewTime(id) {
     const d = counterDate[id]; const t = counterTime[id];
     if (!d || !t) return;
+    if (sessionTimePassed(d, t)) { window.alert("That time has already passed — pick a date and time later than now."); return; }
     setSessions((prev) => prev.map((s) => s.id === id ? { ...s, date: d, time: t, status: "teacher_proposed" } : s));
     setShowCounter((prev) => ({ ...prev, [id]: false }));
     supabase.from("lesson_sessions").update({ session_date: d, session_time: t, status: "teacher_proposed", proposed_by: "teacher" }).eq("id", id).then(({ error }) => {
@@ -15861,7 +15868,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView, focus }) {
                 <div style={{ background: SURF, border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: 16, marginBottom: 14 }}>
                   <p style={{ fontSize: 13, fontWeight: 600, color: C.ivory, margin: "0 0 10px" }}>Propose a time for {activeLearner.name.split(" ")[0]}</p>
                   <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
-                    <input type="date" value={newDate} onChange={(e) => setNewDate(e.target.value)}
+                    <input type="date" min={localTodayStr()} value={newDate} onChange={(e) => setNewDate(e.target.value)}
                       style={{ flex: 1, background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 9, padding: "8px 10px", fontSize: 13, color: C.inkText, outline: "none" }} />
                     <input type="time" value={newTime} onChange={(e) => setNewTime(e.target.value)}
                       style={{ flex: 1, background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 9, padding: "8px 10px", fontSize: 13, color: C.inkText, outline: "none" }} />
@@ -15988,7 +15995,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView, focus }) {
                     <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
                       <p style={{ fontSize: 12, color: C.ivoryDim, margin: 0 }}>Suggest a new time:</p>
                       <div style={{ display: "flex", gap: 8 }}>
-                        <input type="date" value={counterDate[sel.id] || ""} onChange={(e) => setCounterDate((p) => ({ ...p, [sel.id]: e.target.value }))}
+                        <input type="date" min={localTodayStr()} value={counterDate[sel.id] || ""} onChange={(e) => setCounterDate((p) => ({ ...p, [sel.id]: e.target.value }))}
                           style={{ flex: 1, background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 9, padding: "8px 10px", fontSize: 13, color: C.inkText, outline: "none" }} />
                         <input type="time" value={counterTime[sel.id] || ""} onChange={(e) => setCounterTime((p) => ({ ...p, [sel.id]: e.target.value }))}
                           style={{ flex: 1, background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 9, padding: "8px 10px", fontSize: 13, color: C.inkText, outline: "none" }} />
