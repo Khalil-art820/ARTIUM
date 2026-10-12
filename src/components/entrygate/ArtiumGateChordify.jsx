@@ -111,47 +111,114 @@ const Seal = () => (
   </svg>
 );
 
-// Member photos as square panels stacked in depth (like the owner's sketch):
-// swipe to send the front one to the back; tap one behind to bring it forward.
+// Member photos as square panels stacked in depth (like the owner's sketch).
+// The front photo follows the finger and, once thrown, flies off-screen in
+// the swipe's direction while the rest glide forward; after the last one has
+// gone they come back round, one after another, and the deck starts again.
 // Until four members have a photo, instrument artwork completes the deck —
 // never stand-in people, so every face shown is a real member.
 const DECK_ART = ["violin", "piano", "cello", "harp"];
+const DECK_STEP = 24;           // px between stacked panels
+const THROW_DIST = 70;          // px of drag that commits a throw
+const THROW_SPEED = 0.55;       // px/ms flick that commits a throw
 function PhotoDeck({ faces: real }) {
   const faces = [...real.filter((f) => f.photoUrl)];
   for (let k = 0; faces.length < 4 && k < DECK_ART.length; k++) faces.push({ art: `/instruments/${DECK_ART[k]}.webp`, name: "" });
   const n = faces.length;
-  const [front, setFront] = React.useState(0);
-  const start = React.useRef(null);
+  const [gone, setGone] = React.useState(0);          // cards thrown so far
+  const [drag, setDrag] = React.useState(0);          // live drag of the front card
+  const [dragging, setDragging] = React.useState(false);
+  const [flying, setFlying] = React.useState(null);   // { i, dir } while a card leaves
+  const [phase, setPhase] = React.useState("idle");   // "idle" | "out" | "in"
+  const track = React.useRef(null);
+  const timers = React.useRef([]);
+  React.useEffect(() => () => timers.current.forEach(clearTimeout), []);
+  const later = (fn, ms) => { timers.current.push(setTimeout(fn, ms)); };
   if (!n) return null;
-  const go = (d) => setFront((f) => (f + d + n) % n);
+
+  const c = (n - 1) / 2;
+  const base = (k) => `translate3d(${(k - c) * DECK_STEP}px, ${(c - k) * 6}px, ${-k * 16}px) rotateY(18deg)`;
+  const front = gone < n ? gone : null;
+
+  function throwCard(dir) {
+    if (front == null || flying) return;
+    setFlying({ i: front, dir });
+    setDrag(0); setDragging(false);
+    const next = gone + 1;
+    later(() => {
+      setFlying(null);
+      setGone(next);
+      if (next >= n) {
+        // All thrown: bring the stack back round.
+        later(() => {
+          setPhase("out"); setGone(0);
+          requestAnimationFrame(() => requestAnimationFrame(() => setPhase("in")));
+          later(() => setPhase("idle"), 400 + n * 90 + 650);
+        }, 380);
+      }
+    }, 460);
+  }
+
+  const onDown = (e) => {
+    if (front == null || flying) return;
+    track.current = { x: e.clientX, t: performance.now(), lastX: e.clientX, lastT: performance.now(), v: 0 };
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* older browsers */ }
+    setDragging(true);
+  };
+  const onMove = (e) => {
+    const t = track.current; if (!t) return;
+    const now = performance.now();
+    t.v = (e.clientX - t.lastX) / Math.max(1, now - t.lastT);
+    t.lastX = e.clientX; t.lastT = now;
+    setDrag(e.clientX - t.x);
+  };
+  const onUp = (e) => {
+    const t = track.current; track.current = null;
+    if (!t) return;
+    const dx = e.clientX - t.x;
+    if (Math.abs(dx) > THROW_DIST || Math.abs(t.v) > THROW_SPEED) throwCard(dx < 0 || (dx === 0 && t.v < 0) ? -1 : 1);
+    else { setDragging(false); setDrag(0); }
+  };
+
+  // How far the next card has come forward while the front one is dragged.
+  const pull = front != null ? Math.min(1, Math.abs(drag) / 140) : 0;
+
   return (
     <div className="cg-deck-wrap">
-      <div className="cg-deck" role="group" aria-roledescription="carousel"
+      <div className={`cg-deck${phase !== "idle" ? ` is-${phase}` : ""}`} role="group" aria-roledescription="carousel"
         aria-label={`Members: ${real.map((f) => f.name).filter(Boolean).join(", ")}`}
-        onPointerDown={(e) => { start.current = e.clientX; }}
-        onPointerUp={(e) => {
-          if (start.current == null) return;
-          const dx = e.clientX - start.current; start.current = null;
-          if (Math.abs(dx) > 28) go(dx < 0 ? 1 : -1);
-        }}
-        onPointerCancel={() => { start.current = null; }}
-        onKeyDown={(e) => { if (e.key === "ArrowRight") go(1); if (e.key === "ArrowLeft") go(-1); }}
+        onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp}
+        onPointerCancel={() => { track.current = null; setDragging(false); setDrag(0); }}
+        onKeyDown={(e) => { if (e.key === "ArrowRight") throwCard(1); if (e.key === "ArrowLeft") throwCard(-1); }}
         tabIndex={0}>
         {faces.map((f, i) => {
-          // Square photos standing parallel, one behind the other: the first
-          // one bottom-left and whole, each further one stepping up and to
-          // the right, deeper in space — all turned to the same angle.
-          const k = (i - front + n) % n;           // 0 = front, n-1 = back
-          const c = (n - 1) / 2;
-          const on = k === 0;
-          const style = {
-            transform: `translateX(${(k - c) * 24}px) translateY(${(c - k) * 6}px) translateZ(${-k * 16}px) rotateY(18deg)`,
-            zIndex: n - k,
-          };
+          const k = i - gone;                       // place in the remaining stack; < 0 = thrown
+          const isFront = i === front;
+          let transform, transition, z = n - Math.max(0, k);
+          if (flying && flying.i === i) {
+            // Thrown: off-screen along the swipe, turning as it goes.
+            transform = `translate3d(${flying.dir * 520}px, -30px, 40px) rotateZ(${flying.dir * 24}deg) ${base(0)}`;
+            transition = "transform .46s cubic-bezier(.25,.7,.25,1)";
+            z = n + 2;
+          } else if (k < 0) {
+            transform = `translate3d(-520px, -30px, 0) ${base(0)}`;
+            transition = "none";
+          } else if (isFront && (dragging || drag)) {
+            transform = `translate3d(${drag}px, ${-Math.abs(drag) * 0.06}px, 30px) rotateZ(${drag * 0.06}deg) ${base(0)}`;
+            transition = dragging ? "none" : "transform .5s cubic-bezier(.2,1.3,.4,1)";
+            z = n + 1;
+          } else if (phase === "out") {
+            transform = `translate3d(-520px, -30px, 0) rotateZ(-14deg) ${base(k)}`;
+            transition = "none";
+          } else {
+            transform = base(Math.max(0, k - (k > 0 ? pull : 0)));
+            transition = phase === "in"
+              ? `transform .62s cubic-bezier(.2,.8,.2,1) ${(n - 1 - k) * 90}ms`
+              : dragging ? "transform .12s linear" : "transform .45s cubic-bezier(.2,.8,.2,1)";
+          }
           return (
-            <button type="button" key={i} className={`cg-deck-card${on ? " is-front" : ""}`} style={style}
-              aria-label={f.art ? "Instrument artwork" : (f.name || "Member")} aria-current={on || undefined} tabIndex={-1}
-              onClick={(e) => { e.stopPropagation(); if (!on) setFront(i); }}>
+            <div key={i} className={`cg-deck-card${isFront ? " is-front" : ""}`} style={{ transform, transition, zIndex: z }}
+              role="img" aria-label={f.art ? "Instrument artwork" : (f.name || "Member")} aria-hidden={k < 0 || undefined}>
               {f.art ? <img className="cg-deck-art" src={f.art} alt="" draggable={false} />
                 : f.photoUrl ? <img src={f.photoUrl} alt="" draggable={false} /> : <b>{f.initials || accountInitials(f.name)}</b>}
               {!f.art && (
@@ -170,13 +237,13 @@ function PhotoDeck({ faces: real }) {
                   </svg>
                 </span>
               )}
-            </button>
+            </div>
           );
         })}
       </div>
       {n > 1 && (
         <div className="cg-deck-dots" aria-hidden="true">
-          {faces.map((_, i) => <i key={i} className={i === front ? "is-on" : undefined} />)}
+          {faces.map((_, i) => <i key={i} className={i === (front ?? -1) ? "is-on" : undefined} />)}
         </div>
       )}
     </div>
