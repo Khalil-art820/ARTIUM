@@ -5092,8 +5092,8 @@ export default function App() {
       ) : null} memberChips={(() => {
         const chips = [];
         if (myProfile) chips.push({ name: myProfile.name, meta: [myProfile.instrument, findConservatory(myProfile.conservatoryId)?.city].filter(Boolean).join(" · ") || "Conservatory student", photoUrl: accountPhotoUrl });
-        // Up to five faces for the gate's photo pile — members with a photo.
-        students.filter((st) => st.id !== myProfile?.id && st.photoUrl).slice(0, chips.length ? 4 : 5).forEach((st) => {
+        // Faces for the gate's swipeable photo pile — members with a photo.
+        students.filter((st) => st.id !== myProfile?.id && st.photoUrl).slice(0, 30).forEach((st) => {
           chips.push({ name: st.name, meta: [st.instrument, findConservatory(st.conservatoryId)?.city].filter(Boolean).join(" · "), photoUrl: st.photoUrl });
         });
         return chips;

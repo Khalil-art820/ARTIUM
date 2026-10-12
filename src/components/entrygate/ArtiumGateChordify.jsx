@@ -240,21 +240,17 @@ export default function ArtiumGateChordify({
             <h2>I am a Conservatory Student or Graduate</h2>
           </div>
           {(() => {
-            // A pile of member photos and the member count, in place of name rows.
-            const faces = (memberChips && memberChips.length ? memberChips : CHIP_FALLBACKS).slice(0, 5);
-            const n = Number(count) || 0;
-            const shown = n >= 1000 ? `${(n / 1000).toFixed(n >= 10000 ? 0 : 1).replace(/\.0$/, "")}K` : String(n);
-            const names = faces.map((f) => f.name).filter(Boolean);
+            // A swipeable pile of overlapping member photos, in place of name rows.
+            const faces = (memberChips && memberChips.length ? memberChips : CHIP_FALLBACKS).slice(0, 30);
             return (
-              <div className="cg-pile" role="img" aria-label={`${names.join(", ")}${n > names.length ? ` and ${n - names.length} more` : ""} — ${n} members`}>
-                <span className="cg-pile-faces" aria-hidden="true">
+              <div className="cg-pile" role="group" aria-label={`Members: ${faces.map((f) => f.name).filter(Boolean).join(", ")}`}>
+                <div className="cg-pile-track">
                   {faces.map((f, i) => (
-                    <span className="cg-pile-face" key={i} style={{ zIndex: faces.length - i }}>
-                      {f.photoUrl ? <img src={f.photoUrl} alt="" /> : <b>{f.initials || accountInitials(f.name)}</b>}
+                    <span className="cg-pile-face" key={i} style={{ zIndex: faces.length - i }} title={f.name || undefined}>
+                      {f.photoUrl ? <img src={f.photoUrl} alt="" loading={i > 6 ? "lazy" : undefined} /> : <b>{f.initials || accountInitials(f.name)}</b>}
                     </span>
                   ))}
-                </span>
-                <span className="cg-pile-count" aria-hidden="true">{shown}<small>{n === 1 ? "member" : "members"}</small></span>
+                </div>
               </div>
             );
           })()}
