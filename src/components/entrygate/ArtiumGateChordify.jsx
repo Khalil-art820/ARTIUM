@@ -138,14 +138,14 @@ function PhotoDeck({ faces: real }) {
         onKeyDown={(e) => { if (e.key === "ArrowRight") go(1); if (e.key === "ArrowLeft") go(-1); }}
         tabIndex={0}>
         {faces.map((f, i) => {
-          // Square photos standing parallel, one behind the other: the front
-          // one bottom-right and whole, each further one stepping up and to
-          // the left, deeper in space — all turned to the same angle.
+          // Square photos standing parallel, one behind the other: the first
+          // one bottom-left and whole, each further one stepping up and to
+          // the right, deeper in space — all turned to the same angle.
           const k = (i - front + n) % n;           // 0 = front, n-1 = back
           const c = (n - 1) / 2;
           const on = k === 0;
           const style = {
-            transform: `translateX(${(c - k) * 34}px) translateY(${(c - k) * 24}px) translateZ(${-k * 50}px) rotateY(-30deg)`,
+            transform: `translateX(${(k - c) * 34}px) translateY(${(c - k) * 24}px) translateZ(${-k * 50}px) rotateY(30deg)`,
             zIndex: n - k,
           };
           return (
