@@ -159,7 +159,13 @@ function PhotoDeck({ faces: real }) {
                 // blue tick reads the same on any photo.
                 <span className="cg-verified" title="Verified conservatory member" aria-label="Verified">
                   <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-                    <polygon points="12.00,1.00 14.41,3.02 17.50,2.47 18.58,5.42 21.53,6.50 20.98,9.59 23.00,12.00 20.98,14.41 21.53,17.50 18.58,18.58 17.50,21.53 14.41,20.98 12.00,23.00 9.59,20.98 6.50,21.53 5.42,18.58 2.47,17.50 3.02,14.41 1.00,12.00 3.02,9.59 2.47,6.50 5.42,5.42 6.50,2.47 9.59,3.02" fill="#0095F6" strokeLinejoin="round" stroke="#0095F6" strokeWidth="1.2" />
+                    <defs>
+                      <linearGradient id="cg-verified-grad" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0" stopColor="#A99CF3" />
+                        <stop offset="1" stopColor="#6B57E8" />
+                      </linearGradient>
+                    </defs>
+                    <polygon points="12.00,1.00 14.41,3.02 17.50,2.47 18.58,5.42 21.53,6.50 20.98,9.59 23.00,12.00 20.98,14.41 21.53,17.50 18.58,18.58 17.50,21.53 14.41,20.98 12.00,23.00 9.59,20.98 6.50,21.53 5.42,18.58 2.47,17.50 3.02,14.41 1.00,12.00 3.02,9.59 2.47,6.50 5.42,5.42 6.50,2.47 9.59,3.02" fill="url(#cg-verified-grad)" strokeLinejoin="round" stroke="url(#cg-verified-grad)" strokeWidth="1.2" />
                     <path d="M7.6 12.3l3 3 5.8-6.2" fill="none" stroke="#FFFFFF" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </span>
