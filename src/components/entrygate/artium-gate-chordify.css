@@ -404,3 +404,11 @@
 /* The shelf the cards stand on. */
 .cgate .cg-deck::after{content:"";position:absolute;left:8%;right:8%;top:182px;height:7px;border-radius:3px;
   background:linear-gradient(180deg,#D9CFC4,#BFB2A4);box-shadow:0 3px 6px -3px rgba(0,0,0,.25)}
+/* ---- Stacked squares (sketch) ---- */
+.cgate .cg-deck{height:262px;perspective:1000px;perspective-origin:50% 40%}
+.cgate .cg-deck::after{display:none}
+.cgate .cg-deck-card{top:52px;width:150px !important;height:150px;margin-left:-75px !important;border-radius:6px;
+  box-shadow:0 0 0 1px rgba(0,0,0,.08);filter:none !important;transform-origin:50% 50%;
+  transition:transform .45s cubic-bezier(.2,.8,.2,1)}
+.cgate .cg-deck-card.is-front{box-shadow:0 0 0 1px rgba(0,0,0,.1)}
+@media (max-width:360px){.cgate .cg-deck-card{width:134px !important;height:134px;margin-left:-67px !important}}

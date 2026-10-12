@@ -111,8 +111,8 @@ const Seal = () => (
   </svg>
 );
 
-// Member photos as books on a shelf: four upright cards side by side, the
-// chosen one drawn half out. Swipe or tap to choose another.
+// Member photos as square panels stacked in depth (like the owner's sketch):
+// swipe to send the front one to the back; tap one behind to bring it forward.
 // Until four members have a photo, instrument artwork completes the deck —
 // never stand-in people, so every face shown is a real member.
 const DECK_ART = ["violin", "piano", "cello", "harp"];
@@ -138,18 +138,15 @@ function PhotoDeck({ faces: real }) {
         onKeyDown={(e) => { if (e.key === "ArrowRight") go(1); if (e.key === "ArrowLeft") go(-1); }}
         tabIndex={0}>
         {faces.map((f, i) => {
-          // Books on a shelf: every card upright in its own slot, slightly
-          // overlapping; the chosen one is drawn half out (lifted, a touch
-          // larger, square on), the others turned a little toward it.
-          const W = 84, STEP = 76;
-          const x = (i - (n - 1) / 2) * STEP;
-          const d = i - front;
-          const on = d === 0;
+          // Square photos standing parallel, one behind the other: the front
+          // one bottom-right and whole, each further one stepping up and to
+          // the left, deeper in space — all turned to the same angle.
+          const k = (i - front + n) % n;           // 0 = front, n-1 = back
+          const c = (n - 1) / 2;
+          const on = k === 0;
           const style = {
-            width: W,
-            marginLeft: -W / 2,
-            transform: `translateX(${x}px) translateY(${on ? -12 : 0}px) translateZ(${on ? 40 : 0}px) rotateY(${on ? 0 : d < 0 ? 16 : -16}deg) scale(${on ? 1.08 : 1})`,
-            zIndex: on ? 20 : 10 - Math.abs(d),
+            transform: `translateX(${(c - k) * 34}px) translateY(${(c - k) * 24}px) translateZ(${-k * 50}px) rotateY(-30deg)`,
+            zIndex: n - k,
           };
           return (
             <button type="button" key={i} className={`cg-deck-card${on ? " is-front" : ""}`} style={style}
