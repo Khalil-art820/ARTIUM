@@ -412,3 +412,7 @@
   transition:transform .45s cubic-bezier(.2,.8,.2,1)}
 .cgate .cg-deck-card.is-front{box-shadow:0 0 0 1px rgba(0,0,0,.1)}
 @media (max-width:360px){.cgate .cg-deck-card{width:134px !important;height:134px;margin-left:-67px !important}}
+/* Verified tick on its own white plate, top-right of each member photo. */
+.cgate .cg-verified{position:absolute;top:7px;right:7px;width:28px;height:28px;border-radius:50%;
+  background:#FFFFFF;display:grid;place-items:center;box-shadow:0 1px 3px rgba(0,0,0,.25);pointer-events:none}
+.cgate .cg-verified svg{display:block}
