@@ -421,3 +421,7 @@
 .cgate .cg-deck-card{top:34px}
 /* Student card title on one line: scales with the phone width. */
 .cgate .cg-student-head h2{white-space:nowrap;font-size:clamp(14px, 4.4vw, 22px);letter-spacing:-.01em}
+/* Bigger, still one line: a little of the card's side padding and tighter tracking. */
+.cgate .cg-student-head h2{font-size:clamp(14px, 4.75vw, 24px);letter-spacing:-.02em;margin-left:-8px;margin-right:-8px}
+.cgate .cg-student-head{justify-content:center}
+.cgate .cg-student-head h2{text-align:center;flex:1 1 auto}
