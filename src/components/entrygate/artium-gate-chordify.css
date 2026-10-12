@@ -394,3 +394,13 @@
 /* Artwork cards: gold line-drawn instrument on the deep teal. */
 .cgate .cg-deck-card img.cg-deck-art{object-fit:contain;padding:22px 18px;box-sizing:border-box;
   background:radial-gradient(120% 90% at 50% 30%,#2E8A80 0%,#0B5E5A 60%,#073F3D 100%)}
+/* ---- Bookshelf layout ---- */
+.cgate .cg-deck{height:206px;perspective:1100px;perspective-origin:50% 60%}
+.cgate .cg-deck-card{top:22px;height:160px;border-radius:12px;
+  box-shadow:0 1px 2px rgba(0,0,0,.12);filter:none !important;
+  transition:transform .4s cubic-bezier(.2,.8,.2,1)}
+.cgate .cg-deck-card.is-front{box-shadow:0 6px 14px -8px rgba(0,0,0,.35)}
+.cgate .cg-deck-card img.cg-deck-art{padding:16px 10px}
+/* The shelf the cards stand on. */
+.cgate .cg-deck::after{content:"";position:absolute;left:8%;right:8%;top:182px;height:7px;border-radius:3px;
+  background:linear-gradient(180deg,#D9CFC4,#BFB2A4);box-shadow:0 3px 6px -3px rgba(0,0,0,.25)}

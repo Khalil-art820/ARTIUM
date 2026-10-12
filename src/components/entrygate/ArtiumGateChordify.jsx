@@ -111,9 +111,8 @@ const Seal = () => (
   </svg>
 );
 
-// Member photos as a 3D card deck: the front card faces you, its neighbours
-// turn away into depth on either side, the rest wait behind. Swipe (or tap a
-// side card) to bring the next one round; it loops.
+// Member photos as books on a shelf: four upright cards side by side, the
+// chosen one drawn half out. Swipe or tap to choose another.
 // Until four members have a photo, instrument artwork completes the deck —
 // never stand-in people, so every face shown is a real member.
 const DECK_ART = ["violin", "piano", "cello", "harp"];
@@ -125,8 +124,6 @@ function PhotoDeck({ faces: real }) {
   const start = React.useRef(null);
   if (!n) return null;
   const go = (d) => setFront((f) => (f + d + n) % n);
-  // Signed distance from the front card, wrapped into the shortest way round.
-  const offsetOf = (i) => { let o = (i - front + n) % n; if (o > n / 2) o -= n; return o; };
   return (
     <div className="cg-deck-wrap">
       <div className="cg-deck" role="group" aria-roledescription="carousel"
@@ -141,18 +138,23 @@ function PhotoDeck({ faces: real }) {
         onKeyDown={(e) => { if (e.key === "ArrowRight") go(1); if (e.key === "ArrowLeft") go(-1); }}
         tabIndex={0}>
         {faces.map((f, i) => {
-          const o = offsetOf(i);
-          const a = Math.abs(o);
+          // Books on a shelf: every card upright in its own slot, slightly
+          // overlapping; the chosen one is drawn half out (lifted, a touch
+          // larger, square on), the others turned a little toward it.
+          const W = 84, STEP = 76;
+          const x = (i - (n - 1) / 2) * STEP;
+          const d = i - front;
+          const on = d === 0;
           const style = {
-            transform: `translateX(${o * 84}px) translateZ(${-a * 110}px) rotateY(${-o * 34}deg) scale(${1 - a * 0.06})`,
-            zIndex: 10 - a,
-            opacity: a >= 2 ? 0 : 1,
-            pointerEvents: a >= 2 ? "none" : "auto",
+            width: W,
+            marginLeft: -W / 2,
+            transform: `translateX(${x}px) translateY(${on ? -12 : 0}px) translateZ(${on ? 40 : 0}px) rotateY(${on ? 0 : d < 0 ? 16 : -16}deg) scale(${on ? 1.08 : 1})`,
+            zIndex: on ? 20 : 10 - Math.abs(d),
           };
           return (
-            <button type="button" key={i} className={`cg-deck-card${o === 0 ? " is-front" : ""}`} style={style}
-              aria-label={f.art ? "Instrument artwork" : (f.name || "Member")} aria-current={o === 0 || undefined} tabIndex={-1}
-              onClick={(e) => { e.stopPropagation(); if (o !== 0) go(o); }}>
+            <button type="button" key={i} className={`cg-deck-card${on ? " is-front" : ""}`} style={style}
+              aria-label={f.art ? "Instrument artwork" : (f.name || "Member")} aria-current={on || undefined} tabIndex={-1}
+              onClick={(e) => { e.stopPropagation(); if (!on) setFront(i); }}>
               {f.art ? <img className="cg-deck-art" src={f.art} alt="" draggable={false} />
                 : f.photoUrl ? <img src={f.photoUrl} alt="" draggable={false} /> : <b>{f.initials || accountInitials(f.name)}</b>}
             </button>
