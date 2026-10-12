@@ -419,3 +419,5 @@
 /* Flatter, wider stack: less height needed. */
 .cgate .cg-deck{height:224px}
 .cgate .cg-deck-card{top:34px}
+/* Student card title on one line: scales with the phone width. */
+.cgate .cg-student-head h2{white-space:nowrap;font-size:clamp(14px, 4.4vw, 22px);letter-spacing:-.01em}
