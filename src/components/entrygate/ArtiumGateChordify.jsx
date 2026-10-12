@@ -311,9 +311,10 @@ export default function ArtiumGateChordify({
           <h3>Our partners</h3>
           <div className="cg-partner-row">
             <a href={ARTIUM_INSTAGRAM} target="_blank" rel="noreferrer" aria-label="aclassicaltone on Instagram">
-              <img src="/partner-aclassicaltone.png" alt="" width="44" height="44" />
+              <img src="/partner-aclassicaltone-v2.png" alt="" width="44" height="44" />
               <span>aclassicaltone</span>
             </a>
+            <VacantPartnerTile onClick={() => setPartnerOpen(true)} />
             <VacantPartnerTile onClick={() => setPartnerOpen(true)} />
             <VacantPartnerTile onClick={() => setPartnerOpen(true)} />
           </div>
