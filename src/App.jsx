@@ -5092,8 +5092,10 @@ export default function App() {
       ) : null} memberChips={(() => {
         const chips = [];
         if (myProfile) chips.push({ name: myProfile.name, meta: [myProfile.instrument, findConservatory(myProfile.conservatoryId)?.city].filter(Boolean).join(" · ") || "Conservatory student", photoUrl: accountPhotoUrl });
-        const other = students.find((st) => st.id !== myProfile?.id && st.photoUrl);
-        if (other) chips.push({ name: other.name, meta: [other.instrument, findConservatory(other.conservatoryId)?.city].filter(Boolean).join(" · "), photoUrl: other.photoUrl });
+        // Up to five faces for the gate's photo pile — members with a photo.
+        students.filter((st) => st.id !== myProfile?.id && st.photoUrl).slice(0, chips.length ? 4 : 5).forEach((st) => {
+          chips.push({ name: st.name, meta: [st.instrument, findConservatory(st.conservatoryId)?.city].filter(Boolean).join(" · "), photoUrl: st.photoUrl });
+        });
         return chips;
       })()} onAvatar={myProfile ? goToProfile : (learnerProfile ? () => { setLearnerStartTab("profile"); setScreen("learnerMap"); } : undefined)} onLogout={async () => {
         // Logging out re-arms the gate tour: the next login meets the

@@ -239,21 +239,25 @@ export default function ArtiumGateChordify({
           <div className="cg-student-head">
             <h2>I am a Conservatory Student or Graduate</h2>
           </div>
-          <div className="cg-chips">
-            {CHIP_FALLBACKS.map((fb, i) => {
-              const c = memberChips?.[i];
-              return (
-                <div className="cg-chip" key={fb.initials}>
-                  <span className="cg-chip-av">{c?.photoUrl ? <img src={c.photoUrl} alt="" /> : fb.initials}</span>
-                  <span className="cg-chip-who">
-                    <span className="cg-chip-name">{c?.name || fb.name}</span>
-                    <span className="cg-chip-meta">{c?.meta || fb.meta}</span>
-                  </span>
-                  <Seal />
-                </div>
-              );
-            })}
-          </div>
+          {(() => {
+            // A pile of member photos and the member count, in place of name rows.
+            const faces = (memberChips && memberChips.length ? memberChips : CHIP_FALLBACKS).slice(0, 5);
+            const n = Number(count) || 0;
+            const shown = n >= 1000 ? `${(n / 1000).toFixed(n >= 10000 ? 0 : 1).replace(/\.0$/, "")}K` : String(n);
+            const names = faces.map((f) => f.name).filter(Boolean);
+            return (
+              <div className="cg-pile" role="img" aria-label={`${names.join(", ")}${n > names.length ? ` and ${n - names.length} more` : ""} — ${n} members`}>
+                <span className="cg-pile-faces" aria-hidden="true">
+                  {faces.map((f, i) => (
+                    <span className="cg-pile-face" key={i} style={{ zIndex: faces.length - i }}>
+                      {f.photoUrl ? <img src={f.photoUrl} alt="" /> : <b>{f.initials || accountInitials(f.name)}</b>}
+                    </span>
+                  ))}
+                </span>
+                <span className="cg-pile-count" aria-hidden="true">{shown}<small>{n === 1 ? "member" : "members"}</small></span>
+              </div>
+            );
+          })()}
           <p>A verified community. Connect, collaborate, grow.</p>
           <button type="button" className="cg-btn" aria-label="Join as a student or graduate" disabled={medallionOff}
             onClick={(e) => { e.stopPropagation(); activateStudent(e); }}>
