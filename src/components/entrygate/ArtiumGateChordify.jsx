@@ -111,6 +111,57 @@ const Seal = () => (
   </svg>
 );
 
+// Member photos as a 3D card deck: the front card faces you, its neighbours
+// turn away into depth on either side, the rest wait behind. Swipe (or tap a
+// side card) to bring the next one round; it loops.
+function PhotoDeck({ faces }) {
+  const n = faces.length;
+  const [front, setFront] = React.useState(0);
+  const start = React.useRef(null);
+  if (!n) return null;
+  const go = (d) => setFront((f) => (f + d + n) % n);
+  // Signed distance from the front card, wrapped into the shortest way round.
+  const offsetOf = (i) => { let o = (i - front + n) % n; if (o > n / 2) o -= n; return o; };
+  return (
+    <div className="cg-deck-wrap">
+      <div className="cg-deck" role="group" aria-roledescription="carousel"
+        aria-label={`Members: ${faces.map((f) => f.name).filter(Boolean).join(", ")}`}
+        onPointerDown={(e) => { start.current = e.clientX; }}
+        onPointerUp={(e) => {
+          if (start.current == null) return;
+          const dx = e.clientX - start.current; start.current = null;
+          if (Math.abs(dx) > 28) go(dx < 0 ? 1 : -1);
+        }}
+        onPointerCancel={() => { start.current = null; }}
+        onKeyDown={(e) => { if (e.key === "ArrowRight") go(1); if (e.key === "ArrowLeft") go(-1); }}
+        tabIndex={0}>
+        {faces.map((f, i) => {
+          const o = offsetOf(i);
+          const a = Math.abs(o);
+          const style = {
+            transform: `translateX(${o * 84}px) translateZ(${-a * 110}px) rotateY(${-o * 34}deg) scale(${1 - a * 0.06})`,
+            zIndex: 10 - a,
+            opacity: a >= 2 ? 0 : 1,
+            pointerEvents: a >= 2 ? "none" : "auto",
+          };
+          return (
+            <button type="button" key={i} className={`cg-deck-card${o === 0 ? " is-front" : ""}`} style={style}
+              aria-label={f.name || "Member"} aria-current={o === 0 || undefined} tabIndex={-1}
+              onClick={(e) => { e.stopPropagation(); if (o !== 0) go(o); }}>
+              {f.photoUrl ? <img src={f.photoUrl} alt="" draggable={false} /> : <b>{f.initials || accountInitials(f.name)}</b>}
+            </button>
+          );
+        })}
+      </div>
+      {n > 1 && (
+        <div className="cg-deck-dots" aria-hidden="true">
+          {faces.map((_, i) => <i key={i} className={i === front ? "is-on" : undefined} />)}
+        </div>
+      )}
+    </div>
+  );
+}
+
 const CHIP_FALLBACKS = [
   { initials: "AD", name: "Amélie D.", meta: "Piano · Paris" },
   { initials: "LM", name: "Lucas M.", meta: "Violin · Vienna" },
@@ -239,21 +290,7 @@ export default function ArtiumGateChordify({
           <div className="cg-student-head">
             <h2>I am a Conservatory Student or Graduate</h2>
           </div>
-          {(() => {
-            // A swipeable pile of overlapping member photos, in place of name rows.
-            const faces = (memberChips && memberChips.length ? memberChips : CHIP_FALLBACKS).slice(0, 30);
-            return (
-              <div className="cg-pile" role="group" aria-label={`Members: ${faces.map((f) => f.name).filter(Boolean).join(", ")}`}>
-                <div className="cg-pile-track">
-                  {faces.map((f, i) => (
-                    <span className="cg-pile-face" key={i} style={{ zIndex: faces.length - i }} title={f.name || undefined}>
-                      {f.photoUrl ? <img src={f.photoUrl} alt="" loading={i > 6 ? "lazy" : undefined} /> : <b>{f.initials || accountInitials(f.name)}</b>}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            );
-          })()}
+          <PhotoDeck faces={(memberChips && memberChips.length ? memberChips : CHIP_FALLBACKS).slice(0, 4)} />
           <p>A verified community. Connect, collaborate, grow.</p>
           <button type="button" className="cg-btn" aria-label="Join as a student or graduate" disabled={medallionOff}
             onClick={(e) => { e.stopPropagation(); activateStudent(e); }}>

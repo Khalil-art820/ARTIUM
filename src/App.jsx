@@ -2905,6 +2905,15 @@ export default function App() {
   const pianistNeedsAttention = pianistAttentionCount > 0;
 
   const tabAttention = useTabAttention({ authUser, myProfile, learnerProfile, students });
+  // Four random members with a photo for the gate's 3D deck — drawn once per
+  // visit (re-drawn only when the roster itself changes), so the deck doesn't
+  // reshuffle under the viewer on every render.
+  const photoStudentIds = students.filter((st) => st.photoUrl).map((st) => st.id).join(",");
+  const deckFaces = React.useMemo(() => {
+    const pool = students.filter((st) => st.photoUrl);
+    for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+    return pool.slice(0, 4).map((st) => ({ name: st.name, meta: [st.instrument, findConservatory(st.conservatoryId)?.city].filter(Boolean).join(" · "), photoUrl: st.photoUrl }));
+  }, [photoStudentIds]);
   const tabDots = { ...tabAttention, concerts: pianistNeedsAttention };
   React.useEffect(() => {
     if (screen === "app" && appTab === "promote" && authUser?.id) markPromoteVerdictsSeen(authUser.id);
@@ -5089,15 +5098,7 @@ export default function App() {
           isAdmin={isAdmin}
           onGoToAdmin={() => { setScreen("app"); setAppTabPersist("admin"); }}
         />
-      ) : null} memberChips={(() => {
-        const chips = [];
-        if (myProfile) chips.push({ name: myProfile.name, meta: [myProfile.instrument, findConservatory(myProfile.conservatoryId)?.city].filter(Boolean).join(" · ") || "Conservatory student", photoUrl: accountPhotoUrl });
-        // Faces for the gate's swipeable photo pile — members with a photo.
-        students.filter((st) => st.id !== myProfile?.id && st.photoUrl).slice(0, 30).forEach((st) => {
-          chips.push({ name: st.name, meta: [st.instrument, findConservatory(st.conservatoryId)?.city].filter(Boolean).join(" · "), photoUrl: st.photoUrl });
-        });
-        return chips;
-      })()} onAvatar={myProfile ? goToProfile : (learnerProfile ? () => { setLearnerStartTab("profile"); setScreen("learnerMap"); } : undefined)} onLogout={async () => {
+      ) : null} memberChips={deckFaces} onAvatar={myProfile ? goToProfile : (learnerProfile ? () => { setLearnerStartTab("profile"); setScreen("learnerMap"); } : undefined)} onLogout={async () => {
         // Logging out re-arms the gate tour: the next login meets the
         // card-by-card introduction again, per the user's request.
         try { localStorage.removeItem("artium_gate_tour_v1"); } catch { /* private mode */ }
