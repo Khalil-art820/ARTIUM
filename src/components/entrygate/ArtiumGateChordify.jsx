@@ -145,7 +145,7 @@ function PhotoDeck({ faces: real }) {
           const c = (n - 1) / 2;
           const on = k === 0;
           const style = {
-            transform: `translateX(${(k - c) * 34}px) translateY(${(c - k) * 24}px) translateZ(${-k * 50}px) rotateY(30deg)`,
+            transform: `translateX(${(k - c) * 52}px) translateY(${(c - k) * 10}px) translateZ(${-k * 28}px) rotateY(18deg)`,
             zIndex: n - k,
           };
           return (
