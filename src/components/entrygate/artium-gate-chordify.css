@@ -391,3 +391,6 @@
 .cgate .cg-deck-dots i{width:6px;height:6px;border-radius:50%;background:#D9D3CC;transition:width .25s, background .25s}
 .cgate .cg-deck-dots i.is-on{width:16px;border-radius:3px;background:var(--teal)}
 @media (prefers-reduced-motion:reduce){.cgate .cg-deck-card{transition:none}}
+/* Artwork cards: gold line-drawn instrument on the deep teal. */
+.cgate .cg-deck-card img.cg-deck-art{object-fit:contain;padding:22px 18px;box-sizing:border-box;
+  background:radial-gradient(120% 90% at 50% 30%,#2E8A80 0%,#0B5E5A 60%,#073F3D 100%)}

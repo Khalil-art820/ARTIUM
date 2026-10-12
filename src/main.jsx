@@ -33,9 +33,7 @@ const GatePreview = import.meta.env.DEV && new URLSearchParams(location.search).
             memberCount={2}
             memberChips={[
               { name: "Khalil Tannous", meta: "Piano · Beirut", photoUrl: "/gate-hero.jpg" },
-              { name: "Lucas M.", meta: "Violin · Vienna", photoUrl: "/app-banner.jpg" },
-              { name: "Amélie D.", meta: "Piano · Paris", photoUrl: "/landing-backdrop.jpg" },
-              { name: "Sara K.", meta: "Cello · Berlin", photoUrl: "/earth-artium.jpg" },
+              { name: "Lucas M.", meta: "Violin · Vienna" },
             ]}
             bellSlot={<NotificationBell myProfile={{ id: "preview", name: "Khalil Tannous" }} puck networkFeeds authUser={null} />}
             musicOn={musicPlaying}

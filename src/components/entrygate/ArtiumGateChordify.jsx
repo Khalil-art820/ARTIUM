@@ -114,7 +114,12 @@ const Seal = () => (
 // Member photos as a 3D card deck: the front card faces you, its neighbours
 // turn away into depth on either side, the rest wait behind. Swipe (or tap a
 // side card) to bring the next one round; it loops.
-function PhotoDeck({ faces }) {
+// Until four members have a photo, instrument artwork completes the deck —
+// never stand-in people, so every face shown is a real member.
+const DECK_ART = ["violin", "piano", "cello", "harp"];
+function PhotoDeck({ faces: real }) {
+  const faces = [...real.filter((f) => f.photoUrl)];
+  for (let k = 0; faces.length < 4 && k < DECK_ART.length; k++) faces.push({ art: `/instruments/${DECK_ART[k]}.webp`, name: "" });
   const n = faces.length;
   const [front, setFront] = React.useState(0);
   const start = React.useRef(null);
@@ -125,7 +130,7 @@ function PhotoDeck({ faces }) {
   return (
     <div className="cg-deck-wrap">
       <div className="cg-deck" role="group" aria-roledescription="carousel"
-        aria-label={`Members: ${faces.map((f) => f.name).filter(Boolean).join(", ")}`}
+        aria-label={`Members: ${real.map((f) => f.name).filter(Boolean).join(", ")}`}
         onPointerDown={(e) => { start.current = e.clientX; }}
         onPointerUp={(e) => {
           if (start.current == null) return;
@@ -146,9 +151,10 @@ function PhotoDeck({ faces }) {
           };
           return (
             <button type="button" key={i} className={`cg-deck-card${o === 0 ? " is-front" : ""}`} style={style}
-              aria-label={f.name || "Member"} aria-current={o === 0 || undefined} tabIndex={-1}
+              aria-label={f.art ? "Instrument artwork" : (f.name || "Member")} aria-current={o === 0 || undefined} tabIndex={-1}
               onClick={(e) => { e.stopPropagation(); if (o !== 0) go(o); }}>
-              {f.photoUrl ? <img src={f.photoUrl} alt="" draggable={false} /> : <b>{f.initials || accountInitials(f.name)}</b>}
+              {f.art ? <img className="cg-deck-art" src={f.art} alt="" draggable={false} />
+                : f.photoUrl ? <img src={f.photoUrl} alt="" draggable={false} /> : <b>{f.initials || accountInitials(f.name)}</b>}
             </button>
           );
         })}
