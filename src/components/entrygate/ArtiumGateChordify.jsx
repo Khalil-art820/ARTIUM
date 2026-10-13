@@ -111,159 +111,72 @@ const Seal = () => (
   </svg>
 );
 
-// Member photos as square panels stacked in depth (like the owner's sketch).
-// The front photo follows the finger and, once thrown, flies off-screen in
-// the swipe's direction while the rest glide forward; after the last one has
-// gone they come back round, one after another, and the deck starts again.
-// Until four members have a photo, instrument artwork completes the deck —
-// never stand-in people, so every face shown is a real member.
-const DECK_ART = ["violin", "piano", "cello", "harp"];
-const DECK_STEP = 24;           // px between stacked panels
-const THROW_DIST = 70;          // px of drag that commits a throw
-const THROW_SPEED = 0.55;       // px/ms flick that commits a throw
-function PhotoDeck({ faces: real }) {
-  const faces = [...real.filter((f) => f.photoUrl)];
-  for (let k = 0; faces.length < 4 && k < DECK_ART.length; k++) faces.push({ art: `/instruments/${DECK_ART[k]}.webp`, name: "" });
-  const n = faces.length;
-  const [gone, setGone] = React.useState(0);          // cards thrown so far
-  const [drag, setDrag] = React.useState(0);          // live drag of the front card
-  const [dragging, setDragging] = React.useState(false);
-  const [flying, setFlying] = React.useState(null);   // { i, dir } while a card leaves
-  const [phase, setPhase] = React.useState("idle");   // "idle" | "out" | "in"
-  const track = React.useRef(null);
-  const timers = React.useRef([]);
-  React.useEffect(() => () => timers.current.forEach(clearTimeout), []);
-  const later = (fn, ms) => { timers.current.push(setTimeout(fn, ms)); };
-  if (!n) return null;
-
-  const c = (n - 1) / 2;
-  const base = (k) => `translate3d(${(k - c) * DECK_STEP}px, ${(c - k) * 6}px, ${-k * 16}px) rotateY(18deg)`;
-  const front = gone < n ? gone : null;
-
-  function throwCard(dir) {
-    if (front == null || flying) return;
-    setFlying({ i: front, dir });
-    setDrag(0); setDragging(false);
-    const next = gone + 1;
-    later(() => {
-      setFlying(null);
-      setGone(next);
-      if (next >= n) {
-        // All thrown: bring the stack back round.
-        later(() => {
-          setPhase("out"); setGone(0);
-          requestAnimationFrame(() => requestAnimationFrame(() => setPhase("in")));
-          later(() => setPhase("idle"), 400 + n * 90 + 650);
-        }, 380);
-      }
-    }, 460);
-  }
-
-  const onDown = (e) => {
-    if (front == null || flying) return;
-    track.current = { x: e.clientX, t: performance.now(), lastX: e.clientX, lastT: performance.now(), v: 0 };
-    try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* older browsers */ }
-    setDragging(true);
-  };
-  const onMove = (e) => {
-    const t = track.current; if (!t) return;
-    const now = performance.now();
-    t.v = (e.clientX - t.lastX) / Math.max(1, now - t.lastT);
-    t.lastX = e.clientX; t.lastT = now;
-    setDrag(e.clientX - t.x);
-  };
-  const onUp = (e) => {
-    const t = track.current; track.current = null;
-    if (!t) return;
-    const dx = e.clientX - t.x;
-    if (Math.abs(dx) > THROW_DIST || Math.abs(t.v) > THROW_SPEED) throwCard(dx < 0 || (dx === 0 && t.v < 0) ? -1 : 1);
-    else { setDragging(false); setDrag(0); }
-  };
-
-  // How far the next card has come forward while the front one is dragged.
-  const pull = front != null ? Math.min(1, Math.abs(drag) / 140) : 0;
-
+// The student card's art: four musician cards fanned like an editorial
+// spread inside the lavender panel — the chosen one large and square-on with
+// a champagne edge, one on each side tilted away, the fourth on the outer
+// edge. Swipe, tap a side card or use the arrow keys to bring one forward.
+// Photos: Piano, Violin and Cello are CC0 (Unsplash via Wikimedia Commons);
+// Masters is Artium's own concert-hall conductor.
+const FAN_CARDS = [
+  { key: "violin", label: "Violin", photo: "/gate-cards/violin.webp", icon: "/instruments/violin.webp", pos: "50% 22%" },
+  { key: "piano", label: "Piano", photo: "/gate-cards/piano.webp", icon: "/instruments/piano.webp", pos: "50% 50%" },
+  { key: "cello", label: "Cello", photo: "/gate-cards/cello.webp", icon: "/instruments/cello.webp", pos: "50% 30%" },
+  { key: "masters", label: "Masters", photo: "/gate-cards/masters.webp", icon: null, pos: "70% 30%" },
+];
+// Slot for each distance from the chosen card: x in card widths, tilt, size.
+const FAN_SLOTS = {
+  "-1": { x: -0.6, r: -7, s: 0.86, z: 3 },
+  "0": { x: 0, r: 0, s: 1.06, z: 5 },
+  "1": { x: 0.6, r: 6, s: 0.86, z: 3 },
+  "2": { x: 1.02, r: 11, s: 0.72, z: 2 },
+};
+const FAN_SHIFT = -0.18; // centres the asymmetric spread in the panel
+function CardFan({ active, onActive }) {
+  const n = FAN_CARDS.length;
+  const start = React.useRef(null);
+  const go = (d) => onActive((active + d + n) % n);
   return (
-    <div className="cg-deck-wrap">
-      <div className={`cg-deck${phase !== "idle" ? ` is-${phase}` : ""}`} role="group" aria-roledescription="carousel"
-        aria-label={`Members: ${real.map((f) => f.name).filter(Boolean).join(", ")}`}
-        onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp}
-        onPointerCancel={() => { track.current = null; setDragging(false); setDrag(0); }}
-        onKeyDown={(e) => { if (e.key === "ArrowRight") throwCard(1); if (e.key === "ArrowLeft") throwCard(-1); }}
-        tabIndex={0}>
-        {faces.map((f, i) => {
-          const k = i - gone;                       // place in the remaining stack; < 0 = thrown
-          const isFront = i === front;
-          let transform, transition, z = n - Math.max(0, k);
-          if (flying && flying.i === i) {
-            // Thrown: off-screen along the swipe, turning as it goes.
-            transform = `translate3d(${flying.dir * 520}px, -30px, 40px) rotateZ(${flying.dir * 24}deg) ${base(0)}`;
-            transition = "transform .46s cubic-bezier(.25,.7,.25,1)";
-            z = n + 2;
-          } else if (k < 0) {
-            transform = `translate3d(-520px, -30px, 0) ${base(0)}`;
-            transition = "none";
-          } else if (isFront && (dragging || drag)) {
-            transform = `translate3d(${drag}px, ${-Math.abs(drag) * 0.06}px, 30px) rotateZ(${drag * 0.06}deg) ${base(0)}`;
-            transition = dragging ? "none" : "transform .5s cubic-bezier(.2,1.3,.4,1)";
-            z = n + 1;
-          } else if (phase === "out") {
-            transform = `translate3d(-520px, -30px, 0) rotateZ(-14deg) ${base(k)}`;
-            transition = "none";
-          } else {
-            transform = base(Math.max(0, k - (k > 0 ? pull : 0)));
-            transition = phase === "in"
-              ? `transform .62s cubic-bezier(.2,.8,.2,1) ${(n - 1 - k) * 90}ms`
-              : dragging ? "transform .12s linear" : "transform .45s cubic-bezier(.2,.8,.2,1)";
-          }
-          return (
-            <div key={i} className={`cg-deck-card${isFront ? " is-front" : ""}`} style={{ transform, transition, zIndex: z }}
-              role="img" aria-label={f.art ? "Instrument artwork" : (f.name || "Member")} aria-hidden={k < 0 || undefined}>
-              {f.art ? <img className="cg-deck-art" src={f.art} alt="" draggable={false} />
-                : f.photoUrl ? <img src={f.photoUrl} alt="" draggable={false} /> : <b>{f.initials || accountInitials(f.name)}</b>}
-              {!f.art && (
-                // Verified member: its own white plate in the corner, so the
-                // blue tick reads the same on any photo.
-                <span className="cg-verified" title="Verified conservatory member" aria-label="Verified">
-                  <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-                    <defs>
-                      <linearGradient id="cg-verified-grad" x1="0" y1="0" x2="1" y2="1">
-                        <stop offset="0" stopColor="#A99CF3" />
-                        <stop offset="1" stopColor="#6B57E8" />
-                      </linearGradient>
-                    </defs>
-                    <polygon points="12.00,1.00 14.41,3.02 17.50,2.47 18.58,5.42 21.53,6.50 20.98,9.59 23.00,12.00 20.98,14.41 21.53,17.50 18.58,18.58 17.50,21.53 14.41,20.98 12.00,23.00 9.59,20.98 6.50,21.53 5.42,18.58 2.47,17.50 3.02,14.41 1.00,12.00 3.02,9.59 2.47,6.50 5.42,5.42 6.50,2.47 9.59,3.02" fill="url(#cg-verified-grad)" strokeLinejoin="round" stroke="url(#cg-verified-grad)" strokeWidth="1.2" />
-                    <path d="M7.6 12.3l3 3 5.8-6.2" fill="none" stroke="#FFFFFF" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </span>
+    <div className="cf" role="group" aria-roledescription="carousel" aria-label="Instruments and degrees on Artium"
+      tabIndex={0}
+      onClick={(e) => e.stopPropagation()}
+      onKeyDown={(e) => { e.stopPropagation(); if (e.key === "ArrowRight") go(1); if (e.key === "ArrowLeft") go(-1); }}
+      onPointerDown={(e) => { start.current = e.clientX; }}
+      onPointerUp={(e) => {
+        if (start.current == null) return;
+        const dx = e.clientX - start.current; start.current = null;
+        if (Math.abs(dx) > 30) go(dx < 0 ? 1 : -1);
+      }}
+      onPointerCancel={() => { start.current = null; }}>
+      {FAN_CARDS.map((c, i) => {
+        const o = ((i - active + 1 + n) % n) - 1;   // -1, 0, 1, 2
+        const slot = FAN_SLOTS[String(o)];
+        const on = o === 0;
+        return (
+          <button key={c.key} type="button" className={`cf-card${on ? " is-on" : ""}${o > 0 ? " is-right" : ""}`} tabIndex={-1}
+            aria-label={c.label} aria-current={on || undefined}
+            style={{
+              transform: `translateX(${(slot.x + FAN_SHIFT) * 100}%) rotate(${slot.r}deg) scale(${slot.s})`,
+              zIndex: slot.z,
+            }}
+            onClick={() => { if (!on) onActive(i); }}>
+            <img className="cf-photo" src={c.photo} alt="" draggable={false} style={{ objectPosition: c.pos }} />
+            <span className="cf-shade" aria-hidden="true" />
+            <span className="cf-label">
+              {c.icon ? <img className="cf-icon" src={c.icon} alt="" aria-hidden="true" /> : (
+                <svg className="cf-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M2.5 9.5 12 5l9.5 4.5L12 14z" /><path d="M6.5 11.5v4c1.6 1.4 3.4 2 5.5 2s3.9-.6 5.5-2v-4" /><path d="M21.5 9.5v5" />
+                </svg>
               )}
-            </div>
-          );
-        })}
-      </div>
-      {n > 1 && (
-        <div className="cg-deck-dots" aria-hidden="true">
-          {faces.map((_, i) => <i key={i} className={i === (front ?? -1) ? "is-on" : undefined} />)}
-        </div>
-      )}
+              <span className="cf-name">{c.label}</span>
+            </span>
+          </button>
+        );
+      })}
     </div>
   );
 }
 
-const CHIP_FALLBACKS = [
-  { initials: "AD", name: "Amélie D.", meta: "Piano · Paris" },
-  { initials: "LM", name: "Lucas M.", meta: "Violin · Vienna" },
-];
 
-const KEYS = [
-  { t: "Piano", check: true },
-  { t: "Violin" },
-  { t: "Masters", check: true },
-  { t: "Cello" },
-  { t: "Voice", check: true },
-  { t: "Bachelor" },
-  { t: "Flute" },
-];
 
 export default function ArtiumGateChordify({
   onLearner, onStudent, onPianist, onComposers, onNews,
@@ -298,6 +211,7 @@ export default function ArtiumGateChordify({
   const count = memberCount ?? 40;
   const medallionOff = !!learnerProfile && !studentLoggedIn;
   const [partnerOpen, setPartnerOpen] = React.useState(false);
+  const [fanActive, setFanActive] = React.useState(1);   // Piano in front first
   const activateStudent = (e) => { if (e && e.preventDefault) e.preventDefault(); if (!medallionOff && onStudent) onStudent(); };
 
   return (
@@ -377,18 +291,15 @@ export default function ArtiumGateChordify({
           onClick={activateStudent}
           onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") activateStudent(e); }}
         >
-          <div className="cg-illo" aria-hidden="true">
-            {KEYS.map((k, i) => (
-              <span key={k.t} className={`cg-key cg-key-${i}`}>
-                {k.t}
-                {k.check && <i className="cg-check"><svg viewBox="0 0 12 12" width="10" height="10"><path d="M2.5 6.3l2.3 2.3 4.7-5" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg></i>}
-              </span>
-            ))}
+          <div className="cg-illo cg-illo-fan">
+            <CardFan active={fanActive} onActive={setFanActive} />
+          </div>
+          <div className="cg-deck-dots cf-dots" aria-hidden="true">
+            {FAN_CARDS.map((c, i) => <i key={c.key} className={i === fanActive ? "is-on" : undefined} />)}
           </div>
           <div className="cg-student-head">
             <h2>I am a Conservatory Student or Graduate</h2>
           </div>
-          <PhotoDeck faces={(memberChips && memberChips.length ? memberChips : CHIP_FALLBACKS).slice(0, 4)} />
           <p>A verified community. Connect, collaborate, grow.</p>
           <button type="button" className="cg-btn" aria-label="Join as a student or graduate" disabled={medallionOff}
             onClick={(e) => { e.stopPropagation(); activateStudent(e); }}>
