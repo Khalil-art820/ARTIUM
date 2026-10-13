@@ -12,7 +12,7 @@ import {
   Calendar, CreditCard, Video, Link2, Clock, Bell,
   Map, BookOpen, ListChecks, LayoutList, Megaphone, Check as CheckIcon, ShieldCheck, FileText, Lock,
   ScanLine, ArrowUpRight, Globe2, MapPin, GraduationCap, User, Paperclip,
-  Compass, Briefcase, Feather, CheckCircle2,
+  Compass, Briefcase, Feather, CheckCircle2, ChevronDown, RotateCcw, SlidersHorizontal,
   Globe as GlobeIcon,
 } from "lucide-react";
 import { useAuth } from "./contexts/AuthContext";
@@ -69,6 +69,7 @@ import WallOfComposers from "./pages/WallOfComposers";
 // initial download and out of the entry chunk, which otherwise blew past the
 // service worker's 2MiB precache ceiling and failed the build.
 const Globe = lazy(() => import("react-globe.gl"));
+const NetworkGlobe = lazy(() => import("./components/network/NetworkGlobe.jsx"));
 import "leaflet/dist/leaflet.css";
 import "./theme-modern.css";
 
@@ -5474,6 +5475,9 @@ export default function App() {
                 // be reachable by a signed-in student.
                 canViewRoster={!!myProfile && authProfile?.approved !== false}
                 extraCons={docCons}
+                myId={myProfile?.id}
+                myConservatoryId={myProfile?.conservatoryId}
+                onMessage={openChat}
               />
             </>
           )}
@@ -10426,7 +10430,328 @@ function ConsAvatar({ cons }) {
   );
 }
 
-function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId, onOpenStudent, isGuest, onGuestClick, canViewRoster, extraCons = [] }) {
+// ---- Network tab: interactive globe + member carousel + filters ----------
+// One filter state drives both the globe's portrait markers and the carousel.
+// Every value shown is read from real member data: instruments, the
+// conservatory (which gives city, country and the marker's coordinates), the
+// level/year phrase, teaching availability and the conservatory-verified flag.
+function hasWebGL() {
+  try {
+    const c = document.createElement("canvas");
+    return !!(window.WebGLRenderingContext && (c.getContext("webgl") || c.getContext("experimental-webgl")));
+  } catch { return false; }
+}
+class GlobeBoundary extends React.Component {
+  constructor(p) { super(p); this.state = { failed: false }; }
+  static getDerivedStateFromError() { return { failed: true }; }
+  componentDidCatch(err) { console.error("network globe", err?.message || err); }
+  render() { return this.state.failed ? this.props.fallback : this.props.children; }
+}
+const NX_EMPTY = { instruments: [], countries: [], levels: [], cons: [], teach: false, verified: false };
+function nxLevels(st) {
+  const p = parseStudy(st.year);
+  return [...p.levels, ...(p.graduated ? [GRADUATED] : [])];
+}
+function NxSheet({ title, onClose, children, footer }) {
+  React.useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+  return ReactDOM.createPortal(
+    <div className="nx-sheet-wrap" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="nx-sheet" role="dialog" aria-modal="true" aria-label={title}>
+        <div className="nx-sheet-head">
+          <span className="nx-sheet-grip" aria-hidden="true" />
+          <p>{title}</p>
+          <button type="button" onClick={onClose} aria-label="Close"><X size={18} /></button>
+        </div>
+        <div className="nx-sheet-body">{children}</div>
+        {footer && <div className="nx-sheet-foot">{footer}</div>}
+      </div>
+    </div>,
+    document.body
+  );
+}
+function NxFace({ m, size = 56 }) {
+  const [broken, setBroken] = useState(false);
+  return (
+    <span className="nx-face" style={size ? { width: size, height: size } : undefined}>
+      {m.photoUrl && !broken
+        ? <img src={m.photoUrl} alt="" loading="lazy" onError={() => setBroken(true)} />
+        : <b style={{ fontSize: size ? Math.round(size * 0.34) : 30 }}>{initials(m.name || "?")}</b>}
+    </span>
+  );
+}
+function NxVerified({ size = 15 }) {
+  return (
+    <span className="nx-verified" title="Conservatory verified" aria-label="Conservatory verified">
+      <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#086868" /><path d="M7.4 12.3l3 3 6.2-6.3" stroke="#fff" strokeWidth="2.4" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
+    </span>
+  );
+}
+
+function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStudent, onMessage, isGuest, onGuestClick }) {
+  const consById = React.useMemo(() => Object.fromEntries(allCons.map((c) => [c.id, c])), [allCons]);
+  const members = React.useMemo(() => students.map((st) => {
+    const c = consById[st.conservatoryId];
+    return {
+      ...st,
+      lat: c?.lat, lng: c?.lng,
+      city: c?.city || "", country: c?.country || "", consName: c?.name || "",
+      instrumentLabel: instrumentLabel(st),
+      instrumentList: instrumentsOf(st),
+      levels: nxLevels(st),
+      verified: !!st.conservatoryVerified,
+      open: !!st.teaching?.open,
+    };
+  }), [students, consById]);
+
+  const [filters, setFilters] = useState(NX_EMPTY);
+  const [sheet, setSheet] = useState(null);       // "instruments" | "countries" | "levels" | "cons" | "group"
+  const [group, setGroup] = useState([]);
+  const [tab, setTab] = useState("featured");
+  const [selectedId, setSelectedId] = useState(null);
+  const [focus, setFocus] = useState(null);
+  const cardRefs = React.useRef({});
+  const webgl = React.useMemo(() => hasWebGL(), []);
+  // Members arrive a moment after the page; until then (or 5s), show
+  // placeholder cards rather than claiming the network is empty.
+  const [settled, setSettled] = useState(students.length > 0);
+  React.useEffect(() => {
+    if (students.length) { setSettled(true); return; }
+    const t = setTimeout(() => setSettled(true), 5000);
+    return () => clearTimeout(t);
+  }, [students.length]);
+
+  const matches = (m, f, skip) => (
+    (skip === "instruments" || !f.instruments.length || m.instrumentList.some((i) => f.instruments.includes(i))) &&
+    (skip === "countries" || !f.countries.length || f.countries.includes(m.country)) &&
+    (skip === "levels" || !f.levels.length || m.levels.some((l) => f.levels.includes(l))) &&
+    (skip === "cons" || !f.cons.length || f.cons.includes(m.conservatoryId)) &&
+    (!f.teach || m.open) && (!f.verified || m.verified)
+  );
+  const filtered = React.useMemo(() => members.filter((m) => matches(m, filters)), [members, filters]);
+  const onGlobe = React.useMemo(() => filtered.filter((m) => Number.isFinite(m.lat) && Number.isFinite(m.lng)), [filtered]);
+
+  // Options come from the members themselves, counted against the other filters.
+  const optionsFor = (key) => {
+    const pool = members.filter((m) => matches(m, filters, key));
+    const counts = Object.create(null);
+    const add = (v, label) => { if (!v) return; (counts[v] = counts[v] || { v, label: label || v, n: 0 }).n++; };
+    for (const m of pool) {
+      if (key === "instruments") m.instrumentList.forEach((i) => add(i));
+      if (key === "countries") add(m.country);
+      if (key === "levels") m.levels.forEach((l) => add(l));
+      if (key === "cons") add(m.conservatoryId, m.consName);
+    }
+    for (const v of filters[key]) if (!counts[v]) counts[v] = { v, label: key === "cons" ? (consById[v]?.name || v) : v, n: 0 };
+    return Object.values(counts).sort((a, b) => b.n - a.n || String(a.label).localeCompare(String(b.label)));
+  };
+  const toggle = (key, v) => setFilters((f) => ({ ...f, [key]: f[key].includes(v) ? f[key].filter((x) => x !== v) : [...f[key], v] }));
+  const activeCount = filters.instruments.length + filters.countries.length + filters.levels.length + filters.cons.length + (filters.teach ? 1 : 0) + (filters.verified ? 1 : 0);
+
+  const myCountry = consById[myConservatoryId]?.country || "";
+  const list = React.useMemo(() => {
+    const byName = (a, b) => (a.name || "").localeCompare(b.name || "");
+    if (tab === "nearby") return filtered.filter((m) => m.id !== myId && myCountry && m.country === myCountry).sort(byName);
+    if (tab === "all") return [...filtered].sort(byName);
+    const withPhoto = filtered.filter((m) => m.photoUrl);
+    const pool = withPhoto.length ? withPhoto : filtered;
+    return [...pool].sort((a, b) => (b.open - a.open) || (b.verified - a.verified) || byName(a, b));
+  }, [filtered, tab, myId, myCountry]);
+
+  const selected = members.find((m) => m.id === selectedId) || null;
+  // A filter that hides the selected member closes its preview.
+  React.useEffect(() => { if (selectedId && !filtered.some((m) => m.id === selectedId)) setSelectedId(null); }, [filtered, selectedId]);
+
+  function selectFromCarousel(m) {
+    setSelectedId(m.id);
+    if (Number.isFinite(m.lat)) setFocus({ lat: m.lat, lng: m.lng, at: Date.now() });
+  }
+  function selectFromGlobe(id) {
+    setSelectedId(id);
+    if (!list.some((m) => m.id === id)) setTab("all");
+    setTimeout(() => {
+      const el = cardRefs.current[id];
+      if (el) try { el.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" }); } catch { /* old Safari */ }
+    }, 60);
+  }
+  const guard = (fn) => () => { if (isGuest) { onGuestClick && onGuestClick(); return; } fn(); };
+
+  const FILTERS = [
+    { key: "instruments", label: "Instrument" },
+    { key: "countries", label: "Country" },
+    { key: "levels", label: "Level" },
+    { key: "cons", label: "Conservatory" },
+  ];
+  const chipLabel = (key, v) => (key === "cons" ? (consById[v]?.short || consById[v]?.name || v) : v);
+
+  return (
+    <div className="nx">
+      {/* Filters */}
+      <div className="nx-filters" role="toolbar" aria-label="Filter musicians">
+        <div className="nx-filter-row">
+          {FILTERS.map(({ key, label }) => (
+            <button key={key} type="button" className={`nx-fchip${filters[key].length ? " is-on" : ""}`} onClick={() => setSheet(key)} aria-haspopup="dialog">
+              {label}{filters[key].length ? <i>{filters[key].length}</i> : null}<ChevronDown size={14} />
+            </button>
+          ))}
+          <button type="button" className={`nx-fchip nx-toggle${filters.teach ? " is-on" : ""}`} aria-pressed={filters.teach}
+            onClick={() => setFilters((f) => ({ ...f, teach: !f.teach }))}>
+            <span className="nx-dot" aria-hidden="true" />Open to teach
+          </button>
+          <button type="button" className={`nx-fchip nx-toggle${filters.verified ? " is-on" : ""}`} aria-pressed={filters.verified}
+            onClick={() => setFilters((f) => ({ ...f, verified: !f.verified }))}>
+            <ShieldCheck size={13} />Verified
+          </button>
+        </div>
+        {activeCount > 0 && (
+          <div className="nx-active">
+            {FILTERS.flatMap(({ key }) => filters[key].map((v) => (
+              <button key={`${key}:${v}`} type="button" className="nx-achip" onClick={() => toggle(key, v)} aria-label={`Remove ${chipLabel(key, v)}`}>
+                {chipLabel(key, v)}<X size={12} />
+              </button>
+            )))}
+            {filters.teach && <button type="button" className="nx-achip" onClick={() => setFilters((f) => ({ ...f, teach: false }))}>Open to teach<X size={12} /></button>}
+            {filters.verified && <button type="button" className="nx-achip" onClick={() => setFilters((f) => ({ ...f, verified: false }))}>Verified<X size={12} /></button>}
+            <button type="button" className="nx-clear" onClick={() => setFilters(NX_EMPTY)}>Clear all</button>
+          </div>
+        )}
+      </div>
+
+      {/* Globe */}
+      <div className="nx-stage" id="nx-globe">
+        {webgl ? (
+          <GlobeBoundary fallback={<div className="nx-globe-fallback"><Globe2 size={28} /><p>The 3D globe isn't available on this device. Browse the musicians below.</p></div>}>
+            <Suspense fallback={<div className="nx-globe-skel" aria-label="Loading the globe"><span /></div>}>
+              <NetworkGlobe
+                members={onGlobe}
+                conservatories={allCons}
+                selectedId={selectedId}
+                focus={focus}
+                onSelectMember={selectFromGlobe}
+                onSelectGroup={(ms) => { setGroup(ms); setSheet("group"); }}
+                height={330}
+              />
+            </Suspense>
+          </GlobeBoundary>
+        ) : (
+          <div className="nx-globe-fallback"><Globe2 size={28} /><p>The 3D globe needs WebGL, which this browser doesn't offer. Browse the musicians below.</p></div>
+        )}
+        <button type="button" className="nx-recenter" onClick={() => { setSelectedId(null); setFocus({ reset: true, at: Date.now() }); }} aria-label="Recenter the globe">
+          <RotateCcw size={16} />
+        </button>
+      </div>
+
+      {/* Carousel */}
+      <div className="nx-tabs" role="tablist" aria-label="Musicians">
+        {[["featured", "Featured"], ["nearby", "Nearby"], ["all", "All"]].map(([v, t]) => (
+          <button key={v} type="button" role="tab" aria-selected={tab === v} className={tab === v ? "is-on" : ""} onClick={() => setTab(v)}>{t}</button>
+        ))}
+      </div>
+      {members.length === 0 && !settled ? (
+        <div className="nx-carousel" aria-busy="true" aria-label="Loading musicians">
+          {[0, 1, 2].map((i) => <span key={i} className="nx-card nx-card-skel"><span /><i /><i /></span>)}
+        </div>
+      ) : list.length === 0 ? (
+        <div className="nx-empty">
+          {members.length === 0 ? (
+            <p>No musicians have joined yet — the network is just getting started.</p>
+          ) : tab === "nearby" && !myCountry ? (
+            <p>Add your conservatory to your profile to see musicians in your country.</p>
+          ) : tab === "nearby" ? (
+            <p>No one else{activeCount ? " matching these filters" : ""} studies in {myCountry} yet.</p>
+          ) : (
+            <>
+              <p>No musicians match these filters.</p>
+              <button type="button" className="nx-clear" onClick={() => setFilters(NX_EMPTY)}>Clear filters</button>
+            </>
+          )}
+        </div>
+      ) : (
+        <div className="nx-carousel" role="list">
+          {list.map((m) => (
+            <button key={m.id} type="button" role="listitem" ref={(el) => { cardRefs.current[m.id] = el; }}
+              className={`nx-card${m.id === selectedId ? " is-on" : ""}`} onClick={() => selectFromCarousel(m)}
+              aria-label={`${m.name}${m.instrumentLabel ? `, ${m.instrumentLabel}` : ""}${m.city ? `, ${m.city}` : ""}`}>
+              <span className="nx-card-photo">
+                <NxFace m={m} size={0} />
+                {m.verified && <span className="nx-card-tick"><NxVerified size={17} /></span>}
+              </span>
+              <span className="nx-card-name">{m.name}{m.id === myId ? " (you)" : ""}</span>
+              <span className="nx-card-meta">{m.instrumentLabel || "Musician"}</span>
+              {(m.city || m.country) && <span className="nx-card-meta nx-card-place"><MapPin size={11} />{[m.city, m.country].filter(Boolean).join(", ")}</span>}
+              {m.open && <span className="nx-card-teach">Open to teach</span>}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Filter sheets */}
+      {FILTERS.some((f) => f.key === sheet) && (
+        <NxSheet title={FILTERS.find((f) => f.key === sheet).label} onClose={() => setSheet(null)}
+          footer={<>
+            <button type="button" className="nx-clear" onClick={() => setFilters((f) => ({ ...f, [sheet]: [] }))}>Clear</button>
+            <button type="button" className="nx-done" onClick={() => setSheet(null)}>Show {filtered.length} musician{filtered.length === 1 ? "" : "s"}</button>
+          </>}>
+          {optionsFor(sheet).length === 0 && <p className="nx-sheet-none">No options for the current filters.</p>}
+          {optionsFor(sheet).map((o) => {
+            const on = filters[sheet].includes(o.v);
+            return (
+              <button key={o.v} type="button" className={`nx-opt${on ? " is-on" : ""}`} onClick={() => toggle(sheet, o.v)} aria-pressed={on}>
+                <span>{o.label}</span><em>{o.n}</em>{on ? <Check size={16} /> : <span className="nx-opt-box" aria-hidden="true" />}
+              </button>
+            );
+          })}
+        </NxSheet>
+      )}
+
+      {/* Members at one place */}
+      {sheet === "group" && (
+        <NxSheet title={`${group.length} musicians here`} onClose={() => setSheet(null)}>
+          {group.map((m) => (
+            <button key={m.id} type="button" className="nx-grow" onClick={() => { setSheet(null); setSelectedId(m.id); selectFromGlobe(m.id); }}>
+              <NxFace m={m} size={44} />
+              <span><b>{m.name}{m.verified && <NxVerified size={13} />}</b><em>{[m.instrumentLabel, m.city].filter(Boolean).join(" · ")}</em></span>
+              <ChevronRight size={16} />
+            </button>
+          ))}
+        </NxSheet>
+      )}
+
+      {/* Profile preview */}
+      {selected && !sheet && ReactDOM.createPortal(
+        <div className="nx-preview" role="dialog" aria-label={`${selected.name} — preview`}>
+          <button type="button" className="nx-preview-x" onClick={() => setSelectedId(null)} aria-label="Close preview"><X size={16} /></button>
+          <div className="nx-preview-top">
+            <NxFace m={selected} size={64} />
+            <div className="nx-preview-who">
+              <p className="nx-preview-name">{selected.name}{selected.verified && <NxVerified size={16} />}</p>
+              {selected.instrumentLabel && <p className="nx-preview-line">{selected.instrumentLabel}</p>}
+              {selected.consName && <p className="nx-preview-line nx-muted">{selected.consName}{selected.city ? ` · ${selected.city}` : ""}{selected.country ? `, ${selected.country}` : ""}</p>}
+            </div>
+          </div>
+          {(selected.year || selected.open) && (
+            <div className="nx-preview-chips">
+              {(selected.year || "").split(",").map((t) => t.trim()).filter(Boolean).map((t) => <span key={t}><GraduationCap size={12} />{t}</span>)}
+              {selected.open && <span className="is-teach"><IconTeacher size={12} />Open to teach</span>}
+            </div>
+          )}
+          <div className="nx-preview-actions">
+            <button type="button" className="nx-btn" onClick={guard(() => onOpenStudent(selected.id))}>View profile</button>
+            {selected.id !== myId && onMessage && (
+              <button type="button" className="nx-btn nx-btn-ghost" onClick={guard(() => onMessage(selected.id))}><MessageCircle size={15} />Message</button>
+            )}
+          </div>
+        </div>,
+        document.body
+      )}
+    </div>
+  );
+}
+
+function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId, onOpenStudent, isGuest, onGuestClick, canViewRoster, extraCons = [], myId, myConservatoryId, onMessage }) {
   const ALL_CONS = React.useMemo(() => [...CONSERVATORIES, ...extraCons], [extraCons]);
   const cons = ALL_CONS.find((c) => c.id === selectedConsId);
   const roster = selectedConsId ? studentsByCons[selectedConsId] || [] : [];
@@ -10479,6 +10804,10 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
         <p className="artium-aw-eyebrow"><i />The Artium Network<i /></p>
         <h1 className="artium-aw-h1">Bridging Musicians<br />Worldwide</h1>
 
+        {MODERN ? (
+          <NetworkExplorer students={allStudents} allCons={ALL_CONS} myId={myId} myConservatoryId={myConservatoryId}
+            onOpenStudent={onOpenStudent} onMessage={onMessage} isGuest={isGuest} onGuestClick={onGuestClick} />
+        ) : (
         <div className="artium-aw-stage">
           <span className="artium-aw-glow" aria-hidden="true" />
           <span className="artium-aw-ring artium-aw-ring--a" aria-hidden="true" />
@@ -10487,6 +10816,7 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
             onCluster={(members) => { setSelectedConsId(null); setAreaIds(members.map((m) => m.id)); }}
             height={300} />
         </div>
+        )}
 
         <div className="artium-aw-stats">
           <div className="artium-aw-stat">
@@ -10521,6 +10851,17 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
         {/* The slab the mock draws under the stats — a compass, and the
             page's own copy for what the globe above is for. Replaces the
             old plain caption in exactly this one spot. */}
+        {MODERN ? (
+          <button type="button" className="artium-aw-explore nx-explore"
+            onClick={() => document.getElementById("nx-globe")?.scrollIntoView({ behavior: "smooth", block: "center" })}>
+            <span className="artium-aw-explore-tile"><Compass size={18} strokeWidth={1.8} /></span>
+            <span className="artium-aw-explore-copy">
+              <b>Explore the world and connect with talent.</b>
+              <span>Tap a pin to discover musicians nearby.</span>
+            </span>
+            <ChevronRight size={18} strokeWidth={2} className="nx-explore-arrow" />
+          </button>
+        ) : (
         <div className="artium-aw-explore">
           <span className="artium-aw-explore-tile"><Compass size={18} strokeWidth={1.8} /></span>
           <span className="artium-aw-explore-copy">
@@ -10528,6 +10869,7 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
             <span>Tap a pin on the map to discover who's studying nearby.</span>
           </span>
         </div>
+        )}
 
         {cons ? (
           <>
@@ -16361,4 +16703,4 @@ function LearnerChat({ teacher, messages, onSend }) {
   );
 }
 
-export { BottomTabs, STUDENT_TABS, NotificationBell, ArtiumRadio };
+export { BottomTabs, STUDENT_TABS, NotificationBell, ArtiumRadio, NetworkExplorer, CONSERVATORIES };

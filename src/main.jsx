@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import App, { BottomTabs, STUDENT_TABS, NotificationBell, ArtiumRadio } from "./App.jsx";
+import App, { BottomTabs, STUDENT_TABS, NotificationBell, ArtiumRadio, NetworkExplorer, CONSERVATORIES } from "./App.jsx";
 import ErrorBoundary from "./ErrorBoundary.jsx";
 import { AuthProvider } from "./contexts/AuthContext.jsx";
 import "./index.css";
@@ -56,8 +56,31 @@ const GatePreview = import.meta.env.DEV && new URLSearchParams(location.search).
     }))
   : null;
 
+// Dev-only: /?networkpreview renders the Network tab's explorer with sample
+// members at real conservatories (never shipped — the production build drops it).
+const NetworkPreview = import.meta.env.DEV && new URLSearchParams(location.search).has("networkpreview")
+  ? () => {
+      const S = (id, name, cons, inst, year, open, verified, photo) => ({ id, name, conservatoryId: cons, instrument: inst, year, teaching: { open }, conservatoryVerified: verified, photoUrl: photo });
+      const students = [
+        S("me", "Khalil Tannous", "juilliard", "Piano", "Masters, Doctoral, 3rd year", true, true, "/gate-hero.jpg"),
+        S("s2", "Sample Violinist", "eisler", "Violin", "Masters, 2nd year", false, true, "/app-banner.jpg"),
+        S("s3", "Sample Cellist", "udk", "Cello", "Doctoral, 1st year", true, false, "/landing-backdrop.jpg"),
+        S("s4", "Sample Singer", "hemgeneve", "Voice", "Graduated", false, true, ""),
+        S("s5", "Sample Flautist", "curtis", "Flute", "Masters, 1st year", true, true, "/earth-artium.jpg"),
+      ];
+      return (
+        <div style={{ maxWidth: 560, margin: "0 auto", padding: "20px 16px 120px", background: "#F8F5F0", minHeight: "100vh" }}>
+          <style>{TAB_CSS}</style>
+          <NetworkExplorer students={students} allCons={CONSERVATORIES} myId="me" myConservatoryId="juilliard"
+            onOpenStudent={(id) => alert("open " + id)} onMessage={(id) => alert("message " + id)} />
+          <BottomTabs light modern items={STUDENT_TABS} active="map" onTab={() => {}} />
+        </div>
+      );
+    }
+  : null;
+
 ReactDOM.createRoot(document.getElementById("root")).render(
-  GatePreview ? (
+  NetworkPreview ? <NetworkPreview /> : GatePreview ? (
     <React.Suspense fallback={null}><GatePreview /></React.Suspense>
   ) : (
   <React.StrictMode>
