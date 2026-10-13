@@ -711,3 +711,10 @@ html.theme-modern .nx-card-skel{cursor:default}
 html.theme-modern .nx-card-skel span{display:block;height:116px;border-radius:10px;background:#EFEAE2;margin-bottom:8px;animation:nxPulse 1.2s ease-in-out infinite alternate}
 html.theme-modern .nx-card-skel i{display:block;height:10px;border-radius:5px;background:#EFEAE2;margin:6px 2px 0;width:80%}
 html.theme-modern .nx-card-skel i + i{width:55%}
+/* Header member counter: overlapping portraits + mint count pill. */
+html.theme-modern .tm-hm{display:inline-flex;align-items:center}
+html.theme-modern .tm-hm-faces{display:inline-flex;align-items:center}
+html.theme-modern .tm-hm-faces img{width:28px;height:28px;border-radius:50%;object-fit:cover;display:block;box-shadow:0 0 0 2px #086868;background:#0E6A65}
+html.theme-modern .tm-hm-faces img + img{margin-left:-9px}
+html.theme-modern .tm-hm-n{margin-left:-6px;min-width:28px;height:24px;padding:0 8px;border-radius:12px;display:inline-grid;place-items:center;
+  background:#42C9B8;color:#06302E;font:700 12.5px 'Fira Sans',sans-serif;box-shadow:0 0 0 2px #086868;position:relative}

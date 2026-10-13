@@ -71,7 +71,7 @@ const NetworkPreview = import.meta.env.DEV && new URLSearchParams(location.searc
       return (
         <div style={{ maxWidth: 560, margin: "0 auto", padding: "20px 16px 120px", background: "#F8F5F0", minHeight: "100vh" }}>
           <style>{TAB_CSS}</style>
-          <NetworkExplorer students={students} allCons={CONSERVATORIES} myId="me" myConservatoryId="juilliard"
+          <NetworkExplorer learnerMode={new URLSearchParams(location.search).has("learner")} students={students} allCons={CONSERVATORIES} myId="me" myConservatoryId="juilliard"
             onOpenStudent={(id) => alert("open " + id)} onMessage={(id) => alert("message " + id)} />
           <BottomTabs light modern items={STUDENT_TABS} active="map" onTab={() => {}} />
         </div>

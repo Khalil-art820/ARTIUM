@@ -2910,6 +2910,7 @@ export default function App() {
   // visit (re-drawn only when the roster itself changes), so the deck doesn't
   // reshuffle under the viewer on every render.
   const photoStudentIds = students.filter((st) => st.photoUrl).map((st) => st.id).join(",");
+  const headerFaces = React.useMemo(() => students.filter((st) => st.photoUrl).slice(0, 2), [photoStudentIds]);
   const deckFaces = React.useMemo(() => {
     const pool = students.filter((st) => st.photoUrl);
     for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
@@ -5274,8 +5275,7 @@ export default function App() {
               </span>
               <span className="artium-net-right">
                 <span className="artium-net-count" title="Members" aria-label={`${Object.values(studentsByCons).flat().length} members`}>
-                  {MODERN ? <IconThreePeople size={31} strokeWidth={1.6} solidMiddle /> : <Users size={15} strokeWidth={1.8} />}
-                  {Object.values(studentsByCons).flat().length}
+                  {MODERN ? <HeaderMembers count={Object.values(studentsByCons).flat().length} faces={headerFaces} /> : <><Users size={15} strokeWidth={1.8} />{Object.values(studentsByCons).flat().length}</>}
                 </span>
                 {/* The bell's own button, glyph swapped for the play
                     triangle — same position as the landing header. */}
@@ -5740,6 +5740,21 @@ const IconThreePeople = ({ solidMiddle, ...p }) => (
     <path d="M22.8 19.2a3.6 3.6 0 0 0-3.1-4.4" />
   </IconBox>
 );
+// Header member counter: two overlapping member portraits and the count in a
+// mint pill; the three-figure mark stands in until someone has a photo.
+function HeaderMembers({ count, faces = [] }) {
+  const shown = (faces || []).filter((f) => f && f.photoUrl).slice(0, 2);
+  if (!shown.length) return <><IconThreePeople size={31} strokeWidth={1.6} solidMiddle />{count}</>;
+  return (
+    <span className="tm-hm">
+      <span className="tm-hm-faces" aria-hidden="true">
+        {shown.map((f, i) => <img key={i} src={f.photoUrl} alt="" onError={(e) => { e.currentTarget.style.visibility = "hidden"; }} />)}
+      </span>
+      <span className="tm-hm-n">{count}</span>
+    </span>
+  );
+}
+
 // The teaching man — the mark that used to be the artium logo. A silhouette
 // through the same PNG mask the gate's conductor uses, so it is the mark
 // itself rather than a redrawing of it. currentColor through backgroundColor,
@@ -5827,8 +5842,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
               .artium-net-puck now, the bell's own class, so the two can
               never drift apart in size or material again. */}
           <span className="artium-gx-count">
-            {MODERN ? <IconThreePeople size={31} strokeWidth={1.6} solidMiddle /> : <Users size={16} strokeWidth={1.8} />}
-            {memberCount}
+            {MODERN ? <HeaderMembers count={memberCount} faces={Object.values(studentsByCons).flat()} /> : <><Users size={16} strokeWidth={1.8} />{memberCount}</>}
           </span>
           {onMusicToggle && (
             <button
@@ -6811,7 +6825,7 @@ function PianistDiscover({ students, onOpen }) {
         <span />
         <GateLogo word={21} />
         <span className="artium-aw-bar-right">
-          <span className="artium-aw-count">{MODERN ? <IconThreePeople size={31} strokeWidth={1.6} solidMiddle /> : <Users size={16} strokeWidth={1.8} />}{students.length}</span>
+          <span className="artium-aw-count">{MODERN ? <HeaderMembers count={students.length} faces={students} /> : <><Users size={16} strokeWidth={1.8} />{students.length}</>}</span>
         </span>
       </header>
 
@@ -10491,7 +10505,10 @@ function NxVerified({ size = 15 }) {
   );
 }
 
-function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStudent, onMessage, isGuest, onGuestClick }) {
+function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStudent, onMessage, isGuest, onGuestClick, learnerMode = false }) {
+  // Learner mode: everyone shown is a teacher, so no "Open to teach" toggle,
+  // and no Nearby (a learner has no conservatory to measure from).
+  const noun = learnerMode ? "teacher" : "musician";
   const consById = React.useMemo(() => Object.fromEntries(allCons.map((c) => [c.id, c])), [allCons]);
   const members = React.useMemo(() => students.map((st) => {
     const c = consById[st.conservatoryId];
@@ -10590,17 +10607,19 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
   return (
     <div className="nx">
       {/* Filters */}
-      <div className="nx-filters" role="toolbar" aria-label="Filter musicians">
+      <div className="nx-filters" role="toolbar" aria-label={`Filter ${noun}s`}>
         <div className="nx-filter-row">
           {FILTERS.map(({ key, label }) => (
             <button key={key} type="button" className={`nx-fchip${filters[key].length ? " is-on" : ""}`} onClick={() => setSheet(key)} aria-haspopup="dialog">
               {label}{filters[key].length ? <i>{filters[key].length}</i> : null}<ChevronDown size={14} />
             </button>
           ))}
+          {!learnerMode && (
           <button type="button" className={`nx-fchip nx-toggle${filters.teach ? " is-on" : ""}`} aria-pressed={filters.teach}
             onClick={() => setFilters((f) => ({ ...f, teach: !f.teach }))}>
             <span className="nx-dot" aria-hidden="true" />Open to teach
           </button>
+          )}
           <button type="button" className={`nx-fchip nx-toggle${filters.verified ? " is-on" : ""}`} aria-pressed={filters.verified}
             onClick={() => setFilters((f) => ({ ...f, verified: !f.verified }))}>
             <ShieldCheck size={13} />Verified
@@ -10646,7 +10665,7 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
 
       {/* Carousel */}
       <div className="nx-tabs" role="tablist" aria-label="Musicians">
-        {[["featured", "Featured"], ["nearby", "Nearby"], ["all", "All"]].map(([v, t]) => (
+        {(learnerMode ? [["featured", "Featured"], ["all", "All"]] : [["featured", "Featured"], ["nearby", "Nearby"], ["all", "All"]]).map(([v, t]) => (
           <button key={v} type="button" role="tab" aria-selected={tab === v} className={tab === v ? "is-on" : ""} onClick={() => setTab(v)}>{t}</button>
         ))}
       </div>
@@ -10657,14 +10676,14 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
       ) : list.length === 0 ? (
         <div className="nx-empty">
           {members.length === 0 ? (
-            <p>No musicians have joined yet — the network is just getting started.</p>
+            <p>{learnerMode ? "No teachers yet — check back as more conservatory students start teaching." : "No musicians have joined yet — the network is just getting started."}</p>
           ) : tab === "nearby" && !myCountry ? (
             <p>Add your conservatory to your profile to see musicians in your country.</p>
           ) : tab === "nearby" ? (
             <p>No one else{activeCount ? " matching these filters" : ""} studies in {myCountry} yet.</p>
           ) : (
             <>
-              <p>No musicians match these filters.</p>
+              <p>No {noun}s match these filters.</p>
               <button type="button" className="nx-clear" onClick={() => setFilters(NX_EMPTY)}>Clear filters</button>
             </>
           )}
@@ -10682,7 +10701,8 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
               <span className="nx-card-name">{m.name}{m.id === myId ? " (you)" : ""}</span>
               <span className="nx-card-meta">{m.instrumentLabel || "Musician"}</span>
               {(m.city || m.country) && <span className="nx-card-meta nx-card-place"><MapPin size={11} />{[m.city, m.country].filter(Boolean).join(", ")}</span>}
-              {m.open && <span className="nx-card-teach">Open to teach</span>}
+              {m.open && !learnerMode && <span className="nx-card-teach">Open to teach</span>}
+              {learnerMode && m.teaching?.price && <span className="nx-card-teach">€{m.teaching.price}</span>}
             </button>
           ))}
         </div>
@@ -10693,7 +10713,7 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
         <NxSheet title={FILTERS.find((f) => f.key === sheet).label} onClose={() => setSheet(null)}
           footer={<>
             <button type="button" className="nx-clear" onClick={() => setFilters((f) => ({ ...f, [sheet]: [] }))}>Clear</button>
-            <button type="button" className="nx-done" onClick={() => setSheet(null)}>Show {filtered.length} musician{filtered.length === 1 ? "" : "s"}</button>
+            <button type="button" className="nx-done" onClick={() => setSheet(null)}>Show {filtered.length} {noun}{filtered.length === 1 ? "" : "s"}</button>
           </>}>
           {optionsFor(sheet).length === 0 && <p className="nx-sheet-none">No options for the current filters.</p>}
           {optionsFor(sheet).map((o) => {
@@ -10709,7 +10729,7 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
 
       {/* Members at one place */}
       {sheet === "group" && (
-        <NxSheet title={`${group.length} musicians here`} onClose={() => setSheet(null)}>
+        <NxSheet title={`${group.length} ${noun}s here`} onClose={() => setSheet(null)}>
           {group.map((m) => (
             <button key={m.id} type="button" className="nx-grow" onClick={() => { setSheet(null); setSelectedId(m.id); selectFromGlobe(m.id); }}>
               <NxFace m={m} size={44} />
@@ -12232,6 +12252,11 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
   }, [teachersByCons, areaIds]);
 
   const onlineTeacherCount = teachers.filter((t) => t.online).length;
+  const learnerCons = React.useMemo(() => {
+    const known = new Set(CONSERVATORIES.map((c) => c.id));
+    const extra = teachers.map((t) => findConservatory(t.conservatoryId)).filter((c) => c && !known.has(c.id));
+    return [...CONSERVATORIES, ...extra];
+  }, [teachers]);
 
   function selectTeacher(id) {
     setSelectedId(id);
@@ -12284,8 +12309,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
         </span>
         <span className="artium-net-right">
           <span className="artium-net-count" title="Members" aria-label={`${memberCount} members`}>
-            {MODERN ? <IconThreePeople size={31} strokeWidth={1.6} solidMiddle /> : <Users size={15} strokeWidth={1.8} />}
-            {memberCount}
+            {MODERN ? <HeaderMembers count={memberCount} faces={teachers} /> : <><Users size={15} strokeWidth={1.8} />{memberCount}</>}
           </span>
           <button
             className={`artium-net-puck${MODERN ? " tm-play" : ""}${MODERN && musicOn ? " is-on" : ""}`}
@@ -12346,6 +12370,9 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
             {learner && learner.location ? ` · you're in ${learner.location}` : ""}.
           </p>
 
+          {MODERN ? (
+            <NetworkExplorer learnerMode students={teachers} allCons={learnerCons} onOpenStudent={selectTeacher} />
+          ) : (
           <div className="artium-aw-stage">
             <span className="artium-aw-glow" aria-hidden="true" />
             <span className="artium-aw-ring artium-aw-ring--a" aria-hidden="true" />
@@ -12358,6 +12385,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
               height={300}
             />
           </div>
+          )}
 
           <div className="artium-aw-stats">
             <div className="artium-aw-stat">
@@ -12383,7 +12411,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
             </div>
           </div>
 
-          <p className="artium-aw-hint">Explore the world map and pick a pin to see who teaches there.</p>
+          <p className="artium-aw-hint">{MODERN ? "Turn the globe and tap a portrait to meet a teacher." : "Explore the world map and pick a pin to see who teaches there."}</p>
 
           {cons ? (
             <>
