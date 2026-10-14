@@ -592,3 +592,33 @@
 .cgate .cf-shade{background:linear-gradient(180deg,rgba(0,0,0,0) 70%,rgba(10,8,16,.35) 100%)}
 .cgate .cf-card.is-on .cf-cap{left:6px;right:6px;padding:6px 5px 5px}
 .cgate .cf-card.is-on .cf-person{font-size:clamp(13px,3.9vw,16px);letter-spacing:0}
+/* Plate: a slim band across the card's foot, following its rounded corners. */
+.cgate .cf-cap,.cgate .cf-card.is-on .cf-cap,.cgate .cf-card:not(.is-on) .cf-cap{left:0;right:0;bottom:0;border-radius:0;padding:5px 6px 5px;
+  background:rgba(14,11,22,.55);box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}
+.cgate .cf-card.is-on .cf-cap{padding:6px 8px 6px}
+.cgate .cf-person{margin-bottom:2px}
+.cgate .cf-card.is-on .cf-person{margin-bottom:3px}
+.cgate .cf-cap .cf-emblem{margin-top:3px;width:10px;height:10px}
+.cgate .cf-card.is-on .cf-cap .cf-emblem{margin-top:3px;width:12px;height:12px}
+.cgate .cf-card:not(.is-on) .cf-cap .cf-emblem{margin-top:2px;width:8px;height:8px}
+/* Side cards: keep the text inside the strip that shows, the band spans the card. */
+.cgate .cf-card:not(.is-on):not(.is-right) .cf-cap{padding-right:50%}
+.cgate .cf-card.is-right:not(.is-on) .cf-cap{padding-left:50%}
+.cgate .cf-card.is-outer .cf-cap{padding-left:60%}
+/* Thinner band: tight lines. */
+.cgate .cf-card.is-on .cf-cap{padding:5px 8px 5px}
+.cgate .cf-card.is-on .cf-person{font-size:clamp(13px,3.8vw,15.5px);line-height:1.05;margin-bottom:2px}
+.cgate .cf-card.is-on .cf-inst{line-height:1}
+.cgate .cf-card.is-on .cf-inst span{font-size:9px;line-height:1}
+.cgate .cf-card.is-on .cf-cap .cf-emblem{width:11px;height:11px;margin-top:2px}
+/* Side cards: name and instrument only, sized to the visible strip. */
+.cgate .cf-card:not(.is-on) .cf-inst i,.cgate .cf-card:not(.is-on) .cf-cap .cf-emblem{display:none}
+.cgate .cf-card:not(.is-on) .cf-cap{padding-top:4px;padding-bottom:4px}
+.cgate .cf-card:not(.is-on):not(.is-right) .cf-cap{padding-left:4px;padding-right:48%}
+.cgate .cf-card.is-right:not(.is-on) .cf-cap{padding-left:48%;padding-right:4px}
+.cgate .cf-card.is-outer .cf-cap{padding-left:58%;padding-right:3px}
+.cgate .cf-card:not(.is-on) .cf-person{font-size:11px;margin-bottom:1px}
+.cgate .cf-card:not(.is-on) .cf-inst span{font-size:7px;letter-spacing:.16em;margin-right:-.16em}
+.cgate .cf-card:not(.is-on):not(.is-right) .cf-cap{left:0;right:0}
+.cgate .cf-card.is-right:not(.is-on) .cf-cap{left:0;right:0}
+.cgate .cf-card.is-outer:not(.is-on) .cf-cap{left:0;right:0;padding-left:60%;padding-right:3px}
