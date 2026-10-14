@@ -643,3 +643,7 @@
 .cgate .cf-card.is-on .cf-cap.cf-cap-row{gap:6px;padding-left:6px;padding-right:6px}
 .cgate .cf-card.is-on .cf-cap-row .cf-person{font-size:clamp(12.5px,3.7vw,15px)}
 .cgate .cf-card.is-on .cf-mark{width:19px;height:19px}
+/* A soft arch along the band's top edge. */
+.cgate .cf-cap.cf-cap-row,.cgate .cf-card.is-on .cf-cap.cf-cap-row,.cgate .cf-card:not(.is-on) .cf-cap.cf-cap-row{
+  border-radius:50% 50% 0 0 / 12px 12px 0 0;padding-top:9px}
+.cgate .cf-card.is-on .cf-cap.cf-cap-row{border-radius:50% 50% 0 0 / 14px 14px 0 0;padding-top:11px}
