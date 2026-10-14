@@ -189,21 +189,16 @@ function CardFan({ active, onActive, cards = FAN_CARDS }) {
               </span>
             )}
             <span className="cf-shade" aria-hidden="true" />
-            {/* Caption, centred: instrument emblem, the student's name in
-                serif, then the instrument in spaced gold capitals between
-                two fine rules. */}
+            {/* Caption on a frosted plate: name in serif, the instrument in
+                spaced gold capitals between two fine rules, emblem beneath. */}
             <span className="cf-cap">
               {c.name && <span className="cf-person">{on ? c.name : c.name.split(" ")[0]}</span>}
-              <span className="cf-inst">
-                <i aria-hidden="true" />
-                {c.icon ? <img className="cf-emblem" src={c.icon} alt="" aria-hidden="true" /> : (
-                  <svg className="cf-emblem" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d="M2.5 9.5 12 5l9.5 4.5L12 14z" /><path d="M6.5 11.5v4c1.6 1.4 3.4 2 5.5 2s3.9-.6 5.5-2v-4" /><path d="M21.5 9.5v5" />
-                  </svg>
-                )}
-                <span>{c.label}</span>
-                <i aria-hidden="true" />
-              </span>
+              <span className="cf-inst"><i aria-hidden="true" /><span>{c.label}</span><i aria-hidden="true" /></span>
+              {c.icon ? <img className="cf-emblem" src={c.icon} alt="" aria-hidden="true" /> : (
+                <svg className="cf-emblem" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M2.5 9.5 12 5l9.5 4.5L12 14z" /><path d="M6.5 11.5v4c1.6 1.4 3.4 2 5.5 2s3.9-.6 5.5-2v-4" /><path d="M21.5 9.5v5" />
+                </svg>
+              )}
             </span>
           </button>
         );
