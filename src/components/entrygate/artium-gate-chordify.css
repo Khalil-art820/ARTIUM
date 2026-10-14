@@ -622,3 +622,24 @@
 .cgate .cf-card:not(.is-on):not(.is-right) .cf-cap{left:0;right:0}
 .cgate .cf-card.is-right:not(.is-on) .cf-cap{left:0;right:0}
 .cgate .cf-card.is-outer:not(.is-on) .cf-cap{left:0;right:0;padding-left:60%;padding-right:3px}
+
+/* ---- One-line band: gold instrument mark + name ---- */
+.cgate .cf-cap.cf-cap-row,.cgate .cf-card.is-on .cf-cap.cf-cap-row,.cgate .cf-card:not(.is-on) .cf-cap.cf-cap-row{
+  flex-direction:row;align-items:center;justify-content:center;gap:6px;padding-top:5px;padding-bottom:5px}
+.cgate .cf-card.is-on .cf-cap.cf-cap-row{gap:7px;padding-top:6px;padding-bottom:6px}
+.cgate .cf-mark{flex:none;width:17px;height:17px;display:block;background:linear-gradient(160deg,#FBE3A6,#E2B24E);
+  -webkit-mask-size:contain;mask-size:contain;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:center;mask-position:center;
+  /* Thicken the fine line-art and lift it off the photo. */
+  filter:drop-shadow(0 0 .45px #F2CF7E) drop-shadow(0 0 .45px #F2CF7E) drop-shadow(0 1px 1.5px rgba(0,0,0,.75))}
+.cgate .cf-mark-svg{background:none;color:#F2CF7E;filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.75))}
+.cgate .cf-card.is-on .cf-mark{width:21px;height:21px}
+.cgate .cf-card:not(.is-on) .cf-mark{width:13px;height:13px}
+.cgate .cf-cap-row .cf-person{margin:0 !important;min-width:0}
+.cgate .cf-cap-row.is-solo .cf-mark{width:19px;height:19px}
+.cgate .cf-card:not(.is-on) .cf-cap-row.is-solo .cf-mark{width:15px;height:15px}
+/* Side bands keep their content in the strip that shows. */
+.cgate .cf-card:not(.is-on):not(.is-right) .cf-cap.cf-cap-row{justify-content:center}
+.cgate .cf-card.is-outer .cf-cap-row .cf-person{display:none}
+.cgate .cf-card.is-on .cf-cap.cf-cap-row{gap:6px;padding-left:6px;padding-right:6px}
+.cgate .cf-card.is-on .cf-cap-row .cf-person{font-size:clamp(12.5px,3.7vw,15px)}
+.cgate .cf-card.is-on .cf-mark{width:19px;height:19px}

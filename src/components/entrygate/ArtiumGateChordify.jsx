@@ -189,16 +189,18 @@ function CardFan({ active, onActive, cards = FAN_CARDS }) {
               </span>
             )}
             <span className="cf-shade" aria-hidden="true" />
-            {/* Caption on a frosted plate: name in serif, the instrument in
-                spaced gold capitals between two fine rules, emblem beneath. */}
-            <span className="cf-cap">
-              {c.name && <span className="cf-person">{on ? c.name : c.name.split(" ")[0]}</span>}
-              <span className="cf-inst"><i aria-hidden="true" /><span>{c.label}</span><i aria-hidden="true" /></span>
-              {c.icon ? <img className="cf-emblem" src={c.icon} alt="" aria-hidden="true" /> : (
-                <svg className="cf-emblem" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            {/* Caption band: the instrument mark in gold beside the name. */}
+            <span className={`cf-cap cf-cap-row${c.name ? "" : " is-solo"}`}>
+              {c.icon ? (
+                // The instrument drawing as a mask filled in solid gold, so it
+                // reads crisply at small sizes on any photo.
+                <span className="cf-mark" aria-hidden="true" style={{ WebkitMaskImage: `url(${c.icon})`, maskImage: `url(${c.icon})` }} />
+              ) : (
+                <svg className="cf-mark cf-mark-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M2.5 9.5 12 5l9.5 4.5L12 14z" /><path d="M6.5 11.5v4c1.6 1.4 3.4 2 5.5 2s3.9-.6 5.5-2v-4" /><path d="M21.5 9.5v5" />
                 </svg>
               )}
+              {c.name && <span className="cf-person">{on ? c.name : c.name.split(" ")[0]}</span>}
             </span>
           </button>
         );
