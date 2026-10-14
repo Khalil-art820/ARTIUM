@@ -467,3 +467,17 @@
 .cgate .cf-card:not(.is-on) .cf-icon{width:11px;height:11px}
 .cgate .cf-card:not(.is-on) .cf-name{font-size:12.5px;padding-bottom:4px}
 .cgate .cf-card:not(.is-on) .cf-name::after{width:16px}
+
+/* ---- Hero headline: bold display serif (DM Serif Display) ---- */
+.cgate .cg-hero h1{font-family:'DM Serif Display','Playfair Display',Georgia,serif;font-weight:400;
+  font-size:clamp(38px,11.5vw,54px);line-height:1.04;letter-spacing:-.015em;color:#141A19}
+.cgate .cg-hero h1 .cg-accent{color:#086868}
+/* One white field from the hero down to the bottom of the student card. */
+.cgate .cg-hero{border-bottom:0;padding-bottom:6px}
+.cgate .cg-student{margin:-16px -12px 0;border:0;border-radius:0;background:#FFFFFF;padding:14px 16px 22px}
+@media (min-width:744px){.cgate .cg-student{margin:-16px 0 0;border-radius:0 0 12px 12px}}
+.cgate .cg-student .cg-illo.cg-illo-fan{margin-bottom:10px}
+.cgate .cg-student .cf-dots{margin-bottom:16px}
+/* Longer label, still one line. */
+.cgate .cg-student .cg-btn{white-space:nowrap;font-size:clamp(14px,4.2vw,18px);padding-left:12px;padding-right:12px}
+.cgate .cg-hero h1{white-space:nowrap;font-size:clamp(32px,10.4vw,54px)}

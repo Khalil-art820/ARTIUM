@@ -273,7 +273,7 @@ export default function ArtiumGateChordify({
         <div className="cg-hero-in">
           <h1>
             <span>Discover.</span>{" "}
-            <span className="cg-accent">Connect.</span>{" "}
+            <span className="cg-accent">Connect.</span><br />
             <span>Elevate.</span>
           </h1>
           <p className="cg-sub">A trusted community for classical music students, teachers, artists and lovers.</p>
@@ -287,7 +287,7 @@ export default function ArtiumGateChordify({
           role="link"
           aria-disabled={medallionOff || undefined}
           tabIndex={medallionOff ? -1 : 0}
-          aria-label="I am a conservatory student or graduate"
+          aria-label="Join as a conservatory student or graduate"
           onClick={activateStudent}
           onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") activateStudent(e); }}
         >
@@ -297,13 +297,9 @@ export default function ArtiumGateChordify({
           <div className="cg-deck-dots cf-dots" aria-hidden="true">
             {FAN_CARDS.map((c, i) => <i key={c.key} className={i === fanActive ? "is-on" : undefined} />)}
           </div>
-          <div className="cg-student-head">
-            <h2>I am a Conservatory Student or Graduate</h2>
-          </div>
-          <p>A verified community. Connect, collaborate, grow.</p>
-          <button type="button" className="cg-btn" aria-label="Join as a student or graduate" disabled={medallionOff}
+          <button type="button" className="cg-btn" aria-label="Join as a Conservatory Student or Graduate" disabled={medallionOff}
             onClick={(e) => { e.stopPropagation(); activateStudent(e); }}>
-            Join as a student or graduate
+            Join as a Conservatory Student or Graduate
           </button>
         </article>
 
