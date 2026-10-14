@@ -165,7 +165,7 @@ function CardFan({ active, onActive, cards = FAN_CARDS }) {
         const slot = FAN_SLOTS[String(o)];
         const on = o === 0;
         return (
-          <button key={c.key} type="button" className={`cf-card${on ? " is-on" : ""}${o > 0 ? " is-right" : ""}`} tabIndex={-1}
+          <button key={c.key} type="button" className={`cf-card${on ? " is-on" : ""}${o > 0 ? " is-right" : ""}${o > 1 ? " is-outer" : ""}`} tabIndex={-1}
             aria-label={c.name ? `${c.name}, ${c.label}` : c.label} aria-current={on || undefined}
             style={{
               transform: `translateX(${(slot.x + FAN_SHIFT) * 100}%) rotate(${slot.r}deg) scale(${slot.s})`,
@@ -189,14 +189,17 @@ function CardFan({ active, onActive, cards = FAN_CARDS }) {
               </span>
             )}
             <span className="cf-shade" aria-hidden="true" />
-            {c.name && <span className="cf-who">{on ? c.name : c.name.split(" ")[0]}</span>}
-            <span className="cf-label">
-              {c.icon ? <img className="cf-icon" src={c.icon} alt="" aria-hidden="true" /> : (
-                <svg className="cf-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            {/* Caption, centred: instrument emblem, the student's name in
+                serif, then the instrument in spaced gold capitals between
+                two fine rules. */}
+            <span className="cf-cap">
+              {c.icon ? <img className="cf-emblem" src={c.icon} alt="" aria-hidden="true" /> : (
+                <svg className="cf-emblem" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M2.5 9.5 12 5l9.5 4.5L12 14z" /><path d="M6.5 11.5v4c1.6 1.4 3.4 2 5.5 2s3.9-.6 5.5-2v-4" /><path d="M21.5 9.5v5" />
                 </svg>
               )}
-              <span className="cf-name">{c.label}</span>
+              {c.name && <span className="cf-person">{on ? c.name : c.name.split(" ")[0]}</span>}
+              <span className="cf-inst"><i aria-hidden="true" /><span>{c.label}</span><i aria-hidden="true" /></span>
             </span>
           </button>
         );

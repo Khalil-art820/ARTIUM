@@ -526,3 +526,36 @@
 .cgate .cf-verified svg{width:17px;height:17px;display:block}
 .cgate .cf-card.is-on .cf-verified{top:9px;right:9px;width:26px;height:26px}
 .cgate .cf-card.is-on .cf-verified svg{width:20px;height:20px}
+
+/* ---- Card caption: emblem · serif name · gold instrument between rules ---- */
+.cgate .cf-cap{position:absolute;left:8px;right:8px;bottom:12px;display:flex;flex-direction:column;align-items:center;text-align:center;color:#fff;pointer-events:none}
+.cgate .cf-emblem{width:16px;height:16px;object-fit:contain;color:#D9B26A;margin-bottom:6px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6))}
+.cgate .cf-person{font-family:'Cormorant Garamond','Didot',Georgia,serif;font-weight:600;font-size:14px;line-height:1.08;letter-spacing:.005em;
+  text-shadow:0 1px 4px rgba(0,0,0,.6);max-width:100%;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;margin-bottom:6px}
+.cgate .cf-inst{display:flex;align-items:center;gap:6px;width:100%;justify-content:center}
+.cgate .cf-inst span{font-family:'Fira Sans',system-ui,sans-serif;font-weight:500;font-size:8px;letter-spacing:.32em;text-transform:uppercase;color:#D9B26A;
+  margin-right:-.32em;white-space:nowrap;text-shadow:0 1px 2px rgba(0,0,0,.5)}
+.cgate .cf-inst i{flex:1 1 auto;max-width:22px;height:1px;background:linear-gradient(90deg,rgba(217,178,106,0),rgba(217,178,106,.9))}
+.cgate .cf-inst i:last-child{background:linear-gradient(90deg,rgba(217,178,106,.9),rgba(217,178,106,0))}
+/* Front card: larger, as in the reference. */
+.cgate .cf-card.is-on .cf-cap{left:10px;right:10px;bottom:14px}
+.cgate .cf-card.is-on .cf-emblem{width:20px;height:20px;margin-bottom:7px}
+.cgate .cf-card.is-on .cf-person{font-size:clamp(17px,5.4vw,22px);margin-bottom:8px}
+.cgate .cf-card.is-on .cf-inst{gap:8px}
+.cgate .cf-card.is-on .cf-inst span{font-size:10px}
+.cgate .cf-card.is-on .cf-inst i{max-width:34px}
+/* The old caption pieces are retired. */
+.cgate .cf-label,.cgate .cf-who{display:none}
+/* A taller fade so the centred caption always reads. */
+.cgate .cf-shade{background:linear-gradient(180deg,rgba(0,0,0,0) 38%,rgba(10,8,16,.5) 64%,rgba(10,8,16,.9) 100%)}
+/* Side captions sit in the part of the card left in view. */
+.cgate .cf-card:not(.is-on):not(.is-right) .cf-cap{left:5px;right:44%}
+.cgate .cf-card.is-right:not(.is-on) .cf-cap{left:44%;right:5px}
+.cgate .cf-card.is-outer .cf-cap{left:54%;right:5px}
+.cgate .cf-card:not(.is-on) .cf-person{font-size:12px;margin-bottom:4px}
+.cgate .cf-card:not(.is-on) .cf-inst span{font-size:6.5px;letter-spacing:.24em;margin-right:-.24em}
+.cgate .cf-card:not(.is-on) .cf-inst i{max-width:10px}
+.cgate .cf-card:not(.is-on) .cf-inst{gap:4px}
+.cgate .cf-card:not(.is-on) .cf-emblem{width:13px;height:13px;margin-bottom:4px}
+/* Emblem bright enough on any photo. */
+.cgate .cf-emblem{filter:brightness(1.7) saturate(1.2) drop-shadow(0 1px 2px rgba(0,0,0,.8))}
