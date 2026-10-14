@@ -125,10 +125,10 @@ const FAN_CARDS = [
 ];
 // Slot for each distance from the chosen card: x in card widths, tilt, size.
 const FAN_SLOTS = {
-  "-1": { x: -0.6, r: -7, s: 0.86, z: 3 },
+  "-1": { x: -0.55, r: -7, s: 0.86, z: 3 },
   "0": { x: 0, r: 0, s: 1.06, z: 5 },
-  "1": { x: 0.6, r: 6, s: 0.86, z: 3 },
-  "2": { x: 1.02, r: 11, s: 0.72, z: 2 },
+  "1": { x: 0.55, r: 6, s: 0.86, z: 3 },
+  "2": { x: 0.92, r: 10, s: 0.7, z: 2 },
 };
 const FAN_SHIFT = -0.18; // centres the asymmetric spread in the panel
 // The owner's featured students come first (their photo, name and
@@ -193,13 +193,17 @@ function CardFan({ active, onActive, cards = FAN_CARDS }) {
                 serif, then the instrument in spaced gold capitals between
                 two fine rules. */}
             <span className="cf-cap">
-              {c.icon ? <img className="cf-emblem" src={c.icon} alt="" aria-hidden="true" /> : (
-                <svg className="cf-emblem" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M2.5 9.5 12 5l9.5 4.5L12 14z" /><path d="M6.5 11.5v4c1.6 1.4 3.4 2 5.5 2s3.9-.6 5.5-2v-4" /><path d="M21.5 9.5v5" />
-                </svg>
-              )}
               {c.name && <span className="cf-person">{on ? c.name : c.name.split(" ")[0]}</span>}
-              <span className="cf-inst"><i aria-hidden="true" /><span>{c.label}</span><i aria-hidden="true" /></span>
+              <span className="cf-inst">
+                <i aria-hidden="true" />
+                {c.icon ? <img className="cf-emblem" src={c.icon} alt="" aria-hidden="true" /> : (
+                  <svg className="cf-emblem" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M2.5 9.5 12 5l9.5 4.5L12 14z" /><path d="M6.5 11.5v4c1.6 1.4 3.4 2 5.5 2s3.9-.6 5.5-2v-4" /><path d="M21.5 9.5v5" />
+                  </svg>
+                )}
+                <span>{c.label}</span>
+                <i aria-hidden="true" />
+              </span>
             </span>
           </button>
         );
