@@ -131,8 +131,21 @@ const FAN_SLOTS = {
   "2": { x: 1.02, r: 11, s: 0.72, z: 2 },
 };
 const FAN_SHIFT = -0.18; // centres the asymmetric spread in the panel
-function CardFan({ active, onActive }) {
-  const n = FAN_CARDS.length;
+// The owner's featured students come first (their photo, name and
+// instrument); the instrument photos fill whatever is left of the four.
+// Stock cards never carry a name — they aren't Artium members.
+function fanCards(featured = []) {
+  const people = featured.slice(0, 4).map((m, i) => ({
+    key: `m:${m.id || i}`, label: m.instrument, name: m.name, photo: m.photoUrl,
+    icon: m.icon ? `/instruments/${m.icon}.webp` : null, pos: "50% 30%",
+  }));
+  // Fill with instruments not already on a featured card first.
+  const shown = new Set(featured.map((m) => String(m.instrument || "").toLowerCase()));
+  const stock = [...FAN_CARDS].sort((a, b) => shown.has(a.label.toLowerCase()) - shown.has(b.label.toLowerCase()));
+  return [...people, ...stock.slice(0, Math.max(0, 4 - people.length))];
+}
+function CardFan({ active, onActive, cards = FAN_CARDS }) {
+  const n = cards.length;
   const start = React.useRef(null);
   const go = (d) => onActive((active + d + n) % n);
   return (
@@ -147,13 +160,13 @@ function CardFan({ active, onActive }) {
         if (Math.abs(dx) > 30) go(dx < 0 ? 1 : -1);
       }}
       onPointerCancel={() => { start.current = null; }}>
-      {FAN_CARDS.map((c, i) => {
+      {cards.map((c, i) => {
         const o = ((i - active + 1 + n) % n) - 1;   // -1, 0, 1, 2
         const slot = FAN_SLOTS[String(o)];
         const on = o === 0;
         return (
           <button key={c.key} type="button" className={`cf-card${on ? " is-on" : ""}${o > 0 ? " is-right" : ""}`} tabIndex={-1}
-            aria-label={c.label} aria-current={on || undefined}
+            aria-label={c.name ? `${c.name}, ${c.label}` : c.label} aria-current={on || undefined}
             style={{
               transform: `translateX(${(slot.x + FAN_SHIFT) * 100}%) rotate(${slot.r}deg) scale(${slot.s})`,
               zIndex: slot.z,
@@ -161,6 +174,7 @@ function CardFan({ active, onActive }) {
             onClick={() => { if (!on) onActive(i); }}>
             <img className="cf-photo" src={c.photo} alt="" draggable={false} style={{ objectPosition: c.pos }} />
             <span className="cf-shade" aria-hidden="true" />
+            {c.name && <span className="cf-who">{on ? c.name : c.name.split(" ")[0]}</span>}
             <span className="cf-label">
               {c.icon ? <img className="cf-icon" src={c.icon} alt="" aria-hidden="true" /> : (
                 <svg className="cf-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -181,7 +195,7 @@ function CardFan({ active, onActive }) {
 export default function ArtiumGateChordify({
   onLearner, onStudent, onPianist, onComposers, onNews,
   learnerProfile, studentLoggedIn, musicOn, onMusicToggle, memberCount,
-  avatarPhotoUrl, avatarName, onAvatar, onLogout, memberChips, bellSlot, avatarNode,
+  avatarPhotoUrl, avatarName, onAvatar, onLogout, memberChips, bellSlot, avatarNode, featuredMembers,
 }) {
   React.useEffect(() => {
     const id = "cgate-font";
@@ -211,7 +225,11 @@ export default function ArtiumGateChordify({
   const count = memberCount ?? 40;
   const medallionOff = !!learnerProfile && !studentLoggedIn;
   const [partnerOpen, setPartnerOpen] = React.useState(false);
-  const [fanActive, setFanActive] = React.useState(1);   // Piano in front first
+  const cards = React.useMemo(() => fanCards(featuredMembers || []), [featuredMembers]);
+  const featuredCount = Math.min(4, (featuredMembers || []).length);
+  // A featured student leads; with none chosen, Piano does.
+  const [fanActive, setFanActive] = React.useState(featuredCount ? 0 : 1);
+  React.useEffect(() => { setFanActive(featuredCount ? 0 : 1); }, [featuredCount]);
   const activateStudent = (e) => { if (e && e.preventDefault) e.preventDefault(); if (!medallionOff && onStudent) onStudent(); };
 
   return (
@@ -292,10 +310,10 @@ export default function ArtiumGateChordify({
           onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") activateStudent(e); }}
         >
           <div className="cg-illo cg-illo-fan">
-            <CardFan active={fanActive} onActive={setFanActive} />
+            <CardFan active={fanActive} onActive={setFanActive} cards={cards} />
           </div>
           <div className="cg-deck-dots cf-dots" aria-hidden="true">
-            {FAN_CARDS.map((c, i) => <i key={c.key} className={i === fanActive ? "is-on" : undefined} />)}
+            {cards.map((c, i) => <i key={c.key} className={i === fanActive ? "is-on" : undefined} />)}
           </div>
           <button type="button" className="cg-btn" aria-label="Join as a Conservatory Student or Graduate" disabled={medallionOff}
             onClick={(e) => { e.stopPropagation(); activateStudent(e); }}>

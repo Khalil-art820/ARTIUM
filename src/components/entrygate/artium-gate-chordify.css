@@ -504,3 +504,19 @@
 .cgate .cg-logout-txt b{font-size:17px;font-weight:600;color:var(--ink)}
 .cgate .cg-logout-txt em{font-style:normal;font-size:14px;color:#777}
 .cgate .cg-logout-chev{flex:none;color:var(--teal)}
+/* Featured student cards: name above the instrument line. */
+.cgate .cf-text{display:flex;flex-direction:column;min-width:0}
+.cgate .cf-who{font-family:'Fira Sans',system-ui,sans-serif;font-weight:600;font-size:12px;line-height:1.15;color:#fff;
+  text-shadow:0 1px 3px rgba(0,0,0,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px}
+.cgate .cf-card.is-on .cf-who{font-size:15px;margin-bottom:4px}
+.cgate .cf-card:not(.is-on) .cf-who{font-size:10.5px;margin-bottom:2px}
+.cgate .cf-label{align-items:flex-end}
+.cgate .cf-card.is-right .cf-text{align-items:flex-end}
+/* Name on its own line above the instrument label. */
+.cgate .cf-who{position:absolute;left:10px;right:10px;bottom:36px;pointer-events:none;white-space:normal;overflow:hidden;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;text-overflow:clip;margin:0}
+.cgate .cf-card.is-on .cf-who{left:12px;right:12px;bottom:44px;font-size:15px;line-height:1.15}
+.cgate .cf-card:not(.is-on) .cf-who{left:7px;right:7px;bottom:28px;font-size:11px;-webkit-line-clamp:1}
+.cgate .cf-card.is-right .cf-who{text-align:right}
+.cgate .cf-card .cf-who{text-align:left}
+.cgate .cf-card.is-right .cf-who{text-align:right}

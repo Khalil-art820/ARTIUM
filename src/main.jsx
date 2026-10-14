@@ -31,6 +31,10 @@ const GatePreview = import.meta.env.DEV && new URLSearchParams(location.search).
           <style>{TAB_CSS}</style>
           <m.default
             memberCount={2}
+            featuredMembers={new URLSearchParams(location.search).has("featured") ? [
+              { id: "me", name: "Khalil Tannous", photoUrl: "/gate-cards/piano.webp", instrument: "Piano", icon: "piano" },
+              { id: "s2", name: "Sample Violinist", photoUrl: "/gate-cards/violin.webp", instrument: "Violin", icon: "violin" },
+            ] : undefined}
             memberChips={[
               { name: "Khalil Tannous", meta: "Piano · Beirut", photoUrl: "/gate-hero.jpg" },
               { name: "Lucas M.", meta: "Violin · Vienna" },

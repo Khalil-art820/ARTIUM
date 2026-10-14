@@ -2911,6 +2911,24 @@ export default function App() {
   // reshuffle under the viewer on every render.
   const photoStudentIds = students.filter((st) => st.photoUrl).map((st) => st.id).join(",");
   const headerFaces = React.useMemo(() => students.filter((st) => st.photoUrl).slice(0, 2), [photoStudentIds]);
+  // The owner's picks for the gate's four cards (Admin → Gate cards):
+  // approved students with a photo, in the order chosen.
+  const [featuredIds, setFeaturedIds] = useState([]);
+  React.useEffect(() => {
+    if (!authUser?.id) return;
+    let live = true;
+    const load = () => supabase.from("platform_settings").select("value").eq("key", "gate_featured").maybeSingle()
+      .then(({ data }) => { if (live) setFeaturedIds(Array.isArray(data?.value?.ids) ? data.value.ids : []); });
+    load();
+    window.addEventListener("artium-gate-featured-change", load);
+    return () => { live = false; window.removeEventListener("artium-gate-featured-change", load); };
+  }, [authUser?.id]);
+  const gateFeatured = React.useMemo(() => featuredIds
+    .map((id) => students.find((st) => st.id === id))
+    .filter((st) => st && st.photoUrl)
+    .slice(0, 4)
+    .map((st) => ({ id: st.id, name: st.name, photoUrl: st.photoUrl, instrument: instrumentLabel(st) || "Musician", icon: instrumentIcons(st)[0] || null })),
+  [featuredIds, students]);
   const deckFaces = React.useMemo(() => {
     const pool = students.filter((st) => st.photoUrl);
     for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
@@ -5100,7 +5118,7 @@ export default function App() {
           isAdmin={isAdmin}
           onGoToAdmin={() => { setScreen("app"); setAppTabPersist("admin"); }}
         />
-      ) : null} memberChips={deckFaces} onAvatar={myProfile ? goToProfile : (learnerProfile ? () => { setLearnerStartTab("profile"); setScreen("learnerMap"); } : undefined)} onLogout={async () => {
+      ) : null} memberChips={deckFaces} featuredMembers={gateFeatured} onAvatar={myProfile ? goToProfile : (learnerProfile ? () => { setLearnerStartTab("profile"); setScreen("learnerMap"); } : undefined)} onLogout={async () => {
         // Logging out re-arms the gate tour: the next login meets the
         // card-by-card introduction again, per the user's request.
         try { localStorage.removeItem("artium_gate_tour_v1"); } catch { /* private mode */ }
@@ -14415,7 +14433,7 @@ function AdminScreen({ authUser, onlineCount }) {
 
         {/* Section toggle */}
         <div style={MODERN ? { display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" } : { display: "flex", gap: 8, justifyContent: "center" }}>
-          {[{ v: "verifications", t: "Student verifications" }, { v: "conservatories", t: "Conservatories" }, { v: "tracks", t: "Recordings" }, { v: "promotions", t: "Promotions" }, { v: "partners", t: "Partnerships" }].map(({ v, t }) => (
+          {[{ v: "verifications", t: "Student verifications" }, { v: "conservatories", t: "Conservatories" }, { v: "tracks", t: "Recordings" }, { v: "promotions", t: "Promotions" }, { v: "partners", t: "Partnerships" }, { v: "gatecards", t: "Gate cards" }].map(({ v, t }) => (
             <button key={v} onClick={() => setSection(v)}
               style={{ padding: "9px 18px", borderRadius: MODERN ? 10 : 999, fontSize: 13, fontWeight: 700, cursor: "pointer", background: section === v ? BRASS_GRAD : (MODERN ? "#FFFFFF" : warm("0.07")), color: section === v ? C.brassText : C.ivoryDim, border: section === v ? "none" : `1px solid ${C.inkLine}` }}>{t}</button>
           ))}
@@ -14425,6 +14443,7 @@ function AdminScreen({ authUser, onlineCount }) {
         {section === "conservatories" && <AdminConservatories card={card} />}
         {section === "tracks" && <AdminTracks card={card} STATUS_COLOR={STATUS_COLOR} authUser={authUser} />}
         {section === "partners" && <AdminPartners card={card} />}
+        {section === "gatecards" && <AdminGateCards card={card} />}
 
         {section === "promotions" && <>
         <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
@@ -14595,6 +14614,118 @@ function AdminTrackList({ list, editable, card, names, busy, decide, removeTrack
   }
 
 const TRACK_REJECTION_DEFAULT = "Thank you for sharing your playing. This recording wasn't selected for the site's rotation — you're very welcome to submit a different one.";
+
+// Admin → Gate cards: choose up to four approved students (with a photo) for
+// the entry gate's card spread. Saved as platform_settings.gate_featured.
+function AdminGateCards({ card }) {
+  const [people, setPeople] = useState(null);
+  const [picked, setPicked] = useState([]);
+  const [saved, setSaved] = useState([]);
+  const [q, setQ] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState("");
+  React.useEffect(() => {
+    let live = true;
+    (async () => {
+      const [{ data: rows }, { data: setting }] = await Promise.all([
+        supabase.from("profiles").select("id, name, photo_url, instrument, instrument_2, conservatory_id").eq("approved", true).eq("role", "student").neq("is_admin", true).order("name"),
+        supabase.from("platform_settings").select("value").eq("key", "gate_featured").maybeSingle(),
+      ]);
+      if (!live) return;
+      setPeople(rows || []);
+      const ids = Array.isArray(setting?.value?.ids) ? setting.value.ids : [];
+      setPicked(ids); setSaved(ids);
+    })();
+    return () => { live = false; };
+  }, []);
+  if (people === null) return <div style={{ ...card, textAlign: "center" }}><p style={{ margin: 0, fontSize: 14, color: C.ivoryDim }}>Loading…</p></div>;
+  const byId = Object.fromEntries(people.map((p) => [p.id, p]));
+  const toggle = (id) => setPicked((cur) => cur.includes(id) ? cur.filter((x) => x !== id) : cur.length >= 4 ? cur : [...cur, id]);
+  const move = (i, d) => setPicked((cur) => { const n = [...cur]; const j = i + d; if (j < 0 || j >= n.length) return cur; [n[i], n[j]] = [n[j], n[i]]; return n; });
+  const dirty = JSON.stringify(picked) !== JSON.stringify(saved);
+  async function save() {
+    setBusy(true); setMsg("");
+    const value = { ids: picked.filter((id) => byId[id]) };
+    const { error } = await supabase.from("platform_settings").upsert({ key: "gate_featured", value, updated_at: new Date().toISOString() });
+    setBusy(false);
+    if (error) { setMsg(/row-level|policy|permission/i.test(error.message) ? "Couldn't save — run the gate_featured migration first." : error.message); return; }
+    setSaved(value.ids); setPicked(value.ids); setMsg("Saved — the gate shows these now.");
+    window.dispatchEvent(new Event("artium-gate-featured-change"));
+  }
+  const needle = q.trim().toLowerCase();
+  const list = people.filter((p) => !needle || `${p.name} ${p.instrument || ""} ${findConservatory(p.conservatory_id)?.name || ""}`.toLowerCase().includes(needle));
+  const face = (p, size) => p.photo_url
+    ? <img src={p.photo_url} alt="" style={{ width: size, height: size, borderRadius: 10, objectFit: "cover", flexShrink: 0 }} />
+    : <span style={{ width: size, height: size, borderRadius: 10, flexShrink: 0, background: C.inkSoft, display: "grid", placeItems: "center", color: C.ivoryDim, fontSize: 12, fontWeight: 700 }}>{initials(p.name || "?")}</span>;
+  return (
+    <>
+      <div style={card}>
+        <p style={{ margin: "0 0 4px", fontSize: 16, fontWeight: 700, color: C.ivory }}>Entry gate cards</p>
+        <p style={{ margin: "0 0 14px", fontSize: 13, color: C.ivoryDim, lineHeight: 1.5 }}>
+          Pick up to four approved students with a photo. They appear on the gate's card spread in this order, with their name and instrument; empty places show the instrument photos.
+        </p>
+        {picked.length === 0 ? (
+          <p style={{ margin: "0 0 12px", fontSize: 13, color: C.ivoryDim, fontStyle: "italic" }}>No one chosen — the gate shows the four instrument photos.</p>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 12 }}>
+            {picked.map((id, i) => {
+              const p = byId[id];
+              return (
+                <div key={id} style={{ display: "flex", alignItems: "center", gap: 10, padding: 8, borderRadius: 12, border: `1px solid ${C.inkLine}`, background: SURF }}>
+                  <span style={{ width: 22, textAlign: "center", fontSize: 13, fontWeight: 700, color: C.brass }}>{i + 1}</span>
+                  {p ? face(p, 40) : null}
+                  <span style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: C.ivory }}>{p ? p.name : "No longer approved"}</p>
+                    <p style={{ margin: 0, fontSize: 12, color: C.ivoryDim }}>{p ? (instrumentsOf({ instrument: p.instrument, instrument2: p.instrument_2 }).join(" & ") || "—") : "Will be dropped on save"}</p>
+                  </span>
+                  <button onClick={() => move(i, -1)} disabled={i === 0} aria-label="Move up" style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "none", color: C.ivoryDim, cursor: i === 0 ? "default" : "pointer", opacity: i === 0 ? .4 : 1 }}>↑</button>
+                  <button onClick={() => move(i, 1)} disabled={i === picked.length - 1} aria-label="Move down" style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "none", color: C.ivoryDim, cursor: i === picked.length - 1 ? "default" : "pointer", opacity: i === picked.length - 1 ? .4 : 1 }}>↓</button>
+                  <button onClick={() => toggle(id)} aria-label="Remove" style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "none", color: RED_C, cursor: "pointer" }}><X size={14} /></button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          <button onClick={save} disabled={!dirty || busy}
+            style={{ padding: "10px 18px", borderRadius: MODERN ? 10 : 999, border: "none", background: dirty ? C.brass : C.inkLine, color: dirty ? C.brassText : C.ivoryDim, fontSize: 14, fontWeight: 700, cursor: dirty && !busy ? "pointer" : "default" }}>
+            {busy ? "Saving…" : "Save gate cards"}
+          </button>
+          {dirty && <button onClick={() => setPicked(saved)} style={{ background: "none", border: "none", color: C.ivoryDim, fontSize: 13, textDecoration: "underline", cursor: "pointer" }}>Undo changes</button>}
+          {msg && <span style={{ fontSize: 13, color: /Saved/.test(msg) ? OK_C : RED_C }}>{msg}</span>}
+        </div>
+      </div>
+      <div style={card}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "8px 12px", marginBottom: 10, background: SURF }}>
+          <Search size={15} color={C.ivoryDim} />
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search approved students…" style={{ flex: 1, border: "none", outline: "none", background: "none", fontSize: 14, color: C.ivory }} />
+        </div>
+        <p style={{ margin: "0 0 8px", fontSize: 12, color: C.ivoryDim }}>{people.length} approved student{people.length === 1 ? "" : "s"} · {picked.length}/4 chosen</p>
+        {list.length === 0 && <p style={{ margin: 0, fontSize: 13, color: C.ivoryDim }}>No approved student matches.</p>}
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {list.map((p) => {
+            const on = picked.includes(p.id);
+            const blocked = !p.photo_url || (!on && picked.length >= 4);
+            return (
+              <button key={p.id} onClick={() => !blocked || on ? toggle(p.id) : null} disabled={blocked && !on}
+                style={{ display: "flex", alignItems: "center", gap: 10, padding: 8, borderRadius: 12, textAlign: "left", cursor: blocked && !on ? "default" : "pointer",
+                  border: `1px solid ${on ? C.brass : C.inkLine}`, background: on ? (MODERN ? "rgba(8,104,104,.06)" : warm("0.08")) : "transparent", opacity: blocked && !on ? .55 : 1 }}>
+                {face(p, 40)}
+                <span style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: C.ivory }}>{p.name}</p>
+                  <p style={{ margin: 0, fontSize: 12, color: C.ivoryDim }}>
+                    {!p.photo_url ? "Needs a profile photo to be featured" : [instrumentsOf({ instrument: p.instrument, instrument2: p.instrument_2 }).join(" & "), findConservatory(p.conservatory_id)?.short || findConservatory(p.conservatory_id)?.name].filter(Boolean).join(" · ")}
+                  </p>
+                </span>
+                {on ? <CheckCircle2 size={20} color={C.brass} /> : <span style={{ width: 18, height: 18, borderRadius: "50%", border: `1.5px solid ${C.inkLine}` }} />}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </>
+  );
+}
 
 // Partnership / advertising requests sent from the gate's "Your brand here"
 // spots. Admin reads them, contacts the brand outside the app, and moves the
