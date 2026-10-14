@@ -344,9 +344,11 @@ export default function ArtiumGateChordify({
           </div>
         </section>
 
-        <button type="button" className="cg-logout" onClick={onLogout}>
-          Log out
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 12h15M13 6l6 6-6 6" /></svg>
+        <button type="button" className="cg-logout cg-logout-disc" onClick={onLogout} aria-label="Log out">
+          <span className="cg-logout-ring" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12h15M13 6l6 6-6 6" /></svg>
+          </span>
+          <span className="cg-logout-label">Log out</span>
         </button>
 
         <article className="cg-card cg-partners">

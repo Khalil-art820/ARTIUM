@@ -481,3 +481,16 @@
 /* Longer label, still one line. */
 .cgate .cg-student .cg-btn{white-space:nowrap;font-size:clamp(14px,4.2vw,18px);padding-left:12px;padding-right:12px}
 .cgate .cg-hero h1{white-space:nowrap;font-size:clamp(32px,10.4vw,54px)}
+/* Headline a little smaller. */
+.cgate .cg-hero h1{font-size:clamp(30px,9vw,46px)}
+/* Explore, trust and partners: full width, side edges only. */
+.cgate .cg-list,.cgate .cg-trust,.cgate .cg-partners{margin-left:-12px;margin-right:-12px;border-radius:0;border-left:0;border-right:0}
+@media (min-width:744px){.cgate .cg-list,.cgate .cg-trust,.cgate .cg-partners{margin-left:0;margin-right:0;border-radius:12px;border-left:1px solid var(--line);border-right:1px solid var(--line)}}
+/* Log out: a circle with its label beneath, like the partner spots. */
+.cgate .cg-logout.cg-logout-disc{width:auto;align-self:center;flex-direction:column;gap:6px;padding:4px 10px;
+  border:0 !important;background:none !important;color:var(--teal);font-size:14px;font-weight:600}
+.cgate .cg-logout.cg-logout-disc:hover{background:none !important;color:var(--teal)}
+.cgate .cg-logout-ring{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;border:1.5px solid var(--teal);background:#FFFFFF;
+  transition:background .15s,color .15s,transform .15s}
+.cgate .cg-logout-disc:hover .cg-logout-ring{background:var(--teal);color:#fff}
+.cgate .cg-logout-disc:active .cg-logout-ring{transform:scale(.94)}
