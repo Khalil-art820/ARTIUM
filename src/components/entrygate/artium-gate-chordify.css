@@ -494,3 +494,13 @@
   transition:background .15s,color .15s,transform .15s}
 .cgate .cg-logout-disc:hover .cg-logout-ring{background:var(--teal);color:#fff}
 .cgate .cg-logout-disc:active .cg-logout-ring{transform:scale(.94)}
+/* Log out as a row card (icon tile, title + line, chevron). */
+.cgate .cg-logout-row{display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:14px 16px;
+  background:#FFFFFF;border:1px solid var(--line) !important;border-radius:14px;cursor:pointer;transition:background .15s}
+.cgate .cg-logout-row:hover{background:#FAF8F6}
+.cgate .cg-logout-row:active{background:#F4F1EE}
+.cgate .cg-logout-ic{width:46px;height:46px;border-radius:50%;flex:none;display:grid;place-items:center;background:#E6F0F0;color:var(--teal)}
+.cgate .cg-logout-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.cgate .cg-logout-txt b{font-size:17px;font-weight:600;color:var(--ink)}
+.cgate .cg-logout-txt em{font-style:normal;font-size:14px;color:#777}
+.cgate .cg-logout-chev{flex:none;color:var(--teal)}
