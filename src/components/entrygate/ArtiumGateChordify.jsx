@@ -173,6 +173,21 @@ function CardFan({ active, onActive, cards = FAN_CARDS }) {
             }}
             onClick={() => { if (!on) onActive(i); }}>
             <img className="cf-photo" src={c.photo} alt="" draggable={false} style={{ objectPosition: c.pos }} />
+            {c.name && (
+              // Verified member: gold tick on its own white plate, so it reads on any photo.
+              <span className="cf-verified" title="Verified conservatory member" aria-label="Verified">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="cf-verified-grad" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0" stopColor="#F7D774" />
+                      <stop offset="1" stopColor="#D9A21E" />
+                    </linearGradient>
+                  </defs>
+                  <polygon points="12.00,1.00 14.41,3.02 17.50,2.47 18.58,5.42 21.53,6.50 20.98,9.59 23.00,12.00 20.98,14.41 21.53,17.50 18.58,18.58 17.50,21.53 14.41,20.98 12.00,23.00 9.59,20.98 6.50,21.53 5.42,18.58 2.47,17.50 3.02,14.41 1.00,12.00 3.02,9.59 2.47,6.50 5.42,5.42 6.50,2.47 9.59,3.02" fill="url(#cf-verified-grad)" stroke="url(#cf-verified-grad)" strokeWidth="1.2" strokeLinejoin="round" />
+                  <path d="M7.6 12.3l3 3 5.8-6.2" fill="none" stroke="#FFFFFF" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </span>
+            )}
             <span className="cf-shade" aria-hidden="true" />
             {c.name && <span className="cf-who">{on ? c.name : c.name.split(" ")[0]}</span>}
             <span className="cf-label">
