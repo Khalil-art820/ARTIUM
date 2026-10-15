@@ -1,4 +1,5 @@
 import React from "react";
+import ArtiumWord from "./ArtiumWord";
 import { supabase } from "../lib/supabase";
 
 // "Your brand here" → a short lead form. Values mirror the checks on
@@ -13,7 +14,7 @@ const CATEGORIES = [
   ["other", "Something else"],
 ];
 const PLACEMENTS = [
-  ["partner_logo", "Partner logo on Artium"],
+  ["partner_logo", <>Partner logo on <ArtiumWord /></>],
   ["sponsored_spotlight", "Sponsored spotlight"],
   ["both", "Both"],
   ["not_sure", "Not sure yet"],
@@ -143,13 +144,13 @@ export default function PartnerRequestSheet({ open, onClose }) {
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
             </span>
             <h2 id="pr-title">Request received</h2>
-            <p>Thank you, {f.contact_name.split(" ")[0] || "and welcome"}. The Artium team will review your request and reply to <strong>{f.email}</strong>.</p>
+            <p>Thank you, {f.contact_name.split(" ")[0] || "and welcome"}. The <ArtiumWord /> team will review your request and reply to <strong>{f.email}</strong>.</p>
             <button type="button" className="pr-submit" onClick={onClose}>Done</button>
           </div>
         ) : (
           <form onSubmit={submit} noValidate>
             <p className="pr-kicker">Partnerships</p>
-            <h2 id="pr-title">Partner with Artium</h2>
+            <h2 id="pr-title">Partner with <ArtiumWord /></h2>
             <p className="pr-intro">Put your brand in front of conservatory students, teachers and music lovers around the world. Tell us a little about you and we'll get back to you by email.</p>
 
             <fieldset>
@@ -178,7 +179,7 @@ export default function PartnerRequestSheet({ open, onClose }) {
               <legend>Message</legend>
               <label className="pr-sr">Message<textarea value={f.message} onChange={set("message")} maxLength={2000} rows={4} placeholder="Tell us about your goals, timing and audience." /></label>
               <p className="pr-count">{f.message.length}/2000</p>
-              <label className="pr-consent"><input type="checkbox" checked={f.consent} onChange={set("consent")} /> Artium may contact me about this request.</label>
+              <label className="pr-consent"><input type="checkbox" checked={f.consent} onChange={set("consent")} /> <ArtiumWord /> may contact me about this request.</label>
             </fieldset>
 
             {err && <p className="pr-err" role="alert">{err}</p>}

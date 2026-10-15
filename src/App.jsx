@@ -72,6 +72,7 @@ const Globe = lazy(() => import("react-globe.gl"));
 const NetworkGlobe = lazy(() => import("./components/network/NetworkGlobe.jsx"));
 import "leaflet/dist/leaflet.css";
 import "./theme-modern.css";
+import ArtiumWord from "./components/ArtiumWord";
 
 /* ---------------------------------------------------------------- */
 /* THEME                                                              */
@@ -1394,7 +1395,7 @@ function ArtiumRadio({ open, controllerRef, onPlayingChange, onClose, modern }) 
           <button onClick={() => setMinimized(false)} title="Open Artium Radio"
             style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", color: P.dim, fontFamily: P.font, fontSize: 12, fontWeight: 600, padding: "0 4px 0 0", maxWidth: 150, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             <Music2 size={13} style={{ flexShrink: 0, color: P.accent }} />
-            {current ? (current.title || "Artium Radio") : "Artium Radio"}
+            {current?.title || <><ArtiumWord /> Radio</>}
           </button>
         </div>
       ) : (<>
@@ -1403,7 +1404,7 @@ function ArtiumRadio({ open, controllerRef, onPlayingChange, onClose, modern }) 
         <span style={{ width: 30, height: 30, borderRadius: 9, background: `rgba(${P.washRgb},0.14)`, color: P.accent, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
           <Music2 size={15} strokeWidth={2} />
         </span>
-        <p style={{ flex: 1, minWidth: 0, margin: 0, fontSize: 17, fontWeight: 700, color: P.ink, fontFamily: P.font }}>Artium Radio</p>
+        <p style={{ flex: 1, minWidth: 0, margin: 0, fontSize: 17, fontWeight: 700, color: P.ink, fontFamily: P.font }}><ArtiumWord /> Radio</p>
         <button onClick={onClose} title="Hide the playlist — music keeps playing"
           style={{ display: "flex", alignItems: "center", justifyContent: "center", background: "#FFFFFF", border: `1px solid rgba(${P.lineRgb},0.45)`, borderRadius: 999, padding: "3px 14px", cursor: "pointer", color: P.accent, fontSize: 16, fontWeight: 700, lineHeight: 1, boxShadow: `0 3px 6px -3px rgba(${P.shadowRgb},.25)` }}>
           –
@@ -2277,10 +2278,10 @@ function AuthPrompt() {
         <div style={{ textAlign: "center", marginBottom: 26 }}>
           <AuthWordmark />
           <p style={{ marginTop: 12, fontFamily: FONT_PLAYFAIR, fontWeight: 500, fontSize: 21, color: AP_INK }}>
-            {mode === "signup" ? "Join Artium" : "Welcome back"}
+            {mode === "signup" ? <>Join <ArtiumWord /></> : "Welcome back"}
           </p>
           <p style={{ marginTop: 6, fontSize: 13.5, color: AP_MUTED, lineHeight: 1.5 }}>
-            {mode === "signup" ? "One account for the whole Artium community." : "Log in to your Artium account."}
+            {mode === "signup" ? <>One account for the whole <ArtiumWord /> community.</> : <>Log in to your <ArtiumWord /> account.</>}
           </p>
         </div>
         <div style={{ background: "#FFFFFF", border: MODERN ? "1px solid #E8E2DC" : "1px solid rgba(35,42,59,0.1)", borderRadius: MODERN ? 12 : 16, padding: "26px 24px", boxShadow: MODERN ? "0 1px 2px rgba(0,0,0,0.04), 0 8px 24px -16px rgba(0,0,0,0.14)" : "0 10px 40px rgba(35,42,59,0.08)" }}>
@@ -2338,7 +2339,7 @@ function AuthPrompt() {
           </form>
         </div>
         <p style={{ textAlign: "center", marginTop: 20, fontSize: 13.5, color: AP_MUTED }}>
-          {mode === "signup" ? "Already have an account?" : "New to Artium?"}{" "}
+          {mode === "signup" ? "Already have an account?" : <>New to <ArtiumWord />?</>}{" "}
           <button
             type="button"
             onClick={() => { setError(""); setMode(mode === "signup" ? "login" : "signup"); }}
@@ -6023,7 +6024,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
             <span>Help Center</span><i aria-hidden="true">•</i>
             <span>Contact</span>
           </span>
-          <span className="artium-gx-copy">© 2026 Artium. All rights reserved.</span>
+          <span className="artium-gx-copy">© 2026 <ArtiumWord />. All rights reserved.</span>
         </div>
       </footer>
     </div>
@@ -9117,7 +9118,7 @@ function LoginScreen({ onSubmit, onBack, error, unfinished, onResume }) {
       <div className="flex-1 flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-md lg-fade" style={{ background: SURF, border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: 40, boxShadow: MODERN ? "0 1px 2px rgba(0,0,0,0.04), 0 8px 24px -16px rgba(0,0,0,0.14)" : "0 4px 24px rgba(0,0,0,0.28)" }}>
           <h2 style={{ fontSize: 24, fontWeight: 700, letterSpacing: -0.3, marginBottom: 4 }}>Welcome back</h2>
-          <p style={{ color: C.ivoryDim, fontSize: 15, marginBottom: 24 }}>Log in to your Artium account.</p>
+          <p style={{ color: C.ivoryDim, fontSize: 15, marginBottom: 24 }}>Log in to your <ArtiumWord /> account.</p>
 
           {/* Someone who abandoned signup has no account, and no way of knowing
               it: nothing is created until the last of eight steps. Log in is
@@ -9817,10 +9818,10 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
                     </span>
                     <span style={{ flex: 1, minWidth: 0 }}>
                       <p className="tm-ntitle" style={{ margin: 0, fontSize: 15, fontWeight: 600, color: C.ivory, lineHeight: 1.3 }}>
-                        {approved ? "Your recording is live on Artium" : "Your recording wasn't accepted"}
+                        {approved ? <>Your recording is live on <ArtiumWord /></> : "Your recording wasn't accepted"}
                       </p>
                       <p className="tm-nsub" style={{ margin: "2px 0 0", fontSize: 13, color: C.ivoryDim, lineHeight: 1.3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                        {approved ? `"${p.title || "Untitled"}" now plays on Artium Radio` : "Open Promote for the reason"}
+                        {approved ? <>"{p.title || "Untitled"}" now plays on <ArtiumWord /> Radio</> : "Open Promote for the reason"}
                       </p>
                     </span>
                   </button>
@@ -10839,7 +10840,7 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
   return (
     <div className="artium-aw">
       <div className="artium-aw-in">
-        <p className="artium-aw-eyebrow"><i />The Artium Network<i /></p>
+        <p className="artium-aw-eyebrow"><i />The <ArtiumWord /> Network<i /></p>
         <h1 className="artium-aw-h1">Bridging Musicians<br />Worldwide</h1>
 
         {MODERN ? (
@@ -13719,14 +13720,14 @@ function ArtiumSoundCard({ myProfile, authUser }) {
 
   const STATE = {
     pending:  { colour: MODERN ? AMBER_D : C.brassLabel, title: "Waiting for review", body: "Our team listens to every recording before it goes live. This usually takes a day or two." },
-    approved: { colour: OK_C,    title: "Live on Artium",     body: "Visitors hear this when they play the music on Artium." },
+    approved: { colour: OK_C,    title: <>Live on <ArtiumWord /></>,     body: <>Visitors hear this when they play the music on <ArtiumWord />.</> },
     rejected: { colour: C.burgundy,   title: "Not accepted",       body: "This one wasn't right for the site — you're welcome to submit a different recording." },
   };
 
   if (!uid) {
     return (
       <div style={card}>
-        {label("artium")}
+        {label(<ArtiumWord />)}
         <p style={{ fontSize: 14, color: C.ivoryDim, margin: "10px 0 0" }}>
           Log in with your student account to submit a recording.
         </p>
@@ -13742,7 +13743,7 @@ function ArtiumSoundCard({ myProfile, authUser }) {
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
         <Logo size={17} markSize={26} />
       </div>
-      <p style={{ fontSize: 15, fontWeight: 700, color: C.ivory, margin: "10px 0 4px" }}>Be the sound of Artium</p>
+      <p style={{ fontSize: 15, fontWeight: 700, color: C.ivory, margin: "10px 0 4px" }}>Be the sound of <ArtiumWord /></p>
       <p style={{ fontSize: 13, color: C.ivoryDim, margin: 0, lineHeight: 1.5 }}>
         Up to 2 minutes of you playing. Approved recordings become the music
         visitors hear across the site — so choose the passage you'd want heard first.
@@ -13781,7 +13782,7 @@ function ArtiumSoundCard({ myProfile, authUser }) {
               style={{ marginTop: 3, width: 16, height: 16, flexShrink: 0, accentColor: C.brass }}
             />
             <span className="text-sm" style={{ color: C.ivory }}>
-              This is <b>my own performance</b>, and I give Artium permission to play this excerpt on the site.
+              This is <b>my own performance</b>, and I give <ArtiumWord /> permission to play this excerpt on the site.
             </span>
           </label>
 
@@ -14027,7 +14028,7 @@ function PromoteMe({ myProfile, authUser, focus }) {
             <Megaphone size={26} strokeWidth={1.8} className="pm-head-ic" aria-hidden="true" />
             <h2 className="pm-title">Promote <em>Me</em></h2>
             <p className="pm-sub">
-              Two ways to be heard — on <a href="https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==" target="_blank" rel="noreferrer">aclassicaltone</a>, and on Artium itself.
+              Two ways to be heard — on <a href="https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==" target="_blank" rel="noreferrer">aclassicaltone</a>, and on <ArtiumWord /> itself.
             </p>
           </div>
         ) : (
@@ -14037,7 +14038,7 @@ function PromoteMe({ myProfile, authUser, focus }) {
             <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 700, color: C.ivory, margin: 0 }}>Promote Me</h2>
           </div>
           <p style={{ fontSize: 13, color: C.ivoryDim, margin: 0, lineHeight: 1.5 }}>
-            Two ways to be heard — on <a href="https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==" target="_blank" rel="noreferrer" style={{ color: C.brassLabel, fontWeight: 600, textDecoration: "none" }}>aclassicaltone</a>, and on Artium itself.
+            Two ways to be heard — on <a href="https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==" target="_blank" rel="noreferrer" style={{ color: C.brassLabel, fontWeight: 600, textDecoration: "none" }}>aclassicaltone</a>, and on <ArtiumWord /> itself.
           </p>
         </div>
         )}
@@ -14048,7 +14049,7 @@ function PromoteMe({ myProfile, authUser, focus }) {
               <span className="pm-opt-body">
                 <span className="pm-opt-head">
                   <span className="pm-opt-ic" aria-hidden="true"><WaveGlyph size={22} /></span>
-                  <span className="pm-opt-t">artium</span>
+                  <span className="pm-opt-t"><ArtiumWord /></span>
                 </span>
                 <span className="pm-opt-d">Your recording, played across the site. Free.</span>
                 <ArrowRight size={22} strokeWidth={1.6} className="pm-opt-go" aria-hidden="true" />
@@ -14307,7 +14308,7 @@ function PromoteMe({ myProfile, authUser, focus }) {
                 ? "Payment received — your promotion is booked. The aclassicaltone team will post your video on the proposed date."
                 : approved
                 ? "Your video was approved. You can now complete your payment to book your promotion."
-                : "Your video link was received and is awaiting approval by the Artium team. You'll be able to pay once it's approved."}
+                : <>Your video link was received and is awaiting approval by the <ArtiumWord /> team. You'll be able to pay once it's approved.</>}
             </p>
             <p style={{ fontSize: 12, color: C.ivoryDim, margin: "8px 0 0", wordBreak: "break-all" }}>
               <b>{mine.provider}</b> · {mine.video_link}

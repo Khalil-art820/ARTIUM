@@ -1,4 +1,5 @@
 import React, { useRef } from "react";
+import InlineWord from "../ArtiumWord";
 import { CARDS, useTourActivation, useSpotlightTour, TourSpotlight, TourCard } from "./ArtiumGate";
 import { installState } from "../../pwa.js";
 import PartnerRequestSheet, { VacantPartnerTile } from "../PartnerRequest.jsx";
@@ -341,7 +342,7 @@ export default function ArtiumGateChordify({
         </article>
 
         <article className="cg-card cg-list">
-          <h2>Explore Artium</h2>
+          <h2>Explore <InlineWord /></h2>
           <ul>
             {CARDS.map((card, i) => {
               const off = studentLoggedIn && (card.id === 1 || card.id === 2);
@@ -415,7 +416,7 @@ export default function ArtiumGateChordify({
           <a href="#">Help Center</a><span aria-hidden="true">•</span>
           <a href="#">Contact</a>
         </div>
-        <div>© 2026 Artium. All rights reserved.</div>
+        <div>© 2026 <InlineWord />. All rights reserved.</div>
       </footer>
 
       {tourAllowed && tour.visible && tour.spot && (
