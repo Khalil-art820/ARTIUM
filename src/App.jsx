@@ -14060,7 +14060,7 @@ function PromoteMe({ myProfile, authUser, focus }) {
               <span className="pm-opt-body">
                 <span className="pm-opt-head">
                   <span className="pm-opt-ic pm-opt-logo" aria-hidden="true"><img src="/partner-aclassicaltone-v2.png" alt="" width="46" height="46" /></span>
-                  <span className="pm-opt-t">aclassicaltone</span>
+                  <span className="pm-opt-t pm-opt-t-plain">aclassicaltone</span>
                 </span>
                 <span className="pm-opt-d">Your video to their audience — a free Saturday spotlight, or the full €{promoTotal} package.</span>
                 <ArrowRight size={22} strokeWidth={1.6} className="pm-opt-go" aria-hidden="true" />
