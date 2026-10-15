@@ -764,3 +764,6 @@ html.theme-modern .pm-opt-head{gap:10px}
 html.theme-modern .pm-opt-t{font-size:clamp(19px,5.6vw,28px)}
 html.theme-modern .pm-opt-stack img{width:62%}
 html.theme-modern .pm-opt-stack img:nth-child(3){width:66%;right:26%}
+/* Promote Me: aclassicaltone's real logo in place of the drawn clef. */
+html.theme-modern .pm-opt-ic.pm-opt-logo{background:#000;overflow:hidden;padding:0}
+html.theme-modern .pm-opt-ic.pm-opt-logo img{width:100%;height:100%;object-fit:cover;display:block;border-radius:50%}

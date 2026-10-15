@@ -14028,7 +14028,7 @@ function PromoteMe({ myProfile, authUser, focus }) {
             <Megaphone size={26} strokeWidth={1.8} className="pm-head-ic" aria-hidden="true" />
             <h2 className="pm-title">Promote <em>Me</em></h2>
             <p className="pm-sub">
-              Two ways to be heard — on <a href="https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==" target="_blank" rel="noreferrer">aclassicaltone</a>, and on <ArtiumWord /> itself.
+              Two ways to be heard:
             </p>
           </div>
         ) : (
@@ -14038,7 +14038,7 @@ function PromoteMe({ myProfile, authUser, focus }) {
             <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 700, color: C.ivory, margin: 0 }}>Promote Me</h2>
           </div>
           <p style={{ fontSize: 13, color: C.ivoryDim, margin: 0, lineHeight: 1.5 }}>
-            Two ways to be heard — on <a href="https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==" target="_blank" rel="noreferrer" style={{ color: C.brassLabel, fontWeight: 600, textDecoration: "none" }}>aclassicaltone</a>, and on <ArtiumWord /> itself.
+            Two ways to be heard:
           </p>
         </div>
         )}
@@ -14059,11 +14059,7 @@ function PromoteMe({ myProfile, authUser, focus }) {
             <button type="button" className="pm-opt" onClick={() => setView("aclassicaltone")} aria-label={`aclassicaltone — your video to their audience: a free Saturday spotlight, or the full €${promoTotal} package.`}>
               <span className="pm-opt-body">
                 <span className="pm-opt-head">
-                  <span className="pm-opt-ic" aria-hidden="true">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M13 21c-1.7 1-4 .2-4-1.8 0-1.4 1.1-2.3 2.4-2.3 1.4 0 2.3 1 2.3 2.4L13 4.5c-.1-1.5.8-2.6 1.9-2.6 1.2 0 1.8 1 1.8 2.2 0 2.6-3.4 4.4-5.6 6.4-1.6 1.4-2.6 3-2.6 4.8 0 2.6 2.1 4.4 4.6 4.4 2.3 0 4.1-1.6 4.1-3.8 0-2-1.5-3.4-3.4-3.4-1.6 0-2.9 1.1-2.9 2.6" />
-                    </svg>
-                  </span>
+                  <span className="pm-opt-ic pm-opt-logo" aria-hidden="true"><img src="/partner-aclassicaltone-v2.png" alt="" width="46" height="46" /></span>
                   <span className="pm-opt-t">aclassicaltone</span>
                 </span>
                 <span className="pm-opt-d">Your video to their audience — a free Saturday spotlight, or the full €{promoTotal} package.</span>
