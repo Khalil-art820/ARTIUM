@@ -14027,9 +14027,11 @@ function PromoteMe({ myProfile, authUser, focus }) {
             <span className="pm-deco" aria-hidden="true" />
             <Megaphone size={26} strokeWidth={1.8} className="pm-head-ic" aria-hidden="true" />
             <h2 className="pm-title">Promote <em>Me</em></h2>
-            <p className="pm-sub">
-              Two ways to be heard:
-            </p>
+            {view !== "aclassicaltone" && (
+              <p className="pm-sub">
+                Two ways to be heard:
+              </p>
+            )}
           </div>
         ) : (
         <div style={{ textAlign: "center" }}>
@@ -14103,9 +14105,9 @@ function PromoteMe({ myProfile, authUser, focus }) {
         {view && (
           <button
             onClick={() => (view === "aclassicaltone" && promoMode ? setPromoMode(null) : setView(null))}
-            style={{ alignSelf: "flex-start", display: "inline-flex", alignItems: "center", gap: 6, background: "none", border: "none", padding: 0, font: "inherit", fontSize: 13, fontWeight: 600, color: C.ivoryDim, cursor: "pointer" }}
+            style={{ alignSelf: "flex-start", display: "inline-flex", alignItems: "center", gap: 6, background: "none", border: "none", padding: 0, font: "inherit", fontSize: 15.6, fontWeight: 600, color: C.ivoryDim, cursor: "pointer" }}
           >
-            <ArrowLeft size={14} /> {view === "aclassicaltone" && promoMode ? "Free or €65" : "Both options"}
+            <ArrowLeft size={17} /> {view === "aclassicaltone" && promoMode ? "Free or €65" : "Back"}
           </button>
         )}
 
