@@ -14021,6 +14021,16 @@ function PromoteMe({ myProfile, authUser, focus }) {
       <div style={{ maxWidth: 560, margin: "0 auto", display: "flex", flexDirection: "column", gap: 16 }}>
 
         {/* Header */}
+        {MODERN ? (
+          <div className="pm-head">
+            <span className="pm-deco" aria-hidden="true" />
+            <Megaphone size={26} strokeWidth={1.8} className="pm-head-ic" aria-hidden="true" />
+            <h2 className="pm-title">Promote <em>Me</em></h2>
+            <p className="pm-sub">
+              Two ways to be heard — on <a href="https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==" target="_blank" rel="noreferrer">aclassicaltone</a>, and on Artium itself.
+            </p>
+          </div>
+        ) : (
         <div style={{ textAlign: "center" }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
             <Megaphone size={20} color={C.brassLabel} />
@@ -14030,8 +14040,44 @@ function PromoteMe({ myProfile, authUser, focus }) {
             Two ways to be heard — on <a href="https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==" target="_blank" rel="noreferrer" style={{ color: C.brassLabel, fontWeight: 600, textDecoration: "none" }}>aclassicaltone</a>, and on Artium itself.
           </p>
         </div>
+        )}
 
-        {!view && (
+        {!view && MODERN && (
+          <div className="pm-options">
+            <button type="button" className="pm-opt" onClick={() => setView("artium")} aria-label="artium — your recording, played across the site. Free.">
+              <span className="pm-opt-body">
+                <span className="pm-opt-head">
+                  <span className="pm-opt-ic" aria-hidden="true"><WaveGlyph size={22} /></span>
+                  <span className="pm-opt-t">artium</span>
+                </span>
+                <span className="pm-opt-d">Your recording, played across the site. Free.</span>
+                <ArrowRight size={22} strokeWidth={1.6} className="pm-opt-go" aria-hidden="true" />
+              </span>
+              <span className="pm-opt-art pm-opt-photo" aria-hidden="true"><img src="/gate-cards/piano.webp" alt="" /></span>
+            </button>
+            <button type="button" className="pm-opt" onClick={() => setView("aclassicaltone")} aria-label={`aclassicaltone — your video to their audience: a free Saturday spotlight, or the full €${promoTotal} package.`}>
+              <span className="pm-opt-body">
+                <span className="pm-opt-head">
+                  <span className="pm-opt-ic" aria-hidden="true">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M13 21c-1.7 1-4 .2-4-1.8 0-1.4 1.1-2.3 2.4-2.3 1.4 0 2.3 1 2.3 2.4L13 4.5c-.1-1.5.8-2.6 1.9-2.6 1.2 0 1.8 1 1.8 2.2 0 2.6-3.4 4.4-5.6 6.4-1.6 1.4-2.6 3-2.6 4.8 0 2.6 2.1 4.4 4.6 4.4 2.3 0 4.1-1.6 4.1-3.8 0-2-1.5-3.4-3.4-3.4-1.6 0-2.9 1.1-2.9 2.6" />
+                    </svg>
+                  </span>
+                  <span className="pm-opt-t">aclassicaltone</span>
+                </span>
+                <span className="pm-opt-d">Your video to their audience — a free Saturday spotlight, or the full €{promoTotal} package.</span>
+                <ArrowRight size={22} strokeWidth={1.6} className="pm-opt-go" aria-hidden="true" />
+              </span>
+              <span className="pm-opt-art pm-opt-stack" aria-hidden="true">
+                <img src="/gate-cards/cello.webp" alt="" />
+                <img src="/gate-cards/masters.webp" alt="" />
+                <img src="/gate-cards/violin.webp" alt="" />
+              </span>
+            </button>
+          </div>
+        )}
+
+        {!view && !MODERN && (
           <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 4 }}>
             {[
               { v: "artium", t: "artium", d: "Your recording, played across the site. Free." },
@@ -16862,4 +16908,4 @@ function LearnerChat({ teacher, messages, onSend }) {
   );
 }
 
-export { BottomTabs, STUDENT_TABS, NotificationBell, ArtiumRadio, NetworkExplorer, CONSERVATORIES };
+export { BottomTabs, STUDENT_TABS, NotificationBell, ArtiumRadio, NetworkExplorer, CONSERVATORIES, PromoteMe };

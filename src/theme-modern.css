@@ -718,3 +718,49 @@ html.theme-modern .tm-hm-faces img{width:28px;height:28px;border-radius:50%;obje
 html.theme-modern .tm-hm-faces img + img{margin-left:-9px}
 html.theme-modern .tm-hm-n{margin-left:-6px;min-width:28px;height:24px;padding:0 8px;border-radius:12px;display:inline-grid;place-items:center;
   background:#42C9B8;color:#06302E;font:700 12.5px 'Fira Sans',sans-serif;box-shadow:0 0 0 2px #086868;position:relative}
+
+/* ==== Promote Me landing ==== */
+html.theme-modern .pm-head{position:relative;text-align:left;padding:6px 4px 4px;overflow:visible}
+html.theme-modern .pm-deco{position:absolute;top:-6px;right:-30px;width:150px;height:150px;border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle at 60% 55%,rgba(66,201,184,.22),rgba(66,201,184,0) 68%)}
+html.theme-modern .pm-deco::before{content:"";position:absolute;inset:-26px -26px auto auto;width:190px;height:190px;border-radius:50%;
+  border:1.2px solid rgba(8,104,104,.45);border-left-color:transparent;border-bottom-color:transparent;transform:rotate(-12deg)}
+html.theme-modern .pm-head-ic{color:#086868;display:block;margin-bottom:8px;position:relative}
+html.theme-modern .pm-title{position:relative;margin:0;font-family:'DM Serif Display',Georgia,serif;font-weight:400;font-size:clamp(38px,11vw,50px);
+  line-height:1;letter-spacing:-.015em;color:#141A19}
+html.theme-modern .pm-title em{font-style:italic;color:#086868}
+html.theme-modern .pm-sub{position:relative;margin:12px 0 0;font-size:16px;line-height:1.5;color:#5E6B69;max-width:21em}
+html.theme-modern .pm-sub a{color:#086868;font-weight:500;text-decoration:none}
+html.theme-modern .pm-options{display:flex;flex-direction:column;gap:16px;margin-top:10px}
+html.theme-modern .pm-opt{position:relative;display:flex;align-items:stretch;width:100%;min-height:168px;padding:0;text-align:left;cursor:pointer;
+  font:inherit;color:#172321;background:#FFFFFF;border:1px solid #E7E1D8;border-radius:18px;overflow:hidden;
+  box-shadow:0 6px 18px -12px rgba(23,35,33,.25);transition:transform .2s ease, box-shadow .2s ease}
+html.theme-modern .pm-opt:hover{box-shadow:0 10px 24px -12px rgba(23,35,33,.32)}
+html.theme-modern .pm-opt:active{transform:scale(.985)}
+html.theme-modern .pm-opt-body{position:relative;z-index:2;flex:1 1 58%;display:flex;flex-direction:column;gap:10px;padding:20px 8px 18px 20px;min-width:0}
+html.theme-modern .pm-opt-head{display:flex;align-items:center;gap:12px}
+html.theme-modern .pm-opt-ic{width:46px;height:46px;border-radius:50%;flex:none;display:grid;place-items:center;color:#FFFFFF;
+  background:radial-gradient(circle at 35% 30%,#2C8C80,#0A5A55 70%);box-shadow:0 4px 10px -4px rgba(7,95,92,.6)}
+html.theme-modern .pm-opt-ic .tm-wave{color:#fff}
+html.theme-modern .pm-opt-t{font-family:'DM Serif Display',Georgia,serif;font-size:clamp(24px,7vw,30px);line-height:1;color:#141A19;letter-spacing:-.01em;white-space:nowrap}
+html.theme-modern .pm-opt-d{font-size:15px;line-height:1.45;color:#5E6B69}
+html.theme-modern .pm-opt-go{color:#086868;margin-top:auto}
+html.theme-modern .pm-opt-art{position:relative;flex:0 0 42%;overflow:hidden}
+/* Piano photo dissolving into the card. */
+html.theme-modern .pm-opt-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  -webkit-mask-image:linear-gradient(90deg,transparent 0,rgba(0,0,0,.6) 30%,#000 60%);mask-image:linear-gradient(90deg,transparent 0,rgba(0,0,0,.6) 30%,#000 60%)}
+/* Three tilted prints over a soft disc. */
+html.theme-modern .pm-opt-stack::before{content:"";position:absolute;right:-30%;top:-10%;width:130%;height:130%;border-radius:50%;
+  background:radial-gradient(circle,rgba(66,201,184,.16),rgba(66,201,184,0) 70%)}
+html.theme-modern .pm-opt-stack img{position:absolute;width:56%;aspect-ratio:3/4;object-fit:cover;border-radius:10px;
+  box-shadow:0 8px 16px -8px rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.7)}
+html.theme-modern .pm-opt-stack img:nth-child(1){right:6%;top:24%;transform:rotate(9deg)}
+html.theme-modern .pm-opt-stack img:nth-child(2){right:18%;top:20%;transform:rotate(4deg)}
+html.theme-modern .pm-opt-stack img:nth-child(3){right:32%;top:18%;transform:rotate(-6deg);width:60%}
+html.theme-modern .pm-opt-body{flex-basis:64%;padding-right:4px}
+html.theme-modern .pm-opt-art{flex-basis:36%}
+html.theme-modern .pm-opt-ic{width:40px;height:40px}
+html.theme-modern .pm-opt-head{gap:10px}
+html.theme-modern .pm-opt-t{font-size:clamp(19px,5.6vw,28px)}
+html.theme-modern .pm-opt-stack img{width:62%}
+html.theme-modern .pm-opt-stack img:nth-child(3){width:66%;right:26%}

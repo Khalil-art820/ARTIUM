@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import App, { BottomTabs, STUDENT_TABS, NotificationBell, ArtiumRadio, NetworkExplorer, CONSERVATORIES } from "./App.jsx";
+import App, { BottomTabs, STUDENT_TABS, NotificationBell, ArtiumRadio, NetworkExplorer, CONSERVATORIES, PromoteMe } from "./App.jsx";
 import ErrorBoundary from "./ErrorBoundary.jsx";
 import { AuthProvider } from "./contexts/AuthContext.jsx";
 import "./index.css";
@@ -83,8 +83,19 @@ const NetworkPreview = import.meta.env.DEV && new URLSearchParams(location.searc
     }
   : null;
 
+// Dev-only: /?promotepreview renders the Promote Me landing.
+const PromotePreview = import.meta.env.DEV && new URLSearchParams(location.search).has("promotepreview")
+  ? () => (
+      <div style={{ background: "#F7F4F2", minHeight: "100vh" }}>
+        <style>{TAB_CSS}</style>
+        <PromoteMe myProfile={{ id: "preview", name: "Khalil Tannous" }} authUser={{ id: "00000000-0000-0000-0000-000000000000" }} />
+        <BottomTabs light modern items={STUDENT_TABS} active="promote" onTab={() => {}} />
+      </div>
+    )
+  : null;
+
 ReactDOM.createRoot(document.getElementById("root")).render(
-  NetworkPreview ? <NetworkPreview /> : GatePreview ? (
+  PromotePreview ? <PromotePreview /> : NetworkPreview ? <NetworkPreview /> : GatePreview ? (
     <React.Suspense fallback={null}><GatePreview /></React.Suspense>
   ) : (
   <React.StrictMode>
