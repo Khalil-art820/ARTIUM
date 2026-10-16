@@ -8006,8 +8006,17 @@ function emailMatchesConservatory(email, cons) {
   const m = String(email).trim().toLowerCase().match(/@(.+)$/);
   if (!m) return false;
   const host = m[1];
-  return cons.domains.some((d) => host === d.toLowerCase() || host.endsWith("." + d.toLowerCase()));
+  const addr = String(email).trim().toLowerCase();
+  // An entry with an "@" is one exact address an admin accepted for the school
+  // (Admin → Conservatories), not a domain: it lets that address in and no
+  // other at the same provider.
+  return cons.domains.some((d) => {
+    const v = String(d).toLowerCase();
+    return v.includes("@") ? addr === v : host === v || host.endsWith("." + v);
+  });
 }
+// The school's domains without the exact addresses, for hints and placeholders.
+const schoolDomains = (c) => ((c && c.domains) || []).filter((d) => !String(d).includes("@"));
 
 // The addresses people reach for when a form asks for an email, none of which
 // belong to an institution.
@@ -8562,7 +8571,7 @@ function StepConservatory({ draft, update, editing }) {
                         no domain to show. */}
                     {[
                       [c.city, c.country].filter(Boolean).join(", ") || c.address || "Approved conservatory",
-                      c.domains.length ? "@" + c.domains[0] : "",
+                      schoolDomains(c).length ? "@" + schoolDomains(c)[0] : "",
                     ].filter(Boolean).join(" · ")}
                   </p>
                 </span>
@@ -8765,14 +8774,14 @@ function StepConservatory({ draft, update, editing }) {
           ) : (
             <>
               <p className="text-sm" style={{ color: C.ivoryDim, marginBottom: 10 }}>
-                Enter your <b>@{selectedCons.domains[0]}</b> address. We'll email you a code to confirm you study there.
+                Enter your <b>@{schoolDomains(selectedCons)[0]}</b> address. We'll email you a code to confirm you study there.
               </p>
               <input style={inputStyle} type="email" value={email} disabled={codeSent}
                 onChange={(e) => { setEmail(e.target.value); setErr(""); }}
-                placeholder={`you@${selectedCons.domains[0]}`} autoComplete="off" />
+                placeholder={`you@${schoolDomains(selectedCons)[0] || "school.edu"}`} autoComplete="off" />
               {email && !domainOk && (
                 <p className="text-sm" style={{ color: C.burgundy, marginTop: 6 }}>
-                  This must be a {selectedCons.name} address ({selectedCons.domains.map((d) => "@" + d).join(" or ")}).
+                  This must be a {selectedCons.name} address ({schoolDomains(selectedCons).map((d) => "@" + d).join(" or ")}).
                 </p>
               )}
 
@@ -15052,6 +15061,16 @@ function AdminConservatories({ card }) {
   function addDomain(c) {
     const raw = (adding[c.id] || "").trim().toLowerCase().replace(/^@/, "");
     if (!raw) return;
+    // A whole address is one accepted email, not a domain — so a personal
+    // provider is fine here: it admits that one address and nobody else.
+    if (raw.includes("@")) {
+      if (!/^[^@\s]+@[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(raw)) { setNote({ bad: true, text: `"${raw}" doesn't look like an email address.` }); return; }
+      const cur = draftOf(c);
+      if (!cur.includes(raw)) setDrafts((x) => ({ ...x, [c.id]: [...cur, raw] }));
+      setAdding((x) => ({ ...x, [c.id]: "" }));
+      setNote(null);
+      return;
+    }
     // The same refusal as signup. A personal-mail domain here would not add a
     // school, it would hand every account at that provider the ability to
     // verify as one — the mistake that put gmail.com on Juilliard.
@@ -15072,7 +15091,7 @@ function AdminConservatories({ card }) {
     if (error) { setNote({ bad: true, text: error.message }); return; }
     setDrafts((x) => { const n = { ...x }; delete n[c.id]; return n; });
     setNote({ bad: false, text: next.length
-      ? `${c.name} now accepts ${next.map((d) => "@" + d).join(", ")}.`
+      ? `${c.name} now accepts ${next.map((d) => (d.includes("@") ? d : "@" + d)).join(", ")}.`
       : `${c.name} is back to its built-in ${c.builtIn.map((d) => "@" + d).join(", ") || "(none)"}.` });
     load();
   }
@@ -15088,7 +15107,7 @@ function AdminConservatories({ card }) {
     <div style={{ ...card }}>
       <p style={{ margin: "0 0 4px", fontFamily: FONT_DISPLAY, fontSize: 19, fontWeight: 600, color: C.ivory }}>Conservatories</p>
       <p className="text-sm" style={{ margin: "0 0 14px", color: C.ivoryDim, lineHeight: 1.5 }}>
-        Which email addresses each school accepts. Untick one to stop it verifying anybody; add one when a school moves.
+        Which email addresses each school accepts. Untick one to stop it verifying anybody; add a domain when a school moves, or one exact email to accept just that address.
       </p>
 
       <span className="artium-aw-field" style={{ marginBottom: 12 }}>
@@ -15121,7 +15140,7 @@ function AdminConservatories({ card }) {
                   const on = d.includes(dom);
                   return (
                     <button key={dom} onClick={() => toggle(c, dom)} style={chip(on)} title={on ? "Accepted — click to stop accepting it" : "Not accepted — click to accept it"}>
-                      {on ? <CheckIcon size={12} strokeWidth={3} /> : null}@{dom}
+                      {on ? <CheckIcon size={12} strokeWidth={3} /> : null}{dom.includes("@") ? dom : "@" + dom}
                     </button>
                   );
                 })}
@@ -15133,7 +15152,7 @@ function AdminConservatories({ card }) {
                   value={adding[c.id] || ""}
                   onChange={(e) => setAdding((x) => ({ ...x, [c.id]: e.target.value }))}
                   onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addDomain(c); } }}
-                  placeholder="add a domain, e.g. stud.school.edu"
+                  placeholder="add a domain (stud.school.edu) or one email"
                   style={{ flex: "1 1 180px", minWidth: 150, padding: "7px 10px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: warm("0.05"), color: C.ivory, fontSize: 12, outline: "none" }}
                 />
                 <button onClick={() => addDomain(c)} style={{ padding: "7px 12px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: warm("0.05"), color: C.ivoryDim, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Add</button>
