@@ -82,10 +82,7 @@ Deno.serve(async (req) => {
 
   const match = email.match(/^[^@\s]+@([^@\s]+\.[^@\s]+)$/);
   if (!match) return json({ error: "That doesn't look like an email address." }, 400);
-  // A personal address is refused unless an admin accepted that exact address
-  // for the chosen school — checked below, by the same match as any domain.
-  const personal = FREE_MAIL.has(match[1]);
-  if (personal && !conservatoryId) {
+  if (FREE_MAIL.has(match[1])) {
     return json({ error: "That's a personal address. We need the one your conservatory gave you." }, 400);
   }
 
@@ -110,7 +107,6 @@ Deno.serve(async (req) => {
       .rpc("email_matches_conservatory", { p_email: email, p_id: conservatoryId });
     if (matchError) return json({ error: matchError.message }, 500);
     if (!ok) {
-      if (personal) return json({ error: "That's a personal address. We need the one your conservatory gave you." }, 400);
       return json({ error: "That address doesn't belong to the conservatory you selected." }, 400);
     }
   }
