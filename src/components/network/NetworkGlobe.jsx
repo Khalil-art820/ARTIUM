@@ -17,7 +17,7 @@ const OCEAN = "#0A4F4C";
 const LAND_LINE = "rgba(199,166,106,0.62)";   // champagne
 const LAND_FILL = "rgba(66,201,184,0.07)";
 const MINT = "#42C9B8";
-const DEFAULT_POV = { lat: 34, lng: -12, altitude: 1.62 };
+const DEFAULT_POV = { lat: 34, lng: -12, altitude: 1.6 };
 
 const prefersReducedMotion = () => {
   try { return window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch { return false; }

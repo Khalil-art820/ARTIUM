@@ -771,3 +771,23 @@ html.theme-modern .pm-opt-ic.pm-opt-logo img{width:100%;height:100%;object-fit:c
 html.theme-modern .pm-opt-t.pm-opt-t-plain{font-family:"Fira Sans",system-ui,-apple-system,sans-serif;font-size:17px;font-weight:600;color:#1C1C1C;line-height:1.25;letter-spacing:normal}
 /* Bolder, and sized to the ARTIUM wordmark on the card above (.86 of its title size). */
 html.theme-modern .pm-opt-t.pm-opt-t-plain{font-size:calc(clamp(24px,7vw,30px)*.86);font-weight:700;letter-spacing:-.01em;line-height:1}
+
+/* ==== Network tab, round 2: bigger globe, white page, even filter grid ==== */
+html.theme-modern .nx-stage{height:390px;margin:2px 0 4px}
+html.theme-modern .nx-globe-skel,html.theme-modern .nx-globe-fallback{height:390px}
+html.theme-modern .nx-globe-skel span{width:310px;height:310px}
+/* Six filters in an even 3 × 2 grid instead of a row running off the edge. */
+html.theme-modern .nx-filter-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;overflow:visible;padding:2px 4px 4px}
+html.theme-modern .nx-fchip{justify-content:center;min-width:0;padding:0 8px;font-size:13px}
+html.theme-modern .nx-fchip > svg:last-child{flex:none}
+/* White everywhere on this tab — no cream. */
+html.theme-modern .artium-has-tabs.tm-tab-map{background:#FFFFFF !important}
+html.theme-modern:has(.tm-tab-map) #root,html.theme-modern:has(.tm-tab-map) body{background:#FFFFFF}
+html.theme-modern .tm-tab-map .nx{--nx-line:#E6E9E9}
+html.theme-modern .tm-tab-map .nx-tabs{background:#F1F3F3}
+html.theme-modern .tm-tab-map .nx-card-skel span,html.theme-modern .tm-tab-map .nx-card-skel i{background:#EEF1F1}
+html.theme-modern .tm-tab-map .nx-empty{border-color:#DDE2E2}
+html.theme-modern .tm-tab-map .artium-aw-stat,html.theme-modern .tm-tab-map .artium-aw-mono{background:#FFFFFF}
+html.theme-modern .tm-tab-map .artium-aw-row:hover,html.theme-modern .tm-tab-map .artium-aw-list > .artium-aw-row:hover{background:#F6F8F8}
+html.theme-modern .nx-fchip{white-space:nowrap;font-size:12.5px;padding:0 6px;gap:4px}
+html.theme-modern .nx-filter-row{gap:6px}

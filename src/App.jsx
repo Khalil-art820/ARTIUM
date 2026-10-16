@@ -5401,21 +5401,13 @@ export default function App() {
                   so every app tab, not just this one, draws the same bar. */}
               {netHeader}
               {myProfile && (
-                <div className="px-6 pb-2" style={{ paddingTop: 30 }}>
-                  {/* Back to the plain block by request — the white card and
-                      the GOOD TO SEE YOU eyebrow are reversed; what survives
-                      of that round: the corrected pill marks, the columned
-                      hall beside the conservatory, and its newer text voice. */}
-                  <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600, color: C.inkText, textAlign: "center" }}>
+                <div className="pb-2 tm-net-hello" style={MODERN ? { padding: "16px 16px 8px" } : { paddingTop: 30, paddingLeft: 24, paddingRight: 24 }}>
+                  {/* Greeting on the left, the conservatory mark beside it in
+                      place of the waving hand — one line, so the globe below
+                      gets the room. */}
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: MODERN ? "flex-start" : "center", gap: 10 }}>
+                  <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: MODERN ? 24 : 26, fontWeight: 600, color: C.inkText, textAlign: MODERN ? "left" : "center", margin: 0, lineHeight: 1.15, minWidth: 0 }}>
                     Good to see you, {myProfile.name.split(" ")[0]}
-                    <span aria-hidden="true" style={{
-                      display: "inline-flex", alignItems: "center", justifyContent: "center",
-                      width: 30, height: 30, borderRadius: "50%", marginLeft: 8,
-                      verticalAlign: "middle", position: "relative", top: -4,
-                      background: MODERN ? "#FFFFFF" : "radial-gradient(circle at 35% 28%, #FFFFFF 0%, #FCF8EF 55%, #F1E8D6 100%)",
-                      boxShadow: MODERN ? "none" : "0 4px 8px -3px rgba(150,115,55,.35), inset 0 1px 1px #fff",
-                      fontSize: 15, lineHeight: 1,
-                    }}>{"\uD83D\uDC4B"}</span>
                   </h2>
                   <button
                     onClick={() => {
@@ -5429,7 +5421,7 @@ export default function App() {
                     }}
                     title="See who studies at your conservatory"
                     aria-label="See who studies at your conservatory"
-                    style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, background: "none", border: "none", padding: 0, cursor: "pointer", font: "inherit", margin: "2px auto 0" }}
+                    style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, background: "none", border: "none", padding: 0, cursor: "pointer", font: "inherit", margin: 0, flexShrink: 0 }}
                   >
                     <span style={{
                       display: "inline-flex", alignItems: "center", justifyContent: "center",
@@ -5443,7 +5435,8 @@ export default function App() {
                       </svg>
                     </span>
                   </button>
-                  <div style={{ display: "flex", flexWrap: "nowrap", justifyContent: "center", gap: 5, marginTop: 14, opacity: MODERN ? 1 : .45, filter: MODERN ? "none" : "saturate(.6)" }}>
+                  </div>
+                  <div style={{ display: "flex", flexWrap: "nowrap", justifyContent: MODERN ? "flex-start" : "center", gap: 5, marginTop: MODERN ? 10 : 14, opacity: MODERN ? 1 : .45, filter: MODERN ? "none" : "saturate(.6)" }}>
                     {(myProfile.year || "").split(",").map((t) => t.trim()).filter(Boolean).map((label) => {
                       const low = label.toLowerCase();
                       const isYear = /year/.test(low);
@@ -9948,7 +9941,7 @@ function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, mus
   return (
     // Room for the fixed bottom bar. The bare branch needs none: the page it
     // wraps is the Network screen, which already reserves the same height.
-    <div className="min-h-full flex flex-col artium-has-tabs" style={{ background: C.inkSoft, color: C.ivory }}>
+    <div className={`min-h-full flex flex-col artium-has-tabs tm-tab-${appTab}`} style={{ background: C.inkSoft, color: C.ivory }}>
       <div className="px-6 flex items-center gap-4" style={{ height: 60, background: warm("0.05"), borderBottom: `1px solid ${C.inkLine}` }}>
         <div className="flex items-center gap-3">
           {(previewOnly || onBack) && (
@@ -10670,7 +10663,7 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
                 focus={focus}
                 onSelectMember={selectFromGlobe}
                 onSelectGroup={(ms) => { setGroup(ms); setSheet("group"); }}
-                height={330}
+                height={390}
               />
             </Suspense>
           </GlobeBoundary>

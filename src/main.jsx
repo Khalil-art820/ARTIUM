@@ -73,7 +73,7 @@ const NetworkPreview = import.meta.env.DEV && new URLSearchParams(location.searc
         S("s5", "Sample Flautist", "curtis", "Flute", "Masters, 1st year", true, true, "/earth-artium.jpg"),
       ];
       return (
-        <div style={{ maxWidth: 560, margin: "0 auto", padding: "20px 16px 120px", background: "#F8F5F0", minHeight: "100vh" }}>
+        <div className="artium-has-tabs tm-tab-map" style={{ maxWidth: 560, margin: "0 auto", padding: "20px 16px 120px", minHeight: "100vh" }}>
           <style>{TAB_CSS}</style>
           <NetworkExplorer learnerMode={new URLSearchParams(location.search).has("learner")} students={students} allCons={CONSERVATORIES} myId="me" myConservatoryId="juilliard"
             onOpenStudent={(id) => alert("open " + id)} onMessage={(id) => alert("message " + id)} />
