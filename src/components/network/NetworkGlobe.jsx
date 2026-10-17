@@ -170,6 +170,24 @@ export default function NetworkGlobe({ members, conservatories, focus, selectedI
 
   const reduced = prefersReducedMotion();
 
+  // Each arc is drawn twice: a faint steady line, and over it a string of
+  // bright dots travelling along it. Where arcs land, a glow ripples out.
+  const arcLayers = React.useMemo(() => [
+    ...arcs.map((a, i) => ({ ...a, id: `l${i}`, dots: false })),
+    ...arcs.map((a, i) => ({ ...a, id: `d${i}`, dots: true, initialGap: (i * 0.37) % 1 })),
+  ], [arcs]);
+  const landings = React.useMemo(() => {
+    const seen = new Set();
+    const out = [];
+    for (const a of arcs) {
+      for (const [lat, lng] of [[a.startLat, a.startLng], [a.endLat, a.endLng]]) {
+        const k = `${lat.toFixed(2)},${lng.toFixed(2)}`;
+        if (!seen.has(k)) { seen.add(k); out.push({ lat, lng }); }
+      }
+    }
+    return out;
+  }, [arcs]);
+
   return (
     <div ref={wrapRef} className="ng-wrap" style={{ height }}>
       {size.w > 0 && (
@@ -198,14 +216,23 @@ export default function NetworkGlobe({ members, conservatories, focus, selectedI
           pointColor={(d) => (d.on ? "rgba(170,255,240,1)" : "rgba(90,220,200,0.8)")}
           pointsMerge
           pointsTransitionDuration={0}
-          arcsData={arcs}
-          arcColor={() => ["rgba(120,235,220,0.95)", "rgba(222,190,125,0.95)"]}
-          arcStroke={0.55}
+          arcsData={arcLayers}
+          arcColor={(d) => (d.dots ? ["rgba(225,255,250,1)", "rgba(255,226,160,1)"] : ["rgba(120,235,220,0.45)", "rgba(222,190,125,0.45)"])}
+          arcStroke={(d) => (d.dots ? 0.9 : 0.45)}
           arcAltitudeAutoScale={0.38}
-          arcDashLength={0.5}
-          arcDashGap={0.25}
-          arcDashAnimateTime={reduced ? 0 : 6500}
+          arcDashLength={(d) => (d.dots ? 0.009 : 1)}
+          arcDashGap={(d) => (d.dots ? 0.13 : 0)}
+          arcDashInitialGap={(d) => (d.dots ? d.initialGap : 0)}
+          arcDashAnimateTime={(d) => (d.dots && !reduced ? 5200 : 0)}
           arcsTransitionDuration={0}
+          ringsData={reduced ? [] : landings}
+          ringLat="lat"
+          ringLng="lng"
+          ringColor={() => (t) => `rgba(150,245,230,${Math.max(0, 1 - t) * 0.9})`}
+          ringMaxRadius={2.4}
+          ringPropagationSpeed={1.6}
+          ringRepeatPeriod={1500}
+          ringAltitude={0.004}
           htmlElementsData={markers}
           htmlLat="lat"
           htmlLng="lng"
