@@ -3,7 +3,10 @@ import Globe from "react-globe.gl";
 import * as THREE from "three";
 
 /**
- * The Network tab's globe: deep-teal ocean, champagne continent lines, mint
+ * The Network tab's globe: a night Earth in the app's teal — deep ocean,
+ * green land with lit coastlines, and gold city lights that glow on the shaded
+ * side too (NASA Black Marble lights, recoloured into
+ * public/earth-*-artium-v1.jpg). Then: mint
  * points at every conservatory, thin arcs between the places members study,
  * and the members themselves as portrait markers at their conservatory.
  *
@@ -13,9 +16,8 @@ import * as THREE from "three";
  * own visibility test, so a face never floats through the sphere.
  */
 
-const OCEAN = "#0A4F4C";
-const LAND_LINE = "rgba(199,166,106,0.62)";   // champagne
-const LAND_FILL = "rgba(66,201,184,0.07)";
+const EARTH_URL = "/earth-night-artium-v1.jpg";
+const LIGHTS_URL = "/earth-lights-artium-v1.jpg";
 const MINT = "#42C9B8";
 const DEFAULT_POV = { lat: 34, lng: -12, altitude: 1.6 };
 
@@ -62,7 +64,6 @@ export default function NetworkGlobe({ members, conservatories, focus, selectedI
   const [size, setSize] = React.useState({ w: 0, h: 0 });
   const [ready, setReady] = React.useState(false);
   const [altitude, setAltitude] = React.useState(DEFAULT_POV.altitude);
-  const [countries, setCountries] = React.useState([]);
   const idleTimer = React.useRef(null);
 
   // Size from the container (react-globe.gl needs explicit pixels).
@@ -76,16 +77,18 @@ export default function NetworkGlobe({ members, conservatories, focus, selectedI
     return () => ro.disconnect();
   }, []);
 
-  React.useEffect(() => {
-    let alive = true;
-    fetch("/countries.geo.json").then((r) => r.json()).then((d) => { if (alive) setCountries(d.features || []); }).catch(() => {});
-    return () => { alive = false; };
-  }, []);
 
-  const material = React.useMemo(() => new THREE.MeshPhongMaterial({
-    color: new THREE.Color(OCEAN), emissive: new THREE.Color("#052B29"), emissiveIntensity: 0.55, shininess: 14, specular: new THREE.Color("#1E5E58"),
-  }), []);
-  React.useEffect(() => () => material.dispose(), [material]);
+  // The globe image is the lit texture; the lights alone are also the
+  // emissive map, so cities keep glowing where the light falls away.
+  const material = React.useMemo(() => {
+    const lights = new THREE.TextureLoader().load(LIGHTS_URL);
+    lights.colorSpace = THREE.SRGBColorSpace;
+    return new THREE.MeshPhongMaterial({
+      color: new THREE.Color("#FFFFFF"), emissive: new THREE.Color("#FFFFFF"), emissiveMap: lights, emissiveIntensity: 1.3,
+      shininess: 8, specular: new THREE.Color("#0E3B37"),
+    });
+  }, []);
+  React.useEffect(() => () => { material.emissiveMap?.dispose(); material.dispose(); }, [material]);
 
   // Camera, controls, frame budget, and pausing when off-screen.
   React.useEffect(() => {
@@ -183,15 +186,10 @@ export default function NetworkGlobe({ members, conservatories, focus, selectedI
             setAltitude((p) => (p === a ? p : a));
           }}
           globeMaterial={material}
+          globeImageUrl={EARTH_URL}
           showAtmosphere
           atmosphereColor={MINT}
           atmosphereAltitude={0.14}
-          polygonsData={countries}
-          polygonAltitude={0.003}
-          polygonCapColor={() => LAND_FILL}
-          polygonSideColor={() => "rgba(0,0,0,0)"}
-          polygonStrokeColor={() => LAND_LINE}
-          polygonsTransitionDuration={0}
           pointsData={points}
           pointLat="lat"
           pointLng="lng"
