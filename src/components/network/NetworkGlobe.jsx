@@ -19,7 +19,7 @@ import * as THREE from "three";
 const EARTH_URL = "/earth-night-artium-v1.jpg";
 const LIGHTS_URL = "/earth-lights-artium-v1.jpg";
 const MINT = "#42C9B8";
-const DEFAULT_POV = { lat: 34, lng: -12, altitude: 1.6 };
+const DEFAULT_POV = { lat: 34, lng: -12, altitude: 1.36 };
 
 const prefersReducedMotion = () => {
   try { return window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch { return false; }
