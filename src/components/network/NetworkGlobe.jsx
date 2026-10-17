@@ -20,6 +20,16 @@ const EARTH_URL = "/earth-night-artium-v1.jpg";
 const LIGHTS_URL = "/earth-lights-artium-v1.jpg";
 const MINT = "#42C9B8";
 const DEFAULT_POV = { lat: 34, lng: -12, altitude: 1.36 };
+// The camera distance that draws the globe at a given on-screen diameter:
+// as large as the design wants (≈390px), never wider than the space it sits
+// in, so its edge is never cut. Camera fov is the library's 50°.
+const FIT_MAX_DIAMETER = 392;
+function fitAltitude(w, h) {
+  if (!w || !h) return DEFAULT_POV.altitude;
+  const r = Math.min(FIT_MAX_DIAMETER, w - 8, h - 16) / 2;
+  const d = Math.sqrt(1 + ((h / 2) / Math.tan((25 * Math.PI) / 180) / r) ** 2);
+  return Math.round((d - 1) * 1000) / 1000;
+}
 
 const prefersReducedMotion = () => {
   try { return window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch { return false; }
@@ -94,7 +104,7 @@ export default function NetworkGlobe({ members, conservatories, focus, selectedI
   React.useEffect(() => {
     if (!ready || !globeRef.current) return;
     const g = globeRef.current;
-    g.pointOfView(DEFAULT_POV, 0);
+    g.pointOfView({ ...DEFAULT_POV, altitude: fitAltitude(size.w, size.h) }, 0);
     try { g.renderer().setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75)); } catch { /* older three */ }
     let detach = null;
     const c = g.controls();
@@ -132,7 +142,7 @@ export default function NetworkGlobe({ members, conservatories, focus, selectedI
     const g = globeRef.current;
     const c = g.controls(); if (c) c.autoRotate = false;
     clearTimeout(idleTimer.current);
-    if (focus.reset) g.pointOfView(DEFAULT_POV, prefersReducedMotion() ? 0 : 900);
+    if (focus.reset) g.pointOfView({ ...DEFAULT_POV, altitude: fitAltitude(size.w, size.h) }, prefersReducedMotion() ? 0 : 900);
     else if (Number.isFinite(focus.lat) && Number.isFinite(focus.lng)) {
       g.pointOfView({ lat: focus.lat, lng: focus.lng, altitude: Math.min(altitude, 1.55) }, prefersReducedMotion() ? 0 : 900);
     }

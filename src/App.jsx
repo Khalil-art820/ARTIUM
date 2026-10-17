@@ -10680,7 +10680,7 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
                 focus={focus}
                 onSelectMember={selectFromGlobe}
                 onSelectGroup={(ms) => { setGroup(ms); setSheet("group"); }}
-                height={390}
+                height={410}
               />
             </Suspense>
           </GlobeBoundary>

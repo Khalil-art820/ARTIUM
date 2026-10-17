@@ -848,3 +848,8 @@ html.theme-modern .ng-marker .ng-face,html.theme-modern .ng-marker .ng-group{ani
 @keyframes ngGlow{from{filter:drop-shadow(0 0 3px rgba(140,240,225,.55))}to{filter:drop-shadow(0 0 9px rgba(140,240,225,.95))}}
 html.theme-modern .ng-marker.is-on .ng-face{animation-duration:1.6s}
 @media (prefers-reduced-motion:reduce){html.theme-modern .ng-marker .ng-face,html.theme-modern .ng-marker .ng-group{animation:none;filter:drop-shadow(0 0 6px rgba(140,240,225,.8))}}
+/* Globe space: edge to edge and taller, so the globe is drawn whole. */
+html.theme-modern .nx-stage{height:410px;width:100vw;max-width:none;margin:2px 0 4px calc(50% - 50vw)}
+html.theme-modern .nx-globe-skel,html.theme-modern .nx-globe-fallback{height:410px}
+html.theme-modern .nx-recenter{right:16px}
+html.theme-modern .nx-down{right:14px}
