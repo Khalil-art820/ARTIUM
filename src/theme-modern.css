@@ -843,3 +843,8 @@ html.theme-modern .tm-hello-name{font-weight:700}
 html.theme-modern .artium-aw.artium-aw--list,.artium-aw.artium-aw--list{min-height:0;padding-bottom:0;background:#FFFFFF}
 /* Four filters: an even 2 × 2 rather than three and a lone stretched one. */
 html.theme-modern .nx-filter-row:not(:has(> :nth-child(5))) > .nx-fchip{flex:1 1 calc(50% - 6px)}
+/* Globe portraits: the ring glows, breathing softly (still for reduced motion). */
+html.theme-modern .ng-marker .ng-face,html.theme-modern .ng-marker .ng-group{animation:ngGlow 2.8s ease-in-out infinite alternate}
+@keyframes ngGlow{from{filter:drop-shadow(0 0 3px rgba(140,240,225,.55))}to{filter:drop-shadow(0 0 9px rgba(140,240,225,.95))}}
+html.theme-modern .ng-marker.is-on .ng-face{animation-duration:1.6s}
+@media (prefers-reduced-motion:reduce){html.theme-modern .ng-marker .ng-face,html.theme-modern .ng-marker .ng-group{animation:none;filter:drop-shadow(0 0 6px rgba(140,240,225,.8))}}

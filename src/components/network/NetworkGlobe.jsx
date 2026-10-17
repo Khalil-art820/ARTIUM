@@ -54,7 +54,7 @@ function faceHTML(m, size, ring) {
     ? `<img src="${esc(m.photoUrl)}" alt="" draggable="false" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.remove()">`
     : "";
   const initials = esc((m.name || "?").split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase());
-  return `<span class="ng-face" style="width:${size}px;height:${size}px;box-shadow:0 0 0 2px #fff,0 0 0 ${ring}px rgba(66,201,184,.55),0 4px 10px rgba(0,0,0,.45)">
+  return `<span class="ng-face" style="width:${size}px;height:${size}px;box-shadow:0 0 0 2px #fff,0 0 0 ${ring}px rgba(120,235,220,.85),0 0 ${ring * 4}px ${ring}px rgba(120,235,220,.55),0 4px 10px rgba(0,0,0,.45)">
     <b>${initials}</b>${inner}</span>`;
 }
 
