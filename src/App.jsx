@@ -5551,7 +5551,11 @@ export default function App() {
           {appTab === "admin" && !selectedStudentId && isAdmin && (
             <>
               {netHeaderWith(null)}
-              <AdminScreen authUser={authUser} onlineCount={onlineCount} />
+              <AdminScreen authUser={authUser} onlineCount={onlineCount} listProps={{
+                students, studentsByCons, selectedConsId, setSelectedConsId,
+                onOpenStudent: (id) => openStudent(id, "map"), isGuest: false, onGuestClick: () => {},
+                canViewRoster: true, extraCons: docCons, myId: myProfile?.id, myConservatoryId: myProfile?.conservatoryId, onMessage: openChat,
+              }} />
             </>
           )}
           {appTab === "lessons" && !selectedStudentId && myProfile && (
@@ -10643,16 +10647,12 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
               <span className="nx-flabel">{label}</span>{filters[key].length ? <i>{filters[key].length}</i> : null}<ChevronDown size={14} className="nx-fchev" />
             </button>
           ))}
-          {!learnerMode && (
+          {learnerMode && (
           <button type="button" className={`nx-fchip nx-toggle${filters.teach ? " is-on" : ""}`} aria-pressed={filters.teach}
             onClick={() => setFilters((f) => ({ ...f, teach: !f.teach }))}>
             <span className="nx-dot" aria-hidden="true" />Open to teach
           </button>
           )}
-          <button type="button" className={`nx-fchip nx-toggle${filters.verified ? " is-on" : ""}`} aria-pressed={filters.verified}
-            onClick={() => setFilters((f) => ({ ...f, verified: !f.verified }))}>
-            <ShieldCheck size={13} />Verified
-          </button>
         </div>
         {activeCount > 0 && (
           <div className="nx-active">
@@ -10804,7 +10804,7 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
   );
 }
 
-function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId, onOpenStudent, isGuest, onGuestClick, canViewRoster, extraCons = [], myId, myConservatoryId, onMessage }) {
+function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId, onOpenStudent, isGuest, onGuestClick, canViewRoster, extraCons = [], myId, myConservatoryId, onMessage, listOnly = false }) {
   const ALL_CONS = React.useMemo(() => [...CONSERVATORIES, ...extraCons], [extraCons]);
   const cons = ALL_CONS.find((c) => c.id === selectedConsId);
   const roster = selectedConsId ? studentsByCons[selectedConsId] || [] : [];
@@ -10852,8 +10852,9 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
   const nf = (n) => n.toLocaleString();
 
   return (
-    <div className="artium-aw">
-      <div className="artium-aw-in">
+    <div className={`artium-aw${listOnly ? " artium-aw--list" : ""}`}>
+      <div className="artium-aw-in" style={listOnly ? { padding: "14px 12px" } : undefined}>
+        {!listOnly && (<>
         {!MODERN && <p className="artium-aw-eyebrow"><i />The <ArtiumWord /> Network<i /></p>}
         {!MODERN && <h1 className="artium-aw-h1">Bridging Musicians<br />Worldwide</h1>}
 
@@ -10924,7 +10925,11 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
         </div>
         )}
 
-        {cons ? (
+        </>)}
+
+        {/* The conservatory list lives in Admin → Conservatory list on the
+            modern theme; the Network tab is the globe and the musicians. */}
+        {(listOnly || !MODERN) && (cons ? (
           <>
             <div className="artium-aw-listhead">
               <button className="artium-aw-sort" style={{ marginLeft: 0 }} onClick={() => setSelectedConsId(null)}>
@@ -11035,7 +11040,7 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
               })}
             </div>
           </>
-        )}
+        ))}
       </div>
 
     </div>
@@ -12446,7 +12451,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
 
           <p className="artium-aw-hint">{MODERN ? "Turn the globe and tap a portrait to meet a teacher." : "Explore the world map and pick a pin to see who teaches there."}</p>
 
-          {cons ? (
+          {!MODERN && (cons ? (
             <>
               <div className="artium-aw-listhead">
                 <button className="artium-aw-sort" style={{ marginLeft: 0 }} onClick={() => setSelectedConsId(null)}>
@@ -12523,7 +12528,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
                 );
               })()}
             </>
-          )}
+          ))}
         </div>
       )}
 
@@ -14359,7 +14364,7 @@ function PromoteMe({ myProfile, authUser, focus }) {
 /* ---------------------------------------------------------------- */
 /* ADMIN — owner-only promotion approvals                             */
 /* ---------------------------------------------------------------- */
-function AdminScreen({ authUser, onlineCount }) {
+function AdminScreen({ authUser, onlineCount, listProps }) {
   const isRealUser = !!authUser?.id;
   const lsKey = "artium_promotions";
   const [section, setSection] = useState(() => {
@@ -14492,7 +14497,7 @@ function AdminScreen({ authUser, onlineCount }) {
 
         {/* Section toggle */}
         <div style={MODERN ? { display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" } : { display: "flex", gap: 8, justifyContent: "center" }}>
-          {[{ v: "verifications", t: "Student verifications" }, { v: "conservatories", t: "Conservatories" }, { v: "tracks", t: "Recordings" }, { v: "promotions", t: "Promotions" }, { v: "partners", t: "Partnerships" }, { v: "gatecards", t: "Gate cards" }].map(({ v, t }) => (
+          {[{ v: "verifications", t: "Student verifications" }, { v: "conservatories", t: "Conservatories" }, { v: "conslist", t: "Conservatory list" }, { v: "tracks", t: "Recordings" }, { v: "promotions", t: "Promotions" }, { v: "partners", t: "Partnerships" }, { v: "gatecards", t: "Gate cards" }].map(({ v, t }) => (
             <button key={v} onClick={() => setSection(v)}
               style={{ padding: "9px 18px", borderRadius: MODERN ? 10 : 999, fontSize: 13, fontWeight: 700, cursor: "pointer", background: section === v ? BRASS_GRAD : (MODERN ? "#FFFFFF" : warm("0.07")), color: section === v ? C.brassText : C.ivoryDim, border: section === v ? "none" : `1px solid ${C.inkLine}` }}>{t}</button>
           ))}
@@ -14500,6 +14505,11 @@ function AdminScreen({ authUser, onlineCount }) {
 
         {section === "verifications" && <AdminVerifications card={card} STATUS_COLOR={STATUS_COLOR} />}
         {section === "conservatories" && <AdminConservatories card={card} />}
+        {section === "conslist" && listProps && (
+          <div style={{ ...card, padding: 0, overflow: "hidden" }}>
+            <MapScreen listOnly {...listProps} />
+          </div>
+        )}
         {section === "tracks" && <AdminTracks card={card} STATUS_COLOR={STATUS_COLOR} authUser={authUser} />}
         {section === "partners" && <AdminPartners card={card} />}
         {section === "gatecards" && <AdminGateCards card={card} />}

@@ -840,3 +840,6 @@ html.theme-modern .nx-fchip{padding:0 8px;gap:4px}
 html.theme-modern .nx-fchip .nx-fic{width:16px;height:16px}
 html.theme-modern .nx-fchip .nx-fchev{width:12px;height:12px;margin-left:1px}
 html.theme-modern .tm-hello-name{font-weight:700}
+html.theme-modern .artium-aw.artium-aw--list,.artium-aw.artium-aw--list{min-height:0;padding-bottom:0;background:#FFFFFF}
+/* Four filters: an even 2 × 2 rather than three and a lone stretched one. */
+html.theme-modern .nx-filter-row:not(:has(> :nth-child(5))) > .nx-fchip{flex:1 1 calc(50% - 6px)}
