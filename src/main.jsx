@@ -75,6 +75,18 @@ const NetworkPreview = import.meta.env.DEV && new URLSearchParams(location.searc
       return (
         <div className="artium-has-tabs tm-tab-map" style={{ maxWidth: 560, margin: "0 auto", padding: "20px 16px 120px", minHeight: "100vh" }}>
           <style>{TAB_CSS}</style>
+          {/* Mirrors the greeting App draws above the explorer. */}
+          <div className="tm-hello" style={{ margin: "-20px -16px 0" }}>
+            <div className="tm-hello-l">
+              <p className="tm-hello-eyebrow">Welcome back,</p>
+              <h2 className="tm-hello-name">Khalil</h2>
+              <span className="tm-hello-rule" />
+              <p className="tm-hello-tag">Connecting passionate musicians around the world</p>
+            </div>
+            <p className="tm-hello-script">More music.<br />More connections.
+              <svg viewBox="0 0 160 14" preserveAspectRatio="none"><path d="M2 12 C 50 4, 110 2, 158 3" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
+            </p>
+          </div>
           <NetworkExplorer learnerMode={new URLSearchParams(location.search).has("learner")} students={students} allCons={CONSERVATORIES} myId="me" myConservatoryId="juilliard"
             onOpenStudent={(id) => alert("open " + id)} onMessage={(id) => alert("message " + id)} />
           <BottomTabs light modern items={STUDENT_TABS} active="map" onTab={() => {}} />

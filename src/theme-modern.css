@@ -791,3 +791,52 @@ html.theme-modern .tm-tab-map .artium-aw-stat,html.theme-modern .tm-tab-map .art
 html.theme-modern .tm-tab-map .artium-aw-row:hover,html.theme-modern .tm-tab-map .artium-aw-list > .artium-aw-row:hover{background:#F6F8F8}
 html.theme-modern .nx-fchip{white-space:nowrap;font-size:12.5px;padding:0 6px;gap:4px}
 html.theme-modern .nx-filter-row{gap:6px}
+
+/* ==== Network tab, round 3: the welcome mockup ==== */
+/* White, for real: the Network tab's shell is the "bare" one, and the page
+   inside is .artium-aw — both were still painting cream. */
+html.theme-modern:has(.tm-tab-map),
+html.theme-modern:has(.tm-tab-map) body,
+html.theme-modern:has(.tm-tab-map) #root,
+html.theme-modern .tm-tab-map,
+html.theme-modern .tm-tab-map .artium-aw{background:#FFFFFF !important}
+
+/* Greeting */
+html.theme-modern .tm-hello{position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:8px;
+  max-width:560px;margin:0 auto;padding:22px 18px 4px;background:#FFFFFF}
+html.theme-modern .tm-hello-l{min-width:0}
+html.theme-modern .tm-hello-eyebrow{margin:0;font:400 13px/1 'Fira Sans',system-ui,sans-serif;letter-spacing:.22em;text-transform:uppercase;color:#5B6E6B}
+html.theme-modern .tm-hello-name{margin:6px 0 0;font-family:'Cormorant Garamond','Didot',Georgia,serif;font-weight:600;
+  font-size:clamp(46px,14vw,60px);line-height:.95;letter-spacing:-.01em;color:#0B3A36}
+html.theme-modern .tm-hello-rule{display:block;width:30px;height:1.5px;margin:12px 0 11px;background:#C7A66A;border-radius:1px}
+html.theme-modern .tm-hello-tag{margin:0;max-width:16em;font:400 10.5px/1.7 'Fira Sans',system-ui,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:#7A8583}
+html.theme-modern .tm-hello-script{position:relative;flex:none;margin:30px 0 0;padding-bottom:10px;transform:rotate(-9deg);transform-origin:right center;
+  font-family:'Pinyon Script','Cormorant Garamond',Georgia,serif;font-size:clamp(17px,5vw,22px);line-height:1.2;color:#0B3A36;text-align:right;white-space:nowrap}
+html.theme-modern .tm-hello-script svg{position:absolute;right:-2px;bottom:-2px;width:78%;height:10px;color:#C7A66A;overflow:visible}
+
+/* Filters: the mockup's pills — taller, an icon each, soft shadow, teal when on. */
+html.theme-modern .nx-filter-row{gap:8px;padding:4px 2px 6px}
+html.theme-modern .nx-fchip{height:44px;gap:6px;padding:0 10px;justify-content:center;background:#FFFFFF;border:1px solid #ECEFEF;
+  box-shadow:0 4px 12px -6px rgba(11,58,54,.22);font:500 13px 'Fira Sans',sans-serif;color:#1F2E2C;letter-spacing:.01em}
+html.theme-modern .nx-fchip .nx-fic{flex:none;color:#2D4A47}
+html.theme-modern .nx-fchip .nx-flabel{min-width:0;overflow:hidden;text-overflow:ellipsis}
+html.theme-modern .nx-fchip .nx-fchev{flex:none;color:#7A8583;margin-left:auto}
+html.theme-modern .nx-fchip.is-on,html.theme-modern .nx-toggle.is-on{background:#0B4E49;border-color:#0B4E49;color:#FFFFFF;box-shadow:0 6px 14px -6px rgba(11,78,73,.55)}
+html.theme-modern .nx-fchip.is-on .nx-fic,html.theme-modern .nx-fchip.is-on .nx-fchev,html.theme-modern .nx-fchip.is-on svg{color:#FFFFFF}
+html.theme-modern .nx-fchip.is-on i{background:#FFFFFF;color:#0B4E49}
+
+/* Globe buttons: compass recenter, and a round arrow down to the musicians. */
+html.theme-modern .nx-recenter{width:44px;height:44px;top:14px;right:6px;border:0;background:#FFFFFF;color:#0B4E49;box-shadow:0 6px 16px -6px rgba(11,58,54,.3)}
+html.theme-modern .nx-down{position:absolute;right:4px;bottom:6px;z-index:3;width:50px;height:50px;border-radius:50%;border:0;background:#FFFFFF;color:#111;
+  display:grid;place-items:center;cursor:pointer;box-shadow:0 8px 20px -8px rgba(0,0,0,.35)}
+/* Pills size to their words (no truncation), each row stretched edge to edge. */
+html.theme-modern .nx-filter-row{display:flex;flex-wrap:wrap;gap:7px}
+html.theme-modern .nx-fchip{flex:1 1 auto;padding:0 10px;gap:5px;font-size:12.5px}
+html.theme-modern .nx-fchip .nx-fchev{margin-left:2px}
+html.theme-modern .nx-fchip .nx-flabel{overflow:visible}
+html.theme-modern .tm-hello-tag{max-width:21em}
+html.theme-modern .nx-filter-row{gap:6px}
+html.theme-modern .nx-fchip{padding:0 8px;gap:4px}
+html.theme-modern .nx-fchip .nx-fic{width:16px;height:16px}
+html.theme-modern .nx-fchip .nx-fchev{width:12px;height:12px;margin-left:1px}
+html.theme-modern .tm-hello-name{font-weight:700}

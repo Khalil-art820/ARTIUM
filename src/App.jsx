@@ -13,7 +13,7 @@ import {
   Map, BookOpen, ListChecks, LayoutList, Megaphone, Check as CheckIcon, ShieldCheck, FileText, Lock,
   ScanLine, ArrowUpRight, Globe2, MapPin, GraduationCap, User, Paperclip,
   Compass, Briefcase, Feather, CheckCircle2, ChevronDown, RotateCcw, SlidersHorizontal,
-  Globe as GlobeIcon,
+  Globe as GlobeIcon, Piano, Landmark, ArrowDown, ChartNoAxesColumnIncreasing,
 } from "lucide-react";
 import { useAuth } from "./contexts/AuthContext";
 import { supabase } from "./lib/supabase";
@@ -5401,6 +5401,20 @@ export default function App() {
                   so every app tab, not just this one, draws the same bar. */}
               {netHeader}
               {myProfile && (
+                MODERN ? (
+                  <div className="tm-hello">
+                    <div className="tm-hello-l">
+                      <p className="tm-hello-eyebrow">Welcome back,</p>
+                      <h2 className="tm-hello-name">{myProfile.name.split(" ")[0]}</h2>
+                      <span className="tm-hello-rule" aria-hidden="true" />
+                      <p className="tm-hello-tag">Connecting passionate musicians around the world</p>
+                    </div>
+                    <p className="tm-hello-script" aria-hidden="true">
+                      More music.<br />More connections.
+                      <svg viewBox="0 0 160 14" preserveAspectRatio="none"><path d="M2 12 C 50 4, 110 2, 158 3" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
+                    </p>
+                  </div>
+                ) : (
                 <div className="pb-2 tm-net-hello" style={MODERN ? { padding: "16px 16px 8px" } : { paddingTop: 30, paddingLeft: 24, paddingRight: 24 }}>
                   {/* Greeting on the left, the conservatory mark beside it in
                       place of the waving hand — one line, so the globe below
@@ -5474,6 +5488,7 @@ export default function App() {
                     )}
                   </div>
                 </div>
+                )
               )}
               <MapScreen
                 students={students} studentsByCons={studentsByCons}
@@ -9937,7 +9952,7 @@ function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, mus
   const tabs = [];
   // bare: the page inside draws its own header and its own bottom bar, so the
   // shell's white chrome would sit on it as a second, lighter header.
-  if (bare) return <div className="min-h-full flex flex-col">{children}</div>;
+  if (bare) return <div className={`min-h-full flex flex-col tm-tab-${appTab}`}>{children}</div>;
   return (
     // Room for the fixed bottom bar. The bare branch needs none: the page it
     // wraps is the Network screen, which already reserves the same height.
@@ -10614,6 +10629,7 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
     { key: "levels", label: "Level" },
     { key: "cons", label: "Conservatory" },
   ];
+  const FILTER_ICON = { instruments: Piano, countries: GlobeIcon, levels: ChartNoAxesColumnIncreasing, cons: Landmark };
   const chipLabel = (key, v) => (key === "cons" ? (consById[v]?.short || consById[v]?.name || v) : v);
 
   return (
@@ -10623,7 +10639,8 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
         <div className="nx-filter-row">
           {FILTERS.map(({ key, label }) => (
             <button key={key} type="button" className={`nx-fchip${filters[key].length ? " is-on" : ""}`} onClick={() => setSheet(key)} aria-haspopup="dialog">
-              {label}{filters[key].length ? <i>{filters[key].length}</i> : null}<ChevronDown size={14} />
+              {(() => { const Ic = FILTER_ICON[key]; return Ic ? <Ic size={17} strokeWidth={1.7} className="nx-fic" /> : null; })()}
+              <span className="nx-flabel">{label}</span>{filters[key].length ? <i>{filters[key].length}</i> : null}<ChevronDown size={14} className="nx-fchev" />
             </button>
           ))}
           {!learnerMode && (
@@ -10671,7 +10688,11 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
           <div className="nx-globe-fallback"><Globe2 size={28} /><p>The 3D globe needs WebGL, which this browser doesn't offer. Browse the musicians below.</p></div>
         )}
         <button type="button" className="nx-recenter" onClick={() => { setSelectedId(null); setFocus({ reset: true, at: Date.now() }); }} aria-label="Recenter the globe">
-          <RotateCcw size={16} />
+          <Compass size={19} strokeWidth={1.7} />
+        </button>
+        <button type="button" className="nx-down" aria-label="Show the musicians below"
+          onClick={() => document.querySelector(".nx-tabs")?.scrollIntoView({ behavior: "smooth", block: "start" })}>
+          <ArrowDown size={22} strokeWidth={1.8} />
         </button>
       </div>
 
@@ -10833,8 +10854,8 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
   return (
     <div className="artium-aw">
       <div className="artium-aw-in">
-        <p className="artium-aw-eyebrow"><i />The <ArtiumWord /> Network<i /></p>
-        <h1 className="artium-aw-h1">Bridging Musicians<br />Worldwide</h1>
+        {!MODERN && <p className="artium-aw-eyebrow"><i />The <ArtiumWord /> Network<i /></p>}
+        {!MODERN && <h1 className="artium-aw-h1">Bridging Musicians<br />Worldwide</h1>}
 
         {MODERN ? (
           <NetworkExplorer students={allStudents} allCons={ALL_CONS} myId={myId} myConservatoryId={myConservatoryId}
