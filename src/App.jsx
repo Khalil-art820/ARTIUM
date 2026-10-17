@@ -10872,6 +10872,7 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
         </div>
         )}
 
+        {!MODERN && (<>
         <div className="artium-aw-stats">
           <div className="artium-aw-stat">
             <span className="artium-aw-stat-row">
@@ -10924,6 +10925,7 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
           </span>
         </div>
         )}
+        </>)}
 
         </>)}
 
@@ -12425,6 +12427,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
           </div>
           )}
 
+          {!MODERN && (<>
           <div className="artium-aw-stats">
             <div className="artium-aw-stat">
               <span className="artium-aw-stat-row">
@@ -12450,6 +12453,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
           </div>
 
           <p className="artium-aw-hint">{MODERN ? "Turn the globe and tap a portrait to meet a teacher." : "Explore the world map and pick a pin to see who teaches there."}</p>
+          </>)}
 
           {!MODERN && (cons ? (
             <>
