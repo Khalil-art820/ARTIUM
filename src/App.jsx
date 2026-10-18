@@ -10788,16 +10788,24 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
     (skip === "cons" || !f.cons.length || f.cons.includes(m.conservatoryId)) &&
     (!f.teach || m.open) && (!f.verified || m.verified)
   );
-  const filtered = React.useMemo(() => members.filter((m) => matches(m, filters)), [members, filters]);
-  // The globe shows you and the people you're connected with — everyone else
-  // is found in Nearby / All and connected from their card.
-  const onGlobe = React.useMemo(() => filtered.filter((m) => Number.isFinite(m.lat) && Number.isFinite(m.lng)
-    && (!useConn || m.id === myId || conn.byOther[m.id]?.state === "connected")), [filtered, useConn, conn.byOther, myId]);
+  // Students: the filter cards work on your connections only — their choices,
+  // counts and results never come from people you aren't connected with.
+  // The cards below the globe (Featured / Nearby / All) are for finding new
+  // people and are not filtered. Learners: everything filters, as before.
+  const filterBase = React.useMemo(() => (useConn ? members.filter((m) => conn.byOther[m.id]?.state === "connected") : members),
+    [members, useConn, conn.byOther]);
+  const filtered = React.useMemo(() => filterBase.filter((m) => matches(m, filters)), [filterBase, filters]);
+  const discover = useConn ? members : filtered;
+  // The globe shows you and the connections the filters leave.
+  const onGlobe = React.useMemo(() => {
+    const me = useConn ? members.filter((m) => m.id === myId) : [];
+    return [...me, ...filtered].filter((m) => Number.isFinite(m.lat) && Number.isFinite(m.lng));
+  }, [filtered, members, useConn, myId]);
   const connectedCount = useConn ? Object.values(conn.byOther).filter((c) => c.state === "connected").length : null;
 
   // Options come from the members themselves, counted against the other filters.
   const optionsFor = (key) => {
-    const pool = members.filter((m) => matches(m, filters, key));
+    const pool = filterBase.filter((m) => matches(m, filters, key));
     const counts = Object.create(null);
     const add = (v, label) => { if (!v) return; (counts[v] = counts[v] || { v, label: label || v, n: 0 }).n++; };
     for (const m of pool) {
@@ -10815,8 +10823,8 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
   const myCountry = consById[myConservatoryId]?.country || "";
   const list = React.useMemo(() => {
     const byName = (a, b) => (a.name || "").localeCompare(b.name || "");
-    if (tab === "nearby") return filtered.filter((m) => m.id !== myId && myCountry && m.country === myCountry).sort(byName);
-    if (tab === "all") return [...filtered].sort(byName);
+    if (tab === "nearby") return discover.filter((m) => m.id !== myId && myCountry && m.country === myCountry).sort(byName);
+    if (tab === "all") return [...discover].sort(byName);
     // Students: Featured is "people you might want to connect with" — not
     // you, not people you're already connected with; whoever asked you
     // first, then the closest matches (same school, instrument, country,
@@ -10836,7 +10844,7 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
         if (m.verified) n += 1;
         return n;
       };
-      return filtered
+      return discover
         .filter((m) => m.id !== myId && conn.byOther[m.id]?.state !== "connected")
         .map((m) => [m, score(m)])
         .sort((a, b) => b[1] - a[1] || byName(a[0], b[0]))
@@ -10845,11 +10853,11 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
     const withPhoto = filtered.filter((m) => m.photoUrl);
     const pool = withPhoto.length ? withPhoto : filtered;
     return [...pool].sort((a, b) => (b.open - a.open) || (b.verified - a.verified) || byName(a, b));
-  }, [filtered, tab, myId, myCountry, useConn, conn.byOther, members]);
+  }, [filtered, discover, tab, myId, myCountry, useConn, conn.byOther, members]);
 
   const selected = members.find((m) => m.id === selectedId) || null;
   // A filter that hides the selected member closes its preview.
-  React.useEffect(() => { if (selectedId && !filtered.some((m) => m.id === selectedId)) setSelectedId(null); }, [filtered, selectedId]);
+  React.useEffect(() => { if (selectedId && !discover.some((m) => m.id === selectedId)) setSelectedId(null); }, [discover, selectedId]);
 
   function selectFromCarousel(m) {
     setSelectedId(m.id);
@@ -10877,6 +10885,7 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
   const subFor = (key) => {
     const name = (v) => (key === "cons" ? (consById[v]?.short || consById[v]?.name || v) : v);
     if (filters[key].length) return filters[key].map(name).join(" · ");
+    if (useConn && !filterBase.length) return "No connections yet";
     const opts = optionsFor(key).filter((o) => o.n > 0);
     const shown = opts.slice(0, 2).map((o) => (key === "cons" ? name(o.v) : o.label));
     return shown.length ? shown.join(" · ") + (opts.length > 2 ? " · +" : "") : "Any";
@@ -10969,7 +10978,7 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
         <div className="nx-empty">
           {members.length === 0 ? (
             <p>{learnerMode ? "No teachers yet — check back as more conservatory students start teaching." : "No musicians have joined yet — the network is just getting started."}</p>
-          ) : tab === "featured" && useConn && !activeCount ? (
+          ) : tab === "featured" && useConn ? (
             <p>You're connected with everyone so far — new musicians will show up here.</p>
           ) : tab === "nearby" && !myCountry ? (
             <p>Add your conservatory to your profile to see musicians in your country.</p>
@@ -11014,7 +11023,7 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
         <NxSheet title={FILTERS.find((f) => f.key === sheet).label} onClose={() => setSheet(null)}
           footer={<>
             <button type="button" className="nx-clear" onClick={() => setFilters((f) => ({ ...f, [sheet]: [] }))}>Clear</button>
-            <button type="button" className="nx-done" onClick={() => setSheet(null)}>Show {filtered.length} {noun}{filtered.length === 1 ? "" : "s"}</button>
+            <button type="button" className="nx-done" onClick={() => setSheet(null)}>Show {filtered.length} {useConn ? (filtered.length === 1 ? "connection" : "connections") : `${noun}${filtered.length === 1 ? "" : "s"}`}</button>
           </>}>
           {optionsFor(sheet).length === 0 && <p className="nx-sheet-none">No options for the current filters.</p>}
           {optionsFor(sheet).map((o) => {
