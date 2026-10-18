@@ -2865,6 +2865,8 @@ export default function App() {
   // Seven tabs only ever exist for a pianist — the same rule that already
   // governs Lessons.
   const isPianistUser = !!myProfile && instrumentsOf(myProfile).includes("Piano");
+  // Connections, for the Connect button on another student's profile.
+  const appConn = useConnections(myProfile?.id || null);
 
   useEffect(() => {
     if (!isPianistUser) return;
@@ -5587,6 +5589,14 @@ export default function App() {
               conservatory={findConservatory(students.find((s) => s.id === selectedStudentId)?.conservatoryId)}
               onBack={backFromProfile}
               onMessage={myProfile?.id === selectedStudentId ? null : () => openChat(selectedStudentId)}
+              connect={MODERN && appConn.ready && myProfile?.id !== selectedStudentId ? (() => {
+                const c = appConn.byOther[selectedStudentId];
+                return {
+                  state: c?.state,
+                  onConnect: () => appConn.request(selectedStudentId), onCancel: () => appConn.remove(c.id),
+                  onAccept: () => appConn.accept(c.id), onRemove: () => appConn.remove(c.id),
+                };
+              })() : null}
               locked={previewOnly && !myProfile}
               onApply={startApply}
             />
@@ -10705,6 +10715,15 @@ function NxConnectPill({ state, onConnect, onCancel, onAccept, onRemove }) {
   return pill("", <><UserPlus size={11} strokeWidth={2.4} />Connect</>, onConnect, "Send a connection request");
 }
 
+// The profile page's version of the card pill: a full button, same states.
+function ConnectButton({ state, onConnect, onCancel, onAccept, onRemove }) {
+  const cfg = state === "connected" ? { cls: "is-connected", icon: <CheckIcon size={15} strokeWidth={3} />, label: "Connected", fn: () => { if (window.confirm("Remove this connection?")) onRemove(); } }
+    : state === "sent" ? { cls: "is-sent", icon: null, label: "Requested", fn: () => { if (window.confirm("Cancel your connection request?")) onCancel(); } }
+    : state === "received" ? { cls: "is-received", icon: <CheckIcon size={15} strokeWidth={3} />, label: "Accept request", fn: onAccept }
+    : { cls: "", icon: <UserPlus size={15} strokeWidth={2.2} />, label: "Connect", fn: onConnect };
+  return <button type="button" className={`pf-connect ${cfg.cls}`} onClick={cfg.fn}>{cfg.icon}{cfg.label}</button>;
+}
+
 function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStudent, onMessage, isGuest, onGuestClick, learnerMode = false, connectionsOverride = null }) {
   // Students connect; learners browse teachers as before.
   const connLive = useConnections(learnerMode || connectionsOverride ? null : myId);
@@ -11441,7 +11460,7 @@ function ProfileLinks({ links }) {
 }
 
 
-function StudentProfile({ student, conservatory, onBack, onMessage, locked, onApply }) {
+function StudentProfile({ student, conservatory, onBack, onMessage, locked, onApply, connect }) {
   if (!student) return null;
 
   const Row = ({ label, children }) => (
@@ -11473,7 +11492,10 @@ function StudentProfile({ student, conservatory, onBack, onMessage, locked, onAp
           {locked ? (
             <PrimaryBtn onClick={onApply} icon={ArrowRight}>Sign up to message {student.name.split(" ")[0]}</PrimaryBtn>
           ) : onMessage ? (
-            <PrimaryBtn onClick={onMessage} icon={MessageCircle}>Message</PrimaryBtn>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "stretch" }}>
+              {connect && <ConnectButton {...connect} />}
+              <PrimaryBtn onClick={onMessage} icon={MessageCircle}>Message</PrimaryBtn>
+            </div>
           ) : null}
         </div>
       </div>
