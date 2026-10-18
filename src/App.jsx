@@ -11478,6 +11478,19 @@ function ProfileLinks({ links }) {
 
 
 function StudentProfile({ student, conservatory, onBack, onMessage, locked, onApply, connect }) {
+  // Their number of connections (supabase/migrations/20261018100000_connection_count.sql).
+  // Refreshed when a connection changes anywhere; hidden if the function is missing.
+  const [connCount, setConnCount] = React.useState(null);
+  React.useEffect(() => {
+    if (!MODERN || !student?.id) return;
+    let alive = true;
+    const load = () => supabase.rpc("connection_count", { p_id: student.id }).then(({ data, error }) => {
+      if (alive) setConnCount(error ? null : data ?? 0);
+    });
+    load();
+    window.addEventListener(CONN_EVENT, load);
+    return () => { alive = false; window.removeEventListener(CONN_EVENT, load); };
+  }, [student?.id]);
   if (!student) return null;
 
   const Row = ({ label, children }) => (
@@ -11504,6 +11517,9 @@ function StudentProfile({ student, conservatory, onBack, onMessage, locked, onAp
             {[instrumentLabel(student), student.year].filter(Boolean).join(" · ")}
           </p>
           {conservatory && <p style={{ fontSize: 13, color: C.ivoryDim, margin: "1px 0 0" }}>{conservatory.name}, {conservatory.city}</p>}
+          {connCount != null && (
+            <p className="pf-conn-count"><Users size={13} strokeWidth={2} /><b>{connCount}</b> connection{connCount === 1 ? "" : "s"}</p>
+          )}
         </div>
         <div style={{ flexShrink: 0 }}>
           {locked ? (

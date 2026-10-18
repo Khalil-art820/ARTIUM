@@ -929,3 +929,5 @@ button.mc-row.mc-who{padding:8px 6px;width:100%}
 .mc-acts{display:flex;gap:6px;flex:none}
 .mc-acts .tm-conn-yes,.mc-acts .tm-conn-no{height:30px;padding:0 12px;font-size:12.5px}
 .mc-empty{margin:2px 6px 8px;font-size:13.5px;color:#6B7A78;line-height:1.45}
+.pf-conn-count{display:inline-flex;align-items:center;gap:5px;margin:7px 0 0;padding:3px 10px;border-radius:999px;background:#E7F4F1;color:#0B4E49;font:500 12.5px 'Fira Sans',sans-serif}
+.pf-conn-count b{font-weight:700}
