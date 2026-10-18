@@ -10781,10 +10781,35 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
     const byName = (a, b) => (a.name || "").localeCompare(b.name || "");
     if (tab === "nearby") return filtered.filter((m) => m.id !== myId && myCountry && m.country === myCountry).sort(byName);
     if (tab === "all") return [...filtered].sort(byName);
+    // Students: Featured is "people you might want to connect with" — not
+    // you, not people you're already connected with; whoever asked you
+    // first, then the closest matches (same school, instrument, country,
+    // level), with a photo and a verified school as tie-breaks.
+    if (useConn) {
+      const me = members.find((m) => m.id === myId);
+      const score = (m) => {
+        const c = conn.byOther[m.id]?.state;
+        let n = c === "received" ? 100 : 0;
+        if (me) {
+          if (m.conservatoryId && m.conservatoryId === me.conservatoryId) n += 6;
+          if (m.instrumentList.some((i) => me.instrumentList.includes(i))) n += 5;
+          if (m.country && m.country === me.country) n += 3;
+          if (m.levels.some((l) => me.levels.includes(l))) n += 2;
+        }
+        if (m.photoUrl) n += 1;
+        if (m.verified) n += 1;
+        return n;
+      };
+      return filtered
+        .filter((m) => m.id !== myId && conn.byOther[m.id]?.state !== "connected")
+        .map((m) => [m, score(m)])
+        .sort((a, b) => b[1] - a[1] || byName(a[0], b[0]))
+        .map(([m]) => m);
+    }
     const withPhoto = filtered.filter((m) => m.photoUrl);
     const pool = withPhoto.length ? withPhoto : filtered;
     return [...pool].sort((a, b) => (b.open - a.open) || (b.verified - a.verified) || byName(a, b));
-  }, [filtered, tab, myId, myCountry]);
+  }, [filtered, tab, myId, myCountry, useConn, conn.byOther, members]);
 
   const selected = members.find((m) => m.id === selectedId) || null;
   // A filter that hides the selected member closes its preview.
@@ -10908,6 +10933,8 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
         <div className="nx-empty">
           {members.length === 0 ? (
             <p>{learnerMode ? "No teachers yet — check back as more conservatory students start teaching." : "No musicians have joined yet — the network is just getting started."}</p>
+          ) : tab === "featured" && useConn && !activeCount ? (
+            <p>You're connected with everyone so far — new musicians will show up here.</p>
           ) : tab === "nearby" && !myCountry ? (
             <p>Add your conservatory to your profile to see musicians in your country.</p>
           ) : tab === "nearby" ? (
