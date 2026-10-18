@@ -909,3 +909,23 @@ html.theme-modern .tm-conn-no{background:#FFFFFF;color:#2D4A47;border:1px solid 
 .pf-connect.is-sent{background:#FFFFFF;color:#5E6B69;box-shadow:inset 0 0 0 1.5px #D8DEDD}
 .pf-connect.is-received{background:#C7A66A;color:#FFFFFF}
 .pf-connect.is-connected{background:#E7F4F1;color:#0B4E49}
+/* My profile → Connections */
+.mc-card{background:#FFFFFF;border:1px solid #E8E2DC;border-radius:12px;padding:14px 14px 8px;display:flex;flex-direction:column;gap:8px}
+.mc-head{display:flex;align-items:center;justify-content:space-between;padding:0 6px}
+.mc-label{font-size:11px;font-weight:700;color:#8A6A2E;text-transform:uppercase;letter-spacing:.08em}
+.mc-count{min-width:24px;height:22px;padding:0 7px;border-radius:11px;background:#E7F4F1;color:#0B4E49;font:700 12px 'Fira Sans',sans-serif;display:grid;place-items:center}
+.mc-list{display:flex;flex-direction:column}
+.mc-row{display:flex;align-items:center;gap:10px;padding:8px 6px;border-top:1px solid #F1EEE9}
+.mc-list .mc-row:first-child{border-top:0}
+.mc-who{flex:1;min-width:0;display:flex;align-items:center;gap:10px;background:none;border:0;padding:0;text-align:left;cursor:pointer;font:inherit;color:inherit}
+button.mc-row.mc-who{padding:8px 6px;width:100%}
+.mc-who > span:not(.mc-face){min-width:0;display:flex;flex-direction:column}
+.mc-who b{font:600 14.5px 'Fira Sans',sans-serif;color:#1C1C1C;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mc-who em{font:400 12.5px 'Fira Sans',sans-serif;font-style:normal;color:#6B7A78;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mc-face{flex:none;width:40px;height:40px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:linear-gradient(160deg,#2E7F7F,#075F5C);color:#fff;box-shadow:0 0 0 2px #fff,0 0 0 3.5px rgba(66,201,184,.55)}
+.mc-face img{width:100%;height:100%;object-fit:cover}
+.mc-face b{font:700 13px 'Fira Sans',sans-serif;color:#fff}
+.mc-go{flex:none;color:#9AA5A3;margin-left:auto}
+.mc-acts{display:flex;gap:6px;flex:none}
+.mc-acts .tm-conn-yes,.mc-acts .tm-conn-no{height:30px;padding:0 12px;font-size:12.5px}
+.mc-empty{margin:2px 6px 8px;font-size:13.5px;color:#6B7A78;line-height:1.45}

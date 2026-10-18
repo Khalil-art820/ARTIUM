@@ -3364,7 +3364,7 @@ export default function App() {
     setStep(0); setEditingProfile(true); setScreen("signup");
   }
   function openStudent(id, from) { setSelectedStudentId(id); setProfileBack(from); }
-  function backFromProfile() { setSelectedStudentId(null); setAppTabPersist(profileBack === "chat" ? "messages" : "map"); }
+  function backFromProfile() { setSelectedStudentId(null); setAppTabPersist(profileBack === "chat" ? "messages" : profileBack === "profile" ? "profile" : "map"); }
   function openChat(id) {
     setConversations((c) => (c[id] ? c : { ...c, [id]: [] }));
     setActiveChatId(id); setSelectedStudentId(null); setAppTabPersist("messages");
@@ -5521,6 +5521,23 @@ export default function App() {
             <>
               {netHeaderWith(null)}
               <MyProfile profile={myProfile} onEdit={editProfile} onLogout={handleLogout}
+                connections={MODERN && appConn.ready ? (() => {
+                  const person = (id, connId) => {
+                    const st = students.find((x) => x.id === id);
+                    const pp = appConn.people[id] || {};
+                    const c = st ? findConservatory(st.conservatoryId) : null;
+                    return { id, connId, name: st?.name || pp.name || "Musician", photo: st?.photoUrl || pp.photo_url || "",
+                      instrument: st ? instrumentLabel(st) : "", place: c ? [c.city, c.country].filter(Boolean).join(", ") : "" };
+                  };
+                  const all = Object.entries(appConn.byOther);
+                  return {
+                    list: all.filter(([, c]) => c.state === "connected").map(([id, c]) => person(id, c.id)).sort((a, b) => a.name.localeCompare(b.name)),
+                    incoming: all.filter(([, c]) => c.state === "received").map(([id, c]) => person(id, c.id)),
+                    onOpen: (id) => openStudent(id, "profile"),
+                    onAccept: (connId) => appConn.accept(connId),
+                    onDecline: (connId) => appConn.remove(connId),
+                  };
+                })() : null}
                 onUpdateCoverVideo={async (coverVideoUrl) => {
                   await supabase.from("profiles").update({ cover_video_url: coverVideoUrl || null }).eq("id", myProfile.id);
                   const updated = { ...myProfile, coverVideoUrl };
@@ -5629,7 +5646,7 @@ export default function App() {
           // reached from a tab, not a tab.
           // A student's profile keeps its origin tab lit — Network when
           // reached from the roster, Messages when reached from a chat.
-          active={selectedStudentId ? (profileBack === "chat" ? "messages" : "map") : appTab}
+          active={selectedStudentId ? (profileBack === "chat" ? "messages" : profileBack === "profile" ? "profile" : "map") : appTab}
           onTab={goToTab}
         />
       )}
@@ -11552,7 +11569,52 @@ function StudentProfile({ student, conservatory, onBack, onMessage, locked, onAp
   );
 }
 
-function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack, onUpdateCoverVideo }) {
+// "Connections" on your own profile: requests waiting on you, then everyone
+// you're connected with. Tap a person to open their profile.
+function MyConnections({ list, incoming, onOpen, onAccept, onDecline }) {
+  const face = (p) => (
+    <span className="mc-face">{p.photo ? <img src={p.photo} alt="" /> : <b>{(p.name || "?").split(" ").map((x) => x[0]).slice(0, 2).join("").toUpperCase()}</b>}</span>
+  );
+  return (
+    <div className="mc-card">
+      <div className="mc-head">
+        <span className="mc-label">Connections</span>
+        <span className="mc-count">{list.length}</span>
+      </div>
+      {incoming.length > 0 && (
+        <div className="mc-list">
+          {incoming.map((p) => (
+            <div key={p.id} className="mc-row">
+              <button type="button" className="mc-who" onClick={() => onOpen(p.id)}>
+                {face(p)}
+                <span><b>{p.name}</b><em>Wants to connect</em></span>
+              </button>
+              <span className="mc-acts">
+                <button type="button" className="tm-conn-yes" onClick={() => onAccept(p.connId)}>Accept</button>
+                <button type="button" className="tm-conn-no" onClick={() => onDecline(p.connId)}>Decline</button>
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+      {list.length === 0 ? (
+        <p className="mc-empty">No connections yet. Find musicians in Network → Nearby or All and tap Connect.</p>
+      ) : (
+        <div className="mc-list">
+          {list.map((p) => (
+            <button key={p.id} type="button" className="mc-row mc-who" onClick={() => onOpen(p.id)}>
+              {face(p)}
+              <span><b>{p.name}</b><em>{[p.instrument, p.place].filter(Boolean).join(" · ")}</em></span>
+              <ChevronRight size={16} strokeWidth={2} className="mc-go" />
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack, onUpdateCoverVideo, connections }) {
   const cons = findConservatory(profile.conservatoryId);
   const [confirmDelete, setConfirmDelete] = React.useState(false);
   const [deleting, setDeleting] = React.useState(false);
@@ -11650,6 +11712,7 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack, onUpdat
             </div>
           </Row>
         )}
+        {connections && <MyConnections {...connections} />}
         {profile.top && <Row label="Recent win">{profile.top}</Row>}
         {profile.flop && <Row label="Current challenge">{profile.flop}</Row>}
         <Row label="Teaching"><TeachingCell teaching={profile.teaching} /></Row>
