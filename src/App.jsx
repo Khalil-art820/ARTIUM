@@ -5405,14 +5405,9 @@ export default function App() {
                   <div className="tm-hello">
                     <div className="tm-hello-l">
                       <p className="tm-hello-eyebrow">Welcome back,</p>
-                      <h2 className="tm-hello-name">{myProfile.name.split(" ")[0]}</h2>
                       <span className="tm-hello-rule" aria-hidden="true" />
-                      <p className="tm-hello-tag">Connecting passionate musicians around the world</p>
+                      <h2 className="tm-hello-name">{myProfile.name.split(" ")[0]}</h2>
                     </div>
-                    <p className="tm-hello-script" aria-hidden="true">
-                      More music.<br />More connections.
-                      <svg viewBox="0 0 160 14" preserveAspectRatio="none"><path d="M2 12 C 50 4, 110 2, 158 3" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
-                    </p>
                   </div>
                 ) : (
                 <div className="pb-2 tm-net-hello" style={MODERN ? { padding: "16px 16px 8px" } : { paddingTop: 30, paddingLeft: 24, paddingRight: 24 }}>
@@ -10536,6 +10531,48 @@ function NxVerified({ size = 15 }) {
   );
 }
 
+/* The filter cards' marks, after the Network welcome design: dark-green
+   grand piano, globe, rising bars shading into gold, columned hall. */
+function NxGrandPiano() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M3.2 10.4C3.4 7.2 6.6 5 10.6 5h3.2c3.4 0 6.1 1.5 6.9 4l.5 1.4z" fill="currentColor" />
+      <rect x="2.6" y="11.2" width="18.8" height="3.6" rx=".7" fill="currentColor" />
+      <path d="M5.4 12.2h1.2M8.4 12.2h1.2M11.4 12.2h1.2M14.4 12.2h1.2M17.4 12.2h1.2" stroke="#FBF8F2" strokeWidth="1.1" strokeLinecap="round" />
+      <path d="M5 14.8V19M19 14.8V19M12 14.8v3.4M10.8 18.2h2.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+function NxGlobeMark() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+      <circle cx="12" cy="12" r="8.6" />
+      <path d="M3.4 12h17.2M12 3.4c2.4 2.4 3.6 5.3 3.6 8.6s-1.2 6.2-3.6 8.6c-2.4-2.4-3.6-5.3-3.6-8.6s1.2-6.2 3.6-8.6zM5 7.4h14M5 16.6h14" />
+    </svg>
+  );
+}
+function NxLevelBars() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+      <defs>
+        <linearGradient id="nxBarsG" x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0" stopColor="#0B3A36" /><stop offset="1" stopColor="#C7A66A" />
+        </linearGradient>
+      </defs>
+      <rect x="5" y="13" width="3" height="7" rx="1.5" fill="url(#nxBarsG)" />
+      <rect x="10.5" y="8.5" width="3" height="11.5" rx="1.5" fill="url(#nxBarsG)" />
+      <rect x="16" y="4" width="3" height="16" rx="1.5" fill="url(#nxBarsG)" />
+    </svg>
+  );
+}
+function NxHall() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M12 2.6 2.8 7.4v1.7h18.4V7.4L12 2.6zM4.4 10.4h2.3v7.3H4.4zM8.4 10.4h2.3v7.3H8.4zM13.3 10.4h2.3v7.3h-2.3zM17.3 10.4h2.3v7.3h-2.3zM2.8 18.8h18.4v2.2H2.8z" />
+    </svg>
+  );
+}
+
 function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStudent, onMessage, isGuest, onGuestClick, learnerMode = false }) {
   // Learner mode: everyone shown is a teacher, so no "Open to teach" toggle,
   // and no Nearby (a learner has no conservatory to measure from).
@@ -10633,7 +10670,16 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
     { key: "levels", label: "Level" },
     { key: "cons", label: "Conservatory" },
   ];
-  const FILTER_ICON = { instruments: Piano, countries: GlobeIcon, levels: ChartNoAxesColumnIncreasing, cons: Landmark };
+  const FILTER_ICON = { instruments: NxGrandPiano, countries: NxGlobeMark, levels: NxLevelBars, cons: NxHall };
+  // The small caps line under each card: what's chosen, or the first few
+  // choices the network actually has, so it always describes real options.
+  const subFor = (key) => {
+    const name = (v) => (key === "cons" ? (consById[v]?.short || consById[v]?.name || v) : v);
+    if (filters[key].length) return filters[key].map(name).join(" · ");
+    const opts = optionsFor(key).filter((o) => o.n > 0);
+    const shown = opts.slice(0, 2).map((o) => (key === "cons" ? name(o.v) : o.label));
+    return shown.length ? shown.join(" · ") + (opts.length > 2 ? " · +" : "") : "Any";
+  };
   const chipLabel = (key, v) => (key === "cons" ? (consById[v]?.short || consById[v]?.name || v) : v);
 
   return (
@@ -10642,15 +10688,24 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
       <div className="nx-filters" role="toolbar" aria-label={`Filter ${noun}s`}>
         <div className="nx-filter-row">
           {FILTERS.map(({ key, label }) => (
-            <button key={key} type="button" className={`nx-fchip${filters[key].length ? " is-on" : ""}`} onClick={() => setSheet(key)} aria-haspopup="dialog">
-              {(() => { const Ic = FILTER_ICON[key]; return Ic ? <Ic size={17} strokeWidth={1.7} className="nx-fic" /> : null; })()}
-              <span className="nx-flabel">{label}</span>{filters[key].length ? <i>{filters[key].length}</i> : null}<ChevronDown size={14} className="nx-fchev" />
+            <button key={key} type="button" className={`nx-fchip nx-fcard${filters[key].length ? " is-on" : ""}`} onClick={() => setSheet(key)} aria-haspopup="dialog">
+              <span className="nx-fbadge" aria-hidden="true">{(() => { const Ic = FILTER_ICON[key]; return <Ic />; })()}</span>
+              <span className="nx-ftext">
+                <span className="nx-flabel">{label}{filters[key].length ? <i>{filters[key].length}</i> : null}</span>
+                <span className="nx-fsub">{subFor(key)}</span>
+              </span>
+              <ArrowRight size={15} strokeWidth={1.6} className="nx-farrow" aria-hidden="true" />
             </button>
           ))}
           {learnerMode && (
-          <button type="button" className={`nx-fchip nx-toggle${filters.teach ? " is-on" : ""}`} aria-pressed={filters.teach}
+          <button type="button" className={`nx-fchip nx-fcard nx-toggle${filters.teach ? " is-on" : ""}`} aria-pressed={filters.teach}
             onClick={() => setFilters((f) => ({ ...f, teach: !f.teach }))}>
-            <span className="nx-dot" aria-hidden="true" />Open to teach
+            <span className="nx-fbadge" aria-hidden="true"><IconTeacher size={20} /></span>
+            <span className="nx-ftext">
+              <span className="nx-flabel">Open to teach</span>
+              <span className="nx-fsub">{filters.teach ? "Showing only these" : "Taking students now"}</span>
+            </span>
+            <span className="nx-dot" aria-hidden="true" />
           </button>
           )}
         </div>

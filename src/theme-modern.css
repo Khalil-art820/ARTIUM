@@ -853,3 +853,39 @@ html.theme-modern .nx-stage{height:410px;width:100vw;max-width:none;margin:2px 0
 html.theme-modern .nx-globe-skel,html.theme-modern .nx-globe-fallback{height:410px}
 html.theme-modern .nx-recenter{right:16px}
 html.theme-modern .nx-down{right:14px}
+
+/* ==== Network welcome, round 4: the Sara mockup ==== */
+html.theme-modern .tm-hello{padding:26px 22px 6px}
+html.theme-modern .tm-hello-eyebrow{font:500 13px/1 'Jost','Fira Sans',system-ui,sans-serif;letter-spacing:.34em;color:#1E3A35}
+html.theme-modern .tm-hello-rule{width:26px;height:1.5px;margin:12px 0 6px;background:#C7A66A}
+html.theme-modern .tm-hello-name{margin:0;font-family:'Playfair Display','DM Serif Display',Georgia,serif;font-weight:800;
+  font-size:clamp(54px,17vw,76px);line-height:1;letter-spacing:-.01em;color:#12352E}
+
+/* Filter cards: white pill, gold-ringed badge with the mark, spaced caps,
+   a small caps line of real choices, and an arrow. */
+html.theme-modern .nx-filter-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:6px 2px 8px}
+html.theme-modern .nx-fchip.nx-fcard{height:62px;padding:0 10px 0 7px;gap:8px;justify-content:flex-start;border-radius:999px;
+  background:#FFFFFF;border:1px solid #F0EDE7;box-shadow:0 10px 24px -16px rgba(18,53,46,.35),0 1px 2px rgba(18,53,46,.04);color:#12352E;text-align:left}
+html.theme-modern .nx-fbadge{flex:none;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;color:#12352E;
+  background:radial-gradient(circle at 35% 30%,#FFFFFF,#FBF8F2 70%);border:1px solid rgba(199,166,106,.7);box-shadow:0 2px 6px -3px rgba(150,115,55,.35)}
+html.theme-modern .nx-ftext{min-width:0;flex:1;display:flex;flex-direction:column;gap:5px}
+html.theme-modern .nx-fcard .nx-flabel{display:flex;align-items:center;gap:5px;font:500 12px/1 'Jost','Fira Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#12352E;overflow:visible;white-space:nowrap}
+html.theme-modern .nx-fcard .nx-flabel i{min-width:16px;height:16px;border-radius:8px;font-size:10px;letter-spacing:0}
+html.theme-modern .nx-fsub{font:400 8.5px/1.2 'Jost','Fira Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#7E8986;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html.theme-modern .nx-farrow{flex:none;color:#12352E}
+html.theme-modern .nx-fcard.nx-toggle{grid-column:1 / -1}
+html.theme-modern .nx-fcard.nx-toggle .nx-dot{width:10px;height:10px;margin-right:6px}
+/* Chosen: the card stays white, the ring and arrow turn teal. */
+html.theme-modern .nx-fchip.nx-fcard.is-on{background:#FFFFFF;color:#12352E;border-color:#0B4E49;box-shadow:0 0 0 1px #0B4E49,0 10px 24px -16px rgba(18,53,46,.4)}
+html.theme-modern .nx-fchip.nx-fcard.is-on .nx-farrow,html.theme-modern .nx-fchip.nx-fcard.is-on .nx-flabel{color:#0B4E49}
+html.theme-modern .nx-fchip.nx-fcard.is-on .nx-fbadge svg{color:#12352E}
+html.theme-modern .nx-fchip.nx-fcard.is-on i{background:#0B4E49;color:#FFFFFF}
+html.theme-modern .nx-fchip.nx-fcard.is-on .nx-fsub{color:#0B4E49}
+html.theme-modern .nx-fchip.nx-fcard{padding:0 9px 0 6px;gap:7px}
+html.theme-modern .nx-fbadge{width:40px;height:40px}
+html.theme-modern .nx-fbadge svg{width:20px;height:20px}
+html.theme-modern .nx-fcard .nx-flabel{font-size:11px;letter-spacing:.1em}
+html.theme-modern .nx-fsub{font-size:8.5px;letter-spacing:.1em}
+html.theme-modern .nx-farrow{width:13px;height:13px}
+html.theme-modern .nx-fcard .nx-flabel{font-size:10.5px;letter-spacing:.08em}
+@media (max-width:370px){html.theme-modern .nx-farrow{display:none}html.theme-modern .nx-fchip.nx-fcard{padding-right:12px}}
