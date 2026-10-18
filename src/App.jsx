@@ -13,7 +13,7 @@ import {
   Map, BookOpen, ListChecks, LayoutList, Megaphone, Check as CheckIcon, ShieldCheck, FileText, Lock,
   ScanLine, ArrowUpRight, Globe2, MapPin, GraduationCap, User, Paperclip,
   Compass, Briefcase, Feather, CheckCircle2, ChevronDown, RotateCcw, SlidersHorizontal,
-  Globe as GlobeIcon, Piano, Landmark, ArrowDown, ChartNoAxesColumnIncreasing,
+  Globe as GlobeIcon, Piano, Landmark, ArrowDown, ChartNoAxesColumnIncreasing, UserPlus,
 } from "lucide-react";
 import { useAuth } from "./contexts/AuthContext";
 import { supabase } from "./lib/supabase";
@@ -9479,6 +9479,13 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
   const [counters, setCounters] = React.useState([]);
   const [ackCounterKeys, setAckCounterKeys] = React.useState(() => readAckIds("artium_ack_counters_v1"));
   const counterKeyOf = (c) => `${c.id}:${c.date}:${c.time}`;
+  // Connection requests to me, and my requests that were accepted.
+  const conn = useConnections(networkFeeds ? myProfile?.id : null);
+  const connIn = conn.rows.filter((r) => r.status === "pending" && r.addressee_id === myProfile?.id);
+  const connAccepted = conn.rows.filter((r) => r.status === "accepted" && r.requester_id === myProfile?.id);
+  const [ackConnReq, setAckConnReq] = React.useState(() => readAckIds("artium_ack_connreq_v1"));
+  const [seenConnAcc, setSeenConnAcc] = React.useState(() => readAckIds("artium_seen_connacc_v1"));
+  const saveIds = (key, ids, set) => { try { localStorage.setItem(key, JSON.stringify(ids)); } catch { /* private mode */ } set(ids); };
   const ref = React.useRef(null);
 
   function stampTs(key, setter) {
@@ -9501,7 +9508,9 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
     const counterKeys = counters.map(counterKeyOf);
     try { localStorage.setItem("artium_ack_counters_v1", JSON.stringify(counterKeys)); } catch { /* private mode */ }
     setAckCounterKeys(counterKeys);
+    saveIds("artium_ack_connreq_v1", connIn.map((r) => r.id), setAckConnReq);
     if (includePromos) {
+      saveIds("artium_seen_connacc_v1", Array.from(new Set([...seenConnAcc, ...connAccepted.map((r) => r.id)])), setSeenConnAcc);
       const promoKeys = myPromoDecisions.map((p) => promoKeyOf(p));
       try { localStorage.setItem("artium_ack_mypromo_v1", JSON.stringify(promoKeys)); } catch { /* private mode */ }
       setAckPromoKeys(promoKeys);
@@ -9640,7 +9649,9 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
   const newPromoDecisions = myPromoDecisions.filter((p) => !ackPromoKeys.includes(promoKeyOf(p)));
   const newTrackDecisions = myTrackDecisions.filter((p) => !ackTrackKeys.includes(promoKeyOf(p)));
   const newCounterCount = counters.filter((c) => !ackCounterKeys.includes(counterKeyOf(c))).length;
-  const feedTotal = newCounterCount + newTeachCount + newHireCount + composerBadgeCount + newsBadgeCount + newPromoDecisions.length + newTrackDecisions.length;
+  const newConnReq = connIn.filter((r) => !ackConnReq.includes(r.id)).length;
+  const newConnAcc = connAccepted.filter((r) => !seenConnAcc.includes(r.id));
+  const feedTotal = newConnReq + newConnAcc.length + newCounterCount + newTeachCount + newHireCount + composerBadgeCount + newsBadgeCount + newPromoDecisions.length + newTrackDecisions.length;
   const totalCount = (networkFeeds ? feedTotal : pending.length + promoPending.length) + partnerNew.length;
 
   // A ~40px tinted tile, its icon, a title over a status line, and a
@@ -9770,6 +9781,43 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
             <>
               {/* Your own promotion verdicts, newest state per row; a row
                   leaves the panel once clicked or marked read. */}
+              {/* Connection requests: answer right here. */}
+              {connIn.map((r) => {
+                const p = conn.people[r.requester_id] || {};
+                const first = (p.name || "A musician").split(" ")[0];
+                return (
+                  <div key={`cin-${r.id}`} className={`tm-nrow${ackConnReq.includes(r.id) ? "" : " is-unread"}`}
+                    style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "13px 16px", borderBottom: `1px solid ${C.inkLine}`, fontFamily: FONT_BODY, boxSizing: "border-box" }}>
+                    <span className="tm-ntile" style={{ width: 40, height: 40, borderRadius: "50%", flexShrink: 0, overflow: "hidden", background: okA("0.14"), color: OK_C, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      {p.photo_url ? <img src={p.photo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <UserPlus size={18} strokeWidth={2} />}
+                    </span>
+                    <span style={{ flex: 1, minWidth: 0 }}>
+                      <p className="tm-ntitle" style={{ margin: 0, fontSize: 15, fontWeight: 600, color: C.ivory, lineHeight: 1.3 }}>{first} wants to connect</p>
+                      <span style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                        <button type="button" className="tm-conn-yes" onClick={() => conn.accept(r.id)}>Accept</button>
+                        <button type="button" className="tm-conn-no" onClick={() => conn.remove(r.id)}>Decline</button>
+                      </span>
+                    </span>
+                  </div>
+                );
+              })}
+              {newConnAcc.map((r) => {
+                const p = conn.people[r.addressee_id] || {};
+                const first = (p.name || "A musician").split(" ")[0];
+                return (
+                  <button key={`cacc-${r.id}`} className="tm-nrow is-unread"
+                    onClick={() => saveIds("artium_seen_connacc_v1", Array.from(new Set([...seenConnAcc, r.id])), setSeenConnAcc)}
+                    style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, textAlign: "left", padding: "13px 16px", border: "none", borderBottom: `1px solid ${C.inkLine}`, background: "transparent", cursor: "pointer", fontFamily: FONT_BODY }}>
+                    <span className="tm-ntile" style={{ width: 40, height: 40, borderRadius: "50%", flexShrink: 0, overflow: "hidden", background: okA("0.14"), color: OK_C, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      {p.photo_url ? <img src={p.photo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <Users size={18} strokeWidth={2} />}
+                    </span>
+                    <span style={{ flex: 1, minWidth: 0 }}>
+                      <p className="tm-ntitle" style={{ margin: 0, fontSize: 15, fontWeight: 600, color: C.ivory, lineHeight: 1.3 }}>{first} accepted your request</p>
+                      <p className="tm-nsub" style={{ margin: "2px 0 0", fontSize: 13, color: C.ivoryDim, lineHeight: 1.3 }}>You're connected — {first} is on your globe now</p>
+                    </span>
+                  </button>
+                );
+              })}
               {myPromoDecisions.filter((p) => !seenPromoKeys.includes(promoKeyOf(p))).map((p) => {
                 const key = promoKeyOf(p);
                 const approved = p.status === "approved";
@@ -10573,7 +10621,95 @@ function NxHall() {
   );
 }
 
-function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStudent, onMessage, isGuest, onGuestClick, learnerMode = false }) {
+/* ---------------------------------------------------------------- */
+/* Connections between conservatory students                         */
+/* ---------------------------------------------------------------- */
+// One row per pair (supabase/migrations/20261018000000_connections.sql):
+// pending until the addressee accepts; declining or disconnecting deletes it.
+// Every mounted copy of this hook polls, and an action anywhere tells the
+// others to reload at once.
+const CONN_EVENT = "artium-connections-changed";
+function useConnections(myId) {
+  const [rows, setRows] = useState([]);
+  const [ready, setReady] = useState(false);
+  const [people, setPeople] = useState({});
+  const load = React.useCallback(async () => {
+    if (!myId) return;
+    const { data, error } = await supabase.from("connections")
+      .select("id, requester_id, addressee_id, status, created_at, responded_at")
+      .or(`requester_id.eq.${myId},addressee_id.eq.${myId}`);
+    // No table yet (migration not run) leaves ready false, and the Network
+    // tab behaves as it did before connections existed.
+    if (!error) { setRows(data || []); setReady(true); }
+  }, [myId]);
+  useEffect(() => {
+    if (!myId) { setRows([]); setReady(false); return; }
+    load();
+    const t = setInterval(load, 12000);
+    const on = () => load();
+    window.addEventListener(CONN_EVENT, on);
+    return () => { clearInterval(t); window.removeEventListener(CONN_EVENT, on); };
+  }, [myId, load]);
+
+  const byOther = React.useMemo(() => {
+    const out = Object.create(null);
+    for (const r of rows) {
+      const mine = r.requester_id === myId;
+      const other = mine ? r.addressee_id : r.requester_id;
+      out[other] = { id: r.id, row: r, state: r.status === "accepted" ? "connected" : mine ? "sent" : "received" };
+    }
+    return out;
+  }, [rows, myId]);
+
+  // Names and photos for the notification rows.
+  useEffect(() => {
+    const missing = Object.keys(byOther).filter((id) => !people[id]);
+    if (!missing.length) return;
+    let alive = true;
+    supabase.from("profiles").select("id, name, photo_url").in("id", missing).then(({ data }) => {
+      if (alive && data) setPeople((p) => ({ ...p, ...Object.fromEntries(data.map((x) => [x.id, x])) }));
+    });
+    return () => { alive = false; };
+  }, [byOther]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const changed = () => window.dispatchEvent(new Event(CONN_EVENT));
+  async function request(otherId) {
+    const { error } = await supabase.from("connections").insert({ requester_id: myId, addressee_id: otherId });
+    if (error) window.alert(error.message.includes("duplicate") ? "You're already connected or a request is waiting." : error.message);
+    changed();
+  }
+  async function accept(id) {
+    const { error } = await supabase.from("connections").update({ status: "accepted" }).eq("id", id);
+    if (error) window.alert(error.message);
+    changed();
+  }
+  async function remove(id) {
+    const { error } = await supabase.from("connections").delete().eq("id", id);
+    if (error) window.alert(error.message);
+    changed();
+  }
+  return { ready, rows, byOther, people, request, accept, remove };
+}
+
+// The pill on a musician's card. A span, not a button: it sits inside the
+// card's own button.
+function NxConnectPill({ state, onConnect, onCancel, onAccept, onRemove }) {
+  const act = (fn) => (e) => { e.stopPropagation(); e.preventDefault(); fn(); };
+  const key = (fn) => (e) => { if (e.key === "Enter" || e.key === " ") act(fn)(e); };
+  const pill = (cls, label, fn, aria) => (
+    <span role="button" tabIndex={0} className={`nx-connect ${cls}`} onClick={act(fn)} onKeyDown={key(fn)} aria-label={aria}>{label}</span>
+  );
+  if (state === "connected") return pill("is-connected", <><CheckIcon size={11} strokeWidth={3} />Connected</>, () => { if (window.confirm("Remove this connection?")) onRemove(); }, "Connected — remove connection");
+  if (state === "sent") return pill("is-sent", "Requested", () => { if (window.confirm("Cancel your connection request?")) onCancel(); }, "Request sent — cancel it");
+  if (state === "received") return pill("is-received", "Accept", onAccept, "Accept connection request");
+  return pill("", <><UserPlus size={11} strokeWidth={2.4} />Connect</>, onConnect, "Send a connection request");
+}
+
+function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStudent, onMessage, isGuest, onGuestClick, learnerMode = false, connectionsOverride = null }) {
+  // Students connect; learners browse teachers as before.
+  const connLive = useConnections(learnerMode || connectionsOverride ? null : myId);
+  const conn = connectionsOverride || connLive;
+  const useConn = !learnerMode && conn.ready;
   // Learner mode: everyone shown is a teacher, so no "Open to teach" toggle,
   // and no Nearby (a learner has no conservatory to measure from).
   const noun = learnerMode ? "teacher" : "musician";
@@ -10617,7 +10753,11 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
     (!f.teach || m.open) && (!f.verified || m.verified)
   );
   const filtered = React.useMemo(() => members.filter((m) => matches(m, filters)), [members, filters]);
-  const onGlobe = React.useMemo(() => filtered.filter((m) => Number.isFinite(m.lat) && Number.isFinite(m.lng)), [filtered]);
+  // The globe shows you and the people you're connected with — everyone else
+  // is found in Nearby / All and connected from their card.
+  const onGlobe = React.useMemo(() => filtered.filter((m) => Number.isFinite(m.lat) && Number.isFinite(m.lng)
+    && (!useConn || m.id === myId || conn.byOther[m.id]?.state === "connected")), [filtered, useConn, conn.byOther, myId]);
+  const connectedCount = useConn ? Object.values(conn.byOther).filter((c) => c.state === "connected").length : null;
 
   // Options come from the members themselves, counted against the other filters.
   const optionsFor = (key) => {
@@ -10745,6 +10885,9 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
         <button type="button" className="nx-recenter" onClick={() => { setSelectedId(null); setFocus({ reset: true, at: Date.now() }); }} aria-label="Recenter the globe">
           <Compass size={19} strokeWidth={1.7} />
         </button>
+        {connectedCount === 0 && (
+          <p className="nx-globe-hint">Connect with musicians in <b>Nearby</b> or <b>All</b> — they'll appear on your globe.</p>
+        )}
         <button type="button" className="nx-down" aria-label="Show the musicians below"
           onClick={() => document.querySelector(".nx-tabs")?.scrollIntoView({ behavior: "smooth", block: "start" })}>
           <ArrowDown size={22} strokeWidth={1.8} />
@@ -10789,7 +10932,14 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
               <span className="nx-card-name">{m.name}{m.id === myId ? " (you)" : ""}</span>
               <span className="nx-card-meta">{m.instrumentLabel || "Musician"}</span>
               {(m.city || m.country) && <span className="nx-card-meta nx-card-place"><MapPin size={11} />{[m.city, m.country].filter(Boolean).join(", ")}</span>}
-              {m.open && !learnerMode && <span className="nx-card-teach">Open to teach</span>}
+              {useConn && m.id !== myId && !isGuest && (() => {
+                const c = conn.byOther[m.id];
+                return (
+                  <NxConnectPill state={c?.state}
+                    onConnect={() => conn.request(m.id)} onCancel={() => conn.remove(c.id)}
+                    onAccept={() => conn.accept(c.id)} onRemove={() => conn.remove(c.id)} />
+                );
+              })()}
               {learnerMode && m.teaching?.price && <span className="nx-card-teach">€{m.teaching.price}</span>}
             </button>
           ))}

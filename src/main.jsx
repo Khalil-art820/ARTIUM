@@ -83,7 +83,10 @@ const NetworkPreview = import.meta.env.DEV && new URLSearchParams(location.searc
               <h2 className="tm-hello-name">Khalil</h2>
             </div>
           </div>
-          <NetworkExplorer learnerMode={new URLSearchParams(location.search).has("learner")} students={students} allCons={CONSERVATORIES} myId="me" myConservatoryId="juilliard"
+          <NetworkExplorer learnerMode={new URLSearchParams(location.search).has("learner")} students={students}
+            connectionsOverride={{ ready: true, rows: [], people: {},
+              byOther: { s2: { id: "c2", state: "connected" }, s3: { id: "c3", state: "sent" }, s5: { id: "c5", state: "received" } },
+              request: (id) => alert("connect " + id), accept: (id) => alert("accept " + id), remove: (id) => alert("remove " + id) }} allCons={CONSERVATORIES} myId="me" myConservatoryId="juilliard"
             onOpenStudent={(id) => alert("open " + id)} onMessage={(id) => alert("message " + id)} />
           <BottomTabs light modern items={STUDENT_TABS} active="map" onTab={() => {}} />
         </div>
