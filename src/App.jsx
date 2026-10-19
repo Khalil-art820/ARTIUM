@@ -703,6 +703,36 @@ const INSTRUMENTS = [
 const INSTRUMENT_ICON = Object.fromEntries(INSTRUMENTS.map((i) => [i.name, i.icon]));
 const INSTRUMENT_OPTIONS = INSTRUMENTS.map((i) => i.name);
 
+// One instrument from the catalogue's drawings (public/instruments-v2, cut from
+// "Orchestral Instrument Catalogue.png"), the same tiles the student sign-up
+// uses. Learner sign-up keeps its "Other" escape: a learner may want something
+// no conservatory teaches, and that answer is theirs to type.
+function InstrumentPicker({ value, onChange, allowOther = false }) {
+  return (
+    <div className="artium-inst-grid">
+      {INSTRUMENTS.map(({ name, icon }) => {
+        const on = value === name;
+        return (
+          <button key={name} type="button" aria-pressed={on}
+            className={`artium-inst${on ? " artium-inst--on" : ""}`}
+            onClick={() => onChange(on ? "" : name)}>
+            <img src={`/instruments-v2/${icon}.webp`} alt="" loading="lazy" />
+            <span>{name}</span>
+          </button>
+        );
+      })}
+      {allowOther && (
+        <button type="button" aria-pressed={value === "Other"}
+          className={`artium-inst artium-inst--other${value === "Other" ? " artium-inst--on" : ""}`}
+          onClick={() => onChange(value === "Other" ? "" : "Other")}>
+          <b aria-hidden="true">+</b>
+          <span>Other</span>
+        </button>
+      )}
+    </div>
+  );
+}
+
 // Two, because a conservatory student with a second study is ordinary — the
 // pianist who is also an organist, the clarinettist who plays bass clarinet in
 // the wind band — and because the first instrument is still the one they are
@@ -3942,8 +3972,8 @@ export default function App() {
           transition: border-color .16s ease, background .16s ease, transform .16s ease;
         }
         .artium-inst img {
-          width: 38px; height: 38px; object-fit: contain;
-          opacity: 0.72; transition: opacity .16s ease;
+          width: 46px; height: 46px; object-fit: contain;
+          opacity: 1; transition: opacity .16s ease;
           /* The drawings are gold already; unselected they simply sit back. */
         }
         .artium-inst span {
@@ -3968,10 +3998,11 @@ export default function App() {
           box-shadow: 0 0 0 1px rgba(201,150,46,0.22) inset;
         }
         .artium-inst--on img { opacity: 1; }
+        .artium-inst--other b { width: 46px; height: 46px; display: grid; place-items: center; font: 300 30px/1 'Jost', sans-serif; color: #9AA0A6; }
         .artium-inst--on span { color: #232A3B; }
         @media (max-width: 380px) {
           .artium-inst-grid { grid-template-columns: repeat(auto-fill, minmax(74px, 1fr)); }
-          .artium-inst img { width: 32px; height: 32px; }
+          .artium-inst img { width: 40px; height: 40px; }
         }
         .artium-su-head { display: flex; align-items: center; gap: 15px; margin-top: 22px; }
         .artium-su-ring { position: relative; width: 62px; height: 62px; flex-shrink: 0; }
@@ -7922,7 +7953,7 @@ function StepIntro({ draft, update }) {
                 className={`artium-inst${on ? " artium-inst--on" : ""}`}
                 aria-pressed={on}
               >
-                <img src={`/instruments/${icon}.webp`} alt="" loading="lazy" />
+                <img src={`/instruments-v2/${icon}.webp`} alt="" loading="lazy" />
                 <span>{name}</span>
               </button>
             );
@@ -12255,11 +12286,7 @@ function LearnerSignup({ onSubmit, onBack, error, authUser }) {
               <input style={inputStyle} value={learnerLocation} onChange={(e) => setLearnerLocation(e.target.value)} placeholder="City, country" autoComplete="off" />
             </Field>
             <Field label="Which instrument would they like to learn?">
-              <select style={{ ...inputStyle, background: C.inkSoft }} value={learnerInstrument} onChange={(e) => setLearnerInstrument(e.target.value)}>
-                <option value="">Select an instrument…</option>
-                {INSTRUMENT_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
-                <option value="Other">Other</option>
-              </select>
+              <InstrumentPicker value={learnerInstrument} onChange={setLearnerInstrument} allowOther />
               {learnerInstrument === "Other" && (
                 <input style={{ ...inputStyle, marginTop: 8 }} value={learnerInstrumentOther} onChange={(e) => setLearnerInstrumentOther(e.target.value)} placeholder="Please specify…" autoFocus />
               )}
@@ -12296,11 +12323,7 @@ function LearnerSignup({ onSubmit, onBack, error, authUser }) {
               <input style={inputStyle} value={location} onChange={(e) => setLocation(e.target.value)} placeholder="City, country" autoComplete="off" />
             </Field>
             <Field label="Which instrument would you like to learn?">
-              <select style={{ ...inputStyle, background: C.inkSoft }} value={instrument} onChange={(e) => setInstrument(e.target.value)}>
-                <option value="">Select an instrument…</option>
-                {INSTRUMENT_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
-                <option value="Other">Other</option>
-              </select>
+              <InstrumentPicker value={instrument} onChange={setInstrument} allowOther />
               {instrument === "Other" && (
                 <input style={{ ...inputStyle, marginTop: 8 }} value={instrumentOther} onChange={(e) => setInstrumentOther(e.target.value)} placeholder="Please specify…" autoFocus />
               )}
