@@ -8656,7 +8656,7 @@ function StepConservatory({ draft, update, editing }) {
           {[
             { k: "student_email", Icon: ScanLine, t: "I'm a student with a conservatory email",
               d: "Fastest — we send a one-time code to your institutional address." },
-            { k: "student_doc", Icon: FileText, t: "I'm a student without one",
+            { k: "student_doc", Icon: FileText, t: "I don't have a conservatory email",
               d: "Upload a student ID, enrolment certificate or tuition receipt." },
             { k: "graduate", Icon: GraduationCap, t: "I've graduated",
               d: "Upload your diploma, or a transcript naming your conservatory." },
@@ -8679,6 +8679,10 @@ function StepConservatory({ draft, update, editing }) {
         <button className="artium-su-change" onClick={() => chooseDoor("")}>Change</button>
       </div>
 
+      {/* No conservatory email: the document names the school, and an admin
+          picks it from the roster at approval — so no search, no list and no
+          "can't find it" box here, just the upload below. */}
+      {applicant !== "student_doc" && (<>
       <span className="artium-aw-field" style={{ marginBottom: 12 }}>
         <Search size={15} strokeWidth={2} />
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by school, city, or country" />
@@ -8740,6 +8744,7 @@ function StepConservatory({ draft, update, editing }) {
           </button>
         )}
       </div>
+      </>)}
 
       {/* Sent, waiting on an admin. Kept in the draft rather than written
           straight to the table: nothing about this student exists in the
