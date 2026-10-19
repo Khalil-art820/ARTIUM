@@ -4010,9 +4010,15 @@ export default function App() {
           transition: background .3s ease, box-shadow .3s ease, transform .2s ease;
         }
         .artium-su-next-btn:hover:not(:disabled) { background: linear-gradient(180deg, #F4DBA0 0%, #E4BB63 55%, #D3A63B 100%); transform: translateY(-1px); }
-        .artium-su-next-btn:disabled {
+        .artium-su-next-btn:disabled, .artium-su-next-btn.is-off {
           background: rgba(176,146,98,0.15); color: #9A9A9A;
           box-shadow: none; cursor: not-allowed;
+        }
+        .artium-su-back, .artium-su-next-btn { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+        .artium-su-why {
+          position: absolute; left: 24px; right: 24px; bottom: calc(100% - 4px); margin: 0;
+          padding: 9px 12px; border-radius: 10px; background: #FFF6E5; border: 1px solid rgba(201,150,46,0.35);
+          color: #6B4E12; font-size: 13px; line-height: 1.35; text-align: center;
         }
 
 
@@ -6311,13 +6317,14 @@ function HirerSignup({ authUser, onBack, onDone }) {
       </div>
 
       <div className="max-w-3xl mx-auto artium-su-nav">
-        {step > 0 && <button className="artium-su-back" onClick={() => setStep(step - 1)}>Back</button>}
+        {step > 0 && <button type="button" className="artium-su-back" onMouseDown={(e) => e.preventDefault()} onClick={() => setStep(step - 1)}>Back</button>}
         {step < HIRER_STEPS.length - 1 ? (
-          <button className="artium-su-next-btn" disabled={!canNext} onClick={() => setStep(step + 1)}>
+          <SuNextButton ok={!!canNext} onGo={() => setStep(step + 1)}
+            hint={["Add your name and who's hiring.", "Fill in the occasion, city, format and budget."][step]}>
             Next <ChevronRight size={17} strokeWidth={2.2} />
-          </button>
+          </SuNextButton>
         ) : (
-          <button className="artium-su-next-btn" disabled={submitting} onClick={submit}>
+          <button type="button" className="artium-su-next-btn" disabled={submitting} onMouseDown={(e) => e.preventDefault()} onClick={submit}>
             {submitting ? "Sending…" : "Send request"}
             <ArrowRight size={17} strokeWidth={2.2} />
           </button>
@@ -7175,6 +7182,32 @@ function HirerApp({ authUser, students, onHome }) {
 /* ---------------------------------------------------------------- */
 /* SIGNUP FLOW                                                        */
 /* ---------------------------------------------------------------- */
+/* The signup flows' Next button.
+ *
+ * Two things made people tap it again and again on phones:
+ *  1. With the keyboard up, the first tap only took focus off the field. The
+ *     keyboard closed, the page resized, the pinned bar jumped, and the tap
+ *     landed on whatever slid under the finger. Holding focus on mousedown
+ *     keeps the page still, so the first tap is the click.
+ *  2. A step that wasn't finished left the button inert with no word why, so
+ *     the only thing to try was tapping harder. Now an unfinished tap says
+ *     what's missing, right above the button.
+ */
+function SuNextButton({ ok, onGo, hint, children }) {
+  const [why, setWhy] = useState("");
+  useEffect(() => { if (ok) setWhy(""); }, [ok]);
+  return (
+    <>
+      <button type="button" className={`artium-su-next-btn${ok ? "" : " is-off"}`} aria-disabled={!ok}
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={() => { if (ok) onGo(); else setWhy(hint || "Finish this step to continue."); }}>
+        {children}
+      </button>
+      {why && <p className="artium-su-why" role="status">{why}</p>}
+    </>
+  );
+}
+
 const STEP_LABELS = ["Introduce yourself", "Choose your conservatory", "Your musical voice", "Current repertoire", "Top | Flop | Composer", "Teaching", "Review and submit"];
 
 function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubmit, onCancel, onHome, authError, resumed, onStartFresh }) {
@@ -7229,6 +7262,21 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
     true,
   ].filter((v) => v !== null);
   const canNext = stepValid[step];
+  // What an unfinished step is missing — same order as stepValid.
+  const stepHints = [
+    !skipAccountStep ? "Enter your email and a password of at least 6 characters, typed the same twice." : null,
+    "Add your name and choose at least one instrument.",
+    !draft.applicant ? "Choose whether you have a conservatory email."
+      : draft.verifyMethod === "document" ? "Upload your proof of enrolment to continue."
+      : draft.transferPending ? "Confirm your new conservatory to continue."
+      : !draft.conservatoryId && !draft.domainReq ? "Choose your conservatory."
+      : "Enter the code we emailed to your conservatory address.",
+    "Pick at least 3 musical preferences.",
+    "Add at least one piece you're working on.",
+    "",
+    "Choose how you'd like to teach.",
+    "",
+  ].filter((v) => v !== null);
   // Saving from the header skips the remaining steps, so it has to answer for
   // all of them rather than just the one on screen — otherwise the shortcut
   // becomes a way to save a profile the long route would have refused, and an
@@ -7404,14 +7452,14 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
 
       <div className="max-w-3xl mx-auto artium-su-nav">
         {step > 0 && (
-          <button className="artium-su-back" onClick={() => setStep(step - 1)}>Back</button>
+          <button type="button" className="artium-su-back" onMouseDown={(e) => e.preventDefault()} onClick={() => setStep(step - 1)}>Back</button>
         )}
         {step < lastStep ? (
-          <button className="artium-su-next-btn" disabled={!canNext} onClick={() => setStep(step + 1)}>
+          <SuNextButton ok={!!canNext} onGo={() => setStep(step + 1)} hint={stepHints[step]}>
             Next <ChevronRight size={17} strokeWidth={2.2} />
-          </button>
+          </SuNextButton>
         ) : (
-          <button className="artium-su-next-btn" disabled={submitting} onClick={handleSubmit}>
+          <button type="button" className="artium-su-next-btn" disabled={submitting} onMouseDown={(e) => e.preventDefault()} onClick={handleSubmit}>
             {submitting ? "Submitting…" : editing ? "Save changes" : "Submit application"}
             {editing ? <Check size={17} strokeWidth={2.2} /> : <ArrowRight size={17} strokeWidth={2.2} />}
           </button>

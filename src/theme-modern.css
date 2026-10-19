@@ -931,3 +931,6 @@ button.mc-row.mc-who{padding:8px 6px;width:100%}
 .mc-empty{margin:2px 6px 8px;font-size:13.5px;color:#6B7A78;line-height:1.45}
 .pf-conn-count{display:inline-flex;align-items:center;gap:5px;margin:7px 0 0;padding:3px 10px;border-radius:999px;background:#E7F4F1;color:#0B4E49;font:500 12.5px 'Fira Sans',sans-serif}
 .pf-conn-count b{font-weight:700}
+/* Signup Next: unfinished state (still tappable, explains what's missing). */
+html.theme-modern .artium-su-next-btn.is-off,html.theme-modern .artium-su-next-btn.is-off:hover{background:#ECE7E2;color:#9A9A9A;box-shadow:none;transform:none}
+html.theme-modern .artium-su-why{background:#FFFFFF;border:1px solid #E8E2DC;color:#1C1C1C;box-shadow:0 8px 20px -10px rgba(0,0,0,.25);border-radius:10px}
