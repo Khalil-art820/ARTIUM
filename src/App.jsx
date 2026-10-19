@@ -3212,7 +3212,9 @@ export default function App() {
     setAppTabPersist("profile");
     setSelectedStudentId(null);
   }
-  function update(partial) { setDraft((d) => ({ ...d, ...partial })); }
+  // A function is read against the latest draft, so two quick taps can't
+  // each act on the same stale copy.
+  function update(partial) { setDraft((d) => ({ ...d, ...(typeof partial === "function" ? partial(d) : partial) })); }
   function toggleTaste(t) {
     setDraft((d) => ({ ...d, tastes: d.tastes.includes(t) ? d.tastes.filter((x) => x !== t) : [...d.tastes, t] }));
   }
@@ -3949,8 +3951,13 @@ export default function App() {
           font-size: 10.5px; font-weight: 600; line-height: 1.25; text-align: center;
           color: #6A7080; transition: color .16s ease;
         }
-        .artium-inst:hover:not(:disabled) { border-color: rgba(201,150,46,0.45); background: #FCFAF5; }
-        .artium-inst:hover:not(:disabled) img { opacity: 0.9; }
+        /* Hover only where there is a real pointer. On a phone :hover sticks to
+           the last tile tapped, so a tile you had just deselected kept a
+           selected-looking border and read as stuck. */
+        @media (hover: hover) and (pointer: fine) {
+          .artium-inst:hover:not(:disabled) { border-color: rgba(201,150,46,0.45); background: #FCFAF5; }
+          .artium-inst:hover:not(:disabled) img { opacity: 0.9; }
+        }
         /* Two already chosen. Faded rather than hidden — the sheet is the point
            of this grid, and removing thirty-four drawings to say "not now"
            would cost more than the greying does. */
@@ -7887,6 +7894,17 @@ function StepIntro({ draft, update }) {
           hint says which two are chosen, so the way out is deselecting one of
           them and not hunting for a cleared state. */}
       <Field label="Which instrument do you play?">
+        {/* A choice with no tile — an old saved draft can hold a name the list
+            no longer has ("Other", an old spelling). It still counts toward the
+            two, and with no tile there was no way to take it back. Shown here
+            so it can be removed. */}
+        {picked.filter((n) => !INSTRUMENT_ICON[n]).length > 0 && (
+          <div className="flex flex-wrap gap-2" style={{ marginBottom: 10 }}>
+            {picked.filter((n) => !INSTRUMENT_ICON[n]).map((n) => (
+              <Chip key={n} active onClick={() => update((d) => ({ instruments: instrumentsOf(d).filter((x) => x !== n) }))}>{n} ✕</Chip>
+            ))}
+          </div>
+        )}
         <div className="artium-inst-grid">
           {INSTRUMENTS.map(({ name, icon }) => {
             const on = picked.includes(name);
@@ -7896,7 +7914,11 @@ function StepIntro({ draft, update }) {
                 key={name}
                 type="button"
                 disabled={blocked}
-                onClick={() => update({ instruments: on ? picked.filter((n) => n !== name) : [...picked, name] })}
+                onClick={() => update((d) => {
+                  const cur = instrumentsOf(d);
+                  if (cur.includes(name)) return { instruments: cur.filter((n) => n !== name) };
+                  return cur.length >= MAX_INSTRUMENTS ? {} : { instruments: [...cur, name] };
+                })}
                 className={`artium-inst${on ? " artium-inst--on" : ""}`}
                 aria-pressed={on}
               >

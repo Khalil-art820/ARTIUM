@@ -224,7 +224,6 @@ html.theme-modern .artium-su-chosen{border:1px solid rgba(8,104,104,.3);backgrou
 html.theme-modern .artium-su-chosen p,
 html.theme-modern .artium-su-next b{color:#0A6E6E}
 html.theme-modern .artium-inst{border:1px solid #E8E2DC;background:#FFFFFF;border-radius:12px}
-html.theme-modern .artium-inst:hover:not(:disabled){border-color:#086868;background:#FAF8F6}
 html.theme-modern .artium-inst--on{border-color:#086868;background:rgba(8,104,104,.08);box-shadow:0 0 0 1px rgba(8,104,104,.2) inset}
 html.theme-modern .artium-aw-eyebrow{color:#0A6E6E}
 html.theme-modern .artium-aw-eyebrow i{background:linear-gradient(90deg,transparent,rgba(8,104,104,.45))}
@@ -393,7 +392,6 @@ html.theme-modern .artium-su-door-i{
 html.theme-modern .artium-su-door-d{color:#6B6B6B}
 html.theme-modern .artium-su-chosen{border-radius:12px}
 html.theme-modern .artium-su-change{border-radius:10px}
-html.theme-modern .artium-inst:hover:not(:disabled){background:#FAF8F6}
 html.theme-modern .artium-inst--on span{color:#1C1C1C}
 html.theme-modern .artium-su-globe .artium-aw-ring--a{border-color:rgba(8,104,104,.40)}
 html.theme-modern select option{color:#1C1C1C}
@@ -934,3 +932,6 @@ button.mc-row.mc-who{padding:8px 6px;width:100%}
 /* Signup Next: unfinished state (still tappable, explains what's missing). */
 html.theme-modern .artium-su-next-btn.is-off,html.theme-modern .artium-su-next-btn.is-off:hover{background:#ECE7E2;color:#9A9A9A;box-shadow:none;transform:none}
 html.theme-modern .artium-su-why{background:#FFFFFF;border:1px solid #E8E2DC;color:#1C1C1C;box-shadow:0 8px 20px -10px rgba(0,0,0,.25);border-radius:10px}
+/* Instrument tiles: hover only with a real pointer — on touch :hover sticks to
+   the last tile tapped and a deselected tile kept looking selected. */
+@media (hover:hover) and (pointer:fine){html.theme-modern .artium-inst:hover:not(:disabled){border-color:#086868;background:#FAF8F6}}
