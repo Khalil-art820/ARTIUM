@@ -5216,7 +5216,7 @@ export default function App() {
           }
           // The pin-globe page is the network's antechamber — arriving here
           // from the network page's back button keeps the Network tab lit.
-          active="map"
+          active={myProfile ? "map" : "home"}
           dimmed={!myProfile}
           onTab={(k) => { if (k === "home") { setScreen("entry"); return; } setScreen("app"); setAppTabPersist(k); }}
         />
@@ -5889,6 +5889,11 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
             not <GateLogo>, which is the OLD dark gate's champagne pin+serif
             mark and colors itself inline (can't be re-themed by CSS). Same
             "A" glyph as src/components/entrygate/ArtiumGate.jsx's header. */}
+        {onBack && (
+          <button className={`artium-net-puck${MODERN ? " tm-back-plain" : ""}`} onClick={onBack} aria-label="Back">
+            <ChevronLeft size={17} strokeWidth={2} />
+          </button>
+        )}
         {MODERN && lpAvatar}
         <span className="artium-lp-word" aria-label="ARTIUM">
           <svg className="artium-lp-word-a" viewBox="0 0 15 15" aria-hidden="true">
@@ -7349,11 +7354,9 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
             </span>
           ) : (<>
           <button
-            onClick={step === 0 ? undefined : () => setStep(step - 1)}
-            disabled={step === 0}
+            onClick={step === 0 ? () => setConfirmLeave(true) : () => setStep(step - 1)}
             className="artium-aw-round"
-            aria-label={step === 0 ? "You're on the first step" : "Back a step"}
-            style={step === 0 ? { opacity: 0.35, cursor: "default" } : undefined}
+            aria-label={step === 0 ? "Leave sign-up" : "Back a step"}
           >
             <ChevronLeft size={17} strokeWidth={2} />
           </button>
@@ -11399,11 +11402,16 @@ function BottomTabs({ items, active, onTab, light, dimmed, modern, dots }) {
   // would become the containing block for this position:fixed bar and pull
   // it out of the viewport corner.
   return (
-    <nav className={`artium-aw-tabs${light ? " artium-aw-tabs--light" : ""}${modern ? " artium-aw-tabs--modern" : ""}`} style={dimmed ? { opacity: .45, filter: "saturate(.6)", pointerEvents: "none" } : undefined} aria-hidden={dimmed || undefined}>
+    // dimmed: an account with nothing to open yet (signed in, no profile) —
+    // Home stays live, every other tab is shown but switched off.
+    <nav className={`artium-aw-tabs${light ? " artium-aw-tabs--light" : ""}${modern ? " artium-aw-tabs--modern" : ""}`}>
       {/* Modern: the avatar in every top bar is the way to the profile, so
           the bar doesn't repeat it. */}
       {items.filter((it) => !(modern && it.k === "profile")).map(({ k, label, Icon, attention: own }) => { const attention = own || !!dots?.[k]; return (
-        <button key={k} data-k={k} data-on={k === active ? "1" : "0"} onClick={() => onTab(k)} aria-label={label}>
+        <button key={k} data-k={k} data-on={k === active ? "1" : "0"} aria-label={label}
+          disabled={dimmed && k !== "home"} aria-disabled={dimmed && k !== "home" ? true : undefined}
+          style={dimmed && k !== "home" ? { opacity: .35, filter: "saturate(.4)", cursor: "default" } : undefined}
+          onClick={() => { if (dimmed && k !== "home") return; onTab(k); }}>
           <span style={{ position: "relative", display: "inline-flex" }}>
             <Icon size={19} strokeWidth={1.7} />
             {/* A booking waiting on a signature, or an offer waiting on a
