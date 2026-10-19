@@ -935,3 +935,7 @@ html.theme-modern .artium-su-why{background:#FFFFFF;border:1px solid #E8E2DC;col
 /* Instrument tiles: hover only with a real pointer — on touch :hover sticks to
    the last tile tapped and a deselected tile kept looking selected. */
 @media (hover:hover) and (pointer:fine){html.theme-modern .artium-inst:hover:not(:disabled){border-color:#086868;background:#FAF8F6}}
+/* Registration labels: 25% larger, * for required, "optional" for the rest. */
+.artium-su .fld-label,.su-reg .fld-label{font-size:15.6px !important;line-height:1.35}
+.fld-req{margin-left:3px;color:#B3261E;font-weight:700}
+.fld-opt{margin-left:7px;font-style:normal;font-weight:500;font-size:.78em;color:#8A9593;letter-spacing:.02em}

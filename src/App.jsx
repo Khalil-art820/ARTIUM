@@ -6283,10 +6283,10 @@ function HirerSignup({ authUser, onBack, onDone }) {
         <div className="artium-su-card">
         {step === 0 && (
           <div style={{ display: "flex", flexDirection: "column", gap: 22, maxWidth: 520 }}>
-            <Field label="Your name">
+            <Field label="Your name" req>
               <input style={inputStyle} value={d.name} onChange={(e) => up({ name: e.target.value })} placeholder="Full name" autoComplete="name" />
             </Field>
-            <Field label="You're hiring as">
+            <Field label="You're hiring as" req>
               <div className="flex flex-wrap gap-2">
                 {HIRER_ORG.map((o) => (
                   <Chip key={o} active={d.org === o} onClick={() => up({ org: o })}>{o}</Chip>
@@ -6297,7 +6297,7 @@ function HirerSignup({ authUser, onBack, onDone }) {
         )}
         {step === 1 && (
           <div style={{ display: "flex", flexDirection: "column", gap: 22, maxWidth: 560 }}>
-            <Field label="The occasion">
+            <Field label="The occasion" req>
               <div className="flex flex-wrap gap-2">
                 {HIRER_OCCASION.map((o) => (
                   <Chip key={o} active={d.occasion === o} onClick={() => up({ occasion: o })}>{o}</Chip>
@@ -6305,28 +6305,28 @@ function HirerSignup({ authUser, onBack, onDone }) {
               </div>
             </Field>
             <div className="grid sm:grid-cols-2 gap-4">
-              <Field label="City">
+              <Field label="City" req>
                 <input style={inputStyle} value={d.city} onChange={(e) => up({ city: e.target.value })} placeholder="e.g. Vienna" />
               </Field>
-              <Field label="Date (or roughly when)">
+              <Field label="Date (or roughly when)" opt>
                 <input style={inputStyle} value={d.date} onChange={(e) => up({ date: e.target.value })} placeholder="e.g. 14 May 2027 — or 'flexible'" />
               </Field>
             </div>
-            <Field label="Format">
+            <Field label="Format" req>
               <div className="flex flex-wrap gap-2">
                 {HIRER_FORMAT.map((o) => (
                   <Chip key={o} active={d.format === o} onClick={() => up({ format: o })}>{o}</Chip>
                 ))}
               </div>
             </Field>
-            <Field label="Budget">
+            <Field label="Budget" req>
               <div className="flex flex-wrap gap-2">
                 {HIRER_BUDGET.map((o) => (
                   <Chip key={o} active={d.budget === o} onClick={() => up({ budget: o })}>{o}</Chip>
                 ))}
               </div>
             </Field>
-            <Field label="Anything the pianist should know? (optional)">
+            <Field label="Anything the pianist should know?" opt>
               <textarea style={{ ...inputStyle, resize: "vertical", minHeight: 80, lineHeight: 1.6 }} value={d.notes} onChange={(e) => up({ notes: e.target.value })} placeholder="Repertoire wishes, the venue's piano, rehearsal plans…" />
             </Field>
           </div>
@@ -7273,7 +7273,8 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
   const idx = skipAccountStep ? step : step - 1;
   const stepValid = [
     !skipAccountStep ? draft.email.trim().length > 3 && draft.password.length >= 6 && draft.password === draft.confirmPassword : null,
-    draft.name.trim().length > 1 && instrumentsOf(draft).length > 0,
+    draft.name.trim().length > 1 && instrumentsOf(draft).length > 0
+      && (() => { const st = parseStudy(draft.years); return st.levels.length > 0 && (!!st.year || st.graduated); })(),
     // On the document route the upload is what gates the step — a conservatory
     // may not be selectable yet, since the approved list starts empty.
     // No Google bypass on the document route: signing in with Google says
@@ -7308,7 +7309,7 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
   // What an unfinished step is missing — same order as stepValid.
   const stepHints = [
     !skipAccountStep ? "Enter your email and a password of at least 6 characters, typed the same twice." : null,
-    "Add your name and choose at least one instrument.",
+    "Add your name, your level and year of study, and at least one instrument.",
     !draft.applicant ? "Choose whether you have a conservatory email."
       : draft.verifyMethod === "document" ? "Upload your proof of enrolment to continue."
       : draft.transferPending ? "Confirm your new conservatory to continue."
@@ -7510,10 +7511,14 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
   );
 }
 
-function Field({ label, children }) {
+// req: a red asterisk; opt: a quiet "optional". Registration screens show the
+// label 25% larger (.artium-su / .su-reg, below).
+function Field({ label, children, req, opt }) {
   return (
     <label className="block mb-5">
-      <span className="block mb-2" style={{ fontFamily: FONT_BODY, fontSize: 12.5, fontWeight: 600, letterSpacing: "0.01em", color: MODERN ? "#333333" : "#CFCFCF" }}>{label}</span>
+      <span className="block mb-2 fld-label" style={{ fontFamily: FONT_BODY, fontSize: 12.5, fontWeight: 600, letterSpacing: "0.01em", color: MODERN ? "#333333" : "#CFCFCF" }}>
+        {label}{req && <b className="fld-req" aria-label="required">*</b>}{opt && <em className="fld-opt">optional</em>}
+      </span>
       {children}
     </label>
   );
@@ -7835,13 +7840,13 @@ function StepAccount({ draft, update, error }) {
       <>
       <GoogleBtn label="Sign up with Google" />
       <Divider />
-      <Field label="Personal email">
+      <Field label="Personal email" req>
         <input style={inputStyle} type="email" value={draft.email} onChange={(e) => update({ email: e.target.value })} placeholder="you@gmail.com" autoComplete="off" />
       </Field>
-      <Field label="Password">
+      <Field label="Password" req>
         <PasswordField value={draft.password} onChange={(e) => update({ password: e.target.value })} placeholder="At least 6 characters" autoComplete="new-password" />
       </Field>
-      <Field label="Confirm password">
+      <Field label="Confirm password" req>
         <PasswordField value={draft.confirmPassword} onChange={(e) => update({ confirmPassword: e.target.value })} placeholder="Re-enter your password" autoComplete="new-password" />
       </Field>
       {mismatch && <p className="text-sm" style={{ color: C.burgundy }}>Passwords don't match.</p>}
@@ -7864,14 +7869,14 @@ function StepIntro({ draft, update }) {
   return (
     <div>
       <PhotoUpload name={draft.name} photoUrl={draft.photoUrl} onChange={(photoUrl) => update({ photoUrl })} />
-      <Field label="Full name">
+      <Field label="Full name" req>
         <input style={inputStyle} value={draft.name} onChange={(e) => update({ name: e.target.value })} placeholder="Your full name" />
       </Field>
       {/* Chips rather than a text box. The value is read back in half a dozen
           places — rosters, profiles, the lesson room — so it is stored as the
           phrase that reads correctly there ("2nd year"), not as a bare digit
           that would come out as "2 · Chopin, Ravel". */}
-      <Field label="What is your current level and year of study?">
+      <Field label="What is your current level and year of study?" req>
         {/* Two rows because they are two answers. Level is a free multi-select
             — a Masters and a doctorate are both things a person can be partway
             through — while the row beneath it holds the one mutually exclusive
@@ -7924,7 +7929,7 @@ function StepIntro({ draft, update }) {
           a tile that looks pressable and does nothing reads as a bug — and the
           hint says which two are chosen, so the way out is deselecting one of
           them and not hunting for a cleared state. */}
-      <Field label="Which instrument do you play?">
+      <Field label="Which instrument do you play?" req>
         {/* A choice with no tile — an old saved draft can hold a name the list
             no longer has ("Other", an old spelling). It still counts toward the
             two, and with no tile there was no way to take it back. Shown here
@@ -7977,7 +7982,7 @@ function StepIntro({ draft, update }) {
             YouTube URL in the Instagram row is a link that quietly sends
             visitors somewhere they did not ask to go. All four optional: this
             is where to find them, and some are found in one place. */}
-        <Field label="Where can people find you?">
+        <Field label="Where can people find you?" opt>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {LINK_FIELDS.map((f) => {
               const value = (draft.links || {})[f.key] || "";
@@ -8769,13 +8774,13 @@ function StepConservatory({ draft, update, editing }) {
             address a code to confirm it's yours, then check the school by hand — no
             document needed.
           </p>
-          <Field label="Conservatory name">
+          <Field label="Conservatory name" req>
             <input style={inputStyle} value={reqName} onChange={(e) => setReqName(e.target.value)} placeholder="e.g. Royal Danish Academy of Music" />
           </Field>
-          <Field label="Address or city">
+          <Field label="Address or city" req>
             <input style={inputStyle} value={reqAddress} onChange={(e) => setReqAddress(e.target.value)} placeholder="e.g. Rosenørns Allé 22, Copenhagen" />
           </Field>
-          <Field label="Your student email at that conservatory">
+          <Field label="Your student email at that conservatory" req>
             <input style={inputStyle} type="email" value={reqEmail} onChange={(e) => editReqEmail(e.target.value)} placeholder="you@school.edu" autoComplete="off" disabled={reqVerified} />
           </Field>
           {reqEmail && !reqDomain && (
@@ -8983,7 +8988,7 @@ function StepTastes({ draft, toggleTaste }) {
   }
   return (
     <div>
-      <p className="text-sm mb-5" style={{ color: C.ivoryDim }}>Select at least three — composers and/or eras you gravitate toward, as a listener or a performer. ({draft.tastes.length} selected)</p>
+      <p className="text-sm mb-5" style={{ color: C.ivoryDim }}>Select at least three — composers and/or eras you gravitate toward, as a listener or a performer. ({draft.tastes.length} selected)<b className="fld-req" aria-label="required">*</b></p>
       <div className="flex flex-wrap gap-2">
         {TASTE_OPTIONS.map((t) => (
           <Chip key={t} active={draft.tastes.includes(t)} onClick={() => toggleTaste(t)}>{t}</Chip>
@@ -9023,7 +9028,7 @@ function StepPieces({ draft, update }) {
   function remove(i) { update({ pieces: draft.pieces.filter((_, idx) => idx !== i) }); }
   return (
     <div>
-      <p className="text-sm mb-5" style={{ color: C.ivoryDim }}>What are you currently working on in lessons or on your own?</p>
+      <p className="text-sm mb-5" style={{ color: C.ivoryDim }}>What are you currently working on in lessons or on your own?<b className="fld-req" aria-label="required">*</b></p>
       <div className="grid gap-2 mb-5" style={{ gridTemplateColumns: "1fr 1fr auto" }}>
         <input style={inputStyle} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Piece title" />
         <input style={inputStyle} value={composer} onChange={(e) => setComposer(e.target.value)} placeholder="Composer" />
@@ -9052,7 +9057,7 @@ function StepTopFlop({ draft, update }) {
       <p className="text-sm mb-7" style={{ color: C.ivoryDim, lineHeight: 1.6 }}>
         A quick, honest snapshot of where you are right now — the kind of thing only another musician really gets.
       </p>
-      <Field label="Top — what's going well right now">
+      <Field label="Top — what's going well right now" opt>
         <textarea
           rows={3}
           style={{ ...inputStyle, resize: "vertical", lineHeight: 1.5 }}
@@ -9062,7 +9067,7 @@ function StepTopFlop({ draft, update }) {
         />
       </Field>
 
-      <Field label="Flop — what you're struggling with right now">
+      <Field label="Flop — what you're struggling with right now" opt>
         <textarea
           rows={3}
           style={{ ...inputStyle, resize: "vertical", lineHeight: 1.5 }}
@@ -9072,7 +9077,7 @@ function StepTopFlop({ draft, update }) {
         />
       </Field>
 
-      <Field label="If you could spend a day with any composer in history, who would it be — and why?">
+      <Field label="If you could spend a day with any composer in history, who would it be — and why?" opt>
         <textarea
           rows={3}
           style={{ ...inputStyle, resize: "vertical", lineHeight: 1.5 }}
@@ -12067,7 +12072,7 @@ function StepTeaching({ draft, update, editing }) {
         Artium also connects piano enthusiasts with conservatory students who teach.
         Let learners know whether you're available — and on your terms.
       </p>
-      <Field label="Are you open to teaching?">
+      <Field label="Are you open to teaching?" req>
         <div className="flex flex-wrap gap-2">
           <Chip active={t.open} onClick={() => setT({ open: true })}>Yes, I'd like to teach</Chip>
           <Chip active={!t.open} onClick={() => setT({ open: false, mode: "", price: "" })}>Not right now</Chip>
@@ -12075,14 +12080,14 @@ function StepTeaching({ draft, update, editing }) {
       </Field>
       {t.open && (
         <>
-          <Field label="How do you teach?">
+          <Field label="How do you teach?" req>
             <div className="flex flex-wrap gap-2">
               <Chip active={t.mode === "physical"} onClick={() => setT({ mode: "physical" })}>In person</Chip>
               <Chip active={t.mode === "online"} onClick={() => setT({ mode: "online" })}>Online</Chip>
               <Chip active={t.mode === "both"} onClick={() => setT({ mode: "both" })}>Both</Chip>
             </div>
           </Field>
-          <Field label="Price per session (optional)">
+          <Field label="Price per session" opt>
             <div className="flex items-center gap-2">
               <span style={{ color: C.ivoryDim, fontSize: 16 }}>€</span>
               <input
@@ -12101,7 +12106,7 @@ function StepTeaching({ draft, update, editing }) {
               This is that. Asked as a question rather than labelled "bio",
               because "tell us about your teaching" produces a paragraph about
               the teacher and this produces one about the student's hour. */}
-          <Field label="What would a first lesson with you be like?">
+          <Field label="What would a first lesson with you be like?" opt>
             <textarea
               style={{ ...inputStyle, resize: "vertical", minHeight: 96, lineHeight: 1.6 }}
               value={t.pitch || ""}
@@ -12232,7 +12237,7 @@ function LearnerSignup({ onSubmit, onBack, error, authUser }) {
   }
 
   return (
-    <div className="min-h-full" style={{ background: C.ink, color: C.ivory }}>
+    <div className="min-h-full su-reg" style={{ background: C.ink, color: C.ivory }}>
       <div className="max-w-2xl mx-auto px-6 pt-8">
         <div className="flex items-center gap-3">
           <button onClick={onBack} style={{ color: C.ivoryDim, background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", padding: 0 }}>
@@ -12252,7 +12257,7 @@ function LearnerSignup({ onSubmit, onBack, error, authUser }) {
 
       <div className="max-w-2xl mx-auto px-6 py-10">
         <>
-            <Field label="Who is this registration for?">
+            <Field label="Who is this registration for?" req>
               <div style={{ display: "flex", gap: 10 }}>
                 {[
                   { value: "self", label: "For me" },
@@ -12276,28 +12281,28 @@ function LearnerSignup({ onSubmit, onBack, error, authUser }) {
           /* ── On behalf of someone ── */
           <>
             <PhotoUpload name={learnerName} photoUrl={photoUrl} onChange={setPhotoUrl} />
-            <Field label="Learner's full name">
+            <Field label="Learner's full name" req>
               <input style={inputStyle} value={learnerName} onChange={(e) => setLearnerName(e.target.value)} placeholder="e.g. Sophie" autoComplete="off" autoFocus />
             </Field>
-            <Field label="Learner's age">
+            <Field label="Learner's age" opt>
               <input style={inputStyle} value={learnerAge} onChange={(e) => setLearnerAge(e.target.value)} placeholder="e.g. 10" autoComplete="off" />
             </Field>
-            <Field label="Where is the learner based?">
+            <Field label="Where is the learner based?" req>
               <input style={inputStyle} value={learnerLocation} onChange={(e) => setLearnerLocation(e.target.value)} placeholder="City, country" autoComplete="off" />
             </Field>
-            <Field label="Which instrument would they like to learn?">
+            <Field label="Which instrument would they like to learn?" req>
               <InstrumentPicker value={learnerInstrument} onChange={setLearnerInstrument} allowOther />
               {learnerInstrument === "Other" && (
                 <input style={{ ...inputStyle, marginTop: 8 }} value={learnerInstrumentOther} onChange={(e) => setLearnerInstrumentOther(e.target.value)} placeholder="Please specify…" autoFocus />
               )}
             </Field>
-            <Field label="Current level">
+            <Field label="Current level" opt>
               <select style={{ ...inputStyle, background: C.inkSoft }} value={learnerLevel} onChange={(e) => setLearnerLevel(e.target.value)}>
                 <option value="">Select a level…</option>
                 {["Complete beginner", "Early beginner", "Intermediate", "Advanced"].map((l) => <option key={l} value={l}>{l}</option>)}
               </select>
             </Field>
-            <Field label="Goals and expectations">
+            <Field label="Goals and expectations" req>
               <textarea
                 style={{ ...inputStyle, resize: "vertical", minHeight: 100, lineHeight: 1.6 }}
                 value={learnerGoals}
@@ -12316,19 +12321,19 @@ function LearnerSignup({ onSubmit, onBack, error, authUser }) {
           /* ── For myself ── */
           <>
             <PhotoUpload name={name} photoUrl={photoUrl} onChange={setPhotoUrl} />
-            <Field label="Your full name">
+            <Field label="Your full name" req>
               <input style={inputStyle} value={name} onChange={(e) => setName(e.target.value)} placeholder="Your full name" autoComplete="off" autoFocus />
             </Field>
-            <Field label="Where are you based?">
+            <Field label="Where are you based?" req>
               <input style={inputStyle} value={location} onChange={(e) => setLocation(e.target.value)} placeholder="City, country" autoComplete="off" />
             </Field>
-            <Field label="Which instrument would you like to learn?">
+            <Field label="Which instrument would you like to learn?" req>
               <InstrumentPicker value={instrument} onChange={setInstrument} allowOther />
               {instrument === "Other" && (
                 <input style={{ ...inputStyle, marginTop: 8 }} value={instrumentOther} onChange={(e) => setInstrumentOther(e.target.value)} placeholder="Please specify…" autoFocus />
               )}
             </Field>
-            <Field label="Why do you want to learn, and what are your expectations?">
+            <Field label="Why do you want to learn, and what are your expectations?" req>
               <textarea
                 style={{ ...inputStyle, resize: "vertical", minHeight: 100, lineHeight: 1.6 }}
                 value={motivation}
