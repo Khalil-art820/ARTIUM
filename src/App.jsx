@@ -8189,6 +8189,29 @@ const DOOR_LABEL = {
   graduate: "Graduate",
 };
 
+/* A button that opens the file picker on the first tap.
+ *
+ * It was a <label> around a display:none input. Some phone browsers drop the
+ * first tap on that pairing, and an input that already holds a file ignores
+ * the same file chosen again (after a failed upload, say) — both read as
+ * "you have to tap twice". A real button calls the input directly, and the
+ * input is cleared after every pick so the next one always fires.
+ */
+function FilePickButton({ accept, onFile, disabled, style, title, children }) {
+  const ref = useRef(null);
+  return (
+    <>
+      <button type="button" style={style} disabled={disabled} title={title}
+        onClick={() => { if (!disabled) ref.current?.click(); }}>
+        {children}
+      </button>
+      <input ref={ref} type="file" accept={accept} tabIndex={-1} aria-hidden="true"
+        style={{ position: "absolute", width: 1, height: 1, opacity: 0, overflow: "hidden", pointerEvents: "none", clipPath: "inset(50%)" }}
+        onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) onFile(f); }} />
+    </>
+  );
+}
+
 function StepConservatory({ draft, update, editing }) {
   const [q, setQ] = useState("");
   const [email, setEmail] = useState(draft.otpEmail || draft.conservatoryEmail || "");
@@ -8885,16 +8908,16 @@ function StepConservatory({ draft, update, editing }) {
             <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
               <CheckIcon size={18} color={OK_C} />
               <span style={{ fontSize: 14, color: OK_C, fontWeight: 600 }}>{draft.proofDocName || "Document uploaded"}</span>
-              <label style={{ fontSize: 13, color: C.brassLabel, cursor: "pointer" }}>
+              <FilePickButton accept="image/*,application/pdf" onFile={uploadProof}
+                style={{ fontSize: 13, color: C.brassLabel, cursor: "pointer", background: "none", border: "none", padding: 0, fontFamily: FONT_BODY }}>
                 Replace
-                <input type="file" accept="image/*,application/pdf" style={{ display: "none" }} onChange={(e) => uploadProof(e.target.files?.[0])} />
-              </label>
+              </FilePickButton>
             </div>
           ) : (
-            <label style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "11px 18px", borderRadius: 10, border: `1.5px dashed ${C.inkLine}`, background: warm("0.05"), cursor: uploading ? "default" : "pointer", color: C.ivory, fontWeight: 600, fontSize: 14 }}>
+            <FilePickButton accept="image/*,application/pdf" onFile={uploadProof} disabled={uploading}
+              style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "11px 18px", borderRadius: 10, border: `1.5px dashed ${C.inkLine}`, background: warm("0.05"), cursor: uploading ? "default" : "pointer", color: C.ivory, fontWeight: 600, fontSize: 14, fontFamily: FONT_BODY }}>
               <Upload size={16} /> {uploading ? "Uploading…" : "Choose a file"}
-              <input type="file" accept="image/*,application/pdf" style={{ display: "none" }} disabled={uploading} onChange={(e) => uploadProof(e.target.files?.[0])} />
-            </label>
+            </FilePickButton>
           )}
           <p className="text-xs" style={{ color: C.ivoryDim, marginTop: 10, fontFamily: FONT_MONO }}>Image or PDF · max 10 MB · kept private, seen only by our review team.</p>
           {err && <p className="text-sm" style={{ color: C.burgundy, marginTop: 10 }}>{err}</p>}
@@ -14274,20 +14297,17 @@ function ArtiumSoundCard({ myProfile, authUser }) {
               </button>
             </div>
           ) : (
-            <label
-              title={rights ? undefined : "Tick the box above first"}
+            <FilePickButton accept="audio/*" onFile={upload} disabled={!rights || uploading} title={rights ? undefined : "Tick the box above first"}
               style={{
                 display: "inline-flex", alignItems: "center", gap: 8, padding: "11px 18px",
                 borderRadius: 10, border: `1.5px dashed ${C.inkLine}`, background: warm("0.05"),
-                fontWeight: 600, fontSize: 14,
+                fontWeight: 600, fontSize: 14, fontFamily: FONT_BODY,
                 color: rights ? C.ivory : C.ivoryDim,
                 opacity: rights ? 1 : 0.55,
                 cursor: rights && !uploading ? "pointer" : "not-allowed",
-              }}
-            >
+              }}>
               <Upload size={16} /> {uploading ? "Uploading…" : "Choose an audio file"}
-              <input type="file" accept="audio/*" style={{ display: "none" }} disabled={!rights || uploading} onChange={(e) => upload(e.target.files?.[0])} />
-            </label>
+            </FilePickButton>
           )}
 
           {audio.url && (
