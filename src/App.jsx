@@ -8244,6 +8244,45 @@ function SuggestInput({ value, onChange, suggestions, onPick, placeholder, disab
   );
 }
 
+/* Step 2's three choices, drawn in colour like the gate's Explore tiles. */
+function DoorArtEmail() {
+  return (
+    <svg viewBox="0 0 48 48" width="38" height="38" aria-hidden="true">
+      <rect x="5" y="11" width="34" height="25" rx="5" fill="#2F7FD8" />
+      <path d="M7 14.5l15 11 15-11" fill="none" stroke="#FFFFFF" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="36" cy="34" r="9" fill="#2EAA6E" stroke="#FFFFFF" strokeWidth="2.2" />
+      <path d="M31.8 34.2l2.9 2.9 5.4-5.6" fill="none" stroke="#FFFFFF" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+function DoorArtDocument() {
+  return (
+    <svg viewBox="0 0 48 48" width="38" height="38" aria-hidden="true">
+      <path d="M11 6h17l9 9v25a3 3 0 0 1-3 3H11a3 3 0 0 1-3-3V9a3 3 0 0 1 3-3z" fill="#6B57E8" />
+      <path d="M28 6v7a2 2 0 0 0 2 2h7" fill="#B3A8F3" />
+      <circle cx="17" cy="20" r="3.4" fill="#FFFFFF" />
+      <path d="M11.6 29c1-3.2 3-4.8 5.4-4.8s4.4 1.6 5.4 4.8z" fill="#FFFFFF" />
+      <rect x="25" y="19" width="8" height="2.4" rx="1.2" fill="#D9D3FB" />
+      <rect x="25" y="24" width="6" height="2.4" rx="1.2" fill="#D9D3FB" />
+      <circle cx="35" cy="35" r="9" fill="#E8862E" stroke="#FFFFFF" strokeWidth="2.2" />
+      <path d="M35 39.5v-8.5M31.4 34.6L35 31l3.6 3.6" fill="none" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+function DoorArtGraduate() {
+  return (
+    <svg viewBox="0 0 48 48" width="38" height="38" aria-hidden="true">
+      <rect x="12" y="29" width="28" height="12" rx="3" fill="#F3E3C0" stroke="#C9962E" strokeWidth="1.6" />
+      <circle cx="35" cy="35" r="3.2" fill="#C0392B" />
+      <path d="M33.6 38l-1 4 2.4-1.2 2.4 1.2-1-4" fill="#C0392B" />
+      <path d="M24 7L4 16l20 9 20-9z" fill="#1F2A44" />
+      <path d="M12 20v7c0 2.6 5.4 4.7 12 4.7s12-2.1 12-4.7v-7l-12 5.4z" fill="#2E3B5E" />
+      <path d="M41 17.4v10" stroke="#E2B13C" strokeWidth="2.2" strokeLinecap="round" />
+      <circle cx="41" cy="29" r="2.4" fill="#E2B13C" />
+    </svg>
+  );
+}
+
 /* A button that opens the file picker on the first tap.
  *
  * It was a <label> around a display:none input. Some phone browsers drop the
@@ -8727,25 +8766,30 @@ function StepConservatory({ draft, update, editing }) {
           </button>
         </div>
       ) : !applicant ? (
-        <div className="artium-su-doors">
+        /* The gate's "Explore ARTIUM" list, row for row: one white card, rows
+           split by hairlines, a grey tile with a colour drawing, title over a
+           numbered line, and a chevron. */
+        <ul className="su-doorlist">
           {[
-            { k: "student_email", Icon: ScanLine, t: "I'm a student with a conservatory email",
-              d: "Fastest — we send a one-time code to your institutional address." },
-            { k: "student_doc", Icon: FileText, t: "I don't have a conservatory email",
+            { k: "student_email", Art: DoorArtEmail, t: "I have a conservatory email",
+              d: "Fastest — we email your school address a one-time code." },
+            { k: "student_doc", Art: DoorArtDocument, t: "I don't have a conservatory email",
               d: "Upload a student ID, enrolment certificate or tuition receipt." },
-            { k: "graduate", Icon: GraduationCap, t: "I've graduated",
+            { k: "graduate", Art: DoorArtGraduate, t: "I've graduated",
               d: "Upload your diploma, or a transcript naming your conservatory." },
-          ].map(({ k, Icon, t, d }) => (
-            <button key={k} className="artium-su-door" onClick={() => chooseDoor(k)}>
-              <span className="artium-su-door-i"><Icon size={18} strokeWidth={1.8} /></span>
-              <span style={{ flex: 1, minWidth: 0 }}>
-                <p className="artium-su-door-t">{t}</p>
-                <p className="artium-su-door-d">{d}</p>
-              </span>
-              <ChevronRight size={17} strokeWidth={2} style={{ color: "#6E6E6E", flexShrink: 0 }} />
-            </button>
+          ].map(({ k, Art, t, d }, i) => (
+            <li key={k}>
+              <button type="button" className="su-doorrow" onClick={() => chooseDoor(k)}>
+                <span className="su-doorrow-tile" aria-hidden="true"><Art /></span>
+                <span className="su-doorrow-body">
+                  <span className="su-doorrow-title">{t}</span>
+                  <span className="su-doorrow-meta"><em>{String(i + 1).padStart(2, "0")}</em><span>{d}</span></span>
+                </span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
+              </button>
+            </li>
           ))}
-        </div>
+        </ul>
       ) : (
       <>
       {/* Sign-up: no "you chose X · Change" bar — Back (top or bottom) returns
