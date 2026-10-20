@@ -8970,8 +8970,8 @@ function StepConservatory({ draft, update, editing }) {
           Nor on !isGoogle — a Google account proves an email address, not
           enrolment, so the Google shortcut that skips OTP doesn't apply. */}
       {proving && isDoc && (
-        <div className="mt-5 rounded-2xl" style={{ border: `1px solid ${draft.proofDocUrl ? OK_C : C.brass}`, background: C.inkSoft, padding: "18px 18px" }}>
-          <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brassLabel, letterSpacing: 0.5, marginBottom: 8 }}>{applicant === "graduate" ? "UPLOAD YOUR DIPLOMA" : "UPLOAD YOUR PROOF"}</p>
+        <div className="mt-5 rounded-2xl" style={{ border: `1px solid ${C.inkLine}`, background: C.inkSoft, padding: "18px 18px" }}>
+          <p style={{ fontFamily: FONT_BODY, fontSize: 17, fontWeight: 600, color: C.ivory, margin: "0 0 8px", lineHeight: 1.3 }}>{applicant === "graduate" ? "Upload your diploma" : "Upload your proof"}</p>
           {/* Split by where the person is, not by document type. A graduate
               hunting for a "proof of enrolment" they no longer have was the
               old copy's dead end — the card at the gate now says Student |
@@ -8981,8 +8981,8 @@ function StepConservatory({ draft, update, editing }) {
               find their own row again. */}
           <p className="text-sm" style={{ color: C.ivoryDim, marginBottom: 12, lineHeight: 1.55 }}>
             {applicant === "graduate"
-              ? <>Your <b style={{ color: C.ivory, fontWeight: 600 }}>diploma</b>, or a transcript naming the conservatory{selectedCons ? <> — {selectedCons.name}</> : null}.</>
-              : <>A <b style={{ color: C.ivory, fontWeight: 600 }}>student ID card</b>, <b style={{ color: C.ivory, fontWeight: 600 }}>enrolment certificate</b> or <b style={{ color: C.ivory, fontWeight: 600 }}>tuition receipt</b>{selectedCons ? <> from {selectedCons.name}</> : null}.</>}
+              ? <>Your <b style={{ color: C.ivory, fontWeight: 600 }}>diploma</b>, <b style={{ color: C.ivory, fontWeight: 600 }}>or</b> a transcript naming the conservatory{selectedCons ? <> — {selectedCons.name}</> : null}.</>
+              : <><b style={{ color: C.ivory, fontWeight: 600 }}>A</b> <b style={{ color: C.ivory, fontWeight: 600 }}>student ID card</b>, <b style={{ color: C.ivory, fontWeight: 600 }}>enrolment certificate</b> <b style={{ color: C.ivory, fontWeight: 600 }}>or</b> <b style={{ color: C.ivory, fontWeight: 600 }}>tuition receipt</b>{selectedCons ? <> from {selectedCons.name}</> : null}.</>}
           </p>
           <p className="text-sm" style={{ color: C.ivoryDim, marginBottom: 12, lineHeight: 1.55 }}>
             Our team reviews it by hand before granting access
