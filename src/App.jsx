@@ -8981,7 +8981,7 @@ function StepConservatory({ draft, update, editing }) {
               find their own row again. */}
           <p className="text-sm" style={{ color: C.ivoryDim, marginBottom: 12, lineHeight: 1.55 }}>
             {applicant === "graduate"
-              ? <>Your <b style={{ color: C.ivory, fontWeight: 600 }}>diploma</b>, <b style={{ color: C.ivory, fontWeight: 600 }}>or</b> a transcript naming the conservatory{selectedCons ? <> — {selectedCons.name}</> : null}.</>
+              ? <b style={{ color: C.ivory, fontWeight: 600 }}>Your diploma, or a transcript naming the conservatory{selectedCons ? <> — {selectedCons.name}</> : null}.</b>
               : <><b style={{ color: C.ivory, fontWeight: 600 }}>A</b> <b style={{ color: C.ivory, fontWeight: 600 }}>student ID card</b>, <b style={{ color: C.ivory, fontWeight: 600 }}>enrolment certificate</b> <b style={{ color: C.ivory, fontWeight: 600 }}>or</b> <b style={{ color: C.ivory, fontWeight: 600 }}>tuition receipt</b>{selectedCons ? <> from {selectedCons.name}</> : null}.</>}
           </p>
           <p className="text-sm" style={{ color: C.ivoryDim, marginBottom: 12, lineHeight: 1.55 }}>
