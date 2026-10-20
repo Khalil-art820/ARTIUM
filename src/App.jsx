@@ -7251,7 +7251,7 @@ function SuNextButton({ ok, onGo, hint, children }) {
   );
 }
 
-const STEP_LABELS = ["Introduce yourself", "Choose your conservatory", "Your musical voice", "Current repertoire", "Top | Flop | Composer", "Teaching", "Review and submit"];
+const STEP_LABELS = ["Introduce yourself", "Get Verified and Join the Map", "Your musical voice", "Current repertoire", "Top | Flop | Composer", "Teaching", "Review and submit"];
 
 function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubmit, onCancel, onHome, authError, resumed, onStartFresh }) {
   const [submitting, setSubmitting] = useState(false);
@@ -7939,7 +7939,7 @@ function StepIntro({ draft, update }) {
           <Chip
             active={study.graduated}
             onClick={() => setStudy({ ...study, graduated: !study.graduated, year: "" })}
-          >{GRADUATED}</Chip>
+          >Diploma</Chip>
         </div>
       </Field>
       {/* Thirty-six instruments read as a wall of words; the drawings are what
@@ -8760,7 +8760,7 @@ function StepConservatory({ draft, update, editing }) {
               d: "Fastest — we email your school address a one-time code." },
             { k: "student_doc", Art: DoorArtDocument, t: "I don't have a conservatory email",
               d: "Upload a student ID, enrolment certificate or tuition receipt." },
-            { k: "graduate", Art: DoorArtGraduate, t: "I've graduated",
+            { k: "graduate", Art: DoorArtGraduate, t: "I have a Diploma",
               d: "Upload your diploma, or a transcript naming your conservatory." },
           ].map(({ k, Art, t, d }, i) => (
             <li key={k}>
