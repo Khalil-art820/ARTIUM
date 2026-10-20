@@ -7960,7 +7960,6 @@ function StepIntro({ draft, update }) {
           hint says which two are chosen, so the way out is deselecting one of
           them and not hunting for a cleared state. */}
       <Field label="Which instrument(s) do you play?" req>
-        <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: C.ivoryDim, margin: "-4px 0 10px" }}>Maximum 2 instruments.</p>
         {/* A choice with no tile — an old saved draft can hold a name the list
             no longer has ("Other", an old spelling). It still counts toward the
             two, and with no tile there was no way to take it back. Shown here
