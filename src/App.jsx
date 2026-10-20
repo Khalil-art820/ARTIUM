@@ -8244,41 +8244,26 @@ function SuggestInput({ value, onChange, suggestions, onPick, placeholder, disab
   );
 }
 
-/* Step 2's three choices, drawn in colour like the gate's Explore tiles. */
+/* Step 2's three choices — solid one-colour glyphs, the gate's Explore tile
+   style (teal, purple, orange as there). */
 function DoorArtEmail() {
   return (
-    <svg viewBox="0 0 48 48" width="38" height="38" aria-hidden="true">
-      <rect x="5" y="11" width="34" height="25" rx="5" fill="#2F7FD8" />
-      <path d="M7 14.5l15 11 15-11" fill="none" stroke="#FFFFFF" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx="36" cy="34" r="9" fill="#2EAA6E" stroke="#FFFFFF" strokeWidth="2.2" />
-      <path d="M31.8 34.2l2.9 2.9 5.4-5.6" fill="none" stroke="#FFFFFF" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+    <svg viewBox="0 0 24 24" width="38" height="38" fill="#086868" aria-hidden="true">
+      <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
     </svg>
   );
 }
 function DoorArtDocument() {
   return (
-    <svg viewBox="0 0 48 48" width="38" height="38" aria-hidden="true">
-      <path d="M11 6h17l9 9v25a3 3 0 0 1-3 3H11a3 3 0 0 1-3-3V9a3 3 0 0 1 3-3z" fill="#6B57E8" />
-      <path d="M28 6v7a2 2 0 0 0 2 2h7" fill="#B3A8F3" />
-      <circle cx="17" cy="20" r="3.4" fill="#FFFFFF" />
-      <path d="M11.6 29c1-3.2 3-4.8 5.4-4.8s4.4 1.6 5.4 4.8z" fill="#FFFFFF" />
-      <rect x="25" y="19" width="8" height="2.4" rx="1.2" fill="#D9D3FB" />
-      <rect x="25" y="24" width="6" height="2.4" rx="1.2" fill="#D9D3FB" />
-      <circle cx="35" cy="35" r="9" fill="#E8862E" stroke="#FFFFFF" strokeWidth="2.2" />
-      <path d="M35 39.5v-8.5M31.4 34.6L35 31l3.6 3.6" fill="none" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+    <svg viewBox="0 0 24 24" width="38" height="38" fill="#6B57E8" aria-hidden="true">
+      <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-2 9.01l4 4.01-1.41 1.41L13 14.84V19h-2v-4.16l-1.59 1.59L8 15.01 12 11.01zM13 9V3.5L18.5 9H13z" />
     </svg>
   );
 }
 function DoorArtGraduate() {
   return (
-    <svg viewBox="0 0 48 48" width="38" height="38" aria-hidden="true">
-      <rect x="12" y="29" width="28" height="12" rx="3" fill="#F3E3C0" stroke="#C9962E" strokeWidth="1.6" />
-      <circle cx="35" cy="35" r="3.2" fill="#C0392B" />
-      <path d="M33.6 38l-1 4 2.4-1.2 2.4 1.2-1-4" fill="#C0392B" />
-      <path d="M24 7L4 16l20 9 20-9z" fill="#1F2A44" />
-      <path d="M12 20v7c0 2.6 5.4 4.7 12 4.7s12-2.1 12-4.7v-7l-12 5.4z" fill="#2E3B5E" />
-      <path d="M41 17.4v10" stroke="#E2B13C" strokeWidth="2.2" strokeLinecap="round" />
-      <circle cx="41" cy="29" r="2.4" fill="#E2B13C" />
+    <svg viewBox="0 0 24 24" width="38" height="38" fill="#E8862E" aria-hidden="true">
+      <path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z" />
     </svg>
   );
 }

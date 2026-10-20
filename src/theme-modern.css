@@ -982,3 +982,9 @@ html.theme-modern .artium-su-nav{background:linear-gradient(180deg,rgba(255,255,
 .su-doorrow-meta em{font-style:normal;background:#E2EEFB;color:#2F7FD8;border-radius:6px;padding:1px 8px;font-size:14px;font-weight:500;flex:none}
 .su-doorrow-meta span{line-height:1.3}
 .su-doorrow > svg{flex:none}
+/* Step 2 choices: edge to edge like the gate's Explore list — no rounded
+   card, just hairlines above, between and below. */
+.artium-su{overflow-x:hidden}
+.su-doorlist{width:100vw;max-width:none;margin-left:calc(50% - 50vw);border-radius:0;border-left:0;border-right:0;padding:6px 0}
+.su-doorrow{padding:12px 20px}
+@media (min-width:744px){.su-doorlist{width:auto;margin-left:0;border-radius:12px;border-left:1px solid #E8E2DC;border-right:1px solid #E8E2DC}}
