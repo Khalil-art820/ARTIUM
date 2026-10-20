@@ -8971,7 +8971,7 @@ function StepConservatory({ draft, update, editing }) {
           enrolment, so the Google shortcut that skips OTP doesn't apply. */}
       {proving && isDoc && (
         <div className="mt-5 rounded-2xl" style={{ border: `1px solid ${C.inkLine}`, background: C.inkSoft, padding: "18px 18px" }}>
-          <p style={{ fontFamily: FONT_BODY, fontSize: 17, fontWeight: 600, color: C.ivory, margin: "0 0 8px", lineHeight: 1.3 }}>{applicant === "graduate" ? "Upload your diploma" : "Upload your proof"}</p>
+          <p style={{ fontFamily: FONT_BODY, fontSize: 17, fontWeight: 600, color: C.ivory, margin: "0 0 8px", lineHeight: 1.3, textDecoration: "underline", textUnderlineOffset: 4, textDecorationThickness: 1.5 }}>{applicant === "graduate" ? "Upload your diploma" : "Upload your proof"}</p>
           {/* Split by where the person is, not by document type. A graduate
               hunting for a "proof of enrolment" they no longer have was the
               old copy's dead end — the card at the gate now says Student |
