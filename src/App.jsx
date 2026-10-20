@@ -7493,7 +7493,7 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
       </div>
 
       <div className="max-w-3xl mx-auto px-6 pt-7 pb-10 lg-fade" key={step}>
-        <div className={`artium-su-card${!editing && idx === 1 && !draft.applicant ? " artium-su-card--bare" : ""}`}>
+        <div className={`artium-su-card${!editing && idx === 1 ? " artium-su-card--bare" : ""}`}>
         {!skipAccountStep && step === 0 && <StepAccount draft={draft} update={update} error={authError} />}
         {idx === 0 && <StepIntro draft={draft} update={update} />}
         {idx === 1 && <StepConservatory key={editing ? "edit" : (draft.applicant || "doors")} draft={draft} update={update} editing={editing} />}
