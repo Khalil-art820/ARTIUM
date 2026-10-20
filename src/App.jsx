@@ -6277,7 +6277,6 @@ function HirerSignup({ authUser, onBack, onDone }) {
           <StepRing step={step} total={HIRER_STEPS.length} />
           <span className="artium-su-head-text">
             <h2 className="artium-su-title">{HIRER_STEPS[step]}</h2>
-            {HIRER_STEPS[step + 1] && <p className="artium-su-next">Next: <b>{HIRER_STEPS[step + 1]}</b></p>}
           </span>
         </div>
       </div>
@@ -7254,7 +7253,7 @@ function SuNextButton({ ok, onGo, hint, children }) {
   );
 }
 
-const STEP_LABELS = ["Introduce yourself", "Get Verified and Join the Map", "Your musical voice", "Current repertoire", "Top | Flop | Composer", "Teaching", "Review and submit"];
+const STEP_LABELS = ["Introduce Yourself", "Get Verified and Join the Map", "Your musical voice", "Current repertoire", "Top | Flop | Composer", "Teaching", "Review and submit"];
 
 function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubmit, onCancel, onHome, authError, resumed, onStartFresh }) {
   const [submitting, setSubmitting] = useState(false);
@@ -7490,7 +7489,6 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
           <StepRing step={step} total={labels.length} />
           <span className="artium-su-head-text">
             <h2 className="artium-su-title">{labels[step]}</h2>
-            {labels[step + 1] && <p className="artium-su-next">Next: <b>{labels[step + 1]}</b></p>}
           </span>
         </div>
       </div>
