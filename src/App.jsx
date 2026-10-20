@@ -7523,6 +7523,9 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
           <button type="button" className="artium-su-back" onMouseDown={(e) => e.preventDefault()} onClick={goBack}>Back</button>
         )}
         {step < lastStep ? (
+          // On the three choices the choice itself is the way forward, so
+          // there's no Next to tap (and nothing to explain).
+          !editing && idx === 1 && !draft.applicant ? <span style={{ flex: 1 }} /> :
           <SuNextButton ok={!!canNext} onGo={() => setStep(step + 1)} hint={stepHints[step]}>
             Next <ChevronRight size={17} strokeWidth={2.2} />
           </SuNextButton>
@@ -8741,10 +8744,10 @@ function StepConservatory({ draft, update, editing }) {
       </div>
       )}
 
-      {/* No conservatory email: the document names the school, and an admin
-          picks it from the roster at approval — so no search, no list and no
-          "can't find it" box here, just the upload below. */}
-      {applicant !== "student_doc" && (<>
+      {/* The document routes (no conservatory email, graduated): the document
+          names the school, and an admin picks it from the roster at approval —
+          so no search, no list and no "can't find it" box, just the upload. */}
+      {applicant !== "student_doc" && applicant !== "graduate" && (<>
       <span className="artium-aw-field" style={{ marginBottom: 12 }}>
         <Search size={15} strokeWidth={2} />
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by school, city, or country" />
