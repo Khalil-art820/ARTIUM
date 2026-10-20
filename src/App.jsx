@@ -6280,7 +6280,7 @@ function HirerSignup({ authUser, onBack, onDone }) {
       </div>
 
       <div className="max-w-3xl mx-auto px-6 pt-7 pb-10 lg-fade" key={step}>
-        <div className="artium-su-card">
+        <div className="artium-su-card artium-su-card--bare">
         {step === 0 && (
           <div style={{ display: "flex", flexDirection: "column", gap: 22, maxWidth: 520 }}>
             <Field label="Your name" req>
