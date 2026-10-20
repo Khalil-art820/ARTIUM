@@ -8540,9 +8540,17 @@ function StepConservatory({ draft, update, editing }) {
     }
   }, [googleProvesSchool, draft.conservatoryVerified, draft.email]);
 
+  // Tapping the chosen school again unselects it. Choosing a school closes the
+  // "ask us to add it" form — it's one route or the other.
   function pickConservatory(id) {
-    update({ conservatoryId: id, conservatoryVerified: false });
     setCodeSent(false); setCode(""); setErr("");
+    if (draft.conservatoryId === id) {
+      setEmail("");
+      update({ conservatoryId: "", conservatoryVerified: false, conservatoryEmail: "", otpEmail: "", otpSent: false });
+      return;
+    }
+    setShowReq(false);
+    update({ conservatoryId: id, conservatoryVerified: false });
   }
 
   // Clearing the conservatory is not tidiness, it is required: the two routes
@@ -8791,7 +8799,13 @@ function StepConservatory({ draft, update, editing }) {
         </p>
         {!isDoc && !showReq && !draft.domainReq && (
           <button
-            onClick={() => setShowReq(true)}
+            onClick={() => {
+              // Asking us to add a school replaces picking one: clear any choice
+              // so its verification box goes away.
+              setShowReq(true);
+              setEmail(""); setCode(""); setCodeSent(false); setErr("");
+              update({ conservatoryId: "", conservatoryVerified: false, conservatoryEmail: "", otpEmail: "", otpSent: false });
+            }}
             style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 9, padding: 0, background: "none", border: "none", cursor: "pointer", color: C.brassLabel, fontFamily: FONT_BODY, fontSize: 13, fontWeight: 700 }}
           >
             Send your conservatory and email <ArrowRight size={14} />
@@ -8956,7 +8970,7 @@ function StepConservatory({ draft, update, editing }) {
       )}
 
       {/* Conservatory email verification (OTP path) */}
-      {selectedCons && !googleProvesSchool && proving && !isDoc && (
+      {selectedCons && !googleProvesSchool && proving && !isDoc && !showReq && !draft.domainReq && (
         <div className="mt-5 rounded-2xl" style={{ border: `1px solid ${verified ? OK_C : C.brass}`, background: C.inkSoft, padding: "18px 18px" }}>
           <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brassLabel, letterSpacing: 0.5, marginBottom: 8 }}>VERIFY YOUR {(selectedCons.short || selectedCons.name).toUpperCase()} STUDENT EMAIL</p>
           {verified ? (
