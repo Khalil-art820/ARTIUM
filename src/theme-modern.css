@@ -962,3 +962,11 @@ html.theme-modern .artium-su-why{background:#FFFFFF;border:1px solid #E8E2DC;col
 .su-link{gap:12px}
 .su-link-ic,.su-link--youtube .su-link-ic{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center}
 .su-link-ic svg{display:block}
+/* Sign-up step 2: the still globe picture */
+.artium-su-globe--img{display:flex;justify-content:center;margin:0 0 14px}
+.artium-su-globe--img img{width:min(240px,62vw);height:auto;display:block}
+/* Registration (student, hirer, learner): plain white page, no cream */
+html.theme-modern:has(.artium-su),html.theme-modern:has(.artium-su) body,html.theme-modern:has(.artium-su) #root,
+html.theme-modern:has(.su-reg),html.theme-modern:has(.su-reg) body,html.theme-modern:has(.su-reg) #root{background:#FFFFFF !important}
+html.theme-modern .artium-su,html.theme-modern .su-reg{background:#FFFFFF !important}
+html.theme-modern .artium-su-nav{background:linear-gradient(180deg,rgba(255,255,255,0) 0%,rgba(255,255,255,.94) 26%,#FFFFFF 100%) !important}

@@ -8391,11 +8391,6 @@ function StepConservatory({ draft, update, editing }) {
     setReqVerified(true);
   }
 
-  const [roamAt, setRoamAt] = useState(0);
-  useEffect(() => {
-    const t = setInterval(() => setRoamAt((n) => n + 1), 3000);
-    return () => clearInterval(t);
-  }, []);
 
   // Loaded on both doors now, not just the document one. An approved school
   // is a school: once an admin has confirmed it, it belongs on whichever
@@ -8529,16 +8524,6 @@ function StepConservatory({ draft, update, editing }) {
 
   const pool = !isDoc ? emailPool : applicant === "graduate" ? gradPool : docPool;
 
-  // The globe roams whatever the open door can offer, so a school approved
-  // yesterday has a pin today. The without-an-email list is the one that can
-  // legitimately be empty — nobody has been approved from a document yet —
-  // and a globe with nothing on it reads as broken rather than as new, so it
-  // falls back to roaming everything.
-  const roamable = React.useMemo(() => {
-    const src = pool.length ? pool : gradPool;
-    return src.filter((c) => Number.isFinite(c.lat) && Number.isFinite(c.lng));
-  }, [pool, gradPool]);
-  const roamPin = roamable.length ? roamable[roamAt % roamable.length] : null;
 
   const selectedCons = pool.find((c) => c.id === draft.conservatoryId);
   // One search string for every door: the graduate list mixes built-ins, which
@@ -8652,10 +8637,10 @@ function StepConservatory({ draft, update, editing }) {
           two screens show the same world and should look like it. Pins are
           only the schools that can actually be placed; the rest would land at
           0,0 in the Gulf of Guinea. */}
-      <div className="artium-su-globe">
-        <span className="artium-aw-glow" aria-hidden="true" />
-        <span className="artium-aw-ring artium-aw-ring--a" aria-hidden="true" />
-        <WorldGlobe pins={roamPin ? [roamPin] : []} selectedId={null} onSelect={() => {}} height={230} roaming />
+      {/* A still picture of the network rather than the live 3D globe: the
+          step is a form, and the picture only has to say "a world of musicians". */}
+      <div className="artium-su-globe artium-su-globe--img">
+        <img src="/su-globe-v1.webp" alt="" width="486" height="493" />
       </div>
 
       {/* Editing a profile is not re-applying to a conservatory.
