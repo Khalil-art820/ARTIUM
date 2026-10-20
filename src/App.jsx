@@ -7307,6 +7307,18 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
     true,
   ].filter((v) => v !== null);
   const canNext = stepValid[step];
+  // Back, top and bottom. On the conservatory step, once one of the three
+  // choices is made, Back returns to the choices rather than to step 1.
+  const onDoorsBack = !editing && idx === 1 && !!draft.applicant;
+  function goBack() {
+    if (onDoorsBack) {
+      update({ applicant: "", verifyMethod: "otp", conservatoryId: "", conservatoryVerified: false, conservatoryEmail: "",
+        proofDocUrl: "", proofDocName: "", otpEmail: "", otpSent: false });
+      return;
+    }
+    if (step === 0) { setConfirmLeave(true); return; }
+    setStep(step - 1);
+  }
   // What an unfinished step is missing — same order as stepValid.
   const stepHints = [
     !skipAccountStep ? "Enter your email and a password of at least 6 characters, typed the same twice." : null,
@@ -7394,9 +7406,9 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
             </span>
           ) : (<>
           <button
-            onClick={step === 0 ? () => setConfirmLeave(true) : () => setStep(step - 1)}
+            onClick={goBack}
             className="artium-aw-round"
-            aria-label={step === 0 ? "Leave sign-up" : "Back a step"}
+            aria-label={onDoorsBack ? "Back to the choices" : step === 0 ? "Leave sign-up" : "Back a step"}
           >
             <ChevronLeft size={17} strokeWidth={2} />
           </button>
@@ -7484,7 +7496,7 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
         <div className="artium-su-card">
         {!skipAccountStep && step === 0 && <StepAccount draft={draft} update={update} error={authError} />}
         {idx === 0 && <StepIntro draft={draft} update={update} />}
-        {idx === 1 && <StepConservatory draft={draft} update={update} editing={editing} />}
+        {idx === 1 && <StepConservatory key={editing ? "edit" : (draft.applicant || "doors")} draft={draft} update={update} editing={editing} />}
         {idx === 2 && <StepTastes draft={draft} toggleTaste={toggleTaste} />}
         {idx === 3 && <StepPieces draft={draft} update={update} />}
         {idx === 4 && <StepTopFlop draft={draft} update={update} />}
@@ -7508,7 +7520,7 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
 
       <div className="max-w-3xl mx-auto artium-su-nav">
         {step > 0 && (
-          <button type="button" className="artium-su-back" onMouseDown={(e) => e.preventDefault()} onClick={() => setStep(step - 1)}>Back</button>
+          <button type="button" className="artium-su-back" onMouseDown={(e) => e.preventDefault()} onClick={goBack}>Back</button>
         )}
         {step < lastStep ? (
           <SuNextButton ok={!!canNext} onGo={() => setStep(step + 1)} hint={stepHints[step]}>
@@ -8710,11 +8722,16 @@ function StepConservatory({ draft, update, editing }) {
         </div>
       ) : (
       <>
+      {/* Sign-up: no "you chose X · Change" bar — Back (top or bottom) returns
+          to the three choices. Edit-profile transfers keep it, having no other
+          way back to them. */}
+      {editing && (
       <div className="artium-su-chosen">
         <CheckIcon size={16} strokeWidth={2.4} color={MODERN ? C.brass : "#EFD09B"} style={{ flexShrink: 0 }} />
         <p>{DOOR_LABEL[applicant]}</p>
         <button className="artium-su-change" onClick={() => chooseDoor("")}>Change</button>
       </div>
+      )}
 
       {/* No conservatory email: the document names the school, and an admin
           picks it from the roster at approval — so no search, no list and no
