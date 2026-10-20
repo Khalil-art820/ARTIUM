@@ -87,7 +87,8 @@ export function fromDbProfile(row) {
     instruments: instrumentsOf({ instrument: row.instrument, instrument2: row.instrument_2 }),
     instrument: row.instrument,
     conservatoryId: row.conservatory_id,
-    year: row.year,
+    // "Graduated" was renamed "Diploma"; older rows still carry the old word.
+    year: typeof row.year === "string" ? row.year.replace(/\bGraduated\b/g, "Diploma") : row.year,
     bio: row.bio,
     tastes: row.tastes || [],
     pieces: row.pieces || [],

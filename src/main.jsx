@@ -69,7 +69,7 @@ const NetworkPreview = import.meta.env.DEV && new URLSearchParams(location.searc
         S("me", "Khalil Tannous", "juilliard", "Piano", "Masters, Doctoral, 3rd year", true, true, "/gate-hero.jpg"),
         S("s2", "Sample Violinist", "eisler", "Violin", "Masters, 2nd year", false, true, "/app-banner.jpg"),
         S("s3", "Sample Cellist", "udk", "Cello", "Doctoral, 1st year", true, false, "/landing-backdrop.jpg"),
-        S("s4", "Sample Singer", "hemgeneve", "Voice", "Graduated", false, true, ""),
+        S("s4", "Sample Singer", "hemgeneve", "Voice", "Diploma", false, true, ""),
         S("s5", "Sample Flautist", "curtis", "Flute", "Masters, 1st year", true, true, "/earth-artium.jpg"),
       ];
       return (

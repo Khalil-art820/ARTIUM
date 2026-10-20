@@ -621,7 +621,10 @@ const YEAR_OPTIONS = ["1st year", "2nd year", "3rd year", "4th year", "5th year+
 // rules out the other. Graduated still takes a level: somebody who finished a
 // doctorate is a graduate of it.
 const LEVEL_OPTIONS = ["Masters", "Doctoral"];
-const GRADUATED = "Graduated";
+// Shown and saved as "Diploma". Profiles saved before the rename say
+// "Graduated"; both read as the same answer.
+const GRADUATED = "Diploma";
+const LEGACY_GRADUATED = "Graduated";
 
 // Still one string, still the phrase read back verbatim wherever a student is
 // summarised — "Masters, 2nd year" is the shape the sample profiles already
@@ -639,7 +642,7 @@ function parseStudy(years) {
   return {
     levels: LEVEL_OPTIONS.filter((l) => parts.includes(l)),
     year: parts.find((p) => YEAR_OPTIONS.includes(p)) || "",
-    graduated: parts.includes(GRADUATED),
+    graduated: parts.includes(GRADUATED) || parts.includes(LEGACY_GRADUATED),
   };
 }
 
@@ -7939,7 +7942,7 @@ function StepIntro({ draft, update }) {
           <Chip
             active={study.graduated}
             onClick={() => setStudy({ ...study, graduated: !study.graduated, year: "" })}
-          >Diploma</Chip>
+          >{GRADUATED}</Chip>
         </div>
       </Field>
       {/* Thirty-six instruments read as a wall of words; the drawings are what
