@@ -8218,6 +8218,31 @@ const DOOR_LABEL = {
   graduate: "Graduate",
 };
 
+/* A text field with a short list of suggestions under it while it has focus.
+ * Free text is still allowed — a suggestion only fills the field. Items take
+ * mousedown so the tap lands before the field's blur closes the list. */
+function SuggestInput({ value, onChange, suggestions, onPick, placeholder, disabled }) {
+  const [focused, setFocused] = useState(false);
+  const open = focused && !disabled && suggestions.length > 0;
+  return (
+    <span style={{ position: "relative", display: "block" }}>
+      <input style={inputStyle} value={value} placeholder={placeholder} disabled={disabled} autoComplete="off"
+        onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
+        onChange={(e) => onChange(e.target.value)} />
+      {open && (
+        <span className="su-suggest" role="listbox">
+          {suggestions.map((sg) => (
+            <button key={sg.key} type="button" role="option" aria-selected="false"
+              onMouseDown={(e) => { e.preventDefault(); onPick(sg); setFocused(false); }}>
+              <b>{sg.label}</b>{sg.sub && <em>{sg.sub}</em>}
+            </button>
+          ))}
+        </span>
+      )}
+    </span>
+  );
+}
+
 /* A button that opens the file picker on the first tap.
  *
  * It was a <label> around a display:none input. Some phone browsers drop the
@@ -8520,6 +8545,10 @@ function StepConservatory({ draft, update, editing }) {
   const results = pool.filter((c) => `${c.name} ${c.city || ""} ${c.country || ""} ${c.address || ""}`
     .toLowerCase().includes(q.toLowerCase()));
   const domainOk = selectedCons && emailMatchesConservatory(email, selectedCons);
+  // A resumed sign-up that already chose a school shows it in the form.
+  useEffect(() => {
+    if (selectedCons && !reqName) { setReqName(selectedCons.name); setReqAddress(selectedCons.city || selectedCons.address || ""); }
+  }, [selectedCons?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   const verified = draft.conservatoryVerified;
 
   // Signing in with Google proves one address: the Google account's own. It
@@ -8744,78 +8773,9 @@ function StepConservatory({ draft, update, editing }) {
       </div>
       )}
 
-      {/* The document routes (no conservatory email, graduated): the document
-          names the school, and an admin picks it from the roster at approval —
-          so no search, no list and no "can't find it" box, just the upload. */}
-      {applicant !== "student_doc" && applicant !== "graduate" && (<>
-      <span className="artium-aw-field" style={{ marginBottom: 12 }}>
-        <Search size={15} strokeWidth={2} />
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by school, city, or country" />
-      </span>
-
-      {results.length === 0 ? (
-        <p className="artium-aw-empty">
-          {applicant === "student_doc" ? "No approved conservatory matches that search." : "No conservatory matches that search."}
-        </p>
-      ) : (
-        <div className="artium-aw-list" style={{ maxHeight: 268, overflowY: "auto" }}>
-          {results.map((c) => {
-            const on = draft.conservatoryId === c.id;
-            return (
-              <button key={c.id} className="artium-aw-row" onClick={() => pickConservatory(c.id)}
-                style={on ? { borderColor: MODERN ? "rgba(8,104,104,0.55)" : "rgba(239,208,155,0.55)", background: MODERN ? "rgba(8,104,104,0.07)" : "rgba(239,208,155,0.07)" } : undefined}>
-                <ConsAvatar cons={c} />
-                <span className="artium-aw-row-body">
-                  <p className="artium-aw-row-t">{c.name}</p>
-                  <p className="artium-aw-row-c">
-                    <span aria-hidden="true" style={{ fontSize: 11, lineHeight: 1 }}>{"\uD83D\uDCCD"}</span>
-                    {/* Keyed on the row, not the door: the graduate list holds
-                        both kinds, and a school approved from a document has
-                        no domain to show. */}
-                    {[
-                      [c.city, c.country].filter(Boolean).join(", ") || c.address || "Approved conservatory",
-                      c.domains.length ? "@" + c.domains[0] : "",
-                    ].filter(Boolean).join(" · ")}
-                  </p>
-                </span>
-                {on
-                  ? <CheckIcon size={17} strokeWidth={2.4} color={MODERN ? C.brass : "#EFD09B"} />
-                  : <ChevronRight size={17} strokeWidth={2} />}
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Not finding your school is not a failure state, and the old copy only
-          said so once the list came back empty — which never happens on the
-          email route, where 110 schools are listed and yours simply is not
-          one of them. Said plainly, always. */}
-      <div style={{ marginTop: 14, borderRadius: 14, border: `1px solid ${C.inkLine}`, background: warm("0.05"), padding: "13px 15px" }}>
-        <p className="text-sm" style={{ margin: 0, color: C.ivory, fontWeight: 600, fontSize: 13 }}>
-          {isDoc ? "Can't find your conservatory?" : "Can't find your conservatory, or having trouble with your email?"}
-        </p>
-        <p className="text-sm" style={{ margin: "5px 0 0", color: C.ivoryDim, lineHeight: 1.55 }}>
-          {isDoc
-            ? "You don't have to pick one. The list only holds schools we've already confirmed — upload your document below and we'll add yours from it, and it appears on the map once approved."
-            : "Send us the name of your conservatory and the student email it gave you, and we'll approve it by hand. Schools change their email domain and this list can fall behind — no document needed."}
-        </p>
-        {!isDoc && !showReq && !draft.domainReq && (
-          <button
-            onClick={() => {
-              // Asking us to add a school replaces picking one: clear any choice
-              // so its verification box goes away.
-              setShowReq(true);
-              setEmail(""); setCode(""); setCodeSent(false); setErr("");
-              update({ conservatoryId: "", conservatoryVerified: false, conservatoryEmail: "", otpEmail: "", otpSent: false });
-            }}
-            style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 9, padding: 0, background: "none", border: "none", cursor: "pointer", color: C.brassLabel, fontFamily: FONT_BODY, fontSize: 13, fontWeight: 700 }}
-          >
-            Send your conservatory and email <ArrowRight size={14} />
-          </button>
-        )}
-      </div>
-      </>)}
+      {/* No list on any route now. The email route is one form below (name,
+          city, student email) with the roster as suggestions; the document
+          routes are the upload, and an admin places the school at approval. */}
 
       {/* Sent, waiting on an admin. Kept in the draft rather than written
           straight to the table: nothing about this student exists in the
@@ -8826,7 +8786,7 @@ function StepConservatory({ draft, update, editing }) {
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <CheckIcon size={17} strokeWidth={2.4} color={OK_C} style={{ flexShrink: 0 }} />
             <p style={{ margin: 0, fontSize: 13.5, fontWeight: 700, color: C.ivory }}>We'll check this with you</p>
-            <button className="artium-su-change" onClick={() => { update({ domainReq: null }); setShowReq(true); }}>Edit</button>
+            <button className="artium-su-change" onClick={() => { const r = draft.domainReq; setReqName(r.name || ""); setReqAddress(r.address || ""); setReqEmail(r.email || ""); setEmail(r.email || ""); update({ domainReq: null }); }}>Edit</button>
           </div>
           <p className="text-sm" style={{ margin: "8px 0 0", color: C.ivoryDim, lineHeight: 1.55 }}>
             <b style={{ color: C.ivory, fontWeight: 600 }}>{draft.domainReq.name}</b>
@@ -8840,91 +8800,151 @@ function StepConservatory({ draft, update, editing }) {
         </div>
       )}
 
-      {/* The request. Name, address, and the address they already hold — the
-          three things an admin needs to add a school to the roster. */}
-      {!isDoc && showReq && !draft.domainReq && (
-        <div className="mt-4" style={{ borderRadius: 16, border: `1px solid ${C.brass}`, background: C.inkSoft, padding: "16px 16px" }}>
-          <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brassLabel, letterSpacing: 0.5, marginBottom: 8 }}>ASK US TO ADD YOUR CONSERVATORY</p>
-          <p className="text-sm" style={{ color: C.ivoryDim, marginBottom: 14, lineHeight: 1.55 }}>
-            Tell us the school and the student address you hold there. We'll send that
-            address a code to confirm it's yours, then check the school by hand — no
-            document needed.
-          </p>
+      {/* The conservatory-email form: name, city, student email.
+          Typing the name suggests schools from the roster; picking one makes
+          it the normal route (an address at that school's domain gets a code
+          and is verified on the spot). A name the roster doesn't have becomes
+          a request: the code proves the address is theirs, and an admin
+          checks the school by hand. */}
+      {!isDoc && proving && !draft.domainReq && (
+        <div className="mt-2 rounded-2xl" style={{ border: `1px solid ${verified || googleProvesSchool ? OK_C : C.inkLine}`, background: C.inkSoft, padding: "16px 16px" }}>
           <Field label="Conservatory name" req>
-            <input style={inputStyle} value={reqName} onChange={(e) => setReqName(e.target.value)} placeholder="e.g. Royal Danish Academy of Music" />
+            <SuggestInput value={reqName} placeholder="Start typing your conservatory"
+              disabled={verified || codeSent || reqCodeSent}
+              onChange={(v) => {
+                setReqName(v);
+                if (selectedCons && normalizeName(v) !== normalizeName(selectedCons.name)) {
+                  setCodeSent(false); setCode(""); setErr("");
+                  update({ conservatoryId: "", conservatoryVerified: false, conservatoryEmail: "", otpEmail: "", otpSent: false });
+                }
+              }}
+              suggestions={(() => {
+                const n = normalizeName(reqName);
+                if (n.length < 2 || (selectedCons && normalizeName(selectedCons.name) === n)) return [];
+                return pool.filter((c) => normalizeName(`${c.name} ${c.short || ""}`).includes(n)).slice(0, 6)
+                  .map((c) => ({ key: c.id, label: c.name, sub: [c.city, c.country].filter(Boolean).join(", ") || c.address || "" }));
+              })()}
+              onPick={(sug) => {
+                const c = pool.find((x) => x.id === sug.key);
+                if (!c) return;
+                setReqName(c.name);
+                setReqAddress(c.city || c.address || "");
+                if (draft.conservatoryId !== c.id) pickConservatory(c.id);
+              }} />
           </Field>
-          <Field label="Address or city" req>
-            <input style={inputStyle} value={reqAddress} onChange={(e) => setReqAddress(e.target.value)} placeholder="e.g. Rosenørns Allé 22, Copenhagen" />
+          <Field label="City" req>
+            <SuggestInput value={reqAddress} placeholder="e.g. Paris"
+              disabled={verified || codeSent || reqCodeSent}
+              onChange={setReqAddress}
+              suggestions={(() => {
+                const n = normalizeName(reqAddress);
+                if (n.length < 1) return [];
+                const seen = new Set();
+                const out = [];
+                for (const c of pool) {
+                  const city = (c.city || "").trim();
+                  if (!city || seen.has(city) || !normalizeName(city).startsWith(n) || normalizeName(city) === n) continue;
+                  seen.add(city);
+                  out.push({ key: city, label: city, sub: c.country || "" });
+                  if (out.length >= 6) break;
+                }
+                return out;
+              })()}
+              onPick={(sug) => setReqAddress(sug.label)} />
           </Field>
           <Field label="Your student email at that conservatory" req>
-            <input style={inputStyle} type="email" value={reqEmail} onChange={(e) => editReqEmail(e.target.value)} placeholder="you@school.edu" autoComplete="off" disabled={reqVerified} />
+            <input style={inputStyle} type="email" value={selectedCons ? email : reqEmail}
+              disabled={verified || codeSent || reqCodeSent || reqVerified}
+              onChange={(e) => { setEmail(e.target.value); editReqEmail(e.target.value); setErr(""); }}
+              placeholder={selectedCons && schoolDomains(selectedCons)[0] ? `you@${schoolDomains(selectedCons)[0]}` : "you@school.edu"} autoComplete="off" />
           </Field>
-          {reqEmail && !reqDomain && (
-            <p className="text-sm" style={{ color: C.burgundy, margin: "-8px 0 12px" }}>That doesn't look like an email address.</p>
-          )}
-          {reqDomain && reqFreeMail && (
-            <p className="text-sm" style={{ color: C.burgundy, margin: "-8px 0 12px" }}>
-              That's a personal address. We need the one your conservatory gave you.
-            </p>
-          )}
-          {/* Three phases, one at a time: prove the address, then send it.
-              The request is only worth a human's attention once we know the
-              person actually holds the address they are claiming. */}
-          {!reqCodeSent && !reqVerified && (
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <button
-                className="artium-su-next-btn"
-                style={{ flex: "0 0 auto", fontSize: 14, padding: "11px 20px" }}
-                disabled={!reqReady || reqSending}
-                onClick={sendReqCode}
-              >
-                {reqSending ? "Sending…" : "Send verification code"}
-              </button>
-              <button className="artium-su-change" style={{ marginLeft: 0 }} onClick={() => setShowReq(false)}>Cancel</button>
-            </div>
-          )}
 
-          {reqCodeSent && !reqVerified && (
-            <div>
-              <p className="text-sm" style={{ color: C.ivoryDim, marginBottom: 8 }}>Enter the code sent to <b>{reqEmail.trim()}</b>.</p>
-              <input
-                style={{ width: "100%", maxWidth: 260, padding: "12px 16px", borderRadius: 10, border: `1.5px solid ${C.inkLine}`, background: warm("0.05"), color: C.ivory, fontFamily: "'ui-monospace', monospace", fontSize: 22, fontWeight: 600, letterSpacing: 8, textAlign: "center", outline: "none", boxSizing: "border-box" }}
-                value={reqCode}
-                onChange={(e) => { setReqCode(e.target.value.replace(/\D/g, "").slice(0, 10)); setReqErr(""); }}
-                placeholder="••••••••" inputMode="numeric" autoFocus />
-              <div className="flex items-center gap-3" style={{ marginTop: 12 }}>
-                <PrimaryBtn disabled={reqCode.length < 6 || reqVerifying} onClick={verifyReqCode}>{reqVerifying ? "Verifying…" : "Verify address"}</PrimaryBtn>
-                <button onClick={sendReqCode} disabled={reqSending} style={{ fontSize: 13, color: C.brassLabel, background: "none", border: "none", cursor: "pointer" }}>Resend code</button>
-              </div>
-            </div>
-          )}
-
-          {reqVerified && (
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+          {selectedCons ? (
+            /* A school from the roster: verify the address at its domain. */
+            googleProvesSchool ? (
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <CheckIcon size={18} color={OK_C} />
-                <p style={{ fontSize: 14, color: OK_C, fontWeight: 600, margin: 0 }}>Address confirmed</p>
+                <p style={{ fontSize: 14, color: OK_C, fontWeight: 600, margin: 0 }}>Verified via Google ({draft.email})</p>
               </div>
-              <p className="text-sm" style={{ color: C.ivoryDim, marginBottom: 12, lineHeight: 1.55 }}>
-                We know the address is yours. Now we check that it belongs to the conservatory you named — that part is done by hand.
-              </p>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <button
-                  className="artium-su-next-btn"
-                  style={{ flex: "0 0 auto", fontSize: 14, padding: "11px 20px" }}
-                  disabled={!reqReady}
-                  onClick={() => {
-                    update({ domainReq: { name: reqName.trim(), address: reqAddress.trim(), email: reqEmail.trim() }, transferPending: false, priorSchool: null });
-                    setShowReq(false);
-                  }}
-                >
-                  Send for approval
-                </button>
-                <button className="artium-su-change" style={{ marginLeft: 0 }} onClick={() => setShowReq(false)}>Cancel</button>
+            ) : verified ? (
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <CheckIcon size={18} color={OK_C} />
+                <p style={{ fontSize: 14, color: OK_C, fontWeight: 600, margin: 0 }}>{draft.conservatoryEmail} verified</p>
               </div>
-            </div>
+            ) : (
+              <>
+                {email && !domainOk && (
+                  <p className="text-sm" style={{ color: C.burgundy, margin: "-8px 0 12px" }}>
+                    This must be a {selectedCons.name} address ({schoolDomains(selectedCons).map((d) => "@" + d).join(" or ")}).
+                  </p>
+                )}
+                {!codeSent ? (
+                  <PrimaryBtn disabled={!domainOk || sending} onClick={sendCode}>{sending ? "Sending…" : "Send verification code"}</PrimaryBtn>
+                ) : (
+                  <div>
+                    <p className="text-sm" style={{ color: C.ivoryDim, marginBottom: 8 }}>Enter the code sent to <b>{email}</b>.</p>
+                    <input
+                      style={{ width: "100%", maxWidth: 260, padding: "12px 16px", borderRadius: 10, border: `1.5px solid ${C.inkLine}`, background: warm("0.05"), color: C.ivory, fontFamily: "'ui-monospace', monospace", fontSize: 22, fontWeight: 600, letterSpacing: 8, textAlign: "center", outline: "none", boxSizing: "border-box" }}
+                      value={code}
+                      onChange={(e) => { setCode(e.target.value.replace(/\D/g, "").slice(0, 10)); setErr(""); }}
+                      placeholder="••••••••" inputMode="numeric" autoFocus />
+                    <div className="flex items-center gap-3" style={{ marginTop: 12 }}>
+                      <PrimaryBtn disabled={code.length < 6 || verifying} onClick={verifyCode}>{verifying ? "Verifying…" : "Verify & continue"}</PrimaryBtn>
+                      <button onClick={sendCode} disabled={sending} style={{ fontSize: 13, color: C.brassLabel, background: "none", border: "none", cursor: "pointer" }}>Resend code</button>
+                      <button onClick={() => { setCodeSent(false); setCode(""); setErr(""); }} style={{ fontSize: 13, color: C.ivoryDim, background: "none", border: "none", cursor: "pointer" }}>Change details</button>
+                    </div>
+                  </div>
+                )}
+                {err && <p className="text-sm" style={{ color: C.burgundy, marginTop: 10 }}>{err}</p>}
+              </>
+            )
+          ) : (
+            /* Not in the roster: prove the address, then send it to us. */
+            <>
+              {reqEmail && !reqDomain && (
+                <p className="text-sm" style={{ color: C.burgundy, margin: "-8px 0 12px" }}>That doesn't look like an email address.</p>
+              )}
+              {reqDomain && reqFreeMail && (
+                <p className="text-sm" style={{ color: C.burgundy, margin: "-8px 0 12px" }}>
+                  That's a personal address. We need the one your conservatory gave you.
+                </p>
+              )}
+              {!reqCodeSent && !reqVerified && (
+                <PrimaryBtn disabled={!reqReady || reqSending} onClick={sendReqCode}>{reqSending ? "Sending…" : "Send verification code"}</PrimaryBtn>
+              )}
+              {reqCodeSent && !reqVerified && (
+                <div>
+                  <p className="text-sm" style={{ color: C.ivoryDim, marginBottom: 8 }}>Enter the code sent to <b>{reqEmail.trim()}</b>.</p>
+                  <input
+                    style={{ width: "100%", maxWidth: 260, padding: "12px 16px", borderRadius: 10, border: `1.5px solid ${C.inkLine}`, background: warm("0.05"), color: C.ivory, fontFamily: "'ui-monospace', monospace", fontSize: 22, fontWeight: 600, letterSpacing: 8, textAlign: "center", outline: "none", boxSizing: "border-box" }}
+                    value={reqCode}
+                    onChange={(e) => { setReqCode(e.target.value.replace(/\D/g, "").slice(0, 10)); setReqErr(""); }}
+                    placeholder="••••••••" inputMode="numeric" autoFocus />
+                  <div className="flex items-center gap-3" style={{ marginTop: 12 }}>
+                    <PrimaryBtn disabled={reqCode.length < 6 || reqVerifying} onClick={verifyReqCode}>{reqVerifying ? "Verifying…" : "Verify address"}</PrimaryBtn>
+                    <button onClick={sendReqCode} disabled={reqSending} style={{ fontSize: 13, color: C.brassLabel, background: "none", border: "none", cursor: "pointer" }}>Resend code</button>
+                    <button onClick={() => { setReqCodeSent(false); setReqCode(""); setReqErr(""); }} style={{ fontSize: 13, color: C.ivoryDim, background: "none", border: "none", cursor: "pointer" }}>Change details</button>
+                  </div>
+                </div>
+              )}
+              {reqVerified && (
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                    <CheckIcon size={18} color={OK_C} />
+                    <p style={{ fontSize: 14, color: OK_C, fontWeight: 600, margin: 0 }}>Address confirmed</p>
+                  </div>
+                  <p className="text-sm" style={{ color: C.ivoryDim, marginBottom: 12, lineHeight: 1.55 }}>
+                    {reqName.trim() || "This conservatory"} isn't on our list yet — we'll check it by hand.
+                  </p>
+                  <PrimaryBtn disabled={!reqReady}
+                    onClick={() => update({ domainReq: { name: reqName.trim(), address: reqAddress.trim(), email: reqEmail.trim() }, transferPending: false, priorSchool: null })}>
+                    Send for approval
+                  </PrimaryBtn>
+                </div>
+              )}
+              {reqErr && <p className="text-sm" style={{ color: C.burgundy, marginTop: 10 }}>{reqErr}</p>}
+            </>
           )}
-          {reqErr && <p className="text-sm" style={{ color: C.burgundy, marginTop: 10 }}>{reqErr}</p>}
         </div>
       )}
 
@@ -8969,59 +8989,6 @@ function StepConservatory({ draft, update, editing }) {
           )}
           <p className="text-xs" style={{ color: C.ivoryDim, marginTop: 10, fontFamily: FONT_MONO }}>Image or PDF · max 10 MB · kept private, seen only by our review team.</p>
           {err && <p className="text-sm" style={{ color: C.burgundy, marginTop: 10 }}>{err}</p>}
-        </div>
-      )}
-
-      {/* Conservatory email verification (OTP path) */}
-      {selectedCons && !googleProvesSchool && proving && !isDoc && !showReq && !draft.domainReq && (
-        <div className="mt-5 rounded-2xl" style={{ border: `1px solid ${verified ? OK_C : C.brass}`, background: C.inkSoft, padding: "18px 18px" }}>
-          <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.brassLabel, letterSpacing: 0.5, marginBottom: 8 }}>VERIFY YOUR {(selectedCons.short || selectedCons.name).toUpperCase()} STUDENT EMAIL</p>
-          {verified ? (
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <CheckIcon size={18} color={OK_C} />
-              <p style={{ fontSize: 14, color: OK_C, fontWeight: 600, margin: 0 }}>{draft.conservatoryEmail} verified</p>
-            </div>
-          ) : (
-            <>
-              <p className="text-sm" style={{ color: C.ivoryDim, marginBottom: 10 }}>
-                Enter your <b>@{selectedCons.domains[0]}</b> address. We'll email you a code to confirm you study there.
-              </p>
-              <input style={inputStyle} type="email" value={email} disabled={codeSent}
-                onChange={(e) => { setEmail(e.target.value); setErr(""); }}
-                placeholder={`you@${selectedCons.domains[0]}`} autoComplete="off" />
-              {email && !domainOk && (
-                <p className="text-sm" style={{ color: C.burgundy, marginTop: 6 }}>
-                  This must be a {selectedCons.name} address ({selectedCons.domains.map((d) => "@" + d).join(" or ")}).
-                </p>
-              )}
-
-              {!codeSent ? (
-                <div style={{ marginTop: 12 }}>
-                  <PrimaryBtn disabled={!domainOk || sending} onClick={sendCode}>{sending ? "Sending…" : "Send verification code"}</PrimaryBtn>
-                </div>
-              ) : (
-                <div style={{ marginTop: 12 }}>
-                  <p className="text-sm" style={{ color: C.ivoryDim, marginBottom: 8 }}>Enter the code sent to <b>{email}</b>.</p>
-                  <input
-                    style={{ width: "100%", maxWidth: 260, padding: "12px 16px", borderRadius: 10, border: `1.5px solid ${C.inkLine}`, background: warm("0.05"), color: C.ivory, fontFamily: "'ui-monospace', monospace", fontSize: 22, fontWeight: 600, letterSpacing: 8, textAlign: "center", outline: "none", boxSizing: "border-box" }}
-                    value={code}
-                    onChange={(e) => { setCode(e.target.value.replace(/\D/g, "").slice(0, 10)); setErr(""); }}
-                    placeholder="••••••••" inputMode="numeric" autoFocus />
-                  <div className="flex items-center gap-3" style={{ marginTop: 12 }}>
-                    <PrimaryBtn disabled={code.length < 6 || verifying} onClick={verifyCode}>{verifying ? "Verifying…" : "Verify & continue"}</PrimaryBtn>
-                    <button onClick={sendCode} disabled={sending} style={{ fontSize: 13, color: C.brassLabel, background: "none", border: "none", cursor: "pointer" }}>Resend code</button>
-                  </div>
-                </div>
-              )}
-              {err && <p className="text-sm" style={{ color: C.burgundy, marginTop: 10 }}>{err}</p>}
-            </>
-          )}
-        </div>
-      )}
-      {selectedCons && googleProvesSchool && proving && (
-        <div className="mt-5 rounded-2xl" style={{ border: `1px solid ${OK_C}`, background: C.inkSoft, padding: "14px 18px", display: "flex", alignItems: "center", gap: 8 }}>
-          <CheckIcon size={18} color={OK_C} />
-          <p style={{ fontSize: 14, color: OK_C, fontWeight: 600, margin: 0 }}>Verified via Google ({draft.email})</p>
         </div>
       )}
 
