@@ -988,3 +988,5 @@ html.theme-modern .artium-su-nav{background:linear-gradient(180deg,rgba(255,255,
 .su-doorlist{width:100vw;max-width:none;margin-left:calc(50% - 50vw);border-radius:0;border-left:0;border-right:0;padding:6px 0}
 .su-doorrow{padding:12px 20px}
 @media (min-width:744px){.su-doorlist{width:auto;margin-left:0;border-radius:12px;border-left:1px solid #E8E2DC;border-right:1px solid #E8E2DC}}
+/* Step 2's three-choice screen: no card frame around the picture and list. */
+html.theme-modern .artium-su-card.artium-su-card--bare,.artium-su-card.artium-su-card--bare{border:0 !important;box-shadow:none !important;background:transparent !important}
