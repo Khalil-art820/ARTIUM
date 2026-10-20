@@ -11597,16 +11597,16 @@ const GUEST_TABS = [
 // YouTube red, and a black web tile.
 function SocialMark({ k }) {
   if (k === "instagram") return (
-    <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#fff" strokeWidth="2"><rect x="3.5" y="3.5" width="17" height="17" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.3" cy="6.7" r="1.1" fill="#fff" stroke="none" /></svg>
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" strokeWidth="2.1"><rect x="3.5" y="3.5" width="17" height="17" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.3" cy="6.7" r="1.1" fill="#fff" stroke="none" /></svg>
   );
   if (k === "facebook") return (
-    <svg viewBox="5 3 14 19" width="22" height="30" style={{ marginTop: 8 }}><path fill="#fff" d="M13.6 21v-7.4h2.5l.4-2.9h-2.9V8.9c0-.8.3-1.4 1.5-1.4h1.5V4.9c-.3 0-1.2-.1-2.2-.1-2.2 0-3.7 1.3-3.7 3.8v2.1H8.2v2.9h2.5V21z" /></svg>
+    <svg viewBox="8.2 4.8 8.4 16.2" width="10" height="19" style={{ display: "block" }}><path fill="#fff" d="M13.6 21v-7.4h2.5l.4-2.9h-2.9V8.9c0-.8.3-1.4 1.5-1.4h1.5V4.9c-.3 0-1.2-.1-2.2-.1-2.2 0-3.7 1.3-3.7 3.8v2.1H8.2v2.9h2.5V21z" /></svg>
   );
   if (k === "youtube") return (
-    <svg viewBox="0 0 24 24" width="34" height="34"><path fill="#fff" d="M9 6.8v10.4l8.6-5.2z" /></svg>
+    <svg viewBox="0 0 24 24" width="28" height="28" style={{ display: "block", marginLeft: 2 }}><path fill="#fff" d="M9 6.8v10.4l8.6-5.2z" /></svg>
   );
   return (
-    <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#fff" strokeWidth="1.7"><circle cx="12" cy="12" r="8.5" /><path d="M3.5 12h17M12 3.5c2.3 2.4 3.4 5.2 3.4 8.5s-1.1 6.1-3.4 8.5c-2.3-2.4-3.4-5.2-3.4-8.5s1.1-6.1 3.4-8.5z" /></svg>
+    <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="#fff" strokeWidth="1.8"><circle cx="12" cy="12" r="8.5" /><path d="M3.5 12h17M12 3.5c2.3 2.4 3.4 5.2 3.4 8.5s-1.1 6.1-3.4 8.5c-2.3-2.4-3.4-5.2-3.4-8.5s1.1-6.1 3.4-8.5z" /></svg>
   );
 }
 
