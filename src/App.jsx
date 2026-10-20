@@ -8181,6 +8181,9 @@ function emailMatchesConservatory(email, cons) {
   return cons.domains.some((d) => host === d.toLowerCase() || host.endsWith("." + d.toLowerCase()));
 }
 
+// A school's email domains, for hints and placeholders.
+const schoolDomains = (c) => ((c && c.domains) || []).filter((d) => !String(d).includes("@"));
+
 // The addresses people reach for when a form asks for an email, none of which
 // belong to an institution.
 const FREE_MAIL = new Set([
