@@ -958,3 +958,7 @@ html.theme-modern .artium-su-why{background:#FFFFFF;border:1px solid #E8E2DC;col
 .su-link input{margin:0}
 .su-link-note{display:flex;align-items:center;gap:8px;font-family:'Fira Sans',system-ui,sans-serif;font-size:13.5px;font-weight:500;color:#5E6B69}
 .su-link-note svg{color:#B8862E;flex:none}
+/* Smaller brand tiles */
+.su-link{gap:12px}
+.su-link-ic,.su-link--youtube .su-link-ic{width:36px;height:36px;border-radius:10px}
+.su-link-ic svg{transform:scale(.78)}
