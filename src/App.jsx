@@ -7259,6 +7259,7 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
   // been filling for several minutes and the button gives no clue what it
   // costs. The answer — nothing — is the whole reason to ask.
   const [confirmLeave, setConfirmLeave] = useState(false);
+  const [confirmFresh, setConfirmFresh] = useState(false);
   // One signup for the whole app: everyone who reaches this flow now arrives
   // already authenticated (see AuthPrompt / startApply's freshAuthedDraft),
   // so the account-creation step this used to open on never has anything to
@@ -7448,13 +7449,26 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
             where it came from, and whether it is really theirs. */}
         {resumed && !editing && (
           <div style={{ marginTop: 14, padding: "11px 13px", borderRadius: 12, border: MODERN ? "1px solid rgba(8,104,104,0.3)" : "1px solid rgba(239,208,155,0.35)", background: MODERN ? "rgba(8,104,104,0.06)" : "rgba(239,208,155,0.06)" }}>
-            <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: C.brassLabel }}>Picked up where you left off</p>
-            <p className="text-sm" style={{ margin: "4px 0 0", color: C.ivoryDim, lineHeight: 1.5 }}>
-              Everything you filled in is still here. Set your password again — it's the one thing we don't keep — and carry on.
+            <p className="text-sm" style={{ margin: 0, color: C.ivory, lineHeight: 1.5 }}>
+              Everything you filled in is still here.
             </p>
-            <button onClick={onStartFresh} style={{ marginTop: 8, padding: 0, background: "none", border: "none", color: C.brassLabel, fontFamily: FONT_BODY, fontSize: 12.5, fontWeight: 700, cursor: "pointer", textDecoration: "underline" }}>
-              Start again from scratch
-            </button>
+            {!confirmFresh ? (
+              <button onClick={() => setConfirmFresh(true)} style={{ marginTop: 6, padding: 0, background: "none", border: "none", color: C.brassLabel, fontFamily: FONT_BODY, fontSize: 12.5, fontWeight: 700, cursor: "pointer", textDecoration: "underline" }}>
+                Start again from scratch
+              </button>
+            ) : (
+              <div style={{ marginTop: 8 }}>
+                <p className="text-sm" style={{ margin: 0, color: C.ivory, fontWeight: 600 }}>Are you sure? Everything you filled in will be erased.</p>
+                <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                  <button onClick={() => setConfirmFresh(false)} style={{ padding: "7px 14px", borderRadius: MODERN ? 10 : 999, border: "none", background: BRASS_GRAD, color: C.brassText, fontFamily: FONT_BODY, fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}>
+                    Keep my answers
+                  </button>
+                  <button onClick={() => { setConfirmFresh(false); onStartFresh(); }} style={{ padding: "7px 14px", borderRadius: MODERN ? 10 : 999, border: `1px solid ${C.inkLine}`, background: "#FFFFFF", color: C.burgundy, fontFamily: FONT_BODY, fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}>
+                    Yes, start again
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
         <div className="artium-su-head">
@@ -12165,7 +12179,33 @@ function StepTeaching({ draft, update, editing }) {
  * only added a second, competing one. Without it the mark can be taller —
  * a pin is a vertical shape, and a circle was forcing it to be square.
  */
+// The current brand lockup: the app icon's teal disc with the white sound
+// bars, then the ARTIUM wordmark with the crossbar-less A.
+function ArtiumLockup({ size = 20 }) {
+  const disc = Math.round(size * 1.7);
+  return (
+    <span className="artium-lockup" aria-label="ARTIUM" role="img" style={{ display: "inline-flex", alignItems: "center", gap: Math.round(size * 0.45) }}>
+      <span aria-hidden="true" style={{ width: disc, height: disc, borderRadius: "50%", flex: "none", display: "grid", placeItems: "center",
+        background: "radial-gradient(circle at 35% 30%, #2C8C80, #0A5A55 70%)", boxShadow: "0 4px 10px -4px rgba(7,95,92,.6)" }}>
+        <svg width={disc * 0.5} height={disc * 0.5} viewBox="0 0 24 24">
+          {WAVE_BARS.map(([x, h], i) => <line key={i} x1={x} x2={x} y1={12 - h / 2} y2={12 + h / 2} stroke="#FFFFFF" strokeWidth="2.4" strokeLinecap="round" />)}
+        </svg>
+      </span>
+      <span aria-hidden="true" style={{ display: "inline-flex", alignItems: "center", fontFamily: "'Jost', system-ui, sans-serif", fontWeight: 600,
+        fontSize: size * 0.95, letterSpacing: "0.2em", color: "#12352E", lineHeight: 1 }}>
+        <svg width={size * 0.7} height={size * 0.7} viewBox="0 0 15 15" style={{ marginRight: "0.16em", display: "block" }}>
+          <path d="M7.5 0.9 L1.4 14.4 M7.5 0.9 L13.6 14.4" stroke="currentColor" strokeWidth="2.85" fill="none" />
+        </svg>
+        RTIUM
+      </span>
+    </span>
+  );
+}
+
 function GateLogo({ word = 27, markScale = 1.0 }) {
+  // Modern: the current lockup. The pin and lowercase "artium" below are the
+  // old gate's mark, kept for the classic theme only.
+  if (MODERN) return <ArtiumLockup size={word} />;
   // Optical centring, against the mark. align-items: center lands the word's
   // bounding box dead on the mark's centre — measured, it is exact — but the
   // box is not what the eye reads. "artium" is bottom-heavy: all of its mass
@@ -12271,7 +12311,7 @@ function LearnerSignup({ onSubmit, onBack, error, authUser }) {
           <button onClick={onBack} style={{ color: C.ivoryDim, background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", padding: 0 }}>
             <ChevronLeft size={18} />
           </button>
-          <Logo slogan />
+          {MODERN ? <ArtiumLockup size={20} /> : <Logo slogan />}
         </div>
         <h2 className="artium-su-title" style={{ marginTop: 22 }}>
           {isForOther ? "About the learner" : "Tell us about you"}
