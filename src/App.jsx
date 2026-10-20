@@ -7959,7 +7959,8 @@ function StepIntro({ draft, update }) {
           a tile that looks pressable and does nothing reads as a bug — and the
           hint says which two are chosen, so the way out is deselecting one of
           them and not hunting for a cleared state. */}
-      <Field label="Which instrument do you play?" req>
+      <Field label="Which instrument(s) do you play?" req>
+        <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: C.ivoryDim, margin: "-4px 0 10px" }}>Maximum 2 instruments.</p>
         {/* A choice with no tile — an old saved draft can hold a name the list
             no longer has ("Other", an old spelling). It still counts toward the
             two, and with no tile there was no way to take it back. Shown here
@@ -7994,13 +7995,13 @@ function StepIntro({ draft, update }) {
             );
           })}
         </div>
-        <p style={{ fontFamily: FONT_BODY, fontSize: 12, color: C.ivoryDim, margin: "10px 0 0" }}>
-          {full
-            ? `${picked.join(" and ")} — deselect one to change it.`
-            : picked.length === 1
-              ? "Add a second if you play one, or carry on."
-              : "You can pick a second one too."}
-        </p>
+        {picked.length > 0 && (
+          <p style={{ fontFamily: FONT_BODY, fontSize: 12, color: C.ivoryDim, margin: "10px 0 0" }}>
+            {full
+              ? `${picked.join(" and ")} — deselect one to change it.`
+              : "Add a second if you play one, or carry on."}
+          </p>
+        )}
       </Field>
       <div className="mt-2">
         {/* Four fields, not one. The old single field asked for a performance
