@@ -7253,7 +7253,7 @@ function SuNextButton({ ok, onGo, hint, children }) {
   );
 }
 
-const STEP_LABELS = ["Introduce Yourself", "Get Verified and Join the Conservatory Student Map", "Your musical voice", "Current repertoire", "Top | Flop | Composer", "Teaching", "Review and submit"];
+const STEP_LABELS = ["Introduce Yourself", "Get Verified and Join the Student Map", "Your musical voice", "Current repertoire", "Top | Flop | Composer", "Teaching", "Review and submit"];
 
 function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubmit, onCancel, onHome, authError, resumed, onStartFresh }) {
   const [submitting, setSubmitting] = useState(false);
