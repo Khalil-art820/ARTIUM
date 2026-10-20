@@ -13,7 +13,7 @@ import {
   Map, BookOpen, ListChecks, LayoutList, Megaphone, Check as CheckIcon, ShieldCheck, FileText, Lock,
   ScanLine, ArrowUpRight, Globe2, MapPin, GraduationCap, User, Paperclip,
   Compass, Briefcase, Feather, CheckCircle2, ChevronDown, RotateCcw, SlidersHorizontal,
-  Globe as GlobeIcon, Piano, Landmark, ArrowDown, ChartNoAxesColumnIncreasing, UserPlus,
+  Globe as GlobeIcon, Piano, Landmark, ArrowDown, ChartNoAxesColumnIncreasing, UserPlus, Info,
 } from "lucide-react";
 import { useAuth } from "./contexts/AuthContext";
 import { supabase } from "./lib/supabase";
@@ -8018,10 +8018,8 @@ function StepIntro({ draft, update }) {
               const ok = linkFieldValid(f, value);
               return (
                 <div key={f.key}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <span title={f.label} style={{ color: ok ? C.ivoryDim : C.burgundy, display: "flex", flexShrink: 0, width: 18, justifyContent: "center" }}>
-                      <f.Icon size={16} strokeWidth={1.9} />
-                    </span>
+                  <div className={`su-link su-link--${f.key}${ok ? "" : " is-bad"}`}>
+                    <span className="su-link-ic" title={f.label} aria-hidden="true"><SocialMark k={f.key} /></span>
                     <input
                       style={{ ...inputStyle, borderColor: ok ? undefined : C.burgundy }}
                       value={value}
@@ -8032,7 +8030,7 @@ function StepIntro({ draft, update }) {
                     />
                   </div>
                   {!ok && (
-                    <p style={{ margin: "4px 0 0 28px", fontFamily: FONT_BODY, fontSize: 12, color: C.burgundy }}>
+                    <p style={{ margin: "5px 0 0 14px", fontFamily: FONT_BODY, fontSize: 12, color: C.burgundy }}>
                       {f.key === "website"
                         ? "That doesn't look like a web address."
                         : `That isn't a ${f.label} link.`}
@@ -8043,8 +8041,8 @@ function StepIntro({ draft, update }) {
             })}
           </div>
         </Field>
-        <p className="-mt-4" style={{ fontFamily: FONT_BODY, fontSize: 12, fontWeight: 500, color: "#7C7C7C" }}>
-          All optional — add the ones you use.
+        <p className="-mt-3 su-link-note">
+          <Info size={17} strokeWidth={1.8} aria-hidden="true" />All optional — add the ones you use.
         </p>
       </div>
     </div>
@@ -11595,11 +11593,28 @@ const GUEST_TABS = [
  * silently sending visitors somewhere unexpected. Website takes anything that
  * looks like a domain, because that is the whole point of it.
  */
+// The brand tiles for the links form: Instagram's gradient, Facebook blue,
+// YouTube red, and a black web tile.
+function SocialMark({ k }) {
+  if (k === "instagram") return (
+    <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#fff" strokeWidth="2"><rect x="3.5" y="3.5" width="17" height="17" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.3" cy="6.7" r="1.1" fill="#fff" stroke="none" /></svg>
+  );
+  if (k === "facebook") return (
+    <svg viewBox="5 3 14 19" width="22" height="30" style={{ marginTop: 8 }}><path fill="#fff" d="M13.6 21v-7.4h2.5l.4-2.9h-2.9V8.9c0-.8.3-1.4 1.5-1.4h1.5V4.9c-.3 0-1.2-.1-2.2-.1-2.2 0-3.7 1.3-3.7 3.8v2.1H8.2v2.9h2.5V21z" /></svg>
+  );
+  if (k === "youtube") return (
+    <svg viewBox="0 0 24 24" width="34" height="34"><path fill="#fff" d="M9 6.8v10.4l8.6-5.2z" /></svg>
+  );
+  return (
+    <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#fff" strokeWidth="1.7"><circle cx="12" cy="12" r="8.5" /><path d="M3.5 12h17M12 3.5c2.3 2.4 3.4 5.2 3.4 8.5s-1.1 6.1-3.4 8.5c-2.3-2.4-3.4-5.2-3.4-8.5s1.1-6.1 3.4-8.5z" /></svg>
+  );
+}
+
 const LINK_FIELDS = [
   { key: "instagram", label: "Instagram", Icon: Instagram, placeholder: "instagram.com/yourhandle",   host: /instagram\.com/i },
   { key: "facebook",  label: "Facebook",  Icon: Facebook,  placeholder: "facebook.com/yourpage",      host: /facebook\.com|fb\.(com|watch|me)/i },
   { key: "youtube",   label: "YouTube",   Icon: Youtube,   placeholder: "youtube.com/@yourchannel",   host: /youtube\.com|youtu\.be/i },
-  { key: "website",   label: "Website",   Icon: Globe2,    placeholder: "yourname.com",               host: /^[^\s]+\.[a-z]{2,}/i },
+  { key: "website",   label: "Website",   Icon: Globe2,    placeholder: "www.yourname.com",               host: /^[^\s]+\.[a-z]{2,}/i },
 ];
 
 // People type "instagram.com/x", not "https://instagram.com/x". Without a
