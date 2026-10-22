@@ -7334,8 +7334,10 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
   const onDoorsBack = !editing && idx === 1 && !!draft.applicant;
   function goBack() {
     if (onDoorsBack) {
-      update({ applicant: "", verifyMethod: "otp", conservatoryId: "", conservatoryVerified: false, conservatoryEmail: "",
-        proofDocUrl: "", proofDocName: "", otpEmail: "", otpSent: false });
+      // Back to the three choices, keeping what was done in this one — the
+      // school, the email, a sent or verified code, an uploaded document.
+      // Choosing the same option again brings it all back (chooseDoor).
+      update({ applicant: "", lastApplicant: draft.applicant });
       return;
     }
     if (step === 0) { setConfirmLeave(true); return; }
@@ -8318,7 +8320,7 @@ function FilePickButton({ accept, onFile, disabled, style, title, children }) {
 
 function StepConservatory({ draft, update, editing }) {
   const [q, setQ] = useState("");
-  const [email, setEmail] = useState(draft.otpEmail || draft.conservatoryEmail || "");
+  const [email, setEmail] = useState(draft.otpEmail || draft.conservatoryEmail || draft.emailForm?.email || "");
   const [codeSent, setCodeSent] = useState(!!draft.otpSent);
   const [code, setCode] = useState("");
   const [sending, setSending] = useState(false);
@@ -8388,9 +8390,12 @@ function StepConservatory({ draft, update, editing }) {
   // One pin, moving. A school every three seconds beats 110 at once: the
   // point of the globe here is reach, not a map you are meant to read.
   const [showReq, setShowReq] = useState(false);
-  const [reqName, setReqName] = useState("");
-  const [reqAddress, setReqAddress] = useState("");
-  const [reqEmail, setReqEmail] = useState("");
+  // The email form lives in the draft too (emailForm), so leaving the step
+  // and coming back finds it as it was.
+  const savedForm = draft.emailForm || {};
+  const [reqName, setReqName] = useState(savedForm.name || "");
+  const [reqAddress, setReqAddress] = useState(savedForm.city || "");
+  const [reqEmail, setReqEmail] = useState(savedForm.email || "");
   const reqDomain = (String(reqEmail).trim().toLowerCase().match(/@([^@\s]+\.[^@\s]+)$/) || [])[1] || "";
   // A gmail address proves nothing about a conservatory, and it is the most
   // likely thing to be typed here by mistake.
@@ -8410,10 +8415,14 @@ function StepConservatory({ draft, update, editing }) {
   // sending. The same one-time code as the main route, and the same
   // throwaway session, discarded the moment it has served.
   const [reqCode, setReqCode] = useState("");
-  const [reqCodeSent, setReqCodeSent] = useState(false);
+  const [reqCodeSent, setReqCodeSent] = useState(!!savedForm.reqCodeSent);
   const [reqSending, setReqSending] = useState(false);
   const [reqVerifying, setReqVerifying] = useState(false);
-  const [reqVerified, setReqVerified] = useState(false);
+  const [reqVerified, setReqVerified] = useState(!!savedForm.reqVerified);
+  useEffect(() => {
+    if (draft.applicant !== "student_email") return;
+    update({ emailForm: { name: reqName, city: reqAddress, email: reqEmail || email, reqCodeSent, reqVerified } });
+  }, [reqName, reqAddress, reqEmail, email, reqCodeSent, reqVerified]); // eslint-disable-line react-hooks/exhaustive-deps
   const [reqErr, setReqErr] = useState("");
 
   // Editing the address after a code has gone out invalidates everything that
@@ -8632,8 +8641,12 @@ function StepConservatory({ draft, update, editing }) {
   // of. The proof and the verified address go too, since neither means
   // anything on the far side.
   function chooseDoor(kind) {
+    // The same option they came back from: pick up where they left it.
+    if (kind && kind === draft.lastApplicant) { update({ applicant: kind }); return; }
     setQ(""); setEmail(""); setCode(""); setCodeSent(false); setErr("");
+    setReqName(""); setReqAddress(""); setReqEmail(""); setReqCode(""); setReqCodeSent(false); setReqVerified(false); setReqErr("");
     update({
+      lastApplicant: "", emailForm: null,
       applicant: kind,
       verifyMethod: kind === "student_email" ? "otp" : "document",
       conservatoryId: "", conservatoryVerified: false, conservatoryEmail: "",
