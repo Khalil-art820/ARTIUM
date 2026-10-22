@@ -8689,7 +8689,7 @@ function StepConservatory({ draft, update, editing }) {
       {/* A still picture of the network rather than the live 3D globe: the
           step is a form, and the picture only has to say "a world of musicians". */}
       <div className="artium-su-globe artium-su-globe--img">
-        <img src="/su-globe-v1.webp" alt="" width="486" height="493" />
+        <img src="/su-globe-v2.webp" alt="" width="481" height="481" />
       </div>
 
       {/* Editing a profile is not re-applying to a conservatory.

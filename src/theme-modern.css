@@ -1040,3 +1040,6 @@ html.theme-modern .artium-lp--light .artium-lp-h2{font-size:clamp(28px,8.4vw,44p
 .su-step-title{margin:8px 0 0;font-family:'DM Serif Display','Playfair Display',Georgia,serif;font-weight:400;font-size:clamp(28px,8.4vw,38px);line-height:1.08;color:#14202E;letter-spacing:-.005em}
 .su-step-sub{margin:8px 0 0;font:400 15.5px/1.4 'Fira Sans',system-ui,sans-serif;color:#6B7A78}
 .su-step-title{text-align:center;margin-top:16px}
+/* Step 2 globe: no shadow, equal space above and below (30px each:
+   28px page + 22px card padding above, pulled up by 20) */
+.artium-su-globe--img{margin:-20px 0 30px !important}
