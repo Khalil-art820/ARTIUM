@@ -1045,3 +1045,6 @@ html.theme-modern .artium-lp--light .artium-lp-h2{font-size:clamp(28px,8.4vw,44p
 .artium-su-globe--img{margin:-20px 0 30px !important}
 /* Step 2 globe: a soft shadow hugging its round edge */
 .artium-su-globe--img img{border-radius:50%;box-shadow:0 10px 26px -6px rgba(8,60,52,.35),0 2px 8px rgba(0,0,0,.12)}
+/* Sign-up add (+) buttons: round, off-white */
+.su-plus{flex:none;align-self:center;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:#F4F2EE;color:#0F5C52;border:1px solid #E6E2DB;cursor:pointer;box-shadow:0 2px 6px -3px rgba(0,0,0,.18)}
+.su-plus:active{transform:scale(.95)}

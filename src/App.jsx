@@ -9106,8 +9106,8 @@ function StepTastes({ draft, toggleTaste }) {
             placeholder="Type a composer, era, or style, then press Enter"
             autoFocus
           />
-          <button onClick={addOther} className="rounded-xl px-4 py-3 flex items-center justify-center shrink-0" style={{ background: C.brass, color: C.inkText }}>
-            <Plus size={18} />
+          <button onClick={addOther} className="su-plus" aria-label="Add">
+            <Plus size={20} strokeWidth={2.2} />
           </button>
         </div>
       )}
@@ -9130,7 +9130,7 @@ function StepPieces({ draft, update }) {
       <div className="grid gap-2 mb-5" style={{ gridTemplateColumns: "1fr 1fr auto" }}>
         <input style={inputStyle} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Piece title" />
         <input style={inputStyle} value={composer} onChange={(e) => setComposer(e.target.value)} placeholder="Composer" />
-        <button onClick={add} className="rounded-xl px-4 flex items-center justify-center" style={{ background: C.brass, color: C.inkText }}><Plus size={18} /></button>
+        <button onClick={add} className="su-plus" aria-label="Add piece"><Plus size={20} strokeWidth={2.2} /></button>
       </div>
       <div className="flex flex-col gap-2">
         {draft.pieces.map((p, i) => (
