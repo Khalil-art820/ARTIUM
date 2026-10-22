@@ -1018,3 +1018,5 @@ html.theme-modern .artium-lp-create-pin{position:absolute;left:29.6%;top:0.6%;wi
   filter:drop-shadow(0 10px 12px rgba(4,30,26,.45)) drop-shadow(0 2px 3px rgba(0,0,0,.25));transition:transform .18s ease}
 html.theme-modern .artium-explore:active .artium-lp-create-pin{transform:translateY(2px) scale(.97)}
 html.theme-modern .artium-explore:active .artium-lp-create{transform:none}
+/* The radio button's green on the member counter */
+html.theme-modern .tm-hm-n{background:linear-gradient(150deg,#41B48F 0%,#1F8B6D 55%,#13705A 100%);color:#FFFFFF}
