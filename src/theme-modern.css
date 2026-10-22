@@ -995,3 +995,10 @@ html.theme-modern .artium-lp-create{width:min(300px,78vw);height:auto;display:bl
 html.theme-modern .artium-explore:active .artium-lp-create{transform:scale(.97)}
 html.theme-modern .artium-lp.artium-lp--light,html.theme-modern:has(.artium-lp--light) body,html.theme-modern:has(.artium-lp--light) #root{background:#FFFFFF !important}
 html.theme-modern .artium-lp--light .artium-lp-bd{display:none}
+/* The mockup's green (#0E9369) for the member counter and the bottom bar's
+   active icon + line, instead of the mint/blue. */
+html.theme-modern .tm-hm-n{background:#0E9369;color:#FFFFFF}
+html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button[data-on="1"]{color:#0E9369}
+html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button::after{background:#0E9369}
+/* Every Conservatory. One Network: off-white instead of pure white */
+html.theme-modern .artium-lp.artium-lp--light,html.theme-modern:has(.artium-lp--light) body,html.theme-modern:has(.artium-lp--light) #root{background:#FAF9F6 !important}
