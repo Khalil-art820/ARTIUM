@@ -6013,7 +6013,30 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
           {MODERN ? (
             /* The pin, globe and Register tab, as one picture: the globe with
                the "Create account" pin. The whole picture is the button. */
-            <img className="artium-lp-create" src="/lp-create-v2.webp" alt="" width="530" height="493" />
+            <span className="artium-lp-create-wrap">
+              <img className="artium-lp-create" src="/lp-create-v2.webp" alt="" width="530" height="493" />
+              {/* The pin redrawn as vector over the picture's own: a crisp gold
+                  rim and a shadow, so it reads as a button lifted off the globe. */}
+              <svg className="artium-lp-create-pin" viewBox="0 0 216 268" aria-hidden="true">
+                <defs>
+                  <radialGradient id="lpPinFill" cx="50%" cy="35%" r="70%">
+                    <stop offset="0" stopColor="#17614F" /><stop offset="1" stopColor="#0A3A33" />
+                  </radialGradient>
+                  <linearGradient id="lpPinRim" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stopColor="#FFF1C9" /><stop offset=".45" stopColor="#E9C46F" /><stop offset="1" stopColor="#C99A3E" />
+                  </linearGradient>
+                </defs>
+                <path d="M108 262C72 216 5 172 5 106A103 103 0 1 1 211 106C211 172 144 216 108 262Z" fill="url(#lpPinFill)" stroke="url(#lpPinRim)" strokeWidth="7" strokeLinejoin="round" />
+                <g fill="none" stroke="#FFFFFF" strokeWidth="4.4" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="100" cy="46" r="13" />
+                  <path d="M76 86c2-14 12-22 24-22 7 0 13 2 17 7" />
+                  <path d="M122 76h20M132 66v20" />
+                </g>
+                <text x="108" y="128" textAnchor="middle" fill="#FFFFFF" fontFamily="'Fira Sans', system-ui, sans-serif" fontWeight="700" fontSize="24" letterSpacing="1.5">CREATE</text>
+                <text x="108" y="156" textAnchor="middle" fill="#FFFFFF" fontFamily="'Fira Sans', system-ui, sans-serif" fontWeight="700" fontSize="24" letterSpacing="1.5">ACCOUNT</text>
+                <path d="M92 190h30M112 180l10 10-10 10" fill="none" stroke="#FFFFFF" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </span>
           ) : (
           <span className="artium-lp-stage">
             {/* Taller than it is wide (0.669), so sized by height — a square box

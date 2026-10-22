@@ -1011,3 +1011,10 @@ html.theme-modern .artium-lp--light .artium-lp-step,html.theme-modern .artium-lp
   border-color:#E8E2DC;background:#FFFFFF;transform:none;box-shadow:0 1px 2px rgba(0,0,0,.04),0 8px 24px -16px rgba(0,0,0,.14);-webkit-tap-highlight-color:transparent;cursor:default;outline:none}
 /* Off-white, closer to white — the white step cards still stand out */
 html.theme-modern .artium-lp.artium-lp--light,html.theme-modern:has(.artium-lp--light) body,html.theme-modern:has(.artium-lp--light) #root{background:#FCFBF9 !important}
+/* Create-account globe: crisp vector pin over the picture, lifted off it */
+html.theme-modern .artium-lp-create-wrap{position:relative;display:block;width:min(300px,78vw);margin:6px auto 0}
+html.theme-modern .artium-lp-create-wrap .artium-lp-create{width:100%;margin:0}
+html.theme-modern .artium-lp-create-pin{position:absolute;left:29.6%;top:0.6%;width:40.9%;height:54.6%;overflow:visible;
+  filter:drop-shadow(0 10px 12px rgba(4,30,26,.45)) drop-shadow(0 2px 3px rgba(0,0,0,.25));transition:transform .18s ease}
+html.theme-modern .artium-explore:active .artium-lp-create-pin{transform:translateY(2px) scale(.97)}
+html.theme-modern .artium-explore:active .artium-lp-create{transform:none}
