@@ -5892,7 +5892,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
     { n: "5", t: "Perform in concerts", Icon: IconStage,
       d: "Get hired to play in concerts, events and private engagements." },
     { n: "6", t: "Marketing and Advertising", Icon: IconMegaphone,
-      d: <>Claim your promotional video on <a href="https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==" target="_blank" rel="noreferrer">aclassicaltone</a> (may be subject to fees, as per our partnership agreement).</> },
+      d: <>Have your recording played on <ArtiumWord /> Radio, and claim your promotional video on <a href="https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==" target="_blank" rel="noreferrer">aclassicaltone</a>.</> },
   ];
   // One account for the whole app: even mid-way through a role flow (before
   // there's a profiles row), the session already has a face — Google's photo,
