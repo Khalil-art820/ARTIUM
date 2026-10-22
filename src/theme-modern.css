@@ -1020,3 +1020,6 @@ html.theme-modern .artium-explore:active .artium-lp-create-pin{transform:transla
 html.theme-modern .artium-explore:active .artium-lp-create{transform:none}
 /* The radio button's green on the member counter */
 html.theme-modern .tm-hm-n{background:linear-gradient(150deg,#41B48F 0%,#1F8B6D 55%,#13705A 100%);color:#FFFFFF}
+/* Bottom bar: the radio's green — its gradient on the line, its light end on the icon (an icon can't carry a gradient) */
+html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button[data-on="1"]{color:#41B48F}
+html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button::after{background:linear-gradient(150deg,#41B48F 0%,#1F8B6D 55%,#13705A 100%)}
