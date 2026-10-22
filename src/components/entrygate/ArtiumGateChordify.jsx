@@ -125,25 +125,30 @@ const FAN_CARDS = [
   { key: "masters", label: "Masters", photo: "/gate-cards/masters.webp", icon: null, pos: "70% 30%" },
 ];
 // Slot for each distance from the chosen card: x in card widths, tilt, size.
+// Up to six: two on the left, the chosen one, three on the right.
 const FAN_SLOTS = {
-  "-1": { x: -0.55, r: -7, s: 0.86, z: 3 },
-  "0": { x: 0, r: 0, s: 1.06, z: 5 },
-  "1": { x: 0.55, r: 6, s: 0.86, z: 3 },
-  "2": { x: 0.92, r: 10, s: 0.7, z: 2 },
+  "-2": { x: -0.76, r: -10, s: 0.68, z: 2 },
+  "-1": { x: -0.5, r: -6, s: 0.84, z: 3 },
+  "0": { x: 0, r: 0, s: 1.02, z: 5 },
+  "1": { x: 0.5, r: 6, s: 0.84, z: 3 },
+  "2": { x: 0.86, r: 10, s: 0.68, z: 2 },
+  "3": { x: 1.08, r: 13, s: 0.56, z: 1 },
 };
-const FAN_SHIFT = -0.18; // centres the asymmetric spread in the panel
+const FAN_MAX = 6;
+// Centres the asymmetric spread in the panel (4 cards lean right; 6 a little).
+const fanShift = (n) => (n >= 6 ? -0.08 : n === 5 ? -0.03 : -0.18);
 // The owner's featured students come first (their photo, name and
 // instrument); the instrument photos fill whatever is left of the four.
 // Stock cards never carry a name — they aren't Artium members.
 function fanCards(featured = []) {
-  const people = featured.slice(0, 4).map((m, i) => ({
+  const people = featured.slice(0, FAN_MAX).map((m, i) => ({
     key: `m:${m.id || i}`, label: m.instrument, name: m.name, photo: m.photoUrl,
     icon: m.icon ? `/instruments/${m.icon}.webp` : null, pos: "50% 30%",
   }));
   // Fill with instruments not already on a featured card first.
   const shown = new Set(featured.map((m) => String(m.instrument || "").toLowerCase()));
   const stock = [...FAN_CARDS].sort((a, b) => shown.has(a.label.toLowerCase()) - shown.has(b.label.toLowerCase()));
-  return [...people, ...stock.slice(0, Math.max(0, 4 - people.length))];
+  return [...people, ...stock.slice(0, Math.max(0, FAN_MAX - people.length))];
 }
 function CardFan({ active, onActive, cards = FAN_CARDS }) {
   const n = cards.length;
@@ -162,14 +167,16 @@ function CardFan({ active, onActive, cards = FAN_CARDS }) {
       }}
       onPointerCancel={() => { start.current = null; }}>
       {cards.map((c, i) => {
-        const o = ((i - active + 1 + n) % n) - 1;   // -1, 0, 1, 2
+        // Offset from the chosen card: -1..2 for four, -2..3 for six.
+        const back = n >= 5 ? 2 : 1;
+        const o = ((i - active + back + n) % n) - back;
         const slot = FAN_SLOTS[String(o)];
         const on = o === 0;
         return (
-          <button key={c.key} type="button" className={`cf-card${on ? " is-on" : ""}${o > 0 ? " is-right" : ""}${o > 1 ? " is-outer" : ""}`} tabIndex={-1}
+          <button key={c.key} type="button" className={`cf-card${on ? " is-on" : ""}${o > 0 ? " is-right" : ""}${Math.abs(o) > 1 ? " is-outer" : ""}`} tabIndex={-1}
             aria-label={c.name ? `${c.name}, ${c.label}` : c.label} aria-current={on || undefined}
             style={{
-              transform: `translateX(${(slot.x + FAN_SHIFT) * 100}%) rotate(${slot.r}deg) scale(${slot.s})`,
+              transform: `translateX(${(slot.x + fanShift(n)) * 100}%) rotate(${slot.r}deg) scale(${slot.s})`,
               zIndex: slot.z,
             }}
             onClick={() => { if (!on) onActive(i); }}>

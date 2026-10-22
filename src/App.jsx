@@ -2962,7 +2962,7 @@ export default function App() {
   const gateFeatured = React.useMemo(() => featuredIds
     .map((id) => students.find((st) => st.id === id))
     .filter((st) => st && st.photoUrl)
-    .slice(0, 4)
+    .slice(0, 6)
     .map((st) => ({ id: st.id, name: st.name, photoUrl: st.photoUrl, instrument: instrumentLabel(st) || "Musician", icon: instrumentIcons(st)[0] || null })),
   [featuredIds, students]);
   const deckFaces = React.useMemo(() => {
@@ -15258,7 +15258,7 @@ function AdminGateCards({ card }) {
   }, []);
   if (people === null) return <div style={{ ...card, textAlign: "center" }}><p style={{ margin: 0, fontSize: 14, color: C.ivoryDim }}>Loading…</p></div>;
   const byId = Object.fromEntries(people.map((p) => [p.id, p]));
-  const toggle = (id) => setPicked((cur) => cur.includes(id) ? cur.filter((x) => x !== id) : cur.length >= 4 ? cur : [...cur, id]);
+  const toggle = (id) => setPicked((cur) => cur.includes(id) ? cur.filter((x) => x !== id) : cur.length >= 6 ? cur : [...cur, id]);
   const move = (i, d) => setPicked((cur) => { const n = [...cur]; const j = i + d; if (j < 0 || j >= n.length) return cur; [n[i], n[j]] = [n[j], n[i]]; return n; });
   const dirty = JSON.stringify(picked) !== JSON.stringify(saved);
   async function save() {
@@ -15280,10 +15280,10 @@ function AdminGateCards({ card }) {
       <div style={card}>
         <p style={{ margin: "0 0 4px", fontSize: 16, fontWeight: 700, color: C.ivory }}>Entry gate cards</p>
         <p style={{ margin: "0 0 14px", fontSize: 13, color: C.ivoryDim, lineHeight: 1.5 }}>
-          Pick up to four approved students with a photo. They appear on the gate's card spread in this order, with their name and instrument; empty places show the instrument photos.
+          Pick up to six approved students with a photo. They appear on the gate's card spread in this order, with their name and instrument; empty places show the instrument photos.
         </p>
         {picked.length === 0 ? (
-          <p style={{ margin: "0 0 12px", fontSize: 13, color: C.ivoryDim, fontStyle: "italic" }}>No one chosen — the gate shows the four instrument photos.</p>
+          <p style={{ margin: "0 0 12px", fontSize: 13, color: C.ivoryDim, fontStyle: "italic" }}>No one chosen — the gate shows the instrument photos.</p>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 12 }}>
             {picked.map((id, i) => {

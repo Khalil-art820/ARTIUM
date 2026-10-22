@@ -651,3 +651,4 @@
    its bottom corners must carry the card's own radius (18px / 22px front). */
 .cgate .cf-cap.cf-cap-row,.cgate .cf-card:not(.is-on) .cf-cap.cf-cap-row{border-radius:50% 50% 17px 17px / 12px 12px 17px 17px}
 .cgate .cf-card.is-on .cf-cap.cf-cap-row{border-radius:50% 50% 21px 21px / 14px 14px 21px 21px}
+.cgate .cf-card.is-outer:not(.is-right) .cf-cap{left:5px;right:54%}
