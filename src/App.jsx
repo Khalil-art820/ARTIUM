@@ -7275,7 +7275,7 @@ function SuNextButton({ ok, onGo, hint, children }) {
   );
 }
 
-const STEP_LABELS = ["Introduce Yourself", "Get Verified and Join the Student Map", "Your Musical Voice", "Current Repertoire", "Top | Flop | Composer", "Teaching", "Review and submit"];
+const STEP_LABELS = ["Introduce Yourself", "Get Verified and Join the Student Map", "Your Musical Voice", "Current Repertoire", "Performance Videos", "Teaching", "Review and submit"];
 
 function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubmit, onCancel, onHome, authError, resumed, onStartFresh }) {
   const [submitting, setSubmitting] = useState(false);
@@ -7326,7 +7326,7 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
           || (!!draft.conservatoryId && (editing || draft.conservatoryVerified)))),
     draft.tastes.length >= 3,
     draft.pieces.length >= 1,
-    true,
+    (draft.performanceVideos || []).length >= 1,
     !draft.teaching.open || !!draft.teaching.mode,
     true,
   ].filter((v) => v !== null);
@@ -7356,7 +7356,7 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
       : "Enter the code we emailed to your conservatory address.",
     "Pick at least 3 musical preferences.",
     "Add at least one piece you're working on.",
-    "",
+    "Upload at least one performance video.",
     "Choose how you'd like to teach.",
     "",
   ].filter((v) => v !== null);
@@ -7528,7 +7528,7 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
         {idx === 1 && <StepConservatory key={editing ? "edit" : (draft.applicant || "doors")} draft={draft} update={update} editing={editing} />}
         {idx === 2 && <StepTastes draft={draft} toggleTaste={toggleTaste} />}
         {idx === 3 && <StepPieces draft={draft} update={update} />}
-        {idx === 4 && <StepTopFlop draft={draft} update={update} />}
+        {idx === 4 && <StepVideos draft={draft} update={update} />}
         {idx === 5 && <StepTeaching draft={draft} update={update} editing={editing} />}
         {idx === 6 && <StepReview draft={draft} />}
         </div>
@@ -9147,6 +9147,76 @@ function StepPieces({ draft, update }) {
       </div>
     </div>
   );
+}
+
+/* Step 5: up to three performance videos, a minute each, at least one.
+ * Same bucket and duration check as the cover video. */
+const PERF_VIDEO_MAX = 3;
+const PERF_VIDEO_MAX_SECONDS = 60;
+const PERF_VIDEO_MAX_MB = 150;
+function StepVideos({ draft, update }) {
+  const vids = draft.performanceVideos || [];
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  async function add(file) {
+    setErr("");
+    const secs = await videoDuration(file);
+    if (Number.isFinite(secs) && secs > PERF_VIDEO_MAX_SECONDS + 1) {
+      setErr(`That video is ${Math.round(secs)} seconds. Keep each one to a minute or less.`); return;
+    }
+    if (file.size > PERF_VIDEO_MAX_MB * 1024 * 1024) {
+      setErr(`That file is ${Math.round(file.size / 1048576)} MB — the limit is ${PERF_VIDEO_MAX_MB} MB. Record in 1080p rather than 4K, or trim it.`); return;
+    }
+    setBusy(true);
+    const r = await uploadVideoTo("performances", file);
+    setBusy(false);
+    if (r.error) { setErr(r.error); return; }
+    update((d) => ({ performanceVideos: [...(d.performanceVideos || []), r.url].slice(0, PERF_VIDEO_MAX) }));
+  }
+  const remove = (url) => update((d) => ({ performanceVideos: (d.performanceVideos || []).filter((u) => u !== url) }));
+  return (
+    <div>
+      <Field label="Your performance videos" req>
+        <p className="text-sm" style={{ color: C.ivoryDim, margin: "-2px 0 12px", lineHeight: 1.5 }}>
+          Up to {PERF_VIDEO_MAX} videos, one minute each. At least one.
+        </p>
+      </Field>
+      <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: -8 }}>
+        {vids.map((url, i) => (
+          <div key={url} style={{ position: "relative", borderRadius: 12, overflow: "hidden", background: "#000" }}>
+            <video src={url} controls playsInline preload="metadata" style={{ width: "100%", display: "block", maxHeight: 280, background: "#000" }} />
+            <span style={{ position: "absolute", top: 8, left: 8, background: "rgba(0,0,0,.55)", color: "#fff", borderRadius: 999, padding: "3px 10px", fontSize: 12, fontWeight: 600 }}>Video {i + 1}</span>
+            <button type="button" onClick={() => remove(url)}
+              style={{ position: "absolute", top: 8, right: 8, background: "rgba(0,0,0,.55)", color: "#fff", border: "none", borderRadius: 999, padding: "5px 12px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+              Remove
+            </button>
+          </div>
+        ))}
+        {vids.length < PERF_VIDEO_MAX && (
+          <FilePickButton accept="video/*" onFile={add} disabled={busy}
+            style={{ width: "100%", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "18px 14px", borderRadius: 12,
+              border: `1.5px dashed ${C.inkLine}`, background: "#FFFFFF", color: C.ivory, fontFamily: FONT_BODY, fontWeight: 600, fontSize: 14, cursor: busy ? "default" : "pointer", opacity: busy ? .6 : 1 }}>
+            <Upload size={16} /> {busy ? "Uploading…" : vids.length ? "Add another video" : "Upload a video"}
+          </FilePickButton>
+        )}
+      </div>
+      {err && <p className="text-sm" style={{ color: C.burgundy, marginTop: 10 }}>{err}</p>}
+      <p className="text-xs" style={{ color: C.ivoryDim, marginTop: 10 }}>{vids.length} of {PERF_VIDEO_MAX} · shown on your profile.</p>
+    </div>
+  );
+}
+
+// Puts a video in the student-video bucket under a folder; returns its public URL.
+async function uploadVideoTo(folder, file) {
+  const ext = (file.name.split(".").pop() || "mp4").toLowerCase();
+  const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+  const { error } = await supabase.storage.from("student-video")
+    .upload(path, file, { upsert: false, contentType: file.type || undefined });
+  if (error) {
+    const big = /too large|payload|size/i.test(error.message);
+    return { error: big ? "That video is too large to upload. Try recording in 1080p, or a shorter clip." : "Upload failed: " + error.message };
+  }
+  return { url: supabase.storage.from("student-video").getPublicUrl(path).data.publicUrl };
 }
 
 function StepTopFlop({ draft, update }) {
@@ -11715,6 +11785,18 @@ function ProfileLinks({ links }) {
 }
 
 
+// A profile's performance videos (sign-up step 5), stacked, each playable inline.
+function PerfVideosRow({ urls }) {
+  return (
+    <div style={{ background: MODERN ? "#FFFFFF" : warm("0.05"), border: `1px solid ${C.inkLine}`, borderRadius: MODERN ? 12 : 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 10 }}>
+      <span style={{ fontSize: 11, fontWeight: MODERN ? 700 : 600, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em" }}>Performance videos</span>
+      {urls.map((u) => (
+        <video key={u} src={u} controls playsInline preload="metadata" style={{ width: "100%", maxHeight: 300, borderRadius: 10, background: "#000", display: "block" }} />
+      ))}
+    </div>
+  );
+}
+
 function StudentProfile({ student, conservatory, onBack, onMessage, locked, onApply, connect }) {
   // Their number of connections (supabase/migrations/20261018100000_connection_count.sql).
   // Refreshed when a connection changes anywhere; hidden if the function is missing.
@@ -11792,6 +11874,7 @@ function StudentProfile({ student, conservatory, onBack, onMessage, locked, onAp
             </div>
           </Row>
         )}
+        {(student.performanceVideos || []).length > 0 && <PerfVideosRow urls={student.performanceVideos} />}
         {(student.pieces || []).length > 0 && (
           <Row label="Current repertoire">
             <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
@@ -11954,6 +12037,7 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack, onUpdat
             </div>
           </Row>
         )}
+        {(profile.performanceVideos || []).length > 0 && <PerfVideosRow urls={profile.performanceVideos} />}
         {(profile.pieces || []).length > 0 && (
           <Row label="Current repertoire">
             <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
@@ -13190,6 +13274,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
                   </div>
                 </Row>
               )}
+              {(selected.performanceVideos || []).length > 0 && <PerfVideosRow urls={selected.performanceVideos} />}
               {(selected.pieces || []).length > 0 && (
                 <Row label="Current repertoire">
                   <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>

@@ -61,6 +61,8 @@ export function toDbProfile(draft, id) {
     // A URL into the student-video bucket, not the file. The cover photo it
     // replaces was a base64 data URI written straight into the row.
     cover_video_url: draft.coverVideoUrl || null,
+    // Up to three performance videos (sign-up step 5), URLs into student-video.
+    performance_videos: Array.isArray(draft.performanceVideos) ? draft.performanceVideos.slice(0, 3) : [],
     conservatory_email: draft.conservatoryEmail || null,
     conservatory_verified: !!draft.conservatoryVerified,
     is_online: true,
@@ -98,6 +100,7 @@ export function fromDbProfile(row) {
     composerDay: row.composer_day,
     photoUrl: row.photo_url,
     coverVideoUrl: row.cover_video_url || "",
+    performanceVideos: Array.isArray(row.performance_videos) ? row.performance_videos : [],
     conservatoryEmail: row.conservatory_email || "",
     conservatoryVerified: !!row.conservatory_verified,
     teaching: { open: !!row.teaching_open, mode: row.teaching_mode || "", price: row.teaching_price || "", pitch: row.teaching_pitch || "" },
