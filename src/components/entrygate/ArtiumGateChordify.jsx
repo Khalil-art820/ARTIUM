@@ -130,16 +130,16 @@ const FAN_CARDS = [
 // Slot for each distance from the chosen card: x in card widths, tilt, size.
 // Up to six: two on the left, the chosen one, three on the right.
 const FAN_SLOTS = {
-  "-2": { x: -0.76, r: -10, s: 0.68, z: 2 },
-  "-1": { x: -0.5, r: -6, s: 0.84, z: 3 },
+  "-2": { x: -0.74, r: -10, s: 0.66, z: 2 },
+  "-1": { x: -0.46, r: -6, s: 0.84, z: 3 },
   "0": { x: 0, r: 0, s: 1.02, z: 5 },
-  "1": { x: 0.5, r: 6, s: 0.84, z: 3 },
-  "2": { x: 0.86, r: 10, s: 0.68, z: 2 },
-  "3": { x: 1.08, r: 13, s: 0.56, z: 1 },
+  "1": { x: 0.46, r: 6, s: 0.84, z: 3 },
+  "2": { x: 0.78, r: 10, s: 0.66, z: 2 },
+  "3": { x: 0.98, r: 13, s: 0.52, z: 1 },
 };
 const FAN_MAX = 6;
 // Centres the asymmetric spread in the panel (4 cards lean right; 6 a little).
-const fanShift = (n) => (n >= 6 ? -0.08 : n === 5 ? -0.03 : -0.18);
+const fanShift = (n) => (n >= 6 ? -0.11 : n === 5 ? -0.03 : -0.18);
 // The owner's featured students come first (their photo, name and
 // instrument); the instrument photos fill whatever is left of the four.
 // Stock cards never carry a name — they aren't Artium members.
