@@ -9107,7 +9107,7 @@ function StepTastes({ draft, toggleTaste }) {
             autoFocus
           />
           <button onClick={addOther} className="su-plus" aria-label="Add">
-            <Plus size={20} strokeWidth={2.2} />
+            <Plus size={16} strokeWidth={2.2} />
           </button>
         </div>
       )}
@@ -9130,7 +9130,7 @@ function StepPieces({ draft, update }) {
       <div className="grid gap-2 mb-5" style={{ gridTemplateColumns: "1fr 1fr auto" }}>
         <input style={inputStyle} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Piece title" />
         <input style={inputStyle} value={composer} onChange={(e) => setComposer(e.target.value)} placeholder="Composer" />
-        <button onClick={add} className="su-plus" aria-label="Add piece"><Plus size={20} strokeWidth={2.2} /></button>
+        <button onClick={add} className="su-plus" aria-label="Add piece"><Plus size={16} strokeWidth={2.2} /></button>
       </div>
       <div className="flex flex-col gap-2">
         {draft.pieces.map((p, i) => (
