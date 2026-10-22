@@ -1049,3 +1049,4 @@ html.theme-modern .artium-lp--light .artium-lp-h2{font-size:clamp(28px,8.4vw,44p
 .su-plus{flex:none;align-self:center;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:#F4F2EE;color:#0F5C52;border:1px solid #E6E2DB;cursor:pointer;box-shadow:0 2px 6px -3px rgba(0,0,0,.18)}
 .su-plus:active{transform:scale(.95)}
 .su-plus{width:36px;height:36px}
+.su-doorrow-done{flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#0E9369;color:#fff}

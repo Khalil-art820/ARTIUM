@@ -7337,6 +7337,9 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
   // Back, top and bottom. On the conservatory step, once one of the three
   // choices is made, Back returns to the choices rather than to step 1.
   const onDoorsBack = !editing && idx === 1 && !!draft.applicant;
+  // Back on the three choices after finishing one: Next carries on with it.
+  const onDoors = !editing && idx === 1 && !draft.applicant;
+  const doorDone = doorComplete(draft, draft.lastApplicant);
   function goBack() {
     if (onDoorsBack) {
       // Back to the three choices, keeping what was done in this one — the
@@ -7557,7 +7560,9 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
         {step < lastStep ? (
           // On the three choices the choice itself is the way forward, so
           // there's no Next to tap (and nothing to explain).
-          !editing && idx === 1 && !draft.applicant ? <span style={{ flex: 1 }} /> :
+          onDoors ? (doorDone
+            ? <SuNextButton ok onGo={() => { update({ applicant: draft.lastApplicant }); setStep(step + 1); }}>Next <ChevronRight size={17} strokeWidth={2.2} /></SuNextButton>
+            : <span style={{ flex: 1 }} />) :
           <SuNextButton ok={!!canNext} onGo={() => setStep(step + 1)} hint={stepHints[step]}>
             Next <ChevronRight size={17} strokeWidth={2.2} />
           </SuNextButton>
@@ -8276,6 +8281,14 @@ function SuggestInput({ value, onChange, suggestions, onPick, placeholder, disab
   );
 }
 
+// Whether a step-2 choice has been finished: a verified address or a sent
+// request on the email route, an uploaded document on the other two.
+function doorComplete(draft, kind) {
+  if (kind === "student_email") return !!draft.domainReq || (!!draft.conservatoryId && !!draft.conservatoryVerified);
+  if (kind === "student_doc" || kind === "graduate") return !!draft.proofDocUrl;
+  return false;
+}
+
 /* Step 2's three choices — solid one-colour glyphs, the gate's Explore tile
    style (teal, purple, orange as there). */
 function DoorArtEmail() {
@@ -8813,7 +8826,9 @@ function StepConservatory({ draft, update, editing }) {
                   <span className="su-doorrow-title">{t}</span>
                   <span className="su-doorrow-meta"><em>{String(i + 1).padStart(2, "0")}</em><span>{d}</span></span>
                 </span>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
+                {k === draft.lastApplicant && doorComplete(draft, k)
+                  ? <span className="su-doorrow-done" aria-label="Completed"><CheckIcon size={14} strokeWidth={3} /></span>
+                  : <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>}
               </button>
             </li>
           ))}
