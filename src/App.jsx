@@ -9147,15 +9147,13 @@ function StepPieces({ draft, update }) {
   return (
     <div>
       <p className="text-sm mb-5" style={{ color: C.ivoryDim }}>What are you currently working on in lessons or on your own? Up to {MAX_PIECES} pieces.<b className="fld-req" aria-label="required">*</b></p>
-      {full ? (
-        <p className="text-sm mb-5" style={{ color: C.ivoryDim }}>That's {MAX_PIECES} pieces, the maximum — remove one to add another.</p>
-      ) : (
       <div className="grid gap-2 mb-5" style={{ gridTemplateColumns: "1fr 1fr auto" }}>
         <input style={inputStyle} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Piece title" />
         <input style={inputStyle} value={composer} onChange={(e) => setComposer(e.target.value)} placeholder="Composer" />
-        <button onClick={add} className="su-plus" aria-label="Add piece"><Plus size={16} strokeWidth={2.2} /></button>
+        {/* At the limit the + dims and does nothing. */}
+        <button onClick={add} disabled={full} className="su-plus" aria-label={full ? "Maximum reached" : "Add piece"}
+          style={full ? { opacity: 0.35, cursor: "default", boxShadow: "none" } : undefined}><Plus size={16} strokeWidth={2.2} /></button>
       </div>
-      )}
       <div className="flex flex-col gap-2">
         {draft.pieces.map((p, i) => (
           <div key={i} className="flex items-center justify-between rounded-xl px-4 py-3" style={{ border: `1px solid ${C.inkLine}` }}>
