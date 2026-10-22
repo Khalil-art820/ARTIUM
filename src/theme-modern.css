@@ -1039,3 +1039,4 @@ html.theme-modern .artium-lp--light .artium-lp-h2{font-size:clamp(28px,8.4vw,44p
 .su-step-count{margin:12px 0 0;font:500 13px/1 'Fira Sans',system-ui,sans-serif;color:#3E4A48}
 .su-step-title{margin:8px 0 0;font-family:'DM Serif Display','Playfair Display',Georgia,serif;font-weight:400;font-size:clamp(28px,8.4vw,38px);line-height:1.08;color:#14202E;letter-spacing:-.005em}
 .su-step-sub{margin:8px 0 0;font:400 15.5px/1.4 'Fira Sans',system-ui,sans-serif;color:#6B7A78}
+.su-step-title{text-align:center;margin-top:16px}
