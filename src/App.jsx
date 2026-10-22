@@ -6013,7 +6013,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
           {MODERN ? (
             /* The pin, globe and Register tab, as one picture: the globe with
                the "Create account" pin. The whole picture is the button. */
-            <img className="artium-lp-create" src="/lp-create-v1.webp" alt="" width="376" height="387" />
+            <img className="artium-lp-create" src="/lp-create-v2.webp" alt="" width="530" height="493" />
           ) : (
           <span className="artium-lp-stage">
             {/* Taller than it is wide (0.669), so sized by height — a square box
