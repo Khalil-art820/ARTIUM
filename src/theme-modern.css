@@ -1020,3 +1020,9 @@ html.theme-modern .artium-explore:active .artium-lp-create-pin{transform:transla
 html.theme-modern .artium-explore:active .artium-lp-create{transform:none}
 /* The radio button's green on the member counter */
 html.theme-modern .tm-hm-n{background:linear-gradient(150deg,#41B48F 0%,#1F8B6D 55%,#13705A 100%);color:#FFFFFF}
+/* Every Conservatory page: the two titles in globe.png's style (serif, ink). */
+html.theme-modern .artium-lp--light .artium-lp-h1,
+html.theme-modern .artium-lp--light .artium-lp-h2{font-family:'DM Serif Display','Playfair Display',Georgia,serif !important;font-weight:400 !important;
+  color:#0B0B12 !important;text-align:center;letter-spacing:-.005em;line-height:1.08;margin:0}
+html.theme-modern .artium-lp--light .artium-lp-h1{font-size:clamp(26px,7.6vw,40px)}
+html.theme-modern .artium-lp--light .artium-lp-h2{font-size:clamp(28px,8.4vw,44px)}

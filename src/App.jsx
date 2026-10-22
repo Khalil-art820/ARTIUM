@@ -5257,7 +5257,7 @@ export default function App() {
           }
           // The pin-globe page is the network's antechamber — arriving here
           // from the network page's back button keeps the Network tab lit.
-          active={myProfile ? "map" : "home"}
+          active="map"
           dimmed={!myProfile}
           onTab={(k) => { if (k === "home") { setScreen("entry"); return; } setScreen("app"); setAppTabPersist(k); }}
         />
@@ -11524,8 +11524,8 @@ function BottomTabs({ items, active, onTab, light, dimmed, modern, dots }) {
           the bar doesn't repeat it. */}
       {items.filter((it) => !(modern && it.k === "profile")).map(({ k, label, Icon, attention: own }) => { const attention = own || !!dots?.[k]; return (
         <button key={k} data-k={k} data-on={k === active ? "1" : "0"} aria-label={label}
-          disabled={dimmed && k !== "home"} aria-disabled={dimmed && k !== "home" ? true : undefined}
-          style={dimmed && k !== "home" ? { opacity: .35, filter: "saturate(.4)", cursor: "default" } : undefined}
+          disabled={dimmed && k !== "home" && k !== active} aria-disabled={dimmed && k !== "home" && k !== active ? true : undefined}
+          style={dimmed && k !== "home" && k !== active ? { opacity: .35, filter: "saturate(.4)", cursor: "default" } : undefined}
           onClick={() => { if (dimmed && k !== "home") return; onTab(k); }}>
           <span style={{ position: "relative", display: "inline-flex" }}>
             <Icon size={19} strokeWidth={1.7} />
