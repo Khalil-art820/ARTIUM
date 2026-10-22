@@ -1006,3 +1006,8 @@ html.theme-modern .artium-lp.artium-lp--light,html.theme-modern:has(.artium-lp--
 html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button[data-on="1"]{color:#22C38E}
 html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button::after{background:#22C38E}
 html.theme-modern .tm-hm-n{background:#22C38E;color:#FFFFFF}
+/* Every Conservatory page: the steps aren't buttons, so no frame on tap/hover */
+html.theme-modern .artium-lp--light .artium-lp-step,html.theme-modern .artium-lp--light .artium-lp-step:hover,html.theme-modern .artium-lp--light .artium-lp-step:active{
+  border-color:#E8E2DC;background:#FFFFFF;transform:none;box-shadow:0 1px 2px rgba(0,0,0,.04),0 8px 24px -16px rgba(0,0,0,.14);-webkit-tap-highlight-color:transparent;cursor:default;outline:none}
+/* Off-white, closer to white — the white step cards still stand out */
+html.theme-modern .artium-lp.artium-lp--light,html.theme-modern:has(.artium-lp--light) body,html.theme-modern:has(.artium-lp--light) #root{background:#FCFBF9 !important}

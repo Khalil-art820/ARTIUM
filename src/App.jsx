@@ -6087,38 +6087,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
         </div>
       </main>
 
-      {/* The entry gate's current footer language, ported — "OUR PARTNERS"
-          centered over a flush-left avatar lockup, not the old "In
-          partnership with aclassicaltone" + social-puck row. New
-          .artium-lp-partner* classes (not the shared .artium-gx-partner/
-          .artium-gx-social, which stay exactly as they are for the dark
-          screens that still use them) since the structure itself is
-          different, not just the color. */}
-      <footer className="artium-gx-foot">
-        <div className="artium-gx-foot-top" aria-hidden="true" />
-        <div className="artium-lp-partner">
-          <span className="artium-lp-partner-lbl">Our partners</span>
-          <a
-            className="artium-lp-partner-avatar"
-            href={ACT_INSTAGRAM}
-            target="_blank"
-            rel="noreferrer"
-            aria-label="aclassicaltone on Instagram"
-          >
-            <img src="/partner-aclassicaltone.png" alt="" width="54" height="54" />
-            <span className="artium-lp-partner-name">aclassicaltone</span>
-          </a>
-        </div>
-        <div className="artium-gx-foot-line" aria-hidden="true" />
-        <div className="artium-gx-foot-row">
-          <span className="artium-gx-foot-links">
-            <span>About Us</span><i aria-hidden="true">•</i>
-            <span>Help Center</span><i aria-hidden="true">•</i>
-            <span>Contact</span>
-          </span>
-          <span className="artium-gx-copy">© 2026 <ArtiumWord />. All rights reserved.</span>
-        </div>
-      </footer>
+      {/* No footer here: the page ends on the last "How it works" step. */}
     </div>
   );
 }
