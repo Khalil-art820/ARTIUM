@@ -6020,7 +6020,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
               <svg className="artium-lp-create-pin" viewBox="0 0 216 268" aria-hidden="true">
                 <defs>
                   <radialGradient id="lpPinFill" cx="50%" cy="35%" r="70%">
-                    <stop offset="0" stopColor="#17614F" /><stop offset="1" stopColor="#0A3A33" />
+                    <stop offset="0" stopColor="#2A8A70" /><stop offset="1" stopColor="#135A4B" />
                   </radialGradient>
                   <linearGradient id="lpPinRim" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0" stopColor="#FFF1C9" /><stop offset=".45" stopColor="#E9C46F" /><stop offset="1" stopColor="#C99A3E" />
