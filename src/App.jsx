@@ -6003,13 +6003,18 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
             type="button"
             onClick={myProfile ? onPreview : (studentLoggedOut ? onLogin : onApply)}
             className="artium-explore"
-            aria-label={myProfile ? `Explore Artium's network — ${memberCount} members` : (studentLoggedOut ? "Log in" : "Sign up")}
+            aria-label={myProfile ? `Explore Artium's network — ${memberCount} members` : (studentLoggedOut ? "Log in" : "Create account")}
             style={{
               display: "flex", flexDirection: "column", alignItems: "center",
               gap: 12, padding: 0, border: "none", background: "none",
               cursor: "pointer", font: "inherit", textAlign: "center", width: "100%",
             }}
           >
+          {MODERN ? (
+            /* The pin, globe and Register tab, as one picture: the globe with
+               the "Create account" pin. The whole picture is the button. */
+            <img className="artium-lp-create" src="/lp-create-v1.webp" alt="" width="376" height="387" />
+          ) : (
           <span className="artium-lp-stage">
             {/* Taller than it is wide (0.669), so sized by height — a square box
                 would letterbox it. The globe and the count are positioned
@@ -6053,6 +6058,7 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
               </span>
             </span>
           </span>
+          )}
         </button>
 
         {/* Mock splits this into a small caps eyebrow over the serif line,

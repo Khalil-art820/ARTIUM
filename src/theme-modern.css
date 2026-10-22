@@ -990,3 +990,8 @@ html.theme-modern .artium-su-nav{background:linear-gradient(180deg,rgba(255,255,
 @media (min-width:744px){.su-doorlist{width:auto;margin-left:0;border-radius:12px;border-left:1px solid #E8E2DC;border-right:1px solid #E8E2DC}}
 /* Step 2's three-choice screen: no card frame around the picture and list. */
 html.theme-modern .artium-su-card.artium-su-card--bare,.artium-su-card.artium-su-card--bare{border:0 !important;box-shadow:none !important;background:transparent !important}
+/* Every Conservatory. One Network: the Create-account globe on white */
+html.theme-modern .artium-lp-create{width:min(300px,78vw);height:auto;display:block;margin:6px auto 0;transition:transform .2s ease}
+html.theme-modern .artium-explore:active .artium-lp-create{transform:scale(.97)}
+html.theme-modern .artium-lp.artium-lp--light,html.theme-modern:has(.artium-lp--light) body,html.theme-modern:has(.artium-lp--light) #root{background:#FFFFFF !important}
+html.theme-modern .artium-lp--light .artium-lp-bd{display:none}
