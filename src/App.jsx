@@ -597,6 +597,8 @@ const TASTE_OPTIONS = [
   "Liszt", "Debussy", "Ravel", "Rachmaninoff", "Scriabin", "Prokofiev",
   "Messiaen", "Handel", "Vivaldi", "Mahler", "Shostakovich", "Sibelius", "Fauré",
   "Stravinsky", "Bartók", "Saint-Saëns", "Dvořák", "Tchaikovsky", "Poulenc",
+  "Scarlatti", "Medtner", "Mendelssohn", "Haydn", "Purcell", "Telemann",
+  "Wagner", "Verdi", "Puccini", "Grieg", "Mussorgsky", "Elgar", "Granados", "Satie",
   "Baroque", "Classical Era", "Romantic Era", "Impressionism", "20th Century",
 ];
 
