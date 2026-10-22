@@ -599,7 +599,7 @@ const TASTE_OPTIONS = [
   "Stravinsky", "Bartók", "Saint-Saëns", "Dvořák", "Tchaikovsky", "Poulenc",
   "Scarlatti", "Medtner", "Mendelssohn", "Haydn", "Purcell", "Telemann",
   "Wagner", "Verdi", "Puccini", "Grieg", "Mussorgsky", "Elgar", "Granados", "Satie",
-  "Baroque", "Classical Era", "Romantic Era", "Impressionism", "20th Century",
+  "Baroque", "Classical Era", "Romantic Era", "Impressionism", "20th Century", "Modern Era",
 ];
 
 const PALETTE = [C.burgundy, C.forest, "#3B4A6B", "#8A5A2B", "#5B3A66"];
