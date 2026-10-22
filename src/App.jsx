@@ -9133,23 +9133,29 @@ function StepTastes({ draft, toggleTaste }) {
   );
 }
 
+const MAX_PIECES = 3;
 function StepPieces({ draft, update }) {
   const [title, setTitle] = useState("");
   const [composer, setComposer] = useState("");
+  const full = draft.pieces.length >= MAX_PIECES;
   function add() {
-    if (!title.trim() || !composer.trim()) return;
-    update({ pieces: [...draft.pieces, { title, composer }] });
+    if (!title.trim() || !composer.trim() || full) return;
+    update({ pieces: [...draft.pieces, { title, composer }].slice(0, MAX_PIECES) });
     setTitle(""); setComposer("");
   }
   function remove(i) { update({ pieces: draft.pieces.filter((_, idx) => idx !== i) }); }
   return (
     <div>
-      <p className="text-sm mb-5" style={{ color: C.ivoryDim }}>What are you currently working on in lessons or on your own?<b className="fld-req" aria-label="required">*</b></p>
+      <p className="text-sm mb-5" style={{ color: C.ivoryDim }}>What are you currently working on in lessons or on your own? Up to {MAX_PIECES} pieces.<b className="fld-req" aria-label="required">*</b></p>
+      {full ? (
+        <p className="text-sm mb-5" style={{ color: C.ivoryDim }}>That's {MAX_PIECES} pieces, the maximum — remove one to add another.</p>
+      ) : (
       <div className="grid gap-2 mb-5" style={{ gridTemplateColumns: "1fr 1fr auto" }}>
         <input style={inputStyle} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Piece title" />
         <input style={inputStyle} value={composer} onChange={(e) => setComposer(e.target.value)} placeholder="Composer" />
         <button onClick={add} className="su-plus" aria-label="Add piece"><Plus size={16} strokeWidth={2.2} /></button>
       </div>
+      )}
       <div className="flex flex-col gap-2">
         {draft.pieces.map((p, i) => (
           <div key={i} className="flex items-center justify-between rounded-xl px-4 py-3" style={{ border: `1px solid ${C.inkLine}` }}>
