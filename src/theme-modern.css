@@ -1043,3 +1043,5 @@ html.theme-modern .artium-lp--light .artium-lp-h2{font-size:clamp(28px,8.4vw,44p
 /* Step 2 globe: no shadow, equal space above and below (30px each:
    28px page + 22px card padding above, pulled up by 20) */
 .artium-su-globe--img{margin:-20px 0 30px !important}
+/* Step 2 globe: a soft shadow hugging its round edge */
+.artium-su-globe--img img{border-radius:50%;box-shadow:0 10px 26px -6px rgba(8,60,52,.35),0 2px 8px rgba(0,0,0,.12)}
