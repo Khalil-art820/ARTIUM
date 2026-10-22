@@ -1002,3 +1002,6 @@ html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button[data-on="1"]{col
 html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button::after{background:#0E9369}
 /* Every Conservatory. One Network: off-white instead of pure white */
 html.theme-modern .artium-lp.artium-lp--light,html.theme-modern:has(.artium-lp--light) body,html.theme-modern:has(.artium-lp--light) #root{background:#FAF9F6 !important}
+/* Bottom bar: the same green, brighter so it reads on black */
+html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button[data-on="1"]{color:#22C38E}
+html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button::after{background:#22C38E}
