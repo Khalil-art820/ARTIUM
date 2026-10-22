@@ -7339,13 +7339,14 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
   const onDoorsBack = !editing && idx === 1 && !!draft.applicant;
   // Back on the three choices after finishing one: Next carries on with it.
   const onDoors = !editing && idx === 1 && !draft.applicant;
-  const doorDone = doorComplete(draft, draft.lastApplicant);
+  const doorNext = onDoors ? doorToContinue(draft) : "";
+  const doorDone = !!doorNext;
   function goBack() {
     if (onDoorsBack) {
       // Back to the three choices, keeping what was done in this one — the
       // school, the email, a sent or verified code, an uploaded document.
       // Choosing the same option again brings it all back (chooseDoor).
-      update({ applicant: "", lastApplicant: draft.applicant });
+      update((d) => ({ applicant: "", lastApplicant: d.applicant, doorData: { ...(d.doorData || {}), [d.applicant]: doorSnapshot(d) } }));
       return;
     }
     if (step === 0) { setConfirmLeave(true); return; }
@@ -7559,7 +7560,7 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
           // On the three choices the choice itself is the way forward, so
           // there's no Next to tap (and nothing to explain).
           onDoors ? (doorDone
-            ? <SuNextButton ok onGo={() => { update({ applicant: draft.lastApplicant }); setStep(step + 1); }}>Next <ChevronRight size={17} strokeWidth={2.2} /></SuNextButton>
+            ? <SuNextButton ok onGo={() => { update((d) => ({ applicant: doorNext, ...(d.doorData || {})[doorNext] })); setStep(step + 1); }}>Next <ChevronRight size={17} strokeWidth={2.2} /></SuNextButton>
             : <span style={{ flex: 1 }} />) :
           <SuNextButton ok={!!canNext} onGo={() => setStep(step + 1)} hint={stepHints[step]}>
             Next <ChevronRight size={17} strokeWidth={2.2} />
@@ -8304,6 +8305,24 @@ function SuggestInput({ value, onChange, suggestions, onPick, placeholder, disab
   );
 }
 
+// Each step-2 choice keeps its own progress in draft.doorData[kind], so
+// trying another choice never erases a finished one. The live fields below
+// always belong to the choice that is open.
+const DOOR_FIELDS = ["verifyMethod", "conservatoryId", "conservatoryVerified", "conservatoryEmail", "otpEmail", "otpSent", "domainReq", "emailForm", "proofDocUrl", "proofDocName"];
+const doorSnapshot = (d) => Object.fromEntries(DOOR_FIELDS.map((k) => [k, d[k] ?? null]));
+const doorBlank = (kind) => ({
+  verifyMethod: kind === "student_email" ? "otp" : "document",
+  conservatoryId: "", conservatoryVerified: false, conservatoryEmail: "", otpEmail: "", otpSent: false,
+  domainReq: null, emailForm: null, proofDocUrl: "", proofDocName: "",
+});
+// The finished choice to continue with from the choices screen: the one just
+// left if it is done, otherwise any done one.
+function doorToContinue(draft) {
+  const saved = draft.doorData || {};
+  const order = [draft.lastApplicant, "student_email", "student_doc", "graduate"].filter(Boolean);
+  return order.find((k) => saved[k] && doorComplete(saved[k], k)) || "";
+}
+
 // Whether a step-2 choice has been finished: a verified address or a sent
 // request on the email route, an uploaded document on the other two.
 function doorComplete(draft, kind) {
@@ -8682,19 +8701,13 @@ function StepConservatory({ draft, update, editing }) {
   // of. The proof and the verified address go too, since neither means
   // anything on the far side.
   function chooseDoor(kind) {
-    // The same option they came back from: pick up where they left it.
-    if (kind && kind === draft.lastApplicant) { update({ applicant: kind }); return; }
-    setQ(""); setEmail(""); setCode(""); setCodeSent(false); setErr("");
-    setReqName(""); setReqAddress(""); setReqEmail(""); setReqCode(""); setReqCodeSent(false); setReqVerified(false); setReqErr("");
-    update({
-      lastApplicant: "", emailForm: null,
-      applicant: kind,
-      verifyMethod: kind === "student_email" ? "otp" : "document",
-      conservatoryId: "", conservatoryVerified: false, conservatoryEmail: "",
-      proofDocUrl: "", proofDocName: "",
-      otpEmail: "", otpSent: false,
+    setQ(""); setErr("");
+    update((d) => {
+      const saved = (d.doorData || {})[kind];
+      return { applicant: kind, ...(saved ? saved : doorBlank(kind)) };
     });
   }
+
 
   function switchMethod(method) {
     setQ(""); setEmail(""); setCode(""); setCodeSent(false); setErr("");
@@ -8849,7 +8862,7 @@ function StepConservatory({ draft, update, editing }) {
                   <span className="su-doorrow-title">{t}</span>
                   <span className="su-doorrow-meta"><em>{String(i + 1).padStart(2, "0")}</em><span>{d}</span></span>
                 </span>
-                {k === draft.lastApplicant && doorComplete(draft, k)
+                {(draft.doorData || {})[k] && doorComplete(draft.doorData[k], k)
                   ? <span className="su-doorrow-done" aria-label="Completed"><CheckIcon size={14} strokeWidth={3} /></span>
                   : <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>}
               </button>
