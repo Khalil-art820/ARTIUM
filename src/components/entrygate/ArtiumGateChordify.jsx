@@ -116,13 +116,16 @@ const Seal = () => (
 // spread inside the lavender panel — the chosen one large and square-on with
 // a champagne edge, one on each side tilted away, the fourth on the outer
 // edge. Swipe, tap a side card or use the arrow keys to bring one forward.
-// Photos: Piano, Violin and Cello are CC0 (Unsplash via Wikimedia Commons);
+// Photos: Piano, Violin, Cello, Voice ("Chorus member singing") and Trumpet
+// ("Trumpet Player") are CC0 (Unsplash via Wikimedia Commons);
 // Masters is Artium's own concert-hall conductor.
 const FAN_CARDS = [
   { key: "violin", label: "Violin", photo: "/gate-cards/violin.webp", icon: "/instruments/violin.webp", pos: "50% 22%" },
   { key: "piano", label: "Piano", photo: "/gate-cards/piano.webp", icon: "/instruments/piano.webp", pos: "50% 50%" },
   { key: "cello", label: "Cello", photo: "/gate-cards/cello.webp", icon: "/instruments/cello.webp", pos: "50% 30%" },
   { key: "masters", label: "Masters", photo: "/gate-cards/masters.webp", icon: null, pos: "70% 30%" },
+  { key: "voice", label: "Voice", photo: "/gate-cards/voice.webp", icon: "/instruments/voice.webp", pos: "45% 50%" },
+  { key: "trumpet", label: "Trumpet", photo: "/gate-cards/trumpet.webp", icon: "/instruments/trumpet.webp", pos: "60% 50%" },
 ];
 // Slot for each distance from the chosen card: x in card widths, tilt, size.
 // Up to six: two on the left, the chosen one, three on the right.
