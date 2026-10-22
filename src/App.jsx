@@ -6138,6 +6138,27 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
  * and the dash offset carries the whole animation — no width to transition,
  * so it cannot be knocked out of step by a reflow.
  */
+// The stepper, after the owner's mockup: numbered dots joined by a hairline
+// (done in teal, the current one filled), "n of m", a serif title and one
+// plain line saying what the step is for.
+function StepDots({ step, total, title, sub }) {
+  return (
+    <div className="su-stepper">
+      <div className="su-dots" aria-hidden="true">
+        {Array.from({ length: total }).map((_, i) => (
+          <React.Fragment key={i}>
+            {i > 0 && <span className={`su-dots-line${i <= step ? " is-done" : ""}${i === step + 1 ? " is-next" : ""}`} />}
+            <span className={`su-dot${i < step ? " is-done" : i === step ? " is-on" : ""}`}>{i + 1}</span>
+          </React.Fragment>
+        ))}
+      </div>
+      <p className="su-step-count">{step + 1} of {total}</p>
+      <h2 className="su-step-title">{title}</h2>
+      {sub && <p className="su-step-sub">{sub}</p>}
+    </div>
+  );
+}
+
 function StepRing({ step, total, size = 62 }) {
   const R = 19.5, CIRC = 2 * Math.PI * R;
   const done = Math.max(0, Math.min(1, (step + 1) / total));
@@ -6162,6 +6183,7 @@ function StepRing({ step, total, size = 62 }) {
 // guard). What used to be step 0 (email/password) is simply not asked any
 // more — the three real questions shift down to fill its place.
 const HIRER_STEPS = ["Who's hiring", "The engagement", "Review & send"];
+const HIRER_STEP_SUBS = ["Tell us who's looking for a musician.", "What, where and when.", "Check the details and send your request."];
 const HIRER_ORG = ["Individual", "Concert venue", "Orchestra", "Festival", "Agency", "Other"];
 const HIRER_OCCASION = ["Concert", "Recital", "Wedding", "Corporate event", "Recording session", "Other"];
 const HIRER_FORMAT = ["Solo recital", "Accompanist", "Chamber ensemble"];
@@ -6271,12 +6293,16 @@ function HirerSignup({ authUser, onBack, onDone }) {
           </button>
           <GateLogo word={20} />
         </div>
+        {MODERN ? (
+          <StepDots step={step} total={HIRER_STEPS.length} title={HIRER_STEPS[step]} sub={HIRER_STEP_SUBS[step]} />
+        ) : (
         <div className="artium-su-head">
           <StepRing step={step} total={HIRER_STEPS.length} />
           <span className="artium-su-head-text">
             <h2 className="artium-su-title">{HIRER_STEPS[step]}</h2>
           </span>
         </div>
+        )}
       </div>
 
       <div className="max-w-3xl mx-auto px-6 pt-7 pb-10 lg-fade" key={step}>
@@ -7251,6 +7277,18 @@ function SuNextButton({ ok, onGo, hint, children }) {
   );
 }
 
+// One plain line under each step's title (keyed by title, so the optional
+// account step and any renaming stay in step).
+const STEP_SUBS = {
+  "Create your account": "Your email and a password.",
+  "Introduce Yourself": "Let's get to know you better.",
+  "Get Verified and Join the Student Map": "Confirm where you study to appear on the map.",
+  "Your musical voice": "The composers and eras you love.",
+  "Current repertoire": "What you're working on right now.",
+  "Top | Flop | Composer": "A little more about you — all optional.",
+  "Teaching": "Let learners know if you teach.",
+  "Review and submit": "Check everything before you send it.",
+};
 const STEP_LABELS = ["Introduce Yourself", "Get Verified and Join the Student Map", "Your musical voice", "Current repertoire", "Top | Flop | Composer", "Teaching", "Review and submit"];
 
 function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubmit, onCancel, onHome, authError, resumed, onStartFresh }) {
@@ -7483,12 +7521,16 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
             )}
           </div>
         )}
+        {MODERN ? (
+          <StepDots step={step} total={labels.length} title={labels[step]} sub={STEP_SUBS[labels[step]]} />
+        ) : (
         <div className="artium-su-head">
           <StepRing step={step} total={labels.length} />
           <span className="artium-su-head-text">
             <h2 className="artium-su-title">{labels[step]}</h2>
           </span>
         </div>
+        )}
       </div>
 
       <div className="max-w-3xl mx-auto px-6 pt-7 pb-10 lg-fade" key={step}>

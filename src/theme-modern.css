@@ -1026,3 +1026,16 @@ html.theme-modern .artium-lp--light .artium-lp-h2{font-family:'DM Serif Display'
   color:#0B0B12 !important;text-align:center;letter-spacing:-.005em;line-height:1.08;margin:0}
 html.theme-modern .artium-lp--light .artium-lp-h1{font-size:clamp(26px,7.6vw,40px)}
 html.theme-modern .artium-lp--light .artium-lp-h2{font-size:clamp(28px,8.4vw,44px)}
+/* Sign-up stepper (mockup): numbered dots on a hairline, n of m, serif title, subline */
+.su-stepper{margin-top:22px}
+.su-dots{display:flex;align-items:center}
+.su-dot{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:#FFFFFF;border:1.5px solid #DADFDE;
+  color:#6B7A78;font:500 13px/1 'Fira Sans',system-ui,sans-serif}
+.su-dot.is-done{border-color:#0F5C52;color:#0F5C52}
+.su-dot.is-on{width:36px;height:36px;border:0;background:#0F5C52;color:#FFFFFF;font-weight:600;font-size:14px;box-shadow:0 4px 10px -4px rgba(15,92,82,.6)}
+.su-dots-line{flex:1;height:1.5px;background:#DADFDE;min-width:6px}
+.su-dots-line.is-done{background:#0F5C52}
+.su-dots-line.is-next{background:linear-gradient(90deg,#0F5C52 0,#0F5C52 22%,#DADFDE 38%)}
+.su-step-count{margin:12px 0 0;font:500 13px/1 'Fira Sans',system-ui,sans-serif;color:#3E4A48}
+.su-step-title{margin:8px 0 0;font-family:'DM Serif Display','Playfair Display',Georgia,serif;font-weight:400;font-size:clamp(28px,8.4vw,38px);line-height:1.08;color:#14202E;letter-spacing:-.005em}
+.su-step-sub{margin:8px 0 0;font:400 15.5px/1.4 'Fira Sans',system-ui,sans-serif;color:#6B7A78}
