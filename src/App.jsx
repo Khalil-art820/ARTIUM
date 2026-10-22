@@ -7299,7 +7299,8 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
   const stepValid = [
     !skipAccountStep ? draft.email.trim().length > 3 && draft.password.length >= 6 && draft.password === draft.confirmPassword : null,
     draft.name.trim().length > 1 && instrumentsOf(draft).length > 0
-      && (() => { const st = parseStudy(draft.years); return st.levels.length > 0 && (!!st.year || st.graduated); })(),
+      // A year or Diploma is required; Masters / Doctoral are optional extras.
+      && (() => { const st = parseStudy(draft.years); return !!st.year || st.graduated; })(),
     // On the document route the upload is what gates the step — a conservatory
     // may not be selectable yet, since the approved list starts empty.
     // No Google bypass on the document route: signing in with Google says
@@ -7327,7 +7328,9 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
     draft.tastes.length >= 3,
     draft.pieces.length >= 1,
     (draft.performanceVideos || []).length >= 1,
-    !draft.teaching.open || !!draft.teaching.mode,
+    // Teaching needs an answer — Yes (with how) or Not right now. Editing an
+    // existing profile counts as answered: it already holds one.
+    (editing || !!draft.teaching.answered) && (!draft.teaching.open || !!draft.teaching.mode),
     true,
   ].filter((v) => v !== null);
   const canNext = stepValid[step];
@@ -7348,7 +7351,7 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
   // What an unfinished step is missing — same order as stepValid.
   const stepHints = [
     !skipAccountStep ? "Enter your email and a password of at least 6 characters, typed the same twice." : null,
-    "Add your name, your level and year of study, and at least one instrument.",
+    "Add your name, your year of study (or Diploma), and at least one instrument.",
     !draft.applicant ? "Choose whether you have a conservatory email."
       : draft.verifyMethod === "document" ? "Upload your proof of enrolment to continue."
       : draft.transferPending ? "Confirm your new conservatory to continue."
@@ -7357,7 +7360,7 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
     "Pick at least 3 musical preferences.",
     "Add at least one piece you're working on.",
     "Upload at least one performance video.",
-    "Choose how you'd like to teach.",
+    !draft.teaching.answered && !editing ? "Tell us whether you're open to teaching." : "Choose how you'd like to teach.",
     "",
   ].filter((v) => v !== null);
   // Saving from the header skips the remaining steps, so it has to answer for
@@ -12273,8 +12276,8 @@ function StepTeaching({ draft, update, editing }) {
       </p>
       <Field label="Are you open to teaching?" req>
         <div className="flex flex-wrap gap-2">
-          <Chip active={t.open} onClick={() => setT({ open: true })}>Yes, I'd like to teach</Chip>
-          <Chip active={!t.open} onClick={() => setT({ open: false, mode: "", price: "" })}>Not right now</Chip>
+          <Chip active={t.open} onClick={() => setT({ open: true, answered: true })}>Yes, I'd like to teach</Chip>
+          <Chip active={!t.open && (t.answered || editing)} onClick={() => setT({ open: false, mode: "", price: "", answered: true })}>Not right now</Chip>
         </div>
       </Field>
       {t.open && (
