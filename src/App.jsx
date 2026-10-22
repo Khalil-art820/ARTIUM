@@ -7275,7 +7275,7 @@ function SuNextButton({ ok, onGo, hint, children }) {
   );
 }
 
-const STEP_LABELS = ["Introduce Yourself", "Get Verified and Join the Student Map", "Your Musical Voice", "Current Repertoire", "Performance Videos", "Teaching", "Review and submit"];
+const STEP_LABELS = ["Introduce Yourself", "Get Verified and Join the Student Map", "Your Musical Voice", "Current Repertoire", "Performance Videos", "Teaching"];
 
 function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubmit, onCancel, onHome, authError, resumed, onStartFresh }) {
   const [submitting, setSubmitting] = useState(false);
@@ -7284,6 +7284,7 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
   // costs. The answer — nothing — is the whole reason to ask.
   const [confirmLeave, setConfirmLeave] = useState(false);
   const [confirmFresh, setConfirmFresh] = useState(false);
+  const [confirmSubmit, setConfirmSubmit] = useState(false);
   // One signup for the whole app: everyone who reaches this flow now arrives
   // already authenticated (see AuthPrompt / startApply's freshAuthedDraft),
   // so the account-creation step this used to open on never has anything to
@@ -7331,7 +7332,6 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
     // Teaching needs an answer — Yes (with how) or Not right now. Editing an
     // existing profile counts as answered: it already holds one.
     (editing || !!draft.teaching.answered) && (!draft.teaching.open || !!draft.teaching.mode),
-    true,
   ].filter((v) => v !== null);
   const canNext = stepValid[step];
   // Back, top and bottom. On the conservatory step, once one of the three
@@ -7364,7 +7364,6 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
     "Add at least one piece you're working on.",
     "Upload at least one performance video.",
     !draft.teaching.answered && !editing ? "Tell us whether you're open to teaching." : "Choose how you'd like to teach.",
-    "",
   ].filter((v) => v !== null);
   // Saving from the header skips the remaining steps, so it has to answer for
   // all of them rather than just the one on screen — otherwise the shortcut
@@ -7536,7 +7535,6 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
         {idx === 3 && <StepPieces draft={draft} update={update} />}
         {idx === 4 && <StepVideos draft={draft} update={update} />}
         {idx === 5 && <StepTeaching draft={draft} update={update} editing={editing} />}
-        {idx === 6 && <StepReview draft={draft} />}
         </div>
       </div>
 
@@ -7566,13 +7564,38 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
           <SuNextButton ok={!!canNext} onGo={() => setStep(step + 1)} hint={stepHints[step]}>
             Next <ChevronRight size={17} strokeWidth={2.2} />
           </SuNextButton>
-        ) : (
+        ) : editing ? (
           <button type="button" className="artium-su-next-btn" disabled={submitting} onMouseDown={(e) => e.preventDefault()} onClick={handleSubmit}>
-            {submitting ? "Submitting…" : editing ? "Save changes" : "Submit application"}
-            {editing ? <Check size={17} strokeWidth={2.2} /> : <ArrowRight size={17} strokeWidth={2.2} />}
+            {submitting ? "Saving…" : "Save changes"}
+            <Check size={17} strokeWidth={2.2} />
           </button>
+        ) : (
+          // The last step's Next opens the submit window.
+          <SuNextButton ok={!!canNext} onGo={() => setConfirmSubmit(true)} hint={stepHints[step]}>
+            Next <ChevronRight size={17} strokeWidth={2.2} />
+          </SuNextButton>
         )}
       </div>
+      {confirmSubmit && (
+        <div className="fixed z-50 flex items-center justify-center" style={{ inset: 0, background: "rgba(0,0,0,0.55)" }} onClick={() => !submitting && setConfirmSubmit(false)}>
+          <div className="rounded-2xl p-7 max-w-sm w-full mx-4 lg-fade" style={{ background: "#FFFFFF", border: `1px solid ${C.inkLine}`, color: C.ivory }} onClick={(e) => e.stopPropagation()}>
+            <h3 style={{ margin: 0, fontFamily: "'DM Serif Display', Georgia, serif", fontWeight: 400, fontSize: 24, color: "#14202E" }}>Submit your application?</h3>
+            <p className="text-sm" style={{ margin: "10px 0 0", color: C.ivoryDim, lineHeight: 1.6 }}>
+              You can still edit and update your profile at any time after submitting.
+            </p>
+            <div style={{ display: "flex", gap: 9, marginTop: 20 }}>
+              <button type="button" disabled={submitting} onClick={() => setConfirmSubmit(false)}
+                style={{ flex: "0 0 auto", padding: "11px 16px", borderRadius: 10, border: `1px solid ${C.inkLine}`, background: "#FFFFFF", color: C.ivoryDim, fontFamily: FONT_BODY, fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+                Not yet
+              </button>
+              <button type="button" disabled={submitting} onClick={handleSubmit}
+                style={{ flex: 1, padding: "11px 16px", borderRadius: 10, border: "none", background: "#0F5C52", color: "#FFFFFF", fontFamily: FONT_BODY, fontSize: 14, fontWeight: 700, cursor: submitting ? "default" : "pointer", opacity: submitting ? .7 : 1 }}>
+                {submitting ? "Submitting…" : "Submit application"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
