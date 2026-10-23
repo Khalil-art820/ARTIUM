@@ -9148,7 +9148,10 @@ function StepTastes({ draft, toggleTaste }) {
         {customTastes.map((t) => (
           <Chip key={t} active onClick={() => toggleTaste(t)}>{t}</Chip>
         ))}
-        <Chip active={showOther} onClick={() => setShowOther((v) => !v)}>Other</Chip>
+        {/* Set apart from the composers so it's found at a glance. */}
+        <button type="button" className={`su-other${showOther ? " is-on" : ""}`} onClick={() => setShowOther((v) => !v)}>
+          <Plus size={14} strokeWidth={2.4} /> Other
+        </button>
       </div>
       {showOther && (
         <div className="mt-4 flex items-center gap-2">
@@ -9291,7 +9294,7 @@ function StepPieces({ draft, update }) {
           </button>
         ))}
       </div>
-      <button type="button" className="pc-add" onMouseDown={hold} onClick={add} disabled={!canAdd}>
+      <button type="button" className={`pc-add${full ? " is-full" : ""}`} onMouseDown={hold} onClick={add} disabled={!canAdd}>
         <Plus size={16} strokeWidth={2.2} /> Add to my pieces
       </button>
 

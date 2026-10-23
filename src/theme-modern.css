@@ -1076,3 +1076,9 @@ html.theme-modern .artium-lp--light .artium-lp-h2{font-size:clamp(28px,8.4vw,44p
 .pc-pill--challenge{background:#FBF0DD;color:#8A5A12}
 .pc-del{flex:none;width:40px;height:40px;border-radius:50%;border:0;background:#F3F1EE;color:#6B7A78;display:grid;place-items:center;cursor:pointer}
 .pc-status-t{font-size:17px;white-space:nowrap}
+/* Step 4: Add clearly off once three pieces are in */
+.pc-add.is-full{opacity:.32;background:#F1F1EF;border-color:#D5D9D8;color:#8A9391}
+/* Step 3: "Other" stands out from the composer chips */
+.su-other{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:999px;border:1.5px dashed #0F5C52;background:#EEF6F3;
+  color:#0F5C52;font:600 13.5px 'Fira Sans',sans-serif;cursor:pointer}
+.su-other.is-on{border-style:solid;background:#0F5C52;color:#FFFFFF}
