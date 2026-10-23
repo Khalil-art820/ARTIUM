@@ -9215,7 +9215,7 @@ const PIECE_STATUS = {
 };
 const foldName = (v) => normalizeName(v).replace(/[^a-z0-9 ]/g, "");
 
-const MAX_PIECES = 3;
+const MAX_PIECES = 4;
 function StepPieces({ draft, update }) {
   const [title, setTitle] = useState("");
   const [composer, setComposer] = useState("");
