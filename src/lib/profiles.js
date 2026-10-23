@@ -73,6 +73,8 @@ export function toDbProfile(draft, id) {
     teaching_open: draft.teaching.open,
     teaching_mode: draft.teaching.mode,
     teaching_price: draft.teaching.price,
+    // In-person cities (sign-up step 6); empty when teaching online only.
+    teaching_cities: draft.teaching.open && draft.teaching.mode !== "online" ? (draft.teaching.cities || []) : [],
     // Only meaningful while they are open to teaching, so closing the door
     // clears what was said behind it rather than leaving it to reappear.
     teaching_pitch: draft.teaching.open ? (draft.teaching.pitch || null) : null,
@@ -103,7 +105,7 @@ export function fromDbProfile(row) {
     performanceVideos: Array.isArray(row.performance_videos) ? row.performance_videos : [],
     conservatoryEmail: row.conservatory_email || "",
     conservatoryVerified: !!row.conservatory_verified,
-    teaching: { open: !!row.teaching_open, mode: row.teaching_mode || "", price: row.teaching_price || "", pitch: row.teaching_pitch || "" },
+    teaching: { open: !!row.teaching_open, mode: row.teaching_mode || "", price: row.teaching_price || "", pitch: row.teaching_pitch || "", cities: Array.isArray(row.teaching_cities) ? row.teaching_cities : [] },
     // The concert side. Default open: a pianist is bookable unless they said
     // otherwise, and rows older than the column read as never having said it.
     concertOpen: row.concert_open ?? true,

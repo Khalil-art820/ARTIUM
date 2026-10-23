@@ -7331,7 +7331,8 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
     (draft.performanceVideos || []).length >= 1,
     // Teaching needs an answer — Yes (with how) or Not right now. Editing an
     // existing profile counts as answered: it already holds one.
-    (editing || !!draft.teaching.answered) && (!draft.teaching.open || !!draft.teaching.mode),
+    (editing || !!draft.teaching.answered) && (!draft.teaching.open || (!!draft.teaching.mode
+      && (draft.teaching.mode === "online" || (draft.teaching.cities || []).length > 0))),
   ].filter((v) => v !== null);
   const canNext = stepValid[step];
   // Back, top and bottom. On the conservatory step, once one of the three
@@ -7364,7 +7365,9 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
     "Pick at least 3 musical preferences.",
     "Add at least one piece you're working on.",
     "Upload at least one performance video.",
-    !draft.teaching.answered && !editing ? "Tell us whether you're open to teaching." : "Choose how you'd like to teach.",
+    !draft.teaching.answered && !editing ? "Tell us whether you're open to teaching."
+      : !draft.teaching.mode ? "Choose how you'd like to teach."
+      : "Add at least one city where you can teach in person.",
   ].filter((v) => v !== null);
   // Saving from the header skips the remaining steps, so it has to answer for
   // all of them rather than just the one on screen — otherwise the shortcut
@@ -7797,11 +7800,14 @@ async function uploadCoverVideo(file) {
  */
 function TeachingCell({ teaching }) {
   const terms = teaching?.open
-    ? `${teaching.mode === "online" ? "Online" : teaching.mode === "in-person" ? "In-person" : "Online & in-person"} · €${teaching.price}/session`
+    ? `${teaching.mode === "online" ? "Online" : (teaching.mode === "in-person" || teaching.mode === "physical") ? "In-person" : "Online & in-person"}${teaching.price ? ` · €${teaching.price}/session` : ""}`
     : "Not offering lessons";
   return (
     <>
       <div>{terms}</div>
+      {teaching?.open && teaching.mode !== "online" && (teaching.cities || []).length > 0 && (
+        <div style={{ marginTop: 4, fontSize: 13, color: C.ivoryDim }}>In person in {teaching.cities.join(", ")}</div>
+      )}
       {teaching?.open && teaching.pitch && (
         <p style={{ margin: "8px 0 0", fontSize: 13, lineHeight: 1.6, color: C.ivoryDim, whiteSpace: "pre-wrap" }}>
           {teaching.pitch}
@@ -12455,6 +12461,41 @@ function TeachingPayoutsPanel({ profileId }) {
 }
 
 /* ---- Student signup: teaching step ---- */
+// Where an in-person teacher can go: one or more cities, picked from the
+// conservatory cities as suggestions or typed freely.
+const TEACH_CITY_MAX = 8;
+function TeachCities({ t, setT }) {
+  const [q, setQ] = useState("");
+  const cities = t.cities || [];
+  const known = React.useMemo(() => [...new Set(CONSERVATORIES.map((c) => c.city).filter(Boolean))].sort(), []);
+  const addCity = (v) => {
+    const c = String(v || "").trim(); if (!c) return;
+    if (!cities.some((x) => x.toLowerCase() === c.toLowerCase()) && cities.length < TEACH_CITY_MAX) setT({ cities: [...cities, c] });
+    setQ("");
+  };
+  const sugs = (() => {
+    const n = normalizeName(q); if (n.length < 1) return [];
+    return known.filter((c) => normalizeName(c).startsWith(n) && !cities.includes(c)).slice(0, 6).map((c) => ({ key: c, label: c }));
+  })();
+  return (
+    <Field label="Where can you teach in person?" req>
+      <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+        <div style={{ flex: 1, minWidth: 0 }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCity(q); } }}>
+          <SuggestInput value={q} onChange={setQ} placeholder="Add a city, e.g. Paris" suggestions={sugs} onPick={(sg) => addCity(sg.label)} />
+        </div>
+        <button type="button" className="su-plus" style={{ marginTop: 4 }} onMouseDown={(e) => e.preventDefault()} onClick={() => addCity(q)} aria-label="Add city"><Plus size={16} strokeWidth={2.2} /></button>
+      </div>
+      {cities.length > 0 && (
+        <div className="flex flex-wrap gap-2" style={{ marginTop: 10 }}>
+          {cities.map((c) => (
+            <Chip key={c} active onClick={() => setT({ cities: cities.filter((x) => x !== c) })}>{c} ✕</Chip>
+          ))}
+        </div>
+      )}
+    </Field>
+  );
+}
+
 function StepTeaching({ draft, update, editing }) {
   const t = draft.teaching;
   const setT = (partial) => update({ teaching: { ...t, ...partial } });
@@ -12479,6 +12520,7 @@ function StepTeaching({ draft, update, editing }) {
               <Chip active={t.mode === "both"} onClick={() => setT({ mode: "both" })}>Both</Chip>
             </div>
           </Field>
+          {(t.mode === "physical" || t.mode === "both") && <TeachCities t={t} setT={setT} />}
           <Field label="Price per session" opt>
             <div className="flex items-center gap-2">
               <span style={{ color: C.ivoryDim, fontSize: 16 }}>€</span>
