@@ -9169,11 +9169,53 @@ function StepTastes({ draft, toggleTaste }) {
   );
 }
 
+// Composer names for suggestions, loaded once per page (composers table).
+let composerCache = null;
+function useComposerNames() {
+  const [names, setNames] = useState(composerCache || []);
+  useEffect(() => {
+    if (composerCache) return;
+    let alive = true;
+    supabase.from("composers").select("name").order("name").then(({ data }) => {
+      if (!alive || !data) return;
+      composerCache = data.map((r) => r.name);
+      setNames(composerCache);
+    });
+    return () => { alive = false; };
+  }, []);
+  return names;
+}
+const foldName = (v) => normalizeName(v).replace(/[^a-z0-9 ]/g, "");
+
 const MAX_PIECES = 3;
 function StepPieces({ draft, update }) {
   const [title, setTitle] = useState("");
   const [composer, setComposer] = useState("");
   const full = draft.pieces.length >= MAX_PIECES;
+  const composers = useComposerNames();
+  // Piece suggestions come from the database as they type: within the chosen
+  // composer when the name matches one, otherwise across everyone.
+  const [pieceSugs, setPieceSugs] = useState([]);
+  useEffect(() => {
+    const t = title.trim();
+    if (t.length < 2) { setPieceSugs([]); return; }
+    let alive = true;
+    const timer = setTimeout(async () => {
+      const known = composers.find((n) => foldName(n) === foldName(composer));
+      let q = supabase.from("pieces").select("title, composers!inner(name)").ilike("title", `%${t.replace(/[%_]/g, "")}%`).order("title").limit(8);
+      if (known) q = q.eq("composers.name", known);
+      const { data } = await q;
+      if (alive) setPieceSugs((data || []).map((r) => ({ key: `${r.composers?.name}|${r.title}`, label: r.title, sub: known ? "" : r.composers?.name || "", composer: r.composers?.name || "" })));
+    }, 220);
+    return () => { alive = false; clearTimeout(timer); };
+  }, [title, composer, composers]);
+  const composerSugs = (() => {
+    const n = foldName(composer);
+    if (n.length < 2) return [];
+    const hits = composers.filter((c) => foldName(c).includes(n));
+    if (hits.length === 1 && foldName(hits[0]) === n) return [];
+    return hits.slice(0, 6).map((c) => ({ key: c, label: c }));
+  })();
   function add() {
     if (!title.trim() || !composer.trim() || full) return;
     update({ pieces: [...draft.pieces, { title, composer }].slice(0, MAX_PIECES) });
@@ -9184,8 +9226,11 @@ function StepPieces({ draft, update }) {
     <div>
       <p className="text-sm mb-5" style={{ color: C.ivoryDim }}>What are you currently working on in lessons or on your own? Up to {MAX_PIECES} pieces.<b className="fld-req" aria-label="required">*</b></p>
       <div className="grid gap-2 mb-5" style={{ gridTemplateColumns: "1fr 1fr auto" }}>
-        <input style={inputStyle} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Piece title" />
-        <input style={inputStyle} value={composer} onChange={(e) => setComposer(e.target.value)} placeholder="Composer" />
+        {/* Composer first: it narrows the piece suggestions. */}
+        <SuggestInput value={composer} onChange={setComposer} placeholder="Composer"
+          suggestions={composerSugs} onPick={(sg) => setComposer(sg.label)} />
+        <SuggestInput value={title} onChange={setTitle} placeholder="Piece title"
+          suggestions={pieceSugs} onPick={(sg) => { setTitle(sg.label); if (sg.composer) setComposer(sg.composer); }} />
         {/* At the limit the + dims and does nothing. */}
         <button onClick={add} disabled={full} className="su-plus" aria-label={full ? "Maximum reached" : "Add piece"}
           style={full ? { opacity: 0.35, cursor: "default", boxShadow: "none" } : undefined}><Plus size={16} strokeWidth={2.2} /></button>
@@ -15230,7 +15275,7 @@ function AdminScreen({ authUser, onlineCount, listProps }) {
 
         {/* Section toggle */}
         <div style={MODERN ? { display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" } : { display: "flex", gap: 8, justifyContent: "center" }}>
-          {[{ v: "verifications", t: "Student verifications" }, { v: "conservatories", t: "Conservatories" }, { v: "conslist", t: "Conservatory list" }, { v: "tracks", t: "Recordings" }, { v: "promotions", t: "Promotions" }, { v: "partners", t: "Partnerships" }, { v: "gatecards", t: "Gate cards" }].map(({ v, t }) => (
+          {[{ v: "verifications", t: "Student verifications" }, { v: "conservatories", t: "Conservatories" }, { v: "conslist", t: "Conservatory list" }, { v: "tracks", t: "Recordings" }, { v: "promotions", t: "Promotions" }, { v: "partners", t: "Partnerships" }, { v: "gatecards", t: "Gate cards" }, { v: "composers", t: "Composers & pieces" }].map(({ v, t }) => (
             <button key={v} onClick={() => setSection(v)}
               style={{ padding: "9px 18px", borderRadius: MODERN ? 10 : 999, fontSize: 13, fontWeight: 700, cursor: "pointer", background: section === v ? BRASS_GRAD : (MODERN ? "#FFFFFF" : warm("0.07")), color: section === v ? C.brassText : C.ivoryDim, border: section === v ? "none" : `1px solid ${C.inkLine}` }}>{t}</button>
           ))}
@@ -15246,6 +15291,7 @@ function AdminScreen({ authUser, onlineCount, listProps }) {
         {section === "tracks" && <AdminTracks card={card} STATUS_COLOR={STATUS_COLOR} authUser={authUser} />}
         {section === "partners" && <AdminPartners card={card} />}
         {section === "gatecards" && <AdminGateCards card={card} />}
+        {section === "composers" && <AdminComposers card={card} />}
 
         {section === "promotions" && <>
         <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
@@ -15419,6 +15465,129 @@ const TRACK_REJECTION_DEFAULT = "Thank you for sharing your playing. This record
 
 // Admin → Gate cards: choose up to four approved students (with a photo) for
 // the entry gate's card spread. Saved as platform_settings.gate_featured.
+/* Admin → Composers & pieces: the lists behind sign-up step 4's suggestions.
+ * Composers on the left (search, add, delete — deleting removes their pieces
+ * too); pick one to search, add and remove its pieces. */
+function AdminComposers({ card }) {
+  const [composers, setComposers] = useState(null);
+  const [cq, setCq] = useState("");
+  const [newComposer, setNewComposer] = useState("");
+  const [sel, setSel] = useState(null);           // { id, name }
+  const [pieces, setPieces] = useState([]);
+  const [pieceTotal, setPieceTotal] = useState(0);
+  const [pq, setPq] = useState("");
+  const [newPiece, setNewPiece] = useState("");
+  const [note, setNote] = useState(null);
+  const [busy, setBusy] = useState(false);
+
+  async function loadComposers() {
+    const { data, error } = await supabase.from("composers").select("id, name").order("name");
+    if (error) { setNote({ bad: true, text: error.message }); setComposers([]); return; }
+    setComposers(data || []);
+  }
+  useEffect(() => { loadComposers(); }, []);
+
+  async function loadPieces(c = sel, q = pq) {
+    if (!c) return;
+    let qr = supabase.from("pieces").select("id, title", { count: "exact" }).eq("composer_id", c.id).order("title").limit(200);
+    if (q.trim()) qr = qr.ilike("title", `%${q.trim().replace(/[%_]/g, "")}%`);
+    const { data, count } = await qr;
+    setPieces(data || []); setPieceTotal(count || 0);
+  }
+  useEffect(() => { const t = setTimeout(() => loadPieces(), 200); return () => clearTimeout(t); }, [sel?.id, pq]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function addComposer() {
+    const name = newComposer.trim(); if (name.length < 2) return;
+    setBusy(true);
+    const { error } = await supabase.from("composers").insert({ name });
+    setBusy(false);
+    if (error) { setNote({ bad: true, text: /duplicate/i.test(error.message) ? `${name} is already in the list.` : error.message }); return; }
+    setNewComposer(""); setNote({ bad: false, text: `${name} added.` }); composerCache = null; loadComposers();
+  }
+  async function deleteComposer(c) {
+    if (!window.confirm(`Delete ${c.name} and all of their pieces?`)) return;
+    const { error } = await supabase.from("composers").delete().eq("id", c.id);
+    if (error) { setNote({ bad: true, text: error.message }); return; }
+    if (sel?.id === c.id) { setSel(null); setPieces([]); }
+    setNote({ bad: false, text: `${c.name} deleted.` }); composerCache = null; loadComposers();
+  }
+  async function addPiece() {
+    const title = newPiece.trim(); if (!title || !sel) return;
+    setBusy(true);
+    const { error } = await supabase.from("pieces").insert({ composer_id: sel.id, title });
+    setBusy(false);
+    if (error) { setNote({ bad: true, text: /duplicate/i.test(error.message) ? "That piece is already listed." : error.message }); return; }
+    setNewPiece(""); setNote({ bad: false, text: `Added to ${sel.name}.` }); loadPieces();
+  }
+  async function deletePiece(p) {
+    const { error } = await supabase.from("pieces").delete().eq("id", p.id);
+    if (error) { setNote({ bad: true, text: error.message }); return; }
+    setPieces((xs) => xs.filter((x) => x.id !== p.id)); setPieceTotal((n) => n - 1);
+  }
+
+  const inp = { flex: "1 1 160px", minWidth: 0, padding: "9px 11px", borderRadius: 9, border: `1px solid ${C.inkLine}`, background: "#FFFFFF", color: C.ivory, fontSize: 13.5, outline: "none" };
+  const btn = { padding: "9px 14px", borderRadius: 9, border: "none", background: C.brass, color: C.brassText, fontSize: 13, fontWeight: 700, cursor: "pointer" };
+  const row = { display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", borderTop: `1px solid ${C.inkLine}` };
+  const shown = (composers || []).filter((c) => !cq.trim() || normalizeName(c.name).includes(normalizeName(cq)));
+
+  return (
+    <div style={{ ...card }}>
+      <p style={{ margin: "0 0 4px", fontFamily: FONT_DISPLAY, fontSize: 19, fontWeight: 600, color: C.ivory }}>Composers & pieces</p>
+      <p className="text-sm" style={{ margin: "0 0 12px", color: C.ivoryDim, lineHeight: 1.5 }}>
+        The suggestions students get in sign-up step 4. {composers ? `${composers.length} composers.` : ""}
+      </p>
+      {note && <p className="text-sm" style={{ margin: "0 0 10px", color: note.bad ? C.burgundy : OK_C }}>{note.text}</p>}
+
+      {!sel ? (
+        <>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
+            <input style={inp} value={cq} onChange={(e) => setCq(e.target.value)} placeholder="Search composers" />
+          </div>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
+            <input style={inp} value={newComposer} onChange={(e) => setNewComposer(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") addComposer(); }} placeholder="Add a composer (full name)" />
+            <button style={btn} disabled={busy} onClick={addComposer}>Add</button>
+          </div>
+          {composers === null ? <p className="text-sm" style={{ color: C.ivoryDim }}>Loading…</p> : (
+            <div style={{ border: `1px solid ${C.inkLine}`, borderRadius: 10, overflow: "hidden", maxHeight: 460, overflowY: "auto" }}>
+              {shown.map((c, i) => (
+                <div key={c.id} style={{ ...row, borderTop: i ? row.borderTop : "none" }}>
+                  <button onClick={() => { setSel(c); setPq(""); setNote(null); }} style={{ flex: 1, textAlign: "left", background: "none", border: "none", padding: 0, cursor: "pointer", color: C.ivory, fontSize: 14, fontWeight: 600 }}>{c.name}</button>
+                  <button onClick={() => deleteComposer(c)} aria-label={`Delete ${c.name}`} style={{ background: "none", border: "none", cursor: "pointer", color: C.ivoryDim }}><Trash2 size={15} /></button>
+                </div>
+              ))}
+              {shown.length === 0 && <p className="text-sm" style={{ padding: 10, color: C.ivoryDim }}>No composer matches.</p>}
+            </div>
+          )}
+        </>
+      ) : (
+        <>
+          <button onClick={() => { setSel(null); setPieces([]); setNote(null); }} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "none", border: "none", padding: 0, cursor: "pointer", color: C.brassLabel, fontSize: 13, fontWeight: 700, marginBottom: 8 }}>
+            <ArrowLeft size={14} /> All composers
+          </button>
+          <p style={{ margin: "0 0 10px", fontSize: 16, fontWeight: 700, color: C.ivory }}>{sel.name} <span style={{ fontWeight: 500, color: C.ivoryDim, fontSize: 13 }}>· {pieceTotal} piece{pieceTotal === 1 ? "" : "s"}</span></p>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
+            <input style={inp} value={pq} onChange={(e) => setPq(e.target.value)} placeholder="Search this composer's pieces" />
+          </div>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
+            <input style={inp} value={newPiece} onChange={(e) => setNewPiece(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") addPiece(); }} placeholder="Add a piece title" />
+            <button style={btn} disabled={busy} onClick={addPiece}>Add</button>
+          </div>
+          <div style={{ border: `1px solid ${C.inkLine}`, borderRadius: 10, overflow: "hidden", maxHeight: 460, overflowY: "auto" }}>
+            {pieces.map((p, i) => (
+              <div key={p.id} style={{ ...row, borderTop: i ? row.borderTop : "none" }}>
+                <span style={{ flex: 1, minWidth: 0, color: C.ivory, fontSize: 13.5 }}>{p.title}</span>
+                <button onClick={() => deletePiece(p)} aria-label="Delete piece" style={{ background: "none", border: "none", cursor: "pointer", color: C.ivoryDim }}><Trash2 size={15} /></button>
+              </div>
+            ))}
+            {pieces.length === 0 && <p className="text-sm" style={{ padding: 10, color: C.ivoryDim }}>{pq ? "No piece matches." : "No pieces yet — add the first one above."}</p>}
+          </div>
+          {pieceTotal > pieces.length && <p className="text-xs" style={{ marginTop: 6, color: C.ivoryDim }}>Showing {pieces.length} of {pieceTotal} — search to narrow down.</p>}
+        </>
+      )}
+    </div>
+  );
+}
+
 function AdminGateCards({ card }) {
   const [people, setPeople] = useState(null);
   const [picked, setPicked] = useState([]);
