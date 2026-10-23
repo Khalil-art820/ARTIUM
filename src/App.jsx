@@ -7058,7 +7058,7 @@ function HirerPianistProfile({ student, conservatory, onBack, onContact }) {
               {student.pieces.map((p, i) => (
                 <div key={i} style={{ fontSize: 14, color: C.ivory }}>
                   <span style={{ fontWeight: 600 }}>{p.title}</span>
-                  <span style={{ color: C.ivoryDim }}> — {p.composer}</span>
+                  <span style={{ color: C.ivoryDim }}> — {p.composer}</span>{MODERN && PIECE_STATUS[p.status] && <span className={`pc-pill pc-pill--${p.status}`} style={{ marginLeft: 8, display: "inline-block", verticalAlign: "1px" }}>{PIECE_STATUS[p.status].label}</span>}
                 </div>
               ))}
             </div>
@@ -9169,22 +9169,47 @@ function StepTastes({ draft, toggleTaste }) {
   );
 }
 
-// Composer names for suggestions, loaded once per page (composers table).
+// Composers (name + portrait) for suggestions and piece tiles, loaded once
+// per page. Falls back to names only if the photo column isn't there yet.
 let composerCache = null;
+let composerPhotoCache = {};
 function useComposerNames() {
   const [names, setNames] = useState(composerCache || []);
   useEffect(() => {
     if (composerCache) return;
     let alive = true;
-    supabase.from("composers").select("name").order("name").then(({ data }) => {
+    (async () => {
+      let { data, error } = await supabase.from("composers").select("name, photo_url").order("name");
+      if (error) ({ data } = await supabase.from("composers").select("name").order("name"));
       if (!alive || !data) return;
       composerCache = data.map((r) => r.name);
+      composerPhotoCache = Object.fromEntries(data.filter((r) => r.photo_url).map((r) => [foldName(r.name), r.photo_url]));
       setNames(composerCache);
-    });
+    })();
     return () => { alive = false; };
   }, []);
   return names;
 }
+const composerPhoto = (name) => composerPhotoCache[foldName(name || "")] || "";
+
+// A piece's tile: the composer's portrait, or a sheet-music tile without one.
+function PieceTile({ composer, size = 64 }) {
+  const url = composerPhoto(composer);
+  const [broken, setBroken] = useState(false);
+  return url && !broken ? (
+    <img src={url} alt="" onError={() => setBroken(true)} style={{ width: size, height: size, borderRadius: 8, objectFit: "cover", objectPosition: "50% 22%", flex: "none", background: "#EEE" }} />
+  ) : (
+    <span aria-hidden="true" style={{ width: size, height: size, borderRadius: 8, flex: "none", display: "grid", placeItems: "center", background: "linear-gradient(160deg,#F3EADB,#E6D7BD)", color: "#7A6340" }}>
+      <svg width={size * 0.55} height={size * 0.55} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round">
+        <path d="M2 7h20M2 10h20M2 13h20M2 16h20M2 19h20" opacity=".55" /><path d="M9 18V8l8-2v10" /><circle cx="7" cy="18" r="2" fill="currentColor" /><circle cx="15" cy="16" r="2" fill="currentColor" />
+      </svg>
+    </span>
+  );
+}
+const PIECE_STATUS = {
+  good: { label: "Going well", sub: "I feel good about it" },
+  challenge: { label: "Facing challenges", sub: "I could use some support" },
+};
 const foldName = (v) => normalizeName(v).replace(/[^a-z0-9 ]/g, "");
 
 const MAX_PIECES = 3;
@@ -9216,34 +9241,57 @@ function StepPieces({ draft, update }) {
     if (hits.length === 1 && foldName(hits[0]) === n) return [];
     return hits.slice(0, 6).map((c) => ({ key: c, label: c }));
   })();
+  const [status, setStatus] = useState("");
+  const canAdd = !!title.trim() && !!composer.trim() && !!status && !full;
   function add() {
-    if (!title.trim() || !composer.trim() || full) return;
-    update({ pieces: [...draft.pieces, { title, composer }].slice(0, MAX_PIECES) });
-    setTitle(""); setComposer("");
+    if (!canAdd) return;
+    update({ pieces: [...draft.pieces, { title: title.trim(), composer: composer.trim(), status }].slice(0, MAX_PIECES) });
+    setTitle(""); setComposer(""); setStatus("");
   }
   function remove(i) { update({ pieces: draft.pieces.filter((_, idx) => idx !== i) }); }
   return (
     <div>
       <p className="text-sm mb-5" style={{ color: C.ivoryDim }}>What are you currently working on in lessons or on your own? Up to {MAX_PIECES} pieces.<b className="fld-req" aria-label="required">*</b></p>
-      <div className="grid gap-2 mb-5" style={{ gridTemplateColumns: "1fr 1fr auto" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {/* Composer first: it narrows the piece suggestions. */}
         <SuggestInput value={composer} onChange={setComposer} placeholder="Composer"
           suggestions={composerSugs} onPick={(sg) => setComposer(sg.label)} />
         <SuggestInput value={title} onChange={setTitle} placeholder="Piece title"
           suggestions={pieceSugs} onPick={(sg) => { setTitle(sg.label); if (sg.composer) setComposer(sg.composer); }} />
-        {/* At the limit the + dims and does nothing. */}
-        <button onClick={add} disabled={full} className="su-plus" aria-label={full ? "Maximum reached" : "Add piece"}
-          style={full ? { opacity: 0.35, cursor: "default", boxShadow: "none" } : undefined}><Plus size={16} strokeWidth={2.2} /></button>
       </div>
-      <div className="flex flex-col gap-2">
+      {/* How it's going — one of two, for the piece being added. */}
+      <div className="pc-status" role="radiogroup" aria-label="How is this piece going?">
+        {Object.entries(PIECE_STATUS).map(([k, v]) => (
+          <button key={k} type="button" role="radio" aria-checked={status === k} className={`pc-status-card${status === k ? " is-on" : ""}`} onClick={() => setStatus(k)}>
+            <span className="pc-status-top">
+              <span className="pc-status-radio">{status === k && <CheckIcon size={15} strokeWidth={3} />}</span>
+              {k === "good" ? (
+                <svg className="pc-status-ic" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><circle cx="12" cy="12" r="4" /><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8" /></svg>
+              ) : (
+                <svg className="pc-status-ic" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"><path d="M7 18h10a4 4 0 0 0 .6-7.96A5.5 5.5 0 0 0 7.1 9.5 4.25 4.25 0 0 0 7 18z" /></svg>
+              )}
+            </span>
+            <span className="pc-status-t">{v.label}</span>
+            <span className="pc-status-d">{v.sub}</span>
+          </button>
+        ))}
+      </div>
+      <button type="button" className="pc-add" onClick={add} disabled={!canAdd}>
+        <Plus size={16} strokeWidth={2.2} /> Add to my pieces
+      </button>
+
+      <div className="pc-head"><span>Your current pieces</span><i /></div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         {draft.pieces.map((p, i) => (
-          <div key={i} className="flex items-center justify-between rounded-xl px-4 py-3" style={{ border: `1px solid ${C.inkLine}` }}>
-            <div>
-              <span style={{ fontFamily: FONT_MONO, color: C.brassLabel, fontSize: 11 }}>No. {i + 1}</span>
-              <p style={{ fontWeight: 600, fontSize: 14 }}>{p.title}</p>
-              <p style={{ fontSize: 12, color: C.ivoryDim }}>{p.composer}</p>
-            </div>
-            <button onClick={() => remove(i)}><Trash2 size={15} color={C.ivoryDim} /></button>
+          <div key={i} className="pc-card">
+            <PieceTile composer={p.composer} />
+            <span className="pc-body">
+              <span className="pc-no">No. {i + 1}</span>
+              <span className="pc-title">{p.title}</span>
+              <span className="pc-comp">{p.composer}</span>
+              {PIECE_STATUS[p.status] && <span className={`pc-pill pc-pill--${p.status}`}>{PIECE_STATUS[p.status].label}</span>}
+            </span>
+            <button type="button" className="pc-del" onClick={() => remove(i)} aria-label={`Remove ${p.title}`}><Trash2 size={17} /></button>
           </div>
         ))}
         {draft.pieces.length === 0 && <p className="text-sm" style={{ color: C.ivoryDim }}>Nothing added yet.</p>}
@@ -9394,7 +9442,7 @@ function StepReview({ draft }) {
         {draft.pieces.length > 0 && (
           <Card label="Current repertoire">
             {draft.pieces.map((p, i) => (
-              <div key={i}><span style={{ fontWeight: 600 }}>{p.title}</span><span style={{ color: C.ivoryDim }}> — {p.composer}</span></div>
+              <div key={i}><span style={{ fontWeight: 600 }}>{p.title}</span><span style={{ color: C.ivoryDim }}> — {p.composer}</span>{MODERN && PIECE_STATUS[p.status] && <span className={`pc-pill pc-pill--${p.status}`} style={{ marginLeft: 8, display: "inline-block", verticalAlign: "1px" }}>{PIECE_STATUS[p.status].label}</span>}</div>
             ))}
           </Card>
         )}
@@ -11984,7 +12032,7 @@ function StudentProfile({ student, conservatory, onBack, onMessage, locked, onAp
               {student.pieces.map((p, i) => (
                 <div key={i} style={{ fontSize: 14, color: C.ivory }}>
                   <span style={{ fontWeight: 600 }}>{p.title}</span>
-                  <span style={{ color: C.ivoryDim }}> — {p.composer}</span>
+                  <span style={{ color: C.ivoryDim }}> — {p.composer}</span>{MODERN && PIECE_STATUS[p.status] && <span className={`pc-pill pc-pill--${p.status}`} style={{ marginLeft: 8, display: "inline-block", verticalAlign: "1px" }}>{PIECE_STATUS[p.status].label}</span>}
                 </div>
               ))}
             </div>
@@ -12147,7 +12195,7 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack, onUpdat
               {profile.pieces.map((p, i) => (
                 <div key={i} style={{ fontSize: 14, color: C.ivory }}>
                   <span style={{ fontWeight: 600 }}>{p.title}</span>
-                  <span style={{ color: C.ivoryDim }}> — {p.composer}</span>
+                  <span style={{ color: C.ivoryDim }}> — {p.composer}</span>{MODERN && PIECE_STATUS[p.status] && <span className={`pc-pill pc-pill--${p.status}`} style={{ marginLeft: 8, display: "inline-block", verticalAlign: "1px" }}>{PIECE_STATUS[p.status].label}</span>}
                 </div>
               ))}
             </div>
@@ -13384,7 +13432,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
                     {selected.pieces.map((p, i) => (
                       <div key={i}>
                         <span style={{ fontWeight: 600, color: C.inkText }}>{p.title}</span>
-                        <span style={{ color: C.ivoryDim }}> — {p.composer}</span>
+                        <span style={{ color: C.ivoryDim }}> — {p.composer}</span>{MODERN && PIECE_STATUS[p.status] && <span className={`pc-pill pc-pill--${p.status}`} style={{ marginLeft: 8, display: "inline-block", verticalAlign: "1px" }}>{PIECE_STATUS[p.status].label}</span>}
                       </div>
                     ))}
                   </div>
@@ -15481,7 +15529,8 @@ function AdminComposers({ card }) {
   const [busy, setBusy] = useState(false);
 
   async function loadComposers() {
-    const { data, error } = await supabase.from("composers").select("id, name").order("name");
+    let { data, error } = await supabase.from("composers").select("id, name, photo_url").order("name");
+    if (error) ({ data, error } = await supabase.from("composers").select("id, name").order("name"));
     if (error) { setNote({ bad: true, text: error.message }); setComposers([]); return; }
     setComposers(data || []);
   }
@@ -15519,6 +15568,14 @@ function AdminComposers({ card }) {
     if (error) { setNote({ bad: true, text: /duplicate/i.test(error.message) ? "That piece is already listed." : error.message }); return; }
     setNewPiece(""); setNote({ bad: false, text: `Added to ${sel.name}.` }); loadPieces();
   }
+  const [photoDraft, setPhotoDraft] = useState("");
+  useEffect(() => { setPhotoDraft(sel?.photo_url || ""); }, [sel?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  async function savePhoto(url) {
+    const { error } = await supabase.from("composers").update({ photo_url: url.trim() || null }).eq("id", sel.id);
+    if (error) { setNote({ bad: true, text: error.message }); return; }
+    setSel((c) => ({ ...c, photo_url: url.trim() || null })); setNote({ bad: false, text: url.trim() ? "Photo saved." : "Photo removed." });
+    composerCache = null; loadComposers();
+  }
   async function deletePiece(p) {
     const { error } = await supabase.from("pieces").delete().eq("id", p.id);
     if (error) { setNote({ bad: true, text: error.message }); return; }
@@ -15551,6 +15608,7 @@ function AdminComposers({ card }) {
             <div style={{ border: `1px solid ${C.inkLine}`, borderRadius: 10, overflow: "hidden", maxHeight: 460, overflowY: "auto" }}>
               {shown.map((c, i) => (
                 <div key={c.id} style={{ ...row, borderTop: i ? row.borderTop : "none" }}>
+                  {c.photo_url ? <img src={c.photo_url} alt="" style={{ width: 30, height: 30, borderRadius: 6, objectFit: "cover", objectPosition: "50% 22%", flex: "none" }} /> : <span style={{ width: 30, height: 30, borderRadius: 6, background: "#EFE6D6", flex: "none" }} />}
                   <button onClick={() => { setSel(c); setPq(""); setNote(null); }} style={{ flex: 1, textAlign: "left", background: "none", border: "none", padding: 0, cursor: "pointer", color: C.ivory, fontSize: 14, fontWeight: 600 }}>{c.name}</button>
                   <button onClick={() => deleteComposer(c)} aria-label={`Delete ${c.name}`} style={{ background: "none", border: "none", cursor: "pointer", color: C.ivoryDim }}><Trash2 size={15} /></button>
                 </div>
@@ -15564,6 +15622,14 @@ function AdminComposers({ card }) {
           <button onClick={() => { setSel(null); setPieces([]); setNote(null); }} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "none", border: "none", padding: 0, cursor: "pointer", color: C.brassLabel, fontSize: 13, fontWeight: 700, marginBottom: 8 }}>
             <ArrowLeft size={14} /> All composers
           </button>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+            {sel.photo_url ? <img src={sel.photo_url} alt="" style={{ width: 56, height: 56, borderRadius: 8, objectFit: "cover", objectPosition: "50% 22%" }} /> : <span style={{ width: 56, height: 56, borderRadius: 8, background: "#EFE6D6" }} />}
+            <div style={{ display: "flex", gap: 6, flex: 1, flexWrap: "wrap" }}>
+              <input style={inp} value={photoDraft} onChange={(e) => setPhotoDraft(e.target.value)} placeholder="Photo link (https://…)" />
+              <button style={btn} onClick={() => savePhoto(photoDraft)}>Save</button>
+              {sel.photo_url && <button style={{ ...btn, background: "#FFFFFF", color: C.ivoryDim, border: `1px solid ${C.inkLine}` }} onClick={() => { setPhotoDraft(""); savePhoto(""); }}>Remove</button>}
+            </div>
+          </div>
           <p style={{ margin: "0 0 10px", fontSize: 16, fontWeight: 700, color: C.ivory }}>{sel.name} <span style={{ fontWeight: 500, color: C.ivoryDim, fontSize: 13 }}>· {pieceTotal} piece{pieceTotal === 1 ? "" : "s"}</span></p>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
             <input style={inp} value={pq} onChange={(e) => setPq(e.target.value)} placeholder="Search this composer's pieces" />
