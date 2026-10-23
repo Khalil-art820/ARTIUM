@@ -15513,6 +15513,24 @@ const TRACK_REJECTION_DEFAULT = "Thank you for sharing your playing. This record
 
 // Admin → Gate cards: choose up to four approved students (with a photo) for
 // the entry gate's card spread. Saved as platform_settings.gate_featured.
+// Resize an image file on the device to at most `max` px on its long side and
+// return a JPEG blob.
+function shrinkImage(file, max = 480) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const k = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement("canvas");
+      c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(img.src);
+      c.toBlob((b) => (b ? resolve(b) : reject(new Error("Could not read that image"))), "image/jpeg", 0.86);
+    };
+    img.onerror = () => reject(new Error("Could not read that image"));
+    img.src = URL.createObjectURL(file);
+  });
+}
+
 /* Admin → Composers & pieces: the lists behind sign-up step 4's suggestions.
  * Composers on the left (search, add, delete — deleting removes their pieces
  * too); pick one to search, add and remove its pieces. */
@@ -15576,6 +15594,36 @@ function AdminComposers({ card }) {
     setSel((c) => ({ ...c, photo_url: url.trim() || null })); setNote({ bad: false, text: url.trim() ? "Photo saved." : "Photo removed." });
     composerCache = null; loadComposers();
   }
+  // Upload: shrunk to 480px on the device (a portrait is a small tile), stored
+  // in composer-photos, and its link saved on the composer.
+  const [uploading, setUploading] = useState(false);
+  async function uploadPhoto(file) {
+    if (!sel || !file) return;
+    setUploading(true); setNote(null);
+    try {
+      const blob = await shrinkImage(file, 480);
+      const path = `${sel.id}-${Date.now()}.jpg`;
+      const { error } = await supabase.storage.from("composer-photos").upload(path, blob, { contentType: "image/jpeg", upsert: false });
+      if (error) throw error;
+      const url = supabase.storage.from("composer-photos").getPublicUrl(path).data.publicUrl;
+      setPhotoDraft(url); await savePhoto(url);
+    } catch (e) { setNote({ bad: true, text: "Upload failed: " + (e.message || e) }); }
+    setUploading(false);
+  }
+  const [renaming, setRenaming] = useState(null);   // text while renaming the open composer
+  async function renameComposer() {
+    const name = (renaming || "").trim(); if (name.length < 2 || !sel) return;
+    const { error } = await supabase.from("composers").update({ name }).eq("id", sel.id);
+    if (error) { setNote({ bad: true, text: /duplicate/i.test(error.message) ? `${name} is already in the list.` : error.message }); return; }
+    setSel((c) => ({ ...c, name })); setRenaming(null); setNote({ bad: false, text: "Renamed." }); composerCache = null; loadComposers();
+  }
+  const [editPiece, setEditPiece] = useState(null); // { id, title }
+  async function savePiece() {
+    const title = (editPiece?.title || "").trim(); if (!title) return;
+    const { error } = await supabase.from("pieces").update({ title }).eq("id", editPiece.id);
+    if (error) { setNote({ bad: true, text: /duplicate/i.test(error.message) ? "That piece is already listed." : error.message }); return; }
+    setPieces((xs) => xs.map((x) => (x.id === editPiece.id ? { ...x, title } : x))); setEditPiece(null);
+  }
   async function deletePiece(p) {
     const { error } = await supabase.from("pieces").delete().eq("id", p.id);
     if (error) { setNote({ bad: true, text: error.message }); return; }
@@ -15625,12 +15673,25 @@ function AdminComposers({ card }) {
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
             {sel.photo_url ? <img src={sel.photo_url} alt="" style={{ width: 56, height: 56, borderRadius: 8, objectFit: "cover", objectPosition: "50% 22%" }} /> : <span style={{ width: 56, height: 56, borderRadius: 8, background: "#EFE6D6" }} />}
             <div style={{ display: "flex", gap: 6, flex: 1, flexWrap: "wrap" }}>
-              <input style={inp} value={photoDraft} onChange={(e) => setPhotoDraft(e.target.value)} placeholder="Photo link (https://…)" />
-              <button style={btn} onClick={() => savePhoto(photoDraft)}>Save</button>
+              <FilePickButton accept="image/*" onFile={uploadPhoto} disabled={uploading} style={{ ...btn, display: "inline-flex", alignItems: "center", gap: 6 }}>
+                <Upload size={14} /> {uploading ? "Uploading…" : "Upload photo"}
+              </FilePickButton>
+              <input style={inp} value={photoDraft} onChange={(e) => setPhotoDraft(e.target.value)} placeholder="…or paste a photo link" />
+              <button style={{ ...btn, background: "#FFFFFF", color: C.ivory, border: `1px solid ${C.inkLine}` }} onClick={() => savePhoto(photoDraft)}>Save link</button>
               {sel.photo_url && <button style={{ ...btn, background: "#FFFFFF", color: C.ivoryDim, border: `1px solid ${C.inkLine}` }} onClick={() => { setPhotoDraft(""); savePhoto(""); }}>Remove</button>}
             </div>
           </div>
-          <p style={{ margin: "0 0 10px", fontSize: 16, fontWeight: 700, color: C.ivory }}>{sel.name} <span style={{ fontWeight: 500, color: C.ivoryDim, fontSize: 13 }}>· {pieceTotal} piece{pieceTotal === 1 ? "" : "s"}</span></p>
+          {renaming !== null ? (
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
+              <input style={inp} value={renaming} onChange={(e) => setRenaming(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") renameComposer(); }} autoFocus />
+              <button style={btn} onClick={renameComposer}>Save name</button>
+              <button style={{ ...btn, background: "#FFFFFF", color: C.ivoryDim, border: `1px solid ${C.inkLine}` }} onClick={() => setRenaming(null)}>Cancel</button>
+            </div>
+          ) : (
+          <p style={{ margin: "0 0 10px", fontSize: 16, fontWeight: 700, color: C.ivory }}>
+            <button onClick={() => setRenaming(sel.name)} title="Rename" style={{ background: "none", border: "none", padding: 0, marginRight: 6, cursor: "pointer", color: C.ivoryDim, verticalAlign: "-2px" }}><Pencil size={14} /></button>
+            {sel.name} <span style={{ fontWeight: 500, color: C.ivoryDim, fontSize: 13 }}>· {pieceTotal} piece{pieceTotal === 1 ? "" : "s"}</span></p>
+          )}
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
             <input style={inp} value={pq} onChange={(e) => setPq(e.target.value)} placeholder="Search this composer's pieces" />
           </div>
@@ -15641,8 +15702,19 @@ function AdminComposers({ card }) {
           <div style={{ border: `1px solid ${C.inkLine}`, borderRadius: 10, overflow: "hidden", maxHeight: 460, overflowY: "auto" }}>
             {pieces.map((p, i) => (
               <div key={p.id} style={{ ...row, borderTop: i ? row.borderTop : "none" }}>
-                <span style={{ flex: 1, minWidth: 0, color: C.ivory, fontSize: 13.5 }}>{p.title}</span>
-                <button onClick={() => deletePiece(p)} aria-label="Delete piece" style={{ background: "none", border: "none", cursor: "pointer", color: C.ivoryDim }}><Trash2 size={15} /></button>
+                {editPiece?.id === p.id ? (
+                  <>
+                    <input style={inp} value={editPiece.title} onChange={(e) => setEditPiece({ ...editPiece, title: e.target.value })} onKeyDown={(e) => { if (e.key === "Enter") savePiece(); if (e.key === "Escape") setEditPiece(null); }} autoFocus />
+                    <button style={btn} onClick={savePiece}>Save</button>
+                    <button onClick={() => setEditPiece(null)} aria-label="Cancel" style={{ background: "none", border: "none", cursor: "pointer", color: C.ivoryDim }}><X size={15} /></button>
+                  </>
+                ) : (
+                  <>
+                    <span style={{ flex: 1, minWidth: 0, color: C.ivory, fontSize: 13.5 }}>{p.title}</span>
+                    <button onClick={() => setEditPiece({ id: p.id, title: p.title })} aria-label="Edit piece" style={{ background: "none", border: "none", cursor: "pointer", color: C.ivoryDim }}><Pencil size={15} /></button>
+                    <button onClick={() => deletePiece(p)} aria-label="Delete piece" style={{ background: "none", border: "none", cursor: "pointer", color: C.ivoryDim }}><Trash2 size={15} /></button>
+                  </>
+                )}
               </div>
             ))}
             {pieces.length === 0 && <p className="text-sm" style={{ padding: 10, color: C.ivoryDim }}>{pq ? "No piece matches." : "No pieces yet — add the first one above."}</p>}
