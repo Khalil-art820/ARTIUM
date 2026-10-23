@@ -9227,10 +9227,20 @@ function StepPieces({ draft, update }) {
     let alive = true;
     const timer = setTimeout(async () => {
       const known = composers.find((n) => foldName(n) === foldName(composer));
-      let q = supabase.from("pieces").select("title, composers!inner(name)").ilike("title", `%${t.replace(/[%_]/g, "")}%`).order("title").limit(8);
+      // Every typed word has to appear ("piano sonata 14" finds no. 14), up
+      // to 60 results, so a common word like "sonata" doesn't stop at the
+      // first few alphabetically.
+      const words = t.replace(/[%_,]/g, " ").split(/\s+/).filter(Boolean).slice(0, 5);
+      let q = supabase.from("pieces").select("title, composers!inner(name)").limit(60);
+      for (const w of words) q = q.ilike("title", `%${w}%`);
       if (known) q = q.eq("composers.name", known);
       const { data } = await q;
-      if (alive) setPieceSugs((data || []).map((r) => ({ key: `${r.composers?.name}|${r.title}`, label: r.title, sub: known ? "" : r.composers?.name || "", composer: r.composers?.name || "" })));
+      if (!alive) return;
+      const low = t.toLowerCase();
+      const rows = (data || []).sort((a, b) =>
+        (b.title.toLowerCase().startsWith(low) - a.title.toLowerCase().startsWith(low))
+        || a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: "base" }));
+      setPieceSugs(rows.map((r) => ({ key: `${r.composers?.name}|${r.title}`, label: r.title, sub: known ? "" : r.composers?.name || "", composer: r.composers?.name || "" })));
     }, 220);
     return () => { alive = false; clearTimeout(timer); };
   }, [title, composer, composers]);
@@ -9247,7 +9257,12 @@ function StepPieces({ draft, update }) {
     if (!canAdd) return;
     update({ pieces: [...draft.pieces, { title: title.trim(), composer: composer.trim(), status }].slice(0, MAX_PIECES) });
     setTitle(""); setComposer(""); setStatus("");
+    // Close the keyboard only now that the tap has landed.
+    try { document.activeElement && document.activeElement.blur(); } catch { /* none */ }
   }
+  // Keep the field focused on press: if the keyboard closed mid-tap, the page
+  // would jump and the tap could land on Next in the bar below.
+  const hold = (e) => e.preventDefault();
   function remove(i) { update({ pieces: draft.pieces.filter((_, idx) => idx !== i) }); }
   return (
     <div>
@@ -9262,7 +9277,7 @@ function StepPieces({ draft, update }) {
       {/* How it's going — one of two, for the piece being added. */}
       <div className="pc-status" role="radiogroup" aria-label="How is this piece going?">
         {Object.entries(PIECE_STATUS).map(([k, v]) => (
-          <button key={k} type="button" role="radio" aria-checked={status === k} className={`pc-status-card${status === k ? " is-on" : ""}`} onClick={() => setStatus(k)}>
+          <button key={k} type="button" role="radio" aria-checked={status === k} className={`pc-status-card${status === k ? " is-on" : ""}`} onMouseDown={hold} onClick={() => setStatus(k)}>
             <span className="pc-status-top">
               <span className="pc-status-radio">{status === k && <CheckIcon size={15} strokeWidth={3} />}</span>
               {k === "good" ? (
@@ -9276,7 +9291,7 @@ function StepPieces({ draft, update }) {
           </button>
         ))}
       </div>
-      <button type="button" className="pc-add" onClick={add} disabled={!canAdd}>
+      <button type="button" className="pc-add" onMouseDown={hold} onClick={add} disabled={!canAdd}>
         <Plus size={16} strokeWidth={2.2} /> Add to my pieces
       </button>
 
@@ -9286,12 +9301,11 @@ function StepPieces({ draft, update }) {
           <div key={i} className="pc-card">
             <PieceTile composer={p.composer} />
             <span className="pc-body">
-              <span className="pc-no">No. {i + 1}</span>
               <span className="pc-title">{p.title}</span>
               <span className="pc-comp">{p.composer}</span>
               {PIECE_STATUS[p.status] && <span className={`pc-pill pc-pill--${p.status}`}>{PIECE_STATUS[p.status].label}</span>}
             </span>
-            <button type="button" className="pc-del" onClick={() => remove(i)} aria-label={`Remove ${p.title}`}><Trash2 size={17} /></button>
+            <button type="button" className="pc-del" onMouseDown={hold} onClick={() => remove(i)} aria-label={`Remove ${p.title}`}><Trash2 size={17} /></button>
           </div>
         ))}
         {draft.pieces.length === 0 && <p className="text-sm" style={{ color: C.ivoryDim }}>Nothing added yet.</p>}
