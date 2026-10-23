@@ -8363,7 +8363,7 @@ function DoorArtGraduate() {
  * "you have to tap twice". A real button calls the input directly, and the
  * input is cleared after every pick so the next one always fires.
  */
-function FilePickButton({ accept, onFile, disabled, style, title, children }) {
+function FilePickButton({ accept, onFile, onFiles, multiple = false, disabled, style, title, children }) {
   const ref = useRef(null);
   return (
     <>
@@ -8371,9 +8371,13 @@ function FilePickButton({ accept, onFile, disabled, style, title, children }) {
         onClick={() => { if (!disabled) ref.current?.click(); }}>
         {children}
       </button>
-      <input ref={ref} type="file" accept={accept} tabIndex={-1} aria-hidden="true"
+      <input ref={ref} type="file" accept={accept} multiple={multiple} tabIndex={-1} aria-hidden="true"
         style={{ position: "absolute", width: 1, height: 1, opacity: 0, overflow: "hidden", pointerEvents: "none", clipPath: "inset(50%)" }}
-        onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) onFile(f); }} />
+        onChange={(e) => {
+          const list = Array.from(e.target.files || []); e.target.value = "";
+          if (!list.length) return;
+          if (onFiles) onFiles(list); else onFile(list[0]);
+        }} />
     </>
   );
 }
@@ -9324,9 +9328,10 @@ const PERF_VIDEO_MAX_SECONDS = 60;
 const PERF_VIDEO_MAX_MB = 150;
 function StepVideos({ draft, update }) {
   const vids = draft.performanceVideos || [];
-  const [busy, setBusy] = useState(false);
+  const [busySlot, setBusySlot] = useState(-1);
   const [err, setErr] = useState("");
-  async function add(file) {
+  // Three tall slots in a row; tap an empty one to upload into it.
+  async function addToSlot(i, file) {
     setErr("");
     const secs = await videoDuration(file);
     if (Number.isFinite(secs) && secs > PERF_VIDEO_MAX_SECONDS + 1) {
@@ -9335,9 +9340,9 @@ function StepVideos({ draft, update }) {
     if (file.size > PERF_VIDEO_MAX_MB * 1024 * 1024) {
       setErr(`That file is ${Math.round(file.size / 1048576)} MB — the limit is ${PERF_VIDEO_MAX_MB} MB. Record in 1080p rather than 4K, or trim it.`); return;
     }
-    setBusy(true);
+    setBusySlot(i);
     const r = await uploadVideoTo("performances", file);
-    setBusy(false);
+    setBusySlot(-1);
     if (r.error) { setErr(r.error); return; }
     update((d) => ({ performanceVideos: [...(d.performanceVideos || []), r.url].slice(0, PERF_VIDEO_MAX) }));
   }
@@ -9349,27 +9354,27 @@ function StepVideos({ draft, update }) {
           Up to {PERF_VIDEO_MAX} videos, one minute each. At least one.
         </p>
       </Field>
-      <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: -8 }}>
-        {vids.map((url, i) => (
-          <div key={url} style={{ position: "relative", borderRadius: 12, overflow: "hidden", background: "#000" }}>
-            <video src={url} controls playsInline preload="metadata" style={{ width: "100%", display: "block", maxHeight: 280, background: "#000" }} />
-            <span style={{ position: "absolute", top: 8, left: 8, background: "rgba(0,0,0,.55)", color: "#fff", borderRadius: 999, padding: "3px 10px", fontSize: 12, fontWeight: 600 }}>Video {i + 1}</span>
-            <button type="button" onClick={() => remove(url)}
-              style={{ position: "absolute", top: 8, right: 8, background: "rgba(0,0,0,.55)", color: "#fff", border: "none", borderRadius: 999, padding: "5px 12px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
-              Remove
-            </button>
-          </div>
-        ))}
-        {vids.length < PERF_VIDEO_MAX && (
-          <FilePickButton accept="video/*" onFile={add} disabled={busy}
-            style={{ width: "100%", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "18px 14px", borderRadius: 12,
-              border: `1.5px dashed ${C.inkLine}`, background: "#FFFFFF", color: C.ivory, fontFamily: FONT_BODY, fontWeight: 600, fontSize: 14, cursor: busy ? "default" : "pointer", opacity: busy ? .6 : 1 }}>
-            <Upload size={16} /> {busy ? "Uploading…" : vids.length ? "Add another video" : "Upload a video"}
-          </FilePickButton>
-        )}
+      <div className="vs-row" style={{ marginTop: -8 }}>
+        {Array.from({ length: PERF_VIDEO_MAX }).map((_, i) => {
+          const url = vids[i];
+          if (url) return (
+            <div key={url} className="vs-slot is-filled">
+              <video src={url} controls playsInline preload="metadata" />
+              <button type="button" className="vs-remove" onClick={() => remove(url)} aria-label={`Remove video ${i + 1}`}><X size={14} strokeWidth={2.6} /></button>
+            </div>
+          );
+          const busy = busySlot !== -1;
+          return (
+            <FilePickButton key={`empty-${i}`} accept="video/*" onFile={(f) => addToSlot(i, f)} disabled={busy}
+              style={{}} title={`Upload video ${i + 1}`}>
+              <span className={`vs-slot${busySlot === i ? " is-busy" : ""}`}>
+                {busySlot === i ? <span className="vs-spin" aria-label="Uploading" /> : <><Plus size={22} strokeWidth={2} /><span className="vs-n">Video {i + 1}</span></>}
+              </span>
+            </FilePickButton>
+          );
+        })}
       </div>
       {err && <p className="text-sm" style={{ color: C.burgundy, marginTop: 10 }}>{err}</p>}
-      <p className="text-xs" style={{ color: C.ivoryDim, marginTop: 10 }}>{vids.length} of {PERF_VIDEO_MAX} · shown on your profile.</p>
     </div>
   );
 }

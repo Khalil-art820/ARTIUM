@@ -1082,3 +1082,15 @@ html.theme-modern .artium-lp--light .artium-lp-h2{font-size:clamp(28px,8.4vw,44p
 .su-other{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:999px;border:1.5px dashed #0F5C52;background:#EEF6F3;
   color:#0F5C52;font:600 13.5px 'Fira Sans',sans-serif;cursor:pointer}
 .su-other.is-on{border-style:solid;background:#0F5C52;color:#FFFFFF}
+/* Step 5: three tall video slots in a row */
+.vs-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.vs-row > button{display:block;width:100%;padding:0;border:0;background:none;cursor:pointer;font:inherit}
+.vs-row > button:disabled{cursor:default}
+.vs-slot{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;width:100%;aspect-ratio:9/16;border-radius:12px;
+  border:1.5px dashed #CFD6D4;background:#F7F8F7;color:#0F5C52;overflow:hidden}
+.vs-n{font:500 12px 'Fira Sans',sans-serif;color:#6B7A78}
+.vs-slot.is-filled{border:0;background:#000}
+.vs-slot.is-filled video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000}
+.vs-remove{position:absolute;top:6px;right:6px;z-index:2;width:26px;height:26px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;display:grid;place-items:center;cursor:pointer}
+.vs-spin{width:26px;height:26px;border-radius:50%;border:3px solid #CFE3DD;border-top-color:#0F5C52;animation:vsSpin .8s linear infinite}
+@keyframes vsSpin{to{transform:rotate(360deg)}}
