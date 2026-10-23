@@ -9326,6 +9326,26 @@ function StepPieces({ draft, update }) {
 const PERF_VIDEO_MAX = 3;
 const PERF_VIDEO_MAX_SECONDS = 60;
 const PERF_VIDEO_MAX_MB = 150;
+// A filled slot: the video with a small play/pause button of our own (the
+// browser's controls put a play button over most of a narrow slot).
+function SlotVideo({ url }) {
+  const ref = useRef(null);
+  const [playing, setPlaying] = useState(false);
+  const toggle = () => {
+    const v = ref.current; if (!v) return;
+    if (v.paused) { v.play().catch(() => {}); } else { v.pause(); }
+  };
+  return (
+    <>
+      <video ref={ref} src={url + "#t=0.1"} playsInline preload="metadata" onClick={toggle}
+        onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onEnded={() => setPlaying(false)} />
+      <button type="button" className="vs-play" onClick={toggle} aria-label={playing ? "Pause" : "Play"}>
+        {playing ? <Pause size={13} strokeWidth={2.6} /> : <Play size={13} strokeWidth={2.6} style={{ marginLeft: 2 }} />}
+      </button>
+    </>
+  );
+}
+
 function StepVideos({ draft, update }) {
   const vids = draft.performanceVideos || [];
   const [busySlot, setBusySlot] = useState(-1);
@@ -9359,7 +9379,7 @@ function StepVideos({ draft, update }) {
           const url = vids[i];
           if (url) return (
             <div key={url} className="vs-slot is-filled">
-              <video src={url} controls playsInline preload="metadata" />
+              <SlotVideo url={url} />
               <button type="button" className="vs-remove" onClick={() => remove(url)} aria-label={`Remove video ${i + 1}`}><X size={14} strokeWidth={2.6} /></button>
             </div>
           );
