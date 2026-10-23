@@ -7332,7 +7332,9 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
     // Teaching needs an answer — Yes (with how) or Not right now. Editing an
     // existing profile counts as answered: it already holds one.
     (editing || !!draft.teaching.answered) && (!draft.teaching.open || (!!draft.teaching.mode
-      && (draft.teaching.mode === "online" || (draft.teaching.cities || []).length > 0))),
+      && (draft.teaching.mode === "online" || (draft.teaching.cities || []).length > 0)
+      // The price is what learners pay through Stripe — no price, no paid lessons.
+      && Number(draft.teaching.price) > 0)),
   ].filter((v) => v !== null);
   const canNext = stepValid[step];
   // Back, top and bottom. On the conservatory step, once one of the three
@@ -7367,7 +7369,8 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
     "Upload at least one performance video.",
     !draft.teaching.answered && !editing ? "Tell us whether you're open to teaching."
       : !draft.teaching.mode ? "Choose how you'd like to teach."
-      : "Add at least one city where you can teach in person.",
+      : draft.teaching.mode !== "online" && !(draft.teaching.cities || []).length ? "Add at least one city where you can teach in person."
+      : "Set your price per session.",
   ].filter((v) => v !== null);
   // Saving from the header skips the remaining steps, so it has to answer for
   // all of them rather than just the one on screen — otherwise the shortcut
@@ -12473,9 +12476,30 @@ function TeachCities({ t, setT }) {
     if (!cities.some((x) => x.toLowerCase() === c.toLowerCase()) && cities.length < TEACH_CITY_MAX) setT({ cities: [...cities, c] });
     setQ("");
   };
+  // Worldwide: OpenStreetMap's Photon place search (free, no key), cities and
+  // towns, with the conservatory cities as an instant first answer.
+  const [remote, setRemote] = useState([]);
+  useEffect(() => {
+    const t = q.trim();
+    if (t.length < 2) { setRemote([]); return; }
+    const ctrl = new AbortController();
+    const timer = setTimeout(async () => {
+      try {
+        const r = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(t)}&limit=8&lang=en&osm_tag=place:city&osm_tag=place:town`, { signal: ctrl.signal });
+        const d = await r.json();
+        const seen = new Set();
+        setRemote((d.features || []).map((f) => f.properties || {}).filter((p) => p.name)
+          .map((p) => ({ key: `${p.name}|${p.state || ""}|${p.country || ""}`, label: p.name, sub: [p.state, p.country].filter(Boolean).join(", ") }))
+          .filter((x) => (seen.has(x.key) ? false : seen.add(x.key))));
+      } catch { /* offline or aborted: keep the local list */ }
+    }, 250);
+    return () => { clearTimeout(timer); ctrl.abort(); };
+  }, [q]);
   const sugs = (() => {
     const n = normalizeName(q); if (n.length < 1) return [];
-    return known.filter((c) => normalizeName(c).startsWith(n) && !cities.includes(c)).slice(0, 6).map((c) => ({ key: c, label: c }));
+    const local = known.filter((c) => normalizeName(c).startsWith(n) && !cities.includes(c)).slice(0, 4).map((c) => ({ key: `l:${c}`, label: c }));
+    const more = remote.filter((r) => !cities.includes(r.label) && !local.some((l) => l.label === r.label));
+    return [...local, ...more].slice(0, 8);
   })();
   return (
     <Field label="Where can you teach in person?" req>
@@ -12521,7 +12545,7 @@ function StepTeaching({ draft, update, editing }) {
             </div>
           </Field>
           {(t.mode === "physical" || t.mode === "both") && <TeachCities t={t} setT={setT} />}
-          <Field label="Price per session" opt>
+          <Field label="Price per session" req>
             <div className="flex items-center gap-2">
               <span style={{ color: C.ivoryDim, fontSize: 16 }}>€</span>
               <input
