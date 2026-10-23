@@ -9368,7 +9368,7 @@ function StepVideos({ draft, update }) {
             <FilePickButton key={`empty-${i}`} accept="video/*" onFile={(f) => addToSlot(i, f)} disabled={busy}
               style={{}} title={`Upload video ${i + 1}`}>
               <span className={`vs-slot${busySlot === i ? " is-busy" : ""}`}>
-                {busySlot === i ? <span className="vs-spin" aria-label="Uploading" /> : <><Plus size={22} strokeWidth={2} /><span className="vs-n">Video {i + 1}</span></>}
+                {busySlot === i ? <span className="vs-spin" aria-label="Uploading" /> : <><span className="vs-plus"><Plus size={18} strokeWidth={2.2} /></span><span className="vs-n">Video {i + 1}</span></>}
               </span>
             </FilePickButton>
           );
