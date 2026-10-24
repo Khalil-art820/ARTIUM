@@ -17,7 +17,8 @@ import {
 } from "lucide-react";
 import { useAuth } from "./contexts/AuthContext";
 import { supabase } from "./lib/supabase";
-import { toDbProfile, fromDbProfile, needsReview, instrumentsOf, MAX_INSTRUMENTS } from "./lib/profiles";
+import { toDbProfile, fromDbProfile, needsReview, instrumentsOf, MAX_INSTRUMENTS, TERMS_VERSION } from "./lib/profiles";
+import { TERMS_SECTIONS, TERMS_UPDATED } from "./lib/terms";
 import {
   INQUIRY_STATUS, createInquiry, listInquiries, getInquiry, setInquiryStatus,
   listMessages, sendMessage as sendConcertMessage, uploadConcertFile,
@@ -837,6 +838,7 @@ const emptyDraft = () => ({
   photoUrl: "",
   coverVideoUrl: "",
   teaching: { open: false, mode: "", price: "", pitch: "" },
+  concerts: { answered: false, open: false, regions: [], formats: [], fee: "" },
 });
 
 /* ---------------------------------------------------------------- */
@@ -3176,14 +3178,15 @@ export default function App() {
     if (learnerLoggedOut) { startLogin(); return; }
     setLearnerProfile(null); setAuthError(""); setScreen("learnerSignup");
   }
-  async function submitLearner({ name, location, email, password, instrument, motivation, photoUrl }) {
+  async function submitLearner({ name, location, email, password, instrument, motivation, photoUrl, termsAcceptedAt }) {
+    const terms = termsAcceptedAt ? { terms_accepted_at: termsAcceptedAt, terms_version: TERMS_VERSION } : {};
     setAuthError("");
     if (authUser) {
       // Already authenticated at the prompt (Google or email) — just write
       // the profile row against the live session, whichever way it signed in.
       const { data: { user: authUser } } = await supabase.auth.getUser();
       if (!authUser) { setAuthError("Session expired. Please try again."); return; }
-      const { error: insertError } = await supabase.from("profiles").insert({ id: authUser.id, role: "learner", name, location, instrument, bio: motivation, photo_url: photoUrl || null, approved: true });
+      const { error: insertError } = await supabase.from("profiles").insert({ id: authUser.id, role: "learner", name, location, instrument, bio: motivation, photo_url: photoUrl || null, approved: true, ...terms });
       if (insertError) { setAuthError(await friendlyProfileError(insertError)); return; }
       setLearnerGoogleName("");
       setLearnerProfile({ name, location, instrument, bio: motivation, photoUrl: photoUrl || null });
@@ -3199,7 +3202,7 @@ export default function App() {
     });
     if (error) { setAuthError(friendlyAuthError(error.message)); return; }
     if (data.session && data.user) {
-      const { error: insertError } = await supabase.from("profiles").insert({ id: data.user.id, role: "learner", name, location, instrument, bio: motivation, photo_url: photoUrl || null, approved: true });
+      const { error: insertError } = await supabase.from("profiles").insert({ id: data.user.id, role: "learner", name, location, instrument, bio: motivation, photo_url: photoUrl || null, approved: true, ...terms });
       if (insertError) { setAuthError(await friendlyProfileError(insertError)); return; }
       await supabase.auth.updateUser({ data: { pendingLearner: null } });
       setLearnerProfile({ name, location, instrument, bio: motivation, photoUrl: photoUrl || null });
@@ -7275,7 +7278,7 @@ function SuNextButton({ ok, onGo, hint, children }) {
   );
 }
 
-const STEP_LABELS = ["Introduce Yourself", "Get Verified and Join the Student Map", "Your Musical Voice", "Current Repertoire", "Performance Videos", "Teaching"];
+const STEP_LABELS = ["Introduce Yourself", "Get Verified and Join the Student Map", "Your Musical Voice", "Current Repertoire", "Performance Videos", "Teaching", "Concerts & Mobility"];
 
 function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubmit, onCancel, onHome, authError, resumed, onStartFresh }) {
   const [submitting, setSubmitting] = useState(false);
@@ -7335,6 +7338,8 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
       && (draft.teaching.mode === "online" || (draft.teaching.cities || []).length > 0)
       // The price is what learners pay through Stripe — no price, no paid lessons.
       && Number(draft.teaching.price) > 0)),
+    // Concerts: an answer, and where they can perform if yes.
+    (() => { const c = concertsOf(draft); return (editing || c.answered) && (!c.open || c.regions.length > 0); })(),
   ].filter((v) => v !== null);
   const canNext = stepValid[step];
   // Back, top and bottom. On the conservatory step, once one of the three
@@ -7371,6 +7376,7 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
       : !draft.teaching.mode ? "Choose how you'd like to teach."
       : draft.teaching.mode !== "online" && !(draft.teaching.cities || []).length ? "Add at least one city where you can teach in person."
       : "Set your price per session.",
+    !concertsOf(draft).answered && !editing ? "Tell us whether you're open to giving concerts." : "Choose at least one region where you can perform.",
   ].filter((v) => v !== null);
   // Saving from the header skips the remaining steps, so it has to answer for
   // all of them rather than just the one on screen — otherwise the shortcut
@@ -7541,6 +7547,7 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
         {idx === 2 && <StepTastes draft={draft} toggleTaste={toggleTaste} />}
         {idx === 3 && <StepPieces draft={draft} update={update} />}
         {idx === 4 && <StepVideos draft={draft} update={update} />}
+        {idx === 6 && <StepConcerts draft={draft} update={update} editing={editing} />}
         {idx === 5 && <StepTeaching draft={draft} update={update} editing={editing} />}
         </div>
       </div>
@@ -7590,13 +7597,14 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
             <p className="text-sm" style={{ margin: "10px 0 0", color: C.ivoryDim, lineHeight: 1.6 }}>
               You can still edit and update your profile at any time after submitting.
             </p>
+            <TermsCheck checked={!!draft.termsAcceptedAt} onChange={(v) => update({ termsAcceptedAt: v ? new Date().toISOString() : null })} />
             <div style={{ display: "flex", gap: 9, marginTop: 20 }}>
               <button type="button" disabled={submitting} onClick={() => setConfirmSubmit(false)}
                 style={{ flex: "0 0 auto", padding: "11px 16px", borderRadius: 10, border: `1px solid ${C.inkLine}`, background: "#FFFFFF", color: C.ivoryDim, fontFamily: FONT_BODY, fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
                 Not yet
               </button>
-              <button type="button" disabled={submitting} onClick={handleSubmit}
-                style={{ flex: 1, padding: "11px 16px", borderRadius: 10, border: "none", background: "#0F5C52", color: "#FFFFFF", fontFamily: FONT_BODY, fontSize: 14, fontWeight: 700, cursor: submitting ? "default" : "pointer", opacity: submitting ? .7 : 1 }}>
+              <button type="button" disabled={submitting || !draft.termsAcceptedAt} onClick={handleSubmit}
+                style={{ flex: 1, padding: "11px 16px", borderRadius: 10, border: "none", background: "#0F5C52", color: "#FFFFFF", fontFamily: FONT_BODY, fontSize: 14, fontWeight: 700, cursor: submitting || !draft.termsAcceptedAt ? "default" : "pointer", opacity: submitting || !draft.termsAcceptedAt ? .45 : 1 }}>
                 {submitting ? "Submitting…" : "Submit application"}
               </button>
             </div>
@@ -12520,6 +12528,80 @@ function TeachCities({ t, setT }) {
   );
 }
 
+// The Terms & Conditions, opened from the sign-up acceptance checkbox.
+function TermsSheet({ onClose }) {
+  return (
+    <div className="fixed flex items-end sm:items-center justify-center" style={{ inset: 0, zIndex: 400, background: "rgba(0,0,0,.5)" }} onClick={onClose}>
+      <div className="terms-sheet" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Terms and Conditions">
+        <div className="terms-head">
+          <h2>Terms &amp; Conditions</h2>
+          <button type="button" onClick={onClose} aria-label="Close"><X size={18} /></button>
+        </div>
+        <div className="terms-body">
+          <p className="terms-meta">Last updated {TERMS_UPDATED}</p>
+          {TERMS_SECTIONS.map(([h, paras]) => (
+            <section key={h}>
+              <h3>{h}</h3>
+              {paras.map((p, i) => <p key={i}>{p}</p>)}
+            </section>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+// "I have read and accept the Terms & Conditions" — the link opens the sheet.
+function TermsCheck({ checked, onChange }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <label className="terms-check">
+        <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+        <span>I have read and accept the <button type="button" onClick={(e) => { e.preventDefault(); setOpen(true); }}>Terms &amp; Conditions</button></span>
+      </label>
+      {open && <TermsSheet onClose={() => setOpen(false)} />}
+    </>
+  );
+}
+
+// Step 7 — concerts and how far they'll travel for one.
+const CONCERT_REGIONS = ["Europe", "Asia", "Africa", "Americas", "Oceania"];
+const CONCERT_FORMATS = ["Solo recital", "Chamber music", "Orchestra", "Accompaniment", "Weddings & private events", "Sacred music", "Festivals"];
+const concertsOf = (d) => ({ answered: false, open: false, regions: [], formats: [], fee: "", ...(d.concerts || {}) });
+function StepConcerts({ draft, update, editing }) {
+  const c = concertsOf(draft);
+  const set = (patch) => update((d) => ({ concerts: { ...concertsOf(d), ...patch } }));
+  const flip = (key, v) => set({ [key]: c[key].includes(v) ? c[key].filter((x) => x !== v) : [...c[key], v] });
+  return (
+    <div>
+      <Field label="Are you open to giving concerts?" req>
+        <div className="flex flex-wrap gap-2">
+          <Chip active={c.open} onClick={() => set({ open: true, answered: true })}>Yes, I'd like to perform</Chip>
+          <Chip active={!c.open && (c.answered || editing)} onClick={() => set({ open: false, answered: true })}>Not right now</Chip>
+        </div>
+      </Field>
+      {c.open && (
+        <>
+          <Field label="Where can you perform?" req>
+            <div className="flex flex-wrap gap-2">
+              {CONCERT_REGIONS.map((r) => <Chip key={r} active={c.regions.includes(r)} onClick={() => flip("regions", r)}>{r}</Chip>)}
+            </div>
+          </Field>
+          <Field label="What kind of performances?" opt>
+            <div className="flex flex-wrap gap-2">
+              {CONCERT_FORMATS.map((f) => <Chip key={f} active={c.formats.includes(f)} onClick={() => flip("formats", f)}>{f}</Chip>)}
+            </div>
+          </Field>
+          <Field label="Indicative concert fee" opt>
+            <input style={{ ...inputStyle, maxWidth: 260 }} value={c.fee} maxLength={60}
+              onChange={(e) => set({ fee: e.target.value })} placeholder="e.g. From €300, or on request" />
+          </Field>
+        </>
+      )}
+    </div>
+  );
+}
+
 function StepTeaching({ draft, update, editing }) {
   const t = draft.teaching;
   const setT = (partial) => update({ teaching: { ...t, ...partial } });
@@ -12704,7 +12786,8 @@ function LearnerSignup({ onSubmit, onBack, error, authUser }) {
 
   const readySelf = name.trim().length > 1 && location.trim().length > 1 && resolvedInstrument.length > 0 && motivation.trim().length > 5;
   const readyOther = learnerName.trim().length > 1 && learnerLocation.trim().length > 1 && resolvedLearnerInstrument.length > 0 && learnerGoals.trim().length > 5;
-  const ready = forWhom !== "" && (isForOther ? readyOther : readySelf);
+  const [termsOk, setTermsOk] = useState(false);
+  const ready = forWhom !== "" && (isForOther ? readyOther : readySelf) && termsOk;
 
   async function handleSubmit() {
     setSubmitting(true);
@@ -12716,7 +12799,7 @@ function LearnerSignup({ onSubmit, onBack, error, authUser }) {
       : motivation.trim();
     // email/password no longer come from this form — submitLearner writes
     // against the session that got them here.
-    await onSubmit({ name: submitName, location: submitLocation, email: authUser?.email || "", password: "", instrument: submitInstrument, motivation: submitMotivation, photoUrl });
+    await onSubmit({ name: submitName, location: submitLocation, email: authUser?.email || "", password: "", instrument: submitInstrument, motivation: submitMotivation, photoUrl, termsAcceptedAt: new Date().toISOString() });
     setSubmitting(false);
   }
 
@@ -12795,6 +12878,7 @@ function LearnerSignup({ onSubmit, onBack, error, authUser }) {
               />
             </Field>
             {error && <p className="text-sm mb-4" style={{ color: C.burgundy }}>{error}</p>}
+            <TermsCheck checked={termsOk} onChange={setTermsOk} />
             <div className="mt-2">
               <PrimaryBtn disabled={!ready || submitting} onClick={handleSubmit} icon={ArrowRight}>
                 {submitting ? "Submitting…" : "Find a teacher"}
@@ -12826,6 +12910,7 @@ function LearnerSignup({ onSubmit, onBack, error, authUser }) {
               />
             </Field>
             {error && <p className="text-sm mb-4" style={{ color: C.burgundy }}>{error}</p>}
+            <TermsCheck checked={termsOk} onChange={setTermsOk} />
             <div className="mt-2">
               <PrimaryBtn disabled={!ready || submitting} onClick={handleSubmit} icon={ArrowRight}>
                 {submitting ? "Submitting…" : "Find my teacher"}

@@ -13,6 +13,9 @@
  * screen said one thing and the database another, and logging out and back in
  * let the applicant straight in.
  */
+// The version of the Terms a user accepted (bump when they change).
+export const TERMS_VERSION = "2026-10-25";
+
 export function needsReview(draft) {
   return draft.verifyMethod === "document" || !!draft.domainReq;
 }
@@ -73,6 +76,15 @@ export function toDbProfile(draft, id) {
     teaching_open: draft.teaching.open,
     teaching_mode: draft.teaching.mode,
     teaching_price: draft.teaching.price,
+    // Step 7 — concerts. concert_open is also what concert hirers filter on.
+    ...(draft.concerts && draft.concerts.answered ? {
+      concert_open: !!draft.concerts.open,
+      concert_regions: draft.concerts.open ? (draft.concerts.regions || []) : [],
+      concert_formats: draft.concerts.open ? (draft.concerts.formats || []) : [],
+      concert_fee: draft.concerts.open ? (String(draft.concerts.fee || "").trim() || null) : null,
+    } : {}),
+    // Terms acceptance, stamped once at sign-up and kept on later edits.
+    ...(draft.termsAcceptedAt ? { terms_accepted_at: draft.termsAcceptedAt, terms_version: TERMS_VERSION } : {}),
     // In-person cities (sign-up step 6); empty when teaching online only.
     teaching_cities: draft.teaching.open && draft.teaching.mode !== "online" ? (draft.teaching.cities || []) : [],
     // Only meaningful while they are open to teaching, so closing the door
@@ -110,6 +122,15 @@ export function fromDbProfile(row) {
     // otherwise, and rows older than the column read as never having said it.
     concertOpen: row.concert_open ?? true,
     concertFee: row.concert_fee || "",
+    // Sign-up step 7. Rows from before the step read as already answered.
+    concerts: {
+      answered: row.concert_regions != null,
+      open: row.concert_open ?? true,
+      regions: Array.isArray(row.concert_regions) ? row.concert_regions : [],
+      formats: Array.isArray(row.concert_formats) ? row.concert_formats : [],
+      fee: row.concert_fee || "",
+    },
+    termsAcceptedAt: row.terms_accepted_at || null,
     online: row.is_online ?? true,
   };
 }
