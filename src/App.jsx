@@ -2628,7 +2628,6 @@ export default function App() {
       if (pendingStudent) {
         supabase.from("profiles").insert(toDbProfile(pendingStudent, authUser.id)).select().single().then(async ({ data: insertedProfile, error }) => {
           if (error) { setAuthError(error.message); return; }
-          savePrivate(authUser.id, pendingStudent.birthDate);
           // Same reason as the other two inserts: the context fetched a
           // profile that did not exist yet, so it must be told about this one.
           if (insertedProfile) setAuthProfile(insertedProfile);
@@ -3179,7 +3178,7 @@ export default function App() {
     if (learnerLoggedOut) { startLogin(); return; }
     setLearnerProfile(null); setAuthError(""); setScreen("learnerSignup");
   }
-  async function submitLearner({ name, location, email, password, instrument, motivation, photoUrl, termsAcceptedAt, birthDate }) {
+  async function submitLearner({ name, location, email, password, instrument, motivation, photoUrl, termsAcceptedAt }) {
     const terms = termsAcceptedAt ? { terms_accepted_at: termsAcceptedAt, terms_version: TERMS_VERSION } : {};
     setAuthError("");
     if (authUser) {
@@ -3189,7 +3188,6 @@ export default function App() {
       if (!authUser) { setAuthError("Session expired. Please try again."); return; }
       const { error: insertError } = await supabase.from("profiles").insert({ id: authUser.id, role: "learner", name, location, instrument, bio: motivation, photo_url: photoUrl || null, approved: true, ...terms });
       if (insertError) { setAuthError(await friendlyProfileError(insertError)); return; }
-      savePrivate(authUser.id, birthDate);
       setLearnerGoogleName("");
       setLearnerProfile({ name, location, instrument, bio: motivation, photoUrl: photoUrl || null });
       setLearnerLoggedOut(false);
@@ -3206,7 +3204,6 @@ export default function App() {
     if (data.session && data.user) {
       const { error: insertError } = await supabase.from("profiles").insert({ id: data.user.id, role: "learner", name, location, instrument, bio: motivation, photo_url: photoUrl || null, approved: true, ...terms });
       if (insertError) { setAuthError(await friendlyProfileError(insertError)); return; }
-      savePrivate(data.user.id, birthDate);
       await supabase.auth.updateUser({ data: { pendingLearner: null } });
       setLearnerProfile({ name, location, instrument, bio: motivation, photoUrl: photoUrl || null });
       setLearnerLoggedOut(false);
@@ -3292,7 +3289,6 @@ export default function App() {
     setAuthError("");
     if (editingProfile) {
       const { error } = await supabase.from("profiles").update(toDbProfile(draft, myProfile.id)).eq("id", myProfile.id);
-      if (!error) savePrivate(myProfile.id, draft.birthDate);
       if (error) { setAuthError(error.message); return; }
       const updated = { ...myProfile, ...draft };
       setMyProfile(updated);
@@ -3322,7 +3318,6 @@ export default function App() {
       // database plainly said approved: false.
       const { data: insertedProfile, error: insertError } = await supabase
         .from("profiles").insert(toDbProfile(draft, authUser.id)).select().single();
-      savePrivate(authUser.id, draft.birthDate);
       if (insertError) { setAuthError(await friendlyProfileError(insertError)); return; }
       if (insertedProfile) setAuthProfile(insertedProfile);
       clearSavedDraft();
@@ -3355,7 +3350,6 @@ export default function App() {
         // Email confirmation is off — we already have an active session, insert right away.
         const { data: insertedProfile, error: insertError } = await supabase
           .from("profiles").insert(toDbProfile(draft, data.user.id)).select().single();
-        savePrivate(data.user.id, draft.birthDate);
         if (insertError) { setAuthError(await friendlyProfileError(insertError)); return; }
         if (insertedProfile) setAuthProfile(insertedProfile);
         clearSavedDraft();
@@ -3408,8 +3402,6 @@ export default function App() {
   function editProfile() {
     setDraft({ ...emptyDraft(), ...myProfile, instruments: instrumentsOf(myProfile), years: myProfile.year || "", pieces: myProfile.pieces || [], tastes: myProfile.tastes || [], composerDay: myProfile.composerDay || "" });
     setStep(0); setEditingProfile(true); setScreen("signup");
-    supabase.from("profile_private").select("birth_date").eq("id", myProfile.id).maybeSingle()
-      .then(({ data }) => { if (data?.birth_date) setDraft((d) => ({ ...d, birthDate: data.birth_date })); });
   }
   function openStudent(id, from) { setSelectedStudentId(id); setProfileBack(from); }
   function backFromProfile() { setSelectedStudentId(null); setAppTabPersist(profileBack === "chat" ? "messages" : profileBack === "profile" ? "profile" : "map"); }
@@ -7312,9 +7304,7 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
     !skipAccountStep ? draft.email.trim().length > 3 && draft.password.length >= 6 && draft.password === draft.confirmPassword : null,
     draft.name.trim().length > 1 && instrumentsOf(draft).length > 0
       // A year or Diploma is required; Masters / Doctoral are optional extras.
-      && (() => { const st = parseStudy(draft.years); return !!st.year || st.graduated; })()
-      // 15+ to register alone (French digital age of majority).
-      && (ageFrom(draft.birthDate) ?? -1) >= 15,
+      && (() => { const st = parseStudy(draft.years); return !!st.year || st.graduated; })(),
     // On the document route the upload is what gates the step — a conservatory
     // may not be selectable yet, since the approved list starts empty.
     // No Google bypass on the document route: signing in with Google says
@@ -7373,9 +7363,7 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
   // What an unfinished step is missing — same order as stepValid.
   const stepHints = [
     !skipAccountStep ? "Enter your email and a password of at least 6 characters, typed the same twice." : null,
-    !draft.birthDate ? "Add your date of birth."
-      : (ageFrom(draft.birthDate) ?? 0) < 15 ? "You must be at least 15 to register as a student."
-      : "Add your name, your year of study (or Diploma), and at least one instrument.",
+    "Add your name, your year of study (or Diploma), and at least one instrument.",
     !draft.applicant ? "Choose whether you have a conservatory email."
       : draft.verifyMethod === "document" ? "Upload your proof of enrolment to continue."
       : draft.transferPending ? "Confirm your new conservatory to continue."
@@ -7990,13 +7978,6 @@ function StepIntro({ draft, update }) {
       <PhotoUpload name={draft.name} photoUrl={draft.photoUrl} onChange={(photoUrl) => update({ photoUrl })} />
       <Field label="Full name" req>
         <input style={inputStyle} value={draft.name} onChange={(e) => update({ name: e.target.value })} placeholder="Your full name" />
-      </Field>
-      <Field label="Date of birth" req>
-        <input type="date" style={{ ...inputStyle, maxWidth: 220 }} value={draft.birthDate || ""} max={todayIso()} min="1900-01-01"
-          onChange={(e) => update({ birthDate: e.target.value })} />
-        {draft.birthDate && (ageFrom(draft.birthDate) ?? 0) < 15
-          ? <p className="text-sm" style={{ color: C.burgundy, margin: "6px 0 0" }}>You must be at least 15 to register as a student.</p>
-          : <p className="text-xs" style={{ color: C.ivoryDim, margin: "6px 0 0" }}>Private — never shown on your profile.</p>}
       </Field>
       {/* Chips rather than a text box. The value is read back in half a dozen
           places — rosters, profiles, the lesson room — so it is stored as the
@@ -9210,21 +9191,6 @@ function StepTastes({ draft, toggleTaste }) {
       )}
     </div>
   );
-}
-
-// Age in whole years from a YYYY-MM-DD date of birth (null if missing/invalid).
-function ageFrom(dob) {
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dob || ""); if (!m) return null;
-  const now = new Date(); let a = now.getFullYear() - +m[1];
-  if (now.getMonth() + 1 < +m[2] || (now.getMonth() + 1 === +m[2] && now.getDate() < +m[3])) a -= 1;
-  return a;
-}
-const todayIso = () => new Date().toISOString().slice(0, 10);
-// The date of birth lives in profile_private (owner + admins only), never in
-// the publicly readable profiles row.
-async function savePrivate(id, birthDate) {
-  if (!id || !birthDate) return;
-  try { await supabase.from("profile_private").upsert({ id, birth_date: birthDate, updated_at: new Date().toISOString() }); } catch { /* best effort */ }
 }
 
 // Composers (name + portrait) for suggestions and piece tiles, loaded once
@@ -12861,12 +12827,7 @@ function LearnerSignup({ onSubmit, onBack, error, authUser }) {
   const readySelf = name.trim().length > 1 && location.trim().length > 1 && resolvedInstrument.length > 0 && motivation.trim().length > 5;
   const readyOther = learnerName.trim().length > 1 && learnerLocation.trim().length > 1 && resolvedLearnerInstrument.length > 0 && learnerGoals.trim().length > 5;
   const [termsOk, setTermsOk] = useState(false);
-  // Date of birth of the account holder: 15+ to register for yourself; a
-  // parent or guardian registering a child must be an adult.
-  const [dob, setDob] = useState("");
-  const holderAge = ageFrom(dob);
-  const dobOk = holderAge != null && holderAge >= (isForOther ? 18 : 15);
-  const ready = forWhom !== "" && (isForOther ? readyOther : readySelf) && termsOk && dobOk;
+  const ready = forWhom !== "" && (isForOther ? readyOther : readySelf) && termsOk;
 
   async function handleSubmit() {
     setSubmitting(true);
@@ -12878,7 +12839,7 @@ function LearnerSignup({ onSubmit, onBack, error, authUser }) {
       : motivation.trim();
     // email/password no longer come from this form — submitLearner writes
     // against the session that got them here.
-    await onSubmit({ name: submitName, location: submitLocation, email: authUser?.email || "", password: "", instrument: submitInstrument, motivation: submitMotivation, photoUrl, termsAcceptedAt: new Date().toISOString(), birthDate: dob });
+    await onSubmit({ name: submitName, location: submitLocation, email: authUser?.email || "", password: "", instrument: submitInstrument, motivation: submitMotivation, photoUrl, termsAcceptedAt: new Date().toISOString() });
     setSubmitting(false);
   }
 
@@ -12956,14 +12917,6 @@ function LearnerSignup({ onSubmit, onBack, error, authUser }) {
                 placeholder="What do you hope they'll achieve? Any specific goals, pieces, or timeline in mind?"
               />
             </Field>
-            <Field label={isForOther ? "Your date of birth (parent or guardian)" : "Your date of birth"} req>
-              <input type="date" style={{ ...inputStyle, maxWidth: 220 }} value={dob} max={todayIso()} min="1900-01-01" onChange={(e) => setDob(e.target.value)} />
-              {dob && !dobOk ? (
-                <p className="text-sm" style={{ color: C.burgundy, margin: "6px 0 0" }}>
-                  {isForOther ? "The person registering a learner must be an adult (18 or over)." : "Under 15, a parent or guardian must register for you: go back and choose the option for someone else."}
-                </p>
-              ) : <p className="text-xs" style={{ color: C.ivoryDim, margin: "6px 0 0" }}>Private — never shown on your profile.</p>}
-            </Field>
             {error && <p className="text-sm mb-4" style={{ color: C.burgundy }}>{error}</p>}
             <TermsCheck checked={termsOk} onChange={setTermsOk} />
             <div className="mt-2">
@@ -12995,14 +12948,6 @@ function LearnerSignup({ onSubmit, onBack, error, authUser }) {
                 onChange={(e) => setMotivation(e.target.value)}
                 placeholder="Tell the teacher about your goals, experience level, and what you're hoping to achieve…"
               />
-            </Field>
-            <Field label={isForOther ? "Your date of birth (parent or guardian)" : "Your date of birth"} req>
-              <input type="date" style={{ ...inputStyle, maxWidth: 220 }} value={dob} max={todayIso()} min="1900-01-01" onChange={(e) => setDob(e.target.value)} />
-              {dob && !dobOk ? (
-                <p className="text-sm" style={{ color: C.burgundy, margin: "6px 0 0" }}>
-                  {isForOther ? "The person registering a learner must be an adult (18 or over)." : "Under 15, a parent or guardian must register for you: go back and choose the option for someone else."}
-                </p>
-              ) : <p className="text-xs" style={{ color: C.ivoryDim, margin: "6px 0 0" }}>Private — never shown on your profile.</p>}
             </Field>
             {error && <p className="text-sm mb-4" style={{ color: C.burgundy }}>{error}</p>}
             <TermsCheck checked={termsOk} onChange={setTermsOk} />

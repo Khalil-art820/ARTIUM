@@ -14,7 +14,7 @@
  * let the applicant straight in.
  */
 // The version of the Terms a user accepted (bump when they change).
-export const TERMS_VERSION = "2026-10-25";
+export const TERMS_VERSION = "2026-10-25.2";
 
 export function needsReview(draft) {
   return draft.verifyMethod === "document" || !!draft.domainReq;
