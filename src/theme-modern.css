@@ -1123,3 +1123,8 @@ html.theme-modern .artium-lp--light .artium-lp-h2{font-size:clamp(28px,8.4vw,44p
 .terms-head .terms-lang button.is-on{background:#0F5C52;color:#FFFFFF}
 .terms-head,.terms-tabs{flex:none}
 .terms-head h2{font-size:clamp(19px,5.6vw,24px)}
+/* Sign-up after a rejection */
+.su-rejected{margin-top:14px;padding:12px 14px;border-radius:12px;border:1px solid #F0C9C4;background:#FDF3F2}
+.su-rejected-t{margin:0;font:700 14px 'Fira Sans',sans-serif;color:#9B2C22}
+.su-rejected-r{margin:6px 0 0;font:500 13.5px/1.45 'Fira Sans',sans-serif;color:#3E2A28;white-space:pre-wrap}
+.su-rejected-d{margin:6px 0 0;font:400 13px/1.45 'Fira Sans',sans-serif;color:#6B5A58}

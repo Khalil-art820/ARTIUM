@@ -2485,6 +2485,31 @@ export default function App() {
   // loading, or a learner with no such column, is not someone being made to
   // wait.
   const awaitingReview = authProfile?.approved === false;
+  // A rejected application is not "under review": the applicant goes back to
+  // the sign-up flow at step 1 with everything they entered, sees why, fixes
+  // it and resubmits (which opens a fresh review request).
+  const [reapply, setReapply] = useState(null);   // { reason } while redoing a rejected application
+  useEffect(() => {
+    if (!authUser?.id || authProfile?.approved !== false || authProfile?.role === "learner") { setReapply(null); return; }
+    let alive = true;
+    supabase.from("student_verifications").select("status, decision_reason, created_at")
+      .eq("user_id", authUser.id).order("created_at", { ascending: false }).limit(1).maybeSingle()
+      .then(({ data }) => {
+        if (!alive || data?.status !== "rejected") return;
+        const me = fromDbProfile(authProfile);
+        setDraft({
+          ...emptyDraft(), ...me,
+          instruments: instrumentsOf(me), years: me.year || "", pieces: me.pieces || [], tastes: me.tastes || [], composerDay: me.composerDay || "",
+          email: authUser.email || "", password: "__authed__", confirmPassword: "__authed__",
+          // Proof starts again; everything else is kept.
+          applicant: "", lastApplicant: "", doorData: {}, verifyMethod: "otp",
+          conservatoryVerified: false, conservatoryEmail: "", proofDocUrl: "", proofDocName: "", domainReq: null, otpEmail: "", otpSent: false,
+        });
+        setEditingProfile(false); setStep(0); setScreen("signup");
+        setReapply({ reason: data.decision_reason || "" });
+      });
+    return () => { alive = false; };
+  }, [authUser?.id, authProfile?.approved]); // eslint-disable-line react-hooks/exhaustive-deps
   // What is actually on screen, as opposed to where the app last decided to
   // put you. Every branch below reads this rather than `screen`, so an
   // account still waiting on a human sees one thing and only one thing.
@@ -2504,7 +2529,7 @@ export default function App() {
   // A promo-verdict bell tap opens PromoteMe directly on the right
   // sub-screen (aclassicaltone free spotlight or paid package).
   const [promoteFocus, setPromoteFocus] = useState(null);
-  const view = awaitingReview ? "pendingReview" : screen;
+  const view = awaitingReview && !reapply ? "pendingReview" : screen;
   // The document's own colour is set in index.css now that every screen is
   // dark; this used to flip it per screen and no longer has anything to say.
   const [appTab, setAppTab] = useState(() => localStorage.getItem("artium_app_tab") || "map");
@@ -3287,6 +3312,22 @@ export default function App() {
   }
   async function submitApplication() {
     setAuthError("");
+    if (reapply && authUser) {
+      // Resubmitting after a rejection: update the existing profile, open a
+      // fresh review request, and go back to waiting.
+      // The approval trigger only re-decides when the school or address
+      // changes, so a re-verified code on the same address would be ignored.
+      // Clearing them first makes the real save below a new claim it checks.
+      if (!needsReview(draft)) await supabase.from("profiles").update({ conservatory_email: null, conservatory_id: null }).eq("id", authUser.id);
+      const { data: row, error } = await supabase.from("profiles").update(toDbProfile(draft, authUser.id)).eq("id", authUser.id).select().single();
+      if (error) { setAuthError(await friendlyProfileError(error)); return; }
+      if (needsReview(draft)) await insertVerificationRequest(authUser.id, draft);
+      clearSavedDraft();
+      if (row) setAuthProfile(row);
+      setReapply(null);
+      setScreen(row?.approved ? "app" : "pendingReview");
+      return;
+    }
     if (editingProfile) {
       const { error } = await supabase.from("profiles").update(toDbProfile(draft, myProfile.id)).eq("id", myProfile.id);
       if (error) { setAuthError(error.message); return; }
@@ -5290,7 +5331,7 @@ export default function App() {
         <SignupFlow
           draft={draft} update={update} toggleTaste={toggleTaste} step={step} setStep={setStep}
           editing={editingProfile} onSubmit={submitApplication} authError={authError}
-          resumed={resumed} onStartFresh={() => { clearSavedDraft(); setDraft(freshAuthedDraft()); setStep(0); }}
+          resumed={resumed && !reapply} rejection={reapply} onStartFresh={() => { clearSavedDraft(); setDraft(freshAuthedDraft()); setStep(0); }}
           onCancel={() => setScreen(editingProfile ? "app" : "landing")}
           onHome={goHome}
         />
@@ -7280,7 +7321,7 @@ function SuNextButton({ ok, onGo, hint, children }) {
 
 const STEP_LABELS = ["Introduce Yourself", "Get Verified and Join the Student Map", "Your Musical Voice", "Current Repertoire", "Performance Videos", "Teaching", "Concerts & Mobility"];
 
-function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubmit, onCancel, onHome, authError, resumed, onStartFresh }) {
+function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubmit, onCancel, onHome, authError, resumed, onStartFresh, rejection }) {
   const [submitting, setSubmitting] = useState(false);
   // Asked before leaving, because Leave is one tap from a form somebody has
   // been filling for several minutes and the button gives no clue what it
@@ -7500,6 +7541,13 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
             </div>
           )}
         </div>
+        {rejection && (
+          <div className="su-rejected">
+            <p className="su-rejected-t">Your application wasn't approved</p>
+            {rejection.reason && <p className="su-rejected-r">{rejection.reason}</p>}
+            <p className="su-rejected-d">Your answers are all still here. Update what's needed, verify your conservatory again in step 2, and resubmit.</p>
+          </div>
+        )}
         {/* Said once, on the step they land on. Restoring someone's answers
             without telling them is its own small unpleasantness — they wonder
             where it came from, and whether it is really theirs. */}
