@@ -18,7 +18,7 @@ import {
 import { useAuth } from "./contexts/AuthContext";
 import { supabase } from "./lib/supabase";
 import { toDbProfile, fromDbProfile, needsReview, instrumentsOf, MAX_INSTRUMENTS, TERMS_VERSION } from "./lib/profiles";
-import { TERMS_SECTIONS, TERMS_UPDATED } from "./lib/terms";
+import { TERMS_SECTIONS, TERMS_UPDATED, PRIVACY_SECTIONS, PRIVACY_UPDATED, SAFETY_SECTIONS, SAFETY_UPDATED } from "./lib/terms";
 import {
   INQUIRY_STATUS, createInquiry, listInquiries, getInquiry, setInquiryStatus,
   listMessages, sendMessage as sendConcertMessage, uploadConcertFile,
@@ -12277,6 +12277,7 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack, onUpdat
   return (
     <div style={{ maxWidth: 900, margin: "0 auto", padding: "40px 24px" }}>
       {cards}
+      {MODERN && <LegalLinks />}
     </div>
   );
 }
@@ -12528,18 +12529,32 @@ function TeachCities({ t, setT }) {
   );
 }
 
-// The Terms & Conditions, opened from the sign-up acceptance checkbox.
-function TermsSheet({ onClose }) {
+// Artium's three legal documents in one sheet, switchable by tab.
+const LEGAL_DOCS = {
+  terms: { title: "Terms & Conditions", updated: TERMS_UPDATED, sections: TERMS_SECTIONS },
+  privacy: { title: "Privacy Policy", updated: PRIVACY_UPDATED, sections: PRIVACY_SECTIONS },
+  safety: { title: "Community & Safety", updated: SAFETY_UPDATED, sections: SAFETY_SECTIONS },
+};
+function TermsSheet({ onClose, doc: start = "terms" }) {
+  const [doc, setDoc] = useState(start);
+  const d = LEGAL_DOCS[doc];
+  const bodyRef = useRef(null);
+  useEffect(() => { if (bodyRef.current) bodyRef.current.scrollTop = 0; }, [doc]);
   return (
     <div className="fixed flex items-end sm:items-center justify-center" style={{ inset: 0, zIndex: 400, background: "rgba(0,0,0,.5)" }} onClick={onClose}>
-      <div className="terms-sheet" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Terms and Conditions">
+      <div className="terms-sheet" onClick={(e) => e.stopPropagation()} role="dialog" aria-label={d.title}>
         <div className="terms-head">
-          <h2>Terms &amp; Conditions</h2>
+          <h2>{d.title}</h2>
           <button type="button" onClick={onClose} aria-label="Close"><X size={18} /></button>
         </div>
-        <div className="terms-body">
-          <p className="terms-meta">Last updated {TERMS_UPDATED}</p>
-          {TERMS_SECTIONS.map(([h, paras]) => (
+        <div className="terms-tabs" role="tablist">
+          {Object.entries(LEGAL_DOCS).map(([k, v]) => (
+            <button key={k} type="button" role="tab" aria-selected={doc === k} className={doc === k ? "is-on" : ""} onClick={() => setDoc(k)}>{v.title}</button>
+          ))}
+        </div>
+        <div className="terms-body" ref={bodyRef}>
+          <p className="terms-meta">Last updated {d.updated}</p>
+          {d.sections.map(([h, paras]) => (
             <section key={h}>
               <h3>{h}</h3>
               {paras.map((p, i) => <p key={i}>{p}</p>)}
@@ -12550,16 +12565,28 @@ function TermsSheet({ onClose }) {
     </div>
   );
 }
-// "I have read and accept the Terms & Conditions" — the link opens the sheet.
+// "I have read and accept the Terms & Conditions and the Privacy Policy".
 function TermsCheck({ checked, onChange }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(null);
   return (
     <>
       <label className="terms-check">
         <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
-        <span>I have read and accept the <button type="button" onClick={(e) => { e.preventDefault(); setOpen(true); }}>Terms &amp; Conditions</button></span>
+        <span>I have read and accept the <button type="button" onClick={(e) => { e.preventDefault(); setOpen("terms"); }}>Terms &amp; Conditions</button>, including the <button type="button" onClick={(e) => { e.preventDefault(); setOpen("safety"); }}>Community &amp; Safety Guidelines</button>, and the <button type="button" onClick={(e) => { e.preventDefault(); setOpen("privacy"); }}>Privacy Policy</button>.</span>
       </label>
-      {open && <TermsSheet onClose={() => setOpen(false)} />}
+      {open && <TermsSheet doc={open} onClose={() => setOpen(null)} />}
+    </>
+  );
+}
+// A quiet row of links to the three documents, for profile pages.
+function LegalLinks() {
+  const [open, setOpen] = useState(null);
+  return (
+    <>
+      <p className="legal-links">
+        <button type="button" onClick={() => setOpen("terms")}>Terms</button> · <button type="button" onClick={() => setOpen("privacy")}>Privacy</button> · <button type="button" onClick={() => setOpen("safety")}>Safety</button> · <a href="mailto:contact@art-ium.com">contact@art-ium.com</a>
+      </p>
+      {open && <TermsSheet doc={open} onClose={() => setOpen(null)} />}
     </>
   );
 }
@@ -13860,6 +13887,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
                   </div>
                 )}
               </div>
+              {MODERN && <LegalLinks />}
             </div>
 
             {/* Bio / motivation */}
