@@ -18,7 +18,7 @@ import {
 import { useAuth } from "./contexts/AuthContext";
 import { supabase } from "./lib/supabase";
 import { toDbProfile, fromDbProfile, needsReview, instrumentsOf, MAX_INSTRUMENTS, TERMS_VERSION } from "./lib/profiles";
-import { TERMS_SECTIONS, TERMS_UPDATED, PRIVACY_SECTIONS, PRIVACY_UPDATED, SAFETY_SECTIONS, SAFETY_UPDATED } from "./lib/terms";
+import { TERMS_SECTIONS, TERMS_SECTIONS_FR, TERMS_UPDATED, TERMS_UPDATED_FR, PRIVACY_SECTIONS, PRIVACY_SECTIONS_FR, PRIVACY_UPDATED, SAFETY_SECTIONS, SAFETY_SECTIONS_FR, SAFETY_UPDATED, LEGAL_SECTIONS, LEGAL_SECTIONS_FR, LEGAL_UPDATED } from "./lib/terms";
 import {
   INQUIRY_STATUS, createInquiry, listInquiries, getInquiry, setInquiryStatus,
   listMessages, sendMessage as sendConcertMessage, uploadConcertFile,
@@ -12529,32 +12529,41 @@ function TeachCities({ t, setT }) {
   );
 }
 
-// Artium's three legal documents in one sheet, switchable by tab.
+// Artium's legal documents in one sheet: four tabs, French or English (French
+// first for French browsers; it is the version that prevails in France).
 const LEGAL_DOCS = {
-  terms: { title: "Terms & Conditions", updated: TERMS_UPDATED, sections: TERMS_SECTIONS },
-  privacy: { title: "Privacy Policy", updated: PRIVACY_UPDATED, sections: PRIVACY_SECTIONS },
-  safety: { title: "Community & Safety", updated: SAFETY_UPDATED, sections: SAFETY_SECTIONS },
+  terms:   { en: ["Terms & Conditions", TERMS_UPDATED, TERMS_SECTIONS], fr: ["Conditions générales", TERMS_UPDATED_FR, TERMS_SECTIONS_FR] },
+  privacy: { en: ["Privacy Policy", PRIVACY_UPDATED, PRIVACY_SECTIONS], fr: ["Confidentialité", TERMS_UPDATED_FR, PRIVACY_SECTIONS_FR] },
+  safety:  { en: ["Community & Safety", SAFETY_UPDATED, SAFETY_SECTIONS], fr: ["Communauté et sécurité", TERMS_UPDATED_FR, SAFETY_SECTIONS_FR] },
+  legal:   { en: ["Legal Notice", LEGAL_UPDATED, LEGAL_SECTIONS], fr: ["Mentions légales", TERMS_UPDATED_FR, LEGAL_SECTIONS_FR] },
 };
+const defaultLegalLang = () => { try { return /^fr/i.test(navigator.language || "") ? "fr" : "en"; } catch { return "en"; } };
 function TermsSheet({ onClose, doc: start = "terms" }) {
   const [doc, setDoc] = useState(start);
-  const d = LEGAL_DOCS[doc];
+  const [lang, setLang] = useState(defaultLegalLang);
+  const [title, updated, sections] = LEGAL_DOCS[doc][lang];
   const bodyRef = useRef(null);
-  useEffect(() => { if (bodyRef.current) bodyRef.current.scrollTop = 0; }, [doc]);
+  useEffect(() => { if (bodyRef.current) bodyRef.current.scrollTop = 0; }, [doc, lang]);
   return (
     <div className="fixed flex items-end sm:items-center justify-center" style={{ inset: 0, zIndex: 400, background: "rgba(0,0,0,.5)" }} onClick={onClose}>
-      <div className="terms-sheet" onClick={(e) => e.stopPropagation()} role="dialog" aria-label={d.title}>
+      <div className="terms-sheet" onClick={(e) => e.stopPropagation()} role="dialog" aria-label={title}>
         <div className="terms-head">
-          <h2>{d.title}</h2>
-          <button type="button" onClick={onClose} aria-label="Close"><X size={18} /></button>
+          <h2>{title}</h2>
+          <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span className="terms-lang" role="group" aria-label="Language">
+              {["fr", "en"].map((l) => <button key={l} type="button" className={lang === l ? "is-on" : ""} onClick={() => setLang(l)}>{l.toUpperCase()}</button>)}
+            </span>
+            <button type="button" onClick={onClose} aria-label="Close"><X size={18} /></button>
+          </span>
         </div>
         <div className="terms-tabs" role="tablist">
           {Object.entries(LEGAL_DOCS).map(([k, v]) => (
-            <button key={k} type="button" role="tab" aria-selected={doc === k} className={doc === k ? "is-on" : ""} onClick={() => setDoc(k)}>{v.title}</button>
+            <button key={k} type="button" role="tab" aria-selected={doc === k} className={doc === k ? "is-on" : ""} onClick={() => setDoc(k)}>{v[lang][0]}</button>
           ))}
         </div>
         <div className="terms-body" ref={bodyRef}>
-          <p className="terms-meta">Last updated {d.updated}</p>
-          {d.sections.map(([h, paras]) => (
+          <p className="terms-meta">{lang === "fr" ? "Dernière mise à jour : " : "Last updated "}{updated}</p>
+          {sections.map(([h, paras]) => (
             <section key={h}>
               <h3>{h}</h3>
               {paras.map((p, i) => <p key={i}>{p}</p>)}
@@ -12572,7 +12581,11 @@ function TermsCheck({ checked, onChange }) {
     <>
       <label className="terms-check">
         <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
-        <span>I have read and accept the <button type="button" onClick={(e) => { e.preventDefault(); setOpen("terms"); }}>Terms &amp; Conditions</button>, including the <button type="button" onClick={(e) => { e.preventDefault(); setOpen("safety"); }}>Community &amp; Safety Guidelines</button>, and the <button type="button" onClick={(e) => { e.preventDefault(); setOpen("privacy"); }}>Privacy Policy</button>.</span>
+        {defaultLegalLang() === "fr" ? (
+          <span>J'ai lu et j'accepte les <button type="button" onClick={(e) => { e.preventDefault(); setOpen("terms"); }}>Conditions générales</button>, y compris les <button type="button" onClick={(e) => { e.preventDefault(); setOpen("safety"); }}>Règles de communauté et de sécurité</button>, ainsi que la <button type="button" onClick={(e) => { e.preventDefault(); setOpen("privacy"); }}>Politique de confidentialité</button>.</span>
+        ) : (
+          <span>I have read and accept the <button type="button" onClick={(e) => { e.preventDefault(); setOpen("terms"); }}>Terms &amp; Conditions</button>, including the <button type="button" onClick={(e) => { e.preventDefault(); setOpen("safety"); }}>Community &amp; Safety Guidelines</button>, and the <button type="button" onClick={(e) => { e.preventDefault(); setOpen("privacy"); }}>Privacy Policy</button>.</span>
+        )}
       </label>
       {open && <TermsSheet doc={open} onClose={() => setOpen(null)} />}
     </>
@@ -12584,7 +12597,7 @@ function LegalLinks() {
   return (
     <>
       <p className="legal-links">
-        <button type="button" onClick={() => setOpen("terms")}>Terms</button> · <button type="button" onClick={() => setOpen("privacy")}>Privacy</button> · <button type="button" onClick={() => setOpen("safety")}>Safety</button> · <a href="mailto:contact@art-ium.com">contact@art-ium.com</a>
+        <button type="button" onClick={() => setOpen("terms")}>Terms</button> · <button type="button" onClick={() => setOpen("privacy")}>Privacy</button> · <button type="button" onClick={() => setOpen("safety")}>Safety</button> · <button type="button" onClick={() => setOpen("legal")}>Legal notice</button> · <a href="mailto:contact@art-ium.com">contact@art-ium.com</a>
       </p>
       {open && <TermsSheet doc={open} onClose={() => setOpen(null)} />}
     </>

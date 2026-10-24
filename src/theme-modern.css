@@ -1118,3 +1118,8 @@ html.theme-modern .artium-lp--light .artium-lp-h2{font-size:clamp(28px,8.4vw,44p
 .terms-tabs button.is-on{background:#0F5C52;border-color:#0F5C52;color:#FFFFFF}
 .legal-links{margin:22px 0 8px;text-align:center;font:400 12.5px 'Fira Sans',sans-serif;color:#8A9593}
 .legal-links button,.legal-links a{background:none;border:0;padding:0;color:#5E6B69;font:inherit;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.terms-lang{display:inline-flex;border:1px solid #E6E2DB;border-radius:999px;overflow:hidden}
+.terms-head .terms-lang button{width:auto;height:30px;border-radius:0;padding:0 10px;background:#FFFFFF;color:#5E6B69;font:700 12px 'Fira Sans',sans-serif}
+.terms-head .terms-lang button.is-on{background:#0F5C52;color:#FFFFFF}
+.terms-head,.terms-tabs{flex:none}
+.terms-head h2{font-size:clamp(19px,5.6vw,24px)}
