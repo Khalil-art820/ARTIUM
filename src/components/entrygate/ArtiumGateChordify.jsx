@@ -392,14 +392,15 @@ export default function ArtiumGateChordify({
           </div>
         </section>
 
-        {/* Log out pill: door-and-arrow, a hairline divider, the word, and a
+        {/* Log out pill: door-and-arrow in a white pill, the word, and a
             chevron at the far end, all in red on a white-to-blush pill. */}
         <button type="button" className="cg-logout-pill" onClick={onLogout}>
           <span className="cg-lp-mid">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M10 4H6.5A1.5 1.5 0 0 0 5 5.5v13A1.5 1.5 0 0 0 6.5 20H10" /><path d="M9.5 12H20" /><path d="M16.5 8.5 20 12l-3.5 3.5" />
-            </svg>
-            <span className="cg-lp-div" aria-hidden="true" />
+            <span className="cg-lp-ic" aria-hidden="true">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10 4H6.5A1.5 1.5 0 0 0 5 5.5v13A1.5 1.5 0 0 0 6.5 20H10" /><path d="M9.5 12H20" /><path d="M16.5 8.5 20 12l-3.5 3.5" />
+              </svg>
+            </span>
             <b>Log out</b>
           </span>
           <svg className="cg-lp-chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>

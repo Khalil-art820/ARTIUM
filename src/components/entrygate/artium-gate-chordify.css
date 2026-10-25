@@ -653,14 +653,14 @@
 .cgate .cf-card.is-on .cf-cap.cf-cap-row{border-radius:50% 50% 21px 21px / 14px 14px 21px 21px}
 .cgate .cf-card.is-outer:not(.is-right) .cf-cap{left:5px;right:54%}
 /* Log out pill (owner's mockup shapes): light red capsule, no rim, soft
-   shadow; icon | word centred, chevron at the end. */
+   shadow; icon (white pill) and word centred, chevron at the end. */
 .cgate .cg-logout-pill{position:relative;display:flex;align-items:center;justify-content:center;width:86%;align-self:center;margin:0 auto;height:54px;padding:0 46px;
   border-radius:999px;border:0 !important;background:#F9D9D5;
   box-shadow:0 10px 24px -14px rgba(192,57,43,.45),inset 0 1px 0 #FFFFFF;color:#C8372D;cursor:pointer;transition:transform .12s,background .15s}
 .cgate .cg-logout-pill:hover{background:#F6CDC8}
 .cgate .cg-logout-pill:active{transform:scale(.98)}
 .cgate .cg-lp-mid{display:flex;align-items:center;gap:13px}
-.cgate .cg-lp-mid svg{width:24px;height:24px}
-.cgate .cg-lp-div{width:1px;height:24px;background:#E6A9A2}
+.cgate .cg-lp-ic{display:inline-flex;align-items:center;justify-content:center;height:36px;padding:0 14px;border-radius:999px;background:#FFFFFF}
+.cgate .cg-lp-ic svg{width:22px;height:22px}
 .cgate .cg-logout-pill b{font-size:17px;font-weight:600;color:#C8372D}
 .cgate .cg-lp-chev{position:absolute;right:20px;top:50%;transform:translateY(-50%);width:18px;height:18px}
