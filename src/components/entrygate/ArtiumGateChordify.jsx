@@ -289,7 +289,7 @@ export default function ArtiumGateChordify({
                   <span className="tm-hm-faces" aria-hidden="true">
                     {memberChips.filter((f) => f.photoUrl).slice(0, 2).map((f, i) => <img key={i} src={f.photoUrl} alt="" />)}
                   </span>
-                  <span className="tm-hm-n">{count}</span>
+                  <span className="tm-hm-n">+{count}</span>
                 </span>
               ) : (<>
                 {/* Step 3's "Connect worldwide" mark — three figures, the middle one larger. */}
@@ -298,7 +298,7 @@ export default function ArtiumGateChordify({
                   <circle cx="4.6" cy="10.6" r="2.1" /><path d="M1.2 19.2a3.6 3.6 0 0 1 3.1-4.4" />
                   <circle cx="19.4" cy="10.6" r="2.1" /><path d="M22.8 19.2a3.6 3.6 0 0 0-3.1-4.4" />
                 </svg>
-                {count}
+                +{count}
               </>)}
             </span>
             {onMusicToggle && (

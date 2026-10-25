@@ -5994,13 +5994,14 @@ const IconThreePeople = ({ solidMiddle, ...p }) => (
 // mint pill; the three-figure mark stands in until someone has a photo.
 function HeaderMembers({ count, faces = [] }) {
   const shown = (faces || []).filter((f) => f && f.photoUrl).slice(0, 2);
-  if (!shown.length) return <><IconThreePeople size={31} strokeWidth={1.6} solidMiddle />{count}</>;
+  // "+4", not "4": the faces are a sample and the number is everyone else.
+  if (!shown.length) return <><IconThreePeople size={31} strokeWidth={1.6} solidMiddle />+{count}</>;
   return (
     <span className="tm-hm">
       <span className="tm-hm-faces" aria-hidden="true">
         {shown.map((f, i) => <img key={i} src={f.photoUrl} alt="" onError={(e) => { e.currentTarget.style.visibility = "hidden"; }} />)}
       </span>
-      <span className="tm-hm-n">{count}</span>
+      <span className="tm-hm-n">+{count}</span>
     </span>
   );
 }
