@@ -658,7 +658,7 @@
 .cgate .cg-logout-row:active{background:#F2B8B0}
 .cgate .cg-logout-row .cg-logout-ic{background:#FFFFFF;color:#C0392B}
 .cgate .cg-logout-row .cg-logout-chev{color:#C0392B}
-.cgate .cg-logout-row .cg-logout-txt b{color:#C0392B}
+.cgate .cg-logout-row .cg-logout-txt b{color:#14202E}
 .cgate .cg-logout-row .cg-logout-txt em{color:#14202E}
 .cgate .cg-logout-row .cg-logout-txt{flex:1;align-items:center;text-align:center;gap:6px;margin-right:26px}
 .cgate .cg-logout-row .cg-logout-txt b,.cgate .cg-logout-row .cg-logout-txt em{background:#FFFFFF;border-radius:999px;padding:4px 14px}
