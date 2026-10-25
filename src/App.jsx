@@ -2497,19 +2497,31 @@ export default function App() {
       .then(({ data }) => {
         if (!alive || data?.status !== "rejected") return;
         const me = fromDbProfile(authProfile);
-        setDraft({
+        // Work already done on this redo (an upload, a door, edits) lives in
+        // the saved draft. It was overwritten from the profile on every load,
+        // so a refresh threw the uploaded proof away. A copy saved after the
+        // rejected request was sent can only be this redo, so it wins.
+        const saved = readSavedDraft();
+        const sentAt = Date.parse(data.created_at || "") || 0;
+        if (saved && saved.at > sentAt && (saved.draft.email || "").toLowerCase() === (authUser.email || "").toLowerCase()) {
+          setDraft({ ...emptyDraft(), ...saved.draft, instruments: instrumentsOf(saved.draft), email: authUser.email || "", password: "__authed__", confirmPassword: "__authed__" });
+          setStep(Number.isInteger(saved.step) ? saved.step : 0);
+        } else {
+          setStep(0);
+          setDraft({
           ...emptyDraft(), ...me,
           instruments: instrumentsOf(me), years: me.year || "", pieces: me.pieces || [], tastes: me.tastes || [], composerDay: me.composerDay || "",
           email: authUser.email || "", password: "__authed__", confirmPassword: "__authed__",
           // Proof starts again; everything else is kept.
           applicant: "", lastApplicant: "", doorData: {}, verifyMethod: "otp",
           conservatoryVerified: false, conservatoryEmail: "", proofDocUrl: "", proofDocName: "", domainReq: null, otpEmail: "", otpSent: false,
-        });
+          });
+        }
         // Back to the state of a registrant who hasn't submitted: no member
         // profile in the app, so the same switched-off tabs and closed doors.
         setMyProfile(null);
         setStudents((arr) => arr.filter((x) => x.id !== authUser.id));
-        setEditingProfile(false); setStep(0); setScreen("signup");
+        setEditingProfile(false); setScreen("signup");
         setReapply({ reason: data.decision_reason || "" });
       });
     return () => { alive = false; };
