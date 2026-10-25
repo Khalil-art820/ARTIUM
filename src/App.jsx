@@ -2515,8 +2515,8 @@ export default function App() {
   // A rejected application is not "under review": the applicant goes back to
   // the sign-up flow at step 1 with everything they entered, sees why, fixes
   // it and resubmits (which opens a fresh review request).
-  const [reapply, setReapply] = useState(null);
-  const reapplyKeepsPage = useRef(!!readNav());   // { reason } while redoing a rejected application
+  const [reapply, setReapply] = useState(null);   // { reason } while redoing a rejected application
+  const reapplyKeepsPage = useRef(!!readNav());
   useEffect(() => {
     if (!authUser?.id || authProfile?.approved !== false || authProfile?.role === "learner") { setReapply(null); return; }
     let alive = true;
@@ -2571,9 +2571,11 @@ export default function App() {
   const navRef = useRef(undefined);
   if (navRef.current === undefined) navRef.current = readNav();
   const nav0 = navRef.current;
-  // While true, the sign-in routing below leaves the restored page alone
-  // instead of sending a member from the home page into the app.
-  const navRestoring = useRef(!!nav0);
+  // The account that was signed in when this page loaded. While it is still
+  // the one signed in, a restored page stays put; only a sign-in during this
+  // page's life routes into the app. (The profile arrives more than once on
+  // a load, so a one-pass flag was used up before the last arrival.)
+  const navUserRef = useRef(undefined);
   const [screen, setScreen] = useState(() => nav0?.screen || "entry");
   // Which tab LearnerScreen opens on: the gate avatar wants "profile",
   // every other entrance wants the map. Reset to "map" after profile use
@@ -2662,10 +2664,9 @@ export default function App() {
   useEffect(() => {
     if (authLoading) return;
     // A page restored after a reload stays put: the home page is not a
-    // place to be bounced out of just because the session came back. Only
-    // the first settled pass; a fresh sign-in later routes as normal.
-    const kept = navRestoring.current && ["entry", "landing"].includes(screen);
-    navRestoring.current = false;
+    // place to be bounced out of just because the session came back.
+    if (navUserRef.current === undefined) navUserRef.current = authUser?.id || null;
+    const kept = !!nav0 && !!authUser?.id && authUser.id === navUserRef.current && ["entry", "landing"].includes(screen);
     // The hirer's whole account lives in auth metadata — no profiles row, so
     // authProfile never resolves for them and the branches below would never
     // fire. Caught here, first, the same way the learner and student routes
@@ -3181,6 +3182,7 @@ export default function App() {
     localStorage.removeItem("artium_app_tab");
     setActiveChatId(null); setTeacherRoomView("students");
     clearTabState();
+    navUserRef.current = null;   // the next sign-in is a sign-in, not a reload
     setMyProfile(null);
     setStudents((arr) => arr.filter((s) => s.id !== myProfile?.id));
     setStudentLoggedOut(true);
