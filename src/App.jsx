@@ -7737,7 +7737,7 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
           </button>
         ) : (
           // The last step's Next opens the submit window.
-          <SuNextButton ok={!!canNext} onGo={() => setConfirmSubmit(true)} hint={stepHints[step]}>
+          <SuNextButton ok={!!canNext} onGo={() => { update({ termsAcceptedAt: null }); setConfirmSubmit(true); }} hint={stepHints[step]}>
             Next <ChevronRight size={17} strokeWidth={2.2} />
           </SuNextButton>
         )}
@@ -12784,14 +12784,20 @@ function TermsCheck({ checked, onChange }) {
   const [open, setOpen] = useState(null);
   return (
     <>
-      <label className="terms-check">
-        <input type="checkbox" checked={checked} onChange={(e) => { e.preventDefault(); if (checked) onChange(false); else setOpen("terms"); }} />
+      <div className="terms-check">
+        {/* Not a native checkbox: a real one ticks itself on tap before any
+            handler can say no, so the box looked accepted without the reading. */}
+        <button type="button" role="checkbox" aria-checked={checked} className={`terms-box${checked ? " is-on" : ""}`}
+          aria-label={checked ? "Accepted — tap to withdraw" : "Read the documents to accept"}
+          onClick={() => { if (checked) onChange(false); else setOpen("terms"); }}>
+          {checked && <Check size={14} strokeWidth={3} />}
+        </button>
         {defaultLegalLang() === "fr" ? (
           <span>J'ai lu et j'accepte les <button type="button" onClick={(e) => { e.preventDefault(); setOpen("terms"); }}>Conditions générales</button>, y compris les <button type="button" onClick={(e) => { e.preventDefault(); setOpen("safety"); }}>Règles de communauté et de sécurité</button>, ainsi que la <button type="button" onClick={(e) => { e.preventDefault(); setOpen("privacy"); }}>Politique de confidentialité</button>.</span>
         ) : (
           <span>I have read and accept the <button type="button" onClick={(e) => { e.preventDefault(); setOpen("terms"); }}>Terms &amp; Conditions</button>, including the <button type="button" onClick={(e) => { e.preventDefault(); setOpen("safety"); }}>Community &amp; Safety Guidelines</button>, and the <button type="button" onClick={(e) => { e.preventDefault(); setOpen("privacy"); }}>Privacy Policy</button>.</span>
         )}
-      </label>
+      </div>
       {open && <TermsSheet doc={open} onClose={() => setOpen(null)} onAccept={checked ? undefined : () => onChange(true)} />}
     </>
   );
