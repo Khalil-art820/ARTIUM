@@ -656,12 +656,12 @@
    shadow; icon (white pill) and word centred, chevron at the end. */
 .cgate .cg-logout-pill{position:relative;display:flex;align-items:center;justify-content:center;width:86%;align-self:center;margin:0 auto;height:54px;padding:0 46px;
   border-radius:999px;border:0 !important;background:#F9D9D5;
-  box-shadow:0 10px 24px -14px rgba(192,57,43,.45),inset 0 1px 0 #FFFFFF;color:#C8372D;cursor:pointer;transition:transform .12s,background .15s}
+  box-shadow:0 2px 12px -4px rgba(192,57,43,.28);color:#C8372D;cursor:pointer;transition:transform .12s,background .15s}
 .cgate .cg-logout-pill:hover{background:#F6CDC8}
 .cgate .cg-logout-pill:active{transform:scale(.98)}
 /* The word is what sits in the middle; the icon hangs off its left side. */
 .cgate .cg-lp-mid{position:relative;display:flex;align-items:center}
 .cgate .cg-lp-ic{position:absolute;right:100%;top:50%;transform:translateY(-50%);margin-right:12px;display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:#FFFFFF}
-.cgate .cg-lp-ic svg{width:20px;height:20px}
-.cgate .cg-logout-pill b{font-size:17px;font-weight:600;color:#C8372D;display:inline-flex;align-items:center;height:36px;padding:0 16px;border-radius:999px;border:1.5px solid #C8372D;box-sizing:border-box}
-.cgate .cg-lp-chev{position:absolute;right:20px;top:50%;transform:translateY(-50%);width:18px;height:18px}
+.cgate .cg-lp-ic svg{width:20px;height:20px;display:block}
+.cgate .cg-logout-pill b{font-size:17px;font-weight:600;color:#C8372D;display:inline-flex;align-items:center;height:36px;line-height:1;padding:0 16px;border-radius:999px;border:1.5px solid #C8372D;box-sizing:border-box}
+.cgate .cg-lp-chev{position:absolute;right:20px;top:50%;transform:translateY(-50%);width:18px;height:18px;display:block}
