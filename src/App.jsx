@@ -2505,6 +2505,10 @@ export default function App() {
           applicant: "", lastApplicant: "", doorData: {}, verifyMethod: "otp",
           conservatoryVerified: false, conservatoryEmail: "", proofDocUrl: "", proofDocName: "", domainReq: null, otpEmail: "", otpSent: false,
         });
+        // Back to the state of a registrant who hasn't submitted: no member
+        // profile in the app, so the same switched-off tabs and closed doors.
+        setMyProfile(null);
+        setStudents((arr) => arr.filter((x) => x.id !== authUser.id));
         setEditingProfile(false); setStep(0); setScreen("signup");
         setReapply({ reason: data.decision_reason || "" });
       });
@@ -2532,8 +2536,10 @@ export default function App() {
   // A rejected applicant is back where they were before they submitted: a
   // registration in progress. They can leave it for the home page like any
   // registrant, but every way into the app leads back to sign-up, answers kept.
+  // Like a new registrant they have no member profile (myProfile stays null),
+  // so the bottom bar keeps only Home live and nothing of the app opens.
   const view = awaitingReview
-    ? (reapply ? (["entry", "landing"].includes(screen) ? screen : "signup") : "pendingReview")
+    ? (reapply ? (["app", "pendingReview"].includes(screen) ? "signup" : screen) : "pendingReview")
     : screen;
   // The document's own colour is set in index.css now that every screen is
   // dark; this used to flip it per screen and no longer has anything to say.
@@ -2625,6 +2631,8 @@ export default function App() {
         }
         return;
       }
+      // A rejected applicant is a registrant again, not a member (see reapply).
+      if (reapply) return;
       const me = fromDbProfile(authProfile);
       setMyProfile(me);
       setPreviewOnly(false);
