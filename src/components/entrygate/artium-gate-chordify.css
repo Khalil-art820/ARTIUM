@@ -652,13 +652,14 @@
 .cgate .cf-cap.cf-cap-row,.cgate .cf-card:not(.is-on) .cf-cap.cf-cap-row{border-radius:50% 50% 17px 17px / 12px 12px 17px 17px}
 .cgate .cf-card.is-on .cf-cap.cf-cap-row{border-radius:50% 50% 21px 21px / 14px 14px 21px 21px}
 .cgate .cf-card.is-outer:not(.is-right) .cf-cap{left:5px;right:54%}
-/* Log out row in light red. */
-.cgate .cg-logout-row{background:#F9D3CE;border-color:#EFB3AB !important}
-.cgate .cg-logout-row:hover{background:#F6C6C0}
-.cgate .cg-logout-row:active{background:#F2B8B0}
-.cgate .cg-logout-row .cg-logout-ic{background:#FFFFFF;color:#C0392B}
-.cgate .cg-logout-row .cg-logout-chev{color:#C0392B}
-.cgate .cg-logout-row .cg-logout-txt b{color:#14202E}
-.cgate .cg-logout-row .cg-logout-txt em{color:#14202E}
-.cgate .cg-logout-row .cg-logout-txt{flex:1;align-items:center;text-align:center;gap:6px;margin-right:26px}
-.cgate .cg-logout-row .cg-logout-txt b,.cgate .cg-logout-row .cg-logout-txt em{background:#FFFFFF;border-radius:999px;padding:4px 14px}
+/* Log out pill (owner's mockup): white fading to blush, thin red rim, soft
+   shadow; icon | word centred, chevron at the end. */
+.cgate .cg-logout-pill{position:relative;display:flex;align-items:center;justify-content:center;width:100%;height:64px;padding:0 52px;
+  border-radius:999px;border:1.5px solid #D9534A !important;background:linear-gradient(180deg,#FFFFFF 0%,#FDF1F0 100%);
+  box-shadow:0 10px 24px -14px rgba(192,57,43,.45),inset 0 1px 0 #FFFFFF;color:#C8372D;cursor:pointer;transition:transform .12s,background .15s}
+.cgate .cg-logout-pill:hover{background:linear-gradient(180deg,#FFFFFF 0%,#FBE6E4 100%)}
+.cgate .cg-logout-pill:active{transform:scale(.98)}
+.cgate .cg-lp-mid{display:flex;align-items:center;gap:16px}
+.cgate .cg-lp-div{width:1px;height:30px;background:#E8C2BE}
+.cgate .cg-logout-pill b{font-size:19px;font-weight:600;color:#C8372D}
+.cgate .cg-lp-chev{position:absolute;right:22px;top:50%;transform:translateY(-50%)}

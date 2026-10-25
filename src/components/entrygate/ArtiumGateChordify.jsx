@@ -392,17 +392,17 @@ export default function ArtiumGateChordify({
           </div>
         </section>
 
-        <button type="button" className="cg-logout-row" onClick={onLogout}>
-          <span className="cg-logout-ic" aria-hidden="true">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9 20H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3" /><path d="M10 12h10" /><path d="M16 8l4 4-4 4" />
+        {/* Log out pill: door-and-arrow, a hairline divider, the word, and a
+            chevron at the far end, all in red on a white-to-blush pill. */}
+        <button type="button" className="cg-logout-pill" onClick={onLogout}>
+          <span className="cg-lp-mid">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M10 4H6.5A1.5 1.5 0 0 0 5 5.5v13A1.5 1.5 0 0 0 6.5 20H10" /><path d="M9.5 12H20" /><path d="M16.5 8.5 20 12l-3.5 3.5" />
             </svg>
-          </span>
-          <span className="cg-logout-txt">
+            <span className="cg-lp-div" aria-hidden="true" />
             <b>Log out</b>
-            <em>Sign out of your account</em>
           </span>
-          <svg className="cg-logout-chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
+          <svg className="cg-lp-chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
         </button>
 
         <article className="cg-card cg-partners">
