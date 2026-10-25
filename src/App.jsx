@@ -2529,7 +2529,9 @@ export default function App() {
   // A promo-verdict bell tap opens PromoteMe directly on the right
   // sub-screen (aclassicaltone free spotlight or paid package).
   const [promoteFocus, setPromoteFocus] = useState(null);
-  const view = awaitingReview && !reapply ? "pendingReview" : screen;
+  // A rejected applicant is held in the sign-up flow the same way: whatever
+  // screen state says, an unapproved account never renders the app.
+  const view = awaitingReview ? (reapply ? "signup" : "pendingReview") : screen;
   // The document's own colour is set in index.css now that every screen is
   // dark; this used to flip it per screen and no longer has anything to say.
   const [appTab, setAppTab] = useState(() => localStorage.getItem("artium_app_tab") || "map");
@@ -5332,8 +5334,9 @@ export default function App() {
           draft={draft} update={update} toggleTaste={toggleTaste} step={step} setStep={setStep}
           editing={editingProfile} onSubmit={submitApplication} authError={authError}
           resumed={resumed && !reapply} rejection={reapply} onStartFresh={() => { clearSavedDraft(); setDraft(freshAuthedDraft()); setStep(0); }}
-          onCancel={() => setScreen(editingProfile ? "app" : "landing")}
-          onHome={goHome}
+          // The only way out of a rejected application is to sign out.
+          onCancel={reapply ? handleLogout : () => setScreen(editingProfile ? "app" : "landing")}
+          onHome={reapply ? handleLogout : goHome}
         />
       )}
       {view === "confirmEmail" && <ConfirmEmail email={pendingEmail} onLogin={startLogin} onHome={goHome} pendingReview={needsReview(draft)} />}
