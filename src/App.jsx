@@ -2475,6 +2475,22 @@ async function markPromoteVerdictsSeen(userId) {
   } catch { /* private mode */ }
 }
 
+// useState that survives a reload of this browser tab (same rule as readNav):
+// inner tabs, open chats and panels come back where they were.
+function useTabState(key, initial) {
+  const [v, setV] = useState(() => {
+    try { const raw = sessionStorage.getItem(key); if (raw != null) return JSON.parse(raw); } catch { /* private mode */ }
+    return typeof initial === "function" ? initial() : initial;
+  });
+  useEffect(() => { try { sessionStorage.setItem(key, JSON.stringify(v)); } catch { /* private mode */ } }, [key, v]);
+  return [v, setV];
+}
+
+// Signing out forgets the open chat, rooms and admin tabs: the next account in
+// this browser tab must not reopen someone else's thread.
+const TAB_STATE_KEYS = ["artium_chat", "artium_teacher_room", "artium_learner_lesson", "artium_learner_room", "artium_lesson_tab", "artium_teacher_lesson_tab", "artium_teacher_learner", "artium_admin_tab", "artium_admin_section", "artium_learner_tab"];
+function clearTabState() { try { TAB_STATE_KEYS.forEach((k) => sessionStorage.removeItem(k)); } catch { /* private mode */ } }
+
 // Where this tab was, so a refresh lands on the same page. sessionStorage:
 // per tab, survives a reload, gone when the tab is closed.
 const NAV_KEY = "artium_nav_v1";
@@ -2575,7 +2591,7 @@ export default function App() {
   // dark; this used to flip it per screen and no longer has anything to say.
   const [appTab, setAppTab] = useState(() => localStorage.getItem("artium_app_tab") || "map");
   const setAppTabPersist = (tab) => { localStorage.setItem("artium_app_tab", tab); setAppTab(tab); };
-  const [teacherRoomView, setTeacherRoomView] = useState("students");
+  const [teacherRoomView, setTeacherRoomView] = useTabState("artium_teacher_room", "students");
   // A bell row asking the teacher's lesson room to open one learner's session.
   const [teacherFocus, setTeacherFocus] = useState(null);
   const goToTeacherSession = (learnerId, sessionId) => {
@@ -2878,7 +2894,7 @@ export default function App() {
   }, []);
 
   const [conversations, setConversations] = useState({});
-  const [activeChatId, setActiveChatId] = useState(null);
+  const [activeChatId, setActiveChatId] = useTabState("artium_chat", null);
 
   // Load every direct_messages row this profile is a party to and group by
   // the other person's id — every consumer (Messages tab, LearnerScreen's
@@ -3158,6 +3174,8 @@ export default function App() {
     await supabase.auth.signOut();
     localStorage.removeItem("artium_demo_session");
     localStorage.removeItem("artium_app_tab");
+    setActiveChatId(null); setTeacherRoomView("students");
+    clearTabState();
     setMyProfile(null);
     setStudents((arr) => arr.filter((s) => s.id !== myProfile?.id));
     setStudentLoggedOut(true);
@@ -5352,7 +5370,7 @@ export default function App() {
               }
             }
           }}
-          onLogout={async () => { await supabase.auth.signOut(); localStorage.removeItem("artium_demo_session"); setLearnerProfile(null); setLearnerLoggedOut(true); setScreen("entry"); }}
+          onLogout={async () => { await supabase.auth.signOut(); localStorage.removeItem("artium_demo_session"); setActiveChatId(null); clearTabState(); setLearnerProfile(null); setLearnerLoggedOut(true); setScreen("entry"); }}
           onDeleteAccount={async () => {
             await supabase.rpc("delete_own_account");
             await supabase.auth.signOut();
@@ -13384,8 +13402,8 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
   useEffect(() => { try { sessionStorage.setItem("artium_learner_tab", appTab); } catch {} }, [appTab]);
   const [selectedConsId, setSelectedConsId] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
-  const [activeLessonTeacherId, setActiveLessonTeacherId] = useState(null);
-  const [learnerRoomView, setLearnerRoomView] = useState("teachers"); // "teachers" | "planning"
+  const [activeLessonTeacherId, setActiveLessonTeacherId] = useTabState("artium_learner_lesson", null);
+  const [learnerRoomView, setLearnerRoomView] = useTabState("artium_learner_room", "teachers"); // "teachers" | "planning"
   const [teacherQ, setTeacherQ] = useState("");
   const [focusSessionReq, setFocusSessionReq] = useState(null);
   // Arriving from the entry gate's bell: open the named teacher's lesson
@@ -14253,7 +14271,7 @@ function VideoSessionTab({ sessions, teacher, zoomLink, meetLink }) {
 }
 
 function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payError, authUser, focusSession }) {
-  const [tab, setTab] = useState("chat");
+  const [tab, setTab] = useTabState("artium_lesson_tab", "chat");
   // A bell notification can ask this room to open straight onto one session
   // card — Schedule & Payments tab, that session selected. Keyed on `at` so
   // tapping the same notification twice still refocuses.
@@ -15608,14 +15626,16 @@ function PromoteMe({ myProfile, authUser, focus }) {
 function AdminScreen({ authUser, onlineCount, listProps }) {
   const isRealUser = !!authUser?.id;
   const lsKey = "artium_promotions";
+  // Deep links write a bare section name here; a reload finds the JSON copy.
   const [section, setSection] = useState(() => {
     try {
       const s = sessionStorage.getItem("artium_admin_section");
-      if (s) { sessionStorage.removeItem("artium_admin_section"); return s; }
+      if (s) { try { return JSON.parse(s); } catch { return s; } }
     } catch { /* private mode */ }
     return "verifications";
   });
-  const [tab, setTab] = useState("pending");
+  useEffect(() => { try { sessionStorage.setItem("artium_admin_section", JSON.stringify(section)); } catch { /* private mode */ } }, [section]);
+  const [tab, setTab] = useTabState("artium_admin_tab", "pending");
   const [rows, setRows] = useState([]);
 
   function readLocal() { try { return JSON.parse(localStorage.getItem(lsKey) || "[]"); } catch { return []; } }
@@ -17349,12 +17369,16 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView, focus }) {
 
   const [viewingLearner, setViewingLearner] = useState(null);
   const [activeLearner, setActiveLearner] = useState(allLearners[0]);
-  const [tab, setTab] = useState("chat");
+  const [tab, setTab] = useTabState("artium_teacher_lesson_tab", "chat");
+  // The learner whose room was open survives a reload by id; the list itself
+  // arrives later from the database.
+  const [savedLearnerId, setSavedLearnerId] = useTabState("artium_teacher_learner", null);
+  React.useEffect(() => { if (activeLearner?.id) setSavedLearnerId(activeLearner.id); }, [activeLearner?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // No mock roster guarantees a first learner any more — pick one up as
   // soon as a real accepted learner appears.
   React.useEffect(() => {
-    if (!activeLearner && allLearners.length > 0) setActiveLearner(allLearners[0]);
+    if (!activeLearner && allLearners.length > 0) setActiveLearner(allLearners.find((l) => l.id === savedLearnerId) || allLearners[0]);
   }, [activeLearner, allLearners.length]);
 
   const [sessionsByLearner, setSessionsByLearner] = useState({});
