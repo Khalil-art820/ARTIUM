@@ -2701,7 +2701,7 @@ export default function App() {
       }
       if (authProfile.approved === false) {
         // Document-proof student still awaiting manual review.
-        if (["entry", "landing", "login", "confirmEmail"].includes(screen)) setScreen("pendingReview");
+        if (["entry", "landing", "login", "confirmEmail"].includes(screen) && !kept) setScreen("pendingReview");
       } else if ((screen === "entry" || screen === "landing" || screen === "login" || screen === "confirmEmail") && !kept) {
         // Default view is the full conservatory list now; the welcome
         // block's own-conservatory row is the shortcut into the roster.
