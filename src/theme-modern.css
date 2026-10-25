@@ -1128,3 +1128,11 @@ html.theme-modern .artium-lp--light .artium-lp-h2{font-size:clamp(28px,8.4vw,44p
 .su-rejected-t{margin:0;font:700 14px 'Fira Sans',sans-serif;color:#9B2C22}
 .su-rejected-r{margin:6px 0 0;font:500 13.5px/1.45 'Fira Sans',sans-serif;color:#3E2A28;white-space:pre-wrap}
 .su-rejected-d{margin:6px 0 0;font:400 13px/1.45 'Fira Sans',sans-serif;color:#6B5A58}
+/* Terms accepted from inside the documents */
+.terms-accept{flex:none;padding:12px 18px calc(14px + env(safe-area-inset-bottom));border-top:1px solid #EEE9E2;background:#FBFAF7}
+.terms-progress{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
+.terms-progress span{display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 10px;border-radius:999px;border:1px solid #E6E2DB;background:#FFFFFF;color:#7A8583;font:600 12px 'Fira Sans',sans-serif}
+.terms-progress span.is-read{border-color:#0F5C52;color:#0F5C52}
+.terms-hint{margin:0;font:500 13px 'Fira Sans',sans-serif;color:#7A8583}
+.terms-next,.terms-agree{width:100%;height:46px;border-radius:12px;border:0;background:#0F5C52;color:#FFFFFF;font:700 15px 'Fira Sans',sans-serif;cursor:pointer}
+.terms-agree:disabled{background:#C9D3D1;cursor:not-allowed}

@@ -12586,12 +12586,26 @@ const LEGAL_DOCS = {
   legal:   { en: ["Legal Notice", LEGAL_UPDATED, LEGAL_SECTIONS], fr: ["Mentions légales", TERMS_UPDATED_FR, LEGAL_SECTIONS_FR] },
 };
 const defaultLegalLang = () => { try { return /^fr/i.test(navigator.language || "") ? "fr" : "en"; } catch { return "en"; } };
-function TermsSheet({ onClose, doc: start = "terms" }) {
+// The documents an applicant must scroll to the end of before they can accept.
+const MUST_READ = ["terms", "safety", "privacy"];
+function TermsSheet({ onClose, doc: start = "terms", onAccept }) {
   const [doc, setDoc] = useState(start);
   const [lang, setLang] = useState(defaultLegalLang);
   const [title, updated, sections] = LEGAL_DOCS[doc][lang];
   const bodyRef = useRef(null);
-  useEffect(() => { if (bodyRef.current) bodyRef.current.scrollTop = 0; }, [doc, lang]);
+  // Accept mode: acceptance is given in here, not from a box outside. Each
+  // required document counts as read once its end has been on screen.
+  const [read, setRead] = useState(() => new Set());
+  const [ticked, setTicked] = useState(false);
+  const checkEnd = () => {
+    const el = bodyRef.current;
+    if (!onAccept || !el || read.has(doc)) return;
+    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 24) setRead((r) => new Set(r).add(doc));
+  };
+  useEffect(() => { if (bodyRef.current) bodyRef.current.scrollTop = 0; checkEnd(); }, [doc, lang]); // eslint-disable-line react-hooks/exhaustive-deps
+  const fr = lang === "fr";
+  const left = MUST_READ.filter((k) => !read.has(k));
+  const allRead = left.length === 0;
   return (
     <div className="fixed flex items-end sm:items-center justify-center" style={{ inset: 0, zIndex: 400, background: "rgba(0,0,0,.5)" }} onClick={onClose}>
       <div className="terms-sheet" onClick={(e) => e.stopPropagation()} role="dialog" aria-label={title}>
@@ -12609,7 +12623,7 @@ function TermsSheet({ onClose, doc: start = "terms" }) {
             <button key={k} type="button" role="tab" aria-selected={doc === k} className={doc === k ? "is-on" : ""} onClick={() => setDoc(k)}>{v[lang][0]}</button>
           ))}
         </div>
-        <div className="terms-body" ref={bodyRef}>
+        <div className="terms-body" ref={bodyRef} onScroll={checkEnd}>
           <p className="terms-meta">{lang === "fr" ? "Dernière mise à jour : " : "Last updated "}{updated}</p>
           {sections.map(([h, paras]) => (
             <section key={h}>
@@ -12618,24 +12632,59 @@ function TermsSheet({ onClose, doc: start = "terms" }) {
             </section>
           ))}
         </div>
+        {onAccept && (
+          <div className="terms-accept">
+            {!allRead ? (
+              <>
+                <p className="terms-progress">
+                  {MUST_READ.map((k) => (
+                    <span key={k} className={read.has(k) ? "is-read" : ""}>{read.has(k) ? <Check size={13} /> : null}{LEGAL_DOCS[k][lang][0]}</span>
+                  ))}
+                </p>
+                {read.has(doc) || !MUST_READ.includes(doc) ? (
+                  <button type="button" className="terms-next" onClick={() => setDoc(left[0])}>
+                    {fr ? "Lire ensuite : " : "Next: "}{LEGAL_DOCS[left[0]][lang][0]} →
+                  </button>
+                ) : (
+                  <p className="terms-hint">{fr ? "Faites défiler jusqu'à la fin pour continuer." : "Scroll to the end to continue."}</p>
+                )}
+              </>
+            ) : (
+              <>
+                <label className="terms-check" style={{ margin: "0 0 10px" }}>
+                  <input type="checkbox" checked={ticked} onChange={(e) => setTicked(e.target.checked)} />
+                  <span>{fr
+                    ? "J'ai lu en entier et j'accepte les Conditions générales, les Règles de communauté et de sécurité et la Politique de confidentialité, et je déclare avoir 15 ans ou plus (ou être le parent ou tuteur légal d'un mineur de moins de 15 ans)."
+                    : "I have read in full and accept the Terms & Conditions, the Community & Safety Guidelines and the Privacy Policy, and I confirm I am 15 or older (or the parent or legal guardian of an under-15)."}</span>
+                </label>
+                <button type="button" className="terms-agree" disabled={!ticked} onClick={() => { onAccept(); onClose(); }}>
+                  {fr ? "J'accepte" : "I accept"}
+                </button>
+              </>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
 }
 // "I have read and accept the Terms & Conditions and the Privacy Policy".
+// The box can't be ticked from here: tapping it opens the documents, and
+// acceptance is given at the end of them (TermsSheet's accept mode). Once
+// accepted, tapping the box again withdraws it.
 function TermsCheck({ checked, onChange }) {
   const [open, setOpen] = useState(null);
   return (
     <>
       <label className="terms-check">
-        <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+        <input type="checkbox" checked={checked} onChange={(e) => { e.preventDefault(); if (checked) onChange(false); else setOpen("terms"); }} />
         {defaultLegalLang() === "fr" ? (
           <span>J'ai lu et j'accepte les <button type="button" onClick={(e) => { e.preventDefault(); setOpen("terms"); }}>Conditions générales</button>, y compris les <button type="button" onClick={(e) => { e.preventDefault(); setOpen("safety"); }}>Règles de communauté et de sécurité</button>, ainsi que la <button type="button" onClick={(e) => { e.preventDefault(); setOpen("privacy"); }}>Politique de confidentialité</button>.</span>
         ) : (
           <span>I have read and accept the <button type="button" onClick={(e) => { e.preventDefault(); setOpen("terms"); }}>Terms &amp; Conditions</button>, including the <button type="button" onClick={(e) => { e.preventDefault(); setOpen("safety"); }}>Community &amp; Safety Guidelines</button>, and the <button type="button" onClick={(e) => { e.preventDefault(); setOpen("privacy"); }}>Privacy Policy</button>.</span>
         )}
       </label>
-      {open && <TermsSheet doc={open} onClose={() => setOpen(null)} />}
+      {open && <TermsSheet doc={open} onClose={() => setOpen(null)} onAccept={checked ? undefined : () => onChange(true)} />}
     </>
   );
 }
