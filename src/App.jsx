@@ -9342,7 +9342,11 @@ function StepPieces({ draft, update }) {
     return hits.slice(0, 6).map((c) => ({ key: c, label: c }));
   })();
   const [status, setStatus] = useState("");
-  const canAdd = !!title.trim() && !!composer.trim() && !!status && !full;
+  // How it's going is a question about a piece, so it opens once there is one
+  // (composer and title both filled) and room left to add it.
+  const canRate = !!title.trim() && !!composer.trim() && !full;
+  const canAdd = canRate && !!status;
+  useEffect(() => { if (!canRate && status) setStatus(""); }, [canRate]); // eslint-disable-line react-hooks/exhaustive-deps
   function add() {
     if (!canAdd) return;
     update({ pieces: [...draft.pieces, { title: title.trim(), composer: composer.trim(), status }].slice(0, MAX_PIECES) });
@@ -9365,9 +9369,9 @@ function StepPieces({ draft, update }) {
           suggestions={pieceSugs} onPick={(sg) => { setTitle(sg.label); if (sg.composer) setComposer(sg.composer); }} />
       </div>
       {/* How it's going — one of two, for the piece being added. */}
-      <div className="pc-status" role="radiogroup" aria-label="How is this piece going?">
+      <div className={`pc-status${canRate ? "" : " is-off"}`} role="radiogroup" aria-label="How is this piece going?" aria-disabled={!canRate || undefined}>
         {Object.entries(PIECE_STATUS).map(([k, v]) => (
-          <button key={k} type="button" role="radio" aria-checked={status === k} className={`pc-status-card${status === k ? " is-on" : ""}`} onMouseDown={hold} onClick={() => setStatus(k)}>
+          <button key={k} type="button" role="radio" aria-checked={status === k} className={`pc-status-card${status === k ? " is-on" : ""}`} disabled={!canRate} onMouseDown={hold} onClick={() => canRate && setStatus(k)}>
             <span className="pc-status-top">
               <span className="pc-status-radio">{status === k && <CheckIcon size={15} strokeWidth={3} />}</span>
               {k === "good" ? (
