@@ -2515,7 +2515,8 @@ export default function App() {
   // A rejected application is not "under review": the applicant goes back to
   // the sign-up flow at step 1 with everything they entered, sees why, fixes
   // it and resubmits (which opens a fresh review request).
-  const [reapply, setReapply] = useState(null);   // { reason } while redoing a rejected application
+  const [reapply, setReapply] = useState(null);
+  const reapplyKeepsPage = useRef(!!readNav());   // { reason } while redoing a rejected application
   useEffect(() => {
     if (!authUser?.id || authProfile?.approved !== false || authProfile?.role === "learner") { setReapply(null); return; }
     let alive = true;
@@ -2548,7 +2549,11 @@ export default function App() {
         // profile in the app, so the same switched-off tabs and closed doors.
         setMyProfile(null);
         setStudents((arr) => arr.filter((x) => x.id !== authUser.id));
-        setEditingProfile(false); setScreen("signup");
+        setEditingProfile(false);
+        // Opening sign-up is for arriving (a sign-in). After a reload the
+        // page they were on is restored and stays, like any other page.
+        if (!reapplyKeepsPage.current) setScreen("signup");
+        reapplyKeepsPage.current = false;
         setReapply({ reason: data.decision_reason || "" });
       });
     return () => { alive = false; };
