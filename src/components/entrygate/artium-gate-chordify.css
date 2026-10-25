@@ -655,9 +655,9 @@
 /* Log out pill (owner's mockup shapes): light red capsule, no rim, soft
    shadow; icon (white pill) and word centred, chevron at the end. */
 .cgate .cg-logout-pill{position:relative;display:flex;align-items:center;justify-content:center;width:86%;align-self:center;margin:0 auto;height:54px;padding:0 46px;
-  border-radius:999px;border:0 !important;background:#F9D9D5;
+  border-radius:999px;border:0 !important;background:#FCE9E7;
   box-shadow:0 2px 12px -4px rgba(192,57,43,.28);color:#C8372D;cursor:pointer;transition:transform .12s,background .15s}
-.cgate .cg-logout-pill:hover{background:#F6CDC8}
+.cgate .cg-logout-pill:hover{background:#F9DEDB}
 .cgate .cg-logout-pill:active{transform:scale(.98)}
 /* The word is what sits in the middle; the icon hangs off its left side. */
 .cgate .cg-lp-mid{position:relative;display:flex;align-items:center}
