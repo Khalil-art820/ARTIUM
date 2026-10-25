@@ -392,14 +392,18 @@ export default function ArtiumGateChordify({
           </div>
         </section>
 
-        {/* Log out as one big white circle, centred between the trust card and
-            the partners: the word and an arrow, both in red. */}
-        <div className="cg-logout-wrap">
-          <button type="button" className="cg-logout-circle" onClick={onLogout}>
+        <button type="button" className="cg-logout-row" onClick={onLogout}>
+          <span className="cg-logout-ic" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 20H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3" /><path d="M10 12h10" /><path d="M16 8l4 4-4 4" />
+            </svg>
+          </span>
+          <span className="cg-logout-txt">
             <b>Log out</b>
-            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14" /><path d="M13 6l6 6-6 6" /></svg>
-          </button>
-        </div>
+            <em>Sign out of your account</em>
+          </span>
+          <svg className="cg-logout-chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
+        </button>
 
         <article className="cg-card cg-partners">
           <h3>Our partners</h3>

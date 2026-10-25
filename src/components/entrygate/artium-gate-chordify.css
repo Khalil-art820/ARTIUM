@@ -652,11 +652,13 @@
 .cgate .cf-cap.cf-cap-row,.cgate .cf-card:not(.is-on) .cf-cap.cf-cap-row{border-radius:50% 50% 17px 17px / 12px 12px 17px 17px}
 .cgate .cf-card.is-on .cf-cap.cf-cap-row{border-radius:50% 50% 21px 21px / 14px 14px 21px 21px}
 .cgate .cf-card.is-outer:not(.is-right) .cf-cap{left:5px;right:54%}
-/* Log out: the biggest centred circle the column allows, white, word and
-   arrow in red. */
-.cgate .cg-logout-wrap{display:flex;justify-content:center;padding:6px 0}
-.cgate .cg-logout-circle{width:min(100%,340px);aspect-ratio:1;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
-  background:#FFFFFF;border:1.5px solid #F2C4BE !important;box-shadow:0 10px 30px -14px rgba(192,57,43,.35);color:#C0392B;cursor:pointer;transition:transform .12s,background .15s}
-.cgate .cg-logout-circle b{font-family:'Fira Sans',system-ui,sans-serif;font-size:30px;font-weight:700;letter-spacing:.2px}
-.cgate .cg-logout-circle:hover{background:#FFF7F6}
-.cgate .cg-logout-circle:active{transform:scale(.97)}
+/* Log out row in light red. */
+.cgate .cg-logout-row{background:#F9D3CE;border-color:#EFB3AB !important}
+.cgate .cg-logout-row:hover{background:#F6C6C0}
+.cgate .cg-logout-row:active{background:#F2B8B0}
+.cgate .cg-logout-row .cg-logout-ic{background:#FFFFFF;color:#C0392B}
+.cgate .cg-logout-row .cg-logout-chev{color:#C0392B}
+.cgate .cg-logout-row .cg-logout-txt b{color:#14202E}
+.cgate .cg-logout-row .cg-logout-txt em{color:#14202E}
+.cgate .cg-logout-row .cg-logout-txt{flex:1;align-items:center;text-align:center;gap:6px;margin-right:26px}
+.cgate .cg-logout-row .cg-logout-txt b,.cgate .cg-logout-row .cg-logout-txt em{background:#FFFFFF;border-radius:999px;padding:4px 14px}
