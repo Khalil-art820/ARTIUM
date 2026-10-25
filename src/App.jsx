@@ -2475,6 +2475,17 @@ async function markPromoteVerdictsSeen(userId) {
   } catch { /* private mode */ }
 }
 
+// Where this tab was, so a refresh lands on the same page. sessionStorage:
+// per tab, survives a reload, gone when the tab is closed.
+const NAV_KEY = "artium_nav_v1";
+const NAV_SKIP = ["confirmEmail", "login"]; // need state a reload can't bring back
+function readNav() {
+  try {
+    const n = JSON.parse(sessionStorage.getItem(NAV_KEY) || "null");
+    return n && n.screen && !NAV_SKIP.includes(n.screen) ? n : null;
+  } catch { return null; }
+}
+
 export default function App() {
   const [unlocked, setUnlocked] = useState(() => localStorage.getItem(ACCESS_KEY) === "1");
   const [onlineCount, setOnlineCount] = useState(1);
@@ -2535,11 +2546,18 @@ export default function App() {
   // signed-in header and a card leading back in. Every screen is a door and
   // the list only grows. Collapsing them to a single expression means a new
   // screen is covered the day it is written, by nobody remembering anything.
-  const [screen, setScreen] = useState("entry");
+  // Read once: the page this tab was on before a reload, if any.
+  const navRef = useRef(undefined);
+  if (navRef.current === undefined) navRef.current = readNav();
+  const nav0 = navRef.current;
+  // While true, the sign-in routing below leaves the restored page alone
+  // instead of sending a member from the home page into the app.
+  const navRestoring = useRef(!!nav0);
+  const [screen, setScreen] = useState(() => nav0?.screen || "entry");
   // Which tab LearnerScreen opens on: the gate avatar wants "profile",
   // every other entrance wants the map. Reset to "map" after profile use
   // happens at each entrance below.
-  const [learnerStartTab, setLearnerStartTab] = useState("map");
+  const [learnerStartTab, setLearnerStartTab] = useState(() => (nav0?.screen === "learnerMap" && sessionStorage.getItem("artium_learner_tab")) || "map");
   // A gate-bell tap carries its destination across the screen switch.
   const [learnerEntryFocus, setLearnerEntryFocus] = useState(null);
   // A promo-verdict bell tap opens PromoteMe directly on the right
@@ -2622,12 +2640,17 @@ export default function App() {
   // being opened in a different browser/device than the one used to sign up).
   useEffect(() => {
     if (authLoading) return;
+    // A page restored after a reload stays put: the home page is not a
+    // place to be bounced out of just because the session came back. Only
+    // the first settled pass; a fresh sign-in later routes as normal.
+    const kept = navRestoring.current && ["entry", "landing"].includes(screen);
+    navRestoring.current = false;
     // The hirer's whole account lives in auth metadata — no profiles row, so
     // authProfile never resolves for them and the branches below would never
     // fire. Caught here, first, the same way the learner and student routes
     // are caught by what did load.
     if (authUser?.user_metadata?.role === "concert_hirer") {
-      if (["entry", "landing", "login", "confirmEmail", "hirerSignup"].includes(screen)) {
+      if (["entry", "landing", "login", "confirmEmail", "hirerSignup"].includes(screen) && !kept) {
         setScreen("hirerApp");
       }
       return;
@@ -2636,7 +2659,7 @@ export default function App() {
       if (authProfile.role === "learner") {
         setLearnerProfile({ name: authProfile.name, location: authProfile.location, instrument: authProfile.instrument, bio: authProfile.bio, photoUrl: authProfile.photo_url });
         setLearnerLoggedOut(false);
-        if (["entry", "landing", "login", "confirmEmail", "learnerSignup"].includes(screen)) {
+        if (["entry", "landing", "login", "confirmEmail", "learnerSignup"].includes(screen) && !kept) {
           setLearnerStartTab("map");
           setLearnerStartTab("map");
       setScreen("learnerMap");
@@ -2658,7 +2681,7 @@ export default function App() {
       if (authProfile.approved === false) {
         // Document-proof student still awaiting manual review.
         if (["entry", "landing", "login", "confirmEmail"].includes(screen)) setScreen("pendingReview");
-      } else if (screen === "entry" || screen === "landing" || screen === "login" || screen === "confirmEmail") {
+      } else if ((screen === "entry" || screen === "landing" || screen === "login" || screen === "confirmEmail") && !kept) {
         // Default view is the full conservatory list now; the welcome
         // block's own-conservatory row is the shortcut into the roster.
         setScreen("app");
@@ -2809,9 +2832,9 @@ export default function App() {
   }, [draft.verifyMethod]);
   const [step, setStep] = useState(0);
 
-  const [selectedConsId, setSelectedConsId] = useState(null);
-  const [selectedStudentId, setSelectedStudentId] = useState(null);
-  const [profileBack, setProfileBack] = useState("map");
+  const [selectedConsId, setSelectedConsId] = useState(() => nav0?.selectedConsId ?? null);
+  const [selectedStudentId, setSelectedStudentId] = useState(() => nav0?.selectedStudentId ?? null);
+  const [profileBack, setProfileBack] = useState(() => nav0?.profileBack || "map");
 
   // Every school the map knows about beyond the bundled list: the roster in
   // the database, and conservatories established from an approved document.
@@ -3474,6 +3497,32 @@ export default function App() {
     setDraft({ ...emptyDraft(), ...myProfile, instruments: instrumentsOf(myProfile), years: myProfile.year || "", pieces: myProfile.pieces || [], tastes: myProfile.tastes || [], composerDay: myProfile.composerDay || "" });
     setStep(0); setEditingProfile(true); setScreen("signup");
   }
+  // Remember where this tab is (see readNav) on every move.
+  useEffect(() => {
+    try { sessionStorage.setItem(NAV_KEY, JSON.stringify({ screen, step, editing: editingProfile, selectedStudentId, selectedConsId, profileBack })); } catch {}
+  }, [screen, step, editingProfile, selectedStudentId, selectedConsId, profileBack]);
+  // Sign-up after a reload: the form itself has to come back too, not just
+  // the page. Waits for the session (and, for Edit profile, the profile).
+  // Not across a Google sign-in round-trip: that return has its own restore.
+  const navSignupPending = useRef(nav0?.screen === "signup" && !sessionStorage.getItem("artium_google_role"));
+  useEffect(() => {
+    if (!navSignupPending.current || authLoading) return;
+    if (!authUser) { navSignupPending.current = false; return; }
+    if (nav0.editing) {
+      if (!myProfile) return;
+      editProfile();
+    } else if (!authProfile) {
+      startApply();   // restores the saved draft
+    } else {
+      // An account with a profile isn't mid-registration: a rejected one is
+      // restored by the reapply check, anyone else belongs in the app.
+      navSignupPending.current = false;
+      if (authProfile.approved !== false) { setScreen(authProfile.role === "learner" ? "learnerMap" : "app"); }
+      return;
+    }
+    navSignupPending.current = false;
+    setStep(nav0.step || 0);
+  }, [authLoading, authUser, authProfile, myProfile]); // eslint-disable-line react-hooks/exhaustive-deps
   function openStudent(id, from) { setSelectedStudentId(id); setProfileBack(from); }
   function backFromProfile() { setSelectedStudentId(null); setAppTabPersist(profileBack === "chat" ? "messages" : profileBack === "profile" ? "profile" : "map"); }
   function openChat(id) {
@@ -13332,6 +13381,7 @@ function LearnerNotificationBell({ authUser, teachers, learnerSessionsByTeacher,
 /* ---- Learner home: map + request + chat ---- */
 function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendRequest, conversations, activeChatId, setActiveChatId, onSend, onSendTo, onBack, onUpdateProfile, onLogout, onDeleteAccount, memberCount, musicOn, onMusicToggle, avatarPhotoUrl, avatarName, initialTab = "map", authUser, lessonDot }) {
   const [appTab, setAppTab] = useState(initialTab);
+  useEffect(() => { try { sessionStorage.setItem("artium_learner_tab", appTab); } catch {} }, [appTab]);
   const [selectedConsId, setSelectedConsId] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
   const [activeLessonTeacherId, setActiveLessonTeacherId] = useState(null);
