@@ -653,8 +653,8 @@
 .cgate .cf-card.is-on .cf-cap.cf-cap-row{border-radius:50% 50% 21px 21px / 14px 14px 21px 21px}
 .cgate .cf-card.is-outer:not(.is-right) .cf-cap{left:5px;right:54%}
 /* Log out row in light red. */
-.cgate .cg-logout-row{background:#FDECEA;border-color:#F5CFCB !important}
-.cgate .cg-logout-row:hover{background:#FBE2DF}
-.cgate .cg-logout-row:active{background:#F8D6D2}
+.cgate .cg-logout-row{background:#F9D3CE;border-color:#EFB3AB !important}
+.cgate .cg-logout-row:hover{background:#F6C6C0}
+.cgate .cg-logout-row:active{background:#F2B8B0}
 .cgate .cg-logout-row .cg-logout-ic{background:#FFFFFF;color:#C0392B}
 .cgate .cg-logout-row .cg-logout-chev{color:#C0392B}
