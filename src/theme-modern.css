@@ -1139,3 +1139,10 @@ html.theme-modern .artium-lp--light .artium-lp-h2{font-size:clamp(28px,8.4vw,44p
 .pc-status.is-off .pc-status-card{opacity:.4;cursor:not-allowed;filter:saturate(.3)}
 .terms-check .terms-box{flex:none;width:20px;height:20px;margin-top:1px;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:5px;border:1.5px solid #8C9694;background:#FFFFFF;color:#FFFFFF;text-decoration:none;cursor:pointer}
 .terms-check .terms-box.is-on{background:#0F5C52;border-color:#0F5C52}
+/* Legal documents open as a full page, not a window */
+.terms-page{position:fixed;inset:0;z-index:400;background:#FFFFFF;display:flex;justify-content:center}
+.terms-page .terms-sheet{max-width:760px;max-height:none;height:100%;height:100dvh;border-radius:0}
+.terms-page .terms-head{gap:12px;justify-content:flex-start;padding:calc(12px + env(safe-area-inset-top)) 16px 12px}
+.terms-page .terms-head h2{flex:1;min-width:0}
+.terms-page .terms-body{flex:1;min-height:0;padding:16px 22px 32px;font-size:15px}
+.terms-page .terms-head .terms-back{flex:none}

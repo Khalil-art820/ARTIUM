@@ -12714,16 +12714,16 @@ function TermsSheet({ onClose, doc: start = "terms", onAccept }) {
   const fr = lang === "fr";
   const left = MUST_READ.filter((k) => !read.has(k));
   const allRead = left.length === 0;
-  return (
-    <div className="fixed flex items-end sm:items-center justify-center" style={{ inset: 0, zIndex: 400, background: "rgba(0,0,0,.5)" }} onClick={onClose}>
-      <div className="terms-sheet" onClick={(e) => e.stopPropagation()} role="dialog" aria-label={title}>
+  // A page of its own, over everything (portalled so no parent window or
+  // transform can shrink it), with Back where a page has it.
+  return ReactDOM.createPortal(
+    <div className="terms-page" role="dialog" aria-modal="true" aria-label={title}>
+      <div className="terms-sheet">
         <div className="terms-head">
+          <button type="button" className="terms-back" onClick={onClose} aria-label="Back"><ChevronLeft size={19} strokeWidth={2} /></button>
           <h2>{title}</h2>
-          <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span className="terms-lang" role="group" aria-label="Language">
-              {["fr", "en"].map((l) => <button key={l} type="button" className={lang === l ? "is-on" : ""} onClick={() => setLang(l)}>{l.toUpperCase()}</button>)}
-            </span>
-            <button type="button" onClick={onClose} aria-label="Close"><X size={18} /></button>
+          <span className="terms-lang" role="group" aria-label="Language">
+            {["fr", "en"].map((l) => <button key={l} type="button" className={lang === l ? "is-on" : ""} onClick={() => setLang(l)}>{l.toUpperCase()}</button>)}
           </span>
         </div>
         <div className="terms-tabs" role="tablist">
@@ -12773,7 +12773,8 @@ function TermsSheet({ onClose, doc: start = "terms", onAccept }) {
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 // "I have read and accept the Terms & Conditions and the Privacy Policy".
