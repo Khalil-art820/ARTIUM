@@ -3092,6 +3092,8 @@ export default function App() {
       setAuthError("You're already registered as a piano enthusiast with this account. You can't also sign up as a conservatory student — log out first if you want to create a separate account with a different email.");
       return;
     }
+    // Redoing a rejected application: their answers are already in the draft.
+    if (reapply) { setStep(0); setEditingProfile(false); setAuthError(""); setScreen("signup"); return; }
     const saved = readSavedDraft();
     const authed = freshAuthedDraft();
     // instruments last, and through the reader: a draft saved before the field
@@ -3183,6 +3185,9 @@ export default function App() {
   function accountHomeScreen() {
     if (authUser?.user_metadata?.role === "concert_hirer") return "hirerApp";
     if (authProfile?.role === "learner") return "learnerMap";
+    // A rejected applicant has no home in the app yet: the gate treats them
+    // like any registrant and shows the globe page first.
+    if (reapply) return null;
     if (authProfile) return "app";
     return null;
   }
