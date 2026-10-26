@@ -5,8 +5,8 @@ import * as THREE from "three";
 /**
  * The Network tab's globe: a night Earth in the app's teal — deep ocean,
  * green land with lit coastlines, and gold city lights that glow on the shaded
- * side too (NASA Black Marble 2016 lights over Natural Earth 10m coastlines,
- * recoloured into public/earth-*-artium-v2.jpg, and an 8K "-hd" pair that
+ * side too (NASA Black Marble 2016 lights over Natural Earth 10m coastlines and lakes,
+ * recoloured into public/earth-*-artium-v3.jpg, and an 8K "-hd-v3" pair that
  * loads once someone zooms in — see scripts/globe-night-texture.py). Then: mint
  * points at every conservatory, thin arcs between the places members study,
  * and the members themselves as portrait markers at their conservatory.
@@ -17,10 +17,10 @@ import * as THREE from "three";
  * own visibility test, so a face never floats through the sphere.
  */
 
-const EARTH_URL = "/earth-night-artium-v2.jpg";
-const LIGHTS_URL = "/earth-lights-artium-v2.jpg";
-const EARTH_HD_URL = "/earth-night-artium-hd.jpg";     // 8192 x 4096
-const LIGHTS_HD_URL = "/earth-lights-artium-hd.jpg";   // 8192 x 4096
+const EARTH_URL = "/earth-night-artium-v3.jpg";
+const LIGHTS_URL = "/earth-lights-artium-v3.jpg";
+const EARTH_HD_URL = "/earth-night-artium-hd-v3.jpg";     // 8192 x 4096
+const LIGHTS_HD_URL = "/earth-lights-artium-hd-v3.jpg";   // 8192 x 4096
 const MINT = "#42C9B8";
 const DEFAULT_POV = { lat: 34, lng: -12, altitude: 1.36 };
 // The camera distance that draws the globe at a given on-screen diameter:

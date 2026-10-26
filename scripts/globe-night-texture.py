@@ -1,7 +1,7 @@
 # Usage: python3 scripts/globe-night-texture.py BlackMarble_2016_3km.jpg land16k.png public 4096   (then 8192)
 #   Black Marble: eoimages.gsfc.nasa.gov/images/imagerecords/144000/144898/BlackMarble_2016_3km.jpg
-#   land16k.png:  scripts/globe-landmask.py ne_10m_land.shp land16k.png 16384  (naciscdn.org/naturalearth/10m/physical/ne_10m_land.zip)
-# 4096 writes earth-*-artium-v2.jpg, 8192 writes earth-*-artium-hd.jpg.
+#   land16k.png:  scripts/globe-landmask.py ne_10m_land.shp land16k.png 16384 ne_10m_lakes.shp  (Natural Earth 10m land + lakes)
+# 4096 writes earth-*-artium-v3.jpg, 8192 writes earth-*-artium-hd-v3.jpg (bump on rebuild: the app caches them).
 # Artium night Earth, rebuilt from sharper sources: NASA Black Marble 2016
 # (13500px lights) + Natural Earth 10m land (rasterised at 16K). Same recipe
 # and colours as earth-night-artium-v1; brightness matched to that source.
@@ -34,7 +34,7 @@ base = ocean * (1 - land[..., None]) + landc * land[..., None]
 base = base * (1 - edge[..., None] * .6) + coast * edge[..., None] * .6
 gold = np.array([1.0, 0.82, 0.45]); core = np.array([1.0, 0.95, 0.78])
 img = np.clip(base + gold * (glow[..., None] * 0.75) + core * (lights[..., None] * 0.55), 0, 1)
-tag = "hd" if W > 4096 else "v2"
+tag = "hd-v3" if W > 4096 else "v3"
 Image.fromarray((img * 255).astype(np.uint8)).save(f"{out}/earth-night-artium-{tag}.jpg", quality=84, optimize=True, progressive=True)
 em = np.clip(gold * (glow[..., None] * 0.6) + core * lights[..., None], 0, 1)
 # The lights glow on top of the map, so in HD they are full size too.
