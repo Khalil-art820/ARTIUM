@@ -79,7 +79,6 @@ const NetworkPreview = import.meta.env.DEV && new URLSearchParams(location.searc
           <div className="tm-hello" style={{ margin: "-20px -16px 0" }}>
             <div className="tm-hello-l">
               <p className="tm-hello-eyebrow">Welcome back,</p>
-              <span className="tm-hello-rule" />
               <h2 className="tm-hello-name">Khalil</h2>
             </div>
           </div>

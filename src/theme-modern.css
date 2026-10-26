@@ -809,7 +809,6 @@ html.theme-modern .tm-hello-l{min-width:0}
 html.theme-modern .tm-hello-eyebrow{margin:0;font:400 13px/1 'Fira Sans',system-ui,sans-serif;letter-spacing:.22em;text-transform:uppercase;color:#5B6E6B}
 html.theme-modern .tm-hello-name{margin:6px 0 0;font-family:'Cormorant Garamond','Didot',Georgia,serif;font-weight:600;
   font-size:clamp(46px,14vw,60px);line-height:.95;letter-spacing:-.01em;color:#0B3A36}
-html.theme-modern .tm-hello-rule{display:block;width:30px;height:1.5px;margin:12px 0 11px;background:#C7A66A;border-radius:1px}
 html.theme-modern .tm-hello-tag{margin:0;max-width:16em;font:400 10.5px/1.7 'Fira Sans',system-ui,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:#7A8583}
 html.theme-modern .tm-hello-script{position:relative;flex:none;margin:30px 0 0;padding-bottom:10px;transform:rotate(-9deg);transform-origin:right center;
   font-family:'Pinyon Script','Cormorant Garamond',Georgia,serif;font-size:clamp(17px,5vw,22px);line-height:1.2;color:#0B3A36;text-align:right;white-space:nowrap}
@@ -858,7 +857,6 @@ html.theme-modern .nx-down{right:14px}
 /* ==== Network welcome, round 4: the Sara mockup ==== */
 html.theme-modern .tm-hello{padding:26px 22px 6px}
 html.theme-modern .tm-hello-eyebrow{font:500 13px/1 'Jost','Fira Sans',system-ui,sans-serif;letter-spacing:.34em;color:#1E3A35}
-html.theme-modern .tm-hello-rule{width:26px;height:1.5px;margin:12px 0 6px;background:#C7A66A}
 html.theme-modern .tm-hello-name{margin:0;font-family:'Playfair Display','DM Serif Display',Georgia,serif;font-weight:800;
   font-size:clamp(54px,17vw,76px);line-height:1;letter-spacing:-.01em;color:#12352E}
 
@@ -1160,3 +1158,12 @@ html.theme-modern .tm-count-btn:not(:disabled):active{transform:scale(.96)}
 /* Counter portraits: the same 38px as the radio and bell discs; the pill keeps its size. */
 html.theme-modern .tm-hm-faces img{width:38px;height:38px}
 html.theme-modern .tm-hm-faces img + img{margin-left:-13px}
+/* Welcome greeting in the Facebook wordmark's manner: the name in a heavy,
+   rounded geometric sans (Figtree — the closest open font to Facebook's own),
+   Facebook blue, tight tracking; "Welcome back" in the same family, light grey,
+   sentence case. Left-aligned. */
+html.theme-modern .tm-hello{justify-content:flex-start;text-align:left}
+html.theme-modern .tm-hello-l{text-align:left}
+html.theme-modern .tm-hello-eyebrow{font:500 17px/1.2 'Figtree','Fira Sans',system-ui,sans-serif;letter-spacing:-.01em;text-transform:none;color:#65676B}
+html.theme-modern .tm-hello-name{margin:2px 0 0;font-family:'Figtree','Fira Sans',system-ui,sans-serif;font-weight:800;font-size:44px;line-height:1.05;
+  letter-spacing:-.035em;color:#0866FF;text-transform:none;font-style:normal}

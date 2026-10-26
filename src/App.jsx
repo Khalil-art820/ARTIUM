@@ -5629,8 +5629,7 @@ export default function App() {
                   <div className="tm-hello">
                     <div className="tm-hello-l">
                       <p className="tm-hello-eyebrow">Welcome back,</p>
-                      <span className="tm-hello-rule" aria-hidden="true" />
-                      <h2 className="tm-hello-name">{myProfile.name.split(" ")[0]}</h2>
+                      <h2 className="tm-hello-name" data-no-translate="">{myProfile.name.split(" ")[0]}</h2>
                     </div>
                   </div>
                 ) : (
