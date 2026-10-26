@@ -1155,3 +1155,7 @@ html.theme-modern .artium-lp--light .artium-lp-h2{font-size:clamp(28px,8.4vw,44p
 
 /* Globe: vertical swipes scroll the page (see NetworkGlobe). */
 html.theme-modern .ng-wrap canvas{touch-action:pan-y !important}
+/* Member counter in the top bars: the way to your profile. */
+html.theme-modern .tm-count-btn{border:0;background:none;font:inherit;cursor:pointer;border-radius:999px;-webkit-tap-highlight-color:transparent}
+html.theme-modern .tm-count-btn:disabled{cursor:default}
+html.theme-modern .tm-count-btn:not(:disabled):active{transform:scale(.96)}

@@ -665,46 +665,10 @@
 .cgate .cg-lp-ic svg{width:20px;height:20px;display:block}
 .cgate .cg-logout-pill b{font-size:17px;font-weight:600;color:#C8372D;display:inline-flex;align-items:center;height:36px;line-height:1;padding:0 16px;border-radius:999px;border:1.5px solid #C8372D;box-sizing:border-box}
 .cgate .cg-lp-chev{position:absolute;right:20px;top:50%;transform:translateY(-50%);width:18px;height:18px;display:block}
-/* ---- Top bar: three-line menu (Chordify style) and the counter as a button ---- */
-.cgate .cg-burger{width:38px;height:38px;flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
-  border:0;background:none;border-radius:10px;cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent}
-.cgate .cg-burger span{display:block;width:22px;height:2.4px;border-radius:2px;background:#FFFFFF}
-.cgate .cg-burger:hover{background:rgba(255,255,255,.14)}
-.cgate .cg-burger:active{transform:scale(.94)}
+/* ---- Top bar: the counter as a button (menu: components/ArtiumMenu) ---- */
 .cgate button.cg-count{border:0;background:none;color:inherit;font:inherit;cursor:pointer;border-radius:999px;-webkit-tap-highlight-color:transparent}
 .cgate button.cg-count:disabled{cursor:default}
 .cgate button.cg-count:not(:disabled):active{transform:scale(.96)}
-
-/* ---- Menu panel, in Facebook's manner ---- */
-.cgate .cg-menu-root{position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.42);animation:cgFade .18s ease}
-.cgate .cg-menu{position:absolute;top:0;bottom:0;left:0;width:min(86vw,380px);background:#FFFFFF;overflow-y:auto;
-  padding:calc(14px + env(safe-area-inset-top)) 0 calc(20px + env(safe-area-inset-bottom));box-shadow:4px 0 24px rgba(0,0,0,.18);
-  font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#050505;animation:cgSlide .22s cubic-bezier(.2,.8,.2,1)}
-@keyframes cgFade{from{opacity:0}to{opacity:1}}
-@keyframes cgSlide{from{transform:translateX(-100%)}to{transform:none}}
-.cgate .cg-menu-card{display:flex;align-items:center;gap:12px;margin:0 12px 14px;padding:12px 14px;border-radius:14px;background:#FFFFFF;
-  box-shadow:0 1px 2px rgba(0,0,0,.1),0 4px 14px rgba(0,0,0,.08)}
-.cgate .cg-menu-mark{width:44px;height:44px;border-radius:50%;flex:none;display:grid;place-items:center;background:var(--teal);color:#FFFFFF}
-.cgate .cg-menu-mark svg{width:20px;height:20px}
-.cgate .cg-menu-name{flex:1;min-width:0;display:flex;flex-direction:column}
-.cgate .cg-menu-name b{font-size:17px;font-weight:600;color:#050505}
-.cgate .cg-menu-name em{font-style:normal;font-size:13px;color:#65676B}
-.cgate .cg-menu-x{width:36px;height:36px;border-radius:50%;border:0;background:#E4E6EB;color:#050505;display:grid;place-items:center;cursor:pointer;flex:none}
-.cgate .cg-menu-list{border-top:1px solid #E4E6EB}
-.cgate .cg-menu-sec{border-bottom:1px solid #E4E6EB}
-.cgate .cg-menu-row{width:100%;display:flex;align-items:center;gap:12px;padding:13px 16px;border:0;background:none;cursor:pointer;
-  color:#050505;font:500 17px system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;text-align:left;-webkit-tap-highlight-color:transparent}
-.cgate .cg-menu-row > span{flex:1}
-.cgate .cg-menu-row svg:last-child{color:#65676B}
-.cgate .cg-menu-row:active{background:#F2F2F2}
-.cgate .cg-menu-body{padding:0 16px 16px 54px;font-size:15px;line-height:1.45;color:#050505}
-.cgate .cg-menu-body p{margin:0 0 10px}
-.cgate .cg-menu-faq{margin:0}
-.cgate .cg-menu-faq dt{font-weight:600;margin:0 0 3px}
-.cgate .cg-menu-faq dd{margin:0 0 12px;color:#65676B}
-.cgate .cg-menu-btn{display:flex;align-items:center;justify-content:center;height:38px;border-radius:8px;background:#E4E6EB;color:#050505;
-  font-weight:600;font-size:15px;text-decoration:none}
-.cgate .cg-menu-btn:active{background:#D8DADF}
 
 /* ---- Footer language picker ---- */
 .cgate .cg-lang{position:relative}

@@ -3,6 +3,7 @@ import InlineWord from "../ArtiumWord";
 import { CARDS, useTourActivation, useSpotlightTour, TourSpotlight, TourCard } from "./ArtiumGate";
 import { installState } from "../../pwa.js";
 import PartnerRequestSheet, { VacantPartnerTile } from "../PartnerRequest.jsx";
+import ArtiumMenu, { LANGS, useLang } from "../ArtiumMenu.jsx";
 import "./artium-gate-chordify.css";
 
 // Alternative entry gate in Chordify's design language (flat, teal, one sans).
@@ -17,15 +18,9 @@ const Svg = ({ children, size = 22, fill = "none", sw = 2 }) => (
     strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{children}</svg>
 );
 
-// The language the visitor picked in the footer. Only the languages the app
-// actually has text in are offered; the legal documents read it too.
-export const LANGS = [["en", "English"], ["fr", "Français"]];
-function readLang() {
-  try { const v = localStorage.getItem("artium_lang"); if (LANGS.some(([k]) => k === v)) return v; } catch { /* private mode */ }
-  try { return /^fr/i.test(navigator.language || "") ? "fr" : "en"; } catch { return "en"; }
-}
+// Footer language picker; the same choice as Settings in the menu.
 function LanguagePicker() {
-  const [lang, setLang] = React.useState(readLang);
+  const [lang, setLangShared] = useLang();
   const [open, setOpen] = React.useState(false);
   const ref = React.useRef(null);
   React.useEffect(() => {
@@ -34,11 +29,7 @@ function LanguagePicker() {
     document.addEventListener("pointerdown", off);
     return () => document.removeEventListener("pointerdown", off);
   }, [open]);
-  const pick = (k) => {
-    setLang(k); setOpen(false);
-    try { localStorage.setItem("artium_lang", k); } catch { /* private mode */ }
-    try { window.dispatchEvent(new Event("artium-lang")); } catch { /* old browser */ }
-  };
+  const pick = (k) => { setLangShared(k); setOpen(false); };
   const label = (LANGS.find(([k]) => k === lang) || LANGS[0])[1];
   return (
     <div className="cg-lang" ref={ref}>
@@ -59,87 +50,6 @@ function LanguagePicker() {
         <span>{label}</span>
         <Svg size={15} sw={2}><path d="M6 9l6 6 6-6" /></Svg>
       </button>
-    </div>
-  );
-}
-
-// The three-line menu: a side panel in Facebook's manner — white sheet over a
-// dimmed page, a raised card at the top, rows with an outline icon and a
-// chevron that open in place.
-const MENU_SECTIONS = [
-  {
-    k: "about", label: "About us",
-    icon: <><circle cx="12" cy="12" r="9" /><path d="M12 11v5.5M12 7.6v.2" /></>,
-    body: () => (
-      <>
-        <p>Artium is a network for classical music. Conservatory students and graduates meet one another across schools and countries, music learners find a teacher, and anyone can book a musician for a concert or an event.</p>
-        <p>Every student on Artium is verified with their conservatory, so the people you meet are who they say they are.</p>
-      </>
-    ),
-  },
-  {
-    k: "help", label: "Help center",
-    icon: <><circle cx="12" cy="12" r="9" /><path d="M9.6 9.3a2.5 2.5 0 0 1 4.8.9c0 1.7-2.4 2.2-2.4 3.6M12 16.9v.2" /></>,
-    body: () => (
-      <dl className="cg-menu-faq">
-        <dt>How do I join?</dt>
-        <dd>Tap “Join as a Conservatory Student or Graduate” on the home page, create your account, then verify your conservatory with your school email or a document. Documents are checked by our team.</dd>
-        <dt>How do I edit my profile?</dt>
-        <dd>Tap the member photos with the counter at the top of the page to open your profile.</dd>
-        <dt>My application wasn't approved</dt>
-        <dd>Sign in again: your answers are kept. Update what's needed, verify again and resubmit.</dd>
-        <dt>Still stuck?</dt>
-        <dd>Write to us from Contact below.</dd>
-      </dl>
-    ),
-  },
-  {
-    k: "contact", label: "Contact",
-    icon: <><rect x="3" y="5.5" width="18" height="13" rx="2.2" /><path d="M3.8 7l8.2 6 8.2-6" /></>,
-    body: () => (
-      <>
-        <p>Questions, a problem with your account, or a partnership idea: write to us and we'll get back to you.</p>
-        <a className="cg-menu-btn" href="mailto:contact@art-ium.com">contact@art-ium.com</a>
-      </>
-    ),
-  },
-];
-function MenuDrawer({ open, onClose }) {
-  const [openK, setOpenK] = React.useState(null);
-  React.useEffect(() => {
-    if (!open) return;
-    const esc = (e) => { if (e.key === "Escape") onClose(); };
-    document.addEventListener("keydown", esc);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => { document.removeEventListener("keydown", esc); document.body.style.overflow = prev; };
-  }, [open, onClose]);
-  if (!open) return null;
-  return (
-    <div className="cg-menu-root" role="dialog" aria-modal="true" aria-label="Menu" onClick={onClose}>
-      <nav className="cg-menu" onClick={(e) => e.stopPropagation()}>
-        <div className="cg-menu-card">
-          <span className="cg-menu-mark" aria-hidden="true">
-            <svg viewBox="0 0 15 15"><path d="M7.5 0.9 L1.4 14.4 M7.5 0.9 L13.6 14.4" stroke="currentColor" strokeWidth="2.85" fill="none" /></svg>
-          </span>
-          <span className="cg-menu-name"><b>Artium</b><em>A world connected by music</em></span>
-          <button type="button" className="cg-menu-x" onClick={onClose} aria-label="Close menu">
-            <Svg size={20} sw={2.2}><path d="M6 6l12 12M18 6L6 18" /></Svg>
-          </button>
-        </div>
-        <div className="cg-menu-list">
-          {MENU_SECTIONS.map(({ k, label, icon, body }) => (
-            <section key={k} className={`cg-menu-sec${openK === k ? " is-open" : ""}`}>
-              <button type="button" className="cg-menu-row" aria-expanded={openK === k} onClick={() => setOpenK((o) => (o === k ? null : k))}>
-                <Svg size={26} sw={1.7}>{icon}</Svg>
-                <span>{label}</span>
-                <Svg size={20} sw={2}><path d={openK === k ? "M6 15l6-6 6 6" : "M6 9l6 6 6-6"} /></Svg>
-              </button>
-              {openK === k && <div className="cg-menu-body">{body()}</div>}
-            </section>
-          ))}
-        </div>
-      </nav>
     </div>
   );
 }
@@ -345,7 +255,7 @@ function CardFan({ active, onActive, cards = FAN_CARDS }) {
 export default function ArtiumGateChordify({
   onLearner, onStudent, onPianist, onComposers, onNews,
   learnerProfile, studentLoggedIn, musicOn, onMusicToggle, memberCount,
-  avatarPhotoUrl, avatarName, onAvatar, onLogout, memberChips, bellSlot, avatarNode, featuredMembers,
+  avatarPhotoUrl, avatarName, onAvatar, onLogout, memberChips, bellSlot, avatarNode, featuredMembers, legalSheet,
 }) {
   React.useEffect(() => {
     const id = "cgate-font";
@@ -380,8 +290,6 @@ export default function ArtiumGateChordify({
   // A featured student leads; with none chosen, Piano does.
   const [fanActive, setFanActive] = React.useState(featuredCount ? 0 : 1);
   React.useEffect(() => { setFanActive(featuredCount ? 0 : 1); }, [featuredCount]);
-  const [menuOpen, setMenuOpen] = React.useState(false);
-  const closeMenu = React.useCallback(() => setMenuOpen(false), []);
   const activateStudent = (e) => { if (e && e.preventDefault) e.preventDefault(); if (!medallionOff && onStudent) onStudent(); };
 
   return (
@@ -391,9 +299,7 @@ export default function ArtiumGateChordify({
           <div className="cg-brand">
           {/* The menu leads the bar, before the wordmark (your profile is
               on the member counter now). */}
-          <button type="button" className="cg-burger" onClick={() => setMenuOpen(true)} aria-label="Menu" aria-haspopup="dialog" aria-expanded={menuOpen}>
-            <span /><span /><span />
-          </button>
+          <ArtiumMenu onProfile={onAvatar} onLogout={onLogout} legalSheet={legalSheet} />
           <div className="cg-word" aria-label="ARTIUM">
             {/* The house wordmark, kept from the original gate: Jost caps,
                 wide tracking, and the crossbar-less A drawn as a glyph. */}
@@ -549,8 +455,6 @@ export default function ArtiumGateChordify({
         <LanguagePicker />
         <div>© 2026 <InlineWord />. All rights reserved.</div>
       </footer>
-
-      <MenuDrawer open={menuOpen} onClose={closeMenu} />
 
       {tourAllowed && tour.visible && tour.spot && (
         <div className="tour-overlay" role="dialog" aria-modal="true" aria-label="Guided tour">

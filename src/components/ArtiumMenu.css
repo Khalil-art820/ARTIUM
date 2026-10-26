@@ -1,0 +1,52 @@
+/* Three-line menu button (Chordify style) — sits on the teal top bars. */
+.am-burger{width:38px;height:38px;flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+  border:0;background:none;border-radius:10px;cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent}
+.am-burger span{display:block;width:22px;height:2.4px;border-radius:2px;background:#FFFFFF}
+.am-burger:hover{background:rgba(255,255,255,.14)}
+.am-burger:active{transform:scale(.94)}
+
+/* The panel, in Facebook's manner. */
+.am-root{position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.42);animation:amFade .18s ease}
+.am-panel{position:absolute;top:0;bottom:0;left:0;width:min(86vw,380px);background:#FFFFFF;overflow-y:auto;display:flex;flex-direction:column;
+  padding:calc(14px + env(safe-area-inset-top)) 0 calc(20px + env(safe-area-inset-bottom));box-shadow:4px 0 24px rgba(0,0,0,.18);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#050505;text-align:left;
+  animation:amSlide .22s cubic-bezier(.2,.8,.2,1)}
+@keyframes amFade{from{opacity:0}to{opacity:1}}
+@keyframes amSlide{from{transform:translateX(-100%)}to{transform:none}}
+.am-card{display:flex;align-items:center;gap:12px;margin:0 12px 14px;padding:12px 14px;border-radius:14px;background:#FFFFFF;
+  box-shadow:0 1px 2px rgba(0,0,0,.1),0 4px 14px rgba(0,0,0,.08)}
+.am-mark{width:44px;height:44px;border-radius:50%;flex:none;display:grid;place-items:center;background:#086868;color:#FFFFFF}
+.am-mark svg{width:20px;height:20px}
+.am-name{flex:1;min-width:0;display:flex;flex-direction:column}
+.am-name b{font-size:17px;font-weight:600;color:#050505}
+.am-name em{font-style:normal;font-size:13px;color:#65676B}
+.am-x{width:36px;height:36px;border-radius:50%;border:0;background:#E4E6EB;color:#050505;display:grid;place-items:center;cursor:pointer;flex:none}
+.am-list{border-top:1px solid #E4E6EB}
+.am-sec{border-bottom:1px solid #E4E6EB}
+.am-row{width:100%;display:flex;align-items:center;gap:12px;padding:13px 16px;border:0;background:none;cursor:pointer;
+  color:#050505;font:500 17px system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;text-align:left;-webkit-tap-highlight-color:transparent}
+.am-row > span{flex:1}
+.am-row svg:last-child{color:#65676B}
+.am-row:active{background:#F2F2F2}
+.am-body{padding:0 16px 16px 54px;font-size:15px;line-height:1.45;color:#050505}
+.am-body p{margin:0 0 10px}
+.am-faq{margin:0}
+.am-faq dt{font-weight:600;margin:0 0 3px}
+.am-faq dd{margin:0 0 12px;color:#65676B}
+.am-btn{display:flex;align-items:center;justify-content:center;height:38px;border-radius:8px;background:#E4E6EB;color:#050505;
+  font-weight:600;font-size:15px;text-decoration:none}
+.am-btn:active{background:#D8DADF}
+/* Settings */
+.am-sub{margin:4px 0 6px !important;font-size:13px;font-weight:600;color:#65676B;text-transform:uppercase;letter-spacing:.04em}
+.am-choices{display:flex;flex-direction:column;margin-bottom:14px;border-radius:10px;background:#F0F2F5;overflow:hidden}
+.am-choices button{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border:0;background:none;cursor:pointer;
+  color:#050505;font:400 15px system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;text-align:left}
+.am-choices button + button{border-top:1px solid #E4E6EB}
+.am-choices button.is-on{font-weight:700}
+.am-link{width:100%;display:flex;align-items:center;gap:10px;padding:10px 0;border:0;background:none;cursor:pointer;
+  color:#050505;font:500 15px system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;text-align:left}
+.am-link svg{color:#65676B}
+/* Log out, at the foot of the panel */
+.am-logout{margin:18px 16px 0;display:flex;align-items:center;justify-content:center;gap:8px;height:42px;border-radius:8px;border:0;
+  background:#E4E6EB;color:#050505;font:600 15px system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;cursor:pointer}
+.am-logout:active{background:#D8DADF}

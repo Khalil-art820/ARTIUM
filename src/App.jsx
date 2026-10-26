@@ -74,6 +74,7 @@ const NetworkGlobe = lazy(() => import("./components/network/NetworkGlobe.jsx"))
 import "leaflet/dist/leaflet.css";
 import "./theme-modern.css";
 import ArtiumWord from "./components/ArtiumWord";
+import ArtiumMenu from "./components/ArtiumMenu.jsx";
 
 /* ---------------------------------------------------------------- */
 /* THEME                                                              */
@@ -3176,6 +3177,10 @@ export default function App() {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) setAuthError(error.message);
   }
+  async function learnerLogout() {
+    await supabase.auth.signOut(); localStorage.removeItem("artium_demo_session");
+    setActiveChatId(null); clearTabState(); setLearnerProfile(null); setLearnerLoggedOut(true); setScreen("entry");
+  }
   async function handleLogout() {
     await supabase.auth.signOut();
     localStorage.removeItem("artium_demo_session");
@@ -5318,7 +5323,7 @@ export default function App() {
           isAdmin={isAdmin}
           onGoToAdmin={() => { setScreen("app"); setAppTabPersist("admin"); }}
         />
-      ) : null} memberChips={deckFaces} featuredMembers={gateFeatured} onAvatar={myProfile ? goToProfile : (learnerProfile ? () => { setLearnerStartTab("profile"); setScreen("learnerMap"); } : undefined)} onLogout={async () => {
+      ) : null} memberChips={deckFaces} featuredMembers={gateFeatured} legalSheet={TermsSheet} onAvatar={myProfile ? goToProfile : (learnerProfile ? () => { setLearnerStartTab("profile"); setScreen("learnerMap"); } : undefined)} onLogout={async () => {
         // Logging out re-arms the gate tour: the next login meets the
         // card-by-card introduction again, per the user's request.
         try { localStorage.removeItem("artium_gate_tour_v1"); } catch { /* private mode */ }
@@ -5340,11 +5345,11 @@ export default function App() {
           onTab={(k) => { if (k === "home") return; setScreen("app"); setAppTabPersist(k); }}
         />
       )}
-      {view === "composers" && <WallOfComposers onBack={backToEntry} modern={MODERN} avatarNode={(myProfile || learnerProfile) ? (
-        <button onClick={myProfile ? goToProfile : () => { setLearnerStartTab("profile"); setScreen("learnerMap"); }} title="My profile" className="tm-head-avatar" style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}>
-          <Avatar name={(myProfile || learnerProfile).name} id="me" size={HEADER_CONTROL} photoUrl={(myProfile || learnerProfile).photoUrl || accountPhotoUrl} online />
-        </button>
-      ) : null} />}
+      {view === "composers" && <WallOfComposers onBack={backToEntry} modern={MODERN} avatarNode={
+        <ArtiumMenu legalSheet={TermsSheet}
+          onProfile={myProfile ? goToProfile : learnerProfile ? () => { setLearnerStartTab("profile"); setScreen("learnerMap"); } : undefined}
+          onLogout={myProfile ? handleLogout : learnerProfile ? learnerLogout : undefined} />
+      } />}
       {view === "learnerSignup" && <LearnerSignup onSubmit={submitLearner} onBack={backToEntry} authUser={authUser} error={authError} />}
       {view === "learnerMap" && (
         <LearnerScreen
@@ -5377,7 +5382,7 @@ export default function App() {
               }
             }
           }}
-          onLogout={async () => { await supabase.auth.signOut(); localStorage.removeItem("artium_demo_session"); setActiveChatId(null); clearTabState(); setLearnerProfile(null); setLearnerLoggedOut(true); setScreen("entry"); }}
+          onLogout={learnerLogout}
           onDeleteAccount={async () => {
             await supabase.rpc("delete_own_account");
             await supabase.auth.signOut();
@@ -5393,7 +5398,7 @@ export default function App() {
         />
       )}
 
-      {view === "landing" && <Landing onApply={pianistEntry ? () => { setAuthError(""); setScreen("hirerSignup"); } : startApply} onBack={backToEntry} onPreview={startPreview} onProfile={goToProfile} onLogin={startLogin} myProfile={myProfile} studentLoggedOut={studentLoggedOut} musicOn={musicPlaying} onMusicToggle={toggleMusic} error={authError} onGoToLessonRoom={() => { setScreen("app"); setAppTabPersist("lessons"); }} onGoToSession={goToTeacherSession} onGoToPromote={(kind) => { setScreen("app"); setAppTabPersist("promote"); setPromoteFocus({ kind: kind || null, at: Date.now() }); }} studentsByCons={studentsByCons} avatarPhotoUrl={accountPhotoUrl} avatarName={accountName} hireCount={pianistAttentionCount} hireIds={pianistAttentionIds} onGoToConcerts={() => { setScreen("app"); setAppTabPersist("concerts"); }} onGoToComposers={() => setScreen("composers")} authUser={authUser} isAdmin={isAdmin} onGoToAdmin={() => { setScreen("app"); setAppTabPersist("admin"); }} />}
+      {view === "landing" && <Landing onLogout={authUser ? handleLogout : undefined} onApply={pianistEntry ? () => { setAuthError(""); setScreen("hirerSignup"); } : startApply} onBack={backToEntry} onPreview={startPreview} onProfile={goToProfile} onLogin={startLogin} myProfile={myProfile} studentLoggedOut={studentLoggedOut} musicOn={musicPlaying} onMusicToggle={toggleMusic} error={authError} onGoToLessonRoom={() => { setScreen("app"); setAppTabPersist("lessons"); }} onGoToSession={goToTeacherSession} onGoToPromote={(kind) => { setScreen("app"); setAppTabPersist("promote"); setPromoteFocus({ kind: kind || null, at: Date.now() }); }} studentsByCons={studentsByCons} avatarPhotoUrl={accountPhotoUrl} avatarName={accountName} hireCount={pianistAttentionCount} hireIds={pianistAttentionIds} onGoToConcerts={() => { setScreen("app"); setAppTabPersist("concerts"); }} onGoToComposers={() => setScreen("composers")} authUser={authUser} isAdmin={isAdmin} onGoToAdmin={() => { setScreen("app"); setAppTabPersist("admin"); }} />}
       {view === "landing" && (
         <BottomTabs
           modern={MODERN}
@@ -5470,13 +5475,8 @@ export default function App() {
           // back to where it was opened from).
           // Modern: your avatar sits where the brand icon was, before the
           // wordmark; the right side keeps count, play and bell.
-          const netAvatar = myProfile ? (
-            <button onClick={goToProfile} title="My profile" className={MODERN ? "tm-head-avatar" : undefined} style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}>
-              <Avatar name={myProfile.name} id="me" size={HEADER_CONTROL} photoUrl={myProfile.photoUrl} online />
-            </button>
-          ) : (
-            <span className={MODERN ? "tm-head-avatar" : undefined}><Avatar name={accountName || "?"} id="me" size={HEADER_CONTROL} photoUrl={accountPhotoUrl} /></span>
-          );
+          // The menu leads the bar; your profile is on the member counter.
+          const netAvatar = <ArtiumMenu onProfile={myProfile ? goToProfile : undefined} onLogout={handleLogout} legalSheet={TermsSheet} />;
           const netHeaderWith = (onBackFn) => (
             <header className="artium-net-bar">
               {onBackFn && (
@@ -5492,9 +5492,10 @@ export default function App() {
                 <span aria-hidden="true">RTIUM</span>
               </span>
               <span className="artium-net-right">
-                <span className="artium-net-count" title="Members" aria-label={`${Object.values(studentsByCons).flat().length} members`}>
+                <button type="button" className="artium-net-count tm-count-btn" onClick={myProfile ? goToProfile : undefined} disabled={!myProfile}
+                  title={myProfile ? "My profile" : "Members"} aria-label={`${Object.values(studentsByCons).flat().length} members${myProfile ? " — open my profile" : ""}`}>
                   {MODERN ? <HeaderMembers count={Object.values(studentsByCons).flat().length} faces={headerFaces} /> : <><Users size={15} strokeWidth={1.8} />{Object.values(studentsByCons).flat().length}</>}
-                </span>
+                </button>
                 {/* The bell's own button, glyph swapped for the play
                     triangle — same position as the landing header. */}
                 <button
@@ -6027,7 +6028,7 @@ const IconMegaphone = (p) => (
   </IconBox>
 );
 
-function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, studentLoggedOut, musicOn, onMusicToggle, error, onGoToPromote, onGoToLessonRoom, onGoToSession, studentsByCons, hireCount = 0, hireIds = [], onGoToConcerts, onGoToComposers, authUser, isAdmin, onGoToAdmin, avatarPhotoUrl, avatarName }) {
+function Landing({ onLogout, onApply, onBack, onPreview, onProfile, onLogin, myProfile, studentLoggedOut, musicOn, onMusicToggle, error, onGoToPromote, onGoToLessonRoom, onGoToSession, studentsByCons, hireCount = 0, hireIds = [], onGoToConcerts, onGoToComposers, authUser, isAdmin, onGoToAdmin, avatarPhotoUrl, avatarName }) {
   const memberCount = Object.values(studentsByCons).flat().length;
   const steps = [
     { n: "1", t: "Build your profile", Icon: IconProfileDoc,
@@ -6047,13 +6048,8 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
   // there's a profiles row), the session already has a face — Google's photo,
   // or initials off whatever name is known yet. Modern: drawn before the
   // wordmark instead of at the far right.
-  const lpAvatar = myProfile ? (
-    <button onClick={onProfile} title="My profile" className={MODERN ? "tm-head-avatar" : undefined} style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}>
-      <Avatar name={myProfile.name} id="me" size={HEADER_CONTROL} photoUrl={myProfile.photoUrl} online />
-    </button>
-  ) : (
-    <span className={MODERN ? "tm-head-avatar" : undefined}><Avatar name={avatarName || "?"} id="me" size={HEADER_CONTROL} photoUrl={avatarPhotoUrl} /></span>
-  );
+  // The menu leads the bar; your profile is on the member counter.
+  const lpAvatar = <ArtiumMenu onProfile={myProfile ? onProfile : undefined} onLogout={onLogout} legalSheet={TermsSheet} />;
   return (
     // Re-skinned into the gate's current light theme (grey ground, ink/gold,
     // Playfair + Jost) — this used to be "the gate's world, continued" in the
@@ -6097,9 +6093,10 @@ function Landing({ onApply, onBack, onPreview, onProfile, onLogin, myProfile, st
           {/* Count first, then play, bell, avatar — and the play disc IS a
               .artium-net-puck now, the bell's own class, so the two can
               never drift apart in size or material again. */}
-          <span className="artium-gx-count">
+          <button type="button" className="artium-gx-count tm-count-btn" onClick={myProfile ? onProfile : undefined} disabled={!myProfile}
+            title={myProfile ? "My profile" : "Members"} aria-label={`${memberCount} members${myProfile ? " — open my profile" : ""}`}>
             {MODERN ? <HeaderMembers count={memberCount} faces={Object.values(studentsByCons).flat()} /> : <><Users size={16} strokeWidth={1.8} />{memberCount}</>}
-          </span>
+          </button>
           {onMusicToggle && (
             <button
               className={`artium-net-puck${MODERN ? " tm-play" : ""}${MODERN && musicOn ? " is-on" : ""}`}
@@ -13588,20 +13585,8 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
     setTimeout(() => setSaved(false), 2000);
   }
 
-  const learnerAvatar = (
-    <button
-      onClick={selectedId ? undefined : () => setAppTab("profile")}
-      title={selectedId ? undefined : "My profile"}
-      className={MODERN ? "tm-head-avatar" : undefined}
-      style={{ background: "none", border: "none", padding: 0, cursor: selectedId ? "default" : "pointer" }}
-    >
-      {learner ? (
-        <Avatar name={learner.name} id="me" size={HEADER_CONTROL} photoUrl={learner.photoUrl} online />
-      ) : (
-        <Avatar name={avatarName || "?"} id="me" size={HEADER_CONTROL} photoUrl={avatarPhotoUrl} />
-      )}
-    </button>
-  );
+  // The menu leads the bar; your profile is on the member counter.
+  const learnerAvatar = <ArtiumMenu onProfile={() => { setSelectedId(null); setAppTab("profile"); }} onLogout={onLogout} legalSheet={TermsSheet} />;
   return (
     <div className="min-h-full flex flex-col artium-has-tabs" style={{ background: C.inkSoft, color: C.ivory }}>
       {/* Same header the conservatory side draws on its network/welcome
@@ -13627,9 +13612,10 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
           <span aria-hidden="true">RTIUM</span>
         </span>
         <span className="artium-net-right">
-          <span className="artium-net-count" title="Members" aria-label={`${memberCount} members`}>
+          <button type="button" className="artium-net-count tm-count-btn" onClick={() => { setSelectedId(null); setAppTab("profile"); }}
+            title="My profile" aria-label={`${memberCount} members — open my profile`}>
             {MODERN ? <HeaderMembers count={memberCount} faces={teachers} /> : <><Users size={15} strokeWidth={1.8} />{memberCount}</>}
-          </span>
+          </button>
           <button
             className={`artium-net-puck${MODERN ? " tm-play" : ""}${MODERN && musicOn ? " is-on" : ""}`}
             onClick={onMusicToggle}
