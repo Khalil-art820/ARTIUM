@@ -630,7 +630,7 @@ html.theme-modern .ng-group .ng-face + .ng-face{margin-left:-12px}
 /* Owner's mockup: the pill is whole and on top, black with a thin silver
    rim; the portrait behind it is cut by the pill's curve where they meet. */
 html.theme-modern .ng-group .ng-face{position:relative;z-index:1}
-html.theme-modern .ng-more{margin-left:-9px;padding:0 10px;min-width:34px;height:23px;border-radius:999px;display:inline-grid;place-items:center;position:relative;z-index:2;
+html.theme-modern .ng-more{margin-left:-9px;padding:0 6px;min-width:27px;height:23px;border-radius:999px;display:inline-grid;place-items:center;position:relative;z-index:2;
   background:linear-gradient(180deg,#1E2022 0%,#0E0F10 100%);color:#FFFFFF;font:700 12.5px 'Fira Sans',sans-serif;
   border:1.5px solid rgba(214,220,220,.9);box-shadow:0 2px 8px rgba(0,0,0,.45)}
 /* Tabs */
