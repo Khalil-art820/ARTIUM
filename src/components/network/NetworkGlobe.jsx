@@ -20,7 +20,7 @@ import * as THREE from "three";
 const EARTH_URL = "/earth-night-artium-v2.jpg";
 const LIGHTS_URL = "/earth-lights-artium-v2.jpg";
 const EARTH_HD_URL = "/earth-night-artium-hd.jpg";     // 8192 x 4096
-const LIGHTS_HD_URL = "/earth-lights-artium-hd.jpg";   // 4096 x 2048
+const LIGHTS_HD_URL = "/earth-lights-artium-hd.jpg";   // 8192 x 4096
 const MINT = "#42C9B8";
 const DEFAULT_POV = { lat: 34, lng: -12, altitude: 1.36 };
 // The camera distance that draws the globe at a given on-screen diameter:
@@ -164,7 +164,7 @@ export default function NetworkGlobe({ members, conservatories, focus, selectedI
     try { globeRef.current.renderer().setPixelRatio(Math.min(dpr, zoomedIn ? 3 : 1.75)); } catch { /* not ready */ }
   }, [ready, zoomedIn]);
 
-  // The first zoom-in swaps in the 8K map (about 1.4 MB, fetched only then),
+  // The first zoom-in swaps in the 8K map and lights (about 2.2 MB, fetched only then),
   // on devices whose GPU takes a texture that size. It stays for the visit.
   const hdLoaded = React.useRef(false);
   React.useEffect(() => {
