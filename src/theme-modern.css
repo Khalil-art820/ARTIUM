@@ -680,6 +680,8 @@ html.theme-modern .nx-sheet-none{padding:16px;color:#8A9593;font-size:14px;text-
 html.theme-modern .nx-grow{width:100%;display:flex;align-items:center;gap:12px;padding:10px;border:0;border-radius:12px;background:none;text-align:left;cursor:pointer;color:#172321}
 html.theme-modern .nx-grow:hover{background:#F7F4EF}
 html.theme-modern .nx-grow > span{flex:1;min-width:0;display:flex;flex-direction:column}
+/* ...but not the portrait, which that rule stretched into an oval. */
+html.theme-modern .nx-grow > .nx-face{flex:none;display:grid;flex-direction:initial}
 html.theme-modern .nx-grow b{font-size:15px;font-weight:600}
 html.theme-modern .nx-grow em{font-style:normal;font-size:13px;color:#5E6B69}
 /* Profile preview: a compact card above the tab bar */
