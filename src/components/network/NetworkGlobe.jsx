@@ -5,8 +5,9 @@ import * as THREE from "three";
 /**
  * The Network tab's globe: a night Earth in the app's teal — deep ocean,
  * green land with lit coastlines, and gold city lights that glow on the shaded
- * side too (NASA Black Marble lights, recoloured into
- * public/earth-*-artium-v1.jpg). Then: mint
+ * side too (NASA Black Marble 2016 lights over Natural Earth 10m coastlines,
+ * recoloured into public/earth-*-artium-v2.jpg, and an 8K "-hd" pair that
+ * loads once someone zooms in — see scripts/globe-night-texture.py). Then: mint
  * points at every conservatory, thin arcs between the places members study,
  * and the members themselves as portrait markers at their conservatory.
  *
@@ -16,8 +17,10 @@ import * as THREE from "three";
  * own visibility test, so a face never floats through the sphere.
  */
 
-const EARTH_URL = "/earth-night-artium-v1.jpg";
-const LIGHTS_URL = "/earth-lights-artium-v1.jpg";
+const EARTH_URL = "/earth-night-artium-v2.jpg";
+const LIGHTS_URL = "/earth-lights-artium-v2.jpg";
+const EARTH_HD_URL = "/earth-night-artium-hd.jpg";     // 8192 x 4096
+const LIGHTS_HD_URL = "/earth-lights-artium-hd.jpg";   // 4096 x 2048
 const MINT = "#42C9B8";
 const DEFAULT_POV = { lat: 34, lng: -12, altitude: 1.36 };
 // The camera distance that draws the globe at a given on-screen diameter:
@@ -139,9 +142,10 @@ export default function NetworkGlobe({ members, conservatories, focus, selectedI
     const sharpen = setInterval(() => {
       try {
         const max = g.renderer().capabilities.getMaxAnisotropy();
-        const mat = g.globeMaterial();
+        // `material` is the one passed as globeMaterial; the library puts the
+        // globe image on it as .map.
         let done = true;
-        for (const tex of [mat.map, mat.emissiveMap]) {
+        for (const tex of [material.map, material.emissiveMap]) {
           if (!tex) { done = false; continue; }
           if (tex.anisotropy !== max) { tex.anisotropy = max; tex.needsUpdate = true; }
         }
@@ -159,6 +163,31 @@ export default function NetworkGlobe({ members, conservatories, focus, selectedI
     const dpr = window.devicePixelRatio || 1;
     try { globeRef.current.renderer().setPixelRatio(Math.min(dpr, zoomedIn ? 3 : 1.75)); } catch { /* not ready */ }
   }, [ready, zoomedIn]);
+
+  // The first zoom-in swaps in the 8K map (about 1.4 MB, fetched only then),
+  // on devices whose GPU takes a texture that size. It stays for the visit.
+  const hdLoaded = React.useRef(false);
+  React.useEffect(() => {
+    if (!ready || !zoomedIn || hdLoaded.current || !globeRef.current) return;
+    const g = globeRef.current;
+    let renderer;
+    try { renderer = g.renderer(); } catch { return; }
+    if ((renderer.capabilities.maxTextureSize || 0) < 8192) return;
+    hdLoaded.current = true;
+    const loader = new THREE.TextureLoader();
+    const aniso = renderer.capabilities.getMaxAnisotropy();
+    const prep = (tex) => { tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = aniso; return tex; };
+    loader.load(EARTH_HD_URL, (tex) => {
+      const old = material.map;
+      material.map = prep(tex); material.needsUpdate = true;
+      if (old && old !== tex) old.dispose();
+    });
+    loader.load(LIGHTS_HD_URL, (tex) => {
+      const old = material.emissiveMap;
+      material.emissiveMap = prep(tex); material.needsUpdate = true;
+      if (old && old !== tex) old.dispose();
+    });
+  }, [ready, zoomedIn, material]);
 
   // Fly to whatever the page asks for (a carousel pick, a recenter).
   React.useEffect(() => {
