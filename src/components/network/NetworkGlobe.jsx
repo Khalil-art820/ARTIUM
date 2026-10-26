@@ -109,6 +109,11 @@ export default function NetworkGlobe({ members, conservatories, focus, selectedI
     const g = globeRef.current;
     g.pointOfView({ ...DEFAULT_POV, altitude: fitAltitude(size.w, size.h) }, 0);
     try { g.renderer().setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75)); } catch { /* older three */ }
+    // Up/down swipes scroll the page, sideways swipes spin the globe, pinch
+    // still zooms. The browser takes a vertical pan itself (and cancels the
+    // controls' pointer); OrbitControls had set "none", which trapped every
+    // swipe that started on the globe.
+    try { g.renderer().domElement.style.touchAction = "pan-y"; } catch { /* not ready */ }
     let detach = null;
     const c = g.controls();
     if (c) {

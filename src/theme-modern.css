@@ -1152,3 +1152,6 @@ html.theme-modern .artium-lp--light .artium-lp-h2{font-size:clamp(28px,8.4vw,44p
 .terms-page .terms-head h2{flex:1;min-width:0}
 .terms-page .terms-body{flex:1;min-height:0;padding:16px 22px 32px;font-size:15px}
 .terms-page .terms-head .terms-back{flex:none}
+
+/* Globe: vertical swipes scroll the page (see NetworkGlobe). */
+html.theme-modern .ng-wrap canvas{touch-action:pan-y !important}
