@@ -202,8 +202,9 @@
 .cgate .cg-round:active,
 .cgate .cg-actions .artium-net-puck:active{transform:scale(.92)}
 .cgate .cg-round.is-on{background:#fff;color:#086868;border-color:#fff}
-/* Solid bell instead of the outline glyph */
-.cgate .cg-actions .artium-net-puck svg{width:18px;height:18px;fill:currentColor;stroke:currentColor;stroke-width:1.4}
+
+/* The bell is an outline, drawn the same in every top bar. */
+.cgate .cg-actions .artium-net-puck svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2}
 .cgate .cg-actions .artium-net-bell-badge{
   position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;padding:0 4px;border-radius:999px;
   display:flex;align-items:center;justify-content:center;

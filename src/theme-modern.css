@@ -141,14 +141,12 @@ html.theme-modern .artium-net-bar .artium-net-puck:hover,
 html.theme-modern .artium-lp-bar .artium-net-puck:hover{background:rgba(255,255,255,.26);box-shadow:none}
 html.theme-modern .artium-net-bar .artium-net-puck:active,
 html.theme-modern .artium-lp-bar .artium-net-puck:active{transform:scale(.92)}
-/* Solid bell and solid play/pause glyphs (the back chevron stays a stroke). */
-html.theme-modern .artium-net-bar button[aria-label="Notifications"] svg,
-html.theme-modern .artium-lp-bar button[aria-label="Notifications"] svg{
-  width:18px;height:18px;fill:currentColor;stroke:currentColor;stroke-width:1.4}
-html.theme-modern .artium-net-bar button[aria-label*="playlist"] svg,
-html.theme-modern .artium-lp-bar button[aria-label*="playlist"] svg{fill:currentColor}
-html.theme-modern .artium-net-bar button[aria-label*="playlist"] svg[stroke],
-html.theme-modern .artium-lp-bar button[aria-label*="playlist"] svg[stroke]{stroke:currentColor}
+/* Solid play/pause glyphs (the back chevron stays a stroke). By class, not
+   by label: labels are translated. */
+html.theme-modern .artium-net-bar button.tm-play svg,
+html.theme-modern .artium-lp-bar button.tm-play svg{fill:currentColor}
+html.theme-modern .artium-net-bar button.tm-play svg[stroke],
+html.theme-modern .artium-lp-bar button.tm-play svg[stroke]{stroke:currentColor}
 html.theme-modern .artium-net-bar .artium-net-bell-badge,
 html.theme-modern .artium-lp-bar .artium-net-bell-badge{
   top:-4px;right:-4px;min-width:18px;height:18px;padding:0 4px;
@@ -574,11 +572,10 @@ html.theme-modern .artium-net-bar .artium-net-puck:not(.tm-back-plain):active,
 html.theme-modern .artium-lp-bar .artium-net-puck:not(.tm-back-plain):active,
 html.theme-modern .cgate .cg-actions .cg-round:active,
 html.theme-modern .cgate .cg-actions .artium-net-puck:active{transform:scale(.94)}
-/* Outline bell, white. */
-html.theme-modern .artium-net-bar .artium-net-puck svg.lucide-bell,
-html.theme-modern .artium-lp-bar .artium-net-puck svg.lucide-bell,
+/* The bell: one outline, white, 20px, in every top bar. */
+html.theme-modern .artium-net-puck svg.tm-bell,
 html.theme-modern .cgate .cg-actions .artium-net-puck svg{
-  width:19px;height:19px;fill:none !important;stroke:currentColor;stroke-width:1.9;color:#FFFFFF;
+  width:20px !important;height:20px !important;fill:none !important;stroke:currentColor !important;stroke-width:2 !important;color:#FFFFFF;
 }
 /* Count badge: white on green, ringed in the bar's teal. */
 html.theme-modern .artium-net-bell-badge{

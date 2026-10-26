@@ -5972,7 +5972,7 @@ const IconHomeArch = ({ size = 24, strokeWidth = 2, color = "currentColor" }) =>
 );
 // Bell: a round dome, short flared sides, a flat base and a half-round clapper.
 const IconBellRef = ({ size = 24, strokeWidth = 2, color = "currentColor" }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth}
+  <svg className="tm-bell" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth}
     strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="M6.6 15.4V9.6a5.4 5.4 0 0 1 10.8 0v5.8l1.6 2.6H5z" />
     <path d="M10 18a2 2 0 0 0 4 0" />
@@ -10421,7 +10421,7 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
         className={puck ? "artium-net-puck" : undefined}
         style={puck ? undefined : { position: "relative", background: "none", border: "none", cursor: "pointer", padding: 4, display: "flex", alignItems: "center", justifyContent: "center" }}
       >
-        <IconBellRef size={puck ? 18 : 20} strokeWidth={puck ? 2 : 1.8} color={puck ? "currentColor" : (totalCount > 0 ? C.brass : C.ivoryDim)} />
+        <IconBellRef size={20} strokeWidth={puck ? 2 : 1.8} color={puck ? "currentColor" : (totalCount > 0 ? C.brass : C.ivoryDim)} />
         {totalCount > 0 && (
           <span
             className={puck ? "artium-net-bell-badge" : undefined}
@@ -13435,7 +13435,7 @@ function LearnerNotificationBell({ authUser, teachers, learnerSessionsByTeacher,
         aria-label="Notifications"
         className="artium-net-puck"
       >
-        <IconBellRef size={18} strokeWidth={2} color="currentColor" />
+        <IconBellRef size={20} strokeWidth={2} color="currentColor" />
         {totalCount > 0 && (
           <span className="artium-net-bell-badge">{totalCount}</span>
         )}
