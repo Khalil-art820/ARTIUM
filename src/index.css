@@ -90,3 +90,4 @@ body,
 /* ARTIUM wordmark inline in running text (components/ArtiumWord.jsx). */
 .aw-mark{display:inline-flex;align-items:center;font-family:'Jost',system-ui,sans-serif;font-weight:700;font-style:normal;letter-spacing:.16em;text-transform:uppercase;font-size:.86em;line-height:1;vertical-align:-.02em;margin-right:-.1em;white-space:nowrap}
 .aw-mark svg{width:.74em;height:.74em;margin-right:.18em;display:block;flex:none}
+html.i18n-pending body{visibility:hidden}

@@ -1,21 +1,35 @@
 import React from "react";
 import "./ArtiumMenu.css";
+import { setLanguage } from "../i18n/runtime.js"; // eslint-disable-line no-unused-vars
 
 // The three-line menu every top bar opens: a side panel in Facebook's manner
 // — white sheet over a dimmed page, a raised card at the top, rows with an
 // outline icon and a chevron that open in place, and Log out at the foot.
 // Your profile is reached from the member counter, not from here.
 
-// The language the visitor picked (footer or Settings). Only languages the app
-// actually has text in are offered; the legal documents read it too.
-export const LANGS = [["en", "English"], ["fr", "Français"]];
+// The language the visitor picked (footer or Settings): the whole app follows
+// it (src/i18n/runtime.js), and so do the legal documents. Each name is
+// written in its own language, so the lists are never translated.
+export const LANGS = [["de", "Deutsch"], ["en", "English"], ["es", "Español"], ["fr", "Français"], ["nl", "Nederlands"], ["it", "Italiano"], ["pt-BR", "Português do Brasil"], ["pl", "Polski"]];
 export function readLang() {
   try { const v = localStorage.getItem("artium_lang"); if (LANGS.some(([k]) => k === v)) return v; } catch { /* private mode */ }
-  try { return /^fr/i.test(navigator.language || "") ? "fr" : "en"; } catch { return "en"; }
+  // First visit: the browser's language when we have it, else English.
+  try {
+    for (const nav of navigator.languages || [navigator.language]) {
+      const l = String(nav || "").toLowerCase();
+      if (l.startsWith("pt")) return "pt-BR";
+      const hit = LANGS.find(([k]) => l.split("-")[0] === k);
+      if (hit) return hit[0];
+    }
+  } catch { /* old browser */ }
+  return "en";
 }
+// A new language reloads the page: the refresh rule keeps you where you were,
+// and every date, number and component comes back in the new language.
 export function writeLang(k) {
+  if (k === readLang()) return;
   try { localStorage.setItem("artium_lang", k); } catch { /* private mode */ }
-  try { window.dispatchEvent(new Event("artium-lang")); } catch { /* old browser */ }
+  try { window.location.reload(); } catch { setLanguage(k); }
 }
 export function useLang() {
   const [lang, setLang] = React.useState(readLang);
@@ -37,7 +51,7 @@ function Settings({ onProfile, onLegal, close }) {
   return (
     <div className="am-settings">
       <p className="am-sub">Language</p>
-      <div className="am-choices" role="radiogroup" aria-label="Language">
+      <div className="am-choices" role="radiogroup" aria-label="Language" data-no-translate="">
         {LANGS.map(([k, name]) => (
           <button key={k} type="button" role="radio" aria-checked={lang === k} className={lang === k ? "is-on" : ""} onClick={() => setLang(k)}>
             <span>{name}</span>

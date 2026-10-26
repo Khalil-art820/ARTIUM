@@ -74,7 +74,22 @@ const NetworkGlobe = lazy(() => import("./components/network/NetworkGlobe.jsx"))
 import "leaflet/dist/leaflet.css";
 import "./theme-modern.css";
 import ArtiumWord from "./components/ArtiumWord";
-import ArtiumMenu from "./components/ArtiumMenu.jsx";
+import ArtiumMenu, { readLang } from "./components/ArtiumMenu.jsx";
+import { setLanguage, currentLanguage } from "./i18n/runtime.js";
+// Dates in the chosen language (English keeps the day-month British order).
+const DATE_LOCALES = { en: "en-GB", de: "de-DE", es: "es-ES", fr: "fr-FR", nl: "nl-NL", it: "it-IT", "pt-BR": "pt-BR", pl: "pl-PL" };
+const dateLocale = () => DATE_LOCALES[currentLanguage()] || DATE_LOCALES[readLang()] || "en-GB";
+// The whole app in the visitor's language from the first paint on: the page
+// stays hidden (at most a second) until the dictionary is in.
+{
+  const l = readLang();
+  if (l !== "en") {
+    document.documentElement.classList.add("i18n-pending");
+    const show = () => document.documentElement.classList.remove("i18n-pending");
+    setTimeout(show, 1200);
+    setLanguage(l).then(show, show);
+  }
+}
 
 /* ---------------------------------------------------------------- */
 /* THEME                                                              */
@@ -384,7 +399,7 @@ function SpotlightCalendar({ slotState, selected, onSelect }) {
   const [monthOffset, setMonthOffset] = React.useState(0);
   const today = new Date();
   const first = new Date(today.getFullYear(), today.getMonth() + monthOffset, 1);
-  const monthLabel = first.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+  const monthLabel = first.toLocaleDateString(dateLocale(), { month: "long", year: "numeric" });
   const daysInMonth = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
   const lead = (first.getDay() + 6) % 7; // Monday-first grid
   const cells = [];
@@ -469,7 +484,7 @@ function nextSaturdays(count = 6) {
     const dt = new Date(d);
     dt.setDate(d.getDate() + i * 7);
     const iso = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
-    out.push({ iso, label: `Saturday ${dt.toLocaleDateString("en-US", { day: "numeric", month: "long" })} · 12:30 (CET)` });
+    out.push({ iso, label: `Saturday ${dt.toLocaleDateString(dateLocale(), { day: "numeric", month: "long" })} · 12:30 (CET)` });
   }
   return out;
 }
@@ -1376,7 +1391,7 @@ function ArtiumRadio({ open, controllerRef, onPlayingChange, onClose, modern }) 
   const totalKnown = tracks && tracks.every((t) => durOf(t) !== undefined);
   const totalSecs = totalKnown ? tracks.reduce((sum, t) => sum + (durOf(t) || 0), 0) : 0;
   const totalLabel = tracks
-    ? `${tracks.length} recording${tracks.length === 1 ? "" : "s"}${totalKnown && totalSecs > 0 ? ` · ${Math.floor(totalSecs / 3600) > 0 ? Math.floor(totalSecs / 3600) + "h " : ""}${Math.round((totalSecs % 3600) / 60)}m` : ""}`
+    ? `${tracks.length === 1 ? `${tracks.length} recording` : `${tracks.length} recordings`}${totalKnown && totalSecs > 0 ? ` · ${Math.floor(totalSecs / 3600) > 0 ? Math.floor(totalSecs / 3600) + "h " : ""}${Math.round((totalSecs % 3600) / 60)}m` : ""}`
     : "";
 
 
@@ -1611,7 +1626,7 @@ function ConsRosterCard({ cons, roster, canViewRoster, onOpenStudent, onLockedCl
     <div style={{ fontFamily: FONT_BODY, minWidth: 230 }}>
       <div style={{ borderBottom: `1px solid ${C.inkLine}`, paddingBottom: 8, marginBottom: 8 }}>
         <p style={{ fontSize: 13, fontWeight: 600, color: C.ivory, margin: 0 }}>{cons.short}</p>
-        <p style={{ fontSize: 11, color: C.ivoryDim, margin: "2px 0 0" }}>{roster.length} student{roster.length === 1 ? "" : "s"}</p>
+        <p style={{ fontSize: 11, color: C.ivoryDim, margin: "2px 0 0" }}>{roster.length === 1 ? `${roster.length} student` : `${roster.length} students`}</p>
       </div>
       {roster.length === 0 ? (
         <p style={{ fontSize: 12, color: C.ivoryDim, margin: 0 }}>No students yet.</p>
@@ -2038,7 +2053,7 @@ function GlobeMap({ selectedId, onSelect, studentsByCons, height = 640, onOpenSt
           </svg>
           {compact
             ? `(${pinned.length}) conservatories`
-            : `(${pinned.length}) conservator${pinned.length !== 1 ? "ies" : "y"} · drag to spin`}
+            : `(${pinned.length}) ${pinned.length !== 1 ? "conservatories" : "conservatory"} · drag to spin`}
         </span>
         <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: C.ivoryDim, fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>
           <svg width="10" height="13" viewBox="0 0 24 30" style={{ flexShrink: 0 }}>
@@ -2047,7 +2062,7 @@ function GlobeMap({ selectedId, onSelect, studentsByCons, height = 640, onOpenSt
           </svg>
           {compact
             ? `(${totalTeachers}) teaching`
-            : `includes (${totalTeachers}) student${totalTeachers !== 1 ? "s" : ""} open to teaching`}
+            : `includes (${totalTeachers}) ${totalTeachers !== 1 ? "students" : "student"} open to teaching`}
         </span>
       </div>
     </div>
@@ -2080,14 +2095,14 @@ function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", inter
             <path d="M12 0C5.4 0 0 5 0 11.4 0 19.6 12 30 12 30s12-10.4 12-18.6C24 5 18.6 0 12 0z" fill="#C0392B" stroke="#8B1A1A" strokeWidth="1.5" />
             <circle cx="12" cy="11.5" r="4" fill="white" opacity="0.9" />
           </svg>
-          ({pinnedCons}) conservator{pinnedCons !== 1 ? "ies" : "y"}
+          ({pinnedCons}) {pinnedCons !== 1 ? "conservatories" : "conservatory"}
         </span>
         <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: C.ivoryDim, fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>
           <svg width="10" height="13" viewBox="0 0 24 30" style={{ flexShrink: 0 }}>
             <path d="M12 0C5.4 0 0 5 0 11.4 0 19.6 12 30 12 30s12-10.4 12-18.6C24 5 18.6 0 12 0z" fill="#C0392B" stroke="#8B1A1A" strokeWidth="1.5" />
             <circle cx="12" cy="11.5" r="4" fill="white" opacity="0.9" />
           </svg>
-          includes ({totalTeachers}) student{totalTeachers !== 1 ? "s" : ""} open to teaching
+          includes ({totalTeachers}) {totalTeachers !== 1 ? "students" : "student"} open to teaching
         </span>
       </div>
       <MapContainer
@@ -2138,7 +2153,7 @@ function WorldMap({ selectedId, onSelect, studentsByCons, height = "100%", inter
                 <span style={{ fontFamily: FONT_BODY, fontWeight: 600 }}>{cons.short}</span>
                 <br />
                 <span style={{ fontFamily: FONT_MONO, fontSize: 11 }}>
-                  {cons.city}, {cons.country} · {n} student{n === 1 ? "" : "s"}
+                  {cons.city}, {cons.country} · {n === 1 ? `${n} student` : `${n} students`}
                 </span>
               </Tooltip>
               {onOpenStudent && (
@@ -6582,7 +6597,7 @@ function StatusPill({ status }) {
 
 function fmtConcertDate(d) {
   if (!d) return "";
-  try { return new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }); }
+  try { return new Date(d).toLocaleDateString(dateLocale(), { day: "numeric", month: "long", year: "numeric" }); }
   catch { return d; }
 }
 function fmtEUR(n) {
@@ -6631,7 +6646,7 @@ function ConcertMessageBubble({ m, mine }) {
   return (
     <div style={{ maxWidth: "78%", alignSelf: mine ? "flex-end" : "flex-start", display: "flex", flexDirection: "column", gap: 6 }}>
       {m.body && (
-        <div className="px-3.5 py-2 rounded-2xl text-sm" style={{ background: mine ? C.brass : C.inkSoft, color: mine ? C.brassText : C.ivory, fontWeight: mine ? 500 : 400 }}>
+        <div className="px-3.5 py-2 rounded-2xl text-sm" data-no-translate="" style={{ background: mine ? C.brass : C.inkSoft, color: mine ? C.brassText : C.ivory, fontWeight: mine ? 500 : 400 }}>
           {m.body}
         </div>
       )}
@@ -6779,7 +6794,7 @@ function AgreementPanel({ inquiry, role, myName, onSign, signing, acceptedOffer 
   const theirSignedName = role === "hirer" ? inquiry.pianistSignedName : inquiry.hirerSignedName;
   const theirPossessive = role === "hirer" ? "the pianist's" : "the hirer's";
   const fee = fmtEUR(acceptedOffer?.feeEur) || inquiry.budget;
-  const dateStr = (d) => d ? new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }) : "";
+  const dateStr = (d) => d ? new Date(d).toLocaleDateString(dateLocale(), { day: "numeric", month: "long", year: "numeric" }) : "";
 
   if (inquiry.status === "confirmed") {
     return (
@@ -7131,7 +7146,7 @@ function PianistDiscover({ students, onOpen }) {
 
         <div className="artium-aw-listhead">
           <h2>Pianists</h2>
-          <span>{rows.length} result{rows.length === 1 ? "" : "s"}</span>
+          <span>{rows.length === 1 ? `${rows.length} result` : `${rows.length} results`}</span>
         </div>
         <div className="artium-aw-list">
           {rows.length === 0 && <p className="artium-aw-empty">{students.length === 0 ? "No pianists on the network yet — the conservatories are filling in." : "No pianist matches that search."}</p>}
@@ -10033,7 +10048,7 @@ function formatTimeUntilLabel(msUntil) {
   if (msUntil <= 0) return "any moment now";
   const totalMinutes = Math.floor(msUntil / 60000);
   const days = Math.floor(totalMinutes / 1440);
-  if (days >= 1) return `${days} day${days !== 1 ? "s" : ""}`;
+  if (days >= 1) return `${days !== 1 ? `${days} days` : `${days} day`}`;
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
   return `${hours}h ${minutes}m`;
@@ -10554,7 +10569,7 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
                   the counter awaits an answer, and opens that session. */}
               {counters.map((c) => {
                 const key = counterKeyOf(c);
-                const label = (d, t) => `${new Date(d + "T00:00").toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })} at ${t}`;
+                const label = (d, t) => `${new Date(d + "T00:00").toLocaleDateString(dateLocale(), { weekday: "short", day: "numeric", month: "short" })} at ${t}`;
                 return (
                   <button key={`ctr-${key}`}
                     className={`tm-nrow${ackCounterKeys.includes(key) ? "" : " is-unread"}`}
@@ -10585,7 +10600,7 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
                 tileBg={brassA("0.14")} tileColor={C.brass}
                 title="Teaching requests"
                 count={pending.length}
-                activeText={`${pending.length} new request${pending.length === 1 ? "" : "s"}`}
+                activeText={`${pending.length === 1 ? `${pending.length} new request` : `${pending.length} new requests`}`}
                 inactiveText="You have 0 new requests"
                 seenKey="artium_seen_teach_v1"
                 onGo={onGoToLessonRoom}
@@ -10595,7 +10610,7 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
                 tileBg="rgba(139,109,196,0.14)" tileColor="#8B6DC4"
                 title="Concert hiring requests"
                 count={hireCount}
-                activeText={`${hireCount} new request${hireCount === 1 ? "" : "s"}`}
+                activeText={`${hireCount === 1 ? `${hireCount} new request` : `${hireCount} new requests`}`}
                 inactiveText="You have 0 new requests"
                 seenKey="artium_seen_hire_v1"
                 onGo={onGoToConcerts}
@@ -10605,7 +10620,7 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
                 tileBg="rgba(63,139,92,0.14)" tileColor={C.forest}
                 title="Tomorrow's Composers"
                 count={composerCount}
-                activeText={`${composerCount} new post${composerCount === 1 ? "" : "s"}`}
+                activeText={`${composerCount === 1 ? `${composerCount} new post` : `${composerCount} new posts`}`}
                 inactiveText="0 new posts"
                 seenKey="artium_seen_composers_v1"
                 onGo={onGoToComposers}
@@ -10616,7 +10631,7 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
                 tileBg="rgba(178,59,59,0.14)" tileColor={C.burgundy}
                 title="Classical Events"
                 count={newsCount}
-                activeText={`${newsCount} new update${newsCount === 1 ? "" : "s"}`}
+                activeText={`${newsCount === 1 ? `${newsCount} new update` : `${newsCount} new updates`}`}
                 inactiveText="0 new updates"
                 seenKey="artium_seen_news_v1"
                 onGo={onGoToNews}
@@ -11074,7 +11089,7 @@ function WorldGlobe({ pins, selectedId, onSelect, onCluster, height = 320, pinSc
                 // A disc, not a pin: it marks an area rather than a place, and
                 // a pin's point would be claiming a precision it does not have.
                 const size = Math.round(Math.min(40, 24 + d.schools * 0.7) * pinScale);
-                el.title = `${d.schools} conservatories, ${d.count} student${d.count === 1 ? "" : "s"} — click to open`;
+                el.title = `${d.schools} conservatories, ${d.count === 1 ? `${d.count} student` : `${d.count} students`} — click to open`;
                 el.style.transform = "translate(-50%,-50%)";
                 el.innerHTML = `
                   <div style="
@@ -11090,7 +11105,7 @@ function WorldGlobe({ pins, selectedId, onSelect, onCluster, height = 320, pinSc
                 return el;
               }
 
-              el.title = d.count == null ? d.name : `${d.name} — ${d.count} student${d.count === 1 ? "" : "s"}`;
+              el.title = d.count == null ? d.name : `${d.name} — ${d.count === 1 ? `${d.count} student` : `${d.count} students`}`;
               const on = d.id === selectedId;
               const size = Math.round((on ? 26 : 21) * pinScale);
               // The gate's pin, at map scale: solid champagne with the window
@@ -11540,7 +11555,7 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
   return (
     <div className="nx">
       {/* Filters */}
-      <div className="nx-filters" role="toolbar" aria-label={`Filter ${noun}s`}>
+      <div className="nx-filters" role="toolbar" aria-label={learnerMode ? "Filter teachers" : "Filter musicians"}>
         <div className="nx-filter-row">
           {FILTERS.map(({ key, label }) => (
             <button key={key} type="button" className={`nx-fchip nx-fcard${filters[key].length ? " is-on" : ""}`} onClick={() => setSheet(key)} aria-haspopup="dialog">
@@ -11631,7 +11646,7 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
             <p>No one else{activeCount ? " matching these filters" : ""} studies in {myCountry} yet.</p>
           ) : (
             <>
-              <p>No {noun}s match these filters.</p>
+              <p>{learnerMode ? "No teachers match these filters." : "No musicians match these filters."}</p>
               <button type="button" className="nx-clear" onClick={() => setFilters(NX_EMPTY)}>Clear filters</button>
             </>
           )}
@@ -11668,7 +11683,11 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
         <NxSheet title={FILTERS.find((f) => f.key === sheet).label} onClose={() => setSheet(null)}
           footer={<>
             <button type="button" className="nx-clear" onClick={() => setFilters((f) => ({ ...f, [sheet]: [] }))}>Clear</button>
-            <button type="button" className="nx-done" onClick={() => setSheet(null)}>Show {filtered.length} {useConn ? (filtered.length === 1 ? "connection" : "connections") : `${noun}${filtered.length === 1 ? "" : "s"}`}</button>
+            <button type="button" className="nx-done" onClick={() => setSheet(null)}>{useConn
+              ? (filtered.length === 1 ? `Show ${filtered.length} connection` : `Show ${filtered.length} connections`)
+              : learnerMode
+                ? (filtered.length === 1 ? `Show ${filtered.length} teacher` : `Show ${filtered.length} teachers`)
+                : (filtered.length === 1 ? `Show ${filtered.length} musician` : `Show ${filtered.length} musicians`)}</button>
           </>}>
           {optionsFor(sheet).length === 0 && <p className="nx-sheet-none">No options for the current filters.</p>}
           {optionsFor(sheet).map((o) => {
@@ -11684,7 +11703,7 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
 
       {/* Members at one place */}
       {sheet === "group" && (
-        <NxSheet title={`${group.length} ${noun}s here`} onClose={() => setSheet(null)}>
+        <NxSheet title={learnerMode ? `${group.length} teachers here` : `${group.length} musicians here`} onClose={() => setSheet(null)}>
           {group.map((m) => (
             <button key={m.id} type="button" className="nx-grow" onClick={() => { setSheet(null); setSelectedId(m.id); selectFromGlobe(m.id); }}>
               <NxFace m={m} size={44} />
@@ -11866,7 +11885,7 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
                 <p className="artium-aw-row-t" style={{ fontSize: 13, fontFamily: FONT_LIBRE, fontWeight: 700 }}>{cons.name}</p>
                 <p className="artium-aw-row-c" style={{ fontSize: 14 }}><span aria-hidden="true" style={{ fontSize: 11, lineHeight: 1 }}>{"\uD83D\uDCCD"}</span>{[cons.city, cons.country].filter(Boolean).join(", ")}</p>
               </span>
-              <span className="artium-aw-badge"><b>{roster.length}</b><span>student{roster.length === 1 ? "" : "s"}</span></span>
+              <span className="artium-aw-badge"><b>{roster.length}</b><span>{roster.length === 1 ? "student" : "students"}</span></span>
             </div>
             <div className="artium-aw-list">
               {roster.length === 0 && (
@@ -11957,7 +11976,7 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
                       <p className="artium-aw-row-t" style={{ fontSize: 13, fontFamily: FONT_LIBRE, fontWeight: 700 }}>{c.name}</p>
                       <p className="artium-aw-row-c" style={{ fontSize: 14 }}><span aria-hidden="true" style={{ fontSize: 11, lineHeight: 1 }}>{"\uD83D\uDCCD"}</span>{[c.city, c.country].filter(Boolean).join(", ")}</p>
                     </span>
-                    <span className="artium-aw-badge"><b>{n}</b><span>student{n === 1 ? "" : "s"}</span></span>
+                    <span className="artium-aw-badge"><b>{n}</b><span>{n === 1 ? "student" : "students"}</span></span>
                     <ChevronRight size={17} strokeWidth={2} />
                   </button>
                 );
@@ -12206,7 +12225,7 @@ function StudentProfile({ student, conservatory, onBack, onMessage, locked, onAp
           </p>
           {conservatory && <p style={{ fontSize: 13, color: C.ivoryDim, margin: "1px 0 0" }}>{conservatory.name}, {conservatory.city}</p>}
           {connCount != null && (
-            <p className="pf-conn-count"><Users size={13} strokeWidth={2} /><b>{connCount}</b> connection{connCount === 1 ? "" : "s"}</p>
+            <p className="pf-conn-count"><Users size={13} strokeWidth={2} /><b>{connCount}</b> {connCount === 1 ? "connection" : "connections"}</p>
           )}
         </div>
         <div style={{ flexShrink: 0 }}>
@@ -12490,7 +12509,7 @@ function Messages({ students, conversations, activeChatId, setActiveChatId, onSe
             </div>
             <div className="flex-1 overflow-y-auto lg-scroll px-5 py-4 flex flex-col gap-2">
               {(conversations[active.id] || []).map((m, i) => (
-                <div key={i} className="px-4 py-2.5 rounded-2xl text-sm" style={{ maxWidth: "75%", alignSelf: m.from === "me" ? "flex-end" : "flex-start", background: m.from === "me" ? C.brass : C.inkSoft, color: m.from === "me" ? C.brassText : C.ivory, fontWeight: m.from === "me" ? 500 : 400 }}>
+                <div key={i} className="px-4 py-2.5 rounded-2xl text-sm" data-no-translate="" style={{ maxWidth: "75%", alignSelf: m.from === "me" ? "flex-end" : "flex-start", background: m.from === "me" ? C.brass : C.inkSoft, color: m.from === "me" ? C.brassText : C.ivory, fontWeight: m.from === "me" ? 500 : 400 }}>
                   {m.text}
                 </div>
               ))}
@@ -12695,17 +12714,45 @@ const LEGAL_DOCS = {
   safety:  { en: ["Community & Safety", SAFETY_UPDATED, SAFETY_SECTIONS], fr: ["Communauté et sécurité", TERMS_UPDATED_FR, SAFETY_SECTIONS_FR] },
   legal:   { en: ["Legal Notice", LEGAL_UPDATED, LEGAL_SECTIONS], fr: ["Mentions légales", TERMS_UPDATED_FR, LEGAL_SECTIONS_FR] },
 };
-// The footer's language choice first, then the browser's.
-const defaultLegalLang = () => {
-  try { const v = localStorage.getItem("artium_lang"); if (v === "fr" || v === "en") return v; } catch { /* private mode */ }
-  try { return /^fr/i.test(navigator.language || "") ? "fr" : "en"; } catch { return "en"; }
+// Courtesy translations of the English documents (src/lib/terms.<lang>.js),
+// loaded when someone reads them in that language. French prevails.
+const LEGAL_LOADERS = import.meta.glob("./lib/terms.*.js");
+const LEGAL_EXTRA = {};
+const LEGAL_NOTE = {
+  de: "Dies ist eine unverbindliche Übersetzung. Maßgeblich ist die französische Fassung.",
+  es: "Esta es una traducción de cortesía. Prevalece la versión francesa.",
+  nl: "Dit is een vertaling ter informatie. De Franse versie is leidend.",
+  it: "Questa è una traduzione di cortesia. Prevale la versione francese.",
+  "pt-BR": "Esta é uma tradução de cortesia. Prevalece a versão em francês.",
+  pl: "To jest tłumaczenie pomocnicze. Rozstrzygająca jest wersja francuska.",
 };
+// The app's language (footer / Settings), else the browser's; French or
+// English when there is no translation of the documents in it.
+const defaultLegalLang = () => {
+  const v = readLang();
+  return v === "fr" || v === "en" || LEGAL_LOADERS[`./lib/terms.${v}.js`] ? v : "en";
+};
+const legalDocsFor = (lang) => (lang === "fr" || lang === "en"
+  ? Object.fromEntries(Object.entries(LEGAL_DOCS).map(([k, v]) => [k, v[lang]]))
+  : LEGAL_EXTRA[lang] || null);
 // The documents an applicant must scroll to the end of before they can accept.
 const MUST_READ = ["terms", "safety", "privacy"];
 function TermsSheet({ onClose, doc: start = "terms", onAccept }) {
   const [doc, setDoc] = useState(start);
   const [lang, setLang] = useState(defaultLegalLang);
-  const [title, updated, sections] = LEGAL_DOCS[doc][lang];
+  // Other languages arrive with the first look at them.
+  const [, setLoaded] = useState(0);
+  useEffect(() => {
+    if (legalDocsFor(lang)) return;
+    const load = LEGAL_LOADERS[`./lib/terms.${lang}.js`];
+    if (!load) { setLang("en"); return; }
+    let live = true;
+    load().then((m) => { LEGAL_EXTRA[lang] = Object.values(m).find((v) => v && v.terms); if (live) setLoaded((n) => n + 1); }).catch(() => { if (live) setLang("en"); });
+    return () => { live = false; };
+  }, [lang]);
+  const docs = legalDocsFor(lang) || legalDocsFor("en");
+  const [title, updated, sections] = docs[doc];
+  const langs = [...new Set([...(lang !== "fr" && lang !== "en" ? [lang] : []), defaultLegalLang(), "fr", "en"])].filter((l) => l === "fr" || l === "en" || LEGAL_LOADERS[`./lib/terms.${l}.js`]);
   const bodyRef = useRef(null);
   // Accept mode: acceptance is given in here, not from a box outside. Each
   // required document counts as read once its end has been on screen.
@@ -12727,18 +12774,21 @@ function TermsSheet({ onClose, doc: start = "terms", onAccept }) {
       <div className="terms-sheet">
         <div className="terms-head">
           <button type="button" className="terms-back" onClick={onClose} aria-label="Back"><ChevronLeft size={19} strokeWidth={2} /></button>
-          <h2>{title}</h2>
-          <span className="terms-lang" role="group" aria-label="Language">
-            {["fr", "en"].map((l) => <button key={l} type="button" className={lang === l ? "is-on" : ""} onClick={() => setLang(l)}>{l.toUpperCase()}</button>)}
+          <h2 data-no-translate="">{title}</h2>
+          <span className="terms-lang" role="group" aria-label="Language" data-no-translate="">
+            {langs.map((l) => <button key={l} type="button" className={lang === l ? "is-on" : ""} onClick={() => setLang(l)}>{l.slice(0, 2).toUpperCase()}</button>)}
           </span>
         </div>
-        <div className="terms-tabs" role="tablist">
-          {Object.entries(LEGAL_DOCS).map(([k, v]) => (
-            <button key={k} type="button" role="tab" aria-selected={doc === k} className={doc === k ? "is-on" : ""} onClick={() => setDoc(k)}>{v[lang][0]}</button>
+        {/* The documents carry their own translations: the live translator
+            leaves them alone. */}
+        <div className="terms-tabs" role="tablist" data-no-translate="">
+          {Object.entries(docs).map(([k, v]) => (
+            <button key={k} type="button" role="tab" aria-selected={doc === k} className={doc === k ? "is-on" : ""} onClick={() => setDoc(k)}>{v[0]}</button>
           ))}
         </div>
-        <div className="terms-body" ref={bodyRef} onScroll={checkEnd}>
-          <p className="terms-meta">{lang === "fr" ? "Dernière mise à jour : " : "Last updated "}{updated}</p>
+        <div className="terms-body" ref={bodyRef} onScroll={checkEnd} data-no-translate="">
+          {LEGAL_NOTE[lang] && <p className="terms-note">{LEGAL_NOTE[lang]}</p>}
+          <p className="terms-meta">{lang === "fr" ? "Dernière mise à jour : " : lang === "en" ? "Last updated " : ""}{updated}</p>
           {sections.map(([h, paras]) => (
             <section key={h}>
               <h3>{h}</h3>
@@ -12752,12 +12802,12 @@ function TermsSheet({ onClose, doc: start = "terms", onAccept }) {
               <>
                 <p className="terms-progress">
                   {MUST_READ.map((k) => (
-                    <span key={k} className={read.has(k) ? "is-read" : ""}>{read.has(k) ? <Check size={13} /> : null}{LEGAL_DOCS[k][lang][0]}</span>
+                    <span key={k} className={read.has(k) ? "is-read" : ""}>{read.has(k) ? <Check size={13} /> : null}<span data-no-translate="">{docs[k][0]}</span></span>
                   ))}
                 </p>
                 {read.has(doc) || !MUST_READ.includes(doc) ? (
                   <button type="button" className="terms-next" onClick={() => setDoc(left[0])}>
-                    {fr ? "Lire ensuite : " : "Next: "}{LEGAL_DOCS[left[0]][lang][0]} →
+                    {fr ? "Lire ensuite : " : "Next: "}<span data-no-translate="">{docs[left[0]][0]}</span> →
                   </button>
                 ) : (
                   <p className="terms-hint">{fr ? "Faites défiler jusqu'à la fin pour continuer." : "Scroll to the end to continue."}</p>
@@ -13671,7 +13721,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
           <p className="artium-aw-eyebrow"><i />Find a teacher<i /></p>
           <h1 className="artium-aw-h1">{learner ? `Welcome, ${learner.name.split(" ")[0]}` : "Find a teacher"}</h1>
           <p className="artium-aw-sub">
-            {teachers.length} conservatory student{teachers.length === 1 ? "" : "s"} offering lessons
+            {teachers.length === 1 ? `${teachers.length} conservatory student` : `${teachers.length} conservatory students`} offering lessons
             {learner && learner.location ? ` · you're in ${learner.location}` : ""}.
           </p>
 
@@ -13733,7 +13783,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
                   <p className="artium-aw-row-t">{cons.name}</p>
                   <p className="artium-aw-row-c"><span aria-hidden="true" style={{ fontSize: 11, lineHeight: 1 }}>{"\uD83D\uDCCD"}</span>{[cons.city, cons.country].filter(Boolean).join(", ")}</p>
                 </span>
-                <span className="artium-aw-badge"><b>{consRoster.length}</b><span>teacher{consRoster.length === 1 ? "" : "s"}</span></span>
+                <span className="artium-aw-badge"><b>{consRoster.length}</b><span>{consRoster.length === 1 ? "teacher" : "teachers"}</span></span>
               </div>
               <div className="artium-aw-list">
                 {consRoster.length === 0 && (
@@ -13788,7 +13838,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
                       <p className="artium-aw-row-c"><span aria-hidden="true" style={{ fontSize: 11, lineHeight: 1 }}>{"\uD83D\uDCCD"}</span>{[c.city, c.country].filter(Boolean).join(", ")}</p>
                     </span>
                     <span className="artium-aw-badge">
-                      <b>{c.teacherCount}</b><span>teacher{c.teacherCount === 1 ? "" : "s"}</span>
+                      <b>{c.teacherCount}</b><span>{c.teacherCount === 1 ? "teacher" : "teachers"}</span>
                     </span>
                     <ChevronRight size={17} strokeWidth={2} />
                   </button>
@@ -13946,7 +13996,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
                   return sum;
                 }, 0);
                 const [y, m] = monthKey.split("-");
-                const monthLabel = new Date(Number(y), Number(m) - 1, 1).toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+                const monthLabel = new Date(Number(y), Number(m) - 1, 1).toLocaleDateString(dateLocale(), { month: "long", year: "numeric" });
                 const isOpen = !!learnerOpenMonths[monthKey];
                 return (
                   <div key={monthKey} style={{ marginBottom: 12, border: `1px solid ${C.inkLine}`, borderRadius: 10, overflow: "hidden" }}>
@@ -13955,7 +14005,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
                       <span style={{ fontSize: 13, fontWeight: 700, color: C.ivory }}>{monthLabel}</span>
                       <span style={{ display: "flex", alignItems: "center", gap: 12 }}>
                         {spentCents > 0 && <span style={{ fontSize: 12, fontWeight: 700, color: OK_C }}>€{euroAmount(spentCents)} spent</span>}
-                        <span style={{ fontSize: 11, color: C.ivoryDim }}>{sessions.length} session{sessions.length !== 1 ? "s" : ""}</span>
+                        <span style={{ fontSize: 11, color: C.ivoryDim }}>{sessions.length !== 1 ? `${sessions.length} sessions` : `${sessions.length} session`}</span>
                         <span style={{ fontSize: 14, color: C.ivoryDim }}>{isOpen ? "▲" : "▼"}</span>
                       </span>
                     </button>
@@ -13989,7 +14039,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
                                     </div>
                                   </div>
                                 </td>
-                                <td style={{ padding: "9px 12px", color: C.ivory }}>{dt.toLocaleDateString("en-GB", { day: "numeric", month: "short" })} · {s.time}</td>
+                                <td style={{ padding: "9px 12px", color: C.ivory }}>{dt.toLocaleDateString(dateLocale(), { day: "numeric", month: "short" })} · {s.time}</td>
                                 <td style={{ padding: "9px 12px" }}>
                                   <span style={{ fontSize: 11, fontWeight: 600, color: STATUS_COLOR[s.status] || C.ivoryDim }}>{STATUS_LABEL[s.status] || s.status}</span>
                                 </td>
@@ -14012,7 +14062,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
           <div style={{ padding: "0 0 32px", background: PAGE_BG, minHeight: "100%" }}>
             <div style={{ padding: "20px 20px 0", background: PAGE_BG }}>
               <p style={{ fontSize: 13, color: C.ivoryDim, margin: "0 0 16px", textAlign: "center" }}>
-                {acceptedTeachers.length} active teacher{acceptedTeachers.length !== 1 ? "s" : ""}
+                {acceptedTeachers.length !== 1 ? `${acceptedTeachers.length} active teachers` : `${acceptedTeachers.length} active teacher`}
               </p>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap", padding: "12px 0 16px" }}>
                 {acceptedTeachers.map((t) => (
@@ -14196,11 +14246,11 @@ function VideoSessionTab({ sessions, teacher, zoomLink, meetLink }) {
   let nextBanner = null;
   if (nextSession) {
     const dt = new Date(nextSession.date + "T" + nextSession.time);
-    const dateStr = dt.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
+    const dateStr = dt.toLocaleDateString(dateLocale(), { weekday: "long", day: "numeric", month: "long" });
     const hoursUntil = Math.round((dt.getTime() - now) / (1000 * 60 * 60));
     const countdown = hoursUntil < 24
-      ? `In ${hoursUntil} hour${hoursUntil !== 1 ? "s" : ""}`
-      : `In ${Math.round(hoursUntil / 24)} day${Math.round(hoursUntil / 24) !== 1 ? "s" : ""}`;
+      ? `In ${hoursUntil !== 1 ? `${hoursUntil} hours` : `${hoursUntil} hour`}`
+      : `In ${Math.round(hoursUntil / 24) !== 1 ? `${Math.round(hoursUntil / 24)} days` : `${Math.round(hoursUntil / 24)} day`}`;
     nextBanner = (
       <div style={{ borderRadius: 12, padding: "14px 16px", background: OK_BG, border: `1px solid ${OK_LINE}` }}>
         <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: OK_C, margin: "0 0 4px" }}>Next session</p>
@@ -14427,7 +14477,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
     }).eq("id", id).then(({ error }) => {
       if (error) { console.error("submitCounter", error.message); return; }
       if (!authUser?.id || !teacher?.id || !changedFrom) return;
-      const label = (dd, tt) => `${new Date(dd + "T00:00").toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })} at ${tt}`;
+      const label = (dd, tt) => `${new Date(dd + "T00:00").toLocaleDateString(dateLocale(), { weekday: "short", day: "numeric", month: "short" })} at ${tt}`;
       supabase.from("direct_messages").insert({
         sender_id: authUser.id, recipient_id: teacher.id,
         body: `I suggested a new time for our lesson: ${label(d, t)} (instead of ${label(changedFrom.date, changedFrom.time)}).`,
@@ -14456,7 +14506,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
       // The teacher's strip loses the card on its next poll; say so in chat
       // so it doesn't just vanish from their side.
       if (!gone || !authUser?.id || !teacher?.id) return;
-      const when = `${new Date(gone.date + "T00:00").toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })} at ${gone.time}`;
+      const when = `${new Date(gone.date + "T00:00").toLocaleDateString(dateLocale(), { weekday: "short", day: "numeric", month: "short" })} at ${gone.time}`;
       supabase.from("direct_messages").insert({
         sender_id: authUser.id, recipient_id: teacher.id,
         body: gone.status === "student_proposed"
@@ -14570,7 +14620,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
           <div className="lg-scroll overflow-y-auto px-4 py-3 flex flex-col gap-2" style={{ maxHeight: 280 }}>
             {activeMessages.length === 0 && <p style={{ fontSize: 13, color: C.ivoryDim, textAlign: "center", padding: "24px 0" }}>Start the conversation with {teacher.name.split(" ")[0]}</p>}
             {activeMessages.map((m, i) => (
-              <div key={i} className="px-3.5 py-2 rounded-2xl text-sm" style={{ maxWidth: "80%", alignSelf: m.from === "me" ? "flex-end" : "flex-start", background: m.from === "me" ? C.brass : C.inkSoft, color: m.from === "me" ? C.brassText : C.inkText, ...(MODERN && m.from !== "me" ? { border: "1px solid #E8E2DC" } : null) }}>
+              <div key={i} className="px-3.5 py-2 rounded-2xl text-sm" data-no-translate="" style={{ maxWidth: "80%", alignSelf: m.from === "me" ? "flex-end" : "flex-start", background: m.from === "me" ? C.brass : C.inkSoft, color: m.from === "me" ? C.brassText : C.inkText, ...(MODERN && m.from !== "me" ? { border: "1px solid #E8E2DC" } : null) }}>
                 {m.text}
               </div>
             ))}
@@ -14644,7 +14694,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
                     </div>
                     <div style={{ textAlign: "left" }}>
                       <p style={{ fontSize: 18, fontWeight: 800, color: C.inkText, margin: 0, lineHeight: 1 }}>{dt.getDate()}</p>
-                      <p style={{ fontSize: 11, color: C.ivoryDim, margin: "2px 0 0" }}>{dt.toLocaleDateString("en-GB", { month: "short" })} · {s.time}</p>
+                      <p style={{ fontSize: 11, color: C.ivoryDim, margin: "2px 0 0" }}>{dt.toLocaleDateString(dateLocale(), { month: "short" })} · {s.time}</p>
                     </div>
                   </button>
                 );
@@ -14662,7 +14712,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
               return (
                 <div style={{ borderTop: `1px solid ${C.inkLine}`, padding: "16px 4px 8px" }}>
                   <p style={{ fontSize: 13, fontWeight: 700, color: C.inkText, margin: "0 0 2px" }}>
-                    {dt.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })} at {sel.time}
+                    {dt.toLocaleDateString(dateLocale(), { weekday: "long", day: "numeric", month: "long" })} at {sel.time}
                   </p>
                   {sel.proposedBy === "student" && <p style={{ fontSize: 11, color: C.brassLabel, margin: "0 0 10px" }}>Your counter-proposal — awaiting teacher</p>}
 
@@ -15229,7 +15279,7 @@ function PromoteMe({ myProfile, authUser, focus }) {
   // one shot per Saturday per person.
   const myRejectedSlots = new Set(mineFreeAll.filter((r) => r.status === "rejected" && !myFreeSlots.has(r.slot_date)).map((r) => r.slot_date));
   const freeSlotLabel = (iso) => saturdays.find((s) => s.iso === iso)?.label
-    || (iso ? new Date(iso + "T00:00:00").toLocaleDateString("en-US", { weekday: "long", day: "numeric", month: "long" }) : "");
+    || (iso ? new Date(iso + "T00:00:00").toLocaleDateString(dateLocale(), { weekday: "long", day: "numeric", month: "long" }) : "");
   // Whether this account has already paid for a promotion. Read from the
   // payments ledger (RLS limits the query to the caller's own rows), not
   // from the ?promo=success redirect — the webhook is the authority. The
@@ -15736,7 +15786,7 @@ function AdminScreen({ authUser, onlineCount, listProps }) {
   // slot, whatever its status. Guarded by a confirm; needs the admin
   // delete policy from 20260904200000_promotions_admin_delete.sql.
   async function deleteWeek(slotDate, count) {
-    if (!window.confirm(`Delete all ${count} request${count === 1 ? "" : "s"} for Saturday ${slotDate}? This cannot be undone.`)) return;
+    if (!window.confirm(`Delete all ${count === 1 ? `${count} request` : `${count} requests`} for Saturday ${slotDate}? This cannot be undone.`)) return;
     const { error } = await supabase.from("promotions").delete().eq("kind", "free_weekly").eq("slot_date", slotDate);
     if (error) { window.alert("Could not delete: " + error.message); return; }
     setRows((prev) => prev.filter((r) => !(r.kind === "free_weekly" && r.slot_date === slotDate)));
@@ -15848,7 +15898,7 @@ function AdminScreen({ authUser, onlineCount, listProps }) {
                 <div key={wk}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, margin: "18px 2px 8px" }}>
                     <p style={{ fontSize: 13, fontWeight: 700, color: C.brassLabel, textTransform: "uppercase", letterSpacing: "0.08em", margin: 0 }}>
-                      {wk === "unscheduled" ? "No date" : `Saturday ${wk}`} · {byWeek[wk].length} request{byWeek[wk].length === 1 ? "" : "s"}
+                      {wk === "unscheduled" ? "No date" : `Saturday ${wk}`} · {byWeek[wk].length === 1 ? `${byWeek[wk].length} request` : `${byWeek[wk].length} requests`}
                     </p>
                     <button onClick={() => deleteWeek(wk, weekTotal(wk))}
                       style={{ padding: "6px 12px", borderRadius: 9, border: "1px solid rgba(179,38,30,0.35)", background: "rgba(179,38,30,0.06)", color: "#B3261E", fontSize: 12, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}>
@@ -16134,7 +16184,7 @@ function AdminComposers({ card }) {
           ) : (
           <p style={{ margin: "0 0 10px", fontSize: 16, fontWeight: 700, color: C.ivory }}>
             <button onClick={() => setRenaming(sel.name)} title="Rename" style={{ background: "none", border: "none", padding: 0, marginRight: 6, cursor: "pointer", color: C.ivoryDim, verticalAlign: "-2px" }}><Pencil size={14} /></button>
-            {sel.name} <span style={{ fontWeight: 500, color: C.ivoryDim, fontSize: 13 }}>· {pieceTotal} piece{pieceTotal === 1 ? "" : "s"}</span></p>
+            {sel.name} <span style={{ fontWeight: 500, color: C.ivoryDim, fontSize: 13 }}>· {pieceTotal === 1 ? `${pieceTotal} piece` : `${pieceTotal} pieces`}</span></p>
           )}
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
             <input style={inp} value={pq} onChange={(e) => setPq(e.target.value)} placeholder="Search this composer's pieces" />
@@ -16253,7 +16303,7 @@ function AdminGateCards({ card }) {
           <Search size={15} color={C.ivoryDim} />
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search approved students…" style={{ flex: 1, border: "none", outline: "none", background: "none", fontSize: 14, color: C.ivory }} />
         </div>
-        <p style={{ margin: "0 0 8px", fontSize: 12, color: C.ivoryDim }}>{people.length} approved student{people.length === 1 ? "" : "s"} · {picked.length}/4 chosen</p>
+        <p style={{ margin: "0 0 8px", fontSize: 12, color: C.ivoryDim }}>{people.length === 1 ? `${people.length} approved student` : `${people.length} approved students`} · {picked.length}/4 chosen</p>
         {list.length === 0 && <p style={{ margin: 0, fontSize: 13, color: C.ivoryDim }}>No approved student matches.</p>}
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           {list.map((p) => {
@@ -16326,7 +16376,7 @@ function AdminPartners({ card }) {
         <div key={r.id} style={card}>
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10, marginBottom: 8 }}>
             <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: C.ivory }}>{r.brand}</p>
-            <span style={{ fontSize: 12, color: C.ivoryDim, flexShrink: 0 }}>{new Date(r.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</span>
+            <span style={{ fontSize: 12, color: C.ivoryDim, flexShrink: 0 }}>{new Date(r.created_at).toLocaleDateString(dateLocale(), { day: "numeric", month: "short", year: "numeric" })}</span>
           </div>
           {line("Contact", r.contact_name)}
           <p style={{ margin: "0 0 4px", fontSize: 13, color: C.ivoryDim }}>
@@ -17800,7 +17850,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView, focus }) {
       )}
       {pendingRequests.length > 0 && (
         <div style={{ margin: "16px 20px 0", background: CREAM_BG, border: `1.5px solid ${C.brass}`, borderRadius: 12, padding: "14px 16px" }}>
-          <p style={{ fontSize: 13, fontWeight: 700, color: C.brassLabel, margin: "0 0 10px" }}>New lesson request{pendingRequests.length > 1 ? "s" : ""}</p>
+          <p style={{ fontSize: 13, fontWeight: 700, color: C.brassLabel, margin: "0 0 10px" }}>{pendingRequests.length > 1 ? "New lesson requests" : "New lesson request"}</p>
           {pendingRequests.map((r) => (
             <div key={r.learnerId} style={{ marginBottom: 12 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
@@ -17821,7 +17871,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView, focus }) {
       )}
       {/* Header */}
       <div style={{ padding: "20px 20px 0", background: PAGE_BG }}>
-        <p style={{ fontSize: 13, color: C.ivoryDim, margin: "0 0 16px", textAlign: "center" }}>{allLearners.length} active student{allLearners.length !== 1 ? "s" : ""}</p>
+        <p style={{ fontSize: 13, color: C.ivoryDim, margin: "0 0 16px", textAlign: "center" }}>{allLearners.length !== 1 ? `${allLearners.length} active students` : `${allLearners.length} active student`}</p>
         {roomView === "students" && (<>
         {/* Learner pill picker */}
         {allLearners.length > 1 && (() => {
@@ -17969,7 +18019,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView, focus }) {
                 return sum;
               }, 0);
               const [y, m] = monthKey.split("-");
-              const monthLabel = new Date(Number(y), Number(m) - 1, 1).toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+              const monthLabel = new Date(Number(y), Number(m) - 1, 1).toLocaleDateString(dateLocale(), { month: "long", year: "numeric" });
               const isOpen = !!openMonths[monthKey];
               return (
                 <div key={monthKey} style={{ marginBottom: 12, border: `1px solid ${C.inkLine}`, borderRadius: 10, overflow: "hidden" }}>
@@ -17978,7 +18028,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView, focus }) {
                     <span style={{ fontSize: 13, fontWeight: 700, color: C.ivory }}>{monthLabel}</span>
                     <span style={{ display: "flex", alignItems: "center", gap: 12 }}>
                       {earnedCents > 0 && <span style={{ fontSize: 12, fontWeight: 700, color: OK_C }}>€{euroAmount(earnedCents)} earned</span>}
-                      <span style={{ fontSize: 11, color: C.ivoryDim }}>{sessions.length} session{sessions.length !== 1 ? "s" : ""}</span>
+                      <span style={{ fontSize: 11, color: C.ivoryDim }}>{sessions.length !== 1 ? `${sessions.length} sessions` : `${sessions.length} session`}</span>
                       <span style={{ fontSize: 14, color: C.ivoryDim }}>{isOpen ? "▲" : "▼"}</span>
                     </span>
                   </button>
@@ -18017,7 +18067,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView, focus }) {
                                 </div>
                               </td>
                               <td style={{ padding: "9px 12px", color: C.ivory }}>
-                                {dt.toLocaleDateString("en-GB", { day: "numeric", month: "short" })} · {sess.time}
+                                {dt.toLocaleDateString(dateLocale(), { day: "numeric", month: "short" })} · {sess.time}
                               </td>
                               <td style={{ padding: "9px 12px" }}>
                                 <span style={{ fontSize: 11, fontWeight: 600, color: STATUS_COLOR[sess.status] || C.ivoryDim }}>
@@ -18054,7 +18104,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView, focus }) {
           <div className="lg-scroll overflow-y-auto px-4 py-3 flex flex-col gap-2" style={{ maxHeight: 300 }}>
             {msgs.length === 0 && <p style={{ fontSize: 13, color: C.ivoryDim, textAlign: "center", padding: "24px 0" }}>Start the conversation with {activeLearner.name.split(" ")[0]}</p>}
             {msgs.map((m, i) => (
-              <div key={i} className="px-3.5 py-2 rounded-2xl text-sm" style={{ maxWidth: "80%", alignSelf: m.from === "me" ? "flex-end" : "flex-start", background: m.from === "me" ? C.brass : C.inkSoft, color: m.from === "me" ? C.brassText : C.inkText, ...(MODERN && m.from !== "me" ? { border: "1px solid #E8E2DC" } : null) }}>
+              <div key={i} className="px-3.5 py-2 rounded-2xl text-sm" data-no-translate="" style={{ maxWidth: "80%", alignSelf: m.from === "me" ? "flex-end" : "flex-start", background: m.from === "me" ? C.brass : C.inkSoft, color: m.from === "me" ? C.brassText : C.inkText, ...(MODERN && m.from !== "me" ? { border: "1px solid #E8E2DC" } : null) }}>
                 {m.text}
               </div>
             ))}
@@ -18158,7 +18208,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView, focus }) {
                     </div>
                     <div style={{ textAlign: "left" }}>
                       <p style={{ fontSize: 18, fontWeight: 800, color: C.inkText, margin: 0, lineHeight: 1 }}>{dt.getDate()}</p>
-                      <p style={{ fontSize: 11, color: C.ivoryDim, margin: "2px 0 0" }}>{dt.toLocaleDateString("en-GB", { month: "short" })} · {s.time}</p>
+                      <p style={{ fontSize: 11, color: C.ivoryDim, margin: "2px 0 0" }}>{dt.toLocaleDateString(dateLocale(), { month: "short" })} · {s.time}</p>
                     </div>
                   </button>
                 );
@@ -18175,7 +18225,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView, focus }) {
               return (
                 <div style={{ borderTop: `1px solid ${C.inkLine}`, padding: "16px 20px 8px" }}>
                   <p style={{ fontSize: 13, fontWeight: 700, color: C.inkText, margin: "0 0 2px" }}>
-                    {dt.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })} at {sel.time}
+                    {dt.toLocaleDateString(dateLocale(), { weekday: "long", day: "numeric", month: "long" })} at {sel.time}
                   </p>
 
                   {/* Student counter-proposal: teacher can approve or re-propose */}
@@ -18190,11 +18240,11 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView, focus }) {
                         <p style={{ fontSize: 12, color: C.ivoryDim, margin: "0 0 10px", display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6 }}>
                           <span>Changed from</span>
                           <span style={{ textDecoration: "line-through" }}>
-                            {new Date(sel.changedFrom.date + "T00:00").toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })} at {sel.changedFrom.time}
+                            {new Date(sel.changedFrom.date + "T00:00").toLocaleDateString(dateLocale(), { weekday: "short", day: "numeric", month: "short" })} at {sel.changedFrom.time}
                           </span>
                           <span aria-hidden="true">→</span>
                           <span style={{ color: C.inkText, fontWeight: 600 }}>
-                            {dt.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })} at {sel.time}
+                            {dt.toLocaleDateString(dateLocale(), { weekday: "short", day: "numeric", month: "short" })} at {sel.time}
                           </span>
                         </p>
                       )}
@@ -18334,7 +18384,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView, focus }) {
             return (
               <div style={{ background: OK_BG2, border: `1px solid ${OK_LINE}`, borderRadius: 12, padding: "16px 20px", marginBottom: 20 }}>
                 <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: OK_C, margin: "0 0 4px" }}>Next session with {activeLearner.name.split(" ")[0]}</p>
-                <p style={{ fontSize: 16, fontWeight: 700, color: C.ivory, margin: 0 }}>{dt.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })} at {nextSession.time}</p>
+                <p style={{ fontSize: 16, fontWeight: 700, color: C.ivory, margin: 0 }}>{dt.toLocaleDateString(dateLocale(), { weekday: "long", day: "numeric", month: "long" })} at {nextSession.time}</p>
               </div>
             );
           })() : (
@@ -18405,7 +18455,7 @@ function LearnerChat({ teacher, messages, onSend }) {
       </div>
       <div className="lg-scroll overflow-y-auto px-4 py-3 flex flex-col gap-2" style={{ maxHeight: 240 }}>
         {messages.map((m, i) => (
-          <div key={i} className="px-3.5 py-2 rounded-2xl text-sm" style={{ maxWidth: "80%", alignSelf: m.from === "me" ? "flex-end" : "flex-start", background: m.from === "me" ? C.brass : C.inkSoft, color: m.from === "me" ? C.brassText : C.ivory, ...(MODERN && m.from !== "me" ? { border: "1px solid #E8E2DC" } : null) }}>
+          <div key={i} className="px-3.5 py-2 rounded-2xl text-sm" data-no-translate="" style={{ maxWidth: "80%", alignSelf: m.from === "me" ? "flex-end" : "flex-start", background: m.from === "me" ? C.brass : C.inkSoft, color: m.from === "me" ? C.brassText : C.ivory, ...(MODERN && m.from !== "me" ? { border: "1px solid #E8E2DC" } : null) }}>
             {m.text}
           </div>
         ))}

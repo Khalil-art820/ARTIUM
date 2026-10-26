@@ -34,7 +34,7 @@ function LanguagePicker() {
   return (
     <div className="cg-lang" ref={ref}>
       {open && (
-        <ul className="cg-lang-menu" role="listbox" aria-label="Language">
+        <ul className="cg-lang-menu" role="listbox" aria-label="Language" data-no-translate="">
           {LANGS.map(([k, name]) => (
             <li key={k} role="option" aria-selected={k === lang}>
               <button type="button" className={k === lang ? "is-on" : ""} onClick={() => pick(k)}>
@@ -47,7 +47,7 @@ function LanguagePicker() {
       )}
       <button type="button" className="cg-lang-btn" onClick={() => setOpen((o) => !o)} aria-haspopup="listbox" aria-expanded={open}>
         <Svg size={20} sw={1.7}><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3c2.6 2.6 3.9 5.6 3.9 9s-1.3 6.4-3.9 9c-2.6-2.6-3.9-5.6-3.9-9S9.4 5.6 12 3z" /></Svg>
-        <span>{label}</span>
+        <span data-no-translate="">{label}</span>
         <Svg size={15} sw={2}><path d="M6 9l6 6 6-6" /></Svg>
       </button>
     </div>

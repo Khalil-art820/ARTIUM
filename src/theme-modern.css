@@ -1159,3 +1159,4 @@ html.theme-modern .ng-wrap canvas{touch-action:pan-y !important}
 html.theme-modern .tm-count-btn{border:0;background:none;font:inherit;cursor:pointer;border-radius:999px;-webkit-tap-highlight-color:transparent}
 html.theme-modern .tm-count-btn:disabled{cursor:default}
 html.theme-modern .tm-count-btn:not(:disabled):active{transform:scale(.96)}
+.terms-note{margin:0 0 10px;padding:8px 12px;border-radius:8px;background:#F3F1EE;color:#5E6B69;font-size:13px}
