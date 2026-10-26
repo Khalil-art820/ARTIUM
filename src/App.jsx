@@ -3367,11 +3367,20 @@ export default function App() {
       if (error && error.code !== "23505") console.error("sendTeachRequest", error);
     });
   }
+  // Where the profile was opened from, so its back arrow returns there.
+  const profileReturn = useRef(null);
   function goToProfile() {
     if (!myProfile) return;
+    if (!(screen === "app" && appTab === "profile")) profileReturn.current = { screen, tab: appTab };
     setScreen("app");
     setAppTabPersist("profile");
     setSelectedStudentId(null);
+  }
+  function backFromMyProfile() {
+    const r = profileReturn.current;
+    profileReturn.current = null;
+    setAppTabPersist(r && r.tab && r.tab !== "profile" ? r.tab : "map");
+    if (r && r.screen !== "app") setScreen(r.screen);
   }
   // A function is read against the latest draft, so two quick taps can't
   // each act on the same stale copy.
@@ -5732,7 +5741,7 @@ export default function App() {
           )}
           {appTab === "profile" && !selectedStudentId && myProfile && (
             <>
-              {netHeaderWith(null)}
+              {netHeaderWith(backFromMyProfile)}
               <MyProfile profile={myProfile} onEdit={editProfile} onLogout={handleLogout}
                 connections={MODERN && appConn.ready ? (() => {
                   const person = (id, connId) => {
@@ -13636,7 +13645,11 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
   }
 
   // The menu leads the bar; your profile is on the member counter.
-  const learnerAvatar = <ArtiumMenu onProfile={() => { setSelectedId(null); setAppTab("profile"); }} onLogout={onLogout} legalSheet={TermsSheet} />;
+  // Opening your profile from the counter or the menu remembers the tab you
+  // were on, so the profile's back arrow returns there.
+  const learnerPrevTab = useRef(null);
+  const openMyProfile = () => { if (appTab !== "profile") learnerPrevTab.current = appTab; setSelectedId(null); setAppTab("profile"); };
+  const learnerAvatar = <ArtiumMenu onProfile={openMyProfile} onLogout={onLogout} legalSheet={TermsSheet} />;
   return (
     <div className="min-h-full flex flex-col artium-has-tabs" style={{ background: C.inkSoft, color: C.ivory }}>
       {/* Same header the conservatory side draws on its network/welcome
@@ -13649,8 +13662,9 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
       <header className="artium-net-bar">
         {/* The profile tab (where editing lives) goes arrowless, matching
             the student side — the bottom bar does the walking there. */}
-        {appTab !== "profile" && (
-          <button className={`artium-net-puck${MODERN ? " tm-back-plain" : ""}`} onClick={onBack} aria-label="Back">
+        {(appTab !== "profile" || learnerPrevTab.current) && (
+          <button className={`artium-net-puck${MODERN ? " tm-back-plain" : ""}`} aria-label="Back"
+            onClick={appTab === "profile" && learnerPrevTab.current ? () => { const t = learnerPrevTab.current; learnerPrevTab.current = null; setAppTab(t); } : onBack}>
             <ChevronLeft size={17} strokeWidth={2} />
           </button>
         )}
@@ -13662,7 +13676,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
           <span aria-hidden="true">RTIUM</span>
         </span>
         <span className="artium-net-right">
-          <button type="button" className="artium-net-count tm-count-btn" onClick={() => { setSelectedId(null); setAppTab("profile"); }}
+          <button type="button" className="artium-net-count tm-count-btn" onClick={openMyProfile}
             title="My profile" aria-label={`${memberCount} members — open my profile`}>
             {MODERN ? <HeaderMembers count={memberCount} faces={teachers} /> : <><Users size={15} strokeWidth={1.8} />{memberCount}</>}
           </button>
