@@ -1167,3 +1167,6 @@ html.theme-modern .tm-hello-l{text-align:left}
 html.theme-modern .tm-hello-eyebrow{font:500 17px/1.2 'Figtree','Fira Sans',system-ui,sans-serif;letter-spacing:-.01em;text-transform:none;color:#65676B}
 html.theme-modern .tm-hello-name{margin:2px 0 0;font-family:'Figtree','Fira Sans',system-ui,sans-serif;font-weight:800;font-size:44px;line-height:1.05;
   letter-spacing:-.035em;color:#0866FF;text-transform:none;font-style:normal}
+/* "Welcome back," in the name's own style (Figtree 800, same blue, tight
+   tracking), a step smaller than the name. */
+html.theme-modern .tm-hello-eyebrow{font:800 28px/1.05 'Figtree','Fira Sans',system-ui,sans-serif;letter-spacing:-.03em;text-transform:none;color:#0866FF}
