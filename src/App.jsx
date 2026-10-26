@@ -5961,6 +5961,23 @@ const IconBox = ({ size = 34, strokeWidth = 1.5, children }) => (
     stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round"
     aria-hidden="true" style={{ display: "block" }}>{children}</svg>
 );
+// The owner's reference shapes, drawn like lucide icons (same size /
+// strokeWidth / color props) so they drop in where Home and Bell were.
+// Home: a house with a rounded peak and an arched door cut into its base.
+const IconHomeArch = ({ size = 24, strokeWidth = 2, color = "currentColor" }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth}
+    strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M4 10.4 12 3.6l8 6.8v9a1.2 1.2 0 0 1-1.2 1.2h-4.3V15.4a2.5 2.5 0 0 0-5 0v5.2H5.2A1.2 1.2 0 0 1 4 19.4z" />
+  </svg>
+);
+// Bell: a round dome, short flared sides, a flat base and a half-round clapper.
+const IconBellRef = ({ size = 24, strokeWidth = 2, color = "currentColor" }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth}
+    strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M6.6 15.4V9.6a5.4 5.4 0 0 1 10.8 0v5.8l1.6 2.6H5z" />
+    <path d="M10 18a2 2 0 0 0 4 0" />
+  </svg>
+);
 const IconStage = ({ size = 34 }) => (
   // The entry gate card 02's proscenium stage, verbatim: solid gold arch,
   // swagged curtains, floor bar.
@@ -7376,7 +7393,7 @@ function HirerApp({ authUser, students, onHome }) {
   const items = [
     { k: "pianists", label: "Pianists", Icon: Music2 },
     { k: "bookings", label: "Bookings", Icon: BookOpen, attention: needsAttention },
-    { k: "home", label: "Home", Icon: Home },
+    { k: "home", label: "Home", Icon: IconHomeArch },
   ];
 
   const overlayOpen = !!activeInquiryId || composing || !!selectedPianistId;
@@ -10404,7 +10421,7 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
         className={puck ? "artium-net-puck" : undefined}
         style={puck ? undefined : { position: "relative", background: "none", border: "none", cursor: "pointer", padding: 4, display: "flex", alignItems: "center", justifyContent: "center" }}
       >
-        <Bell size={puck ? 15 : 20} strokeWidth={puck ? 2 : 1.8} color={puck ? "currentColor" : (totalCount > 0 ? C.brass : C.ivoryDim)} />
+        <IconBellRef size={puck ? 15 : 20} strokeWidth={puck ? 2 : 1.8} color={puck ? "currentColor" : (totalCount > 0 ? C.brass : C.ivoryDim)} />
         {totalCount > 0 && (
           <span
             className={puck ? "artium-net-bell-badge" : undefined}
@@ -12080,7 +12097,7 @@ const CalendarEventIcon = ({ size = 24, strokeWidth = 2, ...props }) => (
 );
 
 const STUDENT_TABS = [
-  { k: "home", label: "Home", Icon: Home },
+  { k: "home", label: "Home", Icon: IconHomeArch },
   { k: "map", label: "Network", Icon: MODERN ? IconGlobePin : GlobeIcon },
   { k: "messages", label: "Messages", Icon: MessageCircle },
   { k: "promote", label: "Promote", Icon: MODERN ? IconMegaphone : Megaphone },
@@ -12092,7 +12109,7 @@ const STUDENT_TABS = [
 // What is left is the two things they can actually do, which is also the
 // honest shape of the app before signing up.
 const GUEST_TABS = [
-  { k: "home", label: "Home", Icon: Home },
+  { k: "home", label: "Home", Icon: IconHomeArch },
   { k: "map", label: "Network", Icon: MODERN ? IconGlobePin : GlobeIcon },
 ];
 
@@ -13418,7 +13435,7 @@ function LearnerNotificationBell({ authUser, teachers, learnerSessionsByTeacher,
         aria-label="Notifications"
         className="artium-net-puck"
       >
-        <Bell size={15} strokeWidth={2} color="currentColor" />
+        <IconBellRef size={15} strokeWidth={2} color="currentColor" />
         {totalCount > 0 && (
           <span className="artium-net-bell-badge">{totalCount}</span>
         )}
@@ -14230,7 +14247,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
           dots={{ lesson: !!lessonDot }}
           light
           items={[
-            { k: "home", label: "Home", Icon: Home },
+            { k: "home", label: "Home", Icon: IconHomeArch },
             { k: "map", label: "Teachers", Icon: MODERN ? IconGlobePin : Map },
             ...(Object.values(teachRequests).some((s) => s === "accepted")
               ? [{ k: "lesson", label: "Lessons", Icon: MODERN ? IconTeacher : BookOpen }]
