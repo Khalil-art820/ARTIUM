@@ -10421,7 +10421,7 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
         className={puck ? "artium-net-puck" : undefined}
         style={puck ? undefined : { position: "relative", background: "none", border: "none", cursor: "pointer", padding: 4, display: "flex", alignItems: "center", justifyContent: "center" }}
       >
-        <IconBellRef size={puck ? 15 : 20} strokeWidth={puck ? 2 : 1.8} color={puck ? "currentColor" : (totalCount > 0 ? C.brass : C.ivoryDim)} />
+        <IconBellRef size={puck ? 18 : 20} strokeWidth={puck ? 2 : 1.8} color={puck ? "currentColor" : (totalCount > 0 ? C.brass : C.ivoryDim)} />
         {totalCount > 0 && (
           <span
             className={puck ? "artium-net-bell-badge" : undefined}
@@ -13435,7 +13435,7 @@ function LearnerNotificationBell({ authUser, teachers, learnerSessionsByTeacher,
         aria-label="Notifications"
         className="artium-net-puck"
       >
-        <IconBellRef size={15} strokeWidth={2} color="currentColor" />
+        <IconBellRef size={18} strokeWidth={2} color="currentColor" />
         {totalCount > 0 && (
           <span className="artium-net-bell-badge">{totalCount}</span>
         )}
