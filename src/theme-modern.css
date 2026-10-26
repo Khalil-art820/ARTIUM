@@ -627,8 +627,9 @@ html.theme-modern .ng-face b{font:700 12px 'Fira Sans',sans-serif;position:absol
 html.theme-modern .ng-face img{position:relative}
 html.theme-modern .ng-group{display:flex;align-items:center}
 html.theme-modern .ng-group .ng-face + .ng-face{margin-left:-12px}
-html.theme-modern .ng-more{margin-left:-8px;min-width:26px;height:26px;border-radius:13px;padding:0 6px;background:var(--nx-mint,#42C9B8);color:#06302E;
-  font:700 12px 'Fira Sans',sans-serif;display:grid;place-items:center;box-shadow:0 0 0 2px #fff}
+/* The top-bar counter's pill: same size, radius, green gradient and ring. */
+html.theme-modern .ng-more{margin-left:-10px;min-width:28px;height:24px;padding:0 8px;border-radius:12px;display:inline-grid;place-items:center;position:relative;
+  background:linear-gradient(150deg,#41B48F 0%,#1F8B6D 55%,#13705A 100%);color:#FFFFFF;font:700 12.5px 'Fira Sans',sans-serif;box-shadow:0 0 0 2px #fff}
 /* Tabs */
 html.theme-modern .nx-tabs{display:flex;gap:4px;margin:4px 4px 10px;padding:4px;background:#EFEAE2;border-radius:999px}
 html.theme-modern .nx-tabs button{flex:1;height:34px;border-radius:999px;border:0;background:transparent;color:#5E6B69;font:600 13.5px 'Fira Sans',sans-serif;cursor:pointer;transition:background .2s,color .2s}

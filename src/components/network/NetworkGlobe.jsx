@@ -315,9 +315,10 @@ export default function NetworkGlobe({ members, conservatories, focus, selectedI
               el.innerHTML = faceHTML(m, d.selected ? 46 : 36, d.selected ? 5 : 3);
               el.onclick = (e) => { e.stopPropagation(); onSelectMember(m.id); };
             } else {
-              const shown = d.members.slice(0, 2);
+              // As the top-bar counter: one portrait (the first in order — the
+              // earliest connection) and a "+N" pill for everyone else here.
               el.setAttribute("aria-label", `${d.members.length} musicians here — open the list`);
-              el.innerHTML = `<span class="ng-group">${shown.map((m) => faceHTML(m, 32, 2)).join("")}<span class="ng-more">${d.members.length}</span></span>`;
+              el.innerHTML = `<span class="ng-group">${faceHTML(d.members[0], 34, 2)}<span class="ng-more">+${d.members.length - 1}</span></span>`;
               el.onclick = (e) => { e.stopPropagation(); onSelectGroup(d.members); };
             }
             return el;

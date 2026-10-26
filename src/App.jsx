@@ -11441,10 +11441,14 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
   const filtered = React.useMemo(() => filterBase.filter((m) => matches(m, filters)), [filterBase, filters]);
   const discover = useConn ? members : filtered;
   // The globe shows you and the connections the filters leave.
+  // Connections in the order they were made, so a group of people at one
+  // place shows the earliest connection's face; you come after them.
   const onGlobe = React.useMemo(() => {
     const me = useConn ? members.filter((m) => m.id === myId) : [];
-    return [...me, ...filtered].filter((m) => Number.isFinite(m.lat) && Number.isFinite(m.lng));
-  }, [filtered, members, useConn, myId]);
+    const madeAt = (m) => { const r = conn.byOther?.[m.id]?.row; return r ? (Date.parse(r.responded_at || r.created_at) || 0) : Infinity; };
+    const ordered = useConn ? [...filtered].sort((x, y) => madeAt(x) - madeAt(y)) : filtered;
+    return [...ordered, ...me].filter((m) => Number.isFinite(m.lat) && Number.isFinite(m.lng));
+  }, [filtered, members, useConn, myId, conn.byOther]);
   const connectedCount = useConn ? Object.values(conn.byOther).filter((c) => c.state === "connected").length : null;
 
   // Options come from the members themselves, counted against the other filters.
