@@ -1170,3 +1170,29 @@ html.theme-modern .tm-hello-name{margin:2px 0 0;font-family:'Figtree','Fira Sans
 /* "Welcome back," in the name's own style (Figtree 800, same blue, tight
    tracking), a step smaller than the name. */
 html.theme-modern .tm-hello-eyebrow{font:800 28px/1.05 'Figtree','Fira Sans',system-ui,sans-serif;letter-spacing:-.03em;text-transform:none;color:#0866FF}
+/* ==== White top bars (every page): the bar takes the page's white; what sat
+   on the teal turns ink. The radio/bell discs keep their green. ==== */
+html.theme-modern .artium-net-bar,
+html.theme-modern .artium-lp-bar{background:#FFFFFF}
+html.theme-modern .artium-net-bar .artium-net-word,
+html.theme-modern .artium-lp-bar .artium-lp-word,
+html.theme-modern .artium-net-bar .artium-net-count,
+html.theme-modern .artium-lp-bar .artium-gx-count,
+html.theme-modern .artium-net-bar .artium-net-count svg,
+html.theme-modern .artium-lp-bar .artium-gx-count svg{color:#1C1C1C}
+html.theme-modern .artium-net-puck.tm-back-plain svg{color:#1C1C1C}
+html.theme-modern .artium-net-bar .am-burger span,
+html.theme-modern .artium-lp-bar .am-burger span,
+html.theme-modern .cgate .cg-head .am-burger span{background:#1C1C1C}
+html.theme-modern .am-burger:hover{background:rgba(0,0,0,.05)}
+/* The counter portraits were ringed in the old teal; ring them in white. */
+html.theme-modern .tm-hm-faces img,
+html.theme-modern .tm-hm-n{box-shadow:0 0 0 2px #FFFFFF}
+/* ==== Welcome greeting: "Welcome back," black, the name pure gold. ==== */
+html.theme-modern .tm-hello-eyebrow{color:#1C1C1C}
+html.theme-modern .tm-hello-name{color:#D4AF37}
+/* ==== The four filter cards (Instrument / Country / Level / Conservatory): gold rim. ==== */
+html.theme-modern .nx-fchip.nx-fcard{border-color:#D4AF37}
+/* The greeting block spans the page (it shrank to its text and auto margins
+   centred it), so the words start at the left edge. */
+html.theme-modern .tm-hello{width:100%;box-sizing:border-box}
