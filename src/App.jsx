@@ -12698,7 +12698,11 @@ const LEGAL_DOCS = {
   safety:  { en: ["Community & Safety", SAFETY_UPDATED, SAFETY_SECTIONS], fr: ["Communauté et sécurité", TERMS_UPDATED_FR, SAFETY_SECTIONS_FR] },
   legal:   { en: ["Legal Notice", LEGAL_UPDATED, LEGAL_SECTIONS], fr: ["Mentions légales", TERMS_UPDATED_FR, LEGAL_SECTIONS_FR] },
 };
-const defaultLegalLang = () => { try { return /^fr/i.test(navigator.language || "") ? "fr" : "en"; } catch { return "en"; } };
+// The footer's language choice first, then the browser's.
+const defaultLegalLang = () => {
+  try { const v = localStorage.getItem("artium_lang"); if (v === "fr" || v === "en") return v; } catch { /* private mode */ }
+  try { return /^fr/i.test(navigator.language || "") ? "fr" : "en"; } catch { return "en"; }
+};
 // The documents an applicant must scroll to the end of before they can accept.
 const MUST_READ = ["terms", "safety", "privacy"];
 function TermsSheet({ onClose, doc: start = "terms", onAccept }) {
