@@ -133,8 +133,32 @@ export default function NetworkGlobe({ members, conservatories, focus, selectedI
       }, { threshold: 0.01 });
       io.observe(wrapRef.current);
     }
-    return () => { detach && detach(); io && io.disconnect(); clearTimeout(idleTimer.current); };
+    // Sharp map at a slant: full anisotropic filtering on both textures (the
+    // globe image arrives a moment after ready, so wait for it).
+    let tries = 0;
+    const sharpen = setInterval(() => {
+      try {
+        const max = g.renderer().capabilities.getMaxAnisotropy();
+        const mat = g.globeMaterial();
+        let done = true;
+        for (const tex of [mat.map, mat.emissiveMap]) {
+          if (!tex) { done = false; continue; }
+          if (tex.anisotropy !== max) { tex.anisotropy = max; tex.needsUpdate = true; }
+        }
+        if (done || ++tries > 40) clearInterval(sharpen);
+      } catch { clearInterval(sharpen); }
+    }, 250);
+    return () => { detach && detach(); io && io.disconnect(); clearTimeout(idleTimer.current); clearInterval(sharpen); };
   }, [ready]);
+
+  // Zoomed in, draw at the screen's full pixel density (up to 3x) so the map
+  // and coastlines stay crisp; zoomed out, a lighter 1.75x keeps it smooth.
+  const zoomedIn = altitude < 0.95;
+  React.useEffect(() => {
+    if (!ready || !globeRef.current) return;
+    const dpr = window.devicePixelRatio || 1;
+    try { globeRef.current.renderer().setPixelRatio(Math.min(dpr, zoomedIn ? 3 : 1.75)); } catch { /* not ready */ }
+  }, [ready, zoomedIn]);
 
   // Fly to whatever the page asks for (a carousel pick, a recenter).
   React.useEffect(() => {
