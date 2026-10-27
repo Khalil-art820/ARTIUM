@@ -1237,3 +1237,5 @@ html.theme-modern .nx-sort-title{text-align:center;margin:22px 4px 10px}
 html.theme-modern .nx-fchip.nx-fcard,
 html.theme-modern .nx-fchip.nx-fcard.is-on{border:1px solid #FFE27A}
 html.theme-modern .nx-fchip.nx-fcard.is-on{box-shadow:0 0 0 1px #FFE27A}
+/* Title: upright, in a black-framed pill, centred. */
+html.theme-modern .nx-sort-title{display:table;margin:22px auto 12px;padding:6px 18px;font-style:normal;border:1px solid #1C1C1C;border-radius:999px}
