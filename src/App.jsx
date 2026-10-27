@@ -5348,7 +5348,7 @@ export default function App() {
           isAdmin={isAdmin}
           onGoToAdmin={() => { setScreen("app"); setAppTabPersist("admin"); }}
         />
-      ) : null} memberChips={deckFaces} featuredMembers={gateFeatured} legalSheet={TermsSheet} connCount={myProfile ? myConnCount : 0} onAvatar={myProfile ? goToProfile : (learnerProfile ? () => { setLearnerStartTab("profile"); setScreen("learnerMap"); } : undefined)} onLogout={async () => {
+      ) : null} memberChips={deckFaces} featuredMembers={gateFeatured} legalSheet={TermsSheet} connCount={myProfile ? myConnCount : learnerProfile ? Object.values(teachRequests || {}).filter((st) => st === "accepted").length : 0} onAvatar={myProfile ? goToProfile : (learnerProfile ? () => { setLearnerStartTab("profile"); setScreen("learnerMap"); } : undefined)} onLogout={async () => {
         // Logging out re-arms the gate tour: the next login meets the
         // card-by-card introduction again, per the user's request.
         try { localStorage.removeItem("artium_gate_tour_v1"); } catch { /* private mode */ }
@@ -13581,6 +13581,8 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
   const selected = teachers.find((t) => t.id === selectedId);
   const status = selectedId ? teachRequests[selectedId] : undefined;
   const acceptedTeachers = teachers.filter((t) => teachRequests[t.id] === "accepted");
+  // A learner's connections are their teachers: the requests a teacher accepted.
+  const learnerTeacherCount = Object.values(teachRequests || {}).filter((s) => s === "accepted").length;
   const activeLessonTeacher = teachers.find((t) => t.id === activeLessonTeacherId) || acceptedTeachers[0] || null;
 
   // profile editing state
@@ -13721,8 +13723,8 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
         </span>
         <span className="artium-net-right">
           <button type="button" className="artium-net-count tm-count-btn" onClick={openMyProfile}
-            title="My profile" aria-label="My profile">
-            {MODERN ? <MeCounter photoUrl={learner?.photoUrl || avatarPhotoUrl} name={learner?.name || avatarName} count={0} /> : <><Users size={15} strokeWidth={1.8} />{memberCount}</>}
+            title="My profile" aria-label={`My profile — ${learnerTeacherCount} connections`}>
+            {MODERN ? <MeCounter photoUrl={learner?.photoUrl || avatarPhotoUrl} name={learner?.name || avatarName} count={learnerTeacherCount} /> : <><Users size={15} strokeWidth={1.8} />{memberCount}</>}
           </button>
           <button
             className={`artium-net-puck${MODERN ? " tm-play" : ""}${MODERN && musicOn ? " is-on" : ""}`}
