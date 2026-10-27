@@ -13,6 +13,13 @@ import "./artium-gate-chordify.css";
 const ARTIUM_INSTAGRAM = "https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==";
 const FONT_HREF = "https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600;700&display=swap";
 
+function accountInitials(name) {
+  const t = (name || "").trim();
+  if (!t) return "?";
+  if (t.includes("@") && !t.includes(" ")) return t[0].toUpperCase();
+  return t.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
+}
+
 const Svg = ({ children, size = 22, fill = "none", sw = 2 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke={fill === "none" ? "currentColor" : "none"}
     strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{children}</svg>
@@ -255,7 +262,7 @@ function CardFan({ active, onActive, cards = FAN_CARDS }) {
 export default function ArtiumGateChordify({
   onLearner, onStudent, onPianist, onComposers, onNews,
   learnerProfile, studentLoggedIn, musicOn, onMusicToggle, memberCount,
-  avatarPhotoUrl, avatarName, onAvatar, onLogout, memberChips, bellSlot, avatarNode, featuredMembers, legalSheet,
+  avatarPhotoUrl, avatarName, onAvatar, onLogout, memberChips, bellSlot, avatarNode, featuredMembers, legalSheet, connCount = 0,
 }) {
   React.useEffect(() => {
     const id = "cgate-font";
@@ -311,25 +318,15 @@ export default function ArtiumGateChordify({
           </div>
           <div className="cg-actions">
             {/* The member counter is the way to your profile. */}
+            {/* Your avatar and your number of connections; none, no pill. */}
             <button type="button" className="cg-count" onClick={onAvatar} disabled={!onAvatar}
-              title={onAvatar ? "My profile" : "Members"} aria-label={onAvatar ? `${count} members — open my profile` : `${count} members`}>
-              {(memberChips || []).some((f) => f.photoUrl) ? (
-                // Two overlapping member portraits and the count, as in every top bar.
-                <span className="tm-hm">
-                  <span className="tm-hm-faces" aria-hidden="true">
-                    {memberChips.filter((f) => f.photoUrl).slice(0, 2).map((f, i) => <img key={i} src={f.photoUrl} alt="" />)}
-                  </span>
-                  <span className="tm-hm-n">+{count}</span>
+              title={onAvatar ? "My profile" : "Your account"} aria-label={onAvatar ? `My profile — ${connCount || 0} connections` : "Your account"}>
+              <span className="tm-hm">
+                <span className="tm-hm-faces" aria-hidden="true">
+                  {avatarPhotoUrl ? <img src={avatarPhotoUrl} alt="" /> : <span className="tm-hm-me">{accountInitials(avatarName)}</span>}
                 </span>
-              ) : (<>
-                {/* Step 3's "Connect worldwide" mark — three figures, the middle one larger. */}
-                <svg width="31" height="31" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <circle cx="12" cy="8.1" r="3.1" fill="currentColor" /><path d="M5.9 20.1a6.1 6.1 0 0 1 12.2 0z" fill="currentColor" />
-                  <circle cx="4.6" cy="10.6" r="2.1" /><path d="M1.2 19.2a3.6 3.6 0 0 1 3.1-4.4" />
-                  <circle cx="19.4" cy="10.6" r="2.1" /><path d="M22.8 19.2a3.6 3.6 0 0 0-3.1-4.4" />
-                </svg>
-                +{count}
-              </>)}
+                {connCount > 0 && <span className="tm-hm-n">+{connCount}</span>}
+              </span>
             </button>
             {onMusicToggle && (
               <button type="button" className={`cg-icon cg-round${musicOn ? " is-on" : ""}`} onClick={onMusicToggle} aria-pressed={!!musicOn}

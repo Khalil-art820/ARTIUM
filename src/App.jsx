@@ -3367,6 +3367,7 @@ export default function App() {
       if (error && error.code !== "23505") console.error("sendTeachRequest", error);
     });
   }
+  const myConnCount = useMyConnectionCount(myProfile?.id && authProfile?.approved !== false ? myProfile.id : null);
   // Where the profile was opened from, so its back arrow returns there.
   const profileReturn = useRef(null);
   function goToProfile() {
@@ -5347,7 +5348,7 @@ export default function App() {
           isAdmin={isAdmin}
           onGoToAdmin={() => { setScreen("app"); setAppTabPersist("admin"); }}
         />
-      ) : null} memberChips={deckFaces} featuredMembers={gateFeatured} legalSheet={TermsSheet} onAvatar={myProfile ? goToProfile : (learnerProfile ? () => { setLearnerStartTab("profile"); setScreen("learnerMap"); } : undefined)} onLogout={async () => {
+      ) : null} memberChips={deckFaces} featuredMembers={gateFeatured} legalSheet={TermsSheet} connCount={myProfile ? myConnCount : 0} onAvatar={myProfile ? goToProfile : (learnerProfile ? () => { setLearnerStartTab("profile"); setScreen("learnerMap"); } : undefined)} onLogout={async () => {
         // Logging out re-arms the gate tour: the next login meets the
         // card-by-card introduction again, per the user's request.
         try { localStorage.removeItem("artium_gate_tour_v1"); } catch { /* private mode */ }
@@ -5422,7 +5423,7 @@ export default function App() {
         />
       )}
 
-      {view === "landing" && <Landing onLogout={authUser ? handleLogout : undefined} onApply={pianistEntry ? () => { setAuthError(""); setScreen("hirerSignup"); } : startApply} onBack={backToEntry} onPreview={startPreview} onProfile={goToProfile} onLogin={startLogin} myProfile={myProfile} studentLoggedOut={studentLoggedOut} musicOn={musicPlaying} onMusicToggle={toggleMusic} error={authError} onGoToLessonRoom={() => { setScreen("app"); setAppTabPersist("lessons"); }} onGoToSession={goToTeacherSession} onGoToPromote={(kind) => { setScreen("app"); setAppTabPersist("promote"); setPromoteFocus({ kind: kind || null, at: Date.now() }); }} studentsByCons={studentsByCons} avatarPhotoUrl={accountPhotoUrl} avatarName={accountName} hireCount={pianistAttentionCount} hireIds={pianistAttentionIds} onGoToConcerts={() => { setScreen("app"); setAppTabPersist("concerts"); }} onGoToComposers={() => setScreen("composers")} authUser={authUser} isAdmin={isAdmin} onGoToAdmin={() => { setScreen("app"); setAppTabPersist("admin"); }} />}
+      {view === "landing" && <Landing myConnCount={myConnCount} onLogout={authUser ? handleLogout : undefined} onApply={pianistEntry ? () => { setAuthError(""); setScreen("hirerSignup"); } : startApply} onBack={backToEntry} onPreview={startPreview} onProfile={goToProfile} onLogin={startLogin} myProfile={myProfile} studentLoggedOut={studentLoggedOut} musicOn={musicPlaying} onMusicToggle={toggleMusic} error={authError} onGoToLessonRoom={() => { setScreen("app"); setAppTabPersist("lessons"); }} onGoToSession={goToTeacherSession} onGoToPromote={(kind) => { setScreen("app"); setAppTabPersist("promote"); setPromoteFocus({ kind: kind || null, at: Date.now() }); }} studentsByCons={studentsByCons} avatarPhotoUrl={accountPhotoUrl} avatarName={accountName} hireCount={pianistAttentionCount} hireIds={pianistAttentionIds} onGoToConcerts={() => { setScreen("app"); setAppTabPersist("concerts"); }} onGoToComposers={() => setScreen("composers")} authUser={authUser} isAdmin={isAdmin} onGoToAdmin={() => { setScreen("app"); setAppTabPersist("admin"); }} />}
       {view === "landing" && (
         <BottomTabs
           modern={MODERN}
@@ -5517,8 +5518,8 @@ export default function App() {
               </span>
               <span className="artium-net-right">
                 <button type="button" className="artium-net-count tm-count-btn" onClick={myProfile ? goToProfile : undefined} disabled={!myProfile}
-                  title={myProfile ? "My profile" : "Members"} aria-label={`${Object.values(studentsByCons).flat().length} members${myProfile ? " — open my profile" : ""}`}>
-                  {MODERN ? <HeaderMembers count={Object.values(studentsByCons).flat().length} faces={headerFaces} /> : <><Users size={15} strokeWidth={1.8} />{Object.values(studentsByCons).flat().length}</>}
+                  title={myProfile ? "My profile" : "Members"} aria-label={myProfile ? `My profile — ${myConnCount} connections` : "Your account"}>
+                  {MODERN ? <MeCounter photoUrl={myProfile?.photoUrl || accountPhotoUrl} name={myProfile?.name || accountName} count={myConnCount} /> : <><Users size={15} strokeWidth={1.8} />{Object.values(studentsByCons).flat().length}</>}
                 </button>
                 {/* The bell's own button, glyph swapped for the play
                     triangle — same position as the landing header. */}
@@ -6033,6 +6034,37 @@ const IconThreePeople = ({ solidMiddle, ...p }) => (
 );
 // Header member counter: two overlapping member portraits and the count in a
 // mint pill; the three-figure mark stands in until someone has a photo.
+// The top bars' counter: your own avatar, and a "+N" pill for your accepted
+// connections. With none, the avatar stands alone (no pill).
+function useMyConnectionCount(myId) {
+  const [n, setN] = useState(0);
+  useEffect(() => {
+    if (!myId) { setN(0); return; }
+    let alive = true;
+    const load = () => supabase.from("connections").select("id", { count: "exact", head: true })
+      .eq("status", "accepted").or(`requester_id.eq.${myId},addressee_id.eq.${myId}`)
+      .then(({ count, error }) => { if (alive && !error) setN(count || 0); });
+    load();
+    const t = setInterval(load, 60000);
+    window.addEventListener(CONN_EVENT, load);
+    document.addEventListener("visibilitychange", load);
+    return () => { alive = false; clearInterval(t); window.removeEventListener(CONN_EVENT, load); document.removeEventListener("visibilitychange", load); };
+  }, [myId]);
+  return n;
+}
+function MeCounter({ photoUrl, name, count = 0 }) {
+  const [broken, setBroken] = useState(false);
+  return (
+    <span className="tm-hm">
+      <span className="tm-hm-faces" aria-hidden="true">
+        {photoUrl && !broken
+          ? <img src={photoUrl} alt="" onError={() => setBroken(true)} />
+          : <span className="tm-hm-me">{initials(name || "?")}</span>}
+      </span>
+      {count > 0 && <span className="tm-hm-n">+{count}</span>}
+    </span>
+  );
+}
 function HeaderMembers({ count, faces = [] }) {
   const shown = (faces || []).filter((f) => f && f.photoUrl).slice(0, 2);
   // "+4", not "4": the faces are a sample and the number is everyone else.
@@ -6068,7 +6100,7 @@ const IconMegaphone = (p) => (
   </IconBox>
 );
 
-function Landing({ onLogout, onApply, onBack, onPreview, onProfile, onLogin, myProfile, studentLoggedOut, musicOn, onMusicToggle, error, onGoToPromote, onGoToLessonRoom, onGoToSession, studentsByCons, hireCount = 0, hireIds = [], onGoToConcerts, onGoToComposers, authUser, isAdmin, onGoToAdmin, avatarPhotoUrl, avatarName }) {
+function Landing({ myConnCount = 0, onLogout, onApply, onBack, onPreview, onProfile, onLogin, myProfile, studentLoggedOut, musicOn, onMusicToggle, error, onGoToPromote, onGoToLessonRoom, onGoToSession, studentsByCons, hireCount = 0, hireIds = [], onGoToConcerts, onGoToComposers, authUser, isAdmin, onGoToAdmin, avatarPhotoUrl, avatarName }) {
   const memberCount = Object.values(studentsByCons).flat().length;
   const steps = [
     { n: "1", t: "Build your profile", Icon: IconProfileDoc,
@@ -6134,8 +6166,8 @@ function Landing({ onLogout, onApply, onBack, onPreview, onProfile, onLogin, myP
               .artium-net-puck now, the bell's own class, so the two can
               never drift apart in size or material again. */}
           <button type="button" className="artium-gx-count tm-count-btn" onClick={myProfile ? onProfile : undefined} disabled={!myProfile}
-            title={myProfile ? "My profile" : "Members"} aria-label={`${memberCount} members${myProfile ? " — open my profile" : ""}`}>
-            {MODERN ? <HeaderMembers count={memberCount} faces={Object.values(studentsByCons).flat()} /> : <><Users size={16} strokeWidth={1.8} />{memberCount}</>}
+            title={myProfile ? "My profile" : "Your account"} aria-label={myProfile ? `My profile — ${myConnCount} connections` : "Your account"}>
+            {MODERN ? <MeCounter photoUrl={myProfile?.photoUrl || avatarPhotoUrl} name={myProfile?.name || avatarName} count={myConnCount} /> : <><Users size={16} strokeWidth={1.8} />{memberCount}</>}
           </button>
           {onMusicToggle && (
             <button
@@ -13689,8 +13721,8 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
         </span>
         <span className="artium-net-right">
           <button type="button" className="artium-net-count tm-count-btn" onClick={openMyProfile}
-            title="My profile" aria-label={`${memberCount} members — open my profile`}>
-            {MODERN ? <HeaderMembers count={memberCount} faces={teachers} /> : <><Users size={15} strokeWidth={1.8} />{memberCount}</>}
+            title="My profile" aria-label="My profile">
+            {MODERN ? <MeCounter photoUrl={learner?.photoUrl || avatarPhotoUrl} name={learner?.name || avatarName} count={0} /> : <><Users size={15} strokeWidth={1.8} />{memberCount}</>}
           </button>
           <button
             className={`artium-net-puck${MODERN ? " tm-play" : ""}${MODERN && musicOn ? " is-on" : ""}`}

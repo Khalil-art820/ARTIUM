@@ -1215,3 +1215,6 @@ html.theme-modern .cgate .cg-actions .artium-net-bell-badge{background:#FFFFFF !
 /* Nothing behind the globe but white: the mint wash ended in a visible
    rectangle when zoomed. */
 html.theme-modern .nx-stage{background:#FFFFFF !important}
+/* Your initials when there's no photo, the size of the photo. */
+html.theme-modern .tm-hm-me{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:#086868;color:#FFFFFF;
+  font:700 14px 'Fira Sans',system-ui,sans-serif;box-shadow:0 0 0 2px #FFFFFF}
