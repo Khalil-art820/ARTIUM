@@ -1237,3 +1237,5 @@ html.theme-modern .nx-sort-title{text-align:center;margin:22px 4px 10px}
 html.theme-modern .nx-fchip.nx-fcard,
 html.theme-modern .nx-fchip.nx-fcard.is-on{border:1px solid #FFE27A}
 html.theme-modern .nx-fchip.nx-fcard.is-on{box-shadow:0 0 0 1px #FFE27A}
+/* Title: a size up, upright, underlined. */
+html.theme-modern .nx-sort-title{font-style:normal;font-size:19px;text-decoration:underline;text-decoration-thickness:1.5px;text-underline-offset:5px}
