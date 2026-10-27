@@ -1218,3 +1218,17 @@ html.theme-modern .nx-stage{background:#FFFFFF !important}
 /* Your initials when there's no photo, the size of the photo. */
 html.theme-modern .tm-hm-me{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:#086868;color:#FFFFFF;
   font:700 14px 'Fira Sans',system-ui,sans-serif;box-shadow:0 0 0 2px #FFFFFF}
+/* ==== Filter cards, redesigned: pure white, no shadow halo, a bright yellow
+   frame, crisp white marks on coloured discs, and a title above. ==== */
+html.theme-modern .nx-sort-title{margin:2px 4px 8px;font:italic 400 16px/1.2 'DM Serif Display',Georgia,serif;color:#3A4A47;text-align:left}
+html.theme-modern .nx-fchip.nx-fcard,
+html.theme-modern .nx-fchip.nx-fcard.is-on{background:#FFFFFF;box-shadow:none;border:1.5px solid #FFD23F}
+html.theme-modern .nx-fchip.nx-fcard.is-on{box-shadow:0 0 0 1px #FFD23F}
+html.theme-modern .nx-fbadge{border:0;box-shadow:none;color:#FFFFFF}
+html.theme-modern .nx-fbadge svg,
+html.theme-modern .nx-fchip.nx-fcard.is-on .nx-fbadge svg{color:#FFFFFF}
+html.theme-modern .nx-fbadge--instruments{background:linear-gradient(145deg,#25A99A,#0F7F72)}
+html.theme-modern .nx-fbadge--countries{background:linear-gradient(145deg,#4C9BEF,#2368C4)}
+html.theme-modern .nx-fbadge--levels{background:linear-gradient(145deg,#FFA552,#EE7A1F)}
+html.theme-modern .nx-fbadge--cons{background:linear-gradient(145deg,#9479F0,#6A4BD6)}
+html.theme-modern .nx-fbadge--teach{background:linear-gradient(145deg,#E25D8A,#C23A6B)}

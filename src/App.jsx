@@ -11596,7 +11596,13 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
     { key: "levels", label: "Level" },
     { key: "cons", label: "Conservatory" },
   ];
-  const FILTER_ICON = { instruments: NxGrandPiano, countries: NxGlobeMark, levels: NxLevelBars, cons: NxHall };
+  // Clean line marks, white on each card's own colour (see .nx-fbadge--*).
+  const FILTER_ICON = {
+    instruments: () => <Piano size={22} strokeWidth={1.9} />,
+    countries: () => <GlobeIcon size={22} strokeWidth={1.9} />,
+    levels: () => <ChartNoAxesColumnIncreasing size={22} strokeWidth={2.2} />,
+    cons: () => <Landmark size={21} strokeWidth={1.9} />,
+  };
   // The small caps line under each card: what's chosen, or the first few
   // choices the network actually has, so it always describes real options.
   const subFor = (key) => {
@@ -11613,10 +11619,11 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
     <div className="nx">
       {/* Filters */}
       <div className="nx-filters" role="toolbar" aria-label={learnerMode ? "Filter teachers" : "Filter musicians"}>
+        <p className="nx-sort-title">{learnerMode ? "Sort teachers by:" : useConn ? "Sort your connections by:" : "Sort musicians by:"}</p>
         <div className="nx-filter-row">
           {FILTERS.map(({ key, label }) => (
             <button key={key} type="button" className={`nx-fchip nx-fcard${filters[key].length ? " is-on" : ""}`} onClick={() => setSheet(key)} aria-haspopup="dialog">
-              <span className="nx-fbadge" aria-hidden="true">{(() => { const Ic = FILTER_ICON[key]; return <Ic />; })()}</span>
+              <span className={`nx-fbadge nx-fbadge--${key}`} aria-hidden="true">{(() => { const Ic = FILTER_ICON[key]; return <Ic />; })()}</span>
               <span className="nx-ftext">
                 <span className="nx-flabel">{label}{filters[key].length ? <i>{filters[key].length}</i> : null}</span>
                 <span className="nx-fsub">{subFor(key)}</span>
@@ -11627,7 +11634,7 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
           {learnerMode && (
           <button type="button" className={`nx-fchip nx-fcard nx-toggle${filters.teach ? " is-on" : ""}`} aria-pressed={filters.teach}
             onClick={() => setFilters((f) => ({ ...f, teach: !f.teach }))}>
-            <span className="nx-fbadge" aria-hidden="true"><IconTeacher size={20} /></span>
+            <span className="nx-fbadge nx-fbadge--teach" aria-hidden="true"><IconTeacher size={20} /></span>
             <span className="nx-ftext">
               <span className="nx-flabel">Open to teach</span>
               <span className="nx-fsub">{filters.teach ? "Showing only these" : "Taking students now"}</span>
