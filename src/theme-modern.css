@@ -1245,3 +1245,6 @@ html.theme-modern .nx-sort-title{display:flex;align-items:center;gap:12px;margin
 html.theme-modern .nx-sort-title::before,
 html.theme-modern .nx-sort-title::after{content:"";flex:1;height:1px;background:#E4E1DA}
 html.theme-modern .nx-sort-title{font-size:13.5px}
+/* Letter-spacing trails after the last letter; take it back so the word's
+   own centre sits on the pills' centre. */
+html.theme-modern .nx-sort-title > span{margin-right:-.22em}
