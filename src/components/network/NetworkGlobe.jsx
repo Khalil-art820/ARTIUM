@@ -273,9 +273,8 @@ export default function NetworkGlobe({ members, conservatories, focus, selectedI
           }}
           globeMaterial={material}
           globeImageUrl={EARTH_URL}
-          showAtmosphere
-          atmosphereColor={MINT}
-          atmosphereAltitude={0.14}
+          // No halo: the globe sits clean on the white page.
+          showAtmosphere={false}
           pointsData={points}
           pointLat="lat"
           pointLng="lng"
