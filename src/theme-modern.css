@@ -1212,3 +1212,6 @@ html.theme-modern .tm-hello-name{letter-spacing:.06em}
 html.theme-modern .ng-more{background:#FFFFFF !important;color:#1C1C1C !important}
 html.theme-modern .artium-net-bell-badge,
 html.theme-modern .cgate .cg-actions .artium-net-bell-badge{background:#FFFFFF !important;color:#1C1C1C !important;border:1.5px solid #E4E6EB !important}
+/* Nothing behind the globe but white: the mint wash ended in a visible
+   rectangle when zoomed. */
+html.theme-modern .nx-stage{background:#FFFFFF !important}
