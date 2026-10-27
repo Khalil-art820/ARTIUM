@@ -1206,3 +1206,5 @@ html.theme-modern .tm-hello-name{font-size:clamp(24px,9.5vw,38px);overflow-wrap:
 /* Greeting 25% smaller (19 -> 14.25px, 38 -> 28.5px). */
 html.theme-modern .tm-hello-eyebrow{font-size:14.25px}
 html.theme-modern .tm-hello-name{font-size:clamp(18px,7.1vw,28.5px)}
+/* The name in the same Jost, letters closer together. */
+html.theme-modern .tm-hello-name{letter-spacing:.06em}
