@@ -1251,3 +1251,6 @@ html.theme-modern .nx-sort-title > span{margin-right:-.22em}
 /* Bell count: white with black text, ringed in black. */
 html.theme-modern .artium-net-bell-badge,
 html.theme-modern .cgate .cg-actions .artium-net-bell-badge{border:1.5px solid #1C1C1C !important}
+/* Bell count: red with white text (black ring kept). */
+html.theme-modern .artium-net-bell-badge,
+html.theme-modern .cgate .cg-actions .artium-net-bell-badge{background:#E5322D !important;color:#FFFFFF !important}
