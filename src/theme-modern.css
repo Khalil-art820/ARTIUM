@@ -1244,3 +1244,4 @@ html.theme-modern .nx-sort-title{display:flex;align-items:center;gap:12px;margin
   font:500 11.5px/1 'Jost','Fira Sans',sans-serif;font-style:normal;letter-spacing:.22em;text-transform:uppercase;color:#1C1C1C;text-decoration:none;white-space:nowrap}
 html.theme-modern .nx-sort-title::before,
 html.theme-modern .nx-sort-title::after{content:"";flex:1;height:1px;background:#E4E1DA}
+html.theme-modern .nx-sort-title{font-size:13.5px}
