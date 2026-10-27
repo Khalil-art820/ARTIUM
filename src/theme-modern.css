@@ -1196,3 +1196,10 @@ html.theme-modern .nx-fchip.nx-fcard{border-color:#D4AF37}
 /* The greeting block spans the page (it shrank to its text and auto margins
    centred it), so the words start at the left edge. */
 html.theme-modern .tm-hello{width:100%;box-sizing:border-box}
+/* Greeting in the ARTIUM wordmark's own lettering (Jost 600, capitals, wide
+   tracking), both lines black; the name a size up. */
+html.theme-modern .tm-hello-eyebrow{font:600 19px/1.1 'Jost',system-ui,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:#1C1C1C}
+html.theme-modern .tm-hello-name{margin:6px 0 0;font-family:'Jost',system-ui,sans-serif;font-weight:600;font-size:38px;line-height:1.05;
+  letter-spacing:.2em;text-transform:uppercase;color:#1C1C1C}
+/* Long first names shrink to fit the phone width instead of running off it. */
+html.theme-modern .tm-hello-name{font-size:clamp(24px,9.5vw,38px);overflow-wrap:anywhere}
