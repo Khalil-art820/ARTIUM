@@ -13,7 +13,7 @@ import {
   Map, BookOpen, ListChecks, LayoutList, Megaphone, Check as CheckIcon, ShieldCheck, FileText, Lock,
   ScanLine, ArrowUpRight, Globe2, MapPin, GraduationCap, User, Paperclip,
   Compass, Briefcase, Feather, CheckCircle2, ChevronDown, RotateCcw, SlidersHorizontal,
-  Globe as GlobeIcon, Piano, Landmark, ArrowDown, ChartNoAxesColumnIncreasing, UserPlus, Info,
+  Globe as GlobeIcon, Piano, Landmark, ChartNoAxesColumnIncreasing, UserPlus, Info,
 } from "lucide-react";
 import { useAuth } from "./contexts/AuthContext";
 import { supabase } from "./lib/supabase";
@@ -11643,10 +11643,6 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
         {connectedCount === 0 && (
           <p className="nx-globe-hint">Connect with musicians in <b>Nearby</b> or <b>All</b> — they'll appear on your globe.</p>
         )}
-        <button type="button" className="nx-down" aria-label="Show the musicians below"
-          onClick={() => document.querySelector(".nx-tabs")?.scrollIntoView({ behavior: "smooth", block: "start" })}>
-          <ArrowDown size={22} strokeWidth={1.8} />
-        </button>
       </div>
 
       {/* Carousel */}

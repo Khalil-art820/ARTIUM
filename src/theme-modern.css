@@ -1208,3 +1208,7 @@ html.theme-modern .tm-hello-eyebrow{font-size:14.25px}
 html.theme-modern .tm-hello-name{font-size:clamp(18px,7.1vw,28.5px)}
 /* The name in the same Jost, letters closer together. */
 html.theme-modern .tm-hello-name{letter-spacing:.06em}
+/* Globe group pill and the bell's count: white with black text. */
+html.theme-modern .ng-more{background:#FFFFFF !important;color:#1C1C1C !important}
+html.theme-modern .artium-net-bell-badge,
+html.theme-modern .cgate .cg-actions .artium-net-bell-badge{background:#FFFFFF !important;color:#1C1C1C !important;border:1.5px solid #E4E6EB !important}
