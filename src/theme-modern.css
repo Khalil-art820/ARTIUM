@@ -1232,3 +1232,8 @@ html.theme-modern .nx-fbadge--countries{background:linear-gradient(145deg,#4C9BE
 html.theme-modern .nx-fbadge--levels{background:linear-gradient(145deg,#FFA552,#EE7A1F)}
 html.theme-modern .nx-fbadge--cons{background:linear-gradient(145deg,#9479F0,#6A4BD6)}
 html.theme-modern .nx-fbadge--teach{background:linear-gradient(145deg,#E25D8A,#C23A6B)}
+/* Title centred, further from the name; frame thinner and lighter. */
+html.theme-modern .nx-sort-title{text-align:center;margin:22px 4px 10px}
+html.theme-modern .nx-fchip.nx-fcard,
+html.theme-modern .nx-fchip.nx-fcard.is-on{border:1px solid #FFE27A}
+html.theme-modern .nx-fchip.nx-fcard.is-on{box-shadow:0 0 0 1px #FFE27A}
