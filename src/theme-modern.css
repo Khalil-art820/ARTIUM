@@ -1248,3 +1248,6 @@ html.theme-modern .nx-sort-title{font-size:13.5px}
 /* Letter-spacing trails after the last letter; take it back so the word's
    own centre sits on the pills' centre. */
 html.theme-modern .nx-sort-title > span{margin-right:-.22em}
+/* Bell count: white with black text, ringed in black. */
+html.theme-modern .artium-net-bell-badge,
+html.theme-modern .cgate .cg-actions .artium-net-bell-badge{border:1.5px solid #1C1C1C !important}
