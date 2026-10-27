@@ -11619,7 +11619,7 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
     <div className="nx">
       {/* Filters */}
       <div className="nx-filters" role="toolbar" aria-label={learnerMode ? "Filter teachers" : "Filter musicians"}>
-        <p className="nx-sort-title">{learnerMode ? "Sort teachers by:" : useConn ? "Manage my connections" : "Sort musicians by:"}</p>
+        <p className="nx-sort-title">{learnerMode ? "Sort teachers by:" : useConn ? "My connections" : "Sort musicians by:"}</p>
         <div className="nx-filter-row">
           {FILTERS.map(({ key, label }) => (
             <button key={key} type="button" className={`nx-fchip nx-fcard${filters[key].length ? " is-on" : ""}`} onClick={() => setSheet(key)} aria-haspopup="dialog">
