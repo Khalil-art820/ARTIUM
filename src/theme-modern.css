@@ -1287,3 +1287,7 @@ html.theme-modern .pk-btn:active{background:#EAF3FC}
 html.theme-modern .pk-btn.is-pending{border-color:#8C8C8C;color:#5E5E5E}
 html.theme-modern .pk-btn.is-accept{background:#0A66C2;color:#FFFFFF}
 html.theme-modern .pk-more{display:block;width:100%;margin:6px 0 4px;padding:12px 0;border:0;background:none;font:500 16px system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#404040;cursor:pointer}
+/* Connect in the Level card's orange instead of LinkedIn blue. */
+html.theme-modern .pk-btn{border-color:#EE7A1F;color:#EE7A1F}
+html.theme-modern .pk-btn:active{background:#FFF1E6}
+html.theme-modern .pk-btn.is-accept{background:#EE7A1F;border-color:#EE7A1F;color:#FFFFFF}
