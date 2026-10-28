@@ -11314,7 +11314,8 @@ function NxFace({ m, size = 56 }) {
 function NxVerified({ size = 15 }) {
   return (
     <span className="nx-verified" title="Conservatory verified" aria-label="Conservatory verified">
-      <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#086868" /><path d="M7.4 12.3l3 3 6.2-6.3" stroke="#fff" strokeWidth="2.4" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
+      {/* Instagram's scalloped badge, in yellow. */}
+      <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true"><path d="M12.00 2.60Q15.25 -0.12 16.70 3.86Q20.87 3.13 20.14 7.30Q24.12 8.75 21.40 12.00Q24.12 15.25 20.14 16.70Q20.87 20.87 16.70 20.14Q15.25 24.12 12.00 21.40Q8.75 24.12 7.30 20.14Q3.13 20.87 3.86 16.70Q-0.12 15.25 2.60 12.00Q-0.12 8.75 3.86 7.30Q3.13 3.13 7.30 3.86Q8.75 -0.12 12.00 2.60Z" fill="#F5B800" /><path d="M7.7 12.2l2.9 2.9 5.8-5.9" stroke="#fff" strokeWidth="2.3" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
     </span>
   );
 }
