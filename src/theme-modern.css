@@ -1299,3 +1299,8 @@ html.theme-modern .nx-face,
 html.theme-modern .tm-hm-me,
 html.theme-modern .ng-face,
 html.theme-modern .tm-initials{background:#387F54 !important;color:#FFFFFF !important}
+/* Initials avatars in the radio button's green instead. */
+html.theme-modern .nx-face,
+html.theme-modern .tm-hm-me,
+html.theme-modern .ng-face,
+html.theme-modern .tm-initials{background:linear-gradient(150deg,#41B48F 0%,#1F8B6D 55%,#13705A 100%) !important;color:#FFFFFF !important}
