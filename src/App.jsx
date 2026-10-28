@@ -11479,7 +11479,7 @@ function useMutualConnections(myId) {
 function NxPymkCard({ m, mutual, sampleName, sampleFace, state, onOpen, onDismiss, onConnect, onCancel, onAccept }) {
   return (
     <div className="pk-card" role="listitem">
-      <button type="button" className="pk-x" onClick={onDismiss} aria-label={`Dismiss ${m.name}`}><X size={16} strokeWidth={2.4} /></button>
+      <button type="button" className="pk-x" onClick={onDismiss} aria-label={`Dismiss ${m.name}`}><X size={12} strokeWidth={2.6} /></button>
       <button type="button" className="pk-open" onClick={onOpen} aria-label={m.name}>
         <span className="pk-banner" aria-hidden="true" />
         <span className="pk-photo"><NxFace m={m} size={0} /></span>
