@@ -11483,7 +11483,7 @@ function NxPymkCard({ m, mutual, sampleName, sampleFace, state, onOpen, onDismis
       <button type="button" className="pk-open" onClick={onOpen} aria-label={m.name}>
         <span className="pk-banner" aria-hidden="true" />
         <span className="pk-photo"><NxFace m={m} size={0} /></span>
-        <span className="pk-name"><span data-no-translate="">{m.name}</span>{m.verified && <NxVerified size={15} />}</span>
+        <span className="pk-name"><span data-no-translate="">{m.name}</span>{m.verified && <NxVerified size={19} />}</span>
         <span className="pk-head">{[m.instrumentLabel || "Musician", m.consName].filter(Boolean).join(" | ")}</span>
         <span className="pk-mutual">
           {mutual > 0 ? (<>
@@ -11842,7 +11842,7 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
               aria-label={`${m.name}${m.instrumentLabel ? `, ${m.instrumentLabel}` : ""}${m.city ? `, ${m.city}` : ""}`}>
               <span className="nx-card-photo">
                 <NxFace m={m} size={0} />
-                {m.verified && <span className="nx-card-tick"><NxVerified size={17} /></span>}
+                {m.verified && <span className="nx-card-tick"><NxVerified size={21} /></span>}
               </span>
               <span className="nx-card-name">{m.name}{m.id === myId ? " (you)" : ""}</span>
               <span className="nx-card-meta">{m.instrumentLabel || "Musician"}</span>
@@ -11891,7 +11891,7 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
           {group.map((m) => (
             <button key={m.id} type="button" className="nx-grow" onClick={() => { setSheet(null); setSelectedId(m.id); selectFromGlobe(m.id); }}>
               <NxFace m={m} size={44} />
-              <span><b>{m.name}{m.verified && <NxVerified size={13} />}</b><em>{[m.instrumentLabel, m.city].filter(Boolean).join(" · ")}</em></span>
+              <span><b>{m.name}{m.verified && <NxVerified size={17} />}</b><em>{[m.instrumentLabel, m.city].filter(Boolean).join(" · ")}</em></span>
               <ChevronRight size={16} />
             </button>
           ))}
@@ -11905,7 +11905,7 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
           <div className="nx-preview-top">
             <NxFace m={selected} size={64} />
             <div className="nx-preview-who">
-              <p className="nx-preview-name">{selected.name}{selected.verified && <NxVerified size={16} />}</p>
+              <p className="nx-preview-name">{selected.name}{selected.verified && <NxVerified size={20} />}</p>
               {selected.instrumentLabel && <p className="nx-preview-line">{selected.instrumentLabel}</p>}
               {selected.consName && <p className="nx-preview-line nx-muted">{selected.consName}{selected.city ? ` · ${selected.city}` : ""}{selected.country ? `, ${selected.country}` : ""}</p>}
             </div>

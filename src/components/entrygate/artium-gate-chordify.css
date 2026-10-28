@@ -687,3 +687,8 @@
 .cgate .cg-head{background:#FFFFFF;color:#1C1C1C}
 .cgate .cg-word{color:#1C1C1C}
 .cgate .cg-count{color:#1C1C1C}
+/* Verified badge a size up. */
+.cgate .cf-verified{width:26px;height:26px}
+.cgate .cf-verified svg{width:21px;height:21px}
+.cgate .cf-card.is-on .cf-verified{width:31px;height:31px}
+.cgate .cf-card.is-on .cf-verified svg{width:25px;height:25px}
