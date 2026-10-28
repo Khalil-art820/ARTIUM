@@ -6250,10 +6250,11 @@ function Landing({ myConnCount = 0, onLogout, onApply, onBack, onPreview, onProf
                 <g fill="none" stroke="#FFFFFF" strokeWidth="4.4" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="100" cy="46" r="13" />
                   <path d="M76 86c2-14 12-22 24-22 7 0 13 2 17 7" />
-                  <path d="M122 76h20M132 66v20" />
+                  {!myProfile && <path d="M122 76h20M132 66v20" />}
                 </g>
-                <text x="108" y="128" textAnchor="middle" fill="#FFFFFF" fontFamily="'Fira Sans', system-ui, sans-serif" fontWeight="700" fontSize="24" letterSpacing="1.5">CREATE</text>
-                <text x="108" y="156" textAnchor="middle" fill="#FFFFFF" fontFamily="'Fira Sans', system-ui, sans-serif" fontWeight="700" fontSize="24" letterSpacing="1.5">ACCOUNT</text>
+                {/* Members already in: the pin greets them instead of asking them to join. */}
+                <text x="108" y="128" textAnchor="middle" fill="#FFFFFF" fontFamily="'Fira Sans', system-ui, sans-serif" fontWeight="700" fontSize="24" letterSpacing="1.5">{myProfile ? "WELCOME" : "CREATE"}</text>
+                <text x="108" y="156" textAnchor="middle" fill="#FFFFFF" fontFamily="'Fira Sans', system-ui, sans-serif" fontWeight="700" fontSize="24" letterSpacing="1.5">{myProfile ? "BACK" : "ACCOUNT"}</text>
                 <path d="M92 190h30M112 180l10 10-10 10" fill="none" stroke="#FFFFFF" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </span>

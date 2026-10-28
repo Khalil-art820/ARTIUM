@@ -18,7 +18,8 @@
 
 const loaders = import.meta.glob("./*.json");
 const ATTRS = ["placeholder", "aria-label", "title", "alt"];
-const SKIP_TAGS = new Set(["SCRIPT", "STYLE", "NOSCRIPT", "TEXTAREA", "CODE", "PRE", "svg", "SVG"]);
+// Text inside drawings (<text> in an SVG, like the globe pin) is translated too.
+const SKIP_TAGS = new Set(["SCRIPT", "STYLE", "NOSCRIPT", "TEXTAREA", "CODE", "PRE"]);
 
 let lang = "en";
 let exact = null;      // Map english -> translated

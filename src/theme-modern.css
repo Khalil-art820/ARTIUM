@@ -1320,3 +1320,12 @@ html.theme-modern .pk-x{width:22px;height:22px;top:7px;right:7px}
 html.theme-modern .ng-continent{pointer-events:none;white-space:nowrap;transform:translate(-50%,-50%);font:600 11px/1 'Jost','Fira Sans',sans-serif;
   letter-spacing:.24em;text-transform:uppercase;color:#F1D27C;text-shadow:0 1px 3px rgba(0,0,0,.75),0 0 8px rgba(0,0,0,.45);transition:opacity .25s}
 html.theme-modern .ng-continent{transition:none;z-index:0}
+/* "How it works": 20% bigger (13 -> 15.6px), in the radio button's green. */
+html.theme-modern .artium-lp--light .artium-lp-eyebrow{font-size:15.6px;color:#1F8B6D}
+/* The six step marks: same drawings, each in its own colour. */
+html.theme-modern .artium-lp--light .artium-lp-step:nth-child(1) .artium-lp-step-i{color:#1F9A8C}
+html.theme-modern .artium-lp--light .artium-lp-step:nth-child(2) .artium-lp-step-i{color:#3B86DE}
+html.theme-modern .artium-lp--light .artium-lp-step:nth-child(3) .artium-lp-step-i{color:#F5913A}
+html.theme-modern .artium-lp--light .artium-lp-step:nth-child(4) .artium-lp-step-i{color:#7E62E3}
+html.theme-modern .artium-lp--light .artium-lp-step:nth-child(5) .artium-lp-step-i{color:#E25D8A}
+html.theme-modern .artium-lp--light .artium-lp-step:nth-child(6) .artium-lp-step-i{color:#D4A23A}
