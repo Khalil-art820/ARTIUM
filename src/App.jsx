@@ -11454,6 +11454,124 @@ function ConnectButton({ state, onConnect, onCancel, onAccept, onRemove }) {
   return <button type="button" className={`pf-connect ${cfg.cls}`} onClick={cfg.fn}>{cfg.icon}{cfg.label}</button>;
 }
 
+// "People you may know", in LinkedIn's manner: sections of 2-column cards
+// (banner, big round photo, dismiss ✕, name + verified tick, headline,
+// mutual connections, Connect). Each person shows once, in the first section
+// that fits: mutual connections, your conservatory, your instrument, your
+// country, then everyone else. Connected people and you never appear.
+function useMutualConnections(myId) {
+  const [map, setMap] = useState({});
+  useEffect(() => {
+    if (!myId) { setMap({}); return; }
+    let alive = true;
+    const load = () => supabase.rpc("mutual_connections").then(({ data, error }) => {
+      // No function yet (migration not run): cards simply go without the line.
+      if (!alive || error || !Array.isArray(data)) return;
+      setMap(Object.fromEntries(data.map((r) => [r.other_id, { n: r.mutual_count, sample: r.sample_id }])));
+    });
+    load();
+    window.addEventListener(CONN_EVENT, load);
+    return () => { alive = false; window.removeEventListener(CONN_EVENT, load); };
+  }, [myId]);
+  return map;
+}
+function NxPymkCard({ m, mutual, sampleName, sampleFace, state, onOpen, onDismiss, onConnect, onCancel, onAccept }) {
+  return (
+    <div className="pk-card" role="listitem">
+      <button type="button" className="pk-x" onClick={onDismiss} aria-label={`Dismiss ${m.name}`}><X size={16} strokeWidth={2.4} /></button>
+      <button type="button" className="pk-open" onClick={onOpen} aria-label={m.name}>
+        <span className="pk-banner" aria-hidden="true" />
+        <span className="pk-photo"><NxFace m={m} size={0} /></span>
+        <span className="pk-name"><span data-no-translate="">{m.name}</span>{m.verified && <NxVerified size={15} />}</span>
+        <span className="pk-head">{[m.instrumentLabel || "Musician", m.consName].filter(Boolean).join(" | ")}</span>
+        <span className="pk-mutual">
+          {mutual > 0 ? (<>
+            {sampleFace}
+            <span>{mutual === 1 ? `${sampleName} is a mutual connection` : `${sampleName} and ${mutual - 1} other mutual connections`}</span>
+          </>) : (m.city || m.country) ? (<>
+            <MapPin size={14} />
+            <span>{[m.city, m.country].filter(Boolean).join(", ")}</span>
+          </>) : null}
+        </span>
+      </button>
+      {state === "sent" ? (
+        <button type="button" className="pk-btn is-pending" onClick={onCancel}>Pending</button>
+      ) : state === "received" ? (
+        <button type="button" className="pk-btn is-accept" onClick={onAccept}>Accept</button>
+      ) : (
+        <button type="button" className="pk-btn" onClick={onConnect}>Connect</button>
+      )}
+    </div>
+  );
+}
+function NxPeopleYouMayKnow({ members, myId, conn, consById, onOpen }) {
+  const mutualMap = useMutualConnections(myId);
+  const dismissKey = `artium_pymk_dismissed_${myId}`;
+  const [dismissed, setDismissed] = useState(() => { try { return new Set(JSON.parse(localStorage.getItem(dismissKey) || "[]")); } catch { return new Set(); } });
+  const dismiss = (id) => setDismissed((d) => {
+    const n = new Set(d); n.add(id);
+    try { localStorage.setItem(dismissKey, JSON.stringify([...n])); } catch { /* private mode */ }
+    return n;
+  });
+  const [open, setOpen] = useState({});
+  const me = members.find((x) => x.id === myId);
+  const byId = React.useMemo(() => Object.fromEntries(members.map((x) => [x.id, x])), [members]);
+  const sections = React.useMemo(() => {
+    const pool = members.filter((x) => x.id !== myId && !dismissed.has(x.id) && conn.byOther[x.id]?.state !== "connected");
+    // Who asked you first, then photo and verified as gentle tie-breaks.
+    const rank = (a, b) => ((conn.byOther[b.id]?.state === "received") - (conn.byOther[a.id]?.state === "received"))
+      || (mutualMap[b.id]?.n || 0) - (mutualMap[a.id]?.n || 0)
+      || (!!b.photoUrl - !!a.photoUrl) || (b.verified - a.verified) || (a.name || "").localeCompare(b.name || "");
+    const used = new Set();
+    const take = (key, title, test) => {
+      const people = pool.filter((x) => !used.has(x.id) && test(x)).sort(rank);
+      people.forEach((x) => used.add(x.id));
+      return people.length ? { key, title, people } : null;
+    };
+    const myCons = me?.conservatoryId ? (consById[me.conservatoryId]?.short || consById[me.conservatoryId]?.name || "") : "";
+    const myInst = me?.instrumentList?.[0] || "";
+    return [
+      take("mutual", "People you may know based on your connections", (x) => (mutualMap[x.id]?.n || 0) > 0),
+      myCons && take("cons", `People you may know from ${myCons}`, (x) => x.conservatoryId === me.conservatoryId),
+      myInst && take("inst", `People you may know who play ${myInst}`, (x) => me.instrumentList.some((i) => x.instrumentList.includes(i))),
+      me?.country && take("country", `People you may know in ${me.country}`, (x) => x.country === me.country),
+      take("more", "More musicians on Artium", () => true),
+    ].filter(Boolean);
+  }, [members, myId, dismissed, conn.byOther, mutualMap, me, consById]);
+
+  if (!sections.length) return <div className="nx-empty"><p>You're connected with everyone so far — new musicians will show up here.</p></div>;
+  return (
+    <div className="pk">
+      {sections.map((sec) => {
+        const shown = open[sec.key] ? sec.people : sec.people.slice(0, 4);
+        return (
+          <section key={sec.key} className="pk-sec">
+            <h3 className="pk-title">{sec.title}</h3>
+            <div className="pk-grid" role="list">
+              {shown.map((m) => {
+                const c = conn.byOther[m.id];
+                const mu = mutualMap[m.id];
+                const sample = mu?.sample ? byId[mu.sample] : null;
+                return (
+                  <NxPymkCard key={m.id} m={m} state={c?.state}
+                    mutual={mu?.n || 0} sampleName={sample ? (sample.name || "").split(" ")[0] : "Someone"}
+                    sampleFace={<span className="pk-mface">{sample ? <NxFace m={sample} size={20} /> : <Users size={14} />}</span>}
+                    onOpen={() => onOpen(m)} onDismiss={() => dismiss(m.id)}
+                    onConnect={() => conn.request(m.id)} onCancel={() => c && conn.remove(c.id)} onAccept={() => c && conn.accept(c.id)} />
+                );
+              })}
+            </div>
+            {sec.people.length > 4 && (
+              <button type="button" className="pk-more" onClick={() => setOpen((o) => ({ ...o, [sec.key]: !o[sec.key] }))}>
+                {open[sec.key] ? "Show less" : "Show all"}
+              </button>
+            )}
+          </section>
+        );
+      })}
+    </div>
+  );
+}
 function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStudent, onMessage, isGuest, onGuestClick, learnerMode = false, connectionsOverride = null }) {
   // Students connect; learners browse teachers as before.
   const connLive = useConnections(learnerMode || connectionsOverride ? null : myId);
@@ -11684,7 +11802,11 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
         )}
       </div>
 
-      {/* Carousel */}
+      {/* Students: people you may know (LinkedIn-style). Learners and guests:
+          the teacher carousel as before. */}
+      {useConn && !isGuest ? (
+        <NxPeopleYouMayKnow members={members} myId={myId} conn={conn} consById={consById} onOpen={(m) => selectFromCarousel(m)} />
+      ) : (<>
       <div className="nx-tabs" role="tablist" aria-label="Musicians">
         {(learnerMode ? [["featured", "Featured"], ["all", "All"]] : [["featured", "Featured"], ["nearby", "Nearby"], ["all", "All"]]).map(([v, t]) => (
           <button key={v} type="button" role="tab" aria-selected={tab === v} className={tab === v ? "is-on" : ""} onClick={() => setTab(v)}>{t}</button>
@@ -11737,6 +11859,7 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
           ))}
         </div>
       )}
+      </>)}
 
       {/* Filter sheets */}
       {FILTERS.some((f) => f.key === sheet) && (
