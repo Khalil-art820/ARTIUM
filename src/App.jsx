@@ -1048,7 +1048,7 @@ function Avatar({ name, id, size = 44, online, photoUrl }) {
         />
       ) : (
         <div
-          className="w-full h-full rounded-full flex items-center justify-center"
+          className="w-full h-full rounded-full flex items-center justify-center tm-initials"
           style={{ background: C.brass, color: C.brassText, fontFamily: FONT_DISPLAY, fontSize: size * 0.36 }}
         >
           {initials(name)}
@@ -16449,7 +16449,7 @@ function AdminGateCards({ card }) {
   const list = people.filter((p) => !needle || `${p.name} ${p.instrument || ""} ${findConservatory(p.conservatory_id)?.name || ""}`.toLowerCase().includes(needle));
   const face = (p, size) => p.photo_url
     ? <img src={p.photo_url} alt="" style={{ width: size, height: size, borderRadius: 10, objectFit: "cover", flexShrink: 0 }} />
-    : <span style={{ width: size, height: size, borderRadius: 10, flexShrink: 0, background: C.inkSoft, display: "grid", placeItems: "center", color: C.ivoryDim, fontSize: 12, fontWeight: 700 }}>{initials(p.name || "?")}</span>;
+    : <span className="tm-initials" style={{ width: size, height: size, borderRadius: 10, flexShrink: 0, background: C.inkSoft, display: "grid", placeItems: "center", color: C.ivoryDim, fontSize: 12, fontWeight: 700 }}>{initials(p.name || "?")}</span>;
   return (
     <>
       <div style={card}>

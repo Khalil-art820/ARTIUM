@@ -1294,3 +1294,8 @@ html.theme-modern .pk-btn.is-accept{background:#EE7A1F;border-color:#EE7A1F;colo
 /* Initials avatars in the Level card's orange instead of teal. */
 html.theme-modern .nx-face{background:linear-gradient(145deg,#FFA552,#EE7A1F)}
 html.theme-modern .tm-hm-me{background:linear-gradient(145deg,#FFA552,#EE7A1F)}
+/* Every initials avatar in one green (the owner's reference logo, #387F54). */
+html.theme-modern .nx-face,
+html.theme-modern .tm-hm-me,
+html.theme-modern .ng-face,
+html.theme-modern .tm-initials{background:#387F54 !important;color:#FFFFFF !important}
