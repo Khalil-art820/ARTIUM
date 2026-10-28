@@ -1304,3 +1304,8 @@ html.theme-modern .nx-face,
 html.theme-modern .tm-hm-me,
 html.theme-modern .ng-face,
 html.theme-modern .tm-initials{background:linear-gradient(150deg,#41B48F 0%,#1F8B6D 55%,#13705A 100%) !important;color:#FFFFFF !important}
+/* Connect / Accept in the radio button's green. */
+html.theme-modern .pk-btn{border-color:#1F8B6D;color:#1F8B6D}
+html.theme-modern .pk-btn:active{background:#E8F6F1}
+html.theme-modern .pk-btn.is-accept{background:linear-gradient(150deg,#41B48F 0%,#1F8B6D 55%,#13705A 100%);border-color:#1F8B6D;color:#FFFFFF}
+html.theme-modern .pk-btn.is-pending{border-color:#8C8C8C;color:#5E5E5E}
