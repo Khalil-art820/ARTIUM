@@ -1329,3 +1329,10 @@ html.theme-modern .artium-lp--light .artium-lp-step:nth-child(3) .artium-lp-step
 html.theme-modern .artium-lp--light .artium-lp-step:nth-child(4) .artium-lp-step-i{color:#7E62E3}
 html.theme-modern .artium-lp--light .artium-lp-step:nth-child(5) .artium-lp-step-i{color:#E25D8A}
 html.theme-modern .artium-lp--light .artium-lp-step:nth-child(6) .artium-lp-step-i{color:#D4A23A}
+/* Step numbers in their icon's colour, on a light tint of it. */
+html.theme-modern .artium-lp--light .artium-lp-step:nth-child(1) .artium-lp-num{color:#1F9A8C;background:#E3F4F1}
+html.theme-modern .artium-lp--light .artium-lp-step:nth-child(2) .artium-lp-num{color:#3B86DE;background:#E5EFFB}
+html.theme-modern .artium-lp--light .artium-lp-step:nth-child(3) .artium-lp-num{color:#F5913A;background:#FEEFE1}
+html.theme-modern .artium-lp--light .artium-lp-step:nth-child(4) .artium-lp-num{color:#7E62E3;background:#EEEAFC}
+html.theme-modern .artium-lp--light .artium-lp-step:nth-child(5) .artium-lp-num{color:#E25D8A;background:#FCE8EF}
+html.theme-modern .artium-lp--light .artium-lp-step:nth-child(6) .artium-lp-num{color:#D4A23A;background:#F8F0DC}
