@@ -2,6 +2,7 @@
 #   Black Marble: eoimages.gsfc.nasa.gov/images/imagerecords/144000/144898/BlackMarble_2016_3km.jpg
 #   land16k.png:  scripts/globe-landmask.py ne_10m_land.shp land16k.png 16384 ne_10m_lakes.shp  (Natural Earth 10m land + lakes)
 # 4096 writes earth-*-artium-v3.jpg, 8192 writes earth-*-artium-hd-v3.jpg (bump on rebuild: the app caches them).
+# Then scripts/globe-continents.py adds the gold continent borders -> v4 / hd-v4 (what the app loads).
 # Artium night Earth, rebuilt from sharper sources: NASA Black Marble 2016
 # (13500px lights) + Natural Earth 10m land (rasterised at 16K). Same recipe
 # and colours as earth-night-artium-v1; brightness matched to that source.

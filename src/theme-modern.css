@@ -1316,3 +1316,7 @@ html.theme-modern .pk-banner{background:#F4F1EA;border-bottom:1px solid #ECE8DF}
    half doesn't vanish into the white page. */
 html.theme-modern .nx-recenter{border:1px solid #E2DED6;box-shadow:0 2px 10px rgba(11,58,54,.14)}
 html.theme-modern .pk-x{width:22px;height:22px;top:7px;right:7px}
+/* Continent names on the globe: gold spaced capitals, never in the way. */
+html.theme-modern .ng-continent{pointer-events:none;white-space:nowrap;transform:translate(-50%,-50%);font:600 11px/1 'Jost','Fira Sans',sans-serif;
+  letter-spacing:.24em;text-transform:uppercase;color:#F1D27C;text-shadow:0 1px 3px rgba(0,0,0,.75),0 0 8px rgba(0,0,0,.45);transition:opacity .25s}
+html.theme-modern .ng-continent{transition:none;z-index:0}

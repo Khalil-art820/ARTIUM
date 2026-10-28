@@ -6,7 +6,8 @@ import * as THREE from "three";
  * The Network tab's globe: a night Earth in the app's teal — deep ocean,
  * green land with lit coastlines, and gold city lights that glow on the shaded
  * side too (NASA Black Marble 2016 lights over Natural Earth 10m coastlines and lakes,
- * recoloured into public/earth-*-artium-v3.jpg, and an 8K "-hd-v3" pair that
+ * recoloured with gold continent borders into public/earth-*-artium-v4.jpg
+ * (scripts/globe-continents.py), and an 8K "-hd-v4" pair that
  * loads once someone zooms in — see scripts/globe-night-texture.py). Then: mint
  * points at every conservatory, thin arcs between the places members study,
  * and the members themselves as portrait markers at their conservatory.
@@ -17,11 +18,19 @@ import * as THREE from "three";
  * own visibility test, so a face never floats through the sphere.
  */
 
-const EARTH_URL = "/earth-night-artium-v3.jpg";
-const LIGHTS_URL = "/earth-lights-artium-v3.jpg";
-const EARTH_HD_URL = "/earth-night-artium-hd-v3.jpg";     // 8192 x 4096
-const LIGHTS_HD_URL = "/earth-lights-artium-hd-v3.jpg";   // 8192 x 4096
+const EARTH_URL = "/earth-night-artium-v4.jpg";
+const LIGHTS_URL = "/earth-lights-artium-v4.jpg";
+const EARTH_HD_URL = "/earth-night-artium-hd-v4.jpg";     // 8192 x 4096
+const LIGHTS_HD_URL = "/earth-lights-artium-hd-v4.jpg";   // 8192 x 4096
 const MINT = "#42C9B8";
+// The five continents' names, floating over each one (gold, spaced caps).
+const CONTINENTS = [
+  { name: "Europe", lat: 55, lng: 34 },   // east of the busy west-European cities
+  { name: "Asia", lat: 47, lng: 92 },
+  { name: "Africa", lat: 6, lng: 20 },
+  { name: "America", lat: 6, lng: -74 },
+  { name: "Oceania", lat: -24, lng: 134 },
+];
 const DEFAULT_POV = { lat: 34, lng: -12, altitude: 1.36 };
 // The camera distance that draws the globe at a given on-screen diameter:
 // as large as the design wants (≈390px), never wider than the space it sits
@@ -206,7 +215,36 @@ export default function NetworkGlobe({ members, conservatories, focus, selectedI
     }
   }, [focus?.at, ready]);
 
-  const markers = React.useMemo(() => groupMarkers(members, altitude, selectedId), [members, altitude, selectedId]);
+  // Continent names fade out as their continent turns toward the rim, so a
+  // name is only fully shown while it faces you (never cut by the edge).
+  const labelEls = React.useRef({});
+  React.useEffect(() => {
+    if (!ready || !globeRef.current) return;
+    const g = globeRef.current;
+    let raf;
+    const tick = () => {
+      try {
+        const cam = g.camera().position;
+        const cl = Math.hypot(cam.x, cam.y, cam.z) || 1;
+        for (const k in labelEls.current) {
+          const { el, lat, lng } = labelEls.current[k];
+          const p = g.getCoords(lat, lng, 0);
+          const pl = Math.hypot(p.x, p.y, p.z) || 1;
+          const dot = (p.x * cam.x + p.y * cam.y + p.z * cam.z) / (pl * cl);
+          const o = Math.max(0, Math.min(1, (dot - 0.5) / 0.3));
+          el.style.opacity = o.toFixed(2);
+          el.style.visibility = o > 0.02 ? "visible" : "hidden";
+        }
+      } catch { /* not ready */ }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [ready]);
+  const markers = React.useMemo(() => [
+    ...CONTINENTS.map((c) => ({ kind: "label", id: `c:${c.name}`, ...c })),
+    ...groupMarkers(members, altitude, selectedId),
+  ], [members, altitude, selectedId]);
 
   // Mint points at every conservatory (real places), brighter where members are.
   const memberCons = React.useMemo(() => new Set(members.map((m) => m.conservatoryId)), [members]);
@@ -306,10 +344,18 @@ export default function NetworkGlobe({ members, conservatories, focus, selectedI
           htmlAltitude={0.02}
           htmlTransitionDuration={0}
           htmlElementVisibilityModifier={(el, visible) => {
+            if (el.classList.contains("ng-continent")) return;   // faded by the loop above
             el.style.opacity = visible ? "1" : "0";
             el.style.pointerEvents = visible ? "auto" : "none";
           }}
           htmlElement={(d) => {
+            if (d.kind === "label") {
+              const el = document.createElement("span");
+              el.className = "ng-continent";
+              el.textContent = d.name;
+              labelEls.current[d.id] = { el, lat: d.lat, lng: d.lng };
+              return el;
+            }
             const el = document.createElement("button");
             el.type = "button";
             el.className = `ng-marker${d.selected ? " is-on" : ""}`;
