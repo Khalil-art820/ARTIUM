@@ -1336,3 +1336,8 @@ html.theme-modern .artium-lp--light .artium-lp-step:nth-child(3) .artium-lp-num{
 html.theme-modern .artium-lp--light .artium-lp-step:nth-child(4) .artium-lp-num{color:#7E62E3;background:#EEEAFC}
 html.theme-modern .artium-lp--light .artium-lp-step:nth-child(5) .artium-lp-num{color:#E25D8A;background:#FCE8EF}
 html.theme-modern .artium-lp--light .artium-lp-step:nth-child(6) .artium-lp-num{color:#D4A23A;background:#F8F0DC}
+/* Steps 1 and 2 swap colours: 1 blue, 2 teal. */
+html.theme-modern .artium-lp--light .artium-lp-step:nth-child(1) .artium-lp-step-i{color:#3B86DE}
+html.theme-modern .artium-lp--light .artium-lp-step:nth-child(2) .artium-lp-step-i{color:#1F9A8C}
+html.theme-modern .artium-lp--light .artium-lp-step:nth-child(1) .artium-lp-num{color:#3B86DE;background:#E5EFFB}
+html.theme-modern .artium-lp--light .artium-lp-step:nth-child(2) .artium-lp-num{color:#1F9A8C;background:#E3F4F1}

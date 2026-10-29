@@ -6247,10 +6247,14 @@ function Landing({ myConnCount = 0, onLogout, onApply, onBack, onPreview, onProf
                   </linearGradient>
                 </defs>
                 <path d="M108 262C72 216 5 172 5 106A103 103 0 1 1 211 106C211 172 144 216 108 262Z" fill="url(#lpPinFill)" stroke="url(#lpPinRim)" strokeWidth="7" strokeLinejoin="round" />
-                <g fill="none" stroke="#FFFFFF" strokeWidth="4.4" strokeLinecap="round" strokeLinejoin="round">
+                {/* A person: round head over a closed body. Members get it
+                    centred over WELCOME BACK; joiners get it shifted left to
+                    make room for the "+". */}
+                <g fill="none" stroke="#FFFFFF" strokeWidth="4.4" strokeLinecap="round" strokeLinejoin="round"
+                  transform={myProfile ? "translate(8 0)" : undefined}>
                   <circle cx="100" cy="46" r="13" />
-                  <path d="M76 86c2-14 12-22 24-22 7 0 13 2 17 7" />
-                  {!myProfile && <path d="M122 76h20M132 66v20" />}
+                  <path d="M76 88c0-14 10.7-24 24-24s24 10 24 24z" />
+                  {!myProfile && <path d="M132 76h18M141 67v18" />}
                 </g>
                 {/* Members already in: the pin greets them instead of asking them to join. */}
                 <text x="108" y="128" textAnchor="middle" fill="#FFFFFF" fontFamily="'Fira Sans', system-ui, sans-serif" fontWeight="700" fontSize="24" letterSpacing="1.5">{myProfile ? "WELCOME" : "CREATE"}</text>
