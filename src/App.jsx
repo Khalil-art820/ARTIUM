@@ -6247,15 +6247,26 @@ function Landing({ myConnCount = 0, onLogout, onApply, onBack, onPreview, onProf
                   </linearGradient>
                 </defs>
                 <path d="M108 262C72 216 5 172 5 106A103 103 0 1 1 211 106C211 172 144 216 108 262Z" fill="url(#lpPinFill)" stroke="url(#lpPinRim)" strokeWidth="7" strokeLinejoin="round" />
-                {/* A person: round head over a closed body. Members get it
-                    centred over WELCOME BACK; joiners get it shifted left to
-                    make room for the "+". */}
-                <g fill="none" stroke="#FFFFFF" strokeWidth="4.4" strokeLinecap="round" strokeLinejoin="round"
-                  transform={myProfile ? "translate(8 0)" : undefined}>
-                  <circle cx="100" cy="46" r="13" />
-                  <path d="M76 88c0-14 10.7-24 24-24s24 10 24 24z" />
-                  {!myProfile && <path d="M132 76h18M141 67v18" />}
-                </g>
+                {/* Joiners: a person (round head over a closed body) with a "+";
+                    members: a waving hand over WELCOME BACK. */}
+                {myProfile ? (
+                  // Members: a hand waving hello, tilted mid-wave, with two
+                  // little motion strokes beside it.
+                  <g fill="none" stroke="#FFFFFF" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round"
+                    transform="translate(80 29) scale(2.4) rotate(-14 11.7 12)">
+                    <path d="M18 11V6a2 2 0 0 0-4 0" />
+                    <path d="M14 10V4a2 2 0 0 0-4 0v2" />
+                    <path d="M10 10.5V6a2 2 0 0 0-4 0v8" />
+                    <path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-6-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15" />
+                    <path d="M1.6 6.2c.5-1.5 1.5-2.6 2.9-3.3M.4 9.4C.9 6.4 2.4 4 4.8 2.4" strokeWidth="1.5" />
+                  </g>
+                ) : (
+                  <g fill="none" stroke="#FFFFFF" strokeWidth="4.4" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="100" cy="46" r="13" />
+                    <path d="M76 88c0-14 10.7-24 24-24s24 10 24 24z" />
+                    <path d="M132 76h18M141 67v18" />
+                  </g>
+                )}
                 {/* Members already in: the pin greets them instead of asking them to join. */}
                 <text x="108" y="128" textAnchor="middle" fill="#FFFFFF" fontFamily="'Fira Sans', system-ui, sans-serif" fontWeight="700" fontSize="24" letterSpacing="1.5">{myProfile ? "WELCOME" : "CREATE"}</text>
                 <text x="108" y="156" textAnchor="middle" fill="#FFFFFF" fontFamily="'Fira Sans', system-ui, sans-serif" fontWeight="700" fontSize="24" letterSpacing="1.5">{myProfile ? "BACK" : "ACCOUNT"}</text>
