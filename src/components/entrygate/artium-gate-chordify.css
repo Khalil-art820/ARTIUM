@@ -728,3 +728,4 @@
 .cgate .cg-app-in{padding-top:40px;padding-bottom:40px}
 /* aclassicaltone: no gold ring; a thin black ring set a little off the disc. */
 .cgate .cg-partner > img{padding:0;background:none;outline:1.5px solid #000000;outline-offset:3px}
+.cgate .cg-partner > img{outline:1.5px solid #000000;outline-offset:-6px}  /* the ring inside the white disc, set in from its edge */
