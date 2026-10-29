@@ -5,7 +5,7 @@
 # ends. Prints the path; scripts/pwa-icons.py and ArtiumMark.jsx use it.
 #   python3 scripts/artium-wave.py [T]
 import math, sys
-T = float(sys.argv[1]) if len(sys.argv) > 1 else 4.2
+T = float(sys.argv[1]) if len(sys.argv) > 1 else 5.8
 # Two cubic Béziers joined smoothly at the middle (tangents match).
 B1 = [(17.0, 56.8), (26.5, 43.2), (37.5, 41.4), (50.0, 50.4)]
 B2 = [(50.0, 50.4), (62.5, 59.4), (73.5, 57.6), (83.0, 44.0)]

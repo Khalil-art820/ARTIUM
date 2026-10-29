@@ -10,7 +10,7 @@ export default defineConfig({
       // Registration lives in src/pwa.js, which also forces the reload that
       // autoUpdate on its own does not do for an already-open page.
       injectRegister: null,
-      includeAssets: ["icon-1024-v9.png", "icon-512-v9.png", "icon-192-v9.png", "icon-1024-maskable-v9.png", "icon-512-maskable-v9.png", "apple-touch-icon-v9.png"],
+      includeAssets: ["icon-1024-v10.png", "icon-512-v10.png", "icon-192-v10.png", "icon-1024-maskable-v10.png", "icon-512-maskable-v10.png", "apple-touch-icon-v10.png"],
       manifest: {
         name: "Artium — A World Connected by Music",
         short_name: "Artium",
@@ -27,11 +27,11 @@ export default defineConfig({
         // launch screen blows the icon up to ~800px on dense phones, and the
         // old 512px files went soft there.
         icons: [
-          { src: "icon-192-v9.png", sizes: "192x192", type: "image/png", purpose: "any" },
-          { src: "icon-512-v9.png", sizes: "512x512", type: "image/png", purpose: "any" },
-          { src: "icon-1024-v9.png", sizes: "1024x1024", type: "image/png", purpose: "any" },
-          { src: "icon-512-maskable-v9.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
-          { src: "icon-1024-maskable-v9.png", sizes: "1024x1024", type: "image/png", purpose: "maskable" },
+          { src: "icon-192-v10.png", sizes: "192x192", type: "image/png", purpose: "any" },
+          { src: "icon-512-v10.png", sizes: "512x512", type: "image/png", purpose: "any" },
+          { src: "icon-1024-v10.png", sizes: "1024x1024", type: "image/png", purpose: "any" },
+          { src: "icon-512-maskable-v10.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+          { src: "icon-1024-maskable-v10.png", sizes: "1024x1024", type: "image/png", purpose: "maskable" },
         ],
       },
       workbox: {
