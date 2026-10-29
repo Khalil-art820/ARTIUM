@@ -1,13 +1,14 @@
 # The Artium mark's white wave, as one filled path in a 100-unit box (disc r=50).
-# A smooth cubic centreline (left tip -> crest -> trough -> right tip) with a
+# A smooth cubic centreline (left tip -> crest -> trough -> right tip), tips well
+# inside the disc, with a
 # thickness that swells to T in the middle and fades to fine points at both
 # ends. Prints the path; scripts/pwa-icons.py and ArtiumMark.jsx use it.
 #   python3 scripts/artium-wave.py [T]
 import math, sys
 T = float(sys.argv[1]) if len(sys.argv) > 1 else 4.2
 # Two cubic Béziers joined smoothly at the middle (tangents match).
-B1 = [(9.0, 58.6), (19.5, 45.6), (30.5, 43.6), (50.0, 51.0)]
-B2 = [(50.0, 51.0), (69.5, 58.4), (80.5, 56.6), (91.0, 44.2)]
+B1 = [(17.0, 56.8), (26.5, 43.2), (37.5, 41.4), (50.0, 50.4)]
+B2 = [(50.0, 50.4), (62.5, 59.4), (73.5, 57.6), (83.0, 44.0)]
 def bez(b, t):
     u = 1 - t
     return tuple(u**3*b[0][i] + 3*u*u*t*b[1][i] + 3*u*t*t*b[2][i] + t**3*b[3][i] for i in range(2))
