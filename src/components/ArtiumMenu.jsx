@@ -1,6 +1,5 @@
 import React from "react";
 import "./ArtiumMenu.css";
-import ArtiumMark from "./ArtiumMark.jsx";
 import { setLanguage } from "../i18n/runtime.js"; // eslint-disable-line no-unused-vars
 
 // The three-line menu every top bar opens: a side panel in Facebook's manner
@@ -140,8 +139,22 @@ function Drawer({ onClose, onProfile, onLogout, onLegal }) {
     <div className="am-root" role="dialog" aria-modal="true" aria-label="Menu" onClick={onClose}>
       <nav className="am-panel" onClick={(e) => e.stopPropagation()}>
         <div className="am-card">
-          <span className="am-mark" aria-hidden="true"><ArtiumMark size={44} /></span>
-          <span className="am-name"><b data-no-translate="">ARTIUM</b><em>A world connected by music</em></span>
+          {/* The app icon (the radio's white bars on dark) and the ARTIUM
+              wordmark exactly as the top bar draws it. */}
+          <span className="am-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              {[[3, 9], [7.5, 15], [12, 20], [16.5, 13], [21, 7]].map(([x, h]) => (
+                <line key={x} x1={x} x2={x} y1={12 - h / 2} y2={12 + h / 2} stroke="#FFFFFF" strokeWidth="2.4" strokeLinecap="round" />
+              ))}
+            </svg>
+          </span>
+          <span className="am-name">
+            <b className="am-word" aria-label="ARTIUM" data-no-translate="">
+              <svg viewBox="0 0 15 15" aria-hidden="true"><path d="M7.5 0.9 L1.4 14.4 M7.5 0.9 L13.6 14.4" stroke="currentColor" strokeWidth="2.85" fill="none" /></svg>
+              <span aria-hidden="true">RTIUM</span>
+            </b>
+            <em>A world connected by music</em>
+          </span>
           <button type="button" className="am-x" onClick={onClose} aria-label="Close menu">
             <Svg size={20} sw={2.2}><path d="M6 6l12 12M18 6L6 18" /></Svg>
           </button>
