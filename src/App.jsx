@@ -75,6 +75,7 @@ import "leaflet/dist/leaflet.css";
 import "./theme-modern.css";
 import ArtiumWord from "./components/ArtiumWord";
 import ArtiumMenu, { readLang } from "./components/ArtiumMenu.jsx";
+import ArtiumMark from "./components/ArtiumMark.jsx";
 import { setLanguage, currentLanguage } from "./i18n/runtime.js";
 // Dates in the chosen language (English keeps the day-month British order).
 const DATE_LOCALES = { en: "en-GB", de: "de-DE", es: "es-ES", fr: "fr-FR", nl: "nl-NL", it: "it-IT", "pt-BR": "pt-BR", pl: "pl-PL" };
@@ -13185,17 +13186,14 @@ function StepTeaching({ draft, update, editing }) {
  * only added a second, competing one. Without it the mark can be taller —
  * a pin is a vertical shape, and a circle was forcing it to be square.
  */
-// The current brand lockup: the app icon's teal disc with the white sound
-// bars, then the ARTIUM wordmark with the crossbar-less A.
+// The current brand lockup: the Artium mark (black disc, white wave), then
+// the ARTIUM wordmark with the crossbar-less A.
 function ArtiumLockup({ size = 20 }) {
   const disc = Math.round(size * 1.7);
   return (
     <span className="artium-lockup" aria-label="ARTIUM" role="img" style={{ display: "inline-flex", alignItems: "center", gap: Math.round(size * 0.45) }}>
-      <span aria-hidden="true" style={{ width: disc, height: disc, borderRadius: "50%", flex: "none", display: "grid", placeItems: "center",
-        background: "radial-gradient(circle at 35% 30%, #2C8C80, #0A5A55 70%)", boxShadow: "0 4px 10px -4px rgba(7,95,92,.6)" }}>
-        <svg width={disc * 0.5} height={disc * 0.5} viewBox="0 0 24 24">
-          {WAVE_BARS.map(([x, h], i) => <line key={i} x1={x} x2={x} y1={12 - h / 2} y2={12 + h / 2} stroke="#FFFFFF" strokeWidth="2.4" strokeLinecap="round" />)}
-        </svg>
+      <span aria-hidden="true" style={{ flex: "none", display: "grid", borderRadius: "50%", boxShadow: "0 4px 10px -4px rgba(0,0,0,.45)" }}>
+        <ArtiumMark size={disc} />
       </span>
       <span aria-hidden="true" style={{ display: "inline-flex", alignItems: "center", fontFamily: "'Jost', system-ui, sans-serif", fontWeight: 600,
         fontSize: size * 0.95, letterSpacing: "0.2em", color: "#12352E", lineHeight: 1 }}>

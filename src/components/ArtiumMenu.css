@@ -55,3 +55,5 @@
 .am-panel .am-logout{background:#E4E6EB;color:#050505;border:0}
 .am-panel .am-logout:active{background:#D8DADF}
 .am-panel .am-x{background:#E4E6EB;color:#050505;border:0}
+.am-mark{background:none !important}
+.am-mark svg{width:44px !important;height:44px !important}

@@ -1,5 +1,6 @@
 import React from "react";
 import "./ArtiumMenu.css";
+import ArtiumMark from "./ArtiumMark.jsx";
 import { setLanguage } from "../i18n/runtime.js"; // eslint-disable-line no-unused-vars
 
 // The three-line menu every top bar opens: a side panel in Facebook's manner
@@ -139,9 +140,7 @@ function Drawer({ onClose, onProfile, onLogout, onLegal }) {
     <div className="am-root" role="dialog" aria-modal="true" aria-label="Menu" onClick={onClose}>
       <nav className="am-panel" onClick={(e) => e.stopPropagation()}>
         <div className="am-card">
-          <span className="am-mark" aria-hidden="true">
-            <svg viewBox="0 0 15 15"><path d="M7.5 0.9 L1.4 14.4 M7.5 0.9 L13.6 14.4" stroke="currentColor" strokeWidth="2.85" fill="none" /></svg>
-          </span>
+          <span className="am-mark" aria-hidden="true"><ArtiumMark size={44} /></span>
           <span className="am-name"><b>Artium</b><em>A world connected by music</em></span>
           <button type="button" className="am-x" onClick={onClose} aria-label="Close menu">
             <Svg size={20} sw={2.2}><path d="M6 6l12 12M18 6L6 18" /></Svg>
