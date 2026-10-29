@@ -141,7 +141,7 @@ function Drawer({ onClose, onProfile, onLogout, onLegal }) {
       <nav className="am-panel" onClick={(e) => e.stopPropagation()}>
         <div className="am-card">
           <span className="am-mark" aria-hidden="true"><ArtiumMark size={44} /></span>
-          <span className="am-name"><b>Artium</b><em>A world connected by music</em></span>
+          <span className="am-name"><b data-no-translate="">ARTIUM</b><em>A world connected by music</em></span>
           <button type="button" className="am-x" onClick={onClose} aria-label="Close menu">
             <Svg size={20} sw={2.2}><path d="M6 6l12 12M18 6L6 18" /></Svg>
           </button>
