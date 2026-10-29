@@ -11493,31 +11493,36 @@ function useMutualConnections(myId) {
   }, [myId]);
   return map;
 }
-function NxPymkCard({ m, mutual, sampleName, sampleFace, state, onOpen, onDismiss, onConnect, onCancel, onAccept }) {
+// One student, in the owner's dark-card design: the photo fills the top and
+// fades into the card; name, a pin + city line, a piano + instrument line,
+// and a round "+" in a gold ring (connect) at the bottom right.
+const PkPiano = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M3.5 11c.3-3.2 3.3-5.6 7.3-5.6h3c3.5 0 6.1 1.8 6.7 5.6z" />
+    <rect x="2.8" y="11" width="18.4" height="4" rx="1" />
+    <path d="M5.5 15v4.2M18.5 15v4.2M12 15v2.6" />
+  </svg>
+);
+function NxPymkCard({ m, state, onOpen, onConnect, onCancel, onAccept }) {
+  const place = [m.city, m.country].filter(Boolean).join(", ");
   return (
     <div className="pk-card" role="listitem">
-      <button type="button" className="pk-x" onClick={onDismiss} aria-label={`Dismiss ${m.name}`}><X size={12} strokeWidth={2.6} /></button>
       <button type="button" className="pk-open" onClick={onOpen} aria-label={m.name}>
-        <span className="pk-banner" aria-hidden="true" />
-        <span className="pk-photo"><NxFace m={m} size={0} /></span>
-        <span className="pk-name"><span data-no-translate="">{m.name}</span>{m.verified && <NxVerified size={19} />}</span>
-        <span className="pk-head">{[m.instrumentLabel || "Musician", m.consName].filter(Boolean).join(" | ")}</span>
-        <span className="pk-mutual">
-          {mutual > 0 ? (<>
-            {sampleFace}
-            <span>{mutual === 1 ? `${sampleName} is a mutual connection` : `${sampleName} and ${mutual - 1} other mutual connections`}</span>
-          </>) : (m.city || m.country) ? (<>
-            <MapPin size={14} />
-            <span>{[m.city, m.country].filter(Boolean).join(", ")}</span>
-          </>) : null}
+        <span className="pk-photo" aria-hidden="true">
+          {m.photoUrl ? <img src={m.photoUrl} alt="" loading="lazy" /> : <b>{initials(m.name || "?")}</b>}
+        </span>
+        <span className="pk-body">
+          <span className="pk-name"><span data-no-translate="">{m.name}</span>{m.verified && <NxVerified size={17} />}</span>
+          {place && <span className="pk-line"><MapPin size={21} strokeWidth={1.5} /><span>{place}</span></span>}
+          <span className="pk-line"><PkPiano /><span>{m.instrumentLabel || "Musician"}</span></span>
         </span>
       </button>
       {state === "sent" ? (
-        <button type="button" className="pk-btn is-pending" onClick={onCancel}>Pending</button>
+        <button type="button" className="pk-plus is-pending" onClick={onCancel} aria-label="Pending — tap to cancel"><Clock size={17} strokeWidth={2} /></button>
       ) : state === "received" ? (
-        <button type="button" className="pk-btn is-accept" onClick={onAccept}>Accept</button>
+        <button type="button" className="pk-plus is-accept" onClick={onAccept} aria-label="Accept"><Check size={18} strokeWidth={2.4} /></button>
       ) : (
-        <button type="button" className="pk-btn" onClick={onConnect}>Connect</button>
+        <button type="button" className="pk-plus" onClick={onConnect} aria-label="Connect"><Plus size={20} strokeWidth={2} /></button>
       )}
     </div>
   );
@@ -11568,13 +11573,9 @@ function NxPeopleYouMayKnow({ members, myId, conn, consById, onOpen }) {
             <div className="pk-grid" role="list">
               {shown.map((m) => {
                 const c = conn.byOther[m.id];
-                const mu = mutualMap[m.id];
-                const sample = mu?.sample ? byId[mu.sample] : null;
                 return (
                   <NxPymkCard key={m.id} m={m} state={c?.state}
-                    mutual={mu?.n || 0} sampleName={sample ? (sample.name || "").split(" ")[0] : "Someone"}
-                    sampleFace={<span className="pk-mface">{sample ? <NxFace m={sample} size={20} /> : <Users size={14} />}</span>}
-                    onOpen={() => onOpen(m)} onDismiss={() => dismiss(m.id)}
+                    onOpen={() => onOpen(m)}
                     onConnect={() => conn.request(m.id)} onCancel={() => c && conn.remove(c.id)} onAccept={() => c && conn.accept(c.id)} />
                 );
               })}

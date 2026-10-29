@@ -1341,3 +1341,38 @@ html.theme-modern .artium-lp--light .artium-lp-step:nth-child(1) .artium-lp-step
 html.theme-modern .artium-lp--light .artium-lp-step:nth-child(2) .artium-lp-step-i{color:#1F9A8C}
 html.theme-modern .artium-lp--light .artium-lp-step:nth-child(1) .artium-lp-num{color:#3B86DE;background:#E5EFFB}
 html.theme-modern .artium-lp--light .artium-lp-step:nth-child(2) .artium-lp-num{color:#1F9A8C;background:#E3F4F1}
+/* ==== Student cards, owner's dark design ==== */
+html.theme-modern .pk-grid{gap:10px}
+html.theme-modern .pk-card{position:relative;border:1px solid rgba(255,255,255,.22);border-radius:18px;overflow:hidden;
+  background:linear-gradient(180deg,#1C2B2E 0%,#142225 60%,#101C1F 100%);box-shadow:0 10px 24px -14px rgba(0,0,0,.55)}
+html.theme-modern .pk-open{display:block;width:100%;padding:0;border:0;background:none;color:#FFFFFF;text-align:left;cursor:pointer}
+html.theme-modern .pk-photo{position:relative;display:block;width:100%;aspect-ratio:1.25;overflow:hidden;
+  background:linear-gradient(150deg,#41B48F 0%,#1F8B6D 55%,#13705A 100%)}
+html.theme-modern .pk-photo img{width:100%;height:100%;object-fit:cover;display:block}
+html.theme-modern .pk-photo b{position:absolute;inset:0;display:grid;place-items:center;font:700 34px 'Fira Sans',sans-serif;color:#FFFFFF}
+/* the photo melts into the card */
+html.theme-modern .pk-photo::after{content:"";position:absolute;left:0;right:0;bottom:0;height:62%;
+  background:linear-gradient(180deg,rgba(20,34,37,0) 0%,rgba(20,34,37,.75) 55%,#142225 100%)}
+html.theme-modern .pk-body{position:relative;z-index:1;display:flex;flex-direction:column;gap:7px;margin-top:-34px;padding:0 12px 14px;min-width:0}
+html.theme-modern .pk-name{display:flex;align-items:center;gap:5px;font:600 17px/1.2 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#FFFFFF;
+  text-shadow:0 1px 4px rgba(0,0,0,.45);min-width:0}
+html.theme-modern .pk-name > span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html.theme-modern .pk-line{display:flex;align-items:center;gap:9px;min-width:0;padding-right:38px;
+  font:400 13.5px/1.2 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#E6ECEB}
+html.theme-modern .pk-line svg{flex:none;color:#E9E2CF}
+html.theme-modern .pk-line > span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html.theme-modern .pk-plus{position:absolute;right:10px;bottom:12px;z-index:2;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;
+  border:1.5px solid #D9B45E;background:rgba(16,28,31,.85);color:#FFFFFF;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+html.theme-modern .pk-plus:active{transform:scale(.94)}
+html.theme-modern .pk-plus.is-pending{border-color:#8E9A98;color:#C9D2D0}
+html.theme-modern .pk-plus.is-accept{background:linear-gradient(150deg,#F2D37E,#C99A3E);border-color:#F2D37E;color:#142225}
+/* (overrides the earlier round-photo card) */
+html.theme-modern .pk-card .pk-photo{margin:0;width:100%;height:auto;aspect-ratio:1.2;border:0;border-radius:0;z-index:0;background:linear-gradient(150deg,#41B48F 0%,#1F8B6D 55%,#13705A 100%)}
+html.theme-modern .pk-card .pk-name{margin-top:0;justify-content:flex-start}
+html.theme-modern .pk-card .pk-open{flex:none}
+/* Only the bottom line shares its row with the "+"; the city line runs full width. */
+html.theme-modern .pk-card .pk-line{padding-right:0}
+html.theme-modern .pk-card .pk-line:last-child{padding-right:44px}
+html.theme-modern .pk-card .pk-plus{width:34px;height:34px;bottom:11px}
+html.theme-modern .pk-card .pk-line{padding-right:28px}
+html.theme-modern .pk-card .pk-line:last-child{padding-right:42px}
