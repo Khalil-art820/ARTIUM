@@ -709,3 +709,8 @@
 .cgate .cg-partner-social a:active{transform:scale(.92)}
 .cgate .cg-partner-row > .cg-partner{width:auto;flex:none}
 .cgate .cg-partners .cg-partner-social a{margin:0;flex:none;display:grid;gap:0}
+/* Social marks: plain, uncoloured, a size up (like the reference). */
+.cgate .cg-partner-social{gap:12px;margin-top:4px}
+.cgate .cg-partners .cg-partner-social a,
+.cgate .cg-partners .cg-partner-social a.is-ig,
+.cgate .cg-partners .cg-partner-social a.is-fb{width:30px;height:30px;border-radius:0;background:none;color:#FFFFFF}
