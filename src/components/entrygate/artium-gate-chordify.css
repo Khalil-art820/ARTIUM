@@ -692,3 +692,6 @@
 .cgate .cf-verified svg{width:21px;height:21px}
 .cgate .cf-card.is-on .cf-verified{width:31px;height:31px}
 .cgate .cf-card.is-on .cf-verified svg{width:25px;height:25px}
+/* App buttons one above the other, smaller, the same width. */
+.cgate .cg-app-btns{flex-direction:column;align-items:center;flex-wrap:nowrap;gap:8px;margin-top:20px}
+.cgate .cg-app-btns .cg-app-btn{width:220px;max-width:100%;font-size:14px;padding:9px 16px;border-radius:6px}

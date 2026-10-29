@@ -50,3 +50,8 @@
 .am-logout{margin:18px 16px 0;display:flex;align-items:center;justify-content:center;gap:8px;height:42px;border-radius:8px;border:0;
   background:#E4E6EB;color:#050505;font:600 15px system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;cursor:pointer}
 .am-logout:active{background:#D8DADF}
+/* Hold the grey pills where a page resets every button's background (the
+   home page does): scoped to the panel so they win. */
+.am-panel .am-logout{background:#E4E6EB;color:#050505;border:0}
+.am-panel .am-logout:active{background:#D8DADF}
+.am-panel .am-x{background:#E4E6EB;color:#050505;border:0}
