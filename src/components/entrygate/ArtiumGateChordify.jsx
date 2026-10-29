@@ -120,7 +120,6 @@ function InstallAppBanner() {
             )}
           </p>
         )}
-        <p className="cg-app-for"><ArtiumWord /><span className="cg-app-line">for iPhone and Android</span></p>
       </div>
     </section>
   );

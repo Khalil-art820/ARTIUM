@@ -714,3 +714,12 @@
 .cgate .cg-partners .cg-partner-social a,
 .cgate .cg-partners .cg-partner-social a.is-ig,
 .cgate .cg-partners .cg-partner-social a.is-fb{width:30px;height:30px;border-radius:0;background:none;color:#FFFFFF}
+/* aclassicaltone's disc in a gold ring, the metallic sweep of its own mark. */
+.cgate .cg-partner > img{padding:3px;box-sizing:border-box;background:linear-gradient(135deg,#FBEFB4 0%,#E4BF5E 28%,#B8872A 52%,#F2D57E 74%,#A7791F 100%)}
+/* App banner: just the line and the two buttons, centred. */
+.cgate .cg-app-in{justify-content:center;text-align:center}
+.cgate .cg-app-btns{align-self:center}
+/* The join button and the word "Connect." in the radio button's green. */
+.cgate .cg-btn{background:linear-gradient(150deg,#41B48F 0%,#1F8B6D 55%,#13705A 100%) !important;border-color:transparent !important;color:#FFFFFF !important}
+.cgate .cg-accent{background:linear-gradient(150deg,#41B48F 0%,#1F8B6D 55%,#13705A 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.cgate .cg-hero .cg-accent{color:transparent !important;-webkit-text-fill-color:transparent}
