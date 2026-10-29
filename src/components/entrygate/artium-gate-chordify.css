@@ -695,3 +695,17 @@
 /* App buttons one above the other, smaller, the same width. */
 .cgate .cg-app-btns{flex-direction:column;align-items:center;flex-wrap:nowrap;gap:8px;margin-top:20px}
 .cgate .cg-app-btns .cg-app-btn{width:220px;max-width:100%;font-size:14px;padding:9px 16px;border-radius:6px}
+/* Our partners, a size up; the partner tile with its Instagram/Facebook links. */
+.cgate .cg-partners{padding-top:34px;padding-bottom:34px}
+.cgate .cg-partners h3{font-size:22px;margin-bottom:26px}
+.cgate .cg-partner{display:flex;flex-direction:column;align-items:center;gap:8px;color:#FFFFFF}
+.cgate .cg-partner > span:not(.cg-partner-social){font-size:14.5px;font-weight:600;white-space:nowrap}
+.cgate .cg-partner-row img,.cgate .cg-partner-row .pr-vacant-disc{width:68px;height:68px}
+.cgate .pr-vacant-label{font-size:13.5px}
+.cgate .cg-partner-social{display:flex;gap:8px;margin-top:2px}
+.cgate .cg-partner-social a{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;color:#FFFFFF;text-decoration:none}
+.cgate .cg-partner-social a.is-ig{background:radial-gradient(circle at 30% 107%,#FDF497 0%,#FD5949 45%,#D6249F 60%,#285AEB 90%)}
+.cgate .cg-partner-social a.is-fb{background:#1877F2}
+.cgate .cg-partner-social a:active{transform:scale(.92)}
+.cgate .cg-partner-row > .cg-partner{width:auto;flex:none}
+.cgate .cg-partners .cg-partner-social a{margin:0;flex:none;display:grid;gap:0}

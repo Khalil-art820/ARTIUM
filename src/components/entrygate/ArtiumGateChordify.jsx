@@ -10,6 +10,7 @@ import "./artium-gate-chordify.css";
 // Same props, copy and behaviour as ArtiumGate (reshape only); shares its
 // spotlight-tour hooks/components and the card marks. Dev-only trial.
 
+const ACLASSICALTONE_FACEBOOK = "https://www.facebook.com/profile.php?id=100094635454669";
 const ARTIUM_INSTAGRAM = "https://www.instagram.com/aclassicaltone?igsh=MTZzdzk3bWo5OGdkbA==";
 const FONT_HREF = "https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600;700&display=swap";
 
@@ -418,10 +419,19 @@ export default function ArtiumGateChordify({
         <article className="cg-card cg-partners">
           <h3>Our partners</h3>
           <div className="cg-partner-row">
-            <a href={ARTIUM_INSTAGRAM} target="_blank" rel="noreferrer" aria-label="aclassicaltone on Instagram">
+            {/* The partner itself isn't a link; its Instagram and Facebook are. */}
+            <div className="cg-partner">
               <img src="/partner-aclassicaltone-v2.png" alt="" width="44" height="44" />
               <span>aclassicaltone</span>
-            </a>
+              <span className="cg-partner-social">
+                <a href={ARTIUM_INSTAGRAM} target="_blank" rel="noreferrer" aria-label="aclassicaltone on Instagram" className="is-ig">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4.2" /><circle cx="17.3" cy="6.7" r="1.1" fill="currentColor" stroke="none" /></svg>
+                </a>
+                <a href={ACLASSICALTONE_FACEBOOK} target="_blank" rel="noreferrer" aria-label="aclassicaltone on Facebook" className="is-fb">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13.6 21v-7.6h2.6l.4-3h-3V8.5c0-.9.3-1.5 1.5-1.5h1.6V4.3c-.3 0-1.2-.1-2.3-.1-2.3 0-3.9 1.4-3.9 4v2.2H7.9v3h2.6V21z" /></svg>
+                </a>
+              </span>
+            </div>
             <VacantPartnerTile onClick={() => setPartnerOpen(true)} />
             <VacantPartnerTile onClick={() => setPartnerOpen(true)} />
             <VacantPartnerTile onClick={() => setPartnerOpen(true)} />
