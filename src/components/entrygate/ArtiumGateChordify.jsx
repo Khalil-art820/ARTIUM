@@ -420,7 +420,7 @@ export default function ArtiumGateChordify({
           <div className="cg-partner-row">
             {/* The partner itself isn't a link; its Instagram and Facebook are. */}
             <div className="cg-partner">
-              <img src="/partner-aclassicaltone-v2.png" alt="" width="44" height="44" />
+              <img src="/partner-aclassicaltone-v3.png" alt="" width="44" height="44" />
               <span>aclassicaltone</span>
               <span className="cg-partner-social">
                 <a href={ARTIUM_INSTAGRAM} target="_blank" rel="noreferrer" aria-label="aclassicaltone on Instagram" className="is-ig">

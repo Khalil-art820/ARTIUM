@@ -723,3 +723,6 @@
 .cgate .cg-btn{background:linear-gradient(150deg,#41B48F 0%,#1F8B6D 55%,#13705A 100%) !important;border-color:transparent !important;color:#FFFFFF !important}
 .cgate .cg-accent{background:linear-gradient(150deg,#41B48F 0%,#1F8B6D 55%,#13705A 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
 .cgate .cg-hero .cg-accent{color:transparent !important;-webkit-text-fill-color:transparent}
+/* Thinner gold ring; banner content truly centred (equal space above and below). */
+.cgate .cg-partner > img{padding:1.5px}
+.cgate .cg-app-in{padding-top:40px;padding-bottom:40px}
