@@ -5773,11 +5773,13 @@ export default function App() {
                 onDeleteAccount={async () => {
                 await supabase.rpc("delete_own_account");
                 await supabase.auth.signOut();
+                clearTabState();
+                navUserRef.current = null;   // as handleLogout: the next sign-in is a sign-in
                 setMyProfile(null);
                 setStudents((arr) => arr.filter((s) => s.id !== myProfile?.id));
                 setLearnerLoggedOut(false);
                 setStudentLoggedOut(false);
-                setScreen("landing");
+                setScreen("entry");
                 setAppTabPersist("map");
               }} onBack={() => setAppTabPersist("map")} />
             </>
