@@ -41,7 +41,13 @@ export const AuthProvider = ({ children }) => {
       if (error) {
         console.error('Error fetching profile:', error);
       } else {
-        setProfile(data);
+        // The school email lives apart from the profile; only its owner reads it.
+        const { data: priv } = await supabase
+          .from('profile_private')
+          .select('conservatory_email')
+          .eq('id', userId)
+          .maybeSingle();
+        setProfile(priv?.conservatory_email ? { ...data, conservatory_email: priv.conservatory_email } : data);
       }
     } finally {
       setLoading(false);

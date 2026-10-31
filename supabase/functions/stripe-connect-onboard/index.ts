@@ -75,6 +75,11 @@ Deno.serve(async (req) => {
     if (profileError || !profile) {
       return new Response(JSON.stringify({ error: "No profile found for this account" }), { status: 404, headers: { ...CORS, "Content-Type": "application/json" } });
     }
+    const { data: priv } = await adminClient
+      .from("profile_private")
+      .select("conservatory_email")
+      .eq("id", user.id)
+      .maybeSingle();
 
     const { data: existing } = await adminClient
       .from("teacher_payout_accounts")
@@ -87,7 +92,7 @@ Deno.serve(async (req) => {
     if (!accountId) {
       const account = await stripe.accounts.create({
         type: "express",
-        email: profile.conservatory_email || undefined,
+        email: priv?.conservatory_email || profile.conservatory_email || undefined,
         metadata: { profile_id: user.id },
       });
       accountId = account.id;
