@@ -1349,3 +1349,5 @@ html.theme-modern .su-save-why{position:fixed;z-index:60;left:16px;right:16px;to
 /* A card with no photo: the initials on light grey. */
 html.theme-modern .mc-photo b,html.theme-modern .mc-mface .nx-face b{background:#EDEDEA !important;color:#5F6B6E !important;box-shadow:none}
 html.theme-modern .mc-mface .nx-face{background:#EDEDEA !important}
+/* The top bar's avatar when there is no photo: a gold ring, inside its edge. */
+html.theme-modern .tm-hm-me{box-shadow:inset 0 0 0 2px #C6A15B}
