@@ -7621,13 +7621,14 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
   const canSaveAll = editing && stepValid.every(Boolean);
   // A save that can't go through takes them to the first unfinished step and
   // says what it needs, rather than sitting there greyed out with no reason.
-  const [saveWhy, setSaveWhy] = useState("");
-  useEffect(() => { if (canSaveAll) setSaveWhy(""); }, [canSaveAll]);
+  // The hint follows the step, so it changes or goes as soon as that step does.
+  const [saveWhyStep, setSaveWhyStep] = useState(null);
+  const saveWhy = saveWhyStep === step && !stepValid[step] ? stepHints[step] : "";
   function saveFromHeader() {
     if (canSaveAll) { handleSubmit(); return; }
     const first = stepValid.findIndex((v) => !v);
     setStep(first);
-    setSaveWhy(stepHints[first]);
+    setSaveWhyStep(first);
   }
 
   async function handleSubmit() {
@@ -7745,7 +7746,7 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
             </div>
           )}
         </div>
-        {saveWhy && !canSaveAll && <p className="su-save-why" role="status">{saveWhy}</p>}
+        {saveWhy && <p className="su-save-why" role="status">{saveWhy}</p>}
         {rejection && (
           <div className="su-rejected">
             <p className="su-rejected-t">Your application wasn't approved</p>
