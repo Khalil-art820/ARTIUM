@@ -8,7 +8,7 @@ import {
   Search, Send,
   ChevronRight, Check, X, Instagram, Facebook, Youtube,
   Music2, Music, Users, MessageCircle, ArrowRight, ArrowLeft, Play, Pause,
-  Pencil, Plus, Trash2, Home, Upload, Eye, EyeOff, ChevronLeft,
+  MoreHorizontal, Pencil, Plus, Trash2, Home, Upload, Eye, EyeOff, ChevronLeft,
   Calendar, CreditCard, Video, Link2, Clock, Bell,
   Map, BookOpen, ListChecks, LayoutList, Megaphone, Check as CheckIcon, ShieldCheck, FileText, Lock,
   ScanLine, ArrowUpRight, Globe2, MapPin, GraduationCap, User, Paperclip,
@@ -11493,41 +11493,74 @@ function useMutualConnections(myId) {
   }, [myId]);
   return map;
 }
-// One student, in the owner's dark-card design: the photo fills the top and
-// fades into the card; name, a pin + city line, a piano + instrument line,
-// and a round "+" in a gold ring (connect) at the bottom right.
-const PkPiano = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M3.5 11c.3-3.2 3.3-5.6 7.3-5.6h3c3.5 0 6.1 1.8 6.7 5.6z" />
-    <rect x="2.8" y="11" width="18.4" height="4" rx="1" />
-    <path d="M5.5 15v4.2M18.5 15v4.2M12 15v2.6" />
-  </svg>
-);
-function NxPymkCard({ m, state, onOpen, onConnect, onCancel, onAccept }) {
+// One musician's networking card: round photo; name + verified, school,
+// place · year, instrument and style tags, a two-line bio; Connect (with its
+// pending and connected states) and a ⋯ menu of real actions. The card opens
+// the full profile.
+function NxMusicianCard({ m, state, onOpen, onConnect, onCancel, onAccept, onRemove, onMessage, onDismiss }) {
+  const [menu, setMenu] = useState(false);
+  const menuRef = useRef(null);
+  useEffect(() => {
+    if (!menu) return;
+    const off = (e) => { if (menuRef.current && !menuRef.current.contains(e.target)) setMenu(false); };
+    document.addEventListener("pointerdown", off);
+    return () => document.removeEventListener("pointerdown", off);
+  }, [menu]);
   const place = [m.city, m.country].filter(Boolean).join(", ");
+  const tags = [...m.instrumentList.slice(0, 2), ...(m.tastes || []).slice(0, 1)].filter(Boolean);
+  const act = (fn) => () => { setMenu(false); fn(); };
   return (
-    <div className="pk-card" role="listitem">
-      <button type="button" className="pk-open" onClick={onOpen} aria-label={m.name}>
-        <span className="pk-photo" aria-hidden="true">
-          {m.photoUrl ? <img src={m.photoUrl} alt="" loading="lazy" /> : <b>{initials(m.name || "?")}</b>}
+    <article className={`mc${menu ? " is-menu" : ""}`} role="listitem">
+      <button type="button" className="mc-open" onClick={onOpen} aria-label={`${m.name} — open profile`}>
+        <span className="mc-photo" aria-hidden="true">
+          {m.photoUrl ? <img src={m.photoUrl} alt="" loading="lazy" /> : <b className="tm-initials">{initials(m.name || "?")}</b>}
         </span>
-        <span className="pk-body">
-          <span className="pk-name"><span data-no-translate="">{m.name}</span>{m.verified && <NxVerified size={17} />}</span>
-          {place && <span className="pk-line"><MapPin size={21} strokeWidth={1.5} /><span>{place}</span></span>}
-          <span className="pk-line"><PkPiano /><span>{m.instrumentLabel || "Musician"}</span></span>
+        <span className="mc-main">
+          <span className="mc-name"><span data-no-translate="">{m.name}</span>{m.verified && <NxVerified size={18} />}</span>
+          {m.consName && <span className="mc-school" data-no-translate="">{m.consName}</span>}
+          {(place || m.year) && (
+            <span className="mc-meta"><span>
+              {place && <span><MapPin size={14} strokeWidth={1.7} />{place}</span>}
+              {m.year && <span className={place ? "mc-dot" : ""}>{m.year}</span>}
+            </span></span>
+          )}
+          {tags.length > 0 && (
+            <span className="mc-tags">
+              {tags.map((t, i) => <span key={t} className="mc-tag">{i < m.instrumentList.length && (/piano/i.test(t) ? <Piano size={14} strokeWidth={1.8} /> : <Music2 size={14} strokeWidth={1.8} />)}{t}</span>)}
+            </span>
+          )}
+          {m.bio && <span className="mc-bio" data-no-translate="">{m.bio}</span>}
         </span>
       </button>
-      {state === "sent" ? (
-        <button type="button" className="pk-plus is-pending" onClick={onCancel} aria-label="Pending — tap to cancel"><Clock size={17} strokeWidth={2} /></button>
-      ) : state === "received" ? (
-        <button type="button" className="pk-plus is-accept" onClick={onAccept} aria-label="Accept"><Check size={18} strokeWidth={2.4} /></button>
-      ) : (
-        <button type="button" className="pk-plus" onClick={onConnect} aria-label="Connect"><Plus size={20} strokeWidth={2} /></button>
-      )}
-    </div>
+      <div className="mc-actions">
+        {state === "connected" ? (
+          <span className="mc-btn is-connected"><Check size={15} strokeWidth={2.4} />Connected</span>
+        ) : state === "sent" ? (
+          <button type="button" className="mc-btn is-pending" onClick={onCancel}>Pending</button>
+        ) : state === "received" ? (
+          <button type="button" className="mc-btn" onClick={onAccept}>Accept</button>
+        ) : (
+          <button type="button" className="mc-btn" onClick={onConnect}>Connect</button>
+        )}
+        <div className="mc-more" ref={menuRef}>
+          <button type="button" className="mc-dots" onClick={() => setMenu((o) => !o)} aria-label="More options" aria-haspopup="menu" aria-expanded={menu}>
+            <MoreHorizontal size={18} strokeWidth={2.2} />
+          </button>
+          {menu && (
+            <div className="mc-menu" role="menu">
+              <button type="button" role="menuitem" onClick={act(onOpen)}>View profile</button>
+              {state === "connected" && onMessage && <button type="button" role="menuitem" onClick={act(onMessage)}>Message</button>}
+              {state === "sent" && <button type="button" role="menuitem" onClick={act(onCancel)}>Cancel request</button>}
+              {state === "connected" && <button type="button" role="menuitem" onClick={act(onRemove)}>Remove connection</button>}
+              {state !== "connected" && <button type="button" role="menuitem" onClick={act(onDismiss)}>Not interested</button>}
+            </div>
+          )}
+        </div>
+      </div>
+    </article>
   );
 }
-function NxPeopleYouMayKnow({ members, myId, conn, consById, onOpen }) {
+function NxPeopleYouMayKnow({ members, myId, conn, consById, onOpen, onMessage }) {
   const mutualMap = useMutualConnections(myId);
   const dismissKey = `artium_pymk_dismissed_${myId}`;
   const [dismissed, setDismissed] = useState(() => { try { return new Set(JSON.parse(localStorage.getItem(dismissKey) || "[]")); } catch { return new Set(); } });
@@ -11537,10 +11570,15 @@ function NxPeopleYouMayKnow({ members, myId, conn, consById, onOpen }) {
     return n;
   });
   const [open, setOpen] = useState({});
+  const seen = useRef(new Set());
   const me = members.find((x) => x.id === myId);
   const byId = React.useMemo(() => Object.fromEntries(members.map((x) => [x.id, x])), [members]);
   const sections = React.useMemo(() => {
-    const pool = members.filter((x) => x.id !== myId && !dismissed.has(x.id) && conn.byOther[x.id]?.state !== "connected");
+    // Someone you connect with stays on screen as Connected until you leave;
+    // already-connected people are not suggested again.
+    const pool = members.filter((x) => x.id !== myId && !dismissed.has(x.id)
+      && (conn.byOther[x.id]?.state !== "connected" || seen.current.has(x.id)));
+    pool.forEach((x) => seen.current.add(x.id));
     // Who asked you first, then photo and verified as gentle tie-breaks.
     const rank = (a, b) => ((conn.byOther[b.id]?.state === "received") - (conn.byOther[a.id]?.state === "received"))
       || (mutualMap[b.id]?.n || 0) - (mutualMap[a.id]?.n || 0)
@@ -11570,13 +11608,14 @@ function NxPeopleYouMayKnow({ members, myId, conn, consById, onOpen }) {
         return (
           <section key={sec.key} className="pk-sec">
             <h3 className="pk-title">{sec.title}</h3>
-            <div className="pk-grid" role="list">
+            <div className="mc-list" role="list">
               {shown.map((m) => {
                 const c = conn.byOther[m.id];
                 return (
-                  <NxPymkCard key={m.id} m={m} state={c?.state}
-                    onOpen={() => onOpen(m)}
-                    onConnect={() => conn.request(m.id)} onCancel={() => c && conn.remove(c.id)} onAccept={() => c && conn.accept(c.id)} />
+                  <NxMusicianCard key={m.id} m={m} state={c?.state} onOpen={() => onOpen(m)}
+                    onConnect={() => conn.request(m.id)} onCancel={() => c && conn.remove(c.id)}
+                    onAccept={() => c && conn.accept(c.id)} onRemove={() => c && conn.remove(c.id)}
+                    onMessage={onMessage ? () => onMessage(m.id) : null} onDismiss={() => dismiss(m.id)} />
                 );
               })}
             </div>
@@ -11824,7 +11863,7 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
       {/* Students: people you may know (LinkedIn-style). Learners and guests:
           the teacher carousel as before. */}
       {useConn && !isGuest ? (
-        <NxPeopleYouMayKnow members={members} myId={myId} conn={conn} consById={consById} onOpen={(m) => selectFromCarousel(m)} />
+        <NxPeopleYouMayKnow members={members} myId={myId} conn={conn} consById={consById} onOpen={(m) => (onOpenStudent ? onOpenStudent(m.id) : selectFromCarousel(m))} onMessage={onMessage} />
       ) : (<>
       <div className="nx-tabs" role="tablist" aria-label="Musicians">
         {(learnerMode ? [["featured", "Featured"], ["all", "All"]] : [["featured", "Featured"], ["nearby", "Nearby"], ["all", "All"]]).map(([v, t]) => (
