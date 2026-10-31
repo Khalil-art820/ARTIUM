@@ -123,11 +123,20 @@ create trigger profiles_file_school_email
   for each row
   execute function public.file_school_email();
 
--- Move what is already there. The update also runs the trigger above, so this
--- alone both copies and blanks.
-update profiles set conservatory_email = conservatory_email where conservatory_email is not null;
+-- Move what is already there: copy first, then blank. In that order, because
+-- the blanking update passes through enforce_profile_approval, and an address
+-- it has not seen yet would re-open approval on a proof long since pruned.
+insert into profile_private (id, conservatory_email)
+  select id, lower(btrim(conservatory_email))
+    from profiles
+   where nullif(btrim(conservatory_email), '') is not null
+on conflict (id) do update
+  set conservatory_email = excluded.conservatory_email, updated_at = now();
 
--- Should read: public_copies 0, private_copies = the number moved.
+update profiles set conservatory_email = null where conservatory_email is not null;
+
+-- Should read: public_copies 0, private_copies 1, approved_students 6.
 select
   (select count(*) from profiles where conservatory_email is not null) as public_copies,
-  (select count(*) from profile_private where conservatory_email is not null) as private_copies;
+  (select count(*) from profile_private where conservatory_email is not null) as private_copies,
+  (select count(*) from profiles where role = 'student' and approved) as approved_students;
