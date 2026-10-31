@@ -8,7 +8,7 @@ import {
   Search, Send,
   ChevronRight, Check, X, Instagram, Facebook, Youtube,
   Music2, Music, Users, MessageCircle, ArrowRight, ArrowLeft, Play, Pause,
-  MoreHorizontal, Pencil, Plus, Trash2, Home, Upload, Eye, EyeOff, ChevronLeft,
+  Pencil, Plus, Trash2, Home, Upload, Eye, EyeOff, ChevronLeft,
   Calendar, CreditCard, Video, Link2, Clock, Bell,
   Map, BookOpen, ListChecks, LayoutList, Megaphone, Check as CheckIcon, ShieldCheck, FileText, Lock,
   ScanLine, ArrowUpRight, Globe2, MapPin, GraduationCap, User, Paperclip,
@@ -11495,22 +11495,16 @@ function useMutualConnections(myId) {
 }
 // One musician's networking card: round photo; name + verified, school,
 // place · year, instrument and style tags, a two-line bio; Connect (with its
-// pending and connected states) and a ⋯ menu of real actions. The card opens
+// pending and connected states) and an X for Not interested. The card opens
 // the full profile.
-function NxMusicianCard({ m, mutual = 0, sample, state, onOpen, onConnect, onCancel, onAccept, onRemove, onMessage, onDismiss }) {
-  const [menu, setMenu] = useState(false);
-  const menuRef = useRef(null);
-  useEffect(() => {
-    if (!menu) return;
-    const off = (e) => { if (menuRef.current && !menuRef.current.contains(e.target)) setMenu(false); };
-    document.addEventListener("pointerdown", off);
-    return () => document.removeEventListener("pointerdown", off);
-  }, [menu]);
+function NxMusicianCard({ m, mutual = 0, sample, state, onOpen, onConnect, onCancel, onAccept, onDismiss }) {
   const place = [m.city, m.country].filter(Boolean).join(", ");
   const tags = [...m.instrumentList.slice(0, 2), ...(m.tastes || []).slice(0, 1)].filter(Boolean);
-  const act = (fn) => () => { setMenu(false); fn(); };
   return (
-    <article className={`mc${menu ? " is-menu" : ""}`} role="listitem">
+    <article className="mc" role="listitem">
+      {state !== "connected" && (
+        <button type="button" className="mc-x" onClick={onDismiss} aria-label="Not interested"><X size={15} strokeWidth={2.2} /></button>
+      )}
       <button type="button" className="mc-open" onClick={onOpen} aria-label={`${m.name} — open profile`}>
         <span className="mc-photo" aria-hidden="true">
           {m.photoUrl ? <img src={m.photoUrl} alt="" loading="lazy" /> : <b className="tm-initials">{initials(m.name || "?")}</b>}
@@ -11551,25 +11545,11 @@ function NxMusicianCard({ m, mutual = 0, sample, state, onOpen, onConnect, onCan
         ) : (
           <button type="button" className="mc-btn" onClick={onConnect}>Connect</button>
         )}
-        <div className="mc-more" ref={menuRef}>
-          <button type="button" className="mc-dots" onClick={() => setMenu((o) => !o)} aria-label="More options" aria-haspopup="menu" aria-expanded={menu}>
-            <MoreHorizontal size={18} strokeWidth={2.2} />
-          </button>
-          {menu && (
-            <div className="mc-menu" role="menu">
-              <button type="button" role="menuitem" onClick={act(onOpen)}>View profile</button>
-              {state === "connected" && onMessage && <button type="button" role="menuitem" onClick={act(onMessage)}>Message</button>}
-              {state === "sent" && <button type="button" role="menuitem" onClick={act(onCancel)}>Cancel request</button>}
-              {state === "connected" && <button type="button" role="menuitem" onClick={act(onRemove)}>Remove connection</button>}
-              {state !== "connected" && <button type="button" role="menuitem" onClick={act(onDismiss)}>Not interested</button>}
-            </div>
-          )}
-        </div>
       </div>
     </article>
   );
 }
-function NxPeopleYouMayKnow({ members, myId, conn, consById, onOpen, onMessage }) {
+function NxPeopleYouMayKnow({ members, myId, conn, consById, onOpen }) {
   const mutualMap = useMutualConnections(myId);
   const dismissKey = `artium_pymk_dismissed_${myId}`;
   const [dismissed, setDismissed] = useState(() => { try { return new Set(JSON.parse(localStorage.getItem(dismissKey) || "[]")); } catch { return new Set(); } });
@@ -11624,8 +11604,7 @@ function NxPeopleYouMayKnow({ members, myId, conn, consById, onOpen, onMessage }
                 return (
                   <NxMusicianCard key={m.id} m={m} mutual={mu?.n || 0} sample={mu?.sample ? byId[mu.sample] : null} state={c?.state} onOpen={() => onOpen(m)}
                     onConnect={() => conn.request(m.id)} onCancel={() => c && conn.remove(c.id)}
-                    onAccept={() => c && conn.accept(c.id)} onRemove={() => c && conn.remove(c.id)}
-                    onMessage={onMessage ? () => onMessage(m.id) : null} onDismiss={() => dismiss(m.id)} />
+                    onAccept={() => c && conn.accept(c.id)} onDismiss={() => dismiss(m.id)} />
                 );
               })}
             </div>
@@ -11704,7 +11683,6 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
     const ordered = useConn ? [...filtered].sort((x, y) => madeAt(x) - madeAt(y)) : filtered;
     return [...ordered, ...me].filter((m) => Number.isFinite(m.lat) && Number.isFinite(m.lng));
   }, [filtered, members, useConn, myId, conn.byOther]);
-  const connectedCount = useConn ? Object.values(conn.byOther).filter((c) => c.state === "connected").length : null;
 
   // Options come from the members themselves, counted against the other filters.
   const optionsFor = (key) => {
@@ -11865,15 +11843,12 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
         <button type="button" className="nx-recenter" onClick={() => { setSelectedId(null); setFocus({ reset: true, at: Date.now() }); }} aria-label="Recenter the globe">
           <Compass size={19} strokeWidth={1.7} />
         </button>
-        {connectedCount === 0 && (
-          <p className="nx-globe-hint">Connect with musicians in <b>Nearby</b> or <b>All</b> — they'll appear on your globe.</p>
-        )}
       </div>
 
       {/* Students: people you may know (LinkedIn-style). Learners and guests:
           the teacher carousel as before. */}
       {useConn && !isGuest ? (
-        <NxPeopleYouMayKnow members={members} myId={myId} conn={conn} consById={consById} onOpen={(m) => (onOpenStudent ? onOpenStudent(m.id) : selectFromCarousel(m))} onMessage={onMessage} />
+        <NxPeopleYouMayKnow members={members} myId={myId} conn={conn} consById={consById} onOpen={(m) => (onOpenStudent ? onOpenStudent(m.id) : selectFromCarousel(m))} />
       ) : (<>
       <div className="nx-tabs" role="tablist" aria-label="Musicians">
         {(learnerMode ? [["featured", "Featured"], ["all", "All"]] : [["featured", "Featured"], ["nearby", "Nearby"], ["all", "All"]]).map(([v, t]) => (

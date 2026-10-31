@@ -31,7 +31,7 @@ const CONTINENTS = [
   { name: "America", lat: 6, lng: -74 },
   { name: "Oceania", lat: -24, lng: 134 },
 ];
-const DEFAULT_POV = { lat: 34, lng: -12, altitude: 1.36 };
+const DEFAULT_POV = { lat: 27, lng: -1, altitude: 1.36 };
 // The camera distance that draws the globe at a given on-screen diameter:
 // as large as the design wants (≈390px), never wider than the space it sits
 // in, so its edge is never cut. Camera fov is the library's 50°.
