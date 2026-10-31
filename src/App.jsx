@@ -11525,7 +11525,7 @@ function NxMusicianCard({ m, mutual = 0, sample, state, onOpen, onConnect, onCan
         <button type="button" className="mc-x" onClick={onDismiss} aria-label="Not interested"><X size={15} strokeWidth={2.2} /></button>
       )}
       <button type="button" className="mc-open" onClick={onOpen} aria-label={`${m.name} — open profile`}>
-        <span className={`mc-photo${m.photoUrl ? "" : " is-empty"}`} aria-hidden="true">
+        <span className="mc-photo" aria-hidden="true">
           {m.photoUrl ? <img src={m.photoUrl} alt="" loading="lazy" /> : <b className="tm-initials">{initials(m.name || "?")}</b>}
         </span>
         <span className="mc-main">
