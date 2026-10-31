@@ -16,6 +16,28 @@
 --
 -- Run this in the Supabase SQL editor.
 
+-- 20261025100000_profile_private.sql was never run on the live database, so
+-- the table and its policies are created here too. Safe if it has been.
+create table if not exists public.profile_private (
+  id uuid primary key references public.profiles(id) on delete cascade,
+  birth_date date check (birth_date > date '1900-01-01' and birth_date <= current_date),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.profile_private enable row level security;
+
+drop policy if exists "own private read" on public.profile_private;
+create policy "own private read" on public.profile_private
+  for select to authenticated using (auth.uid() = id or public.is_admin());
+
+drop policy if exists "own private insert" on public.profile_private;
+create policy "own private insert" on public.profile_private
+  for insert to authenticated with check (auth.uid() = id);
+
+drop policy if exists "own private update" on public.profile_private;
+create policy "own private update" on public.profile_private
+  for update to authenticated using (auth.uid() = id) with check (auth.uid() = id);
+
 alter table public.profile_private
   add column if not exists conservatory_email text,
   alter column birth_date drop not null;
