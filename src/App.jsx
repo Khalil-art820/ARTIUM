@@ -2813,16 +2813,19 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, authProfile, authUser]);
 
-  // Pull in any real conservatory-student signups so they show up on the map
-  // alongside the sample data (learner accounts aren't conservatory students).
+  // Pull in the approved conservatory students once signed in (learner accounts
+  // aren't conservatory students). The database shows these rows only to
+  // members, so the list is fetched again when someone signs in or is
+  // approved, and dropped when they sign out.
   useEffect(() => {
+    if (!authUser?.id) { setStudents([]); return; }
     supabase.from("profiles").select("*").eq("approved", true).eq("role", "student").neq("is_admin", true).then(({ data, error }) => {
       if (error || !data) return;
       const real = data.map(fromDbProfile);
       const realIds = new Set(real.map((r) => r.id));
       setStudents((arr) => [...arr.filter((s) => !realIds.has(s.id)), ...real]);
     });
-  }, []);
+  }, [authUser?.id, authProfile?.approved]);
 
   const [learnerProfile, setLearnerProfile] = useState(null);
   const [learnerLoggedOut, setLearnerLoggedOut] = useState(false);
