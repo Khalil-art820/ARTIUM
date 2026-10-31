@@ -1344,3 +1344,5 @@ html.theme-modern .mc-btn.is-connected{background:#FFFFFF;border-color:#C6A15B;c
   html.theme-modern .mc-name,html.theme-modern .mc-school{padding-right:150px}
   html.theme-modern .mc-actions{position:absolute;top:14px;right:42px;margin:0}
 }
+/* Why a profile can't be saved yet, held at the top while the step scrolls. */
+html.theme-modern .su-save-why{position:fixed;z-index:60;left:16px;right:16px;top:calc(12px + env(safe-area-inset-top));max-width:520px;margin:0 auto;padding:10px 13px;border-radius:10px;background:#FFFFFF;border:1px solid #C6A15B;box-shadow:0 8px 20px -10px rgba(0,0,0,.3);color:#1C1C1C;font-size:14px;font-weight:500;line-height:1.4;text-align:center}

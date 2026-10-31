@@ -7618,6 +7618,16 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
   // becomes a way to save a profile the long route would have refused, and an
   // unfinished transfer is one of the things it would let through.
   const canSaveAll = editing && stepValid.every(Boolean);
+  // A save that can't go through takes them to the first unfinished step and
+  // says what it needs, rather than sitting there greyed out with no reason.
+  const [saveWhy, setSaveWhy] = useState("");
+  useEffect(() => { if (canSaveAll) setSaveWhy(""); }, [canSaveAll]);
+  function saveFromHeader() {
+    if (canSaveAll) { handleSubmit(); return; }
+    const first = stepValid.findIndex((v) => !v);
+    setStep(first);
+    setSaveWhy(stepHints[first]);
+  }
 
   async function handleSubmit() {
     setSubmitting(true);
@@ -7718,13 +7728,12 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
                   steps to reach a save. This is the same submit the last step
                   makes, just reachable from wherever they are. */}
               <button
-                onClick={handleSubmit}
-                disabled={!canSaveAll || submitting}
-                title={canSaveAll ? undefined : "Finish the highlighted step before saving"}
+                onClick={saveFromHeader}
+                disabled={submitting}
                 style={{
                   fontSize: 12.5, fontWeight: 700, borderRadius: MODERN ? 10 : 999, padding: "7px 15px",
                   border: "none", whiteSpace: "nowrap",
-                  cursor: canSaveAll && !submitting ? "pointer" : "not-allowed",
+                  cursor: submitting ? "not-allowed" : "pointer",
                   color: canSaveAll ? C.brassText : C.ivoryDim,
                   background: canSaveAll ? BRASS_GRAD : warm("0.05"),
                   opacity: submitting ? 0.7 : 1,
@@ -7735,6 +7744,7 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
             </div>
           )}
         </div>
+        {saveWhy && !canSaveAll && <p className="su-save-why" role="status">{saveWhy}</p>}
         {rejection && (
           <div className="su-rejected">
             <p className="su-rejected-t">Your application wasn't approved</p>
