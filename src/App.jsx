@@ -11497,7 +11497,7 @@ function useMutualConnections(myId) {
 // place · year, instrument and style tags, a two-line bio; Connect (with its
 // pending and connected states) and a ⋯ menu of real actions. The card opens
 // the full profile.
-function NxMusicianCard({ m, state, onOpen, onConnect, onCancel, onAccept, onRemove, onMessage, onDismiss }) {
+function NxMusicianCard({ m, mutual = 0, sample, state, onOpen, onConnect, onCancel, onAccept, onRemove, onMessage, onDismiss }) {
   const [menu, setMenu] = useState(false);
   const menuRef = useRef(null);
   useEffect(() => {
@@ -11530,6 +11530,15 @@ function NxMusicianCard({ m, state, onOpen, onConnect, onCancel, onAccept, onRem
             </span>
           )}
           {m.bio && <span className="mc-bio" data-no-translate="">{m.bio}</span>}
+          {mutual > 0 && (
+            <span className="mc-mutual">
+              <span className="mc-mface">{sample ? <NxFace m={sample} size={20} /> : <Users size={13} />}</span>
+              <span>{(() => {
+                const name = sample ? (sample.name || "").split(" ")[0] : "Someone";
+                return mutual === 1 ? `${name} is a mutual connection` : `${name} and ${mutual - 1} other mutual connections`;
+              })()}</span>
+            </span>
+          )}
         </span>
       </button>
       <div className="mc-actions">
@@ -11611,8 +11620,9 @@ function NxPeopleYouMayKnow({ members, myId, conn, consById, onOpen, onMessage }
             <div className="mc-list" role="list">
               {shown.map((m) => {
                 const c = conn.byOther[m.id];
+                const mu = mutualMap[m.id];
                 return (
-                  <NxMusicianCard key={m.id} m={m} state={c?.state} onOpen={() => onOpen(m)}
+                  <NxMusicianCard key={m.id} m={m} mutual={mu?.n || 0} sample={mu?.sample ? byId[mu.sample] : null} state={c?.state} onOpen={() => onOpen(m)}
                     onConnect={() => conn.request(m.id)} onCancel={() => c && conn.remove(c.id)}
                     onAccept={() => c && conn.accept(c.id)} onRemove={() => c && conn.remove(c.id)}
                     onMessage={onMessage ? () => onMessage(m.id) : null} onDismiss={() => dismiss(m.id)} />
