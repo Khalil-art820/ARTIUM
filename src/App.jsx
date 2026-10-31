@@ -7535,7 +7535,6 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
   const labels = skipAccountStep ? STEP_LABELS : ["Create your account", ...STEP_LABELS];
   const lastStep = labels.length - 1;
   const idx = skipAccountStep ? step : step - 1;
-  const startedWithVideos = useRef((draft.performanceVideos || []).length > 0);
   const stepValid = [
     !skipAccountStep ? draft.email.trim().length > 3 && draft.password.length >= 6 && draft.password === draft.confirmPassword : null,
     draft.name.trim().length > 1 && instrumentsOf(draft).length > 0
@@ -7567,9 +7566,8 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
           || (!!draft.conservatoryId && (editing || draft.conservatoryVerified)))),
     draft.tastes.length >= 3,
     draft.pieces.length >= 1,
-    // Required since 2026-10-23. Members from before then may still have none
-    // and shouldn't be stopped from saving an edit; anyone who has one keeps one.
-    (editing && !startedWithVideos.current) || (draft.performanceVideos || []).length >= 1,
+    // Videos are optional.
+    true,
     // Teaching needs an answer — Yes (with how) or Not right now. Editing an
     // existing profile counts as answered: it already holds one.
     (editing || !!draft.teaching.answered) && (!draft.teaching.open || (!!draft.teaching.mode
@@ -7609,7 +7607,7 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
       : "Enter the code we emailed to your conservatory address.",
     "Pick at least 3 musical preferences.",
     "Add at least one piece you're working on.",
-    "Upload at least one performance video.",
+    "",
     !draft.teaching.answered && !editing ? "Tell us whether you're open to teaching."
       : !draft.teaching.mode ? "Choose how you'd like to teach."
       : draft.teaching.mode !== "online" && !(draft.teaching.cities || []).length ? "Add at least one city where you can teach in person."
@@ -9645,9 +9643,9 @@ function StepVideos({ draft, update }) {
   const remove = (url) => update((d) => ({ performanceVideos: (d.performanceVideos || []).filter((u) => u !== url) }));
   return (
     <div>
-      <Field label="Your performance videos" req>
+      <Field label="Your performance videos" opt>
         <p className="text-sm" style={{ color: C.ivoryDim, margin: "-2px 0 12px", lineHeight: 1.5 }}>
-          Up to {PERF_VIDEO_MAX} videos, one minute each. At least one.
+          Up to {PERF_VIDEO_MAX} videos, one minute each.
         </p>
       </Field>
       <div className="vs-row" style={{ marginTop: -8 }}>
