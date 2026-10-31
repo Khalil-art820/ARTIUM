@@ -11499,7 +11499,9 @@ function useMutualConnections(myId) {
 // the full profile.
 function NxMusicianCard({ m, mutual = 0, sample, state, onOpen, onConnect, onCancel, onAccept, onDismiss }) {
   const place = [m.city, m.country].filter(Boolean).join(", ");
-  const tags = [...m.instrumentList.slice(0, 2), ...(m.tastes || []).slice(0, 1)].filter(Boolean);
+  // Three tags at most: two instruments and a composer or era, or one
+  // instrument and two of them.
+  const tags = [...m.instrumentList.slice(0, 2), ...(m.tastes || []).slice(0, m.instrumentList.length >= 2 ? 1 : 2)].filter(Boolean);
   return (
     <article className="mc" role="listitem">
       {state !== "connected" && (
