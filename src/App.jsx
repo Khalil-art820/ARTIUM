@@ -11696,7 +11696,9 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
     const me = useConn ? members.filter((m) => m.id === myId) : [];
     const madeAt = (m) => { const r = conn.byOther?.[m.id]?.row; return r ? (Date.parse(r.responded_at || r.created_at) || 0) : Infinity; };
     const ordered = useConn ? [...filtered].sort((x, y) => madeAt(x) - madeAt(y)) : filtered;
-    return [...ordered, ...me].filter((m) => Number.isFinite(m.lat) && Number.isFinite(m.lng));
+    // You first: where your connections share your place, the pin shows you
+    // and its counter opens the others.
+    return [...me, ...ordered].filter((m) => Number.isFinite(m.lat) && Number.isFinite(m.lng));
   }, [filtered, members, useConn, myId, conn.byOther]);
 
   // Options come from the members themselves, counted against the other filters.
@@ -11847,7 +11849,7 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
                 selectedId={selectedId}
                 focus={focus}
                 onSelectMember={selectFromGlobe}
-                onSelectGroup={(ms) => { setGroup(ms); setSheet("group"); }}
+                onSelectGroup={(ms) => { setGroup(ms.filter((m) => m.id !== myId)); setSheet("group"); }}
                 height={410}
               />
             </Suspense>
