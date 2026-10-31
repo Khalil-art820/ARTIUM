@@ -7535,6 +7535,7 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
   const labels = skipAccountStep ? STEP_LABELS : ["Create your account", ...STEP_LABELS];
   const lastStep = labels.length - 1;
   const idx = skipAccountStep ? step : step - 1;
+  const startedWithVideos = useRef((draft.performanceVideos || []).length > 0);
   const stepValid = [
     !skipAccountStep ? draft.email.trim().length > 3 && draft.password.length >= 6 && draft.password === draft.confirmPassword : null,
     draft.name.trim().length > 1 && instrumentsOf(draft).length > 0
@@ -7566,7 +7567,9 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
           || (!!draft.conservatoryId && (editing || draft.conservatoryVerified)))),
     draft.tastes.length >= 3,
     draft.pieces.length >= 1,
-    (draft.performanceVideos || []).length >= 1,
+    // Required since 2026-10-23. Members from before then may still have none
+    // and shouldn't be stopped from saving an edit; anyone who has one keeps one.
+    (editing && !startedWithVideos.current) || (draft.performanceVideos || []).length >= 1,
     // Teaching needs an answer — Yes (with how) or Not right now. Editing an
     // existing profile counts as answered: it already holds one.
     (editing || !!draft.teaching.answered) && (!draft.teaching.open || (!!draft.teaching.mode
@@ -7831,7 +7834,7 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
             Next <ChevronRight size={17} strokeWidth={2.2} />
           </SuNextButton>
         ) : editing ? (
-          <button type="button" className="artium-su-next-btn" disabled={submitting} onMouseDown={(e) => e.preventDefault()} onClick={handleSubmit}>
+          <button type="button" className="artium-su-next-btn" disabled={submitting} onMouseDown={(e) => e.preventDefault()} onClick={saveFromHeader}>
             {submitting ? "Saving…" : "Save changes"}
             <Check size={17} strokeWidth={2.2} />
           </button>
