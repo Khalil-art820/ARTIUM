@@ -1354,4 +1354,4 @@ html.theme-modern .tm-hm-me{color:#5F6B6E !important;background:#EDEDEA !importa
 /* Messages tab, active: the paper plane filled, as Instagram does, with its
    fold drawn in the bar's colour so the crease still shows. */
 html.theme-modern .artium-aw-tabs button[data-on="1"] .ig-direct-body{fill:currentColor;fill-opacity:1}
-html.theme-modern .artium-aw-tabs button[data-on="1"] .ig-direct-fold{stroke:#000000}
+html.theme-modern .artium-aw-tabs button[data-on="1"] .ig-direct-fold{stroke:#000000;stroke-width:1}
