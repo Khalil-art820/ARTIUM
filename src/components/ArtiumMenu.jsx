@@ -189,7 +189,7 @@ function Drawer({ onClose, onProfile, onLogout, onLegal }) {
 function BurgerLines() {
   const ref = React.useRef(null);
   const [dpr, setDpr] = React.useState(() => (typeof window !== "undefined" && window.devicePixelRatio) || 1);
-  const t = Math.max(1, Math.round(2 * dpr)) / dpr;   // line thickness
+  const t = Math.max(1, Math.round(1.5 * dpr)) / dpr; // line thickness
   const step = Math.round(7 * dpr) / dpr;              // line to line
   const h = 2 * step + t;
   React.useLayoutEffect(() => {
