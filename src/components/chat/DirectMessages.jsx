@@ -70,7 +70,10 @@ const IconSelect = () => <Icon d={<><circle cx="4.5" cy="6" r="1.4" /><circle cx
 const IconClose = () => <Icon d={<path d="M5 5l14 14M19 5L5 19" />} size={26} sw={1.9} />;
 const IconTick = () => <Icon d={<path d="M5 12.5l4.5 4.5L19 7.5" />} size={15} sw={3} />;
 
-export default function DirectMessages({ people, conversations, activeId, setActiveId, actions, onOpenProfile, myId }) {
+// The inbox. `trusted`: ids that always land in Primary (connections; for a
+// learner, teachers who accepted them). Anyone else who writes first, before
+// you've written back or accepted, waits in Requests.
+export default function DirectMessages({ people, conversations, activeId, setActiveId, actions, onOpenProfile, myId, trusted = [] }) {
   // Names and photos: the members App already has, and for anyone else in a
   // thread (a learner, say), whatever the database lets this account read.
   const [extra, setExtra] = useState({});
@@ -89,42 +92,72 @@ export default function DirectMessages({ people, conversations, activeId, setAct
   }, [missing]);
   const person = (id) => known[id] || extra[id] || { id, name: "" };
 
-  // Chats you deleted: hidden up to the moment you deleted them, for you only
-  // (dm_cleared). A newer message brings the conversation back.
+  // Chats you deleted (dm_cleared): hidden up to that moment, for you only; a
+  // newer message brings the conversation back. Requests you accepted
+  // (dm_accepted).
   const [cleared, setCleared] = useState({});
+  const [accepted, setAccepted] = useState({});
   useEffect(() => {
     let live = true;
     supabase.from("dm_cleared").select("peer_id, cleared_at").then(({ data, error }) => {
       if (live && !error && data) setCleared(Object.fromEntries(data.map((r) => [r.peer_id, ms(r.cleared_at)])));
     });
+    supabase.from("dm_accepted").select("peer_id").then(({ data, error }) => {
+      if (live && !error && data) setAccepted(Object.fromEntries(data.map((r) => [r.peer_id, true])));
+    });
     return () => { live = false; };
   }, []);
   const visible = (id) => (conversations[id] || []).filter((m) => !cleared[id] || !m.at || ms(m.at) > cleared[id]);
+  const trustedKey = [...trusted].sort().join(",");
+  const isRequest = (id) => !accepted[id] && !trusted.includes(id) && !(conversations[id] || []).some((m) => m.from === "me")
+    && (conversations[id] || []).length > 0;
 
+  const [folder, setFolder] = useState("primary");
   const [q, setQ] = useState("");
   const rows = useMemo(() => ids.map((id) => {
     const thread = visible(id);
     const last = thread[thread.length - 1];
-    return { id, thread, last, when: last ? ms(last.at) || Date.now() : Date.now(), unread: thread.some((m) => m.from === "them" && !m.readAt) };
+    return { id, thread, last, request: isRequest(id), when: last ? ms(last.at) || Date.now() : Date.now(), unread: thread.some((m) => m.from === "them" && !m.readAt) };
   }).filter((r) => r.thread.length || !cleared[r.id] || r.id === activeId)
-    .sort((a, b) => b.when - a.when), [conversations, cleared, activeId]); // eslint-disable-line react-hooks/exhaustive-deps
-  const shown = rows.filter((r) => !q.trim() || (person(r.id).name || "").toLowerCase().includes(q.trim().toLowerCase()));
+    .sort((a, b) => b.when - a.when), [conversations, cleared, accepted, activeId, trustedKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  const inFolder = rows.filter((r) => (folder === "requests" ? r.request : !r.request));
+  const shown = inFolder.filter((r) => !q.trim() || (person(r.id).name || "").toLowerCase().includes(q.trim().toLowerCase()));
+  const unreadIn = (f) => rows.filter((r) => (f === "requests" ? r.request : !r.request) && r.unread).length;
 
-  // Select mode, from the list button: tick conversations, then mark them
-  // read or unread, or delete them from your inbox.
+  // Select mode, from the list button: tick conversations, then act on them
+  // from the bar at the bottom.
   const [selecting, setSelecting] = useState(false);
   const [picked, setPicked] = useState([]);
   const toggle = (id) => setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
   const endSelect = () => { setSelecting(false); setPicked([]); };
+  useEffect(() => { setPicked([]); }, [folder]);
   const anyUnread = picked.some((id) => rows.find((r) => r.id === id)?.unread);
+
+  // The bar sits right on top of the app's tab bar, as Instagram's does.
+  const [barBottom, setBarBottom] = useState(0);
+  useEffect(() => {
+    if (!selecting) return;
+    const nav = document.querySelector(".artium-aw-tabs");
+    setBarBottom(nav ? Math.max(0, window.innerHeight - nav.getBoundingClientRect().top) : 0);
+  }, [selecting]);
+
+  async function clearChats(list) {
+    const now = new Date().toISOString();
+    const { error } = await supabase.from("dm_cleared").upsert(list.map((peer) => ({ peer_id: peer, user_id: myId, cleared_at: now })));
+    if (error) { window.alert("Couldn't delete. Please try again."); return false; }
+    setCleared((c) => ({ ...c, ...Object.fromEntries(list.map((p) => [p, ms(now)])) }));
+    return true;
+  }
   async function deletePicked() {
     const n = picked.length;
     if (!window.confirm(n === 1 ? "Delete this chat? It's removed from your inbox only." : `Delete ${n} chats? They're removed from your inbox only.`)) return;
-    const now = new Date().toISOString();
-    const { error } = await supabase.from("dm_cleared").upsert(picked.map((peer) => ({ peer_id: peer, user_id: myId, cleared_at: now })));
-    if (error) { window.alert("Couldn't delete. Please try again."); return; }
-    setCleared((c) => ({ ...c, ...Object.fromEntries(picked.map((p) => [p, ms(now)])) }));
-    endSelect();
+    if (await clearChats(picked)) endSelect();
+  }
+  async function acceptChats(list) {
+    const { error } = await supabase.from("dm_accepted").upsert(list.map((peer) => ({ peer_id: peer, user_id: myId })));
+    if (error) { window.alert("Couldn't accept. Please try again."); return false; }
+    setAccepted((a) => ({ ...a, ...Object.fromEntries(list.map((p) => [p, true])) }));
+    return true;
   }
 
   return (
@@ -132,7 +165,7 @@ export default function DirectMessages({ people, conversations, activeId, setAct
       <div className="dm-inbox">
         <div className="dm-top">
           {selecting ? <span className="dm-top-side" /> : (
-            <button type="button" className="dm-top-side dm-icon" onClick={() => setSelecting(true)} aria-label="Select chats" disabled={!rows.length}><IconSelect /></button>
+            <button type="button" className="dm-top-side dm-icon" onClick={() => setSelecting(true)} aria-label="Select chats" disabled={!inFolder.length}><IconSelect /></button>
           )}
           <h2 className="dm-title">{selecting ? `${picked.length} selected` : "Messages"}</h2>
           {selecting ? (
@@ -143,13 +176,33 @@ export default function DirectMessages({ people, conversations, activeId, setAct
           <IconSearch />
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search" />
         </label>
-        {rows.length === 0 ? (
+        <div className={`dm-folders${selecting ? " is-dim" : ""}`}>
+          {[["primary", "Primary"], ["requests", "Requests"]].map(([k, label]) => {
+            const n = unreadIn(k);
+            return (
+              <button key={k} type="button" className={`dm-folder${folder === k ? " is-on" : ""}`} onClick={() => setFolder(k)} disabled={selecting}>
+                {n > 0 && <i className="dm-folder-dot" aria-hidden="true" />}
+                <span>{label}</span>
+                {n > 0 && <b>{n}</b>}
+              </button>
+            );
+          })}
+        </div>
+        {inFolder.length === 0 ? (
           <div className="dm-empty">
-            <p className="dm-empty-t">No messages yet</p>
-            <p className="dm-empty-d">Message a musician from their profile to start a conversation.</p>
+            {folder === "requests" ? (<>
+              <p className="dm-empty-t">No message requests</p>
+              <p className="dm-empty-d">Messages from people you're not connected with appear here.</p>
+            </>) : (<>
+              <p className="dm-empty-t">No messages yet</p>
+              <p className="dm-empty-d">Message a musician from their profile to start a conversation.</p>
+            </>)}
           </div>
         ) : (
           <ul className="dm-rows">
+            {folder === "requests" && !selecting && (
+              <li className="dm-req-note">They won't know you've seen their message until you accept.</li>
+            )}
             {shown.map(({ id, last, unread }) => {
               const p = person(id);
               const on = picked.includes(id);
@@ -171,17 +224,27 @@ export default function DirectMessages({ people, conversations, activeId, setAct
           </ul>
         )}
       </div>
-      {selecting && picked.length > 0 && (
-        <div className="dm-actions">
-          <button type="button" onClick={() => { (anyUnread ? actions.markRead : actions.markUnread)(picked); endSelect(); }}>
-            {anyUnread ? "Mark as read" : "Mark as unread"}
-          </button>
-          <button type="button" className="is-danger" onClick={deletePicked}>Delete</button>
+      {selecting && (
+        <div className="dm-actions" style={{ bottom: barBottom }}>
+          {folder === "requests" ? (
+            <button type="button" disabled={!picked.length} onClick={async () => { if (await acceptChats(picked)) endSelect(); }}>
+              {`Accept (${picked.length})`}
+            </button>
+          ) : (
+            <button type="button" disabled={!picked.length} onClick={() => { (anyUnread ? actions.markRead : actions.markUnread)(picked); endSelect(); }}>
+              {anyUnread ? `Mark as read (${picked.length})` : `Mark as unread (${picked.length})`}
+            </button>
+          )}
+          <button type="button" className="is-danger" disabled={!picked.length} onClick={deletePicked}>{`Delete (${picked.length})`}</button>
         </div>
       )}
       {activeId && (
         <Thread key={activeId} peer={person(activeId)} thread={visible(activeId)} actions={actions}
-          onBack={() => setActiveId(null)} onOpenProfile={onOpenProfile} />
+          onBack={() => setActiveId(null)} onOpenProfile={onOpenProfile}
+          request={isRequest(activeId) ? {
+            onAccept: () => acceptChats([activeId]),
+            onDelete: async () => { if (window.confirm("Delete this chat? It's removed from your inbox only.") && await clearChats([activeId])) setActiveId(null); },
+          } : null} />
       )}
     </div>
   );
@@ -200,7 +263,10 @@ function rowLine(last) {
   return <><span className="dm-row-text" data-no-translate="">{last.text}</span>{a && <span className="dm-row-age">· {a}</span>}</>;
 }
 
-function Thread({ peer, thread, actions, onBack, onOpenProfile }) {
+// A conversation. Full screen over the inbox, or `embedded` in a page (the
+// learner's lesson room). `request`: an unaccepted request, shown with Accept
+// and Delete instead of the composer, and not marked read until accepted.
+export function Thread({ peer, thread, actions, onBack, onOpenProfile, embedded = false, request = null }) {
   const [text, setText] = useState("");
   const [replyTo, setReplyTo] = useState(null);   // a message
   const [editing, setEditing] = useState(null);   // a message
@@ -210,14 +276,22 @@ function Thread({ peer, thread, actions, onBack, onOpenProfile }) {
   const first = (peer.name || "").split(" ")[0];
   const byId = useMemo(() => Object.fromEntries(thread.filter((m) => m.id).map((m) => [m.id, m])), [thread]);
 
+  // Reading it is reading it for real (the inbox dot, "Seen" on their side),
+  // except for a request, which stays unread until accepted.
+  const unreadKey = thread.filter((m) => m.from === "them" && !m.readAt).length;
+  useEffect(() => {
+    if (unreadKey && !request && peer.id && actions.markRead) actions.markRead([peer.id]);
+  }, [unreadKey, request, peer.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // The page behind doesn't scroll while a conversation is open.
   useEffect(() => {
+    if (embedded) return undefined;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const esc = (e) => { if (e.key === "Escape") { if (menu) setMenu(null); else onBack(); } };
     document.addEventListener("keydown", esc);
     return () => { document.body.style.overflow = prev; document.removeEventListener("keydown", esc); };
-  }, [menu, onBack]);
+  }, [menu, onBack, embedded]);
 
   // Open at the latest message; follow new ones if already at the bottom.
   const lastKey = thread.length ? `${thread.length}:${thread[thread.length - 1].id || "o"}` : "0";
@@ -262,8 +336,8 @@ function Thread({ peer, thread, actions, onBack, onOpenProfile }) {
   const last = thread[thread.length - 1];
 
   return (
-    <div className="dm-thread" role="dialog" aria-label={peer.name}>
-      <header className="dm-head">
+    <div className={`dm-thread${embedded ? " is-embedded" : ""}`} role={embedded ? undefined : "dialog"} aria-label={peer.name}>
+      {!embedded && <header className="dm-head">
         <button type="button" className="dm-icon" onClick={onBack} aria-label="Back"><IconBack /></button>
         <button type="button" className="dm-head-who" onClick={() => onOpenProfile && peer.id && onOpenProfile(peer.id)} aria-label="Open profile">
           <Face person={peer} size={34} />
@@ -272,14 +346,14 @@ function Thread({ peer, thread, actions, onBack, onOpenProfile }) {
             {peer.instrumentLabel && <em data-no-translate="">{peer.instrumentLabel}</em>}
           </span>
         </button>
-      </header>
+      </header>}
 
       <div className="dm-body" ref={bodyRef} onScroll={onScroll}>
         <div className="dm-intro">
           <Face person={peer} size={88} />
           <b data-no-translate="">{peer.name}</b>
           {peer.instrumentLabel && <em data-no-translate="">{peer.instrumentLabel}</em>}
-          <button type="button" className="dm-intro-btn" onClick={() => onOpenProfile && peer.id && onOpenProfile(peer.id)}>View profile</button>
+          {onOpenProfile && <button type="button" className="dm-intro-btn" onClick={() => peer.id && onOpenProfile(peer.id)}>View profile</button>}
         </div>
         {thread.map((m, i) => {
           const prev = thread[i - 1], next = thread[i + 1];
@@ -301,6 +375,16 @@ function Thread({ peer, thread, actions, onBack, onOpenProfile }) {
         })}
       </div>
 
+      {request ? (
+        <div className="dm-request">
+          <p className="dm-request-t">{`${first || "Someone"} wants to send you a message`}</p>
+          <p className="dm-request-d">They won't know you've seen it until you accept.</p>
+          <div className="dm-request-btns">
+            <button type="button" className="is-danger" onClick={request.onDelete}>Delete</button>
+            <button type="button" className="is-accept" onClick={request.onAccept}>Accept</button>
+          </div>
+        </div>
+      ) : (
       <div className="dm-compose">
         {(replyTo || editing) && (
           <div className="dm-bar">
@@ -317,6 +401,7 @@ function Thread({ peer, thread, actions, onBack, onOpenProfile }) {
           {text.trim() && <button type="button" className="dm-send" onMouseDown={(e) => e.preventDefault()} onClick={submit}>{editing ? "Save" : "Send"}</button>}
         </div>
       </div>
+      )}
 
       {menu && (
         <MessageMenu m={menu} onClose={() => setMenu(null)}

@@ -76,7 +76,7 @@ import "./theme-modern.css";
 import ArtiumWord from "./components/ArtiumWord";
 import ArtiumMenu, { readLang } from "./components/ArtiumMenu.jsx";
 import ArtiumMark from "./components/ArtiumMark.jsx";
-import DirectMessages from "./components/chat/DirectMessages.jsx";
+import DirectMessages, { Thread as DmThread } from "./components/chat/DirectMessages.jsx";
 import { setLanguage, currentLanguage } from "./i18n/runtime.js";
 // Dates in the chosen language (English keeps the day-month British order).
 const DATE_LOCALES = { en: "en-GB", de: "de-DE", es: "es-ES", fr: "fr-FR", nl: "nl-NL", it: "it-IT", "pt-BR": "pt-BR", pl: "pl-PL" };
@@ -2993,23 +2993,8 @@ export default function App() {
     return () => { live = false; clearInterval(id); dmLoadRef.current = null; };
   }, [authUser?.id]);
 
-  // Mark the open thread's incoming messages read as soon as it's open —
-  // there's no unread-badge consumer for this yet (the existing badges count
-  // local "them" messages against a locally-remembered last-seen count), but
-  // the truth belongs in the database for whenever one is built.
-  // Also re-runs as new messages land in the open thread, and only counts
-  // as reading while the student actually has Messages on screen.
-  const activeThreadLen = activeChatId ? (conversations[activeChatId] || []).length : 0;
-  React.useEffect(() => {
-    if (!authUser?.id || !activeChatId) return;
-    if (myProfile && !(screen === "app" && appTab === "messages")) return;
-    supabase.from("direct_messages").update({ read_at: new Date().toISOString() })
-      .eq("recipient_id", authUser.id).eq("sender_id", activeChatId).is("read_at", null)
-      .then(({ error }) => {
-        if (error) console.error("mark messages read failed", error.message);
-        else window.dispatchEvent(new Event("artium-attention-refresh"));
-      });
-  }, [authUser?.id, activeChatId, activeThreadLen, screen, appTab]);
+  // Marking a conversation read happens in the conversation itself
+  // (components/chat), which leaves an unaccepted request unread.
   const [showGuestPrompt, setShowGuestPrompt] = useState(false);
 
   const [musicOn, setMusicOn] = useState(false);
@@ -5452,6 +5437,7 @@ export default function App() {
           setActiveChatId={setActiveChatId}
           onSend={sendMessage}
           onSendTo={sendMessageTo}
+          dmActions={dmActions}
           onBack={backToEntry}
           onUpdateProfile={(updates) => {
             setLearnerProfile((p) => ({ ...p, ...updates }));
@@ -5794,6 +5780,7 @@ export default function App() {
               <DirectMessages
                 people={students} conversations={conversations} activeId={activeChatId}
                 setActiveId={setActiveChatId} actions={dmActions} myId={authUser?.id}
+                trusted={appConn.ready ? Object.entries(appConn.byOther).filter(([, c]) => c.state === "connected").map(([id]) => id) : []}
                 onOpenProfile={(id) => openStudent(id, "chat")}
               />
             </>
@@ -13695,7 +13682,7 @@ function LearnerNotificationBell({ authUser, teachers, learnerSessionsByTeacher,
 }
 
 /* ---- Learner home: map + request + chat ---- */
-function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendRequest, conversations, activeChatId, setActiveChatId, onSend, onSendTo, onBack, onUpdateProfile, onLogout, onDeleteAccount, memberCount, musicOn, onMusicToggle, avatarPhotoUrl, avatarName, initialTab = "map", authUser, lessonDot }) {
+function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendRequest, conversations, activeChatId, setActiveChatId, onSend, onSendTo, dmActions, onBack, onUpdateProfile, onLogout, onDeleteAccount, memberCount, musicOn, onMusicToggle, avatarPhotoUrl, avatarName, initialTab = "map", authUser, lessonDot }) {
   const [appTab, setAppTab] = useState(initialTab);
   useEffect(() => { try { sessionStorage.setItem("artium_learner_tab", appTab); } catch {} }, [appTab]);
   const [selectedConsId, setSelectedConsId] = useState(null);
@@ -13858,6 +13845,9 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
     setSelectedId(id);
     setActiveChatId(id);
   }
+  // The conversation open in the Messages tab (separate from the lesson
+  // room's teacher, so opening a profile never pops a chat open).
+  const [dmPeer, setDmPeer] = useTabState("artium_learner_dm", null);
 
   function saveProfile() {
     onUpdateProfile({ name: editName.trim(), location: editLocation.trim(), photoUrl: editPhotoUrl });
@@ -14323,6 +14313,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
                 focusSession={focusSessionReq}
                 messages={conversations[activeLessonTeacher.id] || []}
                 onSend={(t) => (onSendTo ? onSendTo(activeLessonTeacher.id, t) : onSend(t))}
+                dmActions={dmActions}
                 onPayLesson={payForLesson}
                 payLoading={payLoading}
                 payError={payError}
@@ -14345,6 +14336,15 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
         );
       })()}
 
+      {/* Messages: the same inbox and conversations as the student side.
+          Teachers who accepted you are in Primary; anyone else who writes
+          first waits in Requests. */}
+      {appTab === "messages" && !selectedId && (
+        <DirectMessages people={teachers} conversations={conversations} activeId={dmPeer} setActiveId={setDmPeer}
+          actions={dmActions} myId={authUser?.id}
+          trusted={Object.entries(teachRequests).filter(([, st]) => st === "accepted").map(([id]) => id)}
+          onOpenProfile={(id) => { setDmPeer(null); setAppTab("map"); setSelectedId(id); }} />
+      )}
       {appTab === "profile" && (() => {
         const Row = ({ label, children }) => (
           <div style={{ background: SURF, border: `1px solid ${C.inkLine}`, borderRadius: MODERN ? 12 : 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
@@ -14453,6 +14453,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
           items={[
             { k: "home", label: "Home", Icon: IconHomeArch },
             { k: "map", label: "Teachers", Icon: MODERN ? IconGlobePin : Map },
+            { k: "messages", label: "Messages", Icon: MessageCircle },
             ...(Object.values(teachRequests).some((s) => s === "accepted")
               ? [{ k: "lesson", label: "Lessons", Icon: MODERN ? IconTeacher : BookOpen }]
               : []),
@@ -14564,7 +14565,7 @@ function VideoSessionTab({ sessions, teacher, zoomLink, meetLink }) {
   );
 }
 
-function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payError, authUser, focusSession }) {
+function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payError, authUser, focusSession, dmActions }) {
   const [tab, setTab] = useTabState("artium_lesson_tab", "chat");
   // A bell notification can ask this room to open straight onto one session
   // card — Schedule & Payments tab, that session selected. Keyed on `at` so
@@ -14577,12 +14578,6 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
       setLearnerSessionDetailTab((prev) => ({ ...prev, [focusSession.sessionId]: focusSession.detail }));
     }
   }, [focusSession?.at]);
-  function sendLearnerMsg(text) {
-    if (!text.trim()) return;
-    // Straight to direct_messages via the parent's sender, which names this
-    // teacher as the recipient explicitly.
-    onSend(text);
-  }
 
   // Map stored messages to learner display perspective
   const activeMessages = (messages || []).map((m) =>
@@ -14849,27 +14844,13 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
         ))}
       </div>
 
-      {/* Chat */}
+      {/* Chat: the same Instagram-style conversation as Messages, inside the room. */}
       {tab === "chat" && (
-        <div>
-          <div className="lg-scroll overflow-y-auto px-4 py-3 flex flex-col gap-2" style={{ maxHeight: 280 }}>
-            {activeMessages.length === 0 && <p style={{ fontSize: 13, color: C.ivoryDim, textAlign: "center", padding: "24px 0" }}>Start the conversation with {teacher.name.split(" ")[0]}</p>}
-            {activeMessages.map((m, i) => (
-              <div key={i} className="px-3.5 py-2 rounded-2xl text-sm" data-no-translate="" style={{ maxWidth: "80%", alignSelf: m.from === "me" ? "flex-end" : "flex-start", background: m.from === "me" ? C.brass : C.inkSoft, color: m.from === "me" ? C.brassText : C.inkText, ...(MODERN && m.from !== "me" ? { border: "1px solid #E8E2DC" } : null) }}>
-                {m.text}
-              </div>
-            ))}
-          </div>
-          <div className="px-3 py-3 flex items-center gap-2" style={{ borderTop: `1px solid ${C.inkLine}` }}>
-            <input style={{ flex: 1, background: C.inkSoft, border: `1px solid ${C.inkLine}`, borderRadius: 12, padding: "10px 14px", fontSize: 14, color: C.inkText, outline: "none" }}
-              placeholder={`Message ${teacher.name.split(" ")[0]}…`}
-              onKeyDown={(e) => { if (e.key === "Enter" && e.target.value.trim()) { sendLearnerMsg(e.target.value); e.target.value = ""; } }} />
-            <button onClick={(e) => { const inp = e.currentTarget.previousSibling; if (inp.value.trim()) { sendLearnerMsg(inp.value); inp.value = ""; } }}
-              className="rounded-full p-3" style={{ background: C.brass, flexShrink: 0 }}>
-              <Send size={15} color={C.brassText} />
-            </button>
-          </div>
-        </div>
+        dmActions ? (
+          <DmThread embedded peer={teacher} thread={(messages || []).filter((m) => m.from === "me" || m.from === "them")} actions={dmActions} onBack={() => {}} />
+        ) : (
+          <div className="px-4 py-6"><p style={{ fontSize: 13, color: C.ivoryDim, textAlign: "center" }}>Start the conversation with {teacher.name.split(" ")[0]}</p></div>
+        )
       )}
 
       {/* Schedule & Pay */}

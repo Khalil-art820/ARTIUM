@@ -128,12 +128,39 @@
 .dm-menu-list button.is-danger { color: var(--dm-red); }
 .dm-msg.has-react .dm-edited { margin-top: 18px; }
 
-/* Select mode: a square box before each row, and the actions at the bottom. */
-.dm-check { flex: none; width: 22px; height: 22px; margin-right: 8px; display: grid; place-items: center; border-radius: 5px; border: 2px solid #C7C7C7; color: #FFFFFF; box-sizing: border-box; }
-.dm-check.is-on { border-color: var(--dm-blue); background: var(--dm-blue); }
-.dm-actions { position: fixed; left: 12px; right: 12px; bottom: calc(76px + env(safe-area-inset-bottom)); z-index: 60; max-width: 520px; margin: 0 auto;
-  display: flex; border-radius: 14px; background: #FFFFFF; box-shadow: 0 8px 26px rgba(0,0,0,.18); overflow: hidden; animation: dmFade .15s ease; }
-.dm-actions button { flex: 1; height: 50px; font-size: 15px; font-weight: 600; }
-.dm-actions button + button { border-left: 1px solid #EFEFEF !important; }
+/* Select mode, as Instagram draws it: a rounded square before each row
+   (black with a white tick when chosen), and a full-width bar on top of the
+   tab bar, its cells split by thin lines, Delete in red. */
+.dm-check { flex: none; width: 22px; height: 22px; margin-right: 6px; display: grid; place-items: center; border-radius: 5px; border: 2px solid #8E8E8E; color: #FFFFFF; box-sizing: border-box; }
+.dm-check.is-on { border-color: #000000; background: #000000; }
+.dm-actions { position: fixed; left: 0; right: 0; z-index: 60; display: flex; background: #FFFFFF; border-top: 1px solid var(--dm-line);
+  animation: dmFade .15s ease; }
+.dm-actions button { flex: 1; height: 52px; font-size: 16px; font-weight: 600; color: var(--dm-ink); }
+.dm-actions button + button { border-left: 1px solid var(--dm-line) !important; }
 .dm-actions button.is-danger { color: var(--dm-red); }
-.dm-actions button:active { background: #F5F5F5 !important; }
+.dm-actions button:disabled { opacity: .45; cursor: default; }
+.dm-actions button:not(:disabled):active { background: #F5F5F5 !important; }
+
+/* Folders: Primary / Requests, as rounded pills; the chosen one filled. */
+.dm-folders { display: flex; gap: 8px; margin: 0 16px 8px; overflow-x: auto; scrollbar-width: none; }
+.dm-folders.is-dim { opacity: .45; }
+.dm-folder { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 14px !important; border-radius: 17px;
+  border: 1px solid var(--dm-line) !important; font-size: 14px; font-weight: 600; }
+.dm-folder.is-on { background: var(--dm-grey) !important; border-color: var(--dm-grey) !important; }
+.dm-folder b { font-weight: 600; color: var(--dm-sub); }
+.dm-folder-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--dm-red); }
+.dm-req-note { padding: 6px 16px 10px; font-size: 13px; line-height: 1.4; color: var(--dm-sub); }
+
+/* A request: Accept / Delete in place of the composer. */
+.dm-request { flex: none; padding: 14px 16px calc(14px + env(safe-area-inset-bottom)); border-top: 1px solid var(--dm-line); text-align: center; background: #FFFFFF; }
+.dm-request > * { max-width: 520px; margin-left: auto; margin-right: auto; }
+.dm-request-t { margin: 0 0 4px; font-size: 15px; font-weight: 600; }
+.dm-request-d { margin: 0 0 12px; font-size: 13px; color: var(--dm-sub); }
+.dm-request-btns { display: flex; gap: 8px; }
+.dm-request-btns button { flex: 1; height: 40px; border-radius: 10px; font-size: 15px; font-weight: 600; }
+.dm-request-btns .is-danger { background: var(--dm-grey) !important; color: var(--dm-red); }
+.dm-request-btns .is-accept { background: var(--dm-blue) !important; color: #FFFFFF; }
+
+/* Inside a page rather than over it. */
+.dm-thread.is-embedded { position: relative; inset: auto; z-index: auto; height: min(68vh, 560px); border-radius: inherit; }
+.dm-thread.is-embedded .dm-compose { padding-bottom: 10px; }
