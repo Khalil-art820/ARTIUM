@@ -5845,7 +5845,8 @@ export default function App() {
           {appTab === "lessons" && !selectedStudentId && myProfile && (
             <>
               {netHeaderWith(null)}
-              <TeacherLessonRoom teacherId={myProfile.id} roomView={teacherRoomView} setRoomView={setTeacherRoomView} focus={teacherFocus} />
+              <TeacherLessonRoom teacherId={myProfile.id} roomView={teacherRoomView} setRoomView={setTeacherRoomView} focus={teacherFocus}
+                conversations={conversations} dmActions={dmActions} />
             </>
           )}
           {appTab === "concerts" && !selectedStudentId && myProfile && isPianistUser && (
@@ -17603,7 +17604,7 @@ function AdminVerifications({ card, STATUS_COLOR }) {
   );
 }
 
-function TeacherLessonRoom({ teacherId, roomView, setRoomView, focus }) {
+function TeacherLessonRoom({ teacherId, roomView, setRoomView, focus, conversations, dmActions }) {
   // teacherId is only ever passed as myProfile.id (see the one call site),
   // which only exists for a real signed-in profile — always a real uuid here.
   const tid = teacherId;
@@ -17673,58 +17674,10 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView, focus }) {
     return () => { live = false; clearInterval(id); };
   }, [tid]);
 
-  const [messagesByLearner, setMessagesByLearner] = useState({});
-
   const [lastSeenByLearner, setLastSeenByLearner] = useState({});
 
-  // Load the shared direct_messages thread and poll it.
-  React.useEffect(() => {
-    if (!activeLearner) return;
-    let live = true;
-    // Same incremental sync as the app-level poll, scoped to this pair.
-    let sinceTs = null;
-    const learnerId = activeLearner.id;
-    async function load() {
-      let q = supabase
-        .from("direct_messages")
-        .select("id, sender_id, recipient_id, body, created_at")
-        .or(`and(sender_id.eq.${tid},recipient_id.eq.${learnerId}),and(sender_id.eq.${learnerId},recipient_id.eq.${tid})`)
-        .order("created_at", { ascending: true });
-      if (sinceTs) q = q.gt("created_at", sinceTs);
-      const { data, error } = await q;
-      if (!live || error || !data || data.length === 0) return;
-      sinceTs = data[data.length - 1].created_at;
-      const incoming = data.map((m) => ({ id: m.id, from: m.sender_id === tid ? "me" : "them", text: m.body }));
-      setMessagesByLearner((prev) => {
-        const thread = [...(prev[learnerId] || [])];
-        for (const m of incoming) {
-          if (thread.some((t) => t.id === m.id)) continue;
-          if (m.from === "me") {
-            const oi = thread.findIndex((t) => t.optimistic && t.from === "me" && t.text === m.text);
-            if (oi !== -1) { thread[oi] = m; continue; }
-          }
-          thread.push(m);
-        }
-        return { ...prev, [learnerId]: thread };
-      });
-    }
-    load();
-    const id = setInterval(load, 8000);
-    return () => { live = false; clearInterval(id); };
-  }, [tid, activeLearner?.id]);
-
-  // Mark the open learner thread's incoming messages read, same as the
-  // top-level Messages/LessonRoom side.
-  const openThreadLen = activeLearner ? (messagesByLearner[activeLearner.id] || []).length : 0;
-  React.useEffect(() => {
-    if (!activeLearner || tab !== "chat") return;
-    supabase.from("direct_messages").update({ read_at: new Date().toISOString() })
-      .eq("recipient_id", tid).eq("sender_id", activeLearner.id).is("read_at", null)
-      .then(({ error }) => {
-        if (error) console.error("mark messages read failed", error.message);
-        else window.dispatchEvent(new Event("artium-attention-refresh"));
-      });
-  }, [tid, activeLearner?.id, tab, openThreadLen]);
+  // Messages come from App's poll (every thread this account is in) and are
+  // read, sent and marked through the shared conversation below.
   const [selectedSessionId, setSelectedSessionId] = useState(null);
   const [showPropose, setShowPropose] = useState(false);
   const [proposeErr, setProposeErr] = useState("");
@@ -17854,7 +17807,7 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView, focus }) {
   const [openMonths, setOpenMonths] = useState({ "2026-07": true, "2026-08": false, "2026-09": false });
 
   const sessions = activeLearner ? (sessionsByLearner[activeLearner.id] || []) : [];
-  const msgs = activeLearner ? (messagesByLearner[activeLearner.id] || []) : [];
+  const msgs = activeLearner ? ((conversations || {})[activeLearner.id] || []) : [];
   const teacherThemCount = msgs.filter(m => m.from === "them").length;
   const teacherUnread = activeLearner ? Math.max(0, teacherThemCount - (lastSeenByLearner[activeLearner.id] || 0)) : 0;
   React.useEffect(() => {
@@ -17971,15 +17924,6 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView, focus }) {
   function cancelLocked(s) { return s.status === "confirmed" && timeUntil(s) < CANCEL_FULL_H * 60 * 60 * 1000; }
   function modifyLocked(s) { return s.status === "confirmed" && timeUntil(s) < MODIFY_LOCK_H * 60 * 60 * 1000; }
 
-  function sendMsg(text) {
-    const body = text.trim();
-    if (!body || !activeLearner) return;
-    setMessagesByLearner((prev) => ({ ...prev, [activeLearner.id]: [...(prev[activeLearner.id] || []), { from: "me", text: body, optimistic: true }] }));
-    // The shared table both sides poll.
-    supabase.from("direct_messages").insert({ sender_id: tid, recipient_id: activeLearner.id, body }).then(({ error }) => {
-      if (error) console.error("send message failed", error.message);
-    });
-  }
 
   // One bar for five destinations. My Rules and My Planning used to be two
   // circles stranded under the card, in a strip of their own, visible only
@@ -18316,27 +18260,9 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView, focus }) {
       <div style={{ margin: "0 20px 20px", background: SURF, borderRadius: MODERN ? 12 : 16, boxShadow: MODERN ? HAIR_RING : "0 2px 12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06)", overflow: "hidden", minHeight: 320 }}>
       <RoomTabs />
 
-      {/* Chat */}
-      {tab === "chat" && (
-        <div>
-          <div className="lg-scroll overflow-y-auto px-4 py-3 flex flex-col gap-2" style={{ maxHeight: 300 }}>
-            {msgs.length === 0 && <p style={{ fontSize: 13, color: C.ivoryDim, textAlign: "center", padding: "24px 0" }}>Start the conversation with {activeLearner.name.split(" ")[0]}</p>}
-            {msgs.map((m, i) => (
-              <div key={i} className="px-3.5 py-2 rounded-2xl text-sm" data-no-translate="" style={{ maxWidth: "80%", alignSelf: m.from === "me" ? "flex-end" : "flex-start", background: m.from === "me" ? C.brass : C.inkSoft, color: m.from === "me" ? C.brassText : C.inkText, ...(MODERN && m.from !== "me" ? { border: "1px solid #E8E2DC" } : null) }}>
-                {m.text}
-              </div>
-            ))}
-          </div>
-          <div className="px-3 py-3 flex items-center gap-2" style={{ borderTop: `1px solid ${C.inkLine}` }}>
-            <input style={{ flex: 1, background: SURF, border: MODERN ? "1px solid #E8E2DC" : "1px solid rgba(255,255,255,0.10)", borderRadius: 999, padding: "11px 15px", fontSize: 14, color: C.ivory, outline: "none" }}
-              placeholder={`Message ${activeLearner.name.split(" ")[0]}…`}
-              onKeyDown={(e) => { if (e.key === "Enter" && e.target.value.trim()) { sendMsg(e.target.value); e.target.value = ""; } }} />
-            <button onClick={(e) => { const inp = e.currentTarget.previousSibling; if (inp.value.trim()) { sendMsg(inp.value); inp.value = ""; } }}
-              className="rounded-full p-3" style={{ background: C.brass, flexShrink: 0 }}>
-              <Send size={15} color={C.brassText} />
-            </button>
-          </div>
-        </div>
+      {/* Chat: the same Instagram-style conversation as Messages. */}
+      {tab === "chat" && dmActions && (
+        <DmThread embedded peer={activeLearner} thread={msgs} actions={dmActions} onBack={() => {}} />
       )}
 
       {/* Schedule & Payments */}
