@@ -175,3 +175,9 @@
 html .dm-input textarea:focus, html .dm-input textarea:focus-visible, html .dm-search input:focus, html .dm-search input:focus-visible,
 html.theme-modern .dm-input textarea:focus, html.theme-modern .dm-input textarea:focus-visible, html.theme-modern .dm-search input:focus, html.theme-modern .dm-search input:focus-visible { outline: none !important; box-shadow: none !important; border: 0 !important; }
 .dm-input:focus-within, .dm-search:focus-within { outline: none !important; box-shadow: none !important; }
+
+/* A hairline between Primary and Requests. Both pills share one width, so with
+   the even spacing the middle of the gap is the middle of the row. */
+.dm-folders { position: relative; }
+.dm-folder { width: 124px; justify-content: center; }
+.dm-folders::after { content: ""; position: absolute; left: 50%; top: 7px; bottom: 7px; width: 1px; transform: translateX(-.5px); background: var(--dm-line); pointer-events: none; }
