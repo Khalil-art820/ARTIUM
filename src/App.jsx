@@ -5844,7 +5844,7 @@ export default function App() {
           )}
           {appTab === "lessons" && !selectedStudentId && myProfile && (
             <>
-              {netHeaderWith(null)}
+              {/* No top bar in the lessons room, as in Messages. */}
               <TeacherLessonRoom teacherId={myProfile.id} roomView={teacherRoomView} setRoomView={setTeacherRoomView} focus={teacherFocus}
                 conversations={conversations} dmActions={dmActions} />
             </>
@@ -13871,7 +13871,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
           that used to sit here (Logo + tab pills + controls): that strip
           was this screen's only chrome, so there is nothing left to
           duplicate now that this header covers the same ground. */}
-      {appTab !== "messages" && (
+      {appTab !== "messages" && appTab !== "lesson" && (
       <header className="artium-net-bar">
         {/* The profile tab (where editing lives) goes arrowless, matching
             the student side — the bottom bar does the walking there. */}
