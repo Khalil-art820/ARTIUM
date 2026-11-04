@@ -75,10 +75,10 @@ const Icon = ({ d, size = 24, sw = 2 }) => (
 );
 // Instagram's back arrow: a full arrow, not a chevron.
 const IconBack = () => <Icon d={<path d="M20 12H4.5M11 5l-7 7 7 7" />} size={26} sw={2} />;
-// The verified mark beside a name: the app's scalloped black badge.
+// The verified mark beside a name: the app's scalloped emerald badge (the Connect button's colour).
 const Verified = () => (
   <svg className="dm-verified" width="19" height="19" viewBox="0 0 24 24" aria-label="Verified">
-    <path fill="#000000" d="M12.00 2.60Q15.25 -0.12 16.70 3.86Q20.87 3.13 20.14 7.30Q24.12 8.75 21.40 12.00Q24.12 15.25 20.14 16.70Q20.87 20.87 16.70 20.14Q15.25 24.12 12.00 21.40Q8.75 24.12 7.30 20.14Q3.13 20.87 3.86 16.70Q-0.12 15.25 2.60 12.00Q-0.12 8.75 3.86 7.30Q3.13 3.13 7.30 3.86Q8.75 -0.12 12.00 2.60Z" />
+    <path fill="#073D37" d="M12.00 2.60Q15.25 -0.12 16.70 3.86Q20.87 3.13 20.14 7.30Q24.12 8.75 21.40 12.00Q24.12 15.25 20.14 16.70Q20.87 20.87 16.70 20.14Q15.25 24.12 12.00 21.40Q8.75 24.12 7.30 20.14Q3.13 20.87 3.86 16.70Q-0.12 15.25 2.60 12.00Q-0.12 8.75 3.86 7.30Q3.13 3.13 7.30 3.86Q8.75 -0.12 12.00 2.60Z" />
     <path d="M7.7 12.2l2.9 2.9 5.8-5.9" fill="none" stroke="#FFFFFF" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
