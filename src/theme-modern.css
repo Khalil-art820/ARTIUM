@@ -1351,3 +1351,7 @@ html.theme-modern .mc-photo b,html.theme-modern .mc-mface .nx-face b{background:
 html.theme-modern .mc-mface .nx-face{background:#EDEDEA !important}
 /* The top bar's avatar when there is no photo: light grey as on the cards. */
 html.theme-modern .tm-hm-me{color:#5F6B6E !important;background:#EDEDEA !important}
+/* Messages tab, active: the paper plane filled, as Instagram does, with its
+   fold drawn in the bar's colour so the crease still shows. */
+html.theme-modern .artium-aw-tabs button[data-on="1"] .ig-direct-body{fill:currentColor;fill-opacity:1}
+html.theme-modern .artium-aw-tabs button[data-on="1"] .ig-direct-fold{stroke:#000000}

@@ -6147,8 +6147,8 @@ const IconDirect = (p) => (
     {/* A touch smaller and lower than Instagram's own box, so it sits on
         the same line as the other tab icons. */}
     <g transform="translate(1.6 2.4) scale(0.86)">
-      <path d="M22 3 9.218 10.083" />
-      <path d="M11.698 20.334 22 3.001H2l7.218 7.083z" />
+      <path className="ig-direct-body" d="M11.698 20.334 22 3.001H2l7.218 7.083z" />
+      <path className="ig-direct-fold" d="M22 3 9.218 10.083" />
     </g>
   </IconBox>
 );
