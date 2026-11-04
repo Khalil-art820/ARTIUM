@@ -40,13 +40,17 @@
 
 /* ---- Conversation, over everything ---- */
 .dm-thread { position: fixed; inset: 0; z-index: 700; display: flex; flex-direction: column; background: #FFFFFF; }
-.dm-head { flex: none; display: flex; align-items: center; gap: 6px; height: 60px; padding: env(safe-area-inset-top) 12px 0 6px; box-sizing: content-box;
-  border-bottom: 1px solid var(--dm-line); }
+/* Instagram's conversation head: arrow, ringed photo, name (with the
+   verified mark) over a smaller second line; no rule under it. */
+.dm-head { flex: none; display: flex; align-items: center; gap: 4px; height: 62px; padding: env(safe-area-inset-top) 12px 0 4px; box-sizing: content-box; }
+.dm-head-face { flex: none; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; box-shadow: 0 0 0 1px var(--dm-line); }
 .dm-icon { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; }
 .dm-head-who { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; text-align: left; }
 .dm-head-text { min-width: 0; display: flex; flex-direction: column; }
-.dm-head-text b { font-size: 16px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.dm-head-text em { font-style: normal; font-size: 12.5px; color: var(--dm-sub); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dm-head-text b { display: flex; align-items: center; gap: 5px; min-width: 0; font-family: 'Playfair Display', Georgia, serif; font-size: 17px; font-weight: 700; }
+.dm-head-text b > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dm-verified { flex: none; }
+.dm-head-text em { font-style: normal; font-size: 13px; color: var(--dm-sub); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .dm-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; padding: 8px 12px 12px; }
 .dm-body > * { max-width: 680px; margin-left: auto; margin-right: auto; }

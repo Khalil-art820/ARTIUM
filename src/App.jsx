@@ -6141,6 +6141,13 @@ const IconTeacher = ({ size = 34 }) => (
     WebkitMaskPosition: "center", maskPosition: "center",
   }} />
 );
+// Instagram's Direct: the paper plane, as Instagram draws it.
+const IconDirect = (p) => (
+  <IconBox {...p}>
+    <path d="M22 3 9.218 10.083" />
+    <path d="M11.698 20.334 22 3.001H2l7.218 7.083z" />
+  </IconBox>
+);
 const IconMegaphone = (p) => (
   <IconBox {...p}>
     <path d="M3.4 9.6v4.1a1.9 1.9 0 0 0 1.9 1.9h1.8l9.6 4.3V5.3L7.1 9.6H5.3a1.9 1.9 0 0 0-1.9 1.9z" />
@@ -12363,7 +12370,7 @@ const CalendarEventIcon = ({ size = 24, strokeWidth = 2, ...props }) => (
 const STUDENT_TABS = [
   { k: "home", label: "Home", Icon: IconHomeArch },
   { k: "map", label: "Network", Icon: MODERN ? IconGlobePin : GlobeIcon },
-  { k: "messages", label: "Messages", Icon: MessageCircle },
+  { k: "messages", label: "Messages", Icon: MODERN ? IconDirect : MessageCircle },
   { k: "promote", label: "Promote", Icon: MODERN ? IconMegaphone : Megaphone },
   { k: "lessons", label: "Lessons", Icon: MODERN ? IconTeacher : BookOpen },
   { k: "profile", label: "Profile", Icon: User },
@@ -14456,7 +14463,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
           items={[
             { k: "home", label: "Home", Icon: IconHomeArch },
             { k: "map", label: "Teachers", Icon: MODERN ? IconGlobePin : Map },
-            { k: "messages", label: "Messages", Icon: MessageCircle },
+            { k: "messages", label: "Messages", Icon: MODERN ? IconDirect : MessageCircle },
             ...(Object.values(teachRequests).some((s) => s === "accepted")
               ? [{ k: "lesson", label: "Lessons", Icon: MODERN ? IconTeacher : BookOpen }]
               : []),

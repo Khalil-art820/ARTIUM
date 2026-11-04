@@ -60,7 +60,15 @@ function Face({ person, size }) {
 const Icon = ({ d, size = 24, sw = 2 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{d}</svg>
 );
-const IconBack = () => <Icon d={<path d="M15 5l-7 7 7 7" />} size={26} />;
+// Instagram's back arrow: a full arrow, not a chevron.
+const IconBack = () => <Icon d={<path d="M20 12H4.5M11 5l-7 7 7 7" />} size={26} sw={2} />;
+// The verified mark beside a name, in Artium's gold.
+const Verified = () => (
+  <svg className="dm-verified" width="15" height="15" viewBox="0 0 24 24" aria-label="Verified">
+    <path fill="#F5B800" d="M12 1.5l2.4 1.8 3-.2.9 2.9 2.5 1.7-.9 2.9.9 2.9-2.5 1.7-.9 2.9-3-.2L12 22.5l-2.4-1.8-3 .2-.9-2.9-2.5-1.7.9-2.9-.9-2.9 2.5-1.7.9-2.9 3 .2z" />
+    <path d="M7.8 12.3l2.8 2.8 5.6-5.8" fill="none" stroke="#FFFFFF" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
 const IconX = () => <Icon d={<path d="M6 6l12 12M18 6L6 18" />} size={18} />;
 const IconSmile = () => <Icon d={<><circle cx="12" cy="12" r="9" /><path d="M8.5 14.5c.9 1.2 2.1 1.8 3.5 1.8s2.6-.6 3.5-1.8M9 9.6v.2M15 9.6v.2" /></>} size={18} />;
 // Instagram's search: a ring open at the top right, a spark in the gap.
@@ -274,6 +282,8 @@ export function Thread({ peer, thread, actions, onBack, onOpenProfile, embedded 
   const bodyRef = useRef(null);
   const inputRef = useRef(null);
   const first = (peer.name || "").split(" ")[0];
+  // The line under the name: what they play.
+  const sub = peer.instrumentLabel || (Array.isArray(peer.instruments) ? peer.instruments.join(" & ") : "") || peer.instrument || "";
   const byId = useMemo(() => Object.fromEntries(thread.filter((m) => m.id).map((m) => [m.id, m])), [thread]);
 
   // Reading it is reading it for real (the inbox dot, "Seen" on their side),
@@ -340,21 +350,15 @@ export function Thread({ peer, thread, actions, onBack, onOpenProfile, embedded 
       {!embedded && <header className="dm-head">
         <button type="button" className="dm-icon" onClick={onBack} aria-label="Back"><IconBack /></button>
         <button type="button" className="dm-head-who" onClick={() => onOpenProfile && peer.id && onOpenProfile(peer.id)} aria-label="Open profile">
-          <Face person={peer} size={34} />
+          <span className="dm-head-face"><Face person={peer} size={40} /></span>
           <span className="dm-head-text">
-            <b data-no-translate="">{peer.name}</b>
-            {peer.instrumentLabel && <em data-no-translate="">{peer.instrumentLabel}</em>}
+            <b><span data-no-translate="">{peer.name}</span>{(peer.verified || peer.conservatoryVerified) && <Verified />}</b>
+            {sub && <em data-no-translate="">{sub}</em>}
           </span>
         </button>
       </header>}
 
       <div className="dm-body" ref={bodyRef} onScroll={onScroll}>
-        <div className="dm-intro">
-          <Face person={peer} size={88} />
-          <b data-no-translate="">{peer.name}</b>
-          {peer.instrumentLabel && <em data-no-translate="">{peer.instrumentLabel}</em>}
-          {onOpenProfile && <button type="button" className="dm-intro-btn" onClick={() => peer.id && onOpenProfile(peer.id)}>View profile</button>}
-        </div>
         {thread.map((m, i) => {
           const prev = thread[i - 1], next = thread[i + 1];
           const brk = !prev || ms(m.at) - ms(prev.at) > BREAK_MS;
