@@ -3641,6 +3641,24 @@ export default function App() {
     edit: (peer, id, text) => { patchMessage(peer, id, { text: text.trim(), editedAt: new Date().toISOString() }); return dmCall("dm_edit", { p_id: id, p_body: text }); },
     unsend: (peer, id) => { patchMessage(peer, id, null); return dmCall("dm_unsend", { p_id: id }); },
     react: (peer, id, emoji) => { patchMessage(peer, id, { myReaction: emoji }); return dmCall("dm_react", { p_id: id, p_emoji: emoji }); },
+    // Read state is the one column a member writes directly (the read_at grant).
+    markRead: async (peers) => {
+      const now = new Date().toISOString();
+      setConversations((c) => Object.fromEntries(Object.entries(c).map(([p, t]) => [p, peers.includes(p) ? t.map((m) => (m.from === "them" && !m.readAt ? { ...m, readAt: now } : m)) : t])));
+      const { error } = await supabase.from("direct_messages").update({ read_at: now })
+        .eq("recipient_id", authUser.id).in("sender_id", peers).is("read_at", null);
+      if (error) console.error("mark read failed", error.message);
+      window.dispatchEvent(new Event("artium-attention-refresh"));
+    },
+    // Unread, as Instagram does it: the latest message from them goes back to unread.
+    markUnread: async (peers) => {
+      const ids = peers.map((p) => [...(conversations[p] || [])].reverse().find((m) => m.from === "them" && m.id)?.id).filter(Boolean);
+      if (!ids.length) return;
+      setConversations((c) => Object.fromEntries(Object.entries(c).map(([p, t]) => [p, t.map((m) => (ids.includes(m.id) ? { ...m, readAt: null } : m))])));
+      const { error } = await supabase.from("direct_messages").update({ read_at: null }).in("id", ids);
+      if (error) console.error("mark unread failed", error.message);
+      window.dispatchEvent(new Event("artium-attention-refresh"));
+    },
   };
 
   if (!unlocked) return <AccessGate onUnlock={() => { localStorage.setItem(ACCESS_KEY, "1"); setUnlocked(true); }} />;
@@ -5775,7 +5793,7 @@ export default function App() {
               {netHeaderWith(null)}
               <DirectMessages
                 people={students} conversations={conversations} activeId={activeChatId}
-                setActiveId={setActiveChatId} actions={dmActions}
+                setActiveId={setActiveChatId} actions={dmActions} myId={authUser?.id}
                 onOpenProfile={(id) => openStudent(id, "chat")}
               />
             </>

@@ -173,8 +173,7 @@ function Drawer({ onClose, onProfile, onLogout, onLegal }) {
         </div>
         {onLogout && (
           <button type="button" className="am-logout" onClick={() => { onClose(); onLogout(); }}>
-            <Svg size={22} sw={1.9}><path d="M10 4H6.5A1.5 1.5 0 0 0 5 5.5v13A1.5 1.5 0 0 0 6.5 20H10" /><path d="M9.5 12H20" /><path d="M16.5 8.5 20 12l-3.5 3.5" /></Svg>
-            <span>Log out</span>
+            <span>Log Out</span>
           </button>
         )}
       </nav>

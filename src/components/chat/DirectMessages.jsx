@@ -63,9 +63,14 @@ const Icon = ({ d, size = 24, sw = 2 }) => (
 const IconBack = () => <Icon d={<path d="M15 5l-7 7 7 7" />} size={26} />;
 const IconX = () => <Icon d={<path d="M6 6l12 12M18 6L6 18" />} size={18} />;
 const IconSmile = () => <Icon d={<><circle cx="12" cy="12" r="9" /><path d="M8.5 14.5c.9 1.2 2.1 1.8 3.5 1.8s2.6-.6 3.5-1.8M9 9.6v.2M15 9.6v.2" /></>} size={18} />;
-const IconSearch = () => <Icon d={<><circle cx="11" cy="11" r="6.5" /><path d="M16 16l4 4" /></>} size={17} />;
+// Instagram's search: a ring open at the top right, a spark in the gap.
+const IconSearch = () => <Icon d={<><path d="M17.2 9.6A7 7 0 1 1 13 4.4" /><path d="M16.5 16.5l4 4" /><path d="M18 2.5v4M16 4.5h4" /></>} size={21} sw={1.9} />;
+// The list button at the top left: three lines, each with a dot.
+const IconSelect = () => <Icon d={<><circle cx="4.5" cy="6" r="1.4" /><circle cx="4.5" cy="12" r="1.4" /><circle cx="4.5" cy="18" r="1.4" /><path d="M9.5 6H20M9.5 12H20M9.5 18H20" /></>} size={26} sw={1.9} />;
+const IconClose = () => <Icon d={<path d="M5 5l14 14M19 5L5 19" />} size={26} sw={1.9} />;
+const IconTick = () => <Icon d={<path d="M5 12.5l4.5 4.5L19 7.5" />} size={15} sw={3} />;
 
-export default function DirectMessages({ people, conversations, activeId, setActiveId, actions, onOpenProfile }) {
+export default function DirectMessages({ people, conversations, activeId, setActiveId, actions, onOpenProfile, myId }) {
   // Names and photos: the members App already has, and for anyone else in a
   // thread (a learner, say), whatever the database lets this account read.
   const [extra, setExtra] = useState({});
@@ -84,18 +89,56 @@ export default function DirectMessages({ people, conversations, activeId, setAct
   }, [missing]);
   const person = (id) => known[id] || extra[id] || { id, name: "" };
 
+  // Chats you deleted: hidden up to the moment you deleted them, for you only
+  // (dm_cleared). A newer message brings the conversation back.
+  const [cleared, setCleared] = useState({});
+  useEffect(() => {
+    let live = true;
+    supabase.from("dm_cleared").select("peer_id, cleared_at").then(({ data, error }) => {
+      if (live && !error && data) setCleared(Object.fromEntries(data.map((r) => [r.peer_id, ms(r.cleared_at)])));
+    });
+    return () => { live = false; };
+  }, []);
+  const visible = (id) => (conversations[id] || []).filter((m) => !cleared[id] || !m.at || ms(m.at) > cleared[id]);
+
   const [q, setQ] = useState("");
   const rows = useMemo(() => ids.map((id) => {
-    const thread = conversations[id] || [];
+    const thread = visible(id);
     const last = thread[thread.length - 1];
     return { id, thread, last, when: last ? ms(last.at) || Date.now() : Date.now(), unread: thread.some((m) => m.from === "them" && !m.readAt) };
-  }).sort((a, b) => b.when - a.when), [conversations]); // eslint-disable-line react-hooks/exhaustive-deps
+  }).filter((r) => r.thread.length || !cleared[r.id] || r.id === activeId)
+    .sort((a, b) => b.when - a.when), [conversations, cleared, activeId]); // eslint-disable-line react-hooks/exhaustive-deps
   const shown = rows.filter((r) => !q.trim() || (person(r.id).name || "").toLowerCase().includes(q.trim().toLowerCase()));
+
+  // Select mode, from the list button: tick conversations, then mark them
+  // read or unread, or delete them from your inbox.
+  const [selecting, setSelecting] = useState(false);
+  const [picked, setPicked] = useState([]);
+  const toggle = (id) => setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
+  const endSelect = () => { setSelecting(false); setPicked([]); };
+  const anyUnread = picked.some((id) => rows.find((r) => r.id === id)?.unread);
+  async function deletePicked() {
+    const n = picked.length;
+    if (!window.confirm(n === 1 ? "Delete this chat? It's removed from your inbox only." : `Delete ${n} chats? They're removed from your inbox only.`)) return;
+    const now = new Date().toISOString();
+    const { error } = await supabase.from("dm_cleared").upsert(picked.map((peer) => ({ peer_id: peer, user_id: myId, cleared_at: now })));
+    if (error) { window.alert("Couldn't delete. Please try again."); return; }
+    setCleared((c) => ({ ...c, ...Object.fromEntries(picked.map((p) => [p, ms(now)])) }));
+    endSelect();
+  }
 
   return (
     <div className="dm">
       <div className="dm-inbox">
-        <h2 className="dm-title">Messages</h2>
+        <div className="dm-top">
+          {selecting ? <span className="dm-top-side" /> : (
+            <button type="button" className="dm-top-side dm-icon" onClick={() => setSelecting(true)} aria-label="Select chats" disabled={!rows.length}><IconSelect /></button>
+          )}
+          <h2 className="dm-title">{selecting ? `${picked.length} selected` : "Messages"}</h2>
+          {selecting ? (
+            <button type="button" className="dm-top-side dm-icon" onClick={endSelect} aria-label="Cancel"><IconClose /></button>
+          ) : <span className="dm-top-side" />}
+        </div>
         <label className="dm-search">
           <IconSearch />
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search" />
@@ -109,15 +152,18 @@ export default function DirectMessages({ people, conversations, activeId, setAct
           <ul className="dm-rows">
             {shown.map(({ id, last, unread }) => {
               const p = person(id);
+              const on = picked.includes(id);
               return (
                 <li key={id}>
-                  <button type="button" className={`dm-row${unread ? " is-unread" : ""}`} onClick={() => setActiveId(id)}>
+                  <button type="button" className={`dm-row${unread ? " is-unread" : ""}`} onClick={() => (selecting ? toggle(id) : setActiveId(id))}
+                    aria-pressed={selecting ? on : undefined}>
+                    {selecting && <span className={`dm-check${on ? " is-on" : ""}`} aria-hidden="true">{on && <IconTick />}</span>}
                     <Face person={p} size={56} />
                     <span className="dm-row-main">
                       <span className="dm-row-name" data-no-translate="">{p.name}</span>
                       <span className="dm-row-sub">{rowLine(last)}</span>
                     </span>
-                    {unread && <i className="dm-dot" aria-label="Unread" />}
+                    {unread && !selecting && <i className="dm-dot" aria-label="Unread" />}
                   </button>
                 </li>
               );
@@ -125,8 +171,16 @@ export default function DirectMessages({ people, conversations, activeId, setAct
           </ul>
         )}
       </div>
+      {selecting && picked.length > 0 && (
+        <div className="dm-actions">
+          <button type="button" onClick={() => { (anyUnread ? actions.markRead : actions.markUnread)(picked); endSelect(); }}>
+            {anyUnread ? "Mark as read" : "Mark as unread"}
+          </button>
+          <button type="button" className="is-danger" onClick={deletePicked}>Delete</button>
+        </div>
+      )}
       {activeId && (
-        <Thread key={activeId} peer={person(activeId)} thread={conversations[activeId] || []} actions={actions}
+        <Thread key={activeId} peer={person(activeId)} thread={visible(activeId)} actions={actions}
           onBack={() => setActiveId(null)} onOpenProfile={onOpenProfile} />
       )}
     </div>
