@@ -47,7 +47,8 @@
 .dm-icon { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; }
 .dm-head-who { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; text-align: left; }
 .dm-head-text { min-width: 0; display: flex; flex-direction: column; }
-.dm-head-text b { display: flex; align-items: center; gap: 5px; min-width: 0; font-family: 'Playfair Display', Georgia, serif; font-size: 17px; font-weight: 700; }
+/* The name as the student cards write it (Fira Sans 600, 17px, black). */
+.dm-head-text b { display: flex; align-items: center; gap: 5px; min-width: 0; font-family: 'Fira Sans', system-ui, -apple-system, sans-serif; font-size: 17px; font-weight: 600; line-height: 1.25; color: #000000; }
 .dm-head-text b > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dm-verified { flex: none; }
 .dm-head-text em { font-style: normal; font-size: 13px; color: var(--dm-sub); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -168,3 +169,8 @@
 /* Inside a page rather than over it. */
 .dm-thread.is-embedded { position: relative; inset: auto; z-index: auto; height: min(68vh, 560px); border-radius: inherit; }
 .dm-thread.is-embedded .dm-compose { padding-bottom: 10px; }
+
+/* No focus frame on the message box: the grey pill is the field. */
+html .dm-input textarea:focus, html .dm-input textarea:focus-visible, html .dm-search input:focus, html .dm-search input:focus-visible,
+html.theme-modern .dm-input textarea:focus, html.theme-modern .dm-input textarea:focus-visible, html.theme-modern .dm-search input:focus, html.theme-modern .dm-search input:focus-visible { outline: none !important; box-shadow: none !important; border: 0 !important; }
+.dm-input:focus-within, .dm-search:focus-within { outline: none !important; box-shadow: none !important; }

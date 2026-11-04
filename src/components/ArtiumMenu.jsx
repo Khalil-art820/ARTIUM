@@ -191,7 +191,13 @@ export default function ArtiumMenu({ onProfile, onLogout, legalSheet: LegalSheet
   return (
     <>
       <button type="button" className={`am-burger ${className}`} onClick={() => setOpen(true)} aria-label="Menu" aria-haspopup="dialog" aria-expanded={open}>
-        <span /><span /><span />
+        {/* One drawing, snapped to whole pixels: the three lines come out
+            identical on every top bar, wherever the bar happens to sit. */}
+        <svg className="am-burger-lines" width="22" height="16" viewBox="0 0 22 16" shapeRendering="crispEdges" aria-hidden="true">
+          <rect x="0" y="0" width="22" height="2" />
+          <rect x="0" y="7" width="22" height="2" />
+          <rect x="0" y="14" width="22" height="2" />
+        </svg>
       </button>
       {open && (
         <Drawer onClose={close} onProfile={onProfile} onLogout={onLogout}
