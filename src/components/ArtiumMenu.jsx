@@ -181,6 +181,41 @@ function Drawer({ onClose, onProfile, onLogout, onLegal }) {
   );
 }
 
+// The three lines, measured in the screen's own pixels. Phones with a
+// fractional pixel ratio (2.625, 2.75...) turn "2px" into 5.25 device pixels
+// and round each line on its own, so one came out thicker than the others.
+// Here every line is the same whole number of device pixels thick and the
+// same whole number apart, and the drawing is nudged onto the pixel grid.
+function BurgerLines() {
+  const ref = React.useRef(null);
+  const [dpr, setDpr] = React.useState(() => (typeof window !== "undefined" && window.devicePixelRatio) || 1);
+  const t = Math.max(1, Math.round(2 * dpr)) / dpr;   // line thickness
+  const step = Math.round(7 * dpr) / dpr;              // line to line
+  const h = 2 * step + t;
+  React.useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return undefined;
+    const snap = () => {
+      const d = window.devicePixelRatio || 1;
+      if (d !== dpr) { setDpr(d); return; }
+      el.style.transform = "";
+      const top = el.getBoundingClientRect().top;
+      const off = Math.round(top * d) / d - top;
+      if (Math.abs(off) > 0.001) el.style.transform = `translateY(${off}px)`;
+    };
+    snap();
+    window.addEventListener("resize", snap);
+    return () => window.removeEventListener("resize", snap);
+  }, [dpr]);
+  return (
+    <svg ref={ref} className="am-burger-lines" width="22" height={h} viewBox={`0 0 22 ${h}`} aria-hidden="true">
+      <rect x="0" y="0" width="22" height={t} />
+      <rect x="0" y={step} width="22" height={t} />
+      <rect x="0" y={2 * step} width="22" height={t} />
+    </svg>
+  );
+}
+
 // The button that sits where the avatar used to, and the panel it opens.
 // legalSheet: the app's TermsSheet component ({ doc, onClose }), passed in so
 // this file doesn't depend on App.
@@ -191,13 +226,7 @@ export default function ArtiumMenu({ onProfile, onLogout, legalSheet: LegalSheet
   return (
     <>
       <button type="button" className={`am-burger ${className}`} onClick={() => setOpen(true)} aria-label="Menu" aria-haspopup="dialog" aria-expanded={open}>
-        {/* One drawing, snapped to whole pixels: the three lines come out
-            identical on every top bar, wherever the bar happens to sit. */}
-        <svg className="am-burger-lines" width="22" height="16" viewBox="0 0 22 16" shapeRendering="crispEdges" aria-hidden="true">
-          <rect x="0" y="0" width="22" height="2" />
-          <rect x="0" y="7" width="22" height="2" />
-          <rect x="0" y="14" width="22" height="2" />
-        </svg>
+        <BurgerLines />
       </button>
       {open && (
         <Drawer onClose={close} onProfile={onProfile} onLogout={onLogout}
