@@ -226,7 +226,7 @@ function CardFan({ active, onActive, cards = FAN_CARDS }) {
               <span className="cf-verified" title="Verified conservatory member" aria-label="Verified">
                 {/* The app's verified badge: Instagram's scalloped shape, in yellow. */}
                 <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M12.00 2.60Q15.25 -0.12 16.70 3.86Q20.87 3.13 20.14 7.30Q24.12 8.75 21.40 12.00Q24.12 15.25 20.14 16.70Q20.87 20.87 16.70 20.14Q15.25 24.12 12.00 21.40Q8.75 24.12 7.30 20.14Q3.13 20.87 3.86 16.70Q-0.12 15.25 2.60 12.00Q-0.12 8.75 3.86 7.30Q3.13 3.13 7.30 3.86Q8.75 -0.12 12.00 2.60Z" fill="#F5B800" />
+                  <path d="M12.00 2.60Q15.25 -0.12 16.70 3.86Q20.87 3.13 20.14 7.30Q24.12 8.75 21.40 12.00Q24.12 15.25 20.14 16.70Q20.87 20.87 16.70 20.14Q15.25 24.12 12.00 21.40Q8.75 24.12 7.30 20.14Q3.13 20.87 3.86 16.70Q-0.12 15.25 2.60 12.00Q-0.12 8.75 3.86 7.30Q3.13 3.13 7.30 3.86Q8.75 -0.12 12.00 2.60Z" fill="#DFA000" />
                   <path d="M7.7 12.2l2.9 2.9 5.8-5.9" fill="none" stroke="#FFFFFF" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </span>

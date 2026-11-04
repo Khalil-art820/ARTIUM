@@ -77,8 +77,8 @@ const Icon = ({ d, size = 24, sw = 2 }) => (
 const IconBack = () => <Icon d={<path d="M20 12H4.5M11 5l-7 7 7 7" />} size={26} sw={2} />;
 // The verified mark beside a name: a round gold badge with a white tick.
 const Verified = () => (
-  <svg className="dm-verified" width="15" height="15" viewBox="0 0 24 24" aria-label="Verified">
-    <circle cx="12" cy="12" r="11" fill="#F5B800" />
+  <svg className="dm-verified" width="19" height="19" viewBox="0 0 24 24" aria-label="Verified">
+    <circle cx="12" cy="12" r="11" fill="#DFA000" />
     <path d="M7.4 12.4l3 3 6.2-6.4" fill="none" stroke="#FFFFFF" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
