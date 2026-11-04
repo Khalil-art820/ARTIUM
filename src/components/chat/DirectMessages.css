@@ -10,8 +10,8 @@
 :where(.dm, .dm-thread, .dm-menu-root) button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 
 /* ---- Inbox ---- */
-.dm { background: #FFFFFF; min-height: calc(100vh - 150px); }
-.dm-inbox { max-width: 680px; margin: 0 auto; padding: 14px 0 110px; }
+.dm { background: #FFFFFF; min-height: 100vh; }
+.dm-inbox { max-width: 680px; margin: 0 auto; padding: calc(10px + env(safe-area-inset-top)) 0 110px; }
 /* Instagram's inbox head: the list button, the title centred, the close X. */
 .dm-top { display: flex; align-items: center; gap: 8px; height: 52px; padding: 0 8px; }
 .dm-top-side { flex: none; width: 44px; height: 44px; }
