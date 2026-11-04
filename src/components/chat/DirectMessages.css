@@ -147,7 +147,8 @@
 .dm-actions button:not(:disabled):active { background: #F5F5F5 !important; }
 
 /* Folders: Primary / Requests, as rounded pills; the chosen one filled. */
-.dm-folders { display: flex; gap: 8px; margin: 0 16px 8px; overflow-x: auto; scrollbar-width: none; }
+/* The two folders spread across the width, the three gaps equal. */
+.dm-folders { display: flex; justify-content: space-evenly; gap: 0; margin: 0 0 8px; overflow-x: auto; scrollbar-width: none; }
 .dm-folders.is-dim { opacity: .45; }
 .dm-folder { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 14px !important; border-radius: 17px;
   border: 1px solid var(--dm-line) !important; font-size: 14px; font-weight: 600; }
