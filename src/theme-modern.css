@@ -1356,3 +1356,6 @@ html.theme-modern .artium-aw-tabs button[data-on="1"] .ig-direct-body{fill:curre
 html.theme-modern .artium-aw-tabs button[data-on="1"] .ig-direct-fold{display:none}
 /* The line over the selected tab: white. */
 html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button::after{background:#FFFFFF}
+/* Twice the air around the globe: ~30px above (to the pills) and ~27px below
+   (to People you may know) become ~60 and ~54. */
+html.theme-modern .nx-stage{margin-top:32px;margin-bottom:31px}
