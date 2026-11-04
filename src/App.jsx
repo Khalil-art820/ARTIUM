@@ -76,6 +76,7 @@ import "./theme-modern.css";
 import ArtiumWord from "./components/ArtiumWord";
 import ArtiumMenu, { readLang } from "./components/ArtiumMenu.jsx";
 import ArtiumMark from "./components/ArtiumMark.jsx";
+import DirectMessages from "./components/chat/DirectMessages.jsx";
 import { setLanguage, currentLanguage } from "./i18n/runtime.js";
 // Dates in the chosen language (English keeps the day-month British order).
 const DATE_LOCALES = { en: "en-GB", de: "de-DE", es: "es-ES", fr: "fr-FR", nl: "nl-NL", it: "it-IT", "pt-BR": "pt-BR", pl: "pl-PL" };
@@ -2924,53 +2925,72 @@ export default function App() {
 
   // Load every direct_messages row this profile is a party to and group by
   // the other person's id — every consumer (Messages tab, LearnerScreen's
-  // lesson room, the teacher's own lesson room below) reads it unchanged.
-  // Polled rather than realtime, same as teach_requests above.
+  // lesson room, the teacher's own lesson room below) reads { from, text }
+  // unchanged; the Messages tab also reads the rest.
+  // Polled rather than realtime, on updated_at: after the first load each
+  // poll asks only for rows that changed since the last one, which brings new
+  // messages, edits, unsends, reactions and read receipts in one query.
+  // Before 20261104000000_dm_instagram.sql has run, those columns don't exist
+  // yet, and the poll falls back to new messages by created_at.
   // Placeholder threads opened via openChat() with no messages yet are kept
   // across a poll (merged, not replaced) so they don't vanish from the list
   // before a first message exists in the database.
+  const dmLoadRef = useRef(null);
   React.useEffect(() => {
     if (!authUser?.id) return;
     let live = true;
-    // Incremental sync: first load takes the history once; every poll after
-    // asks only for rows newer than the last seen — constant-size polls no
-    // matter how long histories grow.
     let sinceTs = null;
+    let legacy = false;
+    const me = authUser.id;
     async function load() {
+      const cursor = legacy ? "created_at" : "updated_at";
       let q = supabase
         .from("direct_messages")
-        .select("id, sender_id, recipient_id, body, created_at")
-        .or(`sender_id.eq.${authUser.id},recipient_id.eq.${authUser.id}`)
-        .order("created_at", { ascending: true });
-      if (sinceTs) q = q.gt("created_at", sinceTs);
+        .select(legacy
+          ? "id, sender_id, recipient_id, body, created_at, read_at"
+          : "id, sender_id, recipient_id, body, created_at, read_at, updated_at, edited_at, deleted_at, reply_to, sender_reaction, recipient_reaction")
+        .or(`sender_id.eq.${me},recipient_id.eq.${me}`)
+        .order(cursor, { ascending: true });
+      if (sinceTs) q = q.gt(cursor, sinceTs);
       const { data, error } = await q;
+      if (error && !legacy && /column|updated_at|reaction|reply_to|edited_at|deleted_at/i.test(error.message || "")) { legacy = true; return load(); }
       if (!live || error || !data || data.length === 0) return;
-      sinceTs = data[data.length - 1].created_at;
+      sinceTs = data[data.length - 1][cursor];
       const additions = {};
       for (const m of data) {
-        const peer = m.sender_id === authUser.id ? m.recipient_id : m.sender_id;
-        (additions[peer] = additions[peer] || []).push({ id: m.id, from: m.sender_id === authUser.id ? "me" : "them", text: m.body });
+        const mine = m.sender_id === me;
+        const peer = mine ? m.recipient_id : m.sender_id;
+        (additions[peer] = additions[peer] || []).push({
+          id: m.id, from: mine ? "me" : "them", text: m.body, at: m.created_at, readAt: m.read_at || null,
+          editedAt: m.edited_at || null, deleted: !!m.deleted_at, replyTo: m.reply_to || null,
+          myReaction: (mine ? m.sender_reaction : m.recipient_reaction) || null,
+          theirReaction: (mine ? m.recipient_reaction : m.sender_reaction) || null,
+        });
       }
       setConversations((prev) => {
         const next = { ...prev };
         for (const [peer, msgs] of Object.entries(additions)) {
-          const thread = [...(next[peer] || [])];
+          let thread = [...(next[peer] || [])];
           for (const m of msgs) {
-            if (thread.some((t) => t.id === m.id)) continue;
+            const at = thread.findIndex((t) => t.id === m.id);
+            if (m.deleted) { if (at !== -1) thread.splice(at, 1); continue; }
+            if (at !== -1) { thread[at] = m; continue; }
             if (m.from === "me") {
               const oi = thread.findIndex((t) => t.optimistic && t.from === "me" && t.text === m.text);
               if (oi !== -1) { thread[oi] = m; continue; }
             }
             thread.push(m);
           }
+          thread = thread.sort((a, b) => (a.at && b.at ? Date.parse(a.at) - Date.parse(b.at) : 0));
           next[peer] = thread;
         }
         return next;
       });
     }
+    dmLoadRef.current = load;
     load();
-    const id = setInterval(load, 8000);
-    return () => { live = false; clearInterval(id); };
+    const id = setInterval(load, 4000);
+    return () => { live = false; clearInterval(id); dmLoadRef.current = null; };
   }, [authUser?.id]);
 
   // Mark the open thread's incoming messages read as soon as it's open —
@@ -3592,17 +3612,36 @@ export default function App() {
   // The lesson room tracks its open teacher in its own state, not in
   // activeChatId — a send from there names its recipient explicitly instead
   // of trusting a selection variable that may never have been set.
-  function sendMessageTo(peerId, text) {
+  function sendMessageTo(peerId, text, replyTo = null) {
     if (!text.trim() || !peerId) return;
     const body = text.trim();
     // Persist to the database and let the poll above confirm it back —
     // appended locally first so the sender sees it immediately.
     const peer = peerId;
-    setConversations((c) => ({ ...c, [peer]: [...(c[peer] || []), { from: "me", text: body, optimistic: true }] }));
-    supabase.from("direct_messages").insert({ sender_id: authUser.id, recipient_id: peer, body }).then(({ error }) => {
+    setConversations((c) => ({ ...c, [peer]: [...(c[peer] || []), { from: "me", text: body, optimistic: true, at: new Date().toISOString(), replyTo }] }));
+    supabase.from("direct_messages").insert({ sender_id: authUser.id, recipient_id: peer, body, ...(replyTo ? { reply_to: replyTo } : {}) }).then(({ error }) => {
       if (error) console.error("send message failed", error.message);
+      else if (dmLoadRef.current) dmLoadRef.current();
     });
   }
+  // Edit, unsend and react go through the database functions that check who
+  // is asking (20261104000000_dm_instagram.sql). The thread changes locally
+  // first and the next poll confirms it; on failure the poll puts it back.
+  function patchMessage(peer, id, patch) {
+    setConversations((c) => ({ ...c, [peer]: (c[peer] || []).flatMap((m) => (m.id !== id ? [m] : patch === null ? [] : [{ ...m, ...patch }])) }));
+  }
+  async function dmCall(fn, args) {
+    const { error } = await supabase.rpc(fn, args);
+    if (error) console.error(fn + " failed", error.message);
+    if (dmLoadRef.current) dmLoadRef.current();
+    return !error;
+  }
+  const dmActions = {
+    send: (peer, text, replyTo) => sendMessageTo(peer, text, replyTo),
+    edit: (peer, id, text) => { patchMessage(peer, id, { text: text.trim(), editedAt: new Date().toISOString() }); return dmCall("dm_edit", { p_id: id, p_body: text }); },
+    unsend: (peer, id) => { patchMessage(peer, id, null); return dmCall("dm_unsend", { p_id: id }); },
+    react: (peer, id, emoji) => { patchMessage(peer, id, { myReaction: emoji }); return dmCall("dm_react", { p_id: id, p_emoji: emoji }); },
+  };
 
   if (!unlocked) return <AccessGate onUnlock={() => { localStorage.setItem(ACCESS_KEY, "1"); setUnlocked(true); }} />;
 
@@ -5734,12 +5773,10 @@ export default function App() {
           {appTab === "messages" && !selectedStudentId && (
             <>
               {netHeaderWith(null)}
-              <Messages
-                students={students} conversations={conversations} activeChatId={activeChatId}
-                setActiveChatId={setActiveChatId} onSend={sendMessage}
+              <DirectMessages
+                people={students} conversations={conversations} activeId={activeChatId}
+                setActiveId={setActiveChatId} actions={dmActions}
                 onOpenProfile={(id) => openStudent(id, "chat")}
-                myProfile={myProfile}
-                onBack={() => setAppTabPersist("map")}
               />
             </>
           )}
@@ -12709,77 +12746,6 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack, onUpdat
 /* ---------------------------------------------------------------- */
 /* MESSAGES                                                            */
 /* ---------------------------------------------------------------- */
-function Messages({ students, conversations, activeChatId, setActiveChatId, onSend, onOpenProfile, myProfile, onBack }) {
-  const ids = Object.keys(conversations);
-  const active = students.find((s) => s.id === activeChatId);
-  const [text, setText] = useState("");
-  const endRef = useRef(null);
-  useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [conversations, activeChatId]);
-
-  return (
-    <div className="lg-split-chat h-full" style={{ minHeight: 520 }}>
-      <div className="lg-scroll overflow-y-auto" style={{ borderRight: `1px solid ${C.inkLine}` }}>
-        <div className="px-5 pt-5 pb-2">
-          <p style={MODERN ? { fontSize: 11, color: C.brass, fontWeight: 700, letterSpacing: "0.08em" } : { fontFamily: FONT_MONO, fontSize: 11, color: C.ivoryDim }}>CONVERSATIONS</p>
-        </div>
-        {ids.length === 0 && (
-          <EmptyState icon={MessageCircle} title="No conversations yet" line="Message a student from their profile to start one." />
-        )}
-        {ids.map((id) => {
-          const s = students.find((st) => st.id === id);
-          if (!s) return null;
-          const last = conversations[id][conversations[id].length - 1];
-          return (
-            <button key={id} onClick={() => setActiveChatId(id)} className="w-full text-left flex items-center gap-3 px-5 py-3" style={{ background: activeChatId === id ? (MODERN ? "rgba(8,104,104,0.08)" : "rgba(201,162,75,0.08)") : "transparent", ...(MODERN ? { borderBottom: "1px solid #E8E2DC" } : {}) }}>
-              <Avatar name={s.name} id={s.id} size={38} photoUrl={s.photoUrl} online={s.online} />
-              <div className="min-w-0 flex-1">
-                <p style={{ fontSize: 13, fontWeight: 600 }}>{s.name}</p>
-                <p className="truncate" style={{ fontSize: 11, color: C.ivoryDim }}>{last ? last.text : "Say hello"}</p>
-              </div>
-            </button>
-          );
-        })}
-      </div>
-      <div className="flex flex-col">
-        {!active ? (
-          <div className="flex-1 flex items-center justify-center"><p style={{ color: C.ivoryDim, fontSize: 13 }}>Select a conversation</p></div>
-        ) : (
-          <>
-            <div className="flex items-center justify-between px-5 py-3" style={{ borderBottom: `1px solid ${C.inkLine}` }}>
-              <div className="flex items-center gap-3">
-                <button onClick={() => setActiveChatId(null)} className="text-xs flex items-center gap-1" style={{ color: C.ivoryDim }}><ArrowLeft size={13} /> Back</button>
-                <button onClick={() => onOpenProfile(active.id)} className="flex items-center gap-3">
-                  <Avatar name={active.name} id={active.id} size={34} photoUrl={active.photoUrl} online={active.online} />
-                  <p style={{ fontSize: 14, fontWeight: 600 }}>{active.name}</p>
-                </button>
-              </div>
-            </div>
-            <div className="flex-1 overflow-y-auto lg-scroll px-5 py-4 flex flex-col gap-2">
-              {(conversations[active.id] || []).map((m, i) => (
-                <div key={i} className="px-4 py-2.5 rounded-2xl text-sm" data-no-translate="" style={{ maxWidth: "75%", alignSelf: m.from === "me" ? "flex-end" : "flex-start", background: m.from === "me" ? C.brass : C.inkSoft, color: m.from === "me" ? C.brassText : C.ivory, fontWeight: m.from === "me" ? 500 : 400 }}>
-                  {m.text}
-                </div>
-              ))}
-              <div ref={endRef} />
-            </div>
-            <div className="px-5 py-4 flex items-center gap-2" style={{ borderTop: `1px solid ${C.inkLine}` }}>
-              <input
-                style={{ ...inputStyle, flex: 1 }}
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter") { onSend(text); setText(""); } }}
-                placeholder={`Message ${active.name.split(" ")[0]}…`}
-              />
-              <button onClick={() => { onSend(text); setText(""); }} className="rounded-full p-3" style={{ background: C.brass }}><Send size={16} color={MODERN ? "#FFFFFF" : C.inkText} /></button>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
-
 /* ---------------------------------------------------------------- */
 /* TEACHING + LEARNER MARKETPLACE                                     */
 /* ---------------------------------------------------------------- */
