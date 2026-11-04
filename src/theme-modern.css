@@ -1178,9 +1178,9 @@ html.theme-modern .artium-lp-bar .artium-gx-count,
 html.theme-modern .artium-net-bar .artium-net-count svg,
 html.theme-modern .artium-lp-bar .artium-gx-count svg{color:#1C1C1C}
 html.theme-modern .artium-net-puck.tm-back-plain svg{color:#1C1C1C}
-html.theme-modern .artium-net-bar .am-burger-lines,
-html.theme-modern .artium-lp-bar .am-burger-lines,
-html.theme-modern .cgate .cg-head .am-burger-lines{fill:#1C1C1C}
+html.theme-modern .artium-net-bar .am-burger,
+html.theme-modern .artium-lp-bar .am-burger,
+html.theme-modern .cgate .cg-head .am-burger{color:#1C1C1C}
 html.theme-modern .am-burger:hover{background:rgba(0,0,0,.05)}
 /* The counter portraits were ringed in the old teal; ring them in white. */
 html.theme-modern .tm-hm-faces img,

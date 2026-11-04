@@ -181,37 +181,14 @@ function Drawer({ onClose, onProfile, onLogout, onLegal }) {
   );
 }
 
-// The three lines, measured in the screen's own pixels. Phones with a
-// fractional pixel ratio (2.625, 2.75...) turn "2px" into 5.25 device pixels
-// and round each line on its own, so one came out thicker than the others.
-// Here every line is the same whole number of device pixels thick and the
-// same whole number apart, and the drawing is nudged onto the pixel grid.
+// The menu icon: the same three dotted lines as the Messages list button
+// (components/chat), in the colour of the bar it sits on.
 function BurgerLines() {
-  const ref = React.useRef(null);
-  const [dpr, setDpr] = React.useState(() => (typeof window !== "undefined" && window.devicePixelRatio) || 1);
-  const t = Math.max(1, Math.round(1.5 * dpr)) / dpr; // line thickness
-  const step = Math.round(7 * dpr) / dpr;              // line to line
-  const h = 2 * step + t;
-  React.useLayoutEffect(() => {
-    const el = ref.current;
-    if (!el) return undefined;
-    const snap = () => {
-      const d = window.devicePixelRatio || 1;
-      if (d !== dpr) { setDpr(d); return; }
-      el.style.transform = "";
-      const top = el.getBoundingClientRect().top;
-      const off = Math.round(top * d) / d - top;
-      if (Math.abs(off) > 0.001) el.style.transform = `translateY(${off}px)`;
-    };
-    snap();
-    window.addEventListener("resize", snap);
-    return () => window.removeEventListener("resize", snap);
-  }, [dpr]);
   return (
-    <svg ref={ref} className="am-burger-lines" width="22" height={h} viewBox={`0 0 22 ${h}`} aria-hidden="true">
-      <rect x="0" y="0" width="22" height={t} />
-      <rect x="0" y={step} width="22" height={t} />
-      <rect x="0" y={2 * step} width="22" height={t} />
+    <svg className="am-burger-lines" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="4.5" cy="6" r="1.4" /><circle cx="4.5" cy="12" r="1.4" /><circle cx="4.5" cy="18" r="1.4" />
+      <path d="M9.5 6H20M9.5 12H20M9.5 18H20" />
     </svg>
   );
 }

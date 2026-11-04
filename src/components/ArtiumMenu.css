@@ -1,7 +1,8 @@
 /* Three-line menu button (Chordify style) — sits on the teal top bars. */
 .am-burger{width:38px;height:38px;flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
   border:0;background:none;border-radius:10px;cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent}
-.am-burger-lines{display:block;flex:none;fill:#FFFFFF}
+.am-burger{color:#FFFFFF}
+.am-burger-lines{display:block;flex:none}
 .am-burger:hover{background:rgba(255,255,255,.14)}
 .am-burger:active{transform:scale(.94)}
 
