@@ -1,6 +1,6 @@
 import React, { useRef } from "react";
 import InlineWord from "../ArtiumWord";
-import { CARDS, useTourActivation, useSpotlightTour, TourSpotlight, TourCard } from "./ArtiumGate";
+import { CARDS } from "./ArtiumGate";
 import { installState } from "../../pwa.js";
 import PartnerRequestSheet, { VacantPartnerTile } from "../PartnerRequest.jsx";
 import ArtiumMenu, { LANGS, useLang } from "../ArtiumMenu.jsx";
@@ -276,12 +276,9 @@ export default function ArtiumGateChordify({
     };
   }, []);
 
-  // Same first-visit spotlight tour as the original (same flag, captions, rules).
-  const { active: tourActive, delay: tourDelay, markSeen: tourMarkSeen } = useTourActivation();
-  const tourAllowed = tourActive && !studentLoggedIn;
+  // No first-visit tour: the gate opens straight on its content.
   const medallionRef = useRef(null);
   const cardRefs = useRef([]);
-  const tour = useSpotlightTour(tourActive, tourDelay, tourMarkSeen, medallionRef, cardRefs);
 
   const handlers = { onLearner, onPianist, onComposers, onNews: onNews || (() => {}) };
   const count = memberCount ?? 40;
@@ -445,12 +442,6 @@ export default function ArtiumGateChordify({
         <div>© 2026 <InlineWord />. All rights reserved.</div>
       </footer>
 
-      {tourAllowed && tour.visible && tour.spot && (
-        <div className="tour-overlay" role="dialog" aria-modal="true" aria-label="Guided tour">
-          <TourSpotlight tour={tour} shape="rect" radius={14} />
-          <TourCard tour={tour} />
-        </div>
-      )}
     </div>
   );
 }
