@@ -1354,3 +1354,5 @@ html.theme-modern .tm-hm-me{color:#5F6B6E !important;background:#EDEDEA !importa
 /* Messages tab, active: the paper plane as one solid shape, no crease. */
 html.theme-modern .artium-aw-tabs button[data-on="1"] .ig-direct-body{fill:currentColor;fill-opacity:1}
 html.theme-modern .artium-aw-tabs button[data-on="1"] .ig-direct-fold{display:none}
+/* The line over the selected tab: white. */
+html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button::after{background:#FFFFFF}
