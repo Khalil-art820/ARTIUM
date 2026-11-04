@@ -3,7 +3,7 @@
 .dm, .dm-thread {
   --dm-ink: #000000; --dm-sub: #737373; --dm-line: #DBDBDB; --dm-grey: #EFEFEF;
   --dm-blue: #0095F6; --dm-red: #ED4956;
-  --dm-mine: linear-gradient(180deg, #A93BD3 0%, #7A45F0 45%, #5A4BEA 100%);
+  --dm-mine: #7638FA;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   color: var(--dm-ink); -webkit-font-smoothing: antialiased; text-align: left;
 }
@@ -73,7 +73,7 @@
 .dm-msg.is-mine .dm-b-wrap { flex-direction: row-reverse; }
 .dm-b { padding: 8px 13px; font-size: 15px; line-height: 1.35; white-space: pre-wrap; overflow-wrap: anywhere; border-radius: 22px;
   -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
-.dm-msg.is-mine .dm-b { background: var(--dm-mine); background-attachment: fixed; color: #FFFFFF; }
+.dm-msg.is-mine .dm-b { background-color: var(--dm-mine); color: #FFFFFF; }
 .dm-msg.is-theirs .dm-b { background: var(--dm-grey); color: var(--dm-ink); }
 .dm-b.is-pending { opacity: .7; }
 /* Joined sides of a run of bubbles are tighter, as on Instagram. */

@@ -18,6 +18,19 @@ const REACTIONS = ["❤️", "😂", "😮", "😢", "😡", "👍"];
 const EDIT_WINDOW_MS = 15 * 60 * 1000;
 const BREAK_MS = 30 * 60 * 1000;
 
+// Your bubbles take Instagram's gradient by where they sit on the screen:
+// pink-magenta at the top, purple through the middle, blue-violet at the
+// bottom, and they change colour as you scroll. Painted per bubble (rather
+// than a fixed CSS background, which iPhones ignore).
+const STOPS = [[0, [214, 46, 158]], [0.32, [160, 52, 222]], [0.62, [118, 56, 250]], [1, [79, 91, 213]]];
+function shade(t) {
+  let i = 0;
+  while (i < STOPS.length - 2 && t > STOPS[i + 1][0]) i++;
+  const [t0, a] = STOPS[i], [t1, b] = STOPS[i + 1];
+  const k = Math.min(1, Math.max(0, (t - t0) / (t1 - t0)));
+  return `rgb(${a.map((v, j) => Math.round(v + (b[j] - v) * k)).join(",")})`;
+}
+
 const initials = (name) => String(name || "?").trim().split(/\s+/).map((p) => p[0]).slice(0, 2).join("").toUpperCase();
 const lang = () => (typeof document !== "undefined" && document.documentElement.lang) || "en";
 const ms = (iso) => (iso ? Date.parse(iso) : 0);
@@ -310,7 +323,24 @@ export function Thread({ peer, thread, actions, onBack, onOpenProfile, embedded 
     const el = bodyRef.current;
     if (el && stuck.current) el.scrollTop = el.scrollHeight;
   }, [lastKey]);
+  const paint = () => {
+    const el = bodyRef.current;
+    if (!el) return;
+    const vh = window.innerHeight || 1;
+    el.querySelectorAll(".dm-msg.is-mine .dm-b").forEach((b) => {
+      const r = b.getBoundingClientRect();
+      b.style.backgroundColor = shade(Math.min(1, Math.max(0, (r.top + r.height / 2) / vh)));
+    });
+  };
+  const painting = useRef(0);
+  const repaint = () => { cancelAnimationFrame(painting.current); painting.current = requestAnimationFrame(paint); };
+  useEffect(() => { paint(); });
+  useEffect(() => {
+    window.addEventListener("resize", repaint);
+    return () => { window.removeEventListener("resize", repaint); cancelAnimationFrame(painting.current); };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const onScroll = () => {
+    repaint();
     const el = bodyRef.current;
     if (el) stuck.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
   };
