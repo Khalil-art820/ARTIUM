@@ -190,3 +190,8 @@ html.theme-modern .dm-input textarea:focus, html.theme-modern .dm-input textarea
 .dm-head-menu button:active { background: #F5F5F5 !important; }
 .dm-head-menu .is-danger { color: var(--dm-red) !important; }
 .dm-seen.is-failed { color: var(--dm-red); }
+
+/* Smaller folder pills. */
+.dm-folder { width: 92px; height: 30px; padding: 0 10px !important; border-radius: 15px; font-size: 13px; gap: 5px; }
+.dm-folder b { font-size: 12.5px; }
+.dm-folder-dot { width: 6px; height: 6px; flex: none; }

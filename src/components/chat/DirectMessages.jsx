@@ -221,6 +221,16 @@ export default function DirectMessages({ people, conversations, activeId, setAct
         <div className={`dm-folders${selecting ? " is-dim" : ""}`}>
           {[["primary", "Primary"], ["requests", "Requests"], ["blocked", "Blocked"]].map(([k, label]) => {
             const n = unreadIn(k);
+            // Requests: a red dot beside the word whenever one is waiting.
+            if (k === "requests") {
+              const waiting = rows.some((r) => r.fold === "requests");
+              return (
+                <button key={k} type="button" className={`dm-folder${folder === k ? " is-on" : ""}`} onClick={() => setFolder(k)} disabled={selecting}>
+                  <span>{label}</span>
+                  {waiting && <i className="dm-folder-dot" aria-label="New request" />}
+                </button>
+              );
+            }
             return (
               <button key={k} type="button" className={`dm-folder${folder === k ? " is-on" : ""}`} onClick={() => setFolder(k)} disabled={selecting}>
                 {n > 0 && <i className="dm-folder-dot" aria-hidden="true" />}
