@@ -89,7 +89,7 @@ const IconSearch = () => <Icon d={<><path d="M17.2 9.6A7 7 0 1 1 13 4.4" /><path
 // The list button at the top left: three lines, each with a dot.
 const IconSelect = () => <Icon d={<><circle cx="4.5" cy="6" r="1.4" /><circle cx="4.5" cy="12" r="1.4" /><circle cx="4.5" cy="18" r="1.4" /><path d="M9.5 6H20M9.5 12H20M9.5 18H20" /></>} size={26} sw={1.9} />;
 const IconClose = () => <Icon d={<path d="M5 5l14 14M19 5L5 19" />} size={26} sw={1.9} />;
-const IconDots = () => <Icon d={<><circle cx="5" cy="12" r="1.3" fill="currentColor" /><circle cx="12" cy="12" r="1.3" fill="currentColor" /><circle cx="19" cy="12" r="1.3" fill="currentColor" /></>} size={24} sw={1.2} />;
+const IconDots = () => <Icon d={<><circle cx="12" cy="5" r="1.3" fill="currentColor" /><circle cx="12" cy="12" r="1.3" fill="currentColor" /><circle cx="12" cy="19" r="1.3" fill="currentColor" /></>} size={24} sw={1.2} />;
 const IconTick = () => <Icon d={<path d="M5 12.5l4.5 4.5L19 7.5" />} size={15} sw={3} />;
 
 // The inbox. `trusted`: ids that always land in Primary (connections; for a
@@ -221,16 +221,6 @@ export default function DirectMessages({ people, conversations, activeId, setAct
         <div className={`dm-folders${selecting ? " is-dim" : ""}`}>
           {[["primary", "Primary"], ["requests", "Requests"], ["blocked", "Blocked"]].map(([k, label]) => {
             const n = unreadIn(k);
-            // Requests: a red dot beside the word whenever one is waiting.
-            if (k === "requests") {
-              const waiting = rows.some((r) => r.fold === "requests");
-              return (
-                <button key={k} type="button" className={`dm-folder${folder === k ? " is-on" : ""}`} onClick={() => setFolder(k)} disabled={selecting}>
-                  <span>{label}</span>
-                  {waiting && <i className="dm-folder-dot" aria-label="New request" />}
-                </button>
-              );
-            }
             return (
               <button key={k} type="button" className={`dm-folder${folder === k ? " is-on" : ""}`} onClick={() => setFolder(k)} disabled={selecting}>
                 {n > 0 && <i className="dm-folder-dot" aria-hidden="true" />}
