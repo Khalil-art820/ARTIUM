@@ -854,7 +854,7 @@ const emptyDraft = () => ({
   links: { instagram: "", facebook: "", youtube: "", website: "" },
   top: "", flop: "", composerDay: "",
   photoUrl: "",
-  coverVideoUrl: "",
+  coverVideoUrl: "", coverPhotoUrl: "",
   teaching: { open: false, mode: "", price: "", pitch: "" },
   concerts: { answered: false, open: false, regions: [], formats: [], fee: "" },
 });
@@ -3395,8 +3395,10 @@ export default function App() {
   // A function is read against the latest draft, so two quick taps can't
   // each act on the same stale copy.
   function update(partial) { setDraft((d) => ({ ...d, ...(typeof partial === "function" ? partial(d) : partial) })); }
+  // Three to six: a seventh is not added (taking one off is always allowed).
   function toggleTaste(t) {
-    setDraft((d) => ({ ...d, tastes: d.tastes.includes(t) ? d.tastes.filter((x) => x !== t) : [...d.tastes, t] }));
+    setDraft((d) => ({ ...d, tastes: d.tastes.includes(t) ? d.tastes.filter((x) => x !== t)
+      : d.tastes.length >= TASTE_MAX ? d.tastes : [...d.tastes, t] }));
   }
 
   async function insertVerificationRequest(userId, d) {
@@ -5806,9 +5808,9 @@ export default function App() {
                     onDecline: (connId) => appConn.remove(connId),
                   };
                 })() : null}
-                onUpdateCoverVideo={async (coverVideoUrl) => {
-                  await supabase.from("profiles").update({ cover_video_url: coverVideoUrl || null }).eq("id", myProfile.id);
-                  const updated = { ...myProfile, coverVideoUrl };
+                onUpdateCoverPhoto={async (coverPhotoUrl) => {
+                  await supabase.from("profiles").update({ cover_photo_url: coverPhotoUrl || null }).eq("id", myProfile.id);
+                  const updated = { ...myProfile, coverPhotoUrl };
                   setMyProfile(updated);
                   setStudents((arr) => arr.map((s) => (s.id === myProfile.id ? updated : s)));
                 }}
@@ -7327,7 +7329,7 @@ function HirerPianistProfile({ student, conservatory, onBack, onContact }) {
   return (
     <div style={{ maxWidth: 640, margin: "0 auto", padding: "40px 24px" }}>
       <button onClick={onBack} className="artium-aw-round" style={{ marginBottom: 20 }} aria-label="Back"><ChevronLeft size={17} strokeWidth={2} /></button>
-      <div className="artium-pf-top" data-solo={student.coverVideoUrl ? "0" : "1"}>
+      <div className="artium-pf-top" data-solo={student.coverPhotoUrl ? "0" : "1"}>
         <div>
           <div style={{ display: "flex", alignItems: "flex-start", gap: 16, marginBottom: 28 }}>
             <div style={{ marginTop: 4 }}><Avatar name={student.name} id={student.id} size={64} photoUrl={student.photoUrl} online={student.online} /></div>
@@ -7343,7 +7345,7 @@ function HirerPianistProfile({ student, conservatory, onBack, onContact }) {
           {student.bio && <p style={{ fontSize: 15, color: C.ivoryDim, lineHeight: 1.75, marginBottom: 24 }}>{student.bio}</p>}
           <ProfileLinks links={student.links} />
         </div>
-        {student.coverVideoUrl && <Row label="Cover video"><CoverVideo url={student.coverVideoUrl} /></Row>}
+        {student.coverPhotoUrl && <Row label="Cover photo"><CoverPhoto url={student.coverPhotoUrl} /></Row>}
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         {(student.pieces || []).length > 0 && (
@@ -8002,8 +8004,6 @@ function PhotoUpload({ name, photoUrl, onChange }) {
   );
 }
 
-const COVER_VIDEO_MAX_SECONDS = 25;
-
 // Long enough for a real answer, short enough that a profile card can show it
 // whole. Past this it stops being a pitch and becomes a page.
 const TEACHING_PITCH_MAX = 400;
@@ -8038,78 +8038,7 @@ function videoDuration(file) {
  * twenty-five seconds hands back 25.04 and refusing that is arguing with the
  * recording rather than with the person.
  */
-function CoverVideoUpload({ value, onChange, uploader }) {
-  const inputRef = useRef(null);
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState("");
 
-  async function handleFile(e) {
-    const file = e.target.files && e.target.files[0];
-    e.target.value = "";
-    if (!file) return;
-    setErr("");
-
-    const seconds = await videoDuration(file);
-    if (Number.isFinite(seconds) && seconds > COVER_VIDEO_MAX_SECONDS + 1) {
-      setErr(`That clip is ${Math.round(seconds)} seconds. Trim it to ${COVER_VIDEO_MAX_SECONDS} or under — pick the moment you would want seen first.`);
-      return;
-    }
-
-    setBusy(true);
-    const result = await uploader(file);
-    setBusy(false);
-    if (result.error) { setErr(result.error); return; }
-    onChange(result.url);
-  }
-
-  return (
-    <div>
-      {value ? (
-        <div style={{ position: "relative", width: "100%", borderRadius: 10, overflow: "hidden", background: "#000" }}>
-          <video src={value} controls playsInline preload="metadata" style={{ width: "100%", display: "block", maxHeight: 260, background: "#000" }} />
-          <div style={{ position: "absolute", top: 8, right: 8, display: "flex", gap: 6 }}>
-            <button type="button" onClick={() => inputRef.current && inputRef.current.click()}
-              className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold"
-              style={{ background: "rgba(0,0,0,0.55)", color: "#fff", border: "none", cursor: "pointer", backdropFilter: "blur(4px)" }}>
-              <Upload size={11} /> Replace
-            </button>
-            <button type="button" onClick={() => { setErr(""); onChange(""); }}
-              className="rounded-full px-3 py-1.5 text-xs font-semibold"
-              style={{ background: "rgba(0,0,0,0.55)", color: "#fff", border: "none", cursor: "pointer", backdropFilter: "blur(4px)" }}>
-              Remove
-            </button>
-          </div>
-        </div>
-      ) : (
-        <button type="button" disabled={busy} onClick={() => inputRef.current && inputRef.current.click()}
-          className="w-full inline-flex items-center justify-center gap-2 rounded-xl py-5 text-sm"
-          style={{ border: `1.5px dashed ${C.inkLine}`, color: C.ivoryDim, background: "transparent", cursor: busy ? "default" : "pointer", opacity: busy ? 0.6 : 1 }}>
-          <Upload size={15} /> {busy ? "Uploading…" : "Upload cover video"}
-        </button>
-      )}
-      <input ref={inputRef} type="file" accept="video/*" className="hidden" onChange={handleFile} />
-      {err
-        ? <p className="text-xs mt-1.5" style={{ color: C.burgundy }}>{err}</p>
-        : <p className="text-xs mt-1.5" style={{ color: C.ivoryDim, fontFamily: FONT_MONO }}>Optional — up to {COVER_VIDEO_MAX_SECONDS} seconds, shown at the top of your profile.</p>}
-    </div>
-  );
-}
-
-/**
- * Puts a cover video in the student-video bucket and returns its public URL.
- *
- * A random path, so one profile's video is not guessable from another's, and
- * the bucket is public so playback needs no session and no URL that expires
- * partway through a clip.
- */
-async function uploadCoverVideo(file) {
-  const ext = (file.name.split(".").pop() || "mp4").toLowerCase();
-  const path = `covers/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-  const { error } = await supabase.storage.from("student-video")
-    .upload(path, file, { upsert: false, contentType: file.type || undefined });
-  if (error) return { error: "Upload failed: " + error.message };
-  return { url: supabase.storage.from("student-video").getPublicUrl(path).data.publicUrl };
-}
 
 /**
  * The teaching cell: the terms, then the pitch under them.
@@ -8142,15 +8071,73 @@ function TeachingCell({ teaching }) {
  * The video as a profile shows it. Muted and loopable but never autoplaying:
  * a page that starts making noise on arrival is a page people close.
  */
-function CoverVideo({ url }) {
+// The cover photo at the top of a profile (replaces the cover video).
+function CoverPhoto({ url }) {
   if (!url) return null;
   return (
-    <div style={{ borderRadius: 10, overflow: "hidden", background: "#000" }}>
-      <video src={url} controls playsInline preload="metadata"
-        style={{ width: "100%", display: "block", maxHeight: 420, background: "#000" }} />
+    <div style={{ borderRadius: 10, overflow: "hidden", background: "#F2F2F0" }}>
+      <img src={url} alt="" loading="lazy" style={{ width: "100%", display: "block", maxHeight: 420, objectFit: "cover" }} />
     </div>
   );
 }
+
+// Puts a cover photo in the student-covers bucket and returns its public URL.
+async function uploadCoverPhoto(file) {
+  // Longest side 1600px, JPEG (shrinkImage, below): a few hundred KB instead
+  // of several MB. A format the browser can't draw goes up as it is.
+  const blob = await shrinkImage(file, 1600).catch(() => file);
+  const path = `covers/${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
+  const { error } = await supabase.storage.from("student-covers")
+    .upload(path, blob, { upsert: false, contentType: blob.type || "image/jpeg" });
+  if (error) return { error: /too large|size/i.test(error.message) ? "That photo is too large. Try another one." : "Upload failed: " + error.message };
+  return { url: supabase.storage.from("student-covers").getPublicUrl(path).data.publicUrl };
+}
+
+function CoverPhotoUpload({ value, onChange }) {
+  const inputRef = useRef(null);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  async function handleFile(e) {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if (!file) return;
+    setErr(""); setBusy(true);
+    const result = await uploadCoverPhoto(file);
+    setBusy(false);
+    if (result.error) { setErr(result.error); return; }
+    onChange(result.url);
+  }
+  const btn = { background: "rgba(0,0,0,0.55)", color: "#fff", border: "none", cursor: "pointer", backdropFilter: "blur(4px)" };
+  return (
+    <div>
+      {value ? (
+        <div style={{ position: "relative", width: "100%", borderRadius: 10, overflow: "hidden", background: "#F2F2F0" }}>
+          <img src={value} alt="" style={{ width: "100%", display: "block", maxHeight: 260, objectFit: "cover" }} />
+          <div style={{ position: "absolute", top: 8, right: 8, display: "flex", gap: 6 }}>
+            <button type="button" disabled={busy} onClick={() => inputRef.current && inputRef.current.click()}
+              className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold" style={btn}>
+              <Upload size={11} /> {busy ? "Uploading…" : "Replace"}
+            </button>
+            <button type="button" onClick={() => { setErr(""); onChange(""); }} className="rounded-full px-3 py-1.5 text-xs font-semibold" style={btn}>
+              Remove
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button type="button" disabled={busy} onClick={() => inputRef.current && inputRef.current.click()}
+          className="w-full inline-flex items-center justify-center gap-2 rounded-xl py-5 text-sm"
+          style={{ border: `1.5px dashed ${C.inkLine}`, color: C.ivoryDim, background: "transparent", cursor: busy ? "default" : "pointer", opacity: busy ? 0.6 : 1 }}>
+          <Upload size={15} /> {busy ? "Uploading…" : "Upload cover photo"}
+        </button>
+      )}
+      <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
+      {err
+        ? <p className="text-xs mt-1.5" style={{ color: C.burgundy }}>{err}</p>
+        : <p className="text-xs mt-1.5" style={{ color: C.ivoryDim, fontFamily: FONT_MONO }}>Optional — shown at the top of your profile.</p>}
+    </div>
+  );
+}
+
 
 // Google's mark on its own. GoogleBtn draws the same paths inline; this
 // pulls them out so the "signed up with Google" panel can show the provider
@@ -8617,7 +8604,9 @@ function SuggestInput({ value, onChange, suggestions, onPick, placeholder, disab
     <span style={{ position: "relative", display: "block" }}>
       <input style={inputStyle} value={value} placeholder={placeholder} disabled={disabled} autoComplete="off"
         onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
-        onChange={(e) => onChange(e.target.value)} />
+        // Typing again after a pick reopens the list (the field never lost
+        // focus, so onFocus would not fire).
+        onChange={(e) => { setFocused(true); onChange(e.target.value); }} />
       {open && (
         <span className="su-suggest" role="listbox">
           {suggestions.map((sg) => (
@@ -9459,10 +9448,12 @@ function StepConservatory({ draft, update, editing }) {
   );
 }
 
+const TASTE_MAX = 6;
 function StepTastes({ draft, toggleTaste }) {
   const [showOther, setShowOther] = useState(false);
   const [otherText, setOtherText] = useState("");
   const customTastes = draft.tastes.filter((t) => !TASTE_OPTIONS.includes(t));
+  const full = draft.tastes.length >= TASTE_MAX;
   function addOther() {
     const v = otherText.trim();
     if (!v) return;
@@ -9471,16 +9462,18 @@ function StepTastes({ draft, toggleTaste }) {
   }
   return (
     <div>
-      <p className="text-sm mb-5" style={{ color: C.ivoryDim }}>Select at least three — composers and/or eras you gravitate toward, as a listener or a performer. ({draft.tastes.length} selected)<b className="fld-req" aria-label="required">*</b></p>
+      <p className="text-sm mb-5" style={{ color: C.ivoryDim }}>Select three to six — composers and/or eras you gravitate toward, as a listener or a performer. ({draft.tastes.length} of 6 selected)<b className="fld-req" aria-label="required">*</b></p>
       <div className="flex flex-wrap gap-2">
         {TASTE_OPTIONS.map((t) => (
-          <Chip key={t} active={draft.tastes.includes(t)} onClick={() => toggleTaste(t)}>{t}</Chip>
+          <span key={t} style={full && !draft.tastes.includes(t) ? { opacity: 0.4 } : undefined}>
+            <Chip active={draft.tastes.includes(t)} onClick={() => toggleTaste(t)}>{t}</Chip>
+          </span>
         ))}
         {customTastes.map((t) => (
           <Chip key={t} active onClick={() => toggleTaste(t)}>{t}</Chip>
         ))}
         {/* Set apart from the composers so it's found at a glance. */}
-        <button type="button" className={`su-other${showOther ? " is-on" : ""}`} onClick={() => setShowOther((v) => !v)}>
+        <button type="button" className={`su-other${showOther ? " is-on" : ""}`} onClick={() => setShowOther((v) => !v)} disabled={full && !showOther} style={full && !showOther ? { opacity: 0.4 } : undefined}>
           <Plus size={14} strokeWidth={2.4} /> Other
         </button>
       </div>
@@ -12512,7 +12505,7 @@ function StudentProfile({ student, conservatory, onBack, onMessage, locked, onAp
     <>
       {/* Same two columns as the owner's own view: who they are on the left,
           the cover video on the right. One profile shape, whoever is reading. */}
-      <div className="artium-pf-top" data-solo={student.coverVideoUrl ? "0" : "1"}>
+      <div className="artium-pf-top" data-solo={student.coverPhotoUrl ? "0" : "1"}>
       <div>
       {/* Header */}
       <div style={{ display: "flex", alignItems: "flex-start", gap: 16, marginBottom: 28 }}>
@@ -12547,8 +12540,8 @@ function StudentProfile({ student, conservatory, onBack, onMessage, locked, onAp
 
       <ProfileLinks links={student.links} />
       </div>
-      {student.coverVideoUrl && (
-        <Row label="Cover video"><CoverVideo url={student.coverVideoUrl} /></Row>
+      {student.coverPhotoUrl && (
+        <Row label="Cover photo"><CoverPhoto url={student.coverPhotoUrl} /></Row>
       )}
       </div>
 
@@ -12639,7 +12632,7 @@ function MyConnections({ list, incoming, onOpen, onAccept, onDecline }) {
   );
 }
 
-function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack, onUpdateCoverVideo, connections }) {
+function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack, onUpdateCoverPhoto, connections }) {
   const cons = findConservatory(profile.conservatoryId);
   const [confirmDelete, setConfirmDelete] = React.useState(false);
   const [deleting, setDeleting] = React.useState(false);
@@ -12705,12 +12698,8 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack, onUpdat
       {/* Video link */}
       <ProfileLinks links={profile.links} />
       </div>
-      <Row label="Cover video">
-        <CoverVideoUpload
-          value={profile.coverVideoUrl}
-          onChange={(url) => onUpdateCoverVideo && onUpdateCoverVideo(url)}
-          uploader={uploadCoverVideo}
-        />
+      <Row label="Cover photo">
+        <CoverPhotoUpload value={profile.coverPhotoUrl} onChange={(url) => onUpdateCoverPhoto && onUpdateCoverPhoto(url)} />
       </Row>
       </div>
 
@@ -14138,9 +14127,9 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
             {/* The teacher's cover video — the thing a learner deciding
                 between teachers most wants to see. Same clip the profile
                 pages show; it was simply never rendered on this screen. */}
-            {selected.coverVideoUrl && (
+            {selected.coverPhotoUrl && (
               <div style={{ marginBottom: 24 }}>
-                <Row label="Cover video"><CoverVideo url={selected.coverVideoUrl} /></Row>
+                <Row label="Cover photo"><CoverPhoto url={selected.coverPhotoUrl} /></Row>
               </div>
             )}
 
