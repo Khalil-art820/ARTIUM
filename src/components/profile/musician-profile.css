@@ -20,7 +20,7 @@
 .mp-hero-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .mp-hero-blank { position: absolute; inset: 0;
   background: radial-gradient(120% 90% at 85% 0%, #E9E1D2 0%, #F2EDE4 45%, var(--mp-page) 100%); }
-.mp-hero-blank::after { content: ""; position: absolute; right: -40px; top: 18px; width: 260px; height: 260px; opacity: .10;
+.mp-hero-blank::after { content: ""; position: absolute; right: -30px; top: 40px; width: 180px; height: 180px; opacity: .05;
   background: no-repeat center/contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23073D37' stroke-width='1.1' stroke-linecap='round'%3E%3Cpath d='M9 18V5l12-2v13'/%3E%3Ccircle cx='6' cy='18' r='3'/%3E%3Ccircle cx='18' cy='16' r='3'/%3E%3C/svg%3E"); }
 /* The photo fades into the page from about halfway down. */
 /* Runs past the photo's edge, so no seam shows where photo and page meet. */
@@ -40,9 +40,9 @@
   border: 3px solid #FFFFFF; box-sizing: border-box; background: #EDEDEA; color: #5F6B6E; font: 600 34px var(--mp-sans); }
 .mp-portrait img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .mp-who { min-width: 0; padding-bottom: 6px; }
-.mp-name { display: flex; align-items: center; gap: 7px; margin: 0; font: 700 31px/1.05 var(--mp-serif); letter-spacing: -.005em; color: var(--mp-ink); }
-.mp-name > span { overflow: hidden; text-overflow: ellipsis; }
-.mp-name .nx-verified { flex: none; display: inline-flex; }
+/* The badge follows the last word, even when the name wraps. */
+.mp-name { display: block; margin: 0; font: 700 31px/1.05 var(--mp-serif); letter-spacing: -.005em; color: var(--mp-ink); overflow-wrap: anywhere; }
+.mp-name .nx-verified { display: inline-flex; margin-left: 7px; vertical-align: 1px; }
 .mp-line { margin: 6px 0 0; font-size: 14px; font-weight: 500; color: var(--mp-ink); }
 .mp-line i { font-style: normal; color: var(--mp-gold); margin: 0 6px; }
 .mp-place { display: flex; align-items: center; gap: 5px; margin: 4px 0 0; font-size: 13.5px; color: var(--mp-sub); }
@@ -107,7 +107,8 @@
 .mp-piece { display: flex; align-items: center; gap: 10px; padding: 11px 0; border-top: 1px solid var(--mp-line); }
 .mp-piece:first-child { border-top: 0; padding-top: 0; }
 .mp-piece-t { flex: 1; min-width: 0; }
-.mp-piece-t b { display: block; font: 600 17px/1.25 var(--mp-serif); }
+/* Playfair here: its figures are lining, so "No. 1" never reads "No. I". */
+.mp-piece-t b { display: block; font: 600 15.5px/1.3 'Playfair Display', Georgia, serif; }
 .mp-piece-t span { font-size: 13px; color: var(--mp-sub); }
 .mp-piece .pc-pill { flex: none; }
 
@@ -121,3 +122,37 @@
   .mp-hero { height: 340px; border-radius: 0 0 28px 28px; }
   .mp-name { font-size: 36px; }
 }
+
+/* ---- Your own profile ---- */
+.mp-cover-tools { position: absolute; z-index: 3; right: 16px; top: calc(14px + env(safe-area-inset-top)); display: flex; gap: 8px; }
+.mp-cover-tools button { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px !important; border-radius: 18px;
+  border: 1px solid rgba(255,255,255,.55) !important; color: #FFFFFF; font-size: 13px !important; font-weight: 600 !important;
+  background: rgba(20,20,20,.32) !important; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+.mp-cover-tools button:disabled { opacity: .7; }
+.mp-cover-err { position: relative; z-index: 2; margin: 8px 20px 0; font-size: 13px; color: #B3261E; }
+
+.mp-person { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 0 !important; border: 0 !important; border-top: 1px solid var(--mp-line) !important;
+  background: none !important; text-align: left; color: var(--mp-ink); }
+.mp-label + .mp-person, .mp-label + .mp-muted { border-top: 0 !important; padding-top: 2px !important; }
+.mp-person-who { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; padding: 0; border: 0; background: none; text-align: left; color: inherit; }
+.mp-person > .mp-person-who { padding: 0 !important; border: 0 !important; }
+.mp-person-face { flex: none; width: 46px; height: 46px; border-radius: 50%; overflow: hidden; display: grid; place-items: center;
+  background: #EDEDEA; color: #5F6B6E; font-size: 15px; font-weight: 600; }
+.mp-person-face img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.mp-person-who > span:last-child, .mp-person > span:nth-child(2) { min-width: 0; display: flex; flex-direction: column; }
+.mp-person b { font: 600 17px/1.2 var(--mp-serif); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mp-person em { font-style: normal; font-size: 13px; color: var(--mp-sub); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mp-person-go { flex: none; margin-left: auto; color: var(--mp-sub); }
+.mp-person-acts { flex: none; display: flex; gap: 6px; }
+.mp-person-acts button { height: 32px; padding: 0 12px !important; border-radius: 16px; border: 1px solid #D9D6CF !important; background: #FFFFFF !important;
+  font-size: 13px !important; font-weight: 600 !important; color: var(--mp-ink); }
+.mp-person-acts .is-yes { background: var(--mp-emerald) !important; border-color: var(--mp-emerald) !important; color: #FFFFFF; }
+.mp-more { display: block; width: 100%; margin-top: 6px; padding: 10px 0 0 !important; border: 0 !important; border-top: 1px solid var(--mp-line) !important;
+  background: none !important; color: var(--mp-emerald); font-size: 14px !important; font-weight: 600 !important; text-align: center; }
+
+.mp-danger { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 26px 20px 4px; text-align: center; }
+.mp-danger > button, .mp-danger span button { border: 0 !important; background: none !important; color: #B3261E; font-size: 14px !important; font-weight: 600 !important; }
+.mp-danger p { margin: 0; font-size: 14px; color: var(--mp-ink); }
+.mp-danger span { display: flex; gap: 10px; }
+.mp-danger span button { height: 36px; padding: 0 16px !important; border-radius: 18px; border: 1px solid #D9D6CF !important; color: var(--mp-ink); background: #FFFFFF !important; }
+.mp-danger span .is-yes { background: #B3261E !important; border-color: #B3261E !important; color: #FFFFFF; }

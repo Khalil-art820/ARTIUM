@@ -5790,7 +5790,8 @@ export default function App() {
           )}
           {appTab === "profile" && !selectedStudentId && myProfile && (
             <>
-              {netHeaderWith(backFromMyProfile)}
+              {/* The profile draws its own back button over the cover photo. */}
+              {!MODERN && netHeaderWith(backFromMyProfile)}
               <MyProfile profile={myProfile} onEdit={editProfile} onLogout={handleLogout}
                 connections={MODERN && appConn.ready ? (() => {
                   const person = (id, connId) => {
@@ -12598,8 +12599,30 @@ function StudentProfile({ student, conservatory, onBack, onMessage, locked, onAp
 // the portrait and name sit on its lower edge; then Connect and Message, their
 // links, and cards for what Artium knows about them. Nothing here that Artium
 // doesn't do: no menu, no list of their connections (only the count).
-function MusicianProfile({ student, conservatory, connCount, onBack, onMessage, connect, locked, onApply }) {
+//
+// `owner`: the same page as its owner sees it, with Edit profile and Log out
+// for actions, cover photo controls on the photo, their connections listed
+// (requests first), and Delete account at the foot.
+function MusicianProfile({ student, conservatory, connCount, onBack, onMessage, connect, locked, onApply, owner }) {
   const [playing, setPlaying] = useState(null);
+  const [brokenCover, setBrokenCover] = useState("");
+  const coverInput = useRef(null);
+  const [coverBusy, setCoverBusy] = useState(false);
+  const [coverErr, setCoverErr] = useState("");
+  const [allConn, setAllConn] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  async function pickCover(e) {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if (!file || !owner) return;
+    setCoverErr(""); setCoverBusy(true);
+    const r = await uploadCoverPhoto(file);
+    setCoverBusy(false);
+    if (r.error) { setCoverErr(r.error); return; }
+    owner.onUpdateCoverPhoto && owner.onUpdateCoverPhoto(r.url);
+  }
+  const conns = owner?.connections;
   const [durations, setDurations] = useState({});
   const s = student;
   const links = LINK_FIELDS.filter((f) => (s.links || {})[f.key]);
@@ -12623,9 +12646,21 @@ function MusicianProfile({ student, conservatory, connCount, onBack, onMessage, 
     <div className="mp">
       <div className="mp-inner">
         <div className="mp-hero">
-          {s.coverPhotoUrl ? <img className="mp-hero-img" src={s.coverPhotoUrl} alt="" /> : <div className="mp-hero-blank" />}
+          {s.coverPhotoUrl && brokenCover !== s.coverPhotoUrl
+            ? <img className="mp-hero-img" src={s.coverPhotoUrl} alt="" onError={() => setBrokenCover(s.coverPhotoUrl)} />
+            : <div className="mp-hero-blank" />}
           {onBack && <button type="button" className="mp-back" onClick={onBack} aria-label="Back"><ChevronLeft size={20} strokeWidth={2.2} /></button>}
+          {owner && (
+            <div className="mp-cover-tools">
+              <button type="button" disabled={coverBusy} onClick={() => coverInput.current && coverInput.current.click()}>
+                <Upload size={14} strokeWidth={2.2} />{coverBusy ? "Uploading…" : s.coverPhotoUrl ? "Change cover" : "Add a cover photo"}
+              </button>
+              {s.coverPhotoUrl && !coverBusy && <button type="button" onClick={() => owner.onUpdateCoverPhoto && owner.onUpdateCoverPhoto("")}>Remove</button>}
+              <input ref={coverInput} type="file" accept="image/*" hidden onChange={pickCover} />
+            </div>
+          )}
         </div>
+        {coverErr && <p className="mp-cover-err">{coverErr}</p>}
 
         <div className="mp-id">
           <div className="mp-portrait"><span>{s.photoUrl ? <img src={s.photoUrl} alt="" /> : initials(s.name || "?")}</span></div>
@@ -12636,7 +12671,12 @@ function MusicianProfile({ student, conservatory, connCount, onBack, onMessage, 
           </div>
         </div>
 
-        {locked ? (
+        {owner ? (
+          <div className="mp-actions">
+            <button type="button" className="mp-btn is-solid" onClick={owner.onEdit}><Pencil size={16} strokeWidth={2} />Edit profile</button>
+            {owner.onLogout && <button type="button" className="mp-btn is-line" onClick={owner.onLogout}>Log Out</button>}
+          </div>
+        ) : locked ? (
           <div className="mp-actions"><button type="button" className="mp-btn is-solid" onClick={onApply}>{`Sign up to message ${first}`}</button></div>
         ) : (cfg || onMessage) && (
           <div className="mp-actions">
@@ -12685,7 +12725,36 @@ function MusicianProfile({ student, conservatory, connCount, onBack, onMessage, 
             </section>
           )}
 
-          {connCount != null && (
+          {conns ? (
+            <section className="mp-card">
+              <h3 className="mp-label"><Users size={18} strokeWidth={1.8} />Connections<em>{conns.list.length}</em></h3>
+              {conns.incoming.map((p) => (
+                <div key={p.id} className="mp-person">
+                  <button type="button" className="mp-person-who" onClick={() => conns.onOpen(p.id)}>
+                    <span className="mp-person-face">{p.photo ? <img src={p.photo} alt="" /> : initials(p.name || "?")}</span>
+                    <span><b data-no-translate="">{p.name}</b><em>Wants to connect</em></span>
+                  </button>
+                  <span className="mp-person-acts">
+                    <button type="button" className="is-yes" onClick={() => conns.onAccept(p.connId)}>Accept</button>
+                    <button type="button" onClick={() => conns.onDecline(p.connId)}>Decline</button>
+                  </span>
+                </div>
+              ))}
+              {conns.list.length === 0 && conns.incoming.length === 0 && (
+                <p className="mp-muted">No connections yet. Find musicians on the Network page and tap Connect.</p>
+              )}
+              {(allConn ? conns.list : conns.list.slice(0, 4)).map((p) => (
+                <button key={p.id} type="button" className="mp-person mp-person-who" onClick={() => conns.onOpen(p.id)}>
+                  <span className="mp-person-face">{p.photo ? <img src={p.photo} alt="" /> : initials(p.name || "?")}</span>
+                  <span><b data-no-translate="">{p.name}</b><em data-no-translate="">{[p.instrument, p.place].filter(Boolean).join(" · ")}</em></span>
+                  <ChevronRight size={16} strokeWidth={2} className="mp-person-go" />
+                </button>
+              ))}
+              {conns.list.length > 4 && (
+                <button type="button" className="mp-more" onClick={() => setAllConn((v) => !v)}>{allConn ? "Show less" : `See all (${conns.list.length})`}</button>
+              )}
+            </section>
+          ) : connCount != null && (
             <section className="mp-card">
               <h3 className="mp-label"><Users size={18} strokeWidth={1.8} />Connections</h3>
               <p className="mp-count"><b>{connCount}</b><span>{connCount === 1 ? "connection on Artium" : "connections on Artium"}</span></p>
@@ -12749,6 +12818,20 @@ function MusicianProfile({ student, conservatory, connCount, onBack, onMessage, 
             </section>
           )}
         </div>
+        {owner?.onDeleteAccount && (
+          <div className="mp-danger">
+            {!confirmDelete ? (
+              <button type="button" onClick={() => setConfirmDelete(true)}>Delete account</button>
+            ) : (<>
+              <p>Delete your account? This can't be undone.</p>
+              <span>
+                <button type="button" className="is-yes" disabled={deleting} onClick={async () => { setDeleting(true); await owner.onDeleteAccount(); setDeleting(false); }}>{deleting ? "Deleting…" : "Yes, delete"}</button>
+                <button type="button" onClick={() => setConfirmDelete(false)}>Cancel</button>
+              </span>
+            </>)}
+          </div>
+        )}
+        {owner?.footer}
       </div>
 
       {playing && (
@@ -12808,6 +12891,10 @@ function MyConnections({ list, incoming, onOpen, onAccept, onDecline }) {
 
 function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack, onUpdateCoverPhoto, connections }) {
   const cons = findConservatory(profile.conservatoryId);
+  if (MODERN) {
+    return <MusicianProfile student={profile} conservatory={cons} onBack={onBack}
+      owner={{ onEdit, onLogout, onDeleteAccount, onUpdateCoverPhoto, connections, footer: <LegalLinks /> }} />;
+  }
   const [confirmDelete, setConfirmDelete] = React.useState(false);
   const [deleting, setDeleting] = React.useState(false);
 
