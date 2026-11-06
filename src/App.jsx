@@ -73,6 +73,7 @@ const Globe = lazy(() => import("react-globe.gl"));
 const NetworkGlobe = lazy(() => import("./components/network/NetworkGlobe.jsx"));
 import "leaflet/dist/leaflet.css";
 import "./theme-modern.css";
+import "./components/profile/musician-profile.css";
 import ArtiumWord from "./components/ArtiumWord";
 import ArtiumMenu, { readLang } from "./components/ArtiumMenu.jsx";
 import ArtiumMark from "./components/ArtiumMark.jsx";
@@ -5873,7 +5874,8 @@ export default function App() {
             </>
           )}
           {selectedStudentId && myProfile && (<>
-            {netHeaderWith(backFromProfile)}
+            {/* The profile draws its own back button over the cover photo. */}
+            {!MODERN && netHeaderWith(backFromProfile)}
             <StudentProfile
               student={students.find((s) => s.id === selectedStudentId)}
               conservatory={findConservatory(students.find((s) => s.id === selectedStudentId)?.conservatoryId)}
@@ -12493,6 +12495,10 @@ function StudentProfile({ student, conservatory, onBack, onMessage, locked, onAp
     return () => { alive = false; window.removeEventListener(CONN_EVENT, load); };
   }, [student?.id]);
   if (!student) return null;
+  if (MODERN) {
+    return <MusicianProfile student={student} conservatory={conservatory} connCount={connCount}
+      onBack={onBack} onMessage={onMessage} connect={connect} locked={locked} onApply={onApply} />;
+  }
 
   const Row = ({ label, children }) => (
     <div style={{ background: MODERN ? "#FFFFFF" : warm("0.05"), border: `1px solid ${C.inkLine}`, borderRadius: MODERN ? 12 : 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
@@ -12583,6 +12589,174 @@ function StudentProfile({ student, conservatory, onBack, onMessage, locked, onAp
   return (
     <div style={{ maxWidth: 640, margin: "0 auto", padding: "40px 24px" }}>
       {profileCards}
+    </div>
+  );
+}
+
+// A musician's profile as other members see it (components/profile/
+// musician-profile.css). The cover photo is the hero, fading into the page;
+// the portrait and name sit on its lower edge; then Connect and Message, their
+// links, and cards for what Artium knows about them. Nothing here that Artium
+// doesn't do: no menu, no list of their connections (only the count).
+function MusicianProfile({ student, conservatory, connCount, onBack, onMessage, connect, locked, onApply }) {
+  const [playing, setPlaying] = useState(null);
+  const [durations, setDurations] = useState({});
+  const s = student;
+  const links = LINK_FIELDS.filter((f) => (s.links || {})[f.key]);
+  const t = s.teaching || {};
+  const mode = t.mode === "online" ? "Online" : (t.mode === "in-person" || t.mode === "physical") ? "In person" : "Online & in person";
+  const videos = s.performanceVideos || [];
+  const concerts = s.concerts || {};
+  const first = (s.name || "").split(" ")[0];
+  const place = conservatory ? [conservatory.name, conservatory.city].filter(Boolean).join(", ") : "";
+  const fmt = (sec) => (Number.isFinite(sec) ? `${Math.floor(sec / 60)}:${String(Math.round(sec % 60)).padStart(2, "0")}` : "");
+  const cfg = connect && (connect.state === "connected" ? { cls: "is-done", label: "Connected", icon: <CheckIcon size={16} strokeWidth={2.6} />, fn: () => { if (window.confirm("Remove this connection?")) connect.onRemove(); } }
+    : connect.state === "sent" ? { cls: "is-muted", label: "Requested", icon: null, fn: () => { if (window.confirm("Cancel your connection request?")) connect.onCancel(); } }
+    : connect.state === "received" ? { cls: "is-solid", label: "Accept request", icon: <CheckIcon size={16} strokeWidth={2.6} />, fn: connect.onAccept }
+    : { cls: "is-solid", label: "Connect", icon: <UserPlus size={16} strokeWidth={2.2} />, fn: connect.onConnect });
+  const Clef = () => (
+    <svg className="mp-deco" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.1" aria-hidden="true">
+      <path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" />
+    </svg>
+  );
+  return (
+    <div className="mp">
+      <div className="mp-inner">
+        <div className="mp-hero">
+          {s.coverPhotoUrl ? <img className="mp-hero-img" src={s.coverPhotoUrl} alt="" /> : <div className="mp-hero-blank" />}
+          {onBack && <button type="button" className="mp-back" onClick={onBack} aria-label="Back"><ChevronLeft size={20} strokeWidth={2.2} /></button>}
+        </div>
+
+        <div className="mp-id">
+          <div className="mp-portrait"><span>{s.photoUrl ? <img src={s.photoUrl} alt="" /> : initials(s.name || "?")}</span></div>
+          <div className="mp-who">
+            <h1 className="mp-name"><span data-no-translate="">{s.name}</span>{s.conservatoryVerified && <NxVerified size={20} />}</h1>
+            <p className="mp-line">{instrumentLabel(s)}{s.year && <><i>•</i>{s.year}</>}</p>
+            {place && <p className="mp-place"><MapPin size={14} strokeWidth={2} /><span data-no-translate="">{place}</span></p>}
+          </div>
+        </div>
+
+        {locked ? (
+          <div className="mp-actions"><button type="button" className="mp-btn is-solid" onClick={onApply}>{`Sign up to message ${first}`}</button></div>
+        ) : (cfg || onMessage) && (
+          <div className="mp-actions">
+            {cfg && <button type="button" className={`mp-btn ${cfg.cls}`} onClick={cfg.fn}>{cfg.icon}{cfg.label}</button>}
+            {onMessage && <button type="button" className={`mp-btn ${cfg ? "is-line" : "is-solid"}`} onClick={onMessage}><MessageCircle size={16} strokeWidth={2} />Message</button>}
+          </div>
+        )}
+
+        {links.length > 0 && (
+          <div className="mp-links">
+            {links.map(({ key, label, Icon }) => (
+              <a key={key} className="mp-link" href={href(s.links[key])} target="_blank" rel="noreferrer"><Icon size={16} strokeWidth={1.8} />{label}</a>
+            ))}
+          </div>
+        )}
+
+        <div className="mp-cards">
+          {s.bio && (
+            <section className="mp-card">
+              <h3 className="mp-label"><FileText size={17} strokeWidth={1.8} />About me</h3>
+              <p className="mp-prose" data-no-translate="">{s.bio}</p>
+              <Clef />
+            </section>
+          )}
+
+          {(s.tastes || []).length > 0 && (
+            <section className={`mp-card${t.open ? " is-half" : ""}`}>
+              <h3 className="mp-label"><Music2 size={17} strokeWidth={1.8} />Musical preferences</h3>
+              <div className="mp-chips">{s.tastes.map((x) => <span key={x} className="mp-chip">{x}</span>)}</div>
+            </section>
+          )}
+          {t.open && (
+            <section className={`mp-card${(s.tastes || []).length ? " is-half" : ""}`}>
+              <h3 className="mp-label"><GraduationCap size={18} strokeWidth={1.8} />Teaching</h3>
+              <p className="mp-teach-mode">{mode}</p>
+              {t.price && <p className="mp-teach-price">€{t.price}<span> / session</span></p>}
+              {t.mode !== "online" && (t.cities || []).length > 0 && (
+                <p className="mp-teach-where"><MapPin size={14} strokeWidth={2} /><span data-no-translate="">{t.cities.join(", ")}</span></p>
+              )}
+            </section>
+          )}
+          {t.open && t.pitch && (
+            <section className="mp-card">
+              <h3 className="mp-label"><GraduationCap size={18} strokeWidth={1.8} />A first lesson with {first}</h3>
+              <p className="mp-small" data-no-translate="">{t.pitch}</p>
+            </section>
+          )}
+
+          {connCount != null && (
+            <section className="mp-card">
+              <h3 className="mp-label"><Users size={18} strokeWidth={1.8} />Connections</h3>
+              <p className="mp-count"><b>{connCount}</b><span>{connCount === 1 ? "connection on Artium" : "connections on Artium"}</span></p>
+            </section>
+          )}
+
+          {videos.length > 0 && (
+            <section className="mp-card">
+              <h3 className="mp-label"><Play size={17} strokeWidth={1.8} />Media</h3>
+              <div className={`mp-media${videos.length === 1 ? " is-one" : ""}`}>
+                {videos.map((u) => (
+                  <button key={u} type="button" className="mp-tile" onClick={() => setPlaying(u)} aria-label="Play video">
+                    <video src={`${u}#t=0.1`} muted playsInline preload="metadata"
+                      onLoadedMetadata={(e) => { const d = e.currentTarget.duration; setDurations((m) => ({ ...m, [u]: d })); }} />
+                    <span className="mp-play"><Play size={20} strokeWidth={0} fill="currentColor" /></span>
+                    {durations[u] != null && <span className="mp-dur">{fmt(durations[u])}</span>}
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {(s.pieces || []).length > 0 && (
+            <section className="mp-card">
+              <h3 className="mp-label"><Music size={17} strokeWidth={1.8} />Current repertoire</h3>
+              <div className="mp-pieces">
+                {s.pieces.map((p, i) => (
+                  <div key={i} className="mp-piece">
+                    <span className="mp-piece-t"><b data-no-translate="">{p.title}</b><span data-no-translate="">{p.composer}</span></span>
+                    {PIECE_STATUS[p.status] && <span className={`pc-pill pc-pill--${p.status}`}>{PIECE_STATUS[p.status].label}</span>}
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {concerts.open && (concerts.regions || []).length > 0 && (
+            <section className="mp-card">
+              <h3 className="mp-label"><Music2 size={17} strokeWidth={1.8} />Concerts</h3>
+              <p className="mp-small">Available to perform in <span data-no-translate="">{concerts.regions.join(", ")}</span></p>
+              {(concerts.formats || []).length > 0 && <div className="mp-chips" style={{ marginTop: 10 }}>{concerts.formats.map((x) => <span key={x} className="mp-chip">{x}</span>)}</div>}
+            </section>
+          )}
+
+          {s.top && (
+            <section className={`mp-card${s.flop ? " is-half" : ""}`}>
+              <h3 className="mp-label">Recent win</h3>
+              <p className="mp-small" data-no-translate="">{s.top}</p>
+            </section>
+          )}
+          {s.flop && (
+            <section className={`mp-card${s.top ? " is-half" : ""}`}>
+              <h3 className="mp-label">Current challenge</h3>
+              <p className="mp-small" data-no-translate="">{s.flop}</p>
+            </section>
+          )}
+          {s.composerDay && (
+            <section className="mp-card">
+              <h3 className="mp-label">A day with a composer</h3>
+              <p className="mp-small" data-no-translate="">{s.composerDay}</p>
+            </section>
+          )}
+        </div>
+      </div>
+
+      {playing && (
+        <div className="mp-player" role="dialog" aria-label="Video" onClick={() => setPlaying(null)}>
+          <video src={playing} controls autoPlay playsInline onClick={(e) => e.stopPropagation()} />
+          <button type="button" className="mp-player-x" onClick={() => setPlaying(null)} aria-label="Close"><X size={22} strokeWidth={2.2} /></button>
+        </div>
+      )}
     </div>
   );
 }
