@@ -89,6 +89,7 @@ const IconSearch = () => <Icon d={<><path d="M17.2 9.6A7 7 0 1 1 13 4.4" /><path
 // The list button at the top left: three lines, each with a dot.
 const IconSelect = () => <Icon d={<><circle cx="4.5" cy="6" r="1.4" /><circle cx="4.5" cy="12" r="1.4" /><circle cx="4.5" cy="18" r="1.4" /><path d="M9.5 6H20M9.5 12H20M9.5 18H20" /></>} size={26} sw={1.9} />;
 const IconClose = () => <Icon d={<path d="M5 5l14 14M19 5L5 19" />} size={26} sw={1.9} />;
+const IconDots = () => <Icon d={<><circle cx="5" cy="12" r="1.3" fill="currentColor" /><circle cx="12" cy="12" r="1.3" fill="currentColor" /><circle cx="19" cy="12" r="1.3" fill="currentColor" /></>} size={24} sw={1.2} />;
 const IconTick = () => <Icon d={<path d="M5 12.5l4.5 4.5L19 7.5" />} size={15} sw={3} />;
 
 // The inbox. `trusted`: ids that always land in Primary (connections; for a
@@ -118,8 +119,14 @@ export default function DirectMessages({ people, conversations, activeId, setAct
   // (dm_accepted).
   const [cleared, setCleared] = useState({});
   const [accepted, setAccepted] = useState({});
+  // People you blocked (dm_blocks): their conversation sits in Blocked, and
+  // the database refuses messages either way until you unblock them.
+  const [blocked, setBlocked] = useState({});
   useEffect(() => {
     let live = true;
+    supabase.from("dm_blocks").select("blocked_id").then(({ data, error }) => {
+      if (live && !error && data) setBlocked(Object.fromEntries(data.map((r) => [r.blocked_id, true])));
+    });
     supabase.from("dm_cleared").select("peer_id, cleared_at").then(({ data, error }) => {
       if (live && !error && data) setCleared(Object.fromEntries(data.map((r) => [r.peer_id, ms(r.cleared_at)])));
     });
@@ -138,12 +145,26 @@ export default function DirectMessages({ people, conversations, activeId, setAct
   const rows = useMemo(() => ids.map((id) => {
     const thread = visible(id);
     const last = thread[thread.length - 1];
-    return { id, thread, last, request: isRequest(id), when: last ? ms(last.at) || Date.now() : Date.now(), unread: thread.some((m) => m.from === "them" && !m.readAt) };
+    const fold = blocked[id] ? "blocked" : isRequest(id) ? "requests" : "primary";
+    return { id, thread, last, fold, request: fold === "requests", when: last ? ms(last.at) || Date.now() : Date.now(), unread: fold !== "blocked" && thread.some((m) => m.from === "them" && !m.readAt) };
   }).filter((r) => r.thread.length || !cleared[r.id] || r.id === activeId)
-    .sort((a, b) => b.when - a.when), [conversations, cleared, accepted, activeId, trustedKey]); // eslint-disable-line react-hooks/exhaustive-deps
-  const inFolder = rows.filter((r) => (folder === "requests" ? r.request : !r.request));
+    .sort((a, b) => b.when - a.when), [conversations, cleared, accepted, blocked, activeId, trustedKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  const inFolder = rows.filter((r) => r.fold === folder);
   const shown = inFolder.filter((r) => !q.trim() || (person(r.id).name || "").toLowerCase().includes(q.trim().toLowerCase()));
-  const unreadIn = (f) => rows.filter((r) => (f === "requests" ? r.request : !r.request) && r.unread).length;
+  const unreadIn = (f) => rows.filter((r) => r.fold === f && r.unread).length;
+  async function blockPeer(peer) {
+    const p = person(peer);
+    if (!window.confirm(`Block ${p.name || "this person"}? Neither of you will be able to message the other until you unblock them.`)) return;
+    const { error } = await supabase.from("dm_blocks").insert({ user_id: myId, blocked_id: peer });
+    if (error && !/duplicate/i.test(error.message || "")) { window.alert("Couldn't block. Please try again."); return; }
+    setBlocked((b) => ({ ...b, [peer]: true }));
+    if (actions.markRead) actions.markRead([peer]);
+  }
+  async function unblockPeer(peer) {
+    const { error } = await supabase.from("dm_blocks").delete().eq("user_id", myId).eq("blocked_id", peer);
+    if (error) { window.alert("Couldn't unblock. Please try again."); return; }
+    setBlocked((b) => { const n = { ...b }; delete n[peer]; return n; });
+  }
 
   // Select mode, from the list button: tick conversations, then act on them
   // from the bar at the bottom.
@@ -198,7 +219,7 @@ export default function DirectMessages({ people, conversations, activeId, setAct
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search" />
         </label>
         <div className={`dm-folders${selecting ? " is-dim" : ""}`}>
-          {[["primary", "Primary"], ["requests", "Requests"]].map(([k, label]) => {
+          {[["primary", "Primary"], ["requests", "Requests"], ["blocked", "Blocked"]].map(([k, label]) => {
             const n = unreadIn(k);
             return (
               <button key={k} type="button" className={`dm-folder${folder === k ? " is-on" : ""}`} onClick={() => setFolder(k)} disabled={selecting}>
@@ -214,6 +235,9 @@ export default function DirectMessages({ people, conversations, activeId, setAct
             {folder === "requests" ? (<>
               <p className="dm-empty-t">No message requests</p>
               <p className="dm-empty-d">Messages from people you're not connected with appear here.</p>
+            </>) : folder === "blocked" ? (<>
+              <p className="dm-empty-t">No one blocked</p>
+              <p className="dm-empty-d">Conversations with people you block appear here.</p>
             </>) : (<>
               <p className="dm-empty-t">No messages yet</p>
               <p className="dm-empty-d">Message a musician from their profile to start a conversation.</p>
@@ -251,6 +275,10 @@ export default function DirectMessages({ people, conversations, activeId, setAct
             <button type="button" disabled={!picked.length} onClick={async () => { if (await acceptChats(picked)) endSelect(); }}>
               {`Accept (${picked.length})`}
             </button>
+          ) : folder === "blocked" ? (
+            <button type="button" disabled={!picked.length} onClick={async () => { for (const p of picked) await unblockPeer(p); endSelect(); }}>
+              {`Unblock (${picked.length})`}
+            </button>
           ) : (
             <button type="button" disabled={!picked.length} onClick={() => { (anyUnread ? actions.markRead : actions.markUnread)(picked); endSelect(); }}>
               {anyUnread ? `Mark as read (${picked.length})` : `Mark as unread (${picked.length})`}
@@ -262,7 +290,8 @@ export default function DirectMessages({ people, conversations, activeId, setAct
       {activeId && (
         <Thread key={activeId} peer={person(activeId)} thread={visible(activeId)} actions={actions}
           onBack={() => setActiveId(null)} onOpenProfile={onOpenProfile}
-          request={isRequest(activeId) ? {
+          blocked={!!blocked[activeId]} onBlock={() => blockPeer(activeId)} onUnblock={() => unblockPeer(activeId)}
+          request={!blocked[activeId] && isRequest(activeId) ? {
             onAccept: () => acceptChats([activeId]),
             onDelete: async () => { if (window.confirm("Delete this chat? It's removed from your inbox only.") && await clearChats([activeId])) setActiveId(null); },
           } : null} />
@@ -275,6 +304,7 @@ export default function DirectMessages({ people, conversations, activeId, setAct
 function rowLine(last) {
   if (!last) return <span>Say hello</span>;
   if (last.from === "me") {
+    if (last.failed) return <span>Not delivered</span>;
     if (last.optimistic) return <span>Sending…</span>;
     if (last.readAt) { const a = age(last.readAt); return <span>{a ? `Seen ${a} ago` : "Seen just now"}</span>; }
     const a = age(last.at);
@@ -287,8 +317,10 @@ function rowLine(last) {
 // A conversation. Full screen over the inbox, or `embedded` in a page (the
 // learner's lesson room). `request`: an unaccepted request, shown with Accept
 // and Delete instead of the composer, and not marked read until accepted.
-export function Thread({ peer, thread, actions, onBack, onOpenProfile, embedded = false, request = null }) {
+export function Thread({ peer, thread, actions, onBack, onOpenProfile, embedded = false, request = null, blocked = false, onBlock, onUnblock }) {
   const [text, setText] = useState("");
+  const [headMenu, setHeadMenu] = useState(false);
+  const rootRef = useRef(null);
   const [replyTo, setReplyTo] = useState(null);   // a message
   const [editing, setEditing] = useState(null);   // a message
   const [menu, setMenu] = useState(null);         // a message
@@ -323,6 +355,25 @@ export function Thread({ peer, thread, actions, onBack, onOpenProfile, embedded 
     const el = bodyRef.current;
     if (el && stuck.current) el.scrollTop = el.scrollHeight;
   }, [lastKey]);
+  // When the keyboard opens, phones shrink (or pan) the visible part of the
+  // page. The conversation is sized to exactly that visible part, so the
+  // messages stay on screen above the keyboard, still at the latest one.
+  useEffect(() => {
+    const vv = window.visualViewport;
+    const root = rootRef.current;
+    if (embedded || !vv || !root) return undefined;
+    const fit = () => {
+      root.style.height = `${vv.height}px`;
+      root.style.bottom = "auto";
+      root.style.transform = vv.offsetTop ? `translateY(${vv.offsetTop}px)` : "";
+      const el = bodyRef.current;
+      if (el && stuck.current) el.scrollTop = el.scrollHeight;
+    };
+    fit();
+    vv.addEventListener("resize", fit);
+    vv.addEventListener("scroll", fit);
+    return () => { vv.removeEventListener("resize", fit); vv.removeEventListener("scroll", fit); };
+  }, [embedded]);
   const paint = () => {
     const el = bodyRef.current;
     if (!el) return;
@@ -376,7 +427,7 @@ export function Thread({ peer, thread, actions, onBack, onOpenProfile, embedded 
   const last = thread[thread.length - 1];
 
   return (
-    <div className={`dm-thread${embedded ? " is-embedded" : ""}`} role={embedded ? undefined : "dialog"} aria-label={peer.name}>
+    <div ref={rootRef} className={`dm-thread${embedded ? " is-embedded" : ""}`} role={embedded ? undefined : "dialog"} aria-label={peer.name}>
       {!embedded && <header className="dm-head">
         <button type="button" className="dm-icon" onClick={onBack} aria-label="Back"><IconBack /></button>
         <button type="button" className="dm-head-who" onClick={() => onOpenProfile && peer.id && onOpenProfile(peer.id)} aria-label="Open profile">
@@ -386,6 +437,20 @@ export function Thread({ peer, thread, actions, onBack, onOpenProfile, embedded 
             {sub && <em data-no-translate="">{sub}</em>}
           </span>
         </button>
+        {(onBlock || onUnblock) && (
+          <div className="dm-head-more">
+            <button type="button" className="dm-icon" onClick={() => setHeadMenu((v) => !v)} aria-label="More options" aria-haspopup="menu" aria-expanded={headMenu}><IconDots /></button>
+            {headMenu && (<>
+              <div className="dm-head-scrim" onClick={() => setHeadMenu(false)} />
+              <div className="dm-head-menu" role="menu">
+                {onOpenProfile && peer.id && <button type="button" role="menuitem" onClick={() => { setHeadMenu(false); onOpenProfile(peer.id); }}>View profile</button>}
+                {blocked
+                  ? <button type="button" role="menuitem" onClick={() => { setHeadMenu(false); onUnblock(); }}>Unblock</button>
+                  : <button type="button" role="menuitem" className="is-danger" onClick={() => { setHeadMenu(false); onBlock(); }}>Block</button>}
+              </div>
+            </>)}
+          </div>
+        )}
       </header>}
 
       <div className="dm-body" ref={bodyRef} onScroll={onScroll}>
@@ -402,14 +467,22 @@ export function Thread({ peer, thread, actions, onBack, onOpenProfile, embedded 
                 top={top} bottom={bottom} showFace={m.from === "them" && bottom}
                 onMenu={() => setMenu(m)} onHeart={() => toggleHeart(m)} onSwipe={() => m.id && startReply(m)} />
               {m === last && m.from === "me" && (
-                <p className="dm-seen">{m.optimistic ? "Sending…" : m.readAt ? "Seen" : "Sent"}</p>
+                <p className={`dm-seen${m.failed ? " is-failed" : ""}`}>{m.failed ? "Not delivered" : m.optimistic ? "Sending…" : m.readAt ? "Seen" : "Sent"}</p>
               )}
             </React.Fragment>
           );
         })}
       </div>
 
-      {request ? (
+      {blocked ? (
+        <div className="dm-request">
+          <p className="dm-request-t">{`You blocked ${first || "this person"}`}</p>
+          <p className="dm-request-d">Neither of you can send messages until you unblock them.</p>
+          <div className="dm-request-btns">
+            <button type="button" className="is-accept" onClick={onUnblock}>Unblock</button>
+          </div>
+        </div>
+      ) : request ? (
         <div className="dm-request">
           <p className="dm-request-t">{`${first || "Someone"} wants to send you a message`}</p>
           <p className="dm-request-d">They won't know you've seen it until you accept.</p>
@@ -431,6 +504,7 @@ export function Thread({ peer, thread, actions, onBack, onOpenProfile, embedded 
         )}
         <div className="dm-input">
           <textarea ref={inputRef} rows={1} value={text} onChange={(e) => setText(e.target.value)} placeholder="Message…"
+            onFocus={() => { stuck.current = true; setTimeout(() => { const el = bodyRef.current; if (el) el.scrollTop = el.scrollHeight; }, 250); }}
             onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); submit(); } }} />
           {text.trim() && <button type="button" className="dm-send" onMouseDown={(e) => e.preventDefault()} onClick={submit}>{editing ? "Save" : "Send"}</button>}
         </div>

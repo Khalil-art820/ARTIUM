@@ -3608,8 +3608,11 @@ export default function App() {
     const peer = peerId;
     setConversations((c) => ({ ...c, [peer]: [...(c[peer] || []), { from: "me", text: body, optimistic: true, at: new Date().toISOString(), replyTo }] }));
     supabase.from("direct_messages").insert({ sender_id: authUser.id, recipient_id: peer, body, ...(replyTo ? { reply_to: replyTo } : {}) }).then(({ error }) => {
-      if (error) console.error("send message failed", error.message);
-      else if (dmLoadRef.current) dmLoadRef.current();
+      if (error) {
+        // Refused (a block, or offline): say so instead of "Sending…" forever.
+        console.error("send message failed", error.message);
+        setConversations((c) => ({ ...c, [peer]: (c[peer] || []).map((m) => (m.optimistic && m.text === body && !m.failed ? { ...m, failed: true } : m)) }));
+      } else if (dmLoadRef.current) dmLoadRef.current();
     });
   }
   // Edit, unsend and react go through the database functions that check who

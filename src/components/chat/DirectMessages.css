@@ -176,8 +176,17 @@ html .dm-input textarea:focus, html .dm-input textarea:focus-visible, html .dm-s
 html.theme-modern .dm-input textarea:focus, html.theme-modern .dm-input textarea:focus-visible, html.theme-modern .dm-search input:focus, html.theme-modern .dm-search input:focus-visible { outline: none !important; box-shadow: none !important; border: 0 !important; }
 .dm-input:focus-within, .dm-search:focus-within { outline: none !important; box-shadow: none !important; }
 
-/* A hairline between Primary and Requests. Both pills share one width, so with
-   the even spacing the middle of the gap is the middle of the row. */
+/* The folders share one width, spread with equal gaps. */
 .dm-folders { position: relative; }
-.dm-folder { width: 124px; justify-content: center; }
-.dm-folders::after { content: ""; position: absolute; left: 50%; top: 7px; bottom: 7px; width: 1px; transform: translateX(-.5px); background: #A8A8A8; pointer-events: none; }
+.dm-folder { width: 104px; justify-content: center; }
+
+
+/* The conversation's ⋯ menu (View profile, Block / Unblock). */
+.dm-head-more { position: relative; flex: none; }
+.dm-head-scrim { position: fixed; inset: 0; z-index: 1; }
+.dm-head-menu { position: absolute; right: 0; top: calc(100% + 4px); z-index: 2; min-width: 180px; padding: 6px; border-radius: 14px; background: #FFFFFF;
+  box-shadow: 0 10px 30px rgba(0,0,0,.18); }
+.dm-head-menu button { display: block; width: 100%; padding: 11px 12px !important; border-radius: 9px; text-align: left; font-size: 15px !important; }
+.dm-head-menu button:active { background: #F5F5F5 !important; }
+.dm-head-menu .is-danger { color: var(--dm-red) !important; }
+.dm-seen.is-failed { color: var(--dm-red); }
