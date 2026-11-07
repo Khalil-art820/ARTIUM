@@ -6166,12 +6166,10 @@ const IconTeacher = ({ size = 34 }) => (
 // Instagram's Direct: the paper plane, as Instagram draws it.
 const IconDirect = (p) => (
   <IconBox {...p}>
-    {/* A touch smaller and lower than Instagram's own box, so it sits on
-        the same line as the other tab icons. */}
-    <g transform="translate(1.6 2.4) scale(0.86)">
-      <path className="ig-direct-body" d="M11.698 20.334 22 3.001H2l7.218 7.083z" />
-      <path className="ig-direct-fold" d="M22 3 9.218 10.083" />
-    </g>
+    {/* Instagram's current plane: a rounded triangle with its flat top,
+        point down, a notch on the left where the crease runs up to the right. */}
+    <path className="ig-direct-body" d="M8.0 12.2 L5.01 7.58 Q3.6 5.4 6.2 5.28 L17.6 4.73 Q20.4 4.6 19.0 7.03 L12.5 18.35 Q11.2 20.6 10.27 18.17 Z" />
+    <path className="ig-direct-fold" d="M8.0 12.2 L15.4 9.0" />
   </IconBox>
 );
 const IconMegaphone = (p) => (
