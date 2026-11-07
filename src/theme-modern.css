@@ -1378,3 +1378,7 @@ html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern .tm-tab-dot{top:auto;bo
 html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button::after{background:#000000}
 /* Home, selected: the house solid black, its arched door left open. */
 html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button[data-k="home"][data-on="1"] svg{fill:currentColor;fill-opacity:1}
+/* Globe, not selected: its many lines drawn finer and a softer black, so it
+   weighs the same as the other icons. */
+html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button[data-k="map"]:not([data-on="1"]){color:#3A3A3A}
+html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button[data-k="map"]:not([data-on="1"]) svg{stroke-width:1.45}
