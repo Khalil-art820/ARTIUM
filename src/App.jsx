@@ -5895,6 +5895,8 @@ export default function App() {
               })() : null}
               locked={previewOnly && !myProfile}
               onApply={startApply}
+              people={students}
+              onOpenPerson={(id) => openStudent(id, profileBack)}
             />
           </>)}
         </AppShell>
@@ -12484,7 +12486,7 @@ function PerfVideosRow({ urls }) {
   );
 }
 
-function StudentProfile({ student, conservatory, onBack, onMessage, locked, onApply, connect }) {
+function StudentProfile({ student, conservatory, onBack, onMessage, locked, onApply, connect, people, onOpenPerson }) {
   // Their number of connections (supabase/migrations/20261018100000_connection_count.sql).
   // Refreshed when a connection changes anywhere; hidden if the function is missing.
   const [connCount, setConnCount] = React.useState(null);
@@ -12501,7 +12503,8 @@ function StudentProfile({ student, conservatory, onBack, onMessage, locked, onAp
   if (!student) return null;
   if (MODERN) {
     return <MusicianProfile student={student} conservatory={conservatory} connCount={connCount}
-      onBack={onBack} onMessage={onMessage} connect={connect} locked={locked} onApply={onApply} />;
+      onBack={onBack} onMessage={onMessage} connect={connect} locked={locked} onApply={onApply}
+      people={people} onOpenPerson={onOpenPerson} />;
   }
 
   const Row = ({ label, children }) => (
@@ -12621,7 +12624,20 @@ const IconMessenger = ({ knockout }) => (
     <path d="M6.4 14.1l3.4-3.6 2.5 2.4 3.4-3.6" fill="none" stroke={knockout} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
-function MusicianProfile({ student, conservatory, connCount, onBack, onMessage, connect, locked, onApply, owner }) {
+function MusicianProfile({ student, conservatory, connCount, onBack, onMessage, connect, locked, onApply, owner, people, onOpenPerson }) {
+  // "N connections": on your own profile it scrolls to your list; on someone
+  // else's it opens theirs (member_connections), each one tappable.
+  const connRef = useRef(null);
+  const [connSheet, setConnSheet] = useState(null);   // null | "loading" | [person]
+  async function openConnections() {
+    if (owner) { connRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }); return; }
+    setConnSheet("loading");
+    const { data, error } = await supabase.rpc("member_connections", { p_id: student.id });
+    if (error) { setConnSheet([]); return; }
+    const byId = Object.fromEntries((people || []).map((p) => [p.id, p]));
+    setConnSheet((data || []).map((r) => byId[r.other_id]).filter(Boolean)
+      .sort((a, b) => (a.name || "").localeCompare(b.name || "")));
+  }
   const [playing, setPlaying] = useState(null);
   const [brokenCover, setBrokenCover] = useState("");
   const coverInput = useRef(null);
@@ -12689,7 +12705,11 @@ function MusicianProfile({ student, conservatory, connCount, onBack, onMessage, 
           <div className="mp-portrait">{s.photoUrl ? <img src={s.photoUrl} alt="" /> : <span>{initials(s.name || "?")}</span>}</div>
           <div className="mp-who">
             <h1 className="mp-name"><span data-no-translate="">{s.name}</span>{s.conservatoryVerified && <NxVerified size={20} color="#800020" />}</h1>
-            {nConn != null && <p className="mp-conn-count">{nConn === 1 ? "1 connection" : `${nConn} connections`}</p>}
+            {nConn != null && (
+              <button type="button" className="mp-conn-count" onClick={openConnections} disabled={!nConn}>
+                {nConn === 1 ? "1 connection" : `${nConn} connections`}
+              </button>
+            )}
           </div>
         </header>
         {/* The details run the full width under the portrait, so they keep to
@@ -12758,7 +12778,7 @@ function MusicianProfile({ student, conservatory, connCount, onBack, onMessage, 
         )}
 
         {conns ? (
-          <section className="mp-sec">
+          <section className="mp-sec" ref={connRef}>
             <div className="mp-h-row">
               <h2 className="mp-h">Connections</h2>
               {conns.list.length > 4
@@ -12861,6 +12881,29 @@ function MusicianProfile({ student, conservatory, connCount, onBack, onMessage, 
         )}
         {owner?.footer}
       </div>
+
+      {connSheet && (
+        <div className="mp-sheet-root" onClick={() => setConnSheet(null)}>
+          <div className="mp-sheet" role="dialog" aria-label="Connections" onClick={(e) => e.stopPropagation()}>
+            <div className="mp-sheet-head">
+              <h2>Connections</h2>
+              <button type="button" onClick={() => setConnSheet(null)} aria-label="Close"><X size={20} strokeWidth={2} /></button>
+            </div>
+            {connSheet === "loading" ? <p className="mp-quiet">Loading…</p>
+              : connSheet.length === 0 ? <p className="mp-quiet">No connections to show.</p>
+              : connSheet.map((p) => {
+                const c = findConservatory(p.conservatoryId);
+                return (
+                  <button key={p.id} type="button" className="mp-row mp-row-who" onClick={() => { setConnSheet(null); onOpenPerson && onOpenPerson(p.id); }}>
+                    <span className="mp-face">{p.photoUrl ? <img src={p.photoUrl} alt="" /> : initials(p.name || "?")}</span>
+                    <span className="mp-row-t"><b data-no-translate="">{p.name}</b><em data-no-translate="">{[instrumentLabel(p), c ? [c.city, c.country].filter(Boolean).join(", ") : ""].filter(Boolean).join(" · ")}</em></span>
+                    <ChevronRight size={18} strokeWidth={1.6} className="mp-go" />
+                  </button>
+                );
+              })}
+          </div>
+        </div>
+      )}
 
       {playing && (
         <div className="mp-player" role="dialog" aria-label="Video" onClick={() => setPlaying(null)}>
