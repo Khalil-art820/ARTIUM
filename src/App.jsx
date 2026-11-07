@@ -12682,10 +12682,14 @@ function MusicianProfile({ student, conservatory, connCount, onBack, onMessage, 
           <div className="mp-portrait">{s.photoUrl ? <img src={s.photoUrl} alt="" /> : <span>{initials(s.name || "?")}</span>}</div>
           <div className="mp-who">
             <h1 className="mp-name"><span data-no-translate="">{s.name}</span>{s.conservatoryVerified && <NxVerified size={20} color="#800020" />}</h1>
-            <p className="mp-meta">{instrumentLabel(s)}{s.year && <><i aria-hidden="true">·</i>{s.year}</>}</p>
-            {place && <p className="mp-place"><MapPin size={13} strokeWidth={1.8} /><span data-no-translate="">{place}</span></p>}
           </div>
         </header>
+        {/* The details run the full width under the portrait, so they keep to
+            one line each instead of wrapping beside it. */}
+        <div className="mp-details">
+          <p className="mp-meta">{instrumentsOf(s).join(" | ")}{s.year && <><i aria-hidden="true">·</i>{s.year}</>}</p>
+          {place && <p className="mp-place"><MapPin size={15} strokeWidth={2.2} /><span data-no-translate="">{place}</span></p>}
+        </div>
 
         {owner ? (
           <div className="mp-actions">

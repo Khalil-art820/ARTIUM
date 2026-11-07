@@ -168,3 +168,17 @@
    portrait and name sit fully on the page. */
 .mp-hero.is-blank { height: 66px; background: #FFFFFF; }
 .mp-hero.is-blank + .mp-id, .mp-hero.is-blank + .mp-cover-err + .mp-id { margin-top: 4px; align-items: center; }
+
+/* Name in the student cards' type (Fira Sans, semi-bold, black), a size up
+   for a page heading. */
+.mp-name { font-family: 'Fira Sans', system-ui, -apple-system, sans-serif; font-size: 24px; font-weight: 600; line-height: 1.2; letter-spacing: 0; color: #000000; }
+.mp-name .nx-verified { margin-left: 6px; vertical-align: -2px; }
+.mp-id { align-items: flex-end; }
+.mp-who { padding-bottom: 14px; }
+/* Details in the links' type: bold system font, near-black. */
+.mp-details { padding: 12px 20px 0; }
+.mp-meta, .mp-place { font-family: var(--mp-fb); font-size: 14.5px; font-weight: 600; color: #050505; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mp-meta { margin: 0; }
+.mp-meta i { color: #65676B; margin: 0 6px; }
+.mp-place { margin: 4px 0 0; gap: 5px; }
+.mp-place svg { color: #050505; }
