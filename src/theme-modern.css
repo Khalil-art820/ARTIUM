@@ -1382,3 +1382,6 @@ html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button[data-k="home"][d
    weighs the same as the other icons. */
 html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button[data-k="map"]:not([data-on="1"]){color:#3A3A3A}
 html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button[data-k="map"]:not([data-on="1"]) svg{stroke-width:1.45}
+/* Promote, selected: the megaphone's body solid black; its handle and sound
+   wave stay lines. */
+html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button[data-k="promote"][data-on="1"] svg path:first-child{fill:currentColor;fill-opacity:1}
