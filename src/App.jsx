@@ -12606,6 +12606,21 @@ function StudentProfile({ student, conservatory, onBack, onMessage, locked, onAp
 // `owner`: the same page as its owner sees it, with Edit profile and Log out
 // for actions, cover photo controls on the photo, their connections listed
 // (requests first), and Delete account at the foot.
+// Facebook's "Following" mark (a tray with a tick), for Connected.
+const IconConnected = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+    <rect x="5.5" y="2.8" width="13" height="3.2" rx="1.4" fill="currentColor" />
+    <rect x="3" y="7.2" width="18" height="14" rx="3.4" fill="currentColor" />
+    <path d="M8.4 14.3l2.4 2.4 4.8-4.9" fill="none" stroke="#E4E6EB" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+// The Messenger bubble with its lightning stroke cut out in the button's colour.
+const IconMessenger = ({ knockout }) => (
+  <svg width="21" height="21" viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M12 2C6.4 2 2 6.1 2 11.4c0 2.8 1.2 5.2 3.2 6.9v3.6l3.3-1.8c1.1.3 2.3.5 3.5.5 5.6 0 10-4.1 10-9.3S17.6 2 12 2z" fill="currentColor" />
+    <path d="M6.4 14.1l3.4-3.6 2.5 2.4 3.4-3.6" fill="none" stroke={knockout} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
 function MusicianProfile({ student, conservatory, connCount, onBack, onMessage, connect, locked, onApply, owner }) {
   const [playing, setPlaying] = useState(null);
   const [brokenCover, setBrokenCover] = useState("");
@@ -12636,10 +12651,13 @@ function MusicianProfile({ student, conservatory, connCount, onBack, onMessage, 
   const first = (s.name || "").split(" ")[0];
   const place = conservatory ? [conservatory.name, conservatory.city].filter(Boolean).join(", ") : "";
   const fmt = (sec) => (Number.isFinite(sec) ? `${Math.floor(sec / 60)}:${String(Math.round(sec % 60)).padStart(2, "0")}` : "");
-  const cfg = connect && (connect.state === "connected" ? { cls: "is-line", label: "Connected", icon: <CheckIcon size={15} strokeWidth={2.4} />, fn: () => { if (window.confirm("Remove this connection?")) connect.onRemove(); } }
-    : connect.state === "sent" ? { cls: "is-quiet", label: "Requested", icon: null, fn: () => { if (window.confirm("Cancel your connection request?")) connect.onCancel(); } }
-    : connect.state === "received" ? { cls: "is-solid", label: "Accept request", icon: null, fn: connect.onAccept }
-    : { cls: "is-solid", label: "Connect", icon: null, fn: connect.onConnect });
+  // Facebook's pair: the relationship in grey, Message in solid burgundy.
+  // Before you're connected, Connect takes the burgundy and Message the grey.
+  const cfg = connect && (connect.state === "connected" ? { cls: "is-grey", label: "Connected", icon: <IconConnected />, fn: () => { if (window.confirm("Remove this connection?")) connect.onRemove(); } }
+    : connect.state === "sent" ? { cls: "is-grey", label: "Requested", icon: null, fn: () => { if (window.confirm("Cancel your connection request?")) connect.onCancel(); } }
+    : connect.state === "received" ? { cls: "is-solid", label: "Accept request", icon: <UserPlus size={19} strokeWidth={2.2} />, fn: connect.onAccept }
+    : { cls: "is-solid", label: "Connect", icon: <UserPlus size={19} strokeWidth={2.2} />, fn: connect.onConnect });
+  const messageSolid = !cfg || connect.state === "connected" || connect.state === "sent";
   const hasCover = s.coverPhotoUrl && brokenCover !== s.coverPhotoUrl;
   const shownConn = conns ? (allConn ? conns.list : conns.list.slice(0, 4)) : [];
   return (
@@ -12671,22 +12689,27 @@ function MusicianProfile({ student, conservatory, connCount, onBack, onMessage, 
 
         {owner ? (
           <div className="mp-actions">
-            <button type="button" className="mp-btn is-solid" onClick={owner.onEdit}>Edit profile</button>
-            {owner.onLogout && <button type="button" className="mp-btn is-line" onClick={owner.onLogout}>Log Out</button>}
+            <button type="button" className="mp-btn is-solid" onClick={owner.onEdit}><Pencil size={17} strokeWidth={2.2} />Edit profile</button>
+            {owner.onLogout && <button type="button" className="mp-btn is-grey" onClick={owner.onLogout}>Log Out</button>}
           </div>
         ) : locked ? (
           <div className="mp-actions"><button type="button" className="mp-btn is-solid" onClick={onApply}>{`Sign up to message ${first}`}</button></div>
         ) : (cfg || onMessage) && (
           <div className="mp-actions">
             {cfg && <button type="button" className={`mp-btn ${cfg.cls}`} onClick={cfg.fn}>{cfg.icon}{cfg.label}</button>}
-            {onMessage && <button type="button" className={`mp-btn ${cfg ? "is-line" : "is-solid"}`} onClick={onMessage}>Message</button>}
+            {onMessage && <button type="button" className={`mp-btn ${messageSolid ? "is-solid" : "is-grey"}`} onClick={onMessage}><IconMessenger knockout={messageSolid ? "#800020" : "#E4E6EB"} />Message</button>}
           </div>
         )}
 
         {links.length > 0 && (
           <nav className="mp-links" aria-label="Links">
-            {links.map(({ key, label, Icon }) => (
-              <a key={key} className="mp-link" href={href(s.links[key])} target="_blank" rel="noreferrer"><Icon size={14} strokeWidth={1.7} />{label}</a>
+            {links.map(({ key, label, Icon }, i) => (
+              <React.Fragment key={key}>
+                {i > 0 && <i className="mp-link-sep" aria-hidden="true">·</i>}
+                <a className="mp-link" href={href(s.links[key])} target="_blank" rel="noreferrer">
+                  {key === "website" ? <Link2 size={18} strokeWidth={2.4} /> : <Icon size={17} strokeWidth={2.2} />}{label}
+                </a>
+              </React.Fragment>
             ))}
           </nav>
         )}

@@ -137,3 +137,34 @@
   .mp-hero { height: 320px; }
   .mp-name { font-size: 34px; }
 }
+
+/* Buttons and links as Facebook draws them: rounded rectangles, the
+   relationship in light grey, the main action solid (burgundy here), and
+   bold system-font labels. The links sit centred under the buttons. */
+.mp {
+  --mp-fb: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+.mp-actions { gap: 8px; }
+.mp-btn { height: 44px; border-radius: 10px; border: 0 !important; gap: 7px;
+  font-family: var(--mp-fb) !important; font-size: 16px !important; font-weight: 600 !important; letter-spacing: 0; }
+.mp-btn.is-solid { background: #800020 !important; color: #FFFFFF !important; }
+.mp-btn.is-grey { background: #E4E6EB !important; color: #050505 !important; }
+.mp-btn svg { flex: none; }
+.mp-links { justify-content: center; align-items: center; gap: 6px 8px; padding-top: 16px; }
+.mp-link { gap: 6px; color: #050505; font-family: var(--mp-fb); font-size: 15px; font-weight: 600; }
+.mp-link svg { color: #050505; }
+.mp-link-sep { font-style: normal; color: #65676B; font-weight: 600; }
+/* All four links on one centred line on a phone. */
+.mp-links { gap: 4px 6px; padding-left: 12px; padding-right: 12px; }
+.mp-link { font-size: 14px; gap: 5px; }
+.mp-link svg { width: 16px; height: 16px; }
+.mp-links { flex-wrap: nowrap; justify-content: safe center; overflow-x: auto; scrollbar-width: none; white-space: nowrap; gap: 0 5px; }
+.mp-links::-webkit-scrollbar { display: none; }
+.mp-link { flex: none; font-size: 13.5px; gap: 4px; }
+.mp-link-sep { flex: none; }
+.mp-links { gap: 0 3px; padding-left: 8px; padding-right: 8px; }
+.mp-link-sep { margin: 0 1px; }
+/* No cover photo: a plain white top, just room for the back button, and the
+   portrait and name sit fully on the page. */
+.mp-hero.is-blank { height: 66px; background: #FFFFFF; }
+.mp-hero.is-blank + .mp-id, .mp-hero.is-blank + .mp-cover-err + .mp-id { margin-top: 4px; align-items: center; }
