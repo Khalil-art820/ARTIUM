@@ -243,3 +243,8 @@ html.theme-modern .mp .nx-face b { color: #5F6B6E !important; }
 .mp-like svg { width: 24px; height: 24px; }
 /* Conservatory first, then instruments and year; no pin. */
 .mp-details .mp-place { margin: 0 0 3px; }
+/* Media: square tiles, square corners, edge to edge across the phone, three
+   to a row with a hairline gap, as on Instagram's profile grid. */
+.mp-media, .mp-media.is-one { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; overflow: visible;
+  margin: 0 -20px; padding: 0; }
+.mp-tile, .mp-media.is-one .mp-tile { width: auto; max-width: none; aspect-ratio: 1 / 1; border-radius: 0; }
