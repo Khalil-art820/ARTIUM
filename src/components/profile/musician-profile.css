@@ -262,3 +262,8 @@ html.theme-modern .mp .nx-face b { color: #5F6B6E !important; }
 /* Your own repertoire: an Update button beside each piece. */
 .mp-update { flex: none; height: 30px; padding: 0 12px !important; border-radius: 8px; border: 0 !important; background: #E4E6EB !important;
   color: #050505 !important; font-family: var(--mp-fb); font-size: 13px !important; font-weight: 600 !important; }
+/* Likes: the number always black; the heart a thick black outline until
+   liked, then solid burgundy. */
+.mp .mp-like, .mp button.mp-like { color: #000000 !important; }
+.mp-like svg { fill: none; stroke: #000000; stroke-width: 2.4; }
+.mp-like.is-on svg { fill: #800020; stroke: #800020; }
