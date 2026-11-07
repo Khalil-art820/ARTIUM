@@ -195,3 +195,5 @@
 .mp-h-row + .mp-row, .mp-h-row + .mp-quiet { margin-top: 0; }
 /* Facing challenges: a red dot. */
 .mp-status.is-challenge::before { background: #D93025; }
+/* Going well: a green dot. */
+.mp-status.is-good::before { background: #1E9E5A; }
