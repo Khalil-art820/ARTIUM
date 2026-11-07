@@ -20,6 +20,19 @@
       ],
       "port": 4173,
       "autoPort": true
+    },
+    {
+      "name": "artium-prod-5173",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "preview",
+        "--",
+        "--port",
+        "5173",
+        "--strictPort"
+      ],
+      "port": 5173
     }
   ]
 }
