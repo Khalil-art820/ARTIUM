@@ -182,3 +182,5 @@
 .mp-meta i { color: #65676B; margin: 0 6px; }
 .mp-place { margin: 4px 0 0; gap: 5px; }
 .mp-place svg { color: #050505; }
+/* The name sits a little higher beside the portrait. */
+.mp-who { padding-bottom: 26px; }
