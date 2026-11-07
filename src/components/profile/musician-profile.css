@@ -231,3 +231,9 @@ html.theme-modern .mp .nx-face b { color: #5F6B6E !important; }
 .mp button.mp-conn-count { color: #800020 !important; }
 /* Beside the likes pill the details have less room: a touch smaller. */
 .mp-details .mp-meta, .mp-details .mp-place { font-size: 13.5px; line-height: 1.35; }
+/* The two detail lines centred on each other: the conservatory line (with its
+   pin) sits centred under the instruments and year. */
+.mp-lines { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.mp-details .mp-place { justify-content: center; }
+.mp-details .mp-place { display: block; }
+.mp-details .mp-place svg { display: inline-block; vertical-align: -2px; margin-right: 4px; }
