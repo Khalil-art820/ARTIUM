@@ -1388,3 +1388,10 @@ html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button[data-k="promote"
 /* The plane's white cut shows only when Messages is selected. */
 .ig-direct-cut{display:none}
 html.theme-modern .artium-aw-tabs button[data-on="1"] .ig-direct-cut{display:inline;stroke:#FFFFFF;stroke-width:1.5;fill:none}
+/* Network tab, selected: the globe solid, its lines in white. */
+html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button[data-on="1"] .gl-disc{fill:currentColor;fill-opacity:1}
+html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button[data-on="1"] .gl-lines{stroke:#FFFFFF;stroke-width:1.3}
+/* Bottom bar alignment: every icon on one centre line and of one height.
+   The megaphone sat ~1.5px low; the teacher figure stood taller than the rest. */
+html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button[data-k="promote"] svg{transform:translateY(-1.5px)}
+html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button > span:first-child > span[aria-hidden="true"]{width:21px !important;height:25px !important}
