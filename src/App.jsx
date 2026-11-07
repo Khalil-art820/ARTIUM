@@ -11398,11 +11398,11 @@ function NxFace({ m, size = 56 }) {
     </span>
   );
 }
-function NxVerified({ size = 15 }) {
+function NxVerified({ size = 15, color = "#073D37" }) {
   return (
     <span className="nx-verified" title="Conservatory verified" aria-label="Conservatory verified">
       {/* Instagram's scalloped badge, in the Connect button's emerald. */}
-      <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true"><path d="M12.00 2.60Q15.25 -0.12 16.70 3.86Q20.87 3.13 20.14 7.30Q24.12 8.75 21.40 12.00Q24.12 15.25 20.14 16.70Q20.87 20.87 16.70 20.14Q15.25 24.12 12.00 21.40Q8.75 24.12 7.30 20.14Q3.13 20.87 3.86 16.70Q-0.12 15.25 2.60 12.00Q-0.12 8.75 3.86 7.30Q3.13 3.13 7.30 3.86Q8.75 -0.12 12.00 2.60Z" fill="#073D37" /><path d="M7.7 12.2l2.9 2.9 5.8-5.9" stroke="#fff" strokeWidth="2.3" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
+      <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true"><path d="M12.00 2.60Q15.25 -0.12 16.70 3.86Q20.87 3.13 20.14 7.30Q24.12 8.75 21.40 12.00Q24.12 15.25 20.14 16.70Q20.87 20.87 16.70 20.14Q15.25 24.12 12.00 21.40Q8.75 24.12 7.30 20.14Q3.13 20.87 3.86 16.70Q-0.12 15.25 2.60 12.00Q-0.12 8.75 3.86 7.30Q3.13 3.13 7.30 3.86Q8.75 -0.12 12.00 2.60Z" fill={color} /><path d="M7.7 12.2l2.9 2.9 5.8-5.9" stroke="#fff" strokeWidth="2.3" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
     </span>
   );
 }
@@ -12615,6 +12615,7 @@ function MusicianProfile({ student, conservatory, connCount, onBack, onMessage, 
   const [allConn, setAllConn] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [durations, setDurations] = useState({});
   async function pickCover(e) {
     const file = e.target.files && e.target.files[0];
     e.target.value = "";
@@ -12626,7 +12627,6 @@ function MusicianProfile({ student, conservatory, connCount, onBack, onMessage, 
     owner.onUpdateCoverPhoto && owner.onUpdateCoverPhoto(r.url);
   }
   const conns = owner?.connections;
-  const [durations, setDurations] = useState({});
   const s = student;
   const links = LINK_FIELDS.filter((f) => (s.links || {})[f.key]);
   const t = s.teaching || {};
@@ -12636,27 +12636,22 @@ function MusicianProfile({ student, conservatory, connCount, onBack, onMessage, 
   const first = (s.name || "").split(" ")[0];
   const place = conservatory ? [conservatory.name, conservatory.city].filter(Boolean).join(", ") : "";
   const fmt = (sec) => (Number.isFinite(sec) ? `${Math.floor(sec / 60)}:${String(Math.round(sec % 60)).padStart(2, "0")}` : "");
-  const cfg = connect && (connect.state === "connected" ? { cls: "is-done", label: "Connected", icon: <CheckIcon size={16} strokeWidth={2.6} />, fn: () => { if (window.confirm("Remove this connection?")) connect.onRemove(); } }
-    : connect.state === "sent" ? { cls: "is-muted", label: "Requested", icon: null, fn: () => { if (window.confirm("Cancel your connection request?")) connect.onCancel(); } }
-    : connect.state === "received" ? { cls: "is-solid", label: "Accept request", icon: <CheckIcon size={16} strokeWidth={2.6} />, fn: connect.onAccept }
-    : { cls: "is-solid", label: "Connect", icon: <UserPlus size={16} strokeWidth={2.2} />, fn: connect.onConnect });
-  const Clef = () => (
-    <svg className="mp-deco" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.1" aria-hidden="true">
-      <path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" />
-    </svg>
-  );
+  const cfg = connect && (connect.state === "connected" ? { cls: "is-line", label: "Connected", icon: <CheckIcon size={15} strokeWidth={2.4} />, fn: () => { if (window.confirm("Remove this connection?")) connect.onRemove(); } }
+    : connect.state === "sent" ? { cls: "is-quiet", label: "Requested", icon: null, fn: () => { if (window.confirm("Cancel your connection request?")) connect.onCancel(); } }
+    : connect.state === "received" ? { cls: "is-solid", label: "Accept request", icon: null, fn: connect.onAccept }
+    : { cls: "is-solid", label: "Connect", icon: null, fn: connect.onConnect });
+  const hasCover = s.coverPhotoUrl && brokenCover !== s.coverPhotoUrl;
+  const shownConn = conns ? (allConn ? conns.list : conns.list.slice(0, 4)) : [];
   return (
     <div className="mp">
       <div className="mp-inner">
-        <div className="mp-hero">
-          {s.coverPhotoUrl && brokenCover !== s.coverPhotoUrl
-            ? <img className="mp-hero-img" src={s.coverPhotoUrl} alt="" onError={() => setBrokenCover(s.coverPhotoUrl)} />
-            : <div className="mp-hero-blank" />}
-          {onBack && <button type="button" className="mp-back" onClick={onBack} aria-label="Back"><ChevronLeft size={20} strokeWidth={2.2} /></button>}
+        <div className={`mp-hero${hasCover ? "" : " is-blank"}`}>
+          {hasCover && <img className="mp-hero-img" src={s.coverPhotoUrl} alt="" onError={() => setBrokenCover(s.coverPhotoUrl)} />}
+          {onBack && <button type="button" className="mp-back" onClick={onBack} aria-label="Back"><ChevronLeft size={20} strokeWidth={2} /></button>}
           {owner && (
             <div className="mp-cover-tools">
               <button type="button" disabled={coverBusy} onClick={() => coverInput.current && coverInput.current.click()}>
-                <Upload size={14} strokeWidth={2.2} />{coverBusy ? "Uploading…" : s.coverPhotoUrl ? "Change cover" : "Add a cover photo"}
+                {coverBusy ? "Uploading…" : s.coverPhotoUrl ? "Change cover" : "Add a cover photo"}
               </button>
               {s.coverPhotoUrl && !coverBusy && <button type="button" onClick={() => owner.onUpdateCoverPhoto && owner.onUpdateCoverPhoto("")}>Remove</button>}
               <input ref={coverInput} type="file" accept="image/*" hidden onChange={pickCover} />
@@ -12665,18 +12660,18 @@ function MusicianProfile({ student, conservatory, connCount, onBack, onMessage, 
         </div>
         {coverErr && <p className="mp-cover-err">{coverErr}</p>}
 
-        <div className="mp-id">
-          <div className="mp-portrait"><span>{s.photoUrl ? <img src={s.photoUrl} alt="" /> : initials(s.name || "?")}</span></div>
+        <header className="mp-id">
+          <div className="mp-portrait">{s.photoUrl ? <img src={s.photoUrl} alt="" /> : <span>{initials(s.name || "?")}</span>}</div>
           <div className="mp-who">
-            <h1 className="mp-name"><span data-no-translate="">{s.name}</span>{s.conservatoryVerified && <NxVerified size={20} />}</h1>
-            <p className="mp-line">{instrumentLabel(s)}{s.year && <><i>•</i>{s.year}</>}</p>
-            {place && <p className="mp-place"><MapPin size={14} strokeWidth={2} /><span data-no-translate="">{place}</span></p>}
+            <h1 className="mp-name"><span data-no-translate="">{s.name}</span>{s.conservatoryVerified && <NxVerified size={20} color="#800020" />}</h1>
+            <p className="mp-meta">{instrumentLabel(s)}{s.year && <><i aria-hidden="true">·</i>{s.year}</>}</p>
+            {place && <p className="mp-place"><MapPin size={13} strokeWidth={1.8} /><span data-no-translate="">{place}</span></p>}
           </div>
-        </div>
+        </header>
 
         {owner ? (
           <div className="mp-actions">
-            <button type="button" className="mp-btn is-solid" onClick={owner.onEdit}><Pencil size={16} strokeWidth={2} />Edit profile</button>
+            <button type="button" className="mp-btn is-solid" onClick={owner.onEdit}>Edit profile</button>
             {owner.onLogout && <button type="button" className="mp-btn is-line" onClick={owner.onLogout}>Log Out</button>}
           </div>
         ) : locked ? (
@@ -12684,143 +12679,145 @@ function MusicianProfile({ student, conservatory, connCount, onBack, onMessage, 
         ) : (cfg || onMessage) && (
           <div className="mp-actions">
             {cfg && <button type="button" className={`mp-btn ${cfg.cls}`} onClick={cfg.fn}>{cfg.icon}{cfg.label}</button>}
-            {onMessage && <button type="button" className={`mp-btn ${cfg ? "is-line" : "is-solid"}`} onClick={onMessage}><MessageCircle size={16} strokeWidth={2} />Message</button>}
+            {onMessage && <button type="button" className={`mp-btn ${cfg ? "is-line" : "is-solid"}`} onClick={onMessage}>Message</button>}
           </div>
         )}
 
         {links.length > 0 && (
-          <div className="mp-links">
+          <nav className="mp-links" aria-label="Links">
             {links.map(({ key, label, Icon }) => (
-              <a key={key} className="mp-link" href={href(s.links[key])} target="_blank" rel="noreferrer"><Icon size={16} strokeWidth={1.8} />{label}</a>
+              <a key={key} className="mp-link" href={href(s.links[key])} target="_blank" rel="noreferrer"><Icon size={14} strokeWidth={1.7} />{label}</a>
             ))}
-          </div>
+          </nav>
         )}
 
-        <div className="mp-cards">
-          {s.bio && (
-            <section className="mp-card">
-              <h3 className="mp-label"><FileText size={17} strokeWidth={1.8} />About me</h3>
-              <p className="mp-prose" data-no-translate="">{s.bio}</p>
-              <Clef />
-            </section>
-          )}
+        {s.bio && (
+          <section className="mp-sec">
+            <h2 className="mp-h">About me</h2>
+            <p className="mp-text" data-no-translate="">{s.bio}</p>
+          </section>
+        )}
 
-          {(s.tastes || []).length > 0 && (
-            <section className={`mp-card${t.open ? " is-half" : ""}`}>
-              <h3 className="mp-label"><Music2 size={17} strokeWidth={1.8} />Musical preferences</h3>
-              <div className="mp-chips">{s.tastes.map((x) => <span key={x} className="mp-chip">{x}</span>)}</div>
-            </section>
-          )}
-          {t.open && (
-            <section className={`mp-card${(s.tastes || []).length ? " is-half" : ""}`}>
-              <h3 className="mp-label"><GraduationCap size={18} strokeWidth={1.8} />Teaching</h3>
-              <p className="mp-teach-mode">{mode}</p>
-              {t.price && <p className="mp-teach-price">€{t.price}<span> / session</span></p>}
-              {t.mode !== "online" && (t.cities || []).length > 0 && (
-                <p className="mp-teach-where"><MapPin size={14} strokeWidth={2} /><span data-no-translate="">{t.cities.join(", ")}</span></p>
-              )}
-            </section>
-          )}
-          {t.open && t.pitch && (
-            <section className="mp-card">
-              <h3 className="mp-label"><GraduationCap size={18} strokeWidth={1.8} />A first lesson with {first}</h3>
-              <p className="mp-small" data-no-translate="">{t.pitch}</p>
-            </section>
-          )}
+        {(s.tastes || []).length > 0 && (
+          <section className="mp-sec">
+            <h2 className="mp-h">Musical preferences</h2>
+            <div className="mp-tags">{s.tastes.map((x) => <span key={x} className="mp-tag">{x}</span>)}</div>
+          </section>
+        )}
 
-          {conns ? (
-            <section className="mp-card">
-              <h3 className="mp-label"><Users size={18} strokeWidth={1.8} />Connections<em>{conns.list.length}</em></h3>
-              {conns.incoming.map((p) => (
-                <div key={p.id} className="mp-person">
-                  <button type="button" className="mp-person-who" onClick={() => conns.onOpen(p.id)}>
-                    <span className="mp-person-face">{p.photo ? <img src={p.photo} alt="" /> : initials(p.name || "?")}</span>
-                    <span><b data-no-translate="">{p.name}</b><em>Wants to connect</em></span>
-                  </button>
-                  <span className="mp-person-acts">
-                    <button type="button" className="is-yes" onClick={() => conns.onAccept(p.connId)}>Accept</button>
-                    <button type="button" onClick={() => conns.onDecline(p.connId)}>Decline</button>
-                  </span>
-                </div>
-              ))}
-              {conns.list.length === 0 && conns.incoming.length === 0 && (
-                <p className="mp-muted">No connections yet. Find musicians on the Network page and tap Connect.</p>
-              )}
-              {(allConn ? conns.list : conns.list.slice(0, 4)).map((p) => (
-                <button key={p.id} type="button" className="mp-person mp-person-who" onClick={() => conns.onOpen(p.id)}>
-                  <span className="mp-person-face">{p.photo ? <img src={p.photo} alt="" /> : initials(p.name || "?")}</span>
-                  <span><b data-no-translate="">{p.name}</b><em data-no-translate="">{[p.instrument, p.place].filter(Boolean).join(" · ")}</em></span>
-                  <ChevronRight size={16} strokeWidth={2} className="mp-person-go" />
+        {t.open && (
+          <section className="mp-sec">
+            <h2 className="mp-h">Teaching</h2>
+            <dl className="mp-facts">
+              <div><dt>Format</dt><dd>{mode}</dd></div>
+              {t.price && <div><dt>Price</dt><dd>{`€${t.price} per session`}</dd></div>}
+              {t.mode !== "online" && (t.cities || []).length > 0 && <div><dt>Locations</dt><dd data-no-translate="">{t.cities.join(", ")}</dd></div>}
+            </dl>
+          </section>
+        )}
+        {t.open && t.pitch && (
+          <section className="mp-sec">
+            <h2 className="mp-h is-small">A first lesson with {first}</h2>
+            <p className="mp-text" data-no-translate="">{t.pitch}</p>
+          </section>
+        )}
+
+        {conns ? (
+          <section className="mp-sec">
+            <div className="mp-h-row">
+              <h2 className="mp-h">Connections</h2>
+              {conns.list.length > 4
+                ? <button type="button" className="mp-see" onClick={() => setAllConn((v) => !v)}>{allConn ? "Show less" : `See all (${conns.list.length})`}</button>
+                : <span className="mp-n">{conns.list.length}</span>}
+            </div>
+            {conns.incoming.map((p) => (
+              <div key={p.id} className="mp-row">
+                <button type="button" className="mp-row-who" onClick={() => conns.onOpen(p.id)}>
+                  <span className="mp-face">{p.photo ? <img src={p.photo} alt="" /> : initials(p.name || "?")}</span>
+                  <span className="mp-row-t"><b data-no-translate="">{p.name}</b><em>Wants to connect</em></span>
+                </button>
+                <span className="mp-row-acts">
+                  <button type="button" className="is-yes" onClick={() => conns.onAccept(p.connId)}>Accept</button>
+                  <button type="button" onClick={() => conns.onDecline(p.connId)}>Decline</button>
+                </span>
+              </div>
+            ))}
+            {conns.list.length === 0 && conns.incoming.length === 0 && (
+              <p className="mp-quiet">No connections yet. Find musicians on the Network page and tap Connect.</p>
+            )}
+            {shownConn.map((p) => (
+              <button key={p.id} type="button" className="mp-row mp-row-who" onClick={() => conns.onOpen(p.id)}>
+                <span className="mp-face">{p.photo ? <img src={p.photo} alt="" /> : initials(p.name || "?")}</span>
+                <span className="mp-row-t"><b data-no-translate="">{p.name}</b><em data-no-translate="">{[p.instrument, p.place].filter(Boolean).join(" · ")}</em></span>
+                <ChevronRight size={18} strokeWidth={1.6} className="mp-go" />
+              </button>
+            ))}
+          </section>
+        ) : connCount != null && (
+          <section className="mp-sec">
+            <div className="mp-h-row">
+              <h2 className="mp-h">Connections</h2>
+              <span className="mp-n">{connCount}</span>
+            </div>
+          </section>
+        )}
+
+        {videos.length > 0 && (
+          <section className="mp-sec">
+            <h2 className="mp-h">Media</h2>
+            <div className={`mp-media${videos.length === 1 ? " is-one" : ""}`}>
+              {videos.map((u) => (
+                <button key={u} type="button" className="mp-tile" onClick={() => setPlaying(u)} aria-label="Play video">
+                  <video src={`${u}#t=0.1`} muted playsInline preload="metadata"
+                    onLoadedMetadata={(e) => { const d = e.currentTarget.duration; setDurations((m) => ({ ...m, [u]: d })); }} />
+                  {durations[u] != null && <span className="mp-dur">{fmt(durations[u])}</span>}
                 </button>
               ))}
-              {conns.list.length > 4 && (
-                <button type="button" className="mp-more" onClick={() => setAllConn((v) => !v)}>{allConn ? "Show less" : `See all (${conns.list.length})`}</button>
-              )}
-            </section>
-          ) : connCount != null && (
-            <section className="mp-card">
-              <h3 className="mp-label"><Users size={18} strokeWidth={1.8} />Connections</h3>
-              <p className="mp-count"><b>{connCount}</b><span>{connCount === 1 ? "connection on Artium" : "connections on Artium"}</span></p>
-            </section>
-          )}
+            </div>
+          </section>
+        )}
 
-          {videos.length > 0 && (
-            <section className="mp-card">
-              <h3 className="mp-label"><Play size={17} strokeWidth={1.8} />Media</h3>
-              <div className={`mp-media${videos.length === 1 ? " is-one" : ""}`}>
-                {videos.map((u) => (
-                  <button key={u} type="button" className="mp-tile" onClick={() => setPlaying(u)} aria-label="Play video">
-                    <video src={`${u}#t=0.1`} muted playsInline preload="metadata"
-                      onLoadedMetadata={(e) => { const d = e.currentTarget.duration; setDurations((m) => ({ ...m, [u]: d })); }} />
-                    <span className="mp-play"><Play size={20} strokeWidth={0} fill="currentColor" /></span>
-                    {durations[u] != null && <span className="mp-dur">{fmt(durations[u])}</span>}
-                  </button>
-                ))}
-              </div>
-            </section>
-          )}
+        {(s.pieces || []).length > 0 && (
+          <section className="mp-sec">
+            <h2 className="mp-h">Current repertoire</h2>
+            <ul className="mp-list">
+              {s.pieces.map((p, i) => (
+                <li key={i}>
+                  <span className="mp-list-t"><b data-no-translate="">{p.title}</b><em data-no-translate="">{p.composer}</em></span>
+                  {PIECE_STATUS[p.status] && <span className={`mp-status is-${p.status}`}>{PIECE_STATUS[p.status].label}</span>}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
-          {(s.pieces || []).length > 0 && (
-            <section className="mp-card">
-              <h3 className="mp-label"><Music size={17} strokeWidth={1.8} />Current repertoire</h3>
-              <div className="mp-pieces">
-                {s.pieces.map((p, i) => (
-                  <div key={i} className="mp-piece">
-                    <span className="mp-piece-t"><b data-no-translate="">{p.title}</b><span data-no-translate="">{p.composer}</span></span>
-                    {PIECE_STATUS[p.status] && <span className={`pc-pill pc-pill--${p.status}`}>{PIECE_STATUS[p.status].label}</span>}
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
+        {concerts.open && (concerts.regions || []).length > 0 && (
+          <section className="mp-sec">
+            <h2 className="mp-h">Concerts</h2>
+            <p className="mp-text">Available to perform in <span data-no-translate="">{concerts.regions.join(", ")}</span></p>
+            {(concerts.formats || []).length > 0 && <div className="mp-tags">{concerts.formats.map((x) => <span key={x} className="mp-tag">{x}</span>)}</div>}
+          </section>
+        )}
 
-          {concerts.open && (concerts.regions || []).length > 0 && (
-            <section className="mp-card">
-              <h3 className="mp-label"><Music2 size={17} strokeWidth={1.8} />Concerts</h3>
-              <p className="mp-small">Available to perform in <span data-no-translate="">{concerts.regions.join(", ")}</span></p>
-              {(concerts.formats || []).length > 0 && <div className="mp-chips" style={{ marginTop: 10 }}>{concerts.formats.map((x) => <span key={x} className="mp-chip">{x}</span>)}</div>}
-            </section>
-          )}
+        {s.top && (
+          <section className="mp-sec">
+            <h2 className="mp-h is-small">Recent win</h2>
+            <p className="mp-text" data-no-translate="">{s.top}</p>
+          </section>
+        )}
+        {s.flop && (
+          <section className="mp-sec">
+            <h2 className="mp-h is-small">Current challenge</h2>
+            <p className="mp-text" data-no-translate="">{s.flop}</p>
+          </section>
+        )}
+        {s.composerDay && (
+          <section className="mp-sec">
+            <h2 className="mp-h is-small">A day with a composer</h2>
+            <p className="mp-text" data-no-translate="">{s.composerDay}</p>
+          </section>
+        )}
 
-          {s.top && (
-            <section className={`mp-card${s.flop ? " is-half" : ""}`}>
-              <h3 className="mp-label">Recent win</h3>
-              <p className="mp-small" data-no-translate="">{s.top}</p>
-            </section>
-          )}
-          {s.flop && (
-            <section className={`mp-card${s.top ? " is-half" : ""}`}>
-              <h3 className="mp-label">Current challenge</h3>
-              <p className="mp-small" data-no-translate="">{s.flop}</p>
-            </section>
-          )}
-          {s.composerDay && (
-            <section className="mp-card">
-              <h3 className="mp-label">A day with a composer</h3>
-              <p className="mp-small" data-no-translate="">{s.composerDay}</p>
-            </section>
-          )}
-        </div>
         {owner?.onDeleteAccount && (
           <div className="mp-danger">
             {!confirmDelete ? (
@@ -12840,7 +12837,7 @@ function MusicianProfile({ student, conservatory, connCount, onBack, onMessage, 
       {playing && (
         <div className="mp-player" role="dialog" aria-label="Video" onClick={() => setPlaying(null)}>
           <video src={playing} controls autoPlay playsInline onClick={(e) => e.stopPropagation()} />
-          <button type="button" className="mp-player-x" onClick={() => setPlaying(null)} aria-label="Close"><X size={22} strokeWidth={2.2} /></button>
+          <button type="button" className="mp-player-x" onClick={() => setPlaying(null)} aria-label="Close"><X size={22} strokeWidth={2} /></button>
         </div>
       )}
     </div>
