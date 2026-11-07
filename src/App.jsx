@@ -12882,27 +12882,22 @@ function MusicianProfile({ student, conservatory, connCount, onBack, onMessage, 
         {owner?.footer}
       </div>
 
+      {/* The same sheet the globe opens for people at one place. */}
       {connSheet && (
-        <div className="mp-sheet-root" onClick={() => setConnSheet(null)}>
-          <div className="mp-sheet" role="dialog" aria-label="Connections" onClick={(e) => e.stopPropagation()}>
-            <div className="mp-sheet-head">
-              <h2>Connections</h2>
-              <button type="button" onClick={() => setConnSheet(null)} aria-label="Close"><X size={20} strokeWidth={2} /></button>
-            </div>
-            {connSheet === "loading" ? <p className="mp-quiet">Loading…</p>
-              : connSheet.length === 0 ? <p className="mp-quiet">No connections to show.</p>
-              : connSheet.map((p) => {
-                const c = findConservatory(p.conservatoryId);
-                return (
-                  <button key={p.id} type="button" className="mp-row mp-row-who" onClick={() => { setConnSheet(null); onOpenPerson && onOpenPerson(p.id); }}>
-                    <span className="mp-face">{p.photoUrl ? <img src={p.photoUrl} alt="" /> : initials(p.name || "?")}</span>
-                    <span className="mp-row-t"><b data-no-translate="">{p.name}</b><em data-no-translate="">{[instrumentLabel(p), c ? [c.city, c.country].filter(Boolean).join(", ") : ""].filter(Boolean).join(" · ")}</em></span>
-                    <ChevronRight size={18} strokeWidth={1.6} className="mp-go" />
-                  </button>
-                );
-              })}
-          </div>
-        </div>
+        <NxSheet title={connSheet === "loading" ? "Connections" : connSheet.length === 1 ? "1 connection" : `${connSheet.length} connections`} onClose={() => setConnSheet(null)}>
+          {connSheet === "loading" ? <p className="mp-quiet" style={{ padding: "8px 4px" }}>Loading…</p>
+            : connSheet.length === 0 ? <p className="mp-quiet" style={{ padding: "8px 4px" }}>No connections to show.</p>
+            : connSheet.map((p) => {
+              const c = findConservatory(p.conservatoryId);
+              return (
+                <button key={p.id} type="button" className="nx-grow" onClick={() => { setConnSheet(null); onOpenPerson && onOpenPerson(p.id); }}>
+                  <NxFace m={p} size={44} />
+                  <span><b>{p.name}{p.conservatoryVerified && <NxVerified size={17} />}</b><em>{[instrumentLabel(p), c?.city].filter(Boolean).join(" · ")}</em></span>
+                  <ChevronRight size={16} />
+                </button>
+              );
+            })}
+        </NxSheet>
       )}
 
       {playing && (
