@@ -1395,3 +1395,11 @@ html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button[data-on="1"] .gl
    The megaphone sat ~1.5px low; the teacher figure stood taller than the rest. */
 html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button[data-k="promote"] svg{transform:translateY(-1.5px)}
 html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button > span:first-child > span[aria-hidden="true"]{width:21px !important;height:25px !important}
+/* Bottom bar: every icon between the same two lines, one top tangent and one
+   bottom tangent, so each draws at the same real height. */
+html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button[data-k="promote"] svg{transform:none}
+html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button[data-k="home"] svg{scale:.973}
+html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button[data-k="messages"] svg{scale:1.125}
+html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button[data-k="promote"] svg{scale:1.09}
+html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button[data-k="lessons"] > span:first-child > span[aria-hidden="true"]{scale:.9}
+html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button[data-k="promote"] svg{translate:0 -1.8px}
