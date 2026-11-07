@@ -5802,7 +5802,8 @@ export default function App() {
                     const pp = appConn.people[id] || {};
                     const c = st ? findConservatory(st.conservatoryId) : null;
                     return { id, connId, name: st?.name || pp.name || "Musician", photo: st?.photoUrl || pp.photo_url || "",
-                      instrument: st ? instrumentLabel(st) : "", place: c ? [c.city, c.country].filter(Boolean).join(", ") : "" };
+                      instrument: st ? instrumentLabel(st) : "", place: c ? [c.city, c.country].filter(Boolean).join(", ") : "",
+                      city: c?.city || "", verified: !!st?.conservatoryVerified };
                   };
                   const all = Object.entries(appConn.byOther);
                   return {
@@ -12786,10 +12787,10 @@ function MusicianProfile({ student, conservatory, connCount, onBack, onMessage, 
                 : <span className="mp-n">{conns.list.length}</span>}
             </div>
             {conns.incoming.map((p) => (
-              <div key={p.id} className="mp-row">
-                <button type="button" className="mp-row-who" onClick={() => conns.onOpen(p.id)}>
-                  <span className="mp-face">{p.photo ? <img src={p.photo} alt="" /> : initials(p.name || "?")}</span>
-                  <span className="mp-row-t"><b data-no-translate="">{p.name}</b><em>Wants to connect</em></span>
+              <div key={p.id} className="mp-conn-req">
+                <button type="button" className="nx-grow" onClick={() => conns.onOpen(p.id)}>
+                  <NxFace m={{ name: p.name, photoUrl: p.photo }} size={44} />
+                  <span><b data-no-translate="">{p.name}{p.verified && <NxVerified size={17} />}</b><em>Wants to connect</em></span>
                 </button>
                 <span className="mp-row-acts">
                   <button type="button" className="is-yes" onClick={() => conns.onAccept(p.connId)}>Accept</button>
@@ -12800,11 +12801,12 @@ function MusicianProfile({ student, conservatory, connCount, onBack, onMessage, 
             {conns.list.length === 0 && conns.incoming.length === 0 && (
               <p className="mp-quiet">No connections yet. Find musicians on the Network page and tap Connect.</p>
             )}
+            {/* The same rows as the globe's and the profile's people panels. */}
             {shownConn.map((p) => (
-              <button key={p.id} type="button" className="mp-row mp-row-who" onClick={() => conns.onOpen(p.id)}>
-                <span className="mp-face">{p.photo ? <img src={p.photo} alt="" /> : initials(p.name || "?")}</span>
-                <span className="mp-row-t"><b data-no-translate="">{p.name}</b><em data-no-translate="">{[p.instrument, p.place].filter(Boolean).join(" · ")}</em></span>
-                <ChevronRight size={18} strokeWidth={1.6} className="mp-go" />
+              <button key={p.id} type="button" className="nx-grow mp-conn-row" onClick={() => conns.onOpen(p.id)}>
+                <NxFace m={{ name: p.name, photoUrl: p.photo }} size={44} />
+                <span><b data-no-translate="">{p.name}{p.verified && <NxVerified size={17} />}</b><em data-no-translate="">{[p.instrument, p.city].filter(Boolean).join(" · ")}</em></span>
+                <ChevronRight size={16} />
               </button>
             ))}
           </section>

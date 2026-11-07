@@ -204,3 +204,11 @@
 /* "N connections" opens the list. */
 button.mp-conn-count { display: block; padding: 0 !important; border: 0 !important; background: none !important; text-align: left; }
 button.mp-conn-count:disabled { cursor: default; }
+
+/* Your connections: the people-panel rows, initials on light grey. */
+.mp-conn-row, .mp-conn-req .nx-grow { margin: 0 -10px; width: calc(100% + 20px) !important; }
+.mp-conn-req { display: flex; align-items: center; gap: 8px; }
+.mp-conn-req .nx-grow { flex: 1; min-width: 0; width: auto !important; margin-right: 0; }
+.mp-conn-req .mp-row-acts { flex: none; }
+html.theme-modern .mp .nx-face { background: #EDEDEA !important; color: #5F6B6E !important; }
+html.theme-modern .mp .nx-face b { color: #5F6B6E !important; }
