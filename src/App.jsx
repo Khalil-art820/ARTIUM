@@ -12761,17 +12761,17 @@ function MusicianProfile({ student, conservatory, connCount, onBack, onMessage, 
         <div className="mp-details">
           {likes && (
             owner ? (
-              <span className="mp-like is-own"><IconHeart /><b>{likes.n === 1 ? "1 like" : `${likes.n} likes`}</b></span>
+              <span className="mp-like is-own" aria-label={likes.n === 1 ? "1 like" : `${likes.n} likes`}><IconHeart /><b>{likes.n}</b></span>
             ) : (
               <button type="button" className={`mp-like${likes.mine ? " is-on" : ""}`} onClick={toggleLike}
                 aria-pressed={likes.mine} aria-label={likes.mine ? "Unlike" : "Like"}>
-                <IconHeart /><b>{likes.n === 1 ? "1 like" : `${likes.n} likes`}</b>
+                <IconHeart /><b>{likes.n}</b>
               </button>
             )
           )}
           <div className="mp-lines">
+            {place && <p className="mp-place"><span data-no-translate="">{place}</span></p>}
             <p className="mp-meta">{instrumentsOf(s).join(" | ")}{s.year && <><i aria-hidden="true">·</i>{s.year}</>}</p>
-            {place && <p className="mp-place"><MapPin size={15} strokeWidth={2.2} /><span data-no-translate="">{place}</span></p>}
           </div>
         </div>
 

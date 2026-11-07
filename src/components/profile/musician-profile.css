@@ -237,3 +237,9 @@ html.theme-modern .mp .nx-face b { color: #5F6B6E !important; }
 .mp-details .mp-place { justify-content: center; }
 .mp-details .mp-place { display: block; }
 .mp-details .mp-place svg { display: inline-block; vertical-align: -2px; margin-right: 4px; }
+
+/* Likes: just the heart and the number, no frame. */
+.mp-like { width: 104px; height: auto; border: 0 !important; background: none !important; gap: 6px; font-size: 16px !important; }
+.mp-like svg { width: 24px; height: 24px; }
+/* Conservatory first, then instruments and year; no pin. */
+.mp-details .mp-place { margin: 0 0 3px; }
