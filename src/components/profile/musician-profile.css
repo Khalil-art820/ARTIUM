@@ -212,3 +212,22 @@ button.mp-conn-count:disabled { cursor: default; }
 .mp-conn-req .mp-row-acts { flex: none; }
 html.theme-modern .mp .nx-face { background: #EDEDEA !important; color: #5F6B6E !important; }
 html.theme-modern .mp .nx-face b { color: #5F6B6E !important; }
+
+/* Likes: an outlined pill under the portrait. Not yet liked, the heart is
+   white (outlined); liked, the heart is solid burgundy and so is the
+   portrait's ring. */
+.mp-details { display: flex; align-items: center; gap: 14px; }
+.mp-lines { flex: 1; min-width: 0; }
+.mp-details .mp-meta, .mp-details .mp-place { white-space: normal; }
+.mp-like { flex: none; width: 104px; height: 36px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 !important;
+  border-radius: 18px; border: 1.5px solid #800020 !important; background: #FFFFFF !important; color: #800020 !important;
+  font-family: var(--mp-fb); font-size: 14px !important; font-weight: 600 !important; }
+.mp-like svg { fill: #FFFFFF; stroke: #800020; stroke-width: 2; stroke-linejoin: round; transition: fill .15s, transform .15s; }
+.mp-like.is-on svg { fill: #800020; }
+.mp-like:active svg { transform: scale(1.18); }
+.mp-like.is-own { cursor: default; }
+.mp-portrait { transition: border-color .2s; }
+.mp-portrait.is-liked { border-color: #800020; }
+.mp button.mp-conn-count { color: #800020 !important; }
+/* Beside the likes pill the details have less room: a touch smaller. */
+.mp-details .mp-meta, .mp-details .mp-place { font-size: 13.5px; line-height: 1.35; }

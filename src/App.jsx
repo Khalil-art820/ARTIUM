@@ -3084,12 +3084,23 @@ export default function App() {
     window.addEventListener("artium-gate-featured-change", load);
     return () => { live = false; window.removeEventListener("artium-gate-featured-change", load); };
   }, [authUser?.id]);
-  const gateFeatured = React.useMemo(() => featuredIds
+  // The gate's six cards rank by likes (top_liked_profiles): the most liked
+  // first. Fewer than six with likes, the owner's picks fill the rest.
+  const [likedIds, setLikedIds] = useState([]);
+  React.useEffect(() => {
+    if (!authUser?.id) return;
+    let live = true;
+    supabase.rpc("top_liked_profiles", { p_limit: 12 }).then(({ data, error }) => {
+      if (live && !error && Array.isArray(data)) setLikedIds(data.map((r) => r.profile_id));
+    });
+    return () => { live = false; };
+  }, [authUser?.id]);
+  const gateFeatured = React.useMemo(() => [...new Set([...likedIds, ...featuredIds])]
     .map((id) => students.find((st) => st.id === id))
     .filter((st) => st && st.photoUrl)
     .slice(0, 6)
     .map((st) => ({ id: st.id, name: st.name, photoUrl: st.photoUrl, instrument: instrumentLabel(st) || "Musician", icon: instrumentIcons(st)[0] || null })),
-  [featuredIds, students]);
+  [likedIds, featuredIds, students]);
   const deckFaces = React.useMemo(() => {
     const pool = students.filter((st) => st.photoUrl);
     for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
@@ -12610,6 +12621,11 @@ function StudentProfile({ student, conservatory, onBack, onMessage, locked, onAp
 // `owner`: the same page as its owner sees it, with Edit profile and Log out
 // for actions, cover photo controls on the photo, their connections listed
 // (requests first), and Delete account at the foot.
+const IconHeart = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M12 20.6s-7.6-4.6-9.4-9.3C1.4 8 3.4 4.6 6.8 4.4c2.1-.1 3.7 1 5.2 2.9 1.5-1.9 3.1-3 5.2-2.9 3.4.2 5.4 3.6 4.2 6.9-1.8 4.7-9.4 9.3-9.4 9.3z" />
+  </svg>
+);
 // Facebook's "Following" mark (a tray with a tick), for Connected.
 const IconConnected = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
@@ -12679,6 +12695,33 @@ function MusicianProfile({ student, conservatory, connCount, onBack, onMessage, 
   const shownConn = conns ? (allConn ? conns.list : conns.list.slice(0, 4)) : [];
   // Under the name: how many connections they have.
   const nConn = conns ? conns.list.length : connCount;
+  // Likes (profile_likes): the count for everyone; on someone else's profile a
+  // heart to like or unlike. Liked, the heart and the portrait's ring turn
+  // burgundy.
+  const [likes, setLikes] = useState(null);   // { n, mine }
+  useEffect(() => {
+    let live = true;
+    (async () => {
+      const [{ data: n, error }, { data: mine }] = await Promise.all([
+        supabase.rpc("profile_like_count", { p_id: s.id }),
+        owner ? Promise.resolve({ data: [] }) : supabase.from("profile_likes").select("liked_id").eq("liked_id", s.id),
+      ]);
+      if (live && !error) setLikes({ n: n || 0, mine: !!(mine && mine.length) });
+    })();
+    return () => { live = false; };
+  }, [s.id, owner]);
+  async function toggleLike() {
+    if (owner || !likes) return;
+    const { data: { session } } = await supabase.auth.getSession();
+    const me = session?.user?.id;
+    if (!me) return;
+    const was = likes;
+    setLikes({ n: was.n + (was.mine ? -1 : 1), mine: !was.mine });
+    const { error } = was.mine
+      ? await supabase.from("profile_likes").delete().eq("liker_id", me).eq("liked_id", s.id)
+      : await supabase.from("profile_likes").insert({ liker_id: me, liked_id: s.id });
+    if (error) setLikes(was);
+  }
   return (
     <div className="mp">
       <div className="mp-inner">
@@ -12703,7 +12746,7 @@ function MusicianProfile({ student, conservatory, connCount, onBack, onMessage, 
         {coverErr && <p className="mp-cover-err">{coverErr}</p>}
 
         <header className="mp-id">
-          <div className="mp-portrait">{s.photoUrl ? <img src={s.photoUrl} alt="" /> : <span>{initials(s.name || "?")}</span>}</div>
+          <div className={`mp-portrait${likes?.mine ? " is-liked" : ""}`}>{s.photoUrl ? <img src={s.photoUrl} alt="" /> : <span>{initials(s.name || "?")}</span>}</div>
           <div className="mp-who">
             <h1 className="mp-name"><span data-no-translate="">{s.name}</span>{s.conservatoryVerified && <NxVerified size={20} color="#800020" />}</h1>
             {nConn != null && (
@@ -12716,8 +12759,20 @@ function MusicianProfile({ student, conservatory, connCount, onBack, onMessage, 
         {/* The details run the full width under the portrait, so they keep to
             one line each instead of wrapping beside it. */}
         <div className="mp-details">
-          <p className="mp-meta">{instrumentsOf(s).join(" | ")}{s.year && <><i aria-hidden="true">·</i>{s.year}</>}</p>
-          {place && <p className="mp-place"><MapPin size={15} strokeWidth={2.2} /><span data-no-translate="">{place}</span></p>}
+          {likes && (
+            owner ? (
+              <span className="mp-like is-own"><IconHeart /><b>{likes.n === 1 ? "1 like" : `${likes.n} likes`}</b></span>
+            ) : (
+              <button type="button" className={`mp-like${likes.mine ? " is-on" : ""}`} onClick={toggleLike}
+                aria-pressed={likes.mine} aria-label={likes.mine ? "Unlike" : "Like"}>
+                <IconHeart /><b>{likes.n === 1 ? "1 like" : `${likes.n} likes`}</b>
+              </button>
+            )
+          )}
+          <div className="mp-lines">
+            <p className="mp-meta">{instrumentsOf(s).join(" | ")}{s.year && <><i aria-hidden="true">·</i>{s.year}</>}</p>
+            {place && <p className="mp-place"><MapPin size={15} strokeWidth={2.2} /><span data-no-translate="">{place}</span></p>}
+          </div>
         </div>
 
         {owner ? (
