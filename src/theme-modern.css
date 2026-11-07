@@ -1365,3 +1365,6 @@ html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button:hover:not([data-
 /* Twice the air around the globe, the same above (to the pills) and below
    (to People you may know): ~61px each on a phone. */
 html.theme-modern .nx-stage{margin-top:32px;margin-bottom:40px}
+/* People panels (globe and profile connections): initials on light grey, as on the cards. */
+html.theme-modern .nx-sheet .nx-face{background:#EDEDEA !important;color:#5F6B6E !important}
+html.theme-modern .nx-sheet .nx-face b{color:#5F6B6E !important}
