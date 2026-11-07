@@ -6166,10 +6166,14 @@ const IconTeacher = ({ size = 34 }) => (
 // Instagram's Direct: the paper plane, as Instagram draws it.
 const IconDirect = (p) => (
   <IconBox {...p}>
-    {/* Instagram's current plane: a rounded triangle with its flat top,
-        point down, a notch on the left where the crease runs up to the right. */}
-    <path className="ig-direct-body" d="M8.0 12.2 L5.01 7.58 Q3.6 5.4 6.2 5.28 L17.6 4.73 Q20.4 4.6 19.0 7.03 L12.5 18.35 Q11.2 20.6 10.27 18.17 Z" />
-    <path className="ig-direct-fold" d="M8.0 12.2 L15.4 9.0" />
+    {/* Instagram's current plane, traced from a zoomed screenshot of it:
+        flat top, a deep rounded corner on the left, the point low and left of
+        centre, a notch on the left where the crease runs up to the right.
+        Selected, the shape is solid and the crease (ig-direct-cut) is cut in
+        white right through the left edge. */}
+    <path className="ig-direct-body" d="M8.29 11.68L4.29 8.24C3.35 7.35 3.18 4.35 5.84 4.3L18.28 4.3C20.5 4.3 20.86 6.57 19.94 8.12L14.32 17.67C13.72 18.67 12.5 19.78 11.17 19.67C10.06 19.56 9.73 18.89 9.56 17.78Z" />
+    <path className="ig-direct-fold" d="M8.29 11.68L14.83 7.79" />
+    <path className="ig-direct-cut" d="M7.29 12.29L14.83 7.79" />
   </IconBox>
 );
 const IconMegaphone = (p) => (

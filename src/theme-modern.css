@@ -1371,7 +1371,7 @@ html.theme-modern .nx-sheet .nx-face b{color:#5F6B6E !important}
 /* Bottom bar: the selected tab's icon in solid black (its line stays). */
 html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button[data-on="1"]{color:#000000}
 /* Messages, selected: a solid black plane with its crease cut out in white. */
-html.theme-modern .artium-aw-tabs button[data-on="1"] .ig-direct-fold{display:inline;stroke:#FFFFFF;stroke-width:1.4}
+html.theme-modern .artium-aw-tabs button[data-on="1"] .ig-direct-fold{display:none}
 /* The needs-your-attention dot sits at the icon's lower right. */
 html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern .tm-tab-dot{top:auto;bottom:1px;right:-3px;width:7px;height:7px}
 /* The line over the selected tab in black, with its icon. */
@@ -1385,3 +1385,6 @@ html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button[data-k="map"]:no
 /* Promote, selected: the megaphone's body solid black; its handle and sound
    wave stay lines. */
 html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button[data-k="promote"][data-on="1"] svg path:first-child{fill:currentColor;fill-opacity:1}
+/* The plane's white cut shows only when Messages is selected. */
+.ig-direct-cut{display:none}
+html.theme-modern .artium-aw-tabs button[data-on="1"] .ig-direct-cut{display:inline;stroke:#FFFFFF;stroke-width:1.5;fill:none}
