@@ -184,3 +184,14 @@
 .mp-place svg { color: #050505; }
 /* The name sits a little higher beside the portrait. */
 .mp-who { padding-bottom: 26px; }
+/* Section headings in the entry gate's row-title type ("Find a Concert
+   Musician": Fira Sans, semi-bold, 17px, near-black), a little higher, with a
+   hairline under them as well as over the section. */
+.mp-sec { margin-top: 18px; padding-top: 14px; }
+.mp-h, .mp-h.is-small { margin: 0 0 14px; padding-bottom: 10px; border-bottom: 1px solid var(--mp-line);
+  font-family: 'Fira Sans', system-ui, -apple-system, sans-serif; font-size: 17px; font-weight: 600; line-height: 1.25; letter-spacing: 0; color: #1C1C1C; }
+.mp-h-row { margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--mp-line); }
+.mp-h-row .mp-h { margin: 0; padding: 0; border: 0; }
+.mp-h-row + .mp-row, .mp-h-row + .mp-quiet { margin-top: 0; }
+/* Facing challenges: a red dot. */
+.mp-status.is-challenge::before { background: #D93025; }
