@@ -6163,15 +6163,20 @@ const IconTeacher = ({ size = 34 }) => (
     WebkitMaskPosition: "center", maskPosition: "center",
   }} />
 );
-// Network tab: a plain globe (the owner's reference). Outlined when not
-// selected; selected, the disc is solid and its lines show through in white.
-const IconGlobeTab = (p) => (
+// Network tab: two half discs facing each other across a gap of one line
+// width. Outlined when not selected, solid when selected.
+const IconHalves = (p) => (
   <IconBox {...p}>
-    <circle className="gl-disc" cx="12" cy="12" r="9" />
-    <g className="gl-lines">
-      <ellipse cx="12" cy="12" rx="4.1" ry="9" />
-      <path d="M3 12h18M5.4 6.4Q12 9.8 18.6 6.4M5.4 17.6Q12 14.2 18.6 17.6" />
-    </g>
+    <path className="hv-shape" d="M10.2 3A9 9 0 0 0 10.2 21Z" />
+    <path className="hv-shape" d="M13.8 3A9 9 0 0 1 13.8 21Z" />
+  </IconBox>
+);
+// Lessons tab: a rounded square with three lines inside. Selected, the square
+// is solid and its lines show through in white.
+const IconLessonsTab = (p) => (
+  <IconBox {...p}>
+    <rect className="ls-box" x="3" y="3" width="18" height="18" rx="4.5" />
+    <path className="ls-lines" d="M7.8 8.4h8.4M7.8 12h8.4M7.8 15.6h8.4" />
   </IconBox>
 );
 // Instagram's Direct: the paper plane, as Instagram draws it.
@@ -12399,10 +12404,10 @@ const CalendarEventIcon = ({ size = 24, strokeWidth = 2, ...props }) => (
 
 const STUDENT_TABS = [
   { k: "home", label: "Home", Icon: IconHomeArch },
-  { k: "map", label: "Network", Icon: MODERN ? IconGlobeTab : GlobeIcon },
+  { k: "map", label: "Network", Icon: MODERN ? IconHalves : GlobeIcon },
   { k: "messages", label: "Messages", Icon: MODERN ? IconDirect : MessageCircle },
   { k: "promote", label: "Promote", Icon: MODERN ? IconMegaphone : Megaphone },
-  { k: "lessons", label: "Lessons", Icon: MODERN ? IconTeacher : BookOpen },
+  { k: "lessons", label: "Lessons", Icon: MODERN ? IconLessonsTab : BookOpen },
   { k: "profile", label: "Profile", Icon: User },
 ];
 
@@ -12411,7 +12416,7 @@ const STUDENT_TABS = [
 // honest shape of the app before signing up.
 const GUEST_TABS = [
   { k: "home", label: "Home", Icon: IconHomeArch },
-  { k: "map", label: "Network", Icon: MODERN ? IconGlobeTab : GlobeIcon },
+  { k: "map", label: "Network", Icon: MODERN ? IconHalves : GlobeIcon },
 ];
 
 /* ---------------------------------------------------------------- */
@@ -14855,10 +14860,10 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
           light
           items={[
             { k: "home", label: "Home", Icon: IconHomeArch },
-            { k: "map", label: "Teachers", Icon: MODERN ? IconGlobeTab : Map },
+            { k: "map", label: "Teachers", Icon: MODERN ? IconHalves : Map },
             { k: "messages", label: "Messages", Icon: MODERN ? IconDirect : MessageCircle },
             ...(Object.values(teachRequests).some((s) => s === "accepted")
-              ? [{ k: "lesson", label: "Lessons", Icon: MODERN ? IconTeacher : BookOpen }]
+              ? [{ k: "lesson", label: "Lessons", Icon: MODERN ? IconLessonsTab : BookOpen }]
               : []),
           ]}
           // A teacher's open profile keeps the tab it was reached from lit,
