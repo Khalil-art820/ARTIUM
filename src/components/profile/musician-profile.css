@@ -248,3 +248,17 @@ html.theme-modern .mp .nx-face b { color: #5F6B6E !important; }
 .mp-media, .mp-media.is-one { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; overflow: visible;
   margin: 0 -20px; padding: 0; }
 .mp-tile, .mp-media.is-one .mp-tile { width: auto; max-width: none; aspect-ratio: 1 / 1; border-radius: 0; }
+
+/* Under the name: connections (grey) with the likes beside it. */
+.mp-sub-row { display: flex; align-items: center; gap: 14px; margin-top: 4px; }
+.mp button.mp-conn-count { margin: 0; color: #6E6E6E !important; }
+.mp-sub-row .mp-like { width: auto; }
+.mp-like svg { width: 21px; height: 21px; }
+/* The two detail lines centred across the page. */
+.mp-details { display: block; }
+.mp-lines { align-items: center; text-align: center; }
+/* Media: equal squares inside the page margins, three to a row. */
+.mp-media, .mp-media.is-one { margin: 0; gap: 6px; }
+/* Your own repertoire: an Update button beside each piece. */
+.mp-update { flex: none; height: 30px; padding: 0 12px !important; border-radius: 8px; border: 0 !important; background: #E4E6EB !important;
+  color: #050505 !important; font-family: var(--mp-fb); font-size: 13px !important; font-weight: 600 !important; }

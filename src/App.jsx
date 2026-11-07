@@ -3571,9 +3571,9 @@ export default function App() {
     setPreviewOnly(false);
     setScreen("app"); setAppTabPersist("map");
   }
-  function editProfile() {
+  function editProfile(atStep) {
     setDraft({ ...emptyDraft(), ...myProfile, instruments: instrumentsOf(myProfile), years: myProfile.year || "", pieces: myProfile.pieces || [], tastes: myProfile.tastes || [], composerDay: myProfile.composerDay || "" });
-    setStep(0); setEditingProfile(true); setScreen("signup");
+    setStep(typeof atStep === "number" ? atStep : 0); setEditingProfile(true); setScreen("signup");
   }
   // Remember where this tab is (see readNav) on every move.
   useEffect(() => {
@@ -12749,26 +12749,28 @@ function MusicianProfile({ student, conservatory, connCount, onBack, onMessage, 
           <div className={`mp-portrait${likes?.mine ? " is-liked" : ""}`}>{s.photoUrl ? <img src={s.photoUrl} alt="" /> : <span>{initials(s.name || "?")}</span>}</div>
           <div className="mp-who">
             <h1 className="mp-name"><span data-no-translate="">{s.name}</span>{s.conservatoryVerified && <NxVerified size={20} color="#800020" />}</h1>
-            {nConn != null && (
-              <button type="button" className="mp-conn-count" onClick={openConnections} disabled={!nConn}>
-                {nConn === 1 ? "1 connection" : `${nConn} connections`}
-              </button>
-            )}
+            <div className="mp-sub-row">
+              {!owner && nConn != null && (
+                <button type="button" className="mp-conn-count" onClick={openConnections} disabled={!nConn}>
+                  {nConn === 1 ? "1 connection" : `${nConn} connections`}
+                </button>
+              )}
+              {likes && (
+                owner ? (
+                  <span className="mp-like is-own" aria-label={likes.n === 1 ? "1 like" : `${likes.n} likes`}><IconHeart /><b>{likes.n}</b></span>
+                ) : (
+                  <button type="button" className={`mp-like${likes.mine ? " is-on" : ""}`} onClick={toggleLike}
+                    aria-pressed={likes.mine} aria-label={likes.mine ? "Unlike" : "Like"}>
+                    <IconHeart /><b>{likes.n}</b>
+                  </button>
+                )
+              )}
+            </div>
           </div>
         </header>
         {/* The details run the full width under the portrait, so they keep to
             one line each instead of wrapping beside it. */}
         <div className="mp-details">
-          {likes && (
-            owner ? (
-              <span className="mp-like is-own" aria-label={likes.n === 1 ? "1 like" : `${likes.n} likes`}><IconHeart /><b>{likes.n}</b></span>
-            ) : (
-              <button type="button" className={`mp-like${likes.mine ? " is-on" : ""}`} onClick={toggleLike}
-                aria-pressed={likes.mine} aria-label={likes.mine ? "Unlike" : "Like"}>
-                <IconHeart /><b>{likes.n}</b>
-              </button>
-            )
-          )}
           <div className="mp-lines">
             {place && <p className="mp-place"><span data-no-translate="">{place}</span></p>}
             <p className="mp-meta">{instrumentsOf(s).join(" | ")}{s.year && <><i aria-hidden="true">·</i>{s.year}</>}</p>
@@ -12890,6 +12892,7 @@ function MusicianProfile({ student, conservatory, connCount, onBack, onMessage, 
                 <li key={i}>
                   <span className="mp-list-t"><b data-no-translate="">{p.title}</b><em data-no-translate="">{p.composer}</em></span>
                   {PIECE_STATUS[p.status] && <span className={`mp-status is-${p.status}`}>{PIECE_STATUS[p.status].label}</span>}
+                  {owner?.onEditPieces && <button type="button" className="mp-update" onClick={owner.onEditPieces}>Update</button>}
                 </li>
               ))}
             </ul>
@@ -13016,7 +13019,7 @@ function MyProfile({ profile, onEdit, onLogout, onDeleteAccount, onBack, onUpdat
   const cons = findConservatory(profile.conservatoryId);
   if (MODERN) {
     return <MusicianProfile student={profile} conservatory={cons} onBack={onBack}
-      owner={{ onEdit, onLogout, onDeleteAccount, onUpdateCoverPhoto, connections, footer: <LegalLinks /> }} />;
+      owner={{ onEdit: () => onEdit(), onEditPieces: () => onEdit(3), onLogout, onDeleteAccount, onUpdateCoverPhoto, connections, footer: <LegalLinks /> }} />;
   }
   const [confirmDelete, setConfirmDelete] = React.useState(false);
   const [deleting, setDeleting] = React.useState(false);
