@@ -197,3 +197,6 @@
 .mp-status.is-challenge::before { background: #D93025; }
 /* Going well: a green dot. */
 .mp-status.is-good::before { background: #1E9E5A; }
+
+/* "1 connection" under the name: the links' bold system font, in burgundy. */
+.mp-conn-count { margin: 4px 0 0; font-family: var(--mp-fb); font-size: 14.5px; font-weight: 600; color: #800020; }

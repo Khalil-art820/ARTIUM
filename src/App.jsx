@@ -12660,6 +12660,8 @@ function MusicianProfile({ student, conservatory, connCount, onBack, onMessage, 
   const messageSolid = !cfg || connect.state === "connected" || connect.state === "sent";
   const hasCover = s.coverPhotoUrl && brokenCover !== s.coverPhotoUrl;
   const shownConn = conns ? (allConn ? conns.list : conns.list.slice(0, 4)) : [];
+  // Under the name: how many connections they have.
+  const nConn = conns ? conns.list.length : connCount;
   return (
     <div className="mp">
       <div className="mp-inner">
@@ -12687,6 +12689,7 @@ function MusicianProfile({ student, conservatory, connCount, onBack, onMessage, 
           <div className="mp-portrait">{s.photoUrl ? <img src={s.photoUrl} alt="" /> : <span>{initials(s.name || "?")}</span>}</div>
           <div className="mp-who">
             <h1 className="mp-name"><span data-no-translate="">{s.name}</span>{s.conservatoryVerified && <NxVerified size={20} color="#800020" />}</h1>
+            {nConn != null && <p className="mp-conn-count">{nConn === 1 ? "1 connection" : `${nConn} connections`}</p>}
           </div>
         </header>
         {/* The details run the full width under the portrait, so they keep to
@@ -12785,14 +12788,7 @@ function MusicianProfile({ student, conservatory, connCount, onBack, onMessage, 
               </button>
             ))}
           </section>
-        ) : connCount != null && (
-          <section className="mp-sec">
-            <div className="mp-h-row">
-              <h2 className="mp-h">Connections</h2>
-              <span className="mp-n">{connCount}</span>
-            </div>
-          </section>
-        )}
+        ) : null}
 
         {videos.length > 0 && (
           <section className="mp-sec">
