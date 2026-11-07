@@ -12665,7 +12665,12 @@ function MusicianProfile({ student, conservatory, connCount, onBack, onMessage, 
       <div className="mp-inner">
         <div className={`mp-hero${hasCover ? "" : " is-blank"}`}>
           {hasCover && <img className="mp-hero-img" src={s.coverPhotoUrl} alt="" onError={() => setBrokenCover(s.coverPhotoUrl)} />}
-          {onBack && <button type="button" className="mp-back" onClick={onBack} aria-label="Back"><ChevronLeft size={20} strokeWidth={2} /></button>}
+          {onBack && (
+            <button type="button" className="mp-back" onClick={onBack} aria-label="Back">
+              {/* The conversation page's back arrow: a full arrow, not a chevron. */}
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 12H4.5M11 5l-7 7 7 7" /></svg>
+            </button>
+          )}
           {owner && (
             <div className="mp-cover-tools">
               <button type="button" disabled={coverBusy} onClick={() => coverInput.current && coverInput.current.click()}>
