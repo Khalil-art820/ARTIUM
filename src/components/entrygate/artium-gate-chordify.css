@@ -768,3 +768,6 @@ html.theme-modern .cgate .cg-actions button.cg-round.cg-round,html.theme-modern 
 .cgate .cg-btn{background:#F5B700 !important;background-image:none !important;color:#FFFFFF !important}
 .cgate .cg-btn:hover:not(:disabled){background:#E5AA00 !important}
 html.theme-modern .cgate .cg-hero h1 .cg-accent{background:none !important;-webkit-text-fill-color:#F5B700 !important;color:#F5B700 !important}
+/* Text on the yellow: black. */
+.cgate .cg-btn,html.theme-modern .cgate .cg-btn{color:#000000 !important}
+html.theme-modern .cgate .tm-hm-n,.cgate .tm-hm-n{color:#000000 !important}
