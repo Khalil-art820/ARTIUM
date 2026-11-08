@@ -5376,7 +5376,7 @@ export default function App() {
         />
       )}
 
-      {view === "entry" && <EntryGate onLearner={chooseLearner} onStudent={() => chooseStudent("otp")} onPianist={choosePianist} onLogin={startLogin} onComposers={() => setScreen("composers")} learnerProfile={learnerProfile} learnerLoggedOut={learnerLoggedOut} studentLoggedIn={!!myProfile} musicOn={musicPlaying} onMusicToggle={toggleMusic} memberCount={Object.values(studentsByCons).flat().length} avatarPhotoUrl={accountPhotoUrl} avatarName={accountName} avatarNode={(myProfile || learnerProfile) ? (
+      {view === "entry" && <EntryGate onLearner={chooseLearner} onStudent={() => chooseStudent("otp")} onPianist={choosePianist} onLogin={startLogin} onComposers={() => setScreen("composers")} learnerProfile={learnerProfile} learnerLoggedOut={learnerLoggedOut} studentLoggedIn={!!myProfile} welcomeName={myProfile && authProfile?.approved ? String(myProfile.name || "").trim().split(/\s+/)[0] : null} musicOn={musicPlaying} onMusicToggle={toggleMusic} memberCount={Object.values(studentsByCons).flat().length} avatarPhotoUrl={accountPhotoUrl} avatarName={accountName} avatarNode={(myProfile || learnerProfile) ? (
         <Avatar
           name={(myProfile || learnerProfile).name}
           id="me"

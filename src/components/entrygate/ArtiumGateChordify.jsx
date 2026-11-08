@@ -272,7 +272,7 @@ function CardFan({ active, onActive, cards = FAN_CARDS }) {
 
 export default function ArtiumGateChordify({
   onLearner, onStudent, onPianist, onComposers, onNews,
-  learnerProfile, studentLoggedIn, musicOn, onMusicToggle, memberCount,
+  learnerProfile, studentLoggedIn, welcomeName, musicOn, onMusicToggle, memberCount,
   avatarPhotoUrl, avatarName, onAvatar, onLogout, memberChips, bellSlot, avatarNode, featuredMembers, legalSheet, connCount = 0,
 }) {
   React.useEffect(() => {
@@ -380,10 +380,17 @@ export default function ArtiumGateChordify({
           <div className="cg-deck-dots cf-dots" aria-hidden="true">
             {cards.map((c, i) => <i key={c.key} className={i === fanActive ? "is-on" : undefined} />)}
           </div>
-          <button type="button" className="cg-btn" aria-label="Join as a Conservatory Student or Graduate" disabled={medallionOff}
-            onClick={(e) => { e.stopPropagation(); activateStudent(e); }}>
-            Join as a Conservatory Student or Graduate
-          </button>
+          {/* An approved member is greeted by name; the button opens their profile. */}
+          {welcomeName ? (
+            <button type="button" className="cg-btn cg-welcome" onClick={(e) => { e.stopPropagation(); if (onAvatar) onAvatar(); }}>
+              Welcome back, {welcomeName}
+            </button>
+          ) : (
+            <button type="button" className="cg-btn" aria-label="Join as a Conservatory Student or Graduate" disabled={medallionOff}
+              onClick={(e) => { e.stopPropagation(); activateStudent(e); }}>
+              Join as a Conservatory Student or Graduate
+            </button>
+          )}
         </article>
 
         <article className="cg-card cg-list">
