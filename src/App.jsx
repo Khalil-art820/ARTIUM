@@ -6164,11 +6164,13 @@ const IconTeacher = ({ size = 34 }) => (
   }} />
 );
 // Network tab: two half discs facing each other across a gap of one line
-// width. Outlined when not selected, solid when selected.
+// width, turned 45 degrees. Outlined when not selected, solid when selected.
 const IconHalves = (p) => (
   <IconBox {...p}>
-    <path className="hv-shape" d="M10.2 3A9 9 0 0 0 10.2 21Z" />
-    <path className="hv-shape" d="M13.8 3A9 9 0 0 1 13.8 21Z" />
+    <g transform="rotate(45 12 12)">
+      <path className="hv-shape" d="M10.2 3A9 9 0 0 0 10.2 21Z" />
+      <path className="hv-shape" d="M13.8 3A9 9 0 0 1 13.8 21Z" />
+    </g>
   </IconBox>
 );
 // Lessons tab: a rounded square with three lines inside. Selected, the square
