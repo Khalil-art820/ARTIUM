@@ -787,9 +787,6 @@ html.theme-modern .cgate .cg-card,.cgate .cg-card{border-top:0 !important;border
    from each edge) with rounded corners, instead of running edge to edge. */
 html.theme-modern .cgate .cg-app,.cgate .cg-app{margin:8px 4px !important;border-radius:14px !important;overflow:hidden}
 html.theme-modern .cgate .cg-card.cg-partners,.cgate .cg-card.cg-partners{margin:8px 4px !important;border-radius:14px !important}
-/* In the inset partners block the four tiles share the width evenly. */
+/* In the inset partners block the three tiles share the width evenly. */
 html.theme-modern .cgate .cg-card.cg-partners,.cgate .cg-card.cg-partners{padding-left:10px !important;padding-right:10px !important}
 .cgate .cg-partners .cg-partner-row{justify-content:space-evenly !important;gap:0 !important}
-.cgate .cg-partner-row img,.cgate .cg-partner-row .pr-vacant-disc{width:60px;height:60px}
-.cgate .cg-partner > span:not(.cg-partner-social){font-size:13px}
-.cgate .pr-vacant-label{font-size:12.5px}

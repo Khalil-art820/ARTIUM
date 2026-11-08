@@ -447,7 +447,6 @@ export default function ArtiumGateChordify({
             </div>
             <VacantPartnerTile onClick={() => setPartnerOpen(true)} />
             <VacantPartnerTile onClick={() => setPartnerOpen(true)} />
-            <VacantPartnerTile onClick={() => setPartnerOpen(true)} />
           </div>
         </article>
         <PartnerRequestSheet open={partnerOpen} onClose={() => setPartnerOpen(false)} />
