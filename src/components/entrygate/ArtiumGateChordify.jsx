@@ -232,9 +232,22 @@ function CardFan({ active, onActive, cards = FAN_CARDS }) {
               </span>
             )}
             <span className="cf-shade" aria-hidden="true" />
-            {/* Caption: a burgundy pill, the instrument mark and the name in white. */}
+            {/* A member's instrument: a pill at the photo's top left, white mark then the name. */}
+            {c.name && c.label && (
+              <span className="cf-inst-pill">
+                {c.icon ? (
+                  <span className="cf-inst-ic" aria-hidden="true" style={{ WebkitMaskImage: `url(${c.icon})`, maskImage: `url(${c.icon})` }} />
+                ) : (
+                  <svg className="cf-inst-ic cf-inst-ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" />
+                  </svg>
+                )}
+                {c.label}
+              </span>
+            )}
+            {/* Caption: the member's name in white; an instrument card shows its mark. */}
             <span className={`cf-cap cf-cap-row${c.name ? "" : " is-solo"}`}>
-              {c.icon ? (
+              {!c.name && (c.icon ? (
                 // The instrument drawing as a mask filled in solid gold, so it
                 // reads crisply at small sizes on any photo.
                 <span className="cf-mark" aria-hidden="true" style={{ WebkitMaskImage: `url(${c.icon})`, maskImage: `url(${c.icon})` }} />
@@ -242,7 +255,7 @@ function CardFan({ active, onActive, cards = FAN_CARDS }) {
                 <svg className="cf-mark cf-mark-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M2.5 9.5 12 5l9.5 4.5L12 14z" /><path d="M6.5 11.5v4c1.6 1.4 3.4 2 5.5 2s3.9-.6 5.5-2v-4" /><path d="M21.5 9.5v5" />
                 </svg>
-              )}
+              ))}
               {c.name && <span className="cf-person">{on ? c.name : c.name.split(" ")[0]}</span>}
             </span>
           </button>
