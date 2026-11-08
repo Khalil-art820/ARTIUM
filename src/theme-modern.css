@@ -1403,3 +1403,6 @@ html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button[data-on="1"] .ls
 html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button[data-k="lessons"] svg,
 html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button[data-k="lesson"] svg{scale:.94}
 html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button[data-k="map"] svg{scale:.83}
+/* Lessons, not selected: the square's line as thick on screen as the
+   paper plane's (the plane is drawn 1.125x, the square 0.94x). */
+html.theme-modern .artium-aw-tabs.artium-aw-tabs--modern button:not([data-on="1"]) .ls-box{stroke-width:2.15}

@@ -735,3 +735,5 @@
 .cgate .cf-verified{background:none !important;box-shadow:none !important;border-radius:0}
 .cgate .cf-verified svg{width:100%;height:100%;filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.35))}
 .cgate .cf-card.is-on .cf-verified svg{width:100%;height:100%}
+/* The badge's white scalloped ring does the reading-on-any-photo now. */
+.cgate .cf-verified svg{filter:none}
