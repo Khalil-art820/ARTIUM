@@ -790,3 +790,5 @@ html.theme-modern .cgate .cg-card.cg-partners,.cgate .cg-card.cg-partners{margin
 /* In the inset partners block the three tiles share the width evenly. */
 html.theme-modern .cgate .cg-card.cg-partners,.cgate .cg-card.cg-partners{padding-left:10px !important;padding-right:10px !important}
 .cgate .cg-partners .cg-partner-row{justify-content:space-evenly !important;gap:0 !important}
+/* The partner logo's ring in old rose. */
+html.theme-modern .cgate .cg-partner-row img,.cgate .cg-partner-row img{outline-color:#A8505F !important}
