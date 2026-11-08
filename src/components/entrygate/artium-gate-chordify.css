@@ -775,7 +775,3 @@ html.theme-modern .cgate .cg-deck-dots i,.cgate .cg-deck-dots i{background:#D6D6
 html.theme-modern .cgate .cg-deck-dots i.is-on,.cgate .cg-deck-dots i.is-on{background:#8A8A8A !important}
 /* Cards: no drop shadows and no gold rim; just the photos. */
 html.theme-modern .cgate .cf-card,.cgate .cf-card,html.theme-modern .cgate .cf-card.is-on,.cgate .cf-card.is-on{box-shadow:none !important;border:0 !important;outline:0 !important}
-/* The bottom band stands apart from the photo: a thin white line follows its
-   arched top edge (the band's own shape, lifted 2px). */
-html.theme-modern .cgate .cf-cap.cf-cap-row,.cgate .cf-cap.cf-cap-row,.cgate .cf-card.is-on .cf-cap.cf-cap-row,.cgate .cf-card:not(.is-on) .cf-cap.cf-cap-row{box-shadow:0 -2px 0 0 #FFFFFF !important}
-.cgate .cf-card:not(.is-on) .cf-cap.cf-cap-row{box-shadow:0 -1.5px 0 0 #FFFFFF !important}
