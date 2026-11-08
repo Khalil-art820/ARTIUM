@@ -12408,8 +12408,8 @@ const STUDENT_TABS = [
   { k: "home", label: "Home", Icon: IconHomeArch },
   { k: "map", label: "Network", Icon: MODERN ? IconHalves : GlobeIcon },
   { k: "messages", label: "Messages", Icon: MODERN ? IconDirect : MessageCircle },
-  { k: "promote", label: "Promote", Icon: MODERN ? IconMegaphone : Megaphone },
   { k: "lessons", label: "Lessons", Icon: MODERN ? IconLessonsTab : BookOpen },
+  { k: "promote", label: "Promote", Icon: MODERN ? IconMegaphone : Megaphone },
   { k: "profile", label: "Profile", Icon: User },
 ];
 

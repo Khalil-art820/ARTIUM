@@ -730,3 +730,8 @@
 .cgate .cg-partner > img{padding:0;background:none;outline:1.5px solid #000000;outline-offset:3px}
 .cgate .cg-partner > img{outline:1.5px solid #000000;outline-offset:-6px}  /* the ring inside the white disc, set in from its edge */
 .cgate .cg-partner > img{outline-offset:-4px}
+/* Verified badge on a card: just the scalloped burgundy mark, no white plate;
+   a soft shadow that follows its shape keeps it readable on any photo. */
+.cgate .cf-verified{background:none !important;box-shadow:none !important;border-radius:0}
+.cgate .cf-verified svg{width:100%;height:100%;filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.35))}
+.cgate .cf-card.is-on .cf-verified svg{width:100%;height:100%}
