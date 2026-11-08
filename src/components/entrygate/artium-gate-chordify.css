@@ -768,3 +768,5 @@ html.theme-modern .cgate .cg-actions button.cg-round.cg-round,html.theme-modern 
 .cgate .cg-btn{background:#A8505F !important;background-image:none !important;color:#FFFFFF !important}
 .cgate .cg-btn:hover:not(:disabled){background:#924351 !important}
 html.theme-modern .cgate .cg-hero h1 .cg-accent{background:none !important;-webkit-text-fill-color:#A8505F !important;color:#A8505F !important}
+/* The card fan sits straight on the page: no purple panel behind it. */
+html.theme-modern .cgate .cg-illo.cg-illo-fan,.cgate .cg-illo.cg-illo-fan{background:none !important;box-shadow:none !important;border:0 !important}
