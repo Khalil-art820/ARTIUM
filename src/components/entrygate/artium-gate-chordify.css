@@ -775,3 +775,6 @@ html.theme-modern .cgate .cg-deck-dots i,.cgate .cg-deck-dots i{background:#D6D6
 html.theme-modern .cgate .cg-deck-dots i.is-on,.cgate .cg-deck-dots i.is-on{background:#8A8A8A !important}
 /* Cards: no drop shadows and no gold rim; just the photos. */
 html.theme-modern .cgate .cf-card,.cgate .cf-card,html.theme-modern .cgate .cf-card.is-on,.cgate .cf-card.is-on{box-shadow:none !important;border:0 !important;outline:0 !important}
+/* Get-the-app buttons in the join button's old rose. */
+html.theme-modern .cgate .cg-app-btn,.cgate .cg-app-btn{background:#A8505F !important;background-image:none !important;color:#FFFFFF !important;border-color:transparent !important}
+html.theme-modern .cgate .cg-app-btn:hover,.cgate .cg-app-btn:hover{background:#924351 !important}
