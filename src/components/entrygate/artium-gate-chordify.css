@@ -770,3 +770,6 @@ html.theme-modern .cgate .cg-actions button.cg-round.cg-round,html.theme-modern 
 html.theme-modern .cgate .cg-hero h1 .cg-accent{background:none !important;-webkit-text-fill-color:#A8505F !important;color:#A8505F !important}
 /* The card fan sits straight on the page: no purple panel behind it. */
 html.theme-modern .cgate .cg-illo.cg-illo-fan,.cgate .cg-illo.cg-illo-fan{background:none !important;box-shadow:none !important;border:0 !important}
+/* Card dots in old rose: the current one solid, the others a pale tint. */
+html.theme-modern .cgate .cg-deck-dots i,.cgate .cg-deck-dots i{background:#E8CCD1 !important}
+html.theme-modern .cgate .cg-deck-dots i.is-on,.cgate .cg-deck-dots i.is-on{background:#A8505F !important}
