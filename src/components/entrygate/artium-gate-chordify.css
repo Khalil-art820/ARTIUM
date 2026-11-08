@@ -755,3 +755,7 @@
 .cgate .cf-cap-row .cf-verified,.cgate .cf-card.is-on .cf-cap-row .cf-verified{position:static;flex:none;width:15px;height:15px;margin-left:1px;display:block}
 .cgate .cf-card:not(.is-on) .cf-cap-row .cf-verified{width:11px;height:11px}
 .cgate .cf-cap-row .cf-verified svg{width:100%;height:100%;display:block}
+/* The name sits dead centre: an invisible spacer on its left mirrors the
+   seal on its right. */
+.cgate .cf-cap-row:not(.is-solo)::before{content:"";flex:none;width:15px;height:1px;margin-right:1px}
+.cgate .cf-card:not(.is-on) .cf-cap-row:not(.is-solo)::before{width:11px}
