@@ -380,17 +380,11 @@ export default function ArtiumGateChordify({
           <div className="cg-deck-dots cf-dots" aria-hidden="true">
             {cards.map((c, i) => <i key={c.key} className={i === fanActive ? "is-on" : undefined} />)}
           </div>
-          {/* An approved member is greeted by name; the button opens their profile. */}
-          {welcomeName ? (
-            <button type="button" className="cg-btn cg-welcome" onClick={(e) => { e.stopPropagation(); if (onAvatar) onAvatar(); }}>
-              Welcome back, {welcomeName}
-            </button>
-          ) : (
-            <button type="button" className="cg-btn" aria-label="Join as a Conservatory Student or Graduate" disabled={medallionOff}
-              onClick={(e) => { e.stopPropagation(); activateStudent(e); }}>
-              Join as a Conservatory Student or Graduate
-            </button>
-          )}
+          {/* Same button and action; an approved member is greeted by name. */}
+          <button type="button" className="cg-btn" aria-label={welcomeName ? `Welcome back, ${welcomeName}` : "Join as a Conservatory Student or Graduate"} disabled={medallionOff}
+            onClick={(e) => { e.stopPropagation(); activateStudent(e); }}>
+            {welcomeName ? <>Welcome back, {welcomeName}</> : "Join as a Conservatory Student or Graduate"}
+          </button>
         </article>
 
         <article className="cg-card cg-list">
