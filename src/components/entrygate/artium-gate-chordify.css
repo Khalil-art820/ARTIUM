@@ -811,3 +811,5 @@ html.theme-modern .cgate button.cg-btn.cg-btn,html.theme-modern .cgate button.cg
 html.theme-modern .cgate .cg-hero h1 span.cg-accent.cg-accent{
   background:linear-gradient(170deg,#D58A97 0%,#B45E6D 38%,#A8505F 58%,#7E3341 100%) !important;
   -webkit-background-clip:text !important;background-clip:text !important;-webkit-text-fill-color:transparent !important;color:#A8505F !important}
+/* The wordmark a little closer to the menu lines. */
+html.theme-modern .cgate .cg-head .cg-brand,.cgate .cg-head .cg-brand{gap:4px !important}

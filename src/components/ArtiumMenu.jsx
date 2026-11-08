@@ -139,7 +139,7 @@ function Drawer({ onClose, onProfile, onLogout, onLegal }) {
     <div className="am-root" role="dialog" aria-modal="true" aria-label="Menu" onClick={onClose}>
       <nav className="am-panel" onClick={(e) => e.stopPropagation()}>
         <div className="am-card">
-          {/* The app icon (the radio's white bars on dark) and the ARTIUM
+          {/* The app icon (the radio's white bars on glossy old rose) and the ARTIUM
               wordmark exactly as the top bar draws it. */}
           <span className="am-mark" aria-hidden="true">
             <svg viewBox="0 0 24 24">

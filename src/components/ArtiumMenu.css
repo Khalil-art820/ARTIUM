@@ -64,3 +64,6 @@
 .am-word{display:inline-flex;align-items:center;font-family:'Jost',system-ui,sans-serif !important;font-weight:600 !important;font-size:19px !important;
   letter-spacing:.2em;text-transform:uppercase;color:#1C1C1C !important;line-height:1}
 .am-word svg{width:.72em;height:.72em;margin-right:.14em;display:block}
+/* The menu's app logo in the radio button's glossy old rose. */
+.am-panel .am-mark{background:linear-gradient(165deg,#D58A97 0%,#B45E6D 42%,#A8505F 60%,#8A3B49 100%) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.55),inset 0 -2px 4px rgba(70,15,30,.28),0 2px 6px -2px rgba(110,40,55,.45)}
