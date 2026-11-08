@@ -737,3 +737,11 @@
 .cgate .cf-card.is-on .cf-verified svg{width:100%;height:100%}
 /* The badge's white scalloped ring does the reading-on-any-photo now. */
 .cgate .cf-verified svg{filter:none}
+/* ---- Caption as a burgundy pill: white instrument mark, bold white name ---- */
+.cgate .cf-cap.cf-cap-row:not(.is-solo),.cgate .cf-card.is-on .cf-cap.cf-cap-row:not(.is-solo),.cgate .cf-card:not(.is-on) .cf-cap.cf-cap-row:not(.is-solo){
+  background:#800020 !important;-webkit-backdrop-filter:none !important;backdrop-filter:none !important;box-shadow:0 2px 8px -2px rgba(0,0,0,.35);
+  border:0 !important;border-radius:8px;padding:6px 10px}
+.cgate .cf-card.is-on .cf-cap.cf-cap-row:not(.is-solo){left:50%;right:auto;transform:translateX(-50%);width:max-content;max-width:calc(100% - 20px);border-radius:9px;padding:7px 12px}
+.cgate .cf-cap-row .cf-person{color:#FFFFFF !important;font-weight:700 !important;text-shadow:none !important}
+.cgate .cf-cap-row:not(.is-solo) .cf-mark{background:#FFFFFF;filter:drop-shadow(0 0 .45px #FFFFFF) drop-shadow(0 0 .45px #FFFFFF)}
+.cgate .cf-cap-row:not(.is-solo) .cf-mark-svg{background:none;color:#FFFFFF;filter:none}

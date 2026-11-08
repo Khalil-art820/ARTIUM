@@ -224,15 +224,15 @@ function CardFan({ active, onActive, cards = FAN_CARDS }) {
             {c.name && (
               // Verified member: the burgundy badge with a white ring that follows its scallops.
               <span className="cf-verified" title="Verified conservatory member" aria-label="Verified">
-                {/* The app's verified badge: Instagram's scalloped shape, in burgundy. */}
+                {/* The verified badge: a saw-toothed seal (twelve triangular teeth) in burgundy. */}
                 <svg viewBox="-2 -2 28 28" aria-hidden="true">
-                  <path stroke="#FFFFFF" strokeWidth="3" strokeLinejoin="round" paintOrder="stroke" d="M12.00 2.60Q15.25 -0.12 16.70 3.86Q20.87 3.13 20.14 7.30Q24.12 8.75 21.40 12.00Q24.12 15.25 20.14 16.70Q20.87 20.87 16.70 20.14Q15.25 24.12 12.00 21.40Q8.75 24.12 7.30 20.14Q3.13 20.87 3.86 16.70Q-0.12 15.25 2.60 12.00Q-0.12 8.75 3.86 7.30Q3.13 3.13 7.30 3.86Q8.75 -0.12 12.00 2.60Z" fill="#800020" />
+                  <path stroke="#FFFFFF" strokeWidth="3" strokeLinejoin="miter" strokeMiterlimit="8" paintOrder="stroke" d="M12.00 0.70 L14.38 3.11 L17.65 2.21 L18.51 5.49 L21.79 6.35 L20.89 9.62 L23.30 12.00 L20.89 14.38 L21.79 17.65 L18.51 18.51 L17.65 21.79 L14.38 20.89 L12.00 23.30 L9.62 20.89 L6.35 21.79 L5.49 18.51 L2.21 17.65 L3.11 14.38 L0.70 12.00 L3.11 9.62 L2.21 6.35 L5.49 5.49 L6.35 2.21 L9.62 3.11Z" fill="#800020" />
                   <path d="M7.7 12.2l2.9 2.9 5.8-5.9" fill="none" stroke="#FFFFFF" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </span>
             )}
             <span className="cf-shade" aria-hidden="true" />
-            {/* Caption band: the instrument mark in gold beside the name. */}
+            {/* Caption: a burgundy pill, the instrument mark and the name in white. */}
             <span className={`cf-cap cf-cap-row${c.name ? "" : " is-solo"}`}>
               {c.icon ? (
                 // The instrument drawing as a mask filled in solid gold, so it
