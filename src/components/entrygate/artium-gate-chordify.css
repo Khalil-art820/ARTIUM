@@ -796,3 +796,11 @@ html.theme-modern .cgate .cg-partner-row img,.cgate .cg-partner-row img{outline-
 .cgate .cg-row.cg-row-static{cursor:default}
 .cgate .cg-row.cg-row-static:hover{background:none}
 .cgate .cg-trust-tile{color:var(--teal) !important}
+/* The +N, radio and bell in glossy old rose: a light-to-deep sheen with a
+   bright top edge. */
+html.theme-modern .cgate .tm-hm-n.tm-hm-n,
+html.theme-modern .cgate .cg-actions button.cg-round.cg-round.cg-round,
+html.theme-modern .cgate .cg-actions .artium-net-puck.artium-net-puck.artium-net-puck,
+html.theme-modern .cgate .cg-actions .artium-net-puck.artium-net-puck.artium-net-puck:not(.tm-back-plain){
+  background:linear-gradient(165deg,#D58A97 0%,#B45E6D 42%,#A8505F 60%,#8A3B49 100%) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.55),inset 0 -2px 4px rgba(70,15,30,.28),0 2px 6px -2px rgba(110,40,55,.45) !important}
