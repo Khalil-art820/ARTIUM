@@ -773,3 +773,5 @@ html.theme-modern .cgate .cg-illo.cg-illo-fan,.cgate .cg-illo.cg-illo-fan{backgr
 /* Card dots in old rose: the current one solid, the others a pale tint. */
 html.theme-modern .cgate .cg-deck-dots i,.cgate .cg-deck-dots i{background:#E8CCD1 !important}
 html.theme-modern .cgate .cg-deck-dots i.is-on,.cgate .cg-deck-dots i.is-on{background:#A8505F !important}
+/* Front card: no drop shadow beneath it; its thin gold rim stays. */
+html.theme-modern .cgate .cf-card.is-on,.cgate .cf-card.is-on{box-shadow:0 0 0 1px rgba(214,186,128,.35),inset 0 1px 0 rgba(255,240,210,.55) !important}
