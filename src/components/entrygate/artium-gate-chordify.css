@@ -759,12 +759,12 @@
    seal on its right. */
 .cgate .cf-cap-row:not(.is-solo)::before{content:"";flex:none;width:15px;height:1px;margin-right:1px}
 .cgate .cf-card:not(.is-on) .cf-cap-row:not(.is-solo)::before{width:11px}
-/* Entry gate accent in the app's burgundy: the +N, the radio and the bell,
+/* Entry gate accent in old rose: the +N, the radio and the bell,
    the "Connect." word and the join button (white text and icons). */
-html.theme-modern .cgate .tm-hm-n,.cgate .tm-hm-n{background:#800020 !important;color:#FFFFFF}
-html.theme-modern .cgate .cg-actions button.cg-round.cg-round,html.theme-modern .cgate .cg-actions .artium-net-puck.artium-net-puck,html.theme-modern .cgate .cg-actions .artium-net-puck.artium-net-puck:not(.tm-back-plain){background:#800020 !important;background-image:none !important;color:#FFFFFF !important;
-  box-shadow:0 2px 6px -2px rgba(80,0,20,.45) !important;border-color:transparent !important}
-.cgate .cg-hero h1 .cg-accent{color:#800020 !important}
-.cgate .cg-btn{background:#800020 !important;background-image:none !important;color:#FFFFFF !important}
-.cgate .cg-btn:hover:not(:disabled){background:#6A001A !important}
-html.theme-modern .cgate .cg-hero h1 .cg-accent{background:none !important;-webkit-text-fill-color:#800020 !important;color:#800020 !important}
+html.theme-modern .cgate .tm-hm-n,.cgate .tm-hm-n{background:#A8505F !important;color:#FFFFFF}
+html.theme-modern .cgate .cg-actions button.cg-round.cg-round,html.theme-modern .cgate .cg-actions .artium-net-puck.artium-net-puck,html.theme-modern .cgate .cg-actions .artium-net-puck.artium-net-puck:not(.tm-back-plain){background:#A8505F !important;background-image:none !important;color:#FFFFFF !important;
+  box-shadow:0 2px 6px -2px rgba(110,40,55,.4) !important;border-color:transparent !important}
+.cgate .cg-hero h1 .cg-accent{color:#A8505F !important}
+.cgate .cg-btn{background:#A8505F !important;background-image:none !important;color:#FFFFFF !important}
+.cgate .cg-btn:hover:not(:disabled){background:#924351 !important}
+html.theme-modern .cgate .cg-hero h1 .cg-accent{background:none !important;-webkit-text-fill-color:#A8505F !important;color:#A8505F !important}
