@@ -778,3 +778,6 @@ html.theme-modern .cgate .cf-card,.cgate .cf-card,html.theme-modern .cgate .cf-c
 /* Get-the-app buttons in the join button's old rose. */
 html.theme-modern .cgate .cg-app-btn,.cgate .cg-app-btn{background:#A8505F !important;background-image:none !important;color:#FFFFFF !important;border-color:transparent !important}
 html.theme-modern .cgate .cg-app-btn:hover,.cgate .cg-app-btn:hover{background:#924351 !important}
+/* The whole entry gate on plain white; the partners card a softer black. */
+html.theme-modern .cgate,.cgate{background:#FFFFFF !important}
+html.theme-modern .cgate .cg-card.cg-partners,.cgate .cg-card.cg-partners{background:#3A3A3E !important}
