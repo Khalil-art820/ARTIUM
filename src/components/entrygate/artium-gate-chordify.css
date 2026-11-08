@@ -792,3 +792,7 @@ html.theme-modern .cgate .cg-card.cg-partners,.cgate .cg-card.cg-partners{paddin
 .cgate .cg-partners .cg-partner-row{justify-content:space-evenly !important;gap:0 !important}
 /* The partner logo's ring in old rose. */
 html.theme-modern .cgate .cg-partner-row img,.cgate .cg-partner-row img{outline-color:#A8505F !important}
+/* Why Artium rows: Explore's look, not tappable, icons in the teal. */
+.cgate .cg-row.cg-row-static{cursor:default}
+.cgate .cg-row.cg-row-static:hover{background:none}
+.cgate .cg-trust-tile{color:var(--teal) !important}

@@ -412,20 +412,31 @@ export default function ArtiumGateChordify({
 
         <InstallAppBanner />
 
-        <section className="cg-card cg-trust" aria-label="Why Artium">
-          <div className="cg-trust-cell">
-            <span className="cg-trust-ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><circle cx="9" cy="8" r="3" /><path d="M3 19c1-3.2 3.2-4.8 6-4.8s5 1.6 6 4.8" /><circle cx="17" cy="7" r="2.4" /><path d="M15.5 12.7c2.6.1 4.5 1.5 5.3 4.3" /></svg></span>
-            <span><h4>Trusted Community</h4><p>Verified conservatory students</p></span>
-          </div>
-          <div className="cg-trust-cell">
-            <span className="cg-trust-ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 2l8 3v6c0 5-3.4 8.6-8 11-4.6-2.4-8-6-8-11V5z" /><path d="M8.6 12l2.3 2.3 4.5-4.6" /></svg></span>
-            <span><h4>Safe | Secure</h4><p>Private, secure, reliable.</p></span>
-          </div>
-          <div className="cg-trust-cell">
-            <span className="cg-trust-ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M5 20v-5M10 20v-9M15 20v-6M20 20V7" /></svg></span>
-            <span><h4>Grow Together</h4><p>Opportunities and real connections.</p></span>
-          </div>
-        </section>
+        {/* Why Artium: the same heading, rows, tiles and type as Explore, not
+            tappable, with a line between each row. */}
+        <article className="cg-card cg-list cg-trust-list" aria-label="Why Artium">
+          <h2>Why <InlineWord /></h2>
+          <ul>
+            {[
+              { title: "Trusted Community", text: "Verified conservatory students",
+                icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><circle cx="9" cy="8" r="3" /><path d="M3 19c1-3.2 3.2-4.8 6-4.8s5 1.6 6 4.8" /><circle cx="17" cy="7" r="2.4" /><path d="M15.5 12.7c2.6.1 4.5 1.5 5.3 4.3" /></svg> },
+              { title: "Safe | Secure", text: "Private, secure, reliable.",
+                icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 2l8 3v6c0 5-3.4 8.6-8 11-4.6-2.4-8-6-8-11V5z" /><path d="M8.6 12l2.3 2.3 4.5-4.6" /></svg> },
+              { title: "Grow Together", text: "Opportunities and real connections.",
+                icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M5 20v-5M10 20v-9M15 20v-6M20 20V7" /></svg> },
+            ].map((t) => (
+              <li key={t.title}>
+                <div className="cg-row cg-row-static">
+                  <span className="cg-row-tile cg-trust-tile">{t.icon}</span>
+                  <span className="cg-row-body">
+                    <span className="cg-row-title">{t.title}</span>
+                    <span className="cg-row-meta"><span>{t.text}</span></span>
+                  </span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </article>
 
 
         <article className="cg-card cg-partners">
