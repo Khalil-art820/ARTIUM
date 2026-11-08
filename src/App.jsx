@@ -3099,7 +3099,7 @@ export default function App() {
     .map((id) => students.find((st) => st.id === id))
     .filter((st) => st && st.photoUrl)
     .slice(0, 6)
-    .map((st) => ({ id: st.id, name: st.name, photoUrl: st.photoUrl, instrument: instrumentLabel(st) || "Musician", icon: instrumentIcons(st)[0] || null })),
+    .map((st) => ({ id: st.id, name: st.name, photoUrl: st.photoUrl, instrument: instrumentLabel(st) || "Musician", icon: instrumentIcons(st)[0] || null, icons: instrumentIcons(st).slice(0, 3) })),
   [likedIds, featuredIds, students]);
   const deckFaces = React.useMemo(() => {
     const pool = students.filter((st) => st.photoUrl);

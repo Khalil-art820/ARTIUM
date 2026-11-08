@@ -184,6 +184,7 @@ function fanCards(featured = []) {
   const people = featured.slice(0, FAN_MAX).map((m, i) => ({
     key: `m:${m.id || i}`, label: m.instrument, name: m.name, photo: m.photoUrl,
     icon: m.icon ? `/instruments/${m.icon}.webp` : null, pos: "50% 30%",
+    icons: (m.icons || (m.icon ? [m.icon] : [])).map((k) => `/instruments/${k}.webp`),
   }));
   // Fill with instruments not already on a featured card first.
   const shown = new Set(featured.map((m) => String(m.instrument || "").toLowerCase()));
@@ -206,6 +207,13 @@ function CardFan({ active, onActive, cards = FAN_CARDS }) {
         if (Math.abs(dx) > 30) go(dx < 0 ? 1 : -1);
       }}
       onPointerCancel={() => { start.current = null; }}>
+      {/* Turns an instrument drawing (thin, half-transparent gold lines) into
+          solid white: every colour to white, the alpha tripled. */}
+      <svg width="0" height="0" style={{ position: "absolute" }} aria-hidden="true" focusable="false">
+        <filter id="cf-white" colorInterpolationFilters="sRGB">
+          <feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 3 0" />
+        </filter>
+      </svg>
       {cards.map((c, i) => {
         // Offset from the chosen card: -1..2 for four, -2..3 for six.
         const back = n >= 5 ? 2 : 1;
@@ -221,28 +229,14 @@ function CardFan({ active, onActive, cards = FAN_CARDS }) {
             }}
             onClick={() => { if (!on) onActive(i); }}>
             <img className="cf-photo" src={c.photo} alt="" draggable={false} style={{ objectPosition: c.pos }} />
-            {c.name && (
-              // Verified member: the burgundy badge with a white ring that follows its scallops.
-              <span className="cf-verified" title="Verified conservatory member" aria-label="Verified">
-                {/* The verified badge: a saw-toothed seal (twelve triangular teeth) in burgundy. */}
-                <svg viewBox="-2 -2 28 28" aria-hidden="true">
-                  <path stroke="#FFFFFF" strokeWidth="3" strokeLinejoin="miter" strokeMiterlimit="8" paintOrder="stroke" d="M12.00 0.70 L14.38 3.11 L17.65 2.21 L18.51 5.49 L21.79 6.35 L20.89 9.62 L23.30 12.00 L20.89 14.38 L21.79 17.65 L18.51 18.51 L17.65 21.79 L14.38 20.89 L12.00 23.30 L9.62 20.89 L6.35 21.79 L5.49 18.51 L2.21 17.65 L3.11 14.38 L0.70 12.00 L3.11 9.62 L2.21 6.35 L5.49 5.49 L6.35 2.21 L9.62 3.11Z" fill="#800020" />
-                  <path d="M7.7 12.2l2.9 2.9 5.8-5.9" fill="none" stroke="#FFFFFF" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </span>
-            )}
             <span className="cf-shade" aria-hidden="true" />
-            {/* A member's instrument: a pill at the photo's top left, white mark then the name. */}
-            {c.name && c.label && (
-              <span className="cf-inst-pill">
-                {c.icon ? (
-                  <span className="cf-inst-ic" aria-hidden="true" style={{ WebkitMaskImage: `url(${c.icon})`, maskImage: `url(${c.icon})` }} />
-                ) : (
-                  <svg className="cf-inst-ic cf-inst-ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" />
-                  </svg>
-                )}
-                {c.label}
+            {/* A member's instruments: a pill at the photo's top left holding each
+                instrument's mark in solid white (no words). */}
+            {c.name && (c.icons || []).length > 0 && (
+              <span className="cf-inst-pill" title={c.label} aria-label={c.label}>
+                {c.icons.map((src) => (
+                  <img key={src} className="cf-inst-ic" src={src} alt="" draggable={false} />
+                ))}
               </span>
             )}
             {/* Caption: the member's name in white; an instrument card shows its mark. */}
@@ -257,6 +251,15 @@ function CardFan({ active, onActive, cards = FAN_CARDS }) {
                 </svg>
               ))}
               {c.name && <span className="cf-person">{on ? c.name : c.name.split(" ")[0]}</span>}
+              {c.name && (
+                // Verified member: the burgundy seal, small, right after the name.
+                <span className="cf-verified" title="Verified conservatory member" aria-label="Verified">
+                  <svg viewBox="-2 -2 28 28" aria-hidden="true">
+                    <path stroke="#FFFFFF" strokeWidth="3" strokeLinejoin="miter" strokeMiterlimit="8" paintOrder="stroke" d="M12.00 0.70 L14.38 3.11 L17.65 2.21 L18.51 5.49 L21.79 6.35 L20.89 9.62 L23.30 12.00 L20.89 14.38 L21.79 17.65 L18.51 18.51 L17.65 21.79 L14.38 20.89 L12.00 23.30 L9.62 20.89 L6.35 21.79 L5.49 18.51 L2.21 17.65 L3.11 14.38 L0.70 12.00 L3.11 9.62 L2.21 6.35 L5.49 5.49 L6.35 2.21 L9.62 3.11Z" fill="#800020" />
+                    <path d="M7.7 12.2l2.9 2.9 5.8-5.9" fill="none" stroke="#FFFFFF" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </span>
+              )}
             </span>
           </button>
         );
