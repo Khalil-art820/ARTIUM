@@ -18,7 +18,7 @@ export default defineConfig({
         // Android paints its bottom system bar from this; the top status bar
         // follows the page's theme-color meta (teal) instead.
         theme_color: "#000000",
-        background_color: "#086868",
+        background_color: "#A8505F",
         display: "standalone",
         orientation: "portrait",
         scope: "/",
