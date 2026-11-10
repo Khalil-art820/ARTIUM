@@ -1460,3 +1460,5 @@ html.theme-modern .ng-shade{position:absolute;left:50%;top:50%;transform:transla
   box-shadow:0 28px 46px -24px rgba(0,32,28,.5),0 10px 30px -12px rgba(0,32,28,.22)}
 /* The globe's shading never spills past the globe's area when zoomed in. */
 html.theme-modern .ng-wrap{overflow:hidden}
+/* The globe's +N counter in the same grey as faces without a photo. */
+html.theme-modern .ng-more{background:#EDEDEA !important;color:#5F6B6E !important}
