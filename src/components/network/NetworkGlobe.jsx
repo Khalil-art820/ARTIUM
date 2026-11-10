@@ -63,7 +63,7 @@ const FAN_MAX = 1;          // two or more in one city always share one named bu
 const FAN_ALTITUDE = 0.95;   // the same "zoomed in" as the HD map swap
 const MAX_MARKERS = 60;
 const PX_PER_DEG = 7.2;
-const BUBBLE_PX = 64;        // a three-face bubble and its +N, with a margin
+const BUBBLE_PX = 52;        // a one-face bubble and its +N, with a margin
 const degFor = (px, altitude) => (px * altitude) / PX_PER_DEG;
 // Distance in degrees, longitude shrunk toward the poles.
 const dist = (a, b) => Math.hypot(a.lat - b.lat, (a.lng - b.lng) * Math.max(0.15, Math.cos((a.lat * Math.PI) / 180)));
@@ -136,9 +136,9 @@ function groupMarkers(members, altitude, selectedId) {
     const n = c.members.length;
     c.ring = zoomedIn && c.places.length === 1 && n > 1 && n <= FAN_MAX;
     c.ringPx = Math.max(30, (n * 33) / (2 * Math.PI));   // room for the city name in the middle
-    c.rPx = n === 1 ? 24 : c.ring ? c.ringPx + 18 : 36;
+    c.rPx = n === 1 ? 22 : c.ring ? c.ringPx + 18 : 28;   // face (+label) or one-face bubble
   }
-  const items = selected ? [{ lat: selected.lat, lng: selected.lng, rPx: 26, fixed: true }, ...clusters] : clusters;
+  const items = selected ? [{ lat: selected.lat, lng: selected.lng, rPx: 24, fixed: true }, ...clusters] : clusters;
   if (zoomedIn) relax(items, altitude);
   if (selected) out.push({ kind: "member", id: selected.id, lat: items[0].lat, lng: items[0].lng, member: selected, selected: true, place: selected.placeName || "" });
   for (const c of clusters) {
@@ -353,8 +353,12 @@ export default function NetworkGlobe({ members, links = [], conservatories, focu
 
   // Arcs: only between two members shown here who are connected to each
   // other (links: [idA, idB] pairs), and only when they stand apart.
+  // Lines join two connected people only while each stands alone on the
+  // globe (a single face, not folded into a bubble), so they follow the zoom.
+  const singlesKey = React.useMemo(() => markers.filter((d) => d.kind === "member").map((d) => d.id).sort().join(","), [markers]);
   const arcs = React.useMemo(() => {
-    const byId = new Map(members.map((m) => [m.id, m]));
+    const single = new Set(singlesKey ? singlesKey.split(",") : []);
+    const byId = new Map(members.filter((m) => single.has(m.id)).map((m) => [m.id, m]));
     const seen = new Set();
     const out = [];
     for (const [ia, ib] of links) {
@@ -366,7 +370,7 @@ export default function NetworkGlobe({ members, links = [], conservatories, focu
       if (out.length >= 40) break;
     }
     return out;
-  }, [members, links]);
+  }, [members, links, singlesKey]);
 
   const reduced = prefersReducedMotion();
   // Zoomed in, the lines would swell and the travelling dots jump many pixels
@@ -481,17 +485,14 @@ export default function NetworkGlobe({ members, links = [], conservatories, focu
             if (d.kind === "member") {
               const m = d.member;
               el.setAttribute("aria-label", `${m.name}${m.instrumentLabel ? `, ${m.instrumentLabel}` : ""}`);
-              el.innerHTML = faceHTML(m, d.selected ? 36 : 28, d.selected ? 4 : 2) + (d.place ? `<span class="ng-place">${esc(d.place)}</span>` : "");
+              el.innerHTML = faceHTML(m, d.selected ? 32 : 25, d.selected ? 4 : 2) + (d.place ? `<span class="ng-place">${esc(d.place)}</span>` : "");
               el.__tap = () => onSelectMember(m.id);
               el.onclick = (e) => { e.stopPropagation(); el.__tap(); };
             } else {
-              // Up to three portraits (first in order: you, then your
-              // connections), a "+N" pill for everyone else, and the city's
-              // name beneath when they all share one place.
-              const shown = d.members.slice(0, 3);
-              const rest = d.members.length - shown.length;
+              // One portrait (the first in order: the earliest connection), a
+              // "+N" for everyone else here, and the city (or "N cities").
               el.setAttribute("aria-label", `${d.members.length} musicians${d.place ? ` in ${d.place}` : " here"} — open the list`);
-              el.innerHTML = `<span class="ng-group">${shown.map((m) => faceHTML(m, 26, 2)).join("")}${rest > 0 ? `<span class="ng-more">+${rest}</span>` : ""}</span>`
+              el.innerHTML = `<span class="ng-group">${faceHTML(d.members[0], 23, 2)}<span class="ng-more">+${d.members.length - 1}</span></span>`
                 + (d.place ? `<span class="ng-place">${esc(d.place)}</span>` : "");
               el.__tap = () => onSelectGroup(d.members);
               el.onclick = (e) => { e.stopPropagation(); el.__tap(); };
