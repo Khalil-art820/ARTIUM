@@ -1430,3 +1430,5 @@ html.theme-modern .nx-demo-tag{position:absolute;top:6px;left:50%;transform:tran
 /* The admin's demo switch: outlined when off, filled old rose when on. */
 html.theme-modern button.nx-demo-tag{pointer-events:auto;cursor:pointer;border:1px solid #A8505F;background:#FFFFFF;color:#A8505F;top:4px}
 html.theme-modern button.nx-demo-tag.is-on{background:#A8505F;color:#FFFFFF}
+/* A city name standing alone at the centre of a ring of faces. */
+html.theme-modern .ng-place.ng-place-solo{margin:0;pointer-events:none}

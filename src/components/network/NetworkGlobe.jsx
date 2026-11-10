@@ -86,7 +86,7 @@ function groupMarkers(members, altitude, selectedId) {
   const byPlace = new Map();
   for (const m of members) {
     // The selected member always stands on their own, highlighted.
-    if (m.id === selectedId) { out.push({ kind: "member", id: m.id, lat: m.lat, lng: m.lng, member: m, selected: true }); continue; }
+    if (m.id === selectedId) { out.push({ kind: "member", id: m.id, lat: m.lat, lng: m.lng, member: m, selected: true, place: m.placeName || "" }); continue; }
     const key = m.placeKey || `${m.lat},${m.lng}`;
     if (!byPlace.has(key)) byPlace.set(key, { key, name: m.placeName || "", lat: m.lat, lng: m.lng, members: [] });
     byPlace.get(key).members.push(m);
@@ -100,7 +100,7 @@ function groupMarkers(members, altitude, selectedId) {
     const c = clusters[ci];
     const list = c.members;
     const n = list.length;
-    if (n === 1) { out.push({ kind: "member", id: list[0].id, lat: c.lat, lng: c.lng, member: list[0], selected: false }); continue; }
+    if (n === 1) { out.push({ kind: "member", id: list[0].id, lat: c.lat, lng: c.lng, member: list[0], selected: false, place: c.places[0].name || "" }); continue; }
     const onePlace = c.places.length === 1;
     // Ring radius: room for n 28px faces side by side (at least 22px).
     const r = degFor(Math.max(22, (n * 33) / (2 * Math.PI)), altitude);
@@ -108,6 +108,8 @@ function groupMarkers(members, altitude, selectedId) {
     const roomy = clusters.every((o, k) => k === ci || dist(o, c) > r + degFor(BUBBLE_PX / 2, altitude));
     if (onePlace && n <= FAN_MAX && altitude < FAN_ALTITUDE && roomy) {
       const cosLat = Math.max(0.15, Math.cos((c.lat * Math.PI) / 180));
+      // The city's name sits at the ring's centre.
+      if (c.places[0].name) out.push({ kind: "place", id: `p:${c.places[0].key}`, lat: c.lat, lng: c.lng, name: c.places[0].name });
       list.forEach((m, k) => {
         const a = (2 * Math.PI * k) / n - Math.PI / 2;
         out.push({ kind: "member", id: m.id, lat: c.lat + r * Math.sin(a), lng: c.lng + (r * Math.cos(a)) / cosLat, member: m, selected: false });
@@ -397,10 +399,17 @@ export default function NetworkGlobe({ members, links = [], conservatories, focu
           htmlTransitionDuration={0}
           htmlElementVisibilityModifier={(el, visible) => {
             if (el.classList.contains("ng-continent")) return;   // faded by the loop above
+            if (el.classList.contains("ng-place-solo")) { el.style.opacity = visible ? "1" : "0"; return; }   // never takes a tap
             el.style.opacity = visible ? "1" : "0";
             el.style.pointerEvents = visible ? "auto" : "none";
           }}
           htmlElement={(d) => {
+            if (d.kind === "place") {
+              const el = document.createElement("span");
+              el.className = "ng-place ng-place-solo";
+              el.textContent = d.name;
+              return el;
+            }
             if (d.kind === "label") {
               const el = document.createElement("span");
               el.className = "ng-continent";
@@ -414,7 +423,7 @@ export default function NetworkGlobe({ members, links = [], conservatories, focu
             if (d.kind === "member") {
               const m = d.member;
               el.setAttribute("aria-label", `${m.name}${m.instrumentLabel ? `, ${m.instrumentLabel}` : ""}`);
-              el.innerHTML = faceHTML(m, d.selected ? 36 : 28, d.selected ? 4 : 2);
+              el.innerHTML = faceHTML(m, d.selected ? 36 : 28, d.selected ? 4 : 2) + (d.place ? `<span class="ng-place">${esc(d.place)}</span>` : "");
               el.onclick = (e) => { e.stopPropagation(); onSelectMember(m.id); };
             } else {
               // Up to three portraits (first in order: you, then your
