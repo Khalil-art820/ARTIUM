@@ -11877,9 +11877,16 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
     });
     return () => { live = false; };
   }, [globeIds]);
-  // The admin account: the is_admin flag, or the owner's admin email.
+  // The admin account: the is_admin flag, or the owner's admin email. It gets
+  // a switch on the globe for the demo (remembered on this device).
   const { profile: authMe, user: authUserMe } = useAuth();
-  const demoGlobe = !learnerMode && (authMe?.is_admin === true || isAdminEmail(authUserMe?.email)) && demoGlobeOn();
+  const canDemo = !learnerMode && (authMe?.is_admin === true || isAdminEmail(authUserMe?.email));
+  const [demoPref, setDemoPref] = React.useState(demoGlobeOn);
+  const demoGlobe = canDemo && demoPref;
+  const toggleDemo = () => {
+    const next = !demoPref; setDemoPref(next);
+    try { if (next) localStorage.setItem(DEMO_GLOBE_KEY, "1"); else localStorage.removeItem(DEMO_GLOBE_KEY); } catch { /* storage blocked */ }
+  };
 
   // Options come from the members themselves, counted against the other filters.
   const optionsFor = (key) => {
@@ -12020,7 +12027,11 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
 
       {/* Globe */}
       <div className="nx-stage" id="nx-globe">
-        {demoGlobe && <span className="nx-demo-tag">Demo globe — only you see this</span>}
+        {canDemo && (
+          <button type="button" className={`nx-demo-tag${demoGlobe ? " is-on" : ""}`} onClick={toggleDemo}>
+            {demoGlobe ? "Demo globe on — tap to hide" : "Show demo globe"}
+          </button>
+        )}
         {webgl ? (
           <GlobeBoundary fallback={<div className="nx-globe-fallback"><Globe2 size={28} /><p>The 3D globe isn't available on this device. Browse the musicians below.</p></div>}>
             <Suspense fallback={<div className="nx-globe-skel" aria-label="Loading the globe"><span /></div>}>
