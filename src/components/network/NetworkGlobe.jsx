@@ -54,13 +54,12 @@ const prefersReducedMotion = () => {
 //    than one bubble's width to a bigger one joins its bubble, so bubbles never
 //    overlap. Zoomed out that makes one bubble per region; zooming in splits
 //    them into cities;
-//  - zoomed in, a single place with up to FAN_MAX people fans out into a ring
-//    of faces (each tappable) when the ring has room; more stays a bubble
-//    whose counter opens the list;
+//  - zoomed in, a place with up to FAN_MAX people shows each face; more
+//    stays one bubble with the city's name, whose counter opens the list;
 //  - never more than MAX_MARKERS markers: the merge distance grows until the
 //    count fits, so a busy network stays smooth on an older phone.
 // On screen, one degree is about PX_PER_DEG / altitude pixels at the centre.
-const FAN_MAX = 8;
+const FAN_MAX = 2;          // a city of 3 or more stays one named bubble, even zoomed in
 const FAN_ALTITUDE = 0.95;   // the same "zoomed in" as the HD map swap
 const MAX_MARKERS = 60;
 const PX_PER_DEG = 7.2;
@@ -181,6 +180,7 @@ function faceHTML(m, size, ring) {
 
 export default function NetworkGlobe({ members, links = [], conservatories, focus, selectedId, onSelectMember, onSelectGroup, height = 330 }) {
   const wrapRef = React.useRef(null);
+  const tapStart = React.useRef(null);
   const globeRef = React.useRef(null);
   const [size, setSize] = React.useState({ w: 0, h: 0 });
   const [ready, setReady] = React.useState(false);
@@ -393,7 +393,21 @@ export default function NetworkGlobe({ members, links = [], conservatories, focu
   }, [arcs]);
 
   return (
-    <div ref={wrapRef} className="ng-wrap" style={{ height }}>
+    // Faces and bubbles let every touch through to the globe (so a swipe that
+    // starts on a crowd of faces still spins it); a touch that barely moves
+    // counts as a tap on whatever marker is under it.
+    <div ref={wrapRef} className="ng-wrap" style={{ height }}
+      onPointerDown={(e) => { tapStart.current = { x: e.clientX, y: e.clientY }; }}
+      onPointerUp={(e) => {
+        const st = tapStart.current; tapStart.current = null;
+        if (!st || Math.hypot(e.clientX - st.x, e.clientY - st.y) > 8) return;
+        const hit = [...(wrapRef.current?.querySelectorAll(".ng-marker") || [])]
+          .filter((el) => el.style.opacity !== "0" && typeof el.__tap === "function")
+          .map((el) => { const r = el.getBoundingClientRect(); return { el, r }; })
+          .filter(({ r }) => e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom)
+          .sort((a, b) => a.r.width * a.r.height - b.r.width * b.r.height)[0];
+        if (hit) hit.el.__tap();
+      }}>
       {size.w > 0 && (
         <Globe
           ref={globeRef}
@@ -468,7 +482,8 @@ export default function NetworkGlobe({ members, links = [], conservatories, focu
               const m = d.member;
               el.setAttribute("aria-label", `${m.name}${m.instrumentLabel ? `, ${m.instrumentLabel}` : ""}`);
               el.innerHTML = faceHTML(m, d.selected ? 36 : 28, d.selected ? 4 : 2) + (d.place ? `<span class="ng-place">${esc(d.place)}</span>` : "");
-              el.onclick = (e) => { e.stopPropagation(); onSelectMember(m.id); };
+              el.__tap = () => onSelectMember(m.id);
+              el.onclick = (e) => { e.stopPropagation(); el.__tap(); };
             } else {
               // Up to three portraits (first in order: you, then your
               // connections), a "+N" pill for everyone else, and the city's
@@ -478,7 +493,8 @@ export default function NetworkGlobe({ members, links = [], conservatories, focu
               el.setAttribute("aria-label", `${d.members.length} musicians${d.place ? ` in ${d.place}` : " here"} — open the list`);
               el.innerHTML = `<span class="ng-group">${shown.map((m) => faceHTML(m, 26, 2)).join("")}${rest > 0 ? `<span class="ng-more">+${rest}</span>` : ""}</span>`
                 + (d.place ? `<span class="ng-place">${esc(d.place)}</span>` : "");
-              el.onclick = (e) => { e.stopPropagation(); onSelectGroup(d.members); };
+              el.__tap = () => onSelectGroup(d.members);
+              el.onclick = (e) => { e.stopPropagation(); el.__tap(); };
             }
             return el;
           }}

@@ -1432,3 +1432,6 @@ html.theme-modern button.nx-demo-tag{pointer-events:auto;cursor:pointer;border:1
 html.theme-modern button.nx-demo-tag.is-on{background:#A8505F;color:#FFFFFF}
 /* A city name standing alone at the centre of a ring of faces. */
 html.theme-modern .ng-place.ng-place-solo{margin:0;pointer-events:none}
+/* Globe markers never catch a touch: swipes reach the globe, taps are
+   resolved by the globe's own wrapper (see NetworkGlobe). */
+html.theme-modern .ng-wrap .ng-marker{pointer-events:none !important}
