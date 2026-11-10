@@ -589,8 +589,10 @@ export default function NetworkGlobe({ members, links = [], conservatories, focu
           // Bright at the face's centre and fading as it spreads, so each line
           // seems to spring out of (and land into) the middle of the face.
           ringColor={() => (t) => `rgba(170,250,238,${Math.pow(Math.max(0, 1 - t), 1.6)})`}
-          ringMaxRadius={Math.min(2.4, Math.max(0.12, altitude * 1.8))}
-          ringPropagationSpeed={1.6}
+          // In screen terms: from the face's centre out to about 22px past its
+          // edge, at every zoom (degrees = px x altitude / PX_PER_DEG).
+          ringMaxRadius={degFor(36, altitude)}
+          ringPropagationSpeed={degFor(36, altitude) / 1.3}
           ringRepeatPeriod={1500}
           ringAltitude={0.004}
           htmlElementsData={markers}

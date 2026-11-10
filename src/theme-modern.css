@@ -1456,3 +1456,5 @@ html.theme-modern .ng-wrap{position:relative}
 html.theme-modern .ng-shade{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;z-index:1;
   background:radial-gradient(circle at 50% 45%,rgba(0,18,16,0) 60%,rgba(0,18,16,.08) 74%,rgba(0,18,16,.22) 88%,rgba(0,18,16,.42) 100%);
   box-shadow:0 28px 46px -24px rgba(0,32,28,.5),0 10px 30px -12px rgba(0,32,28,.22)}
+/* The globe's shading never spills past the globe's area when zoomed in. */
+html.theme-modern .ng-wrap{overflow:hidden}
