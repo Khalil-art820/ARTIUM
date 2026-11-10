@@ -1450,3 +1450,9 @@ html.theme-modern .nx-recenter{background:rgba(10,30,28,.72) !important;color:#F
 /* See-through like the city labels (beats the app-wide emerald initials rule). */
 html.theme-modern .ng-wrap .ng-face{background:rgba(10,30,28,.72) !important}
 html.theme-modern .ng-face b{color:#FFFFFF;font:600 10px/1 'Fira Sans',system-ui,sans-serif}
+/* Globe depth: a soft darkening toward the rim and a gentle shadow beneath,
+   sized to the globe's disc by NetworkGlobe at every zoom. */
+html.theme-modern .ng-wrap{position:relative}
+html.theme-modern .ng-shade{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;z-index:1;
+  background:radial-gradient(circle at 50% 45%,rgba(0,18,16,0) 60%,rgba(0,18,16,.08) 74%,rgba(0,18,16,.22) 88%,rgba(0,18,16,.42) 100%);
+  box-shadow:0 28px 46px -24px rgba(0,32,28,.5),0 10px 30px -12px rgba(0,32,28,.22)}

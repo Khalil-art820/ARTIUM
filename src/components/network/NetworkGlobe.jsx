@@ -187,6 +187,7 @@ function faceHTML(m, size, ring) {
 export default function NetworkGlobe({ members, links = [], conservatories, focus, selectedId, onSelectMember, onSelectGroup, height = 330 }) {
   const wrapRef = React.useRef(null);
   const tapStart = React.useRef(null);
+  const shadeRef = React.useRef(null);
   const globeRef = React.useRef(null);
   const [size, setSize] = React.useState({ w: 0, h: 0 });
   const [ready, setReady] = React.useState(false);
@@ -405,8 +406,17 @@ export default function NetworkGlobe({ members, links = [], conservatories, focu
     }
   }, []);
   const tileRaf = React.useRef(0);
+  // The globe's radius on screen for a camera altitude (inverse of fitAltitude).
+  const sizeShade = React.useCallback((alt) => {
+    const el = shadeRef.current; if (!el || !size.h) return;
+    const d = 1 + alt;
+    const r = (size.h / 2) / Math.tan((25 * Math.PI) / 180) / Math.sqrt(d * d - 1);
+    el.style.width = el.style.height = `${Math.round(2 * r)}px`;
+  }, [size.h]);
+  React.useEffect(() => { sizeShade(pov.current?.altitude ?? fitAltitude(size.w, size.h)); }, [sizeShade, size.w, size.h]);
   const onPov = React.useCallback((p) => {
     pov.current = p;
+    sizeShade(p.altitude);
     // Zooming in stops the slow spin at once, so the view never drifts.
     if (p.altitude < baseAlt.current * 0.95) {
       try { const c = globeRef.current?.controls(); if (c) c.autoRotate = false; } catch { /* not ready */ }
@@ -414,7 +424,7 @@ export default function NetworkGlobe({ members, links = [], conservatories, focu
     }
     if (tileRaf.current) return;
     tileRaf.current = requestAnimationFrame(() => { tileRaf.current = 0; updateTiles(); });
-  }, [updateTiles]);
+  }, [updateTiles, sizeShade]);
   React.useEffect(() => () => {
     cancelAnimationFrame(tileRaf.current);
     let scene = null; try { scene = globeRef.current?.scene(); } catch { /* gone */ }
@@ -576,15 +586,19 @@ export default function NetworkGlobe({ members, links = [], conservatories, focu
           ringsData={reduced ? [] : landings}
           ringLat="lat"
           ringLng="lng"
-          ringColor={() => (t) => `rgba(150,245,230,${Math.max(0, 1 - t) * 0.9})`}
-          ringMaxRadius={2.4}
+          // Bright at the face's centre and fading as it spreads, so each line
+          // seems to spring out of (and land into) the middle of the face.
+          ringColor={() => (t) => `rgba(170,250,238,${Math.pow(Math.max(0, 1 - t), 1.6)})`}
+          ringMaxRadius={Math.min(2.4, Math.max(0.12, altitude * 1.8))}
           ringPropagationSpeed={1.6}
           ringRepeatPeriod={1500}
           ringAltitude={0.004}
           htmlElementsData={markers}
           htmlLat="lat"
           htmlLng="lng"
-          htmlAltitude={0.02}
+          // Faces, the pulsing rings and the lines' ends all sit at the same
+          // height, so at any angle a ring is centred on its face.
+          htmlAltitude={0.004}
           htmlTransitionDuration={0}
           htmlElementVisibilityModifier={(el, visible) => {
             if (el.classList.contains("ng-continent")) return;   // faded by the loop above
@@ -628,6 +642,10 @@ export default function NetworkGlobe({ members, links = [], conservatories, focu
           }}
         />
       )}
+      {/* Depth: the rim darkens a little (as a real planet's does) and a soft
+          shadow sits under the globe on the page. Sized to the globe's disc on
+          screen at every zoom (see onPov). */}
+      <div ref={shadeRef} className="ng-shade" aria-hidden="true" />
     </div>
   );
 }
