@@ -11852,7 +11852,9 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
 
   const matches = (m, f, skip) => (
     (skip === "instruments" || !f.instruments.length || m.instrumentList.some((i) => f.instruments.includes(i))) &&
-    (skip === "countries" || !f.countries.length || f.countries.includes(m.country)) &&
+    // "countries" now filters by city: where the member sits on the globe
+    // (their home city, else their conservatory's city).
+    (skip === "countries" || !f.countries.length || f.countries.includes(m.placeName)) &&
     (skip === "levels" || !f.levels.length || m.levels.some((l) => f.levels.includes(l))) &&
     (skip === "cons" || !f.cons.length || f.cons.includes(m.conservatoryId)) &&
     (!f.teach || m.open) && (!f.verified || m.verified)
@@ -11904,7 +11906,7 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
     const add = (v, label) => { if (!v) return; (counts[v] = counts[v] || { v, label: label || v, n: 0 }).n++; };
     for (const m of pool) {
       if (key === "instruments") m.instrumentList.forEach((i) => add(i));
-      if (key === "countries") add(m.country);
+      if (key === "countries") add(m.placeName);
       if (key === "levels") m.levels.forEach((l) => add(l));
       if (key === "cons") add(m.conservatoryId, m.consName);
     }
@@ -11969,14 +11971,14 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
 
   const FILTERS = [
     { key: "instruments", label: "Instrument" },
-    { key: "countries", label: "Country" },
+    { key: "countries", label: "City" },
     { key: "levels", label: "Level" },
     { key: "cons", label: "Conservatory" },
   ];
   // Clean line marks, white on each card's own colour (see .nx-fbadge--*).
   const FILTER_ICON = {
     instruments: () => <Piano size={22} strokeWidth={1.9} />,
-    countries: () => <GlobeIcon size={22} strokeWidth={1.9} />,
+    countries: () => <MapPin size={22} strokeWidth={1.9} />,
     levels: () => <ChartNoAxesColumnIncreasing size={22} strokeWidth={2.2} />,
     cons: () => <Landmark size={21} strokeWidth={1.9} />,
   };
