@@ -11769,6 +11769,34 @@ function NxPeopleYouMayKnow({ members, myId, conn, consById, onOpen }) {
     </div>
   );
 }
+// Admin-only demo of a busy globe: art-ium.com/?demo=globe turns it on (it is
+// remembered on this device, so the installed app shows it too) and
+// ?demo=off turns it off. Eight made-up connections in eight cities, five
+// pairs of them connected to each other. Never saved anywhere, and only drawn
+// for an account with is_admin.
+const DEMO_GLOBE_KEY = "artium_demo_globe";
+try {
+  const d = new URLSearchParams(window.location.search).get("demo");
+  if (d === "globe") localStorage.setItem(DEMO_GLOBE_KEY, "1");
+  else if (d === "off") localStorage.removeItem(DEMO_GLOBE_KEY);
+} catch { /* storage blocked */ }
+const demoGlobeOn = () => { try { return localStorage.getItem(DEMO_GLOBE_KEY) === "1"; } catch { return false; } };
+const DEMO_GLOBE = [
+  ["01", "Line Tannous", "Piano", "Paris", "France", 48.8566, 2.3522, "/gate-cards/piano.webp"],
+  ["02", "Lukas Weber", "Cello", "Berlin", "Germany", 52.52, 13.405, "/gate-cards/cello.webp"],
+  ["03", "Sofia Rossi", "Voice", "Rome", "Italy", 41.9028, 12.4964, "/gate-cards/voice.webp"],
+  ["04", "Nay Haddad", "Flute", "Beirut", "Lebanon", 33.8938, 35.5018, ""],
+  ["05", "James Carter", "Trumpet", "London", "United Kingdom", 51.5074, -0.1278, "/gate-cards/trumpet.webp"],
+  ["06", "Anna Gruber", "Violin", "Vienna", "Austria", 48.2082, 16.3738, "/gate-cards/violin.webp"],
+  ["07", "Maya Cohen", "Piano", "New York", "United States", 40.7128, -74.006, ""],
+  ["08", "Yuki Tanaka", "Violin", "Tokyo", "Japan", 35.6762, 139.6503, ""],
+].map(([n, name, inst, city, country, lat, lng, photoUrl]) => ({
+  id: `demo-${n}`, name, photoUrl, instrumentLabel: inst, instrumentList: [inst], instruments: [inst],
+  lat, lng, atCity: true, placeKey: `city:${city}|${country}`, placeName: city,
+  city, country, consName: "", levels: [], verified: true, open: false, demo: true,
+}));
+const DEMO_GLOBE_LINKS = [["01", "02"], ["01", "07"], ["06", "03"], ["04", "01"], ["05", "07"]].map(([a, b]) => [`demo-${a}`, `demo-${b}`]);
+
 function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStudent, onMessage, isGuest, onGuestClick, learnerMode = false, connectionsOverride = null }) {
   // Students connect; learners browse teachers as before.
   const connLive = useConnections(learnerMode || connectionsOverride ? null : myId);
@@ -11849,6 +11877,8 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
     });
     return () => { live = false; };
   }, [globeIds]);
+  const { profile: authMe } = useAuth();
+  const demoGlobe = !learnerMode && authMe?.is_admin === true && demoGlobeOn();
 
   // Options come from the members themselves, counted against the other filters.
   const optionsFor = (key) => {
@@ -11989,17 +12019,19 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
 
       {/* Globe */}
       <div className="nx-stage" id="nx-globe">
+        {demoGlobe && <span className="nx-demo-tag">Demo globe — only you see this</span>}
         {webgl ? (
           <GlobeBoundary fallback={<div className="nx-globe-fallback"><Globe2 size={28} /><p>The 3D globe isn't available on this device. Browse the musicians below.</p></div>}>
             <Suspense fallback={<div className="nx-globe-skel" aria-label="Loading the globe"><span /></div>}>
               <NetworkGlobe
-                members={onGlobe}
-                links={globeLinks}
+                members={demoGlobe ? DEMO_GLOBE : onGlobe}
+                links={demoGlobe ? DEMO_GLOBE_LINKS : globeLinks}
                 conservatories={allCons}
                 selectedId={selectedId}
                 focus={focus}
-                onSelectMember={selectFromGlobe}
-                onSelectGroup={(ms) => { setGroup(ms.filter((m) => m.id !== myId)); setSheet("group"); }}
+                // The demo's made-up people have no profile to open.
+                onSelectMember={(id) => { if (!String(id).startsWith("demo-")) selectFromGlobe(id); }}
+                onSelectGroup={(ms) => { if (ms.some((m) => m.demo)) return; setGroup(ms.filter((m) => m.id !== myId)); setSheet("group"); }}
                 height={410}
               />
             </Suspense>
