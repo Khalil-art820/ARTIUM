@@ -48,24 +48,73 @@ const prefersReducedMotion = () => {
 };
 
 // Group members standing at (nearly) the same place for the current zoom.
+// Members sit at their home city when they gave one, else at their
+// conservatory (placeKey says which). Rules that keep a crowded globe legible:
+//  - places are merged by on-screen distance, biggest first: a place closer
+//    than one bubble's width to a bigger one joins its bubble, so bubbles never
+//    overlap. Zoomed out that makes one bubble per region; zooming in splits
+//    them into cities;
+//  - zoomed in, a single place with up to FAN_MAX people fans out into a ring
+//    of faces (each tappable) when the ring has room; more stays a bubble
+//    whose counter opens the list;
+//  - never more than MAX_MARKERS markers: the merge distance grows until the
+//    count fits, so a busy network stays smooth on an older phone.
+// On screen, one degree is about PX_PER_DEG / altitude pixels at the centre.
+const FAN_MAX = 8;
+const FAN_ALTITUDE = 0.95;   // the same "zoomed in" as the HD map swap
+const MAX_MARKERS = 60;
+const PX_PER_DEG = 7.2;
+const BUBBLE_PX = 80;        // a three-face bubble and its +N, with a margin
+const degFor = (px, altitude) => (px * altitude) / PX_PER_DEG;
+// Distance in degrees, longitude shrunk toward the poles.
+const dist = (a, b) => Math.hypot(a.lat - b.lat, (a.lng - b.lng) * Math.max(0.15, Math.cos((a.lat * Math.PI) / 180)));
+function clusterPlaces(places, reach) {
+  const clusters = [];
+  for (const p of places) {
+    const near = clusters.find((c) => dist(c, p) < reach);
+    if (near) { near.members.push(...p.members); near.places.push(p); } else clusters.push({ lat: p.lat, lng: p.lng, members: [...p.members], places: [p] });
+  }
+  return clusters;
+}
 function groupMarkers(members, altitude, selectedId) {
-  const cell = Math.min(16, Math.max(0.3, altitude * 4.5));
-  const groups = Object.create(null);
   const out = [];
+  const byPlace = new Map();
   for (const m of members) {
     // The selected member always stands on their own, highlighted.
     if (m.id === selectedId) { out.push({ kind: "member", id: m.id, lat: m.lat, lng: m.lng, member: m, selected: true }); continue; }
-    const cosLat = Math.max(0.15, Math.cos((m.lat * Math.PI) / 180));
-    const key = `${Math.floor(m.lat / cell)}:${Math.floor(m.lng / Math.min(60, cell / cosLat))}`;
-    (groups[key] = groups[key] || []).push(m);
+    const key = m.placeKey || `${m.lat},${m.lng}`;
+    if (!byPlace.has(key)) byPlace.set(key, { key, name: m.placeName || "", lat: m.lat, lng: m.lng, members: [] });
+    byPlace.get(key).members.push(m);
   }
-  return out.concat(Object.values(groups).map((list) => {
+  // Biggest places first, so a city's bubble sits on the city, not a suburb.
+  const places = [...byPlace.values()].sort((a, b) => b.members.length - a.members.length);
+  let reach = degFor(BUBBLE_PX, altitude);
+  let clusters = clusterPlaces(places, reach);
+  while (clusters.length > MAX_MARKERS - out.length && reach < 60) { reach *= 1.5; clusters = clusterPlaces(places, reach); }
+  for (let ci = 0; ci < clusters.length; ci++) {
+    const c = clusters[ci];
+    const list = c.members;
     const n = list.length;
-    const lat = list.reduce((a, m) => a + m.lat, 0) / n;
-    const lng = list.reduce((a, m) => a + m.lng, 0) / n;
-    if (n === 1) return { kind: "member", id: list[0].id, lat, lng, member: list[0], selected: list[0].id === selectedId };
-    return { kind: "group", id: `g:${list.map((m) => m.id).sort().join(",")}`, lat, lng, members: list, selected: false };
-  }));
+    if (n === 1) { out.push({ kind: "member", id: list[0].id, lat: c.lat, lng: c.lng, member: list[0], selected: false }); continue; }
+    const onePlace = c.places.length === 1;
+    // Ring radius: room for n 36px faces side by side (at least 26px).
+    const r = degFor(Math.max(26, (n * 42) / (2 * Math.PI)), altitude);
+    // Only when the ring has room: nothing else within its reach.
+    const roomy = clusters.every((o, k) => k === ci || dist(o, c) > r + degFor(BUBBLE_PX / 2, altitude));
+    if (onePlace && n <= FAN_MAX && altitude < FAN_ALTITUDE && roomy) {
+      const cosLat = Math.max(0.15, Math.cos((c.lat * Math.PI) / 180));
+      list.forEach((m, k) => {
+        const a = (2 * Math.PI * k) / n - Math.PI / 2;
+        out.push({ kind: "member", id: m.id, lat: c.lat + r * Math.sin(a), lng: c.lng + (r * Math.cos(a)) / cosLat, member: m, selected: false });
+      });
+      continue;
+    }
+    out.push({
+      kind: "group", id: `g:${list.map((m) => m.id).sort().join(",")}`, lat: c.lat, lng: c.lng, members: list, selected: false,
+      place: onePlace ? c.places[0].name : "",
+    });
+  }
+  return out;
 }
 
 function esc(s) {
@@ -127,7 +176,8 @@ export default function NetworkGlobe({ members, conservatories, focus, selectedI
     const c = g.controls();
     if (c) {
       c.enableZoom = true;
-      c.minDistance = 145;
+      // Close enough to tell neighbouring cities apart (Paris from Lyon).
+      c.minDistance = 118;
       c.maxDistance = 420;
       c.zoomSpeed = 0.7;
       c.rotateSpeed = 0.55;
@@ -365,10 +415,14 @@ export default function NetworkGlobe({ members, conservatories, focus, selectedI
               el.innerHTML = faceHTML(m, d.selected ? 46 : 36, d.selected ? 5 : 3);
               el.onclick = (e) => { e.stopPropagation(); onSelectMember(m.id); };
             } else {
-              // As the top-bar counter: one portrait (the first in order — the
-              // earliest connection) and a "+N" pill for everyone else here.
-              el.setAttribute("aria-label", `${d.members.length} musicians here — open the list`);
-              el.innerHTML = `<span class="ng-group">${faceHTML(d.members[0], 34, 2)}<span class="ng-more">+${d.members.length - 1}</span></span>`;
+              // Up to three portraits (first in order: you, then your
+              // connections), a "+N" pill for everyone else, and the city's
+              // name beneath when they all share one place.
+              const shown = d.members.slice(0, 3);
+              const rest = d.members.length - shown.length;
+              el.setAttribute("aria-label", `${d.members.length} musicians${d.place ? ` in ${d.place}` : " here"} — open the list`);
+              el.innerHTML = `<span class="ng-group">${shown.map((m) => faceHTML(m, 34, 2)).join("")}${rest > 0 ? `<span class="ng-more">+${rest}</span>` : ""}</span>`
+                + (d.place ? `<span class="ng-place">${esc(d.place)}</span>` : "");
               el.onclick = (e) => { e.stopPropagation(); onSelectGroup(d.members); };
             }
             return el;

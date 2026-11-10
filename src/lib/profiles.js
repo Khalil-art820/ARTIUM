@@ -86,6 +86,15 @@ export function toDbProfile(draft, id) {
     } : {}),
     // Terms acceptance, stamped once at sign-up and kept on later edits.
     ...(draft.termsAcceptedAt ? { terms_accepted_at: draft.termsAcceptedAt, terms_version: TERMS_VERSION } : {}),
+    // Home city (optional), only to place them on the globe; never shown on
+    // the profile. Written only once they touch the field, so a save from
+    // before the columns existed never sends them.
+    ...(draft.homeCityTouched ? {
+      city_name: draft.homeCity?.name || null,
+      city_country: draft.homeCity?.country || null,
+      city_lat: Number.isFinite(draft.homeCity?.lat) ? draft.homeCity.lat : null,
+      city_lng: Number.isFinite(draft.homeCity?.lng) ? draft.homeCity.lng : null,
+    } : {}),
     // In-person cities (sign-up step 6); empty when teaching online only.
     teaching_cities: draft.teaching.open && draft.teaching.mode !== "online" ? (draft.teaching.cities || []) : [],
     // Only meaningful while they are open to teaching, so closing the door
@@ -117,6 +126,9 @@ export function fromDbProfile(row) {
     coverVideoUrl: row.cover_video_url || "",
     coverPhotoUrl: row.cover_photo_url || "",
     performanceVideos: Array.isArray(row.performance_videos) ? row.performance_videos : [],
+    // Home city for the globe only (not shown on the profile).
+    homeCity: row.city_name && Number.isFinite(row.city_lat) && Number.isFinite(row.city_lng)
+      ? { name: row.city_name, country: row.city_country || "", lat: row.city_lat, lng: row.city_lng } : null,
     conservatoryEmail: row.conservatory_email || "",
     conservatoryVerified: !!row.conservatory_verified,
     teaching: { open: !!row.teaching_open, mode: row.teaching_mode || "", price: row.teaching_price || "", pitch: row.teaching_pitch || "", cities: Array.isArray(row.teaching_cities) ? row.teaching_cities : [] },

@@ -827,6 +827,8 @@ const emptyDraft = () => ({
   id: null,
   email: "", password: "", confirmPassword: "",
   name: "", years: "", instruments: [],
+  // Optional home city, used only to place them on the globe.
+  homeCity: null, homeCityTouched: false,
   conservatoryId: null, conservatoryEmail: "", conservatoryVerified: false,
   // Which of the three doors they took on the conservatory step. verifyMethod
   // follows from it — "student_email" is the OTP route, the other two upload —
@@ -8301,6 +8303,47 @@ function StepAccount({ draft, update, error }) {
   );
 }
 
+// Optional home city: only places them on the globe, never shown on the
+// profile. Picked from OpenStreetMap's Photon search (cities and towns), so it
+// always comes with real coordinates and a country; free text is not taken.
+function HomeCityField({ draft, update }) {
+  const [q, setQ] = useState("");
+  const [hits, setHits] = useState([]);
+  const city = draft.homeCity;
+  useEffect(() => {
+    const term = q.trim();
+    if (term.length < 2) { setHits([]); return; }
+    const ctrl = new AbortController();
+    const timer = setTimeout(async () => {
+      try {
+        const r = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(term)}&limit=8&lang=en&osm_tag=place:city&osm_tag=place:town`, { signal: ctrl.signal });
+        const d = await r.json();
+        const seen = new Set();
+        setHits((d.features || []).map((f) => {
+          const p = f.properties || {}; const [lng, lat] = f.geometry?.coordinates || [];
+          return { key: `${p.name}|${p.state || ""}|${p.country || ""}`, label: p.name, sub: [p.state, p.country].filter(Boolean).join(", "), name: p.name, country: p.country || "", lat, lng };
+        }).filter((x) => x.name && Number.isFinite(x.lat) && Number.isFinite(x.lng) && (seen.has(x.key) ? false : seen.add(x.key))));
+      } catch { /* offline or aborted */ }
+    }, 250);
+    return () => { clearTimeout(timer); ctrl.abort(); };
+  }, [q]);
+  const pick = (h) => { update({ homeCity: { name: h.name, country: h.country, lat: h.lat, lng: h.lng }, homeCityTouched: true }); setQ(""); setHits([]); };
+  return (
+    <Field label="Your city" opt>
+      {city ? (
+        <div className="flex flex-wrap gap-2">
+          <Chip active onClick={() => update({ homeCity: null, homeCityTouched: true })}>{city.country ? `${city.name}, ${city.country}` : city.name} ✕</Chip>
+        </div>
+      ) : (
+        <SuggestInput value={q} onChange={setQ} placeholder="Start typing, e.g. Paris" suggestions={hits} onPick={pick} />
+      )}
+      <p className="su-link-note" style={{ marginTop: 8 }}>
+        <Info size={17} strokeWidth={1.8} aria-hidden="true" />Only used to place you on the globe. It is not shown on your profile.
+      </p>
+    </Field>
+  );
+}
+
 function StepIntro({ draft, update }) {
   const picked = instrumentsOf(draft);
   const full = picked.length >= MAX_INSTRUMENTS;
@@ -8460,6 +8503,7 @@ function StepIntro({ draft, update }) {
           <Info size={17} strokeWidth={1.8} aria-hidden="true" />All optional — add the ones you use.
         </p>
       </div>
+      <div style={{ marginTop: 26 }}><HomeCityField draft={draft} update={update} /></div>
     </div>
   );
 }
@@ -11738,7 +11782,11 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
     const c = consById[st.conservatoryId];
     return {
       ...st,
-      lat: c?.lat, lng: c?.lng,
+      // On the globe at their home city when they gave one, else at their
+      // conservatory. Everything else (filters, labels) stays on the school.
+      lat: st.homeCity?.lat ?? c?.lat, lng: st.homeCity?.lng ?? c?.lng,
+      atCity: !!st.homeCity, placeKey: st.homeCity ? `city:${st.homeCity.name}|${st.homeCity.country}` : `cons:${st.conservatoryId}`,
+      placeName: st.homeCity ? st.homeCity.name : (c?.city || ""),
       city: c?.city || "", country: c?.country || "", consName: c?.name || "",
       instrumentLabel: instrumentLabel(st),
       instrumentList: instrumentsOf(st),
