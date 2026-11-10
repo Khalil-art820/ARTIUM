@@ -11800,7 +11800,9 @@ const DEMO_GLOBE = DEMO_CITIES.flatMap(([city, country, lat, lng, n]) => Array.f
     id: `demo-${i}`, name: `${DEMO_FIRST[i % DEMO_FIRST.length]} ${String.fromCharCode(65 + (i % 26))}.`,
     photoUrl: DEMO_PHOTOS[i % DEMO_PHOTOS.length], instrumentLabel: DEMO_INST[i % 5], instrumentList: [DEMO_INST[i % 5]], instruments: [DEMO_INST[i % 5]],
     lat, lng, atCity: true, placeKey: `city:${city}|${country}`, placeName: city,
-    city, country, consName: "", levels: [], verified: true, open: false, demo: true,
+    city, country, levels: [["Masters", "Bachelor", "Doctorate"][i % 3]], verified: true, open: false, demo: true,
+    // a real school in their city when the app has one, so the Conservatory filter has something to show
+    ...(() => { const c = CONSERVATORIES.find((k) => k.city === city) || CONSERVATORIES[i % CONSERVATORIES.length]; return { conservatoryId: c.id, consName: c.name }; })(),
   }));
 // A dozen pairs who know each other, so lines cross Europe and beyond.
 const DEMO_GLOBE_LINKS = [[0, 5], [0, 9], [5, 14], [9, 12], [3, 16], [20, 24], [1, 26], [30, 33], [6, 22], [18, 28], [10, 35], [2, 31], [0, 40], [5, 39], [13, 38]]
@@ -11863,8 +11865,20 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
   // counts and results never come from people you aren't connected with.
   // The cards below the globe (Featured / Nearby / All) are for finding new
   // people and are not filtered. Learners: everything filters, as before.
-  const filterBase = React.useMemo(() => (useConn ? members.filter((m) => conn.byOther[m.id]?.state === "connected") : members),
-    [members, useConn, conn.byOther]);
+  // The admin account: the is_admin flag, or the owner's admin email. It gets
+  // a switch on the globe for the demo (remembered on this device).
+  const { profile: authMe, user: authUserMe } = useAuth();
+  const canDemo = !learnerMode && (authMe?.is_admin === true || isAdminEmail(authUserMe?.email));
+  const [demoPref, setDemoPref] = React.useState(demoGlobeOn);
+  const demoGlobe = canDemo && demoPref;
+  const toggleDemo = () => {
+    const next = !demoPref; setDemoPref(next);
+    try { if (next) localStorage.setItem(DEMO_GLOBE_KEY, "1"); else localStorage.removeItem(DEMO_GLOBE_KEY); } catch { /* storage blocked */ }
+  };
+  // With the demo on, the filter cards (and so the globe) work on the demo's
+  // made-up connections, so every filter can be tried on a full globe.
+  const filterBase = React.useMemo(() => (demoGlobe ? DEMO_GLOBE : useConn ? members.filter((m) => conn.byOther[m.id]?.state === "connected") : members),
+    [members, useConn, conn.byOther, demoGlobe]);
   const filtered = React.useMemo(() => filterBase.filter((m) => matches(m, filters)), [filterBase, filters]);
   const discover = useConn ? members : filtered;
   // The globe shows your connections the filters leave — not you. In the
@@ -11880,7 +11894,7 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
   const globeIds = React.useMemo(() => onGlobe.map((m) => m.id).sort().join(","), [onGlobe]);
   const [globeLinks, setGlobeLinks] = React.useState([]);
   React.useEffect(() => {
-    const ids = globeIds ? globeIds.split(",") : [];
+    const ids = globeIds ? globeIds.split(",").filter((id) => !id.startsWith("demo-")) : [];
     if (ids.length < 2) { setGlobeLinks([]); return; }
     let live = true;
     supabase.rpc("connections_among", { p_ids: ids }).then(({ data, error }) => {
@@ -11888,16 +11902,7 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
     });
     return () => { live = false; };
   }, [globeIds]);
-  // The admin account: the is_admin flag, or the owner's admin email. It gets
-  // a switch on the globe for the demo (remembered on this device).
-  const { profile: authMe, user: authUserMe } = useAuth();
-  const canDemo = !learnerMode && (authMe?.is_admin === true || isAdminEmail(authUserMe?.email));
-  const [demoPref, setDemoPref] = React.useState(demoGlobeOn);
-  const demoGlobe = canDemo && demoPref;
-  const toggleDemo = () => {
-    const next = !demoPref; setDemoPref(next);
-    try { if (next) localStorage.setItem(DEMO_GLOBE_KEY, "1"); else localStorage.removeItem(DEMO_GLOBE_KEY); } catch { /* storage blocked */ }
-  };
+
 
   // Options come from the members themselves, counted against the other filters.
   const optionsFor = (key) => {
@@ -12047,7 +12052,7 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
           <GlobeBoundary fallback={<div className="nx-globe-fallback"><Globe2 size={28} /><p>The 3D globe isn't available on this device. Browse the musicians below.</p></div>}>
             <Suspense fallback={<div className="nx-globe-skel" aria-label="Loading the globe"><span /></div>}>
               <NetworkGlobe
-                members={demoGlobe ? DEMO_GLOBE : onGlobe}
+                members={onGlobe}
                 links={demoGlobe ? DEMO_GLOBE_LINKS : globeLinks}
                 conservatories={allCons}
                 selectedId={selectedId}
