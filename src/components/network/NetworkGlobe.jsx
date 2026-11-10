@@ -81,32 +81,73 @@ function placeLabel(places) {
   if (names.length === 1) return places.find((p) => (p.name || "").trim().toLowerCase() === names[0]).name.trim();
   return names.length > 1 ? `${names.length} cities` : "";
 }
+// Push markers apart (in degrees, longitude shrunk toward the poles) until no
+// two overlap: each needs its own radius plus the other's. A few passes are
+// enough for a city's neighbours; nothing moves when nothing overlaps.
+function relax(items, altitude) {
+  for (let pass = 0; pass < 40; pass++) {
+    let moved = false;
+    for (let a = 0; a < items.length; a++) {
+      for (let b = a + 1; b < items.length; b++) {
+        const A = items[a], B = items[b];
+        const cosLat = Math.max(0.15, Math.cos((((A.lat + B.lat) / 2) * Math.PI) / 180));
+        let dx = (B.lng - A.lng) * cosLat, dy = B.lat - A.lat;
+        let d = Math.hypot(dx, dy);
+        const need = degFor(A.rPx + B.rPx, altitude);
+        if (d >= need) continue;
+        if (d < 1e-6) { dx = 1; dy = 0; d = 1e-6; }   // same point: split sideways
+        const push = (need - d) / 2 + 1e-4;
+        const ux = dx / d, uy = dy / d;
+        A.lat -= uy * push; A.lng -= (ux * push) / cosLat;
+        B.lat += uy * push; B.lng += (ux * push) / cosLat;
+        moved = true;
+      }
+    }
+    if (!moved) break;
+  }
+}
 function groupMarkers(members, altitude, selectedId) {
   const out = [];
   const byPlace = new Map();
+  let selected = null;
   for (const m of members) {
     // The selected member always stands on their own, highlighted.
-    if (m.id === selectedId) { out.push({ kind: "member", id: m.id, lat: m.lat, lng: m.lng, member: m, selected: true, place: m.placeName || "" }); continue; }
+    if (m.id === selectedId) { selected = m; continue; }
     const key = m.placeKey || `${m.lat},${m.lng}`;
     if (!byPlace.has(key)) byPlace.set(key, { key, name: m.placeName || "", lat: m.lat, lng: m.lng, members: [] });
     byPlace.get(key).members.push(m);
   }
   // Biggest places first, so a city's bubble sits on the city, not a suburb.
   const places = [...byPlace.values()].sort((a, b) => b.members.length - a.members.length);
-  let reach = degFor(BUBBLE_PX, altitude);
-  let clusters = clusterPlaces(places, reach);
-  while (clusters.length > MAX_MARKERS - out.length && reach < 60) { reach *= 1.5; clusters = clusterPlaces(places, reach); }
-  for (let ci = 0; ci < clusters.length; ci++) {
-    const c = clusters[ci];
+  const zoomedIn = altitude < FAN_ALTITUDE;
+  // Zoomed out, nearby places merge into one bubble ("5 cities"). Zoomed in,
+  // every place keeps its own marker and overlapping ones are nudged apart
+  // instead, so close cities (London and Paris, Vienna and Bratislava) always
+  // separate without zooming in past what the 8K map can show sharply.
+  let clusters;
+  if (zoomedIn && places.length <= MAX_MARKERS) {
+    clusters = places.map((p) => ({ lat: p.lat, lng: p.lng, members: [...p.members], places: [p] }));
+  } else {
+    let reach = degFor(BUBBLE_PX, altitude);
+    clusters = clusterPlaces(places, reach);
+    while (clusters.length > MAX_MARKERS && reach < 60) { reach *= 1.5; clusters = clusterPlaces(places, reach); }
+  }
+  // Each marker's footprint in screen pixels (face or bubble plus its label).
+  for (const c of clusters) {
+    const n = c.members.length;
+    c.ring = zoomedIn && c.places.length === 1 && n > 1 && n <= FAN_MAX;
+    c.ringPx = Math.max(30, (n * 33) / (2 * Math.PI));   // room for the city name in the middle
+    c.rPx = n === 1 ? 24 : c.ring ? c.ringPx + 18 : 36;
+  }
+  const items = selected ? [{ lat: selected.lat, lng: selected.lng, rPx: 26, fixed: true }, ...clusters] : clusters;
+  if (zoomedIn) relax(items, altitude);
+  if (selected) out.push({ kind: "member", id: selected.id, lat: items[0].lat, lng: items[0].lng, member: selected, selected: true, place: selected.placeName || "" });
+  for (const c of clusters) {
     const list = c.members;
     const n = list.length;
     if (n === 1) { out.push({ kind: "member", id: list[0].id, lat: c.lat, lng: c.lng, member: list[0], selected: false, place: c.places[0].name || "" }); continue; }
-    const onePlace = c.places.length === 1;
-    // Ring radius: room for n 28px faces side by side (at least 22px).
-    const r = degFor(Math.max(22, (n * 33) / (2 * Math.PI)), altitude);
-    // Only when the ring has room: nothing else within its reach.
-    const roomy = clusters.every((o, k) => k === ci || dist(o, c) > r + degFor(BUBBLE_PX / 2, altitude));
-    if (onePlace && n <= FAN_MAX && altitude < FAN_ALTITUDE && roomy) {
+    if (c.ring) {
+      const r = degFor(c.ringPx, altitude);
       const cosLat = Math.max(0.15, Math.cos((c.lat * Math.PI) / 180));
       // The city's name sits at the ring's centre.
       if (c.places[0].name) out.push({ kind: "place", id: `p:${c.places[0].key}`, lat: c.lat, lng: c.lng, name: c.places[0].name });
