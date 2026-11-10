@@ -11877,8 +11877,9 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
     });
     return () => { live = false; };
   }, [globeIds]);
-  const { profile: authMe } = useAuth();
-  const demoGlobe = !learnerMode && authMe?.is_admin === true && demoGlobeOn();
+  // The admin account: the is_admin flag, or the owner's admin email.
+  const { profile: authMe, user: authUserMe } = useAuth();
+  const demoGlobe = !learnerMode && (authMe?.is_admin === true || isAdminEmail(authUserMe?.email)) && demoGlobeOn();
 
   // Options come from the members themselves, counted against the other filters.
   const optionsFor = (key) => {
