@@ -11771,9 +11771,9 @@ function NxPeopleYouMayKnow({ members, myId, conn, consById, onOpen }) {
 }
 // Admin-only demo of a busy globe: art-ium.com/?demo=globe turns it on (it is
 // remembered on this device, so the installed app shows it too) and
-// ?demo=off turns it off. Eight made-up connections in eight cities, five
-// pairs of them connected to each other. Never saved anywhere, and only drawn
-// for an account with is_admin.
+// ?demo=off turns it off; admins also get a switch on the globe. 41 made-up
+// connections in 25 cities (most in Europe) and a dozen connected pairs.
+// Never saved anywhere, and only drawn for the admin account.
 const DEMO_GLOBE_KEY = "artium_demo_globe";
 try {
   const d = new URLSearchParams(window.location.search).get("demo");
@@ -11781,21 +11781,30 @@ try {
   else if (d === "off") localStorage.removeItem(DEMO_GLOBE_KEY);
 } catch { /* storage blocked */ }
 const demoGlobeOn = () => { try { return localStorage.getItem(DEMO_GLOBE_KEY) === "1"; } catch { return false; } };
-const DEMO_GLOBE = [
-  ["01", "Line Tannous", "Piano", "Paris", "France", 48.8566, 2.3522, "/gate-cards/piano.webp"],
-  ["02", "Lukas Weber", "Cello", "Berlin", "Germany", 52.52, 13.405, "/gate-cards/cello.webp"],
-  ["03", "Sofia Rossi", "Voice", "Rome", "Italy", 41.9028, 12.4964, "/gate-cards/voice.webp"],
-  ["04", "Nay Haddad", "Flute", "Beirut", "Lebanon", 33.8938, 35.5018, ""],
-  ["05", "James Carter", "Trumpet", "London", "United Kingdom", 51.5074, -0.1278, "/gate-cards/trumpet.webp"],
-  ["06", "Anna Gruber", "Violin", "Vienna", "Austria", 48.2082, 16.3738, "/gate-cards/violin.webp"],
-  ["07", "Maya Cohen", "Piano", "New York", "United States", 40.7128, -74.006, ""],
-  ["08", "Yuki Tanaka", "Violin", "Tokyo", "Japan", 35.6762, 139.6503, ""],
-].map(([n, name, inst, city, country, lat, lng, photoUrl]) => ({
-  id: `demo-${n}`, name, photoUrl, instrumentLabel: inst, instrumentList: [inst], instruments: [inst],
-  lat, lng, atCity: true, placeKey: `city:${city}|${country}`, placeName: city,
-  city, country, consName: "", levels: [], verified: true, open: false, demo: true,
-}));
-const DEMO_GLOBE_LINKS = [["01", "02"], ["01", "07"], ["06", "03"], ["04", "01"], ["05", "07"]].map(([a, b]) => [`demo-${a}`, `demo-${b}`]);
+const DEMO_CITIES = [
+  ["Paris", "France", 48.8566, 2.3522, 5], ["London", "United Kingdom", 51.5074, -0.1278, 4], ["Berlin", "Germany", 52.52, 13.405, 4],
+  ["Vienna", "Austria", 48.2082, 16.3738, 3], ["Rome", "Italy", 41.9028, 12.4964, 2], ["Madrid", "Spain", 40.4168, -3.7038, 2],
+  ["Barcelona", "Spain", 41.3874, 2.1686, 1], ["Amsterdam", "Netherlands", 52.3676, 4.9041, 2], ["Brussels", "Belgium", 50.8503, 4.3517, 1],
+  ["Milan", "Italy", 45.4642, 9.19, 2], ["Munich", "Germany", 48.1351, 11.582, 1], ["Prague", "Czechia", 50.0755, 14.4378, 1],
+  ["Warsaw", "Poland", 52.2297, 21.0122, 2], ["Lisbon", "Portugal", 38.7223, -9.1393, 1], ["Copenhagen", "Denmark", 55.6761, 12.5683, 1],
+  ["Stockholm", "Sweden", 59.3293, 18.0686, 1], ["Zurich", "Switzerland", 47.3769, 8.5417, 1], ["Lyon", "France", 45.764, 4.8357, 1],
+  ["Budapest", "Hungary", 47.4979, 19.0402, 1], ["Athens", "Greece", 37.9838, 23.7275, 1], ["Dublin", "Ireland", 53.3498, -6.2603, 1],
+  ["Bratislava", "Slovakia", 48.1486, 17.1077, 1], ["Beirut", "Lebanon", 33.8938, 35.5018, 1], ["New York", "United States", 40.7128, -74.006, 1],
+  ["Tokyo", "Japan", 35.6762, 139.6503, 1],
+];
+const DEMO_FIRST = ["Line", "Lukas", "Sofia", "Nay", "James", "Anna", "Maya", "Yuki", "Paul", "Rose", "Lea", "Daan", "Jan", "Ines", "Tom", "Clara", "Marco", "Elena", "Piotr", "Nora", "Hugo", "Ida", "Leo", "Mila", "Sven", "Ana", "Eva", "Raul", "Zoe", "Max", "Lucia", "Oskar", "Ella", "Dario", "Nils", "Iris", "Karl", "Vera", "Omar", "Rita", "Ben"];
+const DEMO_PHOTOS = ["/gate-cards/piano.webp", "/gate-cards/cello.webp", "/gate-cards/violin.webp", "/gate-cards/voice.webp", "/gate-cards/trumpet.webp", "", ""];
+const DEMO_INST = ["Violin", "Piano", "Cello", "Flute", "Voice"];
+const DEMO_GLOBE = DEMO_CITIES.flatMap(([city, country, lat, lng, n]) => Array.from({ length: n }, () => [city, country, lat, lng]))
+  .map(([city, country, lat, lng], i) => ({
+    id: `demo-${i}`, name: `${DEMO_FIRST[i % DEMO_FIRST.length]} ${String.fromCharCode(65 + (i % 26))}.`,
+    photoUrl: DEMO_PHOTOS[i % DEMO_PHOTOS.length], instrumentLabel: DEMO_INST[i % 5], instrumentList: [DEMO_INST[i % 5]], instruments: [DEMO_INST[i % 5]],
+    lat, lng, atCity: true, placeKey: `city:${city}|${country}`, placeName: city,
+    city, country, consName: "", levels: [], verified: true, open: false, demo: true,
+  }));
+// A dozen pairs who know each other, so lines cross Europe and beyond.
+const DEMO_GLOBE_LINKS = [[0, 5], [0, 9], [5, 14], [9, 12], [3, 16], [20, 24], [1, 26], [30, 33], [6, 22], [18, 28], [10, 35], [2, 31], [0, 40], [5, 39], [13, 38]]
+  .filter(([a, b]) => a < DEMO_GLOBE.length && b < DEMO_GLOBE.length).map(([a, b]) => [`demo-${a}`, `demo-${b}`]);
 
 function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStudent, onMessage, isGuest, onGuestClick, learnerMode = false, connectionsOverride = null }) {
   // Students connect; learners browse teachers as before.
