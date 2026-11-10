@@ -1447,5 +1447,7 @@ html.theme-modern .ng-marker .ng-group > .ng-more{position:absolute;left:100%;to
 html.theme-modern .nx-recenter{background:rgba(10,30,28,.72) !important;color:#FFFFFF !important;border:0 !important;box-shadow:none !important;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
 /* A face without a photo: the same dark see-through ground and white Fira
    Sans as the city label and the +N. */
-html.theme-modern .ng-face{background:rgba(10,30,28,.72)}
+/* Solid, not see-through: the face's mint glow is drawn behind it and showed
+   through as teal. #0A201E is how the see-through label reads on the globe. */
+html.theme-modern .ng-wrap .ng-face{background:#0A201E !important}   /* beats the app-wide emerald initials rule */
 html.theme-modern .ng-face b{color:#FFFFFF;font:600 10px/1 'Fira Sans',system-ui,sans-serif}
