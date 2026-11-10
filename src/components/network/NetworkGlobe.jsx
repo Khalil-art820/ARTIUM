@@ -228,13 +228,14 @@ export default function NetworkGlobe({ members, links = [], conservatories, focu
     return () => { detach && detach(); io && io.disconnect(); clearTimeout(idleTimer.current); clearInterval(sharpen); };
   }, [ready]);
 
-  // Zoomed in, draw at the screen's full pixel density (up to 3x) so the map
-  // and coastlines stay crisp; zoomed out, a lighter 1.75x keeps it smooth.
+  // Zoomed in, draw at up to 2.25x so the map and coastlines stay crisp while
+  // the moving lines stay fluid on a phone (3x made them stutter); zoomed
+  // out, a lighter 1.75x.
   const zoomedIn = altitude < 0.95;
   React.useEffect(() => {
     if (!ready || !globeRef.current) return;
     const dpr = window.devicePixelRatio || 1;
-    try { globeRef.current.renderer().setPixelRatio(Math.min(dpr, zoomedIn ? 3 : 1.75)); } catch { /* not ready */ }
+    try { globeRef.current.renderer().setPixelRatio(Math.min(dpr, zoomedIn ? 2.25 : 1.75)); } catch { /* not ready */ }
   }, [ready, zoomedIn]);
 
   // The first zoom-in swaps in the 8K map and lights (about 2.2 MB, fetched only then),
@@ -326,6 +327,10 @@ export default function NetworkGlobe({ members, links = [], conservatories, focu
   }, [members, links]);
 
   const reduced = prefersReducedMotion();
+  // Zoomed in, the lines would swell and the travelling dots jump many pixels
+  // a frame. In three zoom bands (so the lines are not rebuilt on every zoom
+  // step) they get thinner and slower in map terms, about the same on screen.
+  const arcScale = altitude > 0.95 ? 1 : altitude > 0.5 ? 0.5 : 0.28;
 
   // Each arc is drawn twice: a faint steady line, and over it a string of
   // bright dots travelling along it. Where arcs land, a glow ripples out.
@@ -374,12 +379,12 @@ export default function NetworkGlobe({ members, links = [], conservatories, focu
           pointsTransitionDuration={0}
           arcsData={arcLayers}
           arcColor={(d) => (d.dots ? ["rgba(225,255,250,1)", "rgba(255,226,160,1)"] : ["rgba(120,235,220,0.45)", "rgba(222,190,125,0.45)"])}
-          arcStroke={(d) => (d.dots ? 0.9 : 0.45)}
+          arcStroke={(d) => (d.dots ? 0.9 : 0.45) * arcScale}
           arcAltitudeAutoScale={0.38}
           arcDashLength={(d) => (d.dots ? 0.009 : 1)}
           arcDashGap={(d) => (d.dots ? 0.13 : 0)}
           arcDashInitialGap={(d) => (d.dots ? d.initialGap : 0)}
-          arcDashAnimateTime={(d) => (d.dots && !reduced ? 5200 : 0)}
+          arcDashAnimateTime={(d) => (d.dots && !reduced ? Math.round(5200 / arcScale) : 0)}
           arcsTransitionDuration={0}
           ringsData={reduced ? [] : landings}
           ringLat="lat"
