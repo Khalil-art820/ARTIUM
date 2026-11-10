@@ -11828,17 +11828,27 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
     [members, useConn, conn.byOther]);
   const filtered = React.useMemo(() => filterBase.filter((m) => matches(m, filters)), [filterBase, filters]);
   const discover = useConn ? members : filtered;
-  // The globe shows you and the connections the filters leave.
-  // Connections in the order they were made, so a group of people at one
-  // place shows the earliest connection's face; you come after them.
+  // The globe shows your connections the filters leave — not you. In the
+  // order they were made, so a group at one place shows the earliest
+  // connection's face first.
   const onGlobe = React.useMemo(() => {
-    const me = useConn ? members.filter((m) => m.id === myId) : [];
     const madeAt = (m) => { const r = conn.byOther?.[m.id]?.row; return r ? (Date.parse(r.responded_at || r.created_at) || 0) : Infinity; };
     const ordered = useConn ? [...filtered].sort((x, y) => madeAt(x) - madeAt(y)) : filtered;
-    // You first: where your connections share your place, the pin shows you
-    // and its counter opens the others.
-    return [...me, ...ordered].filter((m) => Number.isFinite(m.lat) && Number.isFinite(m.lng));
-  }, [filtered, members, useConn, myId, conn.byOther]);
+    return ordered.filter((m) => m.id !== myId && Number.isFinite(m.lat) && Number.isFinite(m.lng));
+  }, [filtered, useConn, myId, conn.byOther]);
+  // Lines on the globe join two of your connections only when those two are
+  // connected to each other (connections_among, member-only, accepted only).
+  const globeIds = React.useMemo(() => onGlobe.map((m) => m.id).sort().join(","), [onGlobe]);
+  const [globeLinks, setGlobeLinks] = React.useState([]);
+  React.useEffect(() => {
+    const ids = globeIds ? globeIds.split(",") : [];
+    if (ids.length < 2) { setGlobeLinks([]); return; }
+    let live = true;
+    supabase.rpc("connections_among", { p_ids: ids }).then(({ data, error }) => {
+      if (live) setGlobeLinks(error || !Array.isArray(data) ? [] : data.map((r) => [r.a, r.b]));
+    });
+    return () => { live = false; };
+  }, [globeIds]);
 
   // Options come from the members themselves, counted against the other filters.
   const optionsFor = (key) => {
@@ -11984,6 +11994,7 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
             <Suspense fallback={<div className="nx-globe-skel" aria-label="Loading the globe"><span /></div>}>
               <NetworkGlobe
                 members={onGlobe}
+                links={globeLinks}
                 conservatories={allCons}
                 selectedId={selectedId}
                 focus={focus}

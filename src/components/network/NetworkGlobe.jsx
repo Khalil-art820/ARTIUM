@@ -64,7 +64,7 @@ const FAN_MAX = 8;
 const FAN_ALTITUDE = 0.95;   // the same "zoomed in" as the HD map swap
 const MAX_MARKERS = 60;
 const PX_PER_DEG = 7.2;
-const BUBBLE_PX = 80;        // a three-face bubble and its +N, with a margin
+const BUBBLE_PX = 64;        // a three-face bubble and its +N, with a margin
 const degFor = (px, altitude) => (px * altitude) / PX_PER_DEG;
 // Distance in degrees, longitude shrunk toward the poles.
 const dist = (a, b) => Math.hypot(a.lat - b.lat, (a.lng - b.lng) * Math.max(0.15, Math.cos((a.lat * Math.PI) / 180)));
@@ -97,8 +97,8 @@ function groupMarkers(members, altitude, selectedId) {
     const n = list.length;
     if (n === 1) { out.push({ kind: "member", id: list[0].id, lat: c.lat, lng: c.lng, member: list[0], selected: false }); continue; }
     const onePlace = c.places.length === 1;
-    // Ring radius: room for n 36px faces side by side (at least 26px).
-    const r = degFor(Math.max(26, (n * 42) / (2 * Math.PI)), altitude);
+    // Ring radius: room for n 28px faces side by side (at least 22px).
+    const r = degFor(Math.max(22, (n * 33) / (2 * Math.PI)), altitude);
     // Only when the ring has room: nothing else within its reach.
     const roomy = clusters.every((o, k) => k === ci || dist(o, c) > r + degFor(BUBBLE_PX / 2, altitude));
     if (onePlace && n <= FAN_MAX && altitude < FAN_ALTITUDE && roomy) {
@@ -129,7 +129,7 @@ function faceHTML(m, size, ring) {
     <b>${initials}</b>${inner}</span>`;
 }
 
-export default function NetworkGlobe({ members, conservatories, focus, selectedId, onSelectMember, onSelectGroup, height = 330 }) {
+export default function NetworkGlobe({ members, links = [], conservatories, focus, selectedId, onSelectMember, onSelectGroup, height = 330 }) {
   const wrapRef = React.useRef(null);
   const globeRef = React.useRef(null);
   const [size, setSize] = React.useState({ w: 0, h: 0 });
@@ -302,27 +302,22 @@ export default function NetworkGlobe({ members, conservatories, focus, selectedI
     .filter((c) => Number.isFinite(c.lat) && Number.isFinite(c.lng))
     .map((c) => ({ lat: c.lat, lng: c.lng, on: memberCons.has(c.id) })), [conservatories, memberCons]);
 
-  // Arcs: from where members are to the network's other member places; when
-  // there's only one, to the five nearest conservatories — real places, a
-  // quiet picture of reach rather than invented traffic.
+  // Arcs: only between two members shown here who are connected to each
+  // other (links: [idA, idB] pairs), and only when they stand apart.
   const arcs = React.useMemo(() => {
-    const places = [];
+    const byId = new Map(members.map((m) => [m.id, m]));
     const seen = new Set();
-    for (const m of members) { const k = `${m.lat},${m.lng}`; if (!seen.has(k)) { seen.add(k); places.push(m); } }
     const out = [];
-    if (places.length >= 2) {
-      for (let i = 0; i < places.length && out.length < 14; i++) {
-        const a = places[i], b = places[(i + 1) % places.length];
-        if (a !== b) out.push({ a, b });
-      }
-    } else if (places.length === 1) {
-      const a = places[0];
-      const d = (c) => (c.lat - a.lat) ** 2 + ((c.lng - a.lng) * Math.cos(a.lat * Math.PI / 180)) ** 2;
-      conservatories.filter((c) => Number.isFinite(c.lat) && Math.abs(c.lat - a.lat) + Math.abs(c.lng - a.lng) > 3)
-        .sort((x, y) => d(x) - d(y)).slice(0, 5).forEach((b) => out.push({ a, b }));
+    for (const [ia, ib] of links) {
+      const a = byId.get(ia), b = byId.get(ib);
+      if (!a || !b || (Math.abs(a.lat - b.lat) < 0.05 && Math.abs(a.lng - b.lng) < 0.05)) continue;
+      const k = [ia, ib].sort().join("|");
+      if (seen.has(k)) continue;
+      seen.add(k); out.push({ startLat: a.lat, startLng: a.lng, endLat: b.lat, endLng: b.lng });
+      if (out.length >= 40) break;
     }
-    return out.map(({ a, b }) => ({ startLat: a.lat, startLng: a.lng, endLat: b.lat, endLng: b.lng }));
-  }, [members, conservatories]);
+    return out;
+  }, [members, links]);
 
   const reduced = prefersReducedMotion();
 
@@ -412,7 +407,7 @@ export default function NetworkGlobe({ members, conservatories, focus, selectedI
             if (d.kind === "member") {
               const m = d.member;
               el.setAttribute("aria-label", `${m.name}${m.instrumentLabel ? `, ${m.instrumentLabel}` : ""}`);
-              el.innerHTML = faceHTML(m, d.selected ? 46 : 36, d.selected ? 5 : 3);
+              el.innerHTML = faceHTML(m, d.selected ? 36 : 28, d.selected ? 4 : 2);
               el.onclick = (e) => { e.stopPropagation(); onSelectMember(m.id); };
             } else {
               // Up to three portraits (first in order: you, then your
@@ -421,7 +416,7 @@ export default function NetworkGlobe({ members, conservatories, focus, selectedI
               const shown = d.members.slice(0, 3);
               const rest = d.members.length - shown.length;
               el.setAttribute("aria-label", `${d.members.length} musicians${d.place ? ` in ${d.place}` : " here"} — open the list`);
-              el.innerHTML = `<span class="ng-group">${shown.map((m) => faceHTML(m, 34, 2)).join("")}${rest > 0 ? `<span class="ng-more">+${rest}</span>` : ""}</span>`
+              el.innerHTML = `<span class="ng-group">${shown.map((m) => faceHTML(m, 26, 2)).join("")}${rest > 0 ? `<span class="ng-more">+${rest}</span>` : ""}</span>`
                 + (d.place ? `<span class="ng-place">${esc(d.place)}</span>` : "");
               el.onclick = (e) => { e.stopPropagation(); onSelectGroup(d.members); };
             }
