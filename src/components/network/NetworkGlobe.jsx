@@ -76,6 +76,11 @@ function clusterPlaces(places, reach) {
   }
   return clusters;
 }
+function placeLabel(places) {
+  const names = [...new Set(places.map((p) => (p.name || "").trim()).filter(Boolean).map((n) => n.toLowerCase()))];
+  if (names.length === 1) return places.find((p) => (p.name || "").trim().toLowerCase() === names[0]).name.trim();
+  return names.length > 1 ? `${names.length} cities` : "";
+}
 function groupMarkers(members, altitude, selectedId) {
   const out = [];
   const byPlace = new Map();
@@ -111,7 +116,9 @@ function groupMarkers(members, altitude, selectedId) {
     }
     out.push({
       kind: "group", id: `g:${list.map((m) => m.id).sort().join(",")}`, lat: c.lat, lng: c.lng, members: list, selected: false,
-      place: onePlace ? c.places[0].name : "",
+      // One city: its name. Several: how many (members at a school without a
+      // home city count under the school's city, so names are deduplicated).
+      place: placeLabel(c.places),
     });
   }
   return out;
