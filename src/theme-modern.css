@@ -1421,3 +1421,7 @@ html.theme-modern .ng-place{margin-top:3px;padding:1px 7px;border-radius:999px;b
 html.theme-modern .ng-group .ng-face + .ng-face{margin-left:-9px}
 html.theme-modern .ng-face b{font-size:10px}
 html.theme-modern .ng-more{min-width:23px;height:19px;padding:0 5px;font-size:10.5px;margin-left:-7px}
+/* The +N counter in the city label's design: dark see-through pill, white
+   Fira Sans 600. */
+html.theme-modern .ng-more{background:rgba(10,30,28,.72) !important;color:#FFFFFF !important;font:600 10.5px/1.4 'Fira Sans',system-ui,sans-serif !important;
+  height:auto !important;min-width:0 !important;padding:1px 7px !important;border:0 !important;box-shadow:none !important}
