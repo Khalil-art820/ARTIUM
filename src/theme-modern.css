@@ -1447,8 +1447,10 @@ html.theme-modern .ng-marker .ng-group > .ng-more{position:absolute;left:100%;to
 html.theme-modern .nx-recenter{background:rgba(10,30,28,.72) !important;color:#FFFFFF !important;border:0 !important;box-shadow:none !important;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
 /* A face without a photo: the same dark see-through ground and white Fira
    Sans as the city label and the +N. */
-/* See-through like the city labels (beats the app-wide emerald initials rule). */
-html.theme-modern .ng-wrap .ng-face{background:rgba(10,30,28,.72) !important}
+/* Grey, as initials are everywhere else in the app (light grey ground, slate
+   letters); beats the app-wide emerald initials rule. */
+html.theme-modern .ng-wrap .ng-face{background:#EDEDEA !important}
+html.theme-modern .ng-wrap .ng-face b{color:#5F6B6E !important}
 html.theme-modern .ng-face b{color:#FFFFFF;font:600 10px/1 'Fira Sans',system-ui,sans-serif}
 /* Globe depth: a soft darkening toward the rim and a gentle shadow beneath,
    sized to the globe's disc by NetworkGlobe at every zoom. */
