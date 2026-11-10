@@ -185,8 +185,9 @@ export default function NetworkGlobe({ members, links = [], conservatories, focu
     const c = g.controls();
     if (c) {
       c.enableZoom = true;
-      // Close enough to tell neighbouring cities apart (Paris from Lyon).
-      c.minDistance = 118;
+      // No closer than the 8K map can stay sharp (about 2x its pixels on
+      // screen at 3x density); closer, it turns visibly soft.
+      c.minDistance = 145;
       c.maxDistance = 420;
       c.zoomSpeed = 0.7;
       c.rotateSpeed = 0.55;
@@ -228,14 +229,14 @@ export default function NetworkGlobe({ members, links = [], conservatories, focu
     return () => { detach && detach(); io && io.disconnect(); clearTimeout(idleTimer.current); clearInterval(sharpen); };
   }, [ready]);
 
-  // Zoomed in, draw at up to 2.25x so the map and coastlines stay crisp while
-  // the moving lines stay fluid on a phone (3x made them stutter); zoomed
-  // out, a lighter 1.75x.
+  // Zoomed in, draw at the screen's full pixel density (up to 3x) so the 8K
+  // map and coastlines stay crisp; zoomed out, a lighter 1.75x keeps it
+  // smooth. The lines stay fluid by thinning and slowing with the zoom.
   const zoomedIn = altitude < 0.95;
   React.useEffect(() => {
     if (!ready || !globeRef.current) return;
     const dpr = window.devicePixelRatio || 1;
-    try { globeRef.current.renderer().setPixelRatio(Math.min(dpr, zoomedIn ? 2.25 : 1.75)); } catch { /* not ready */ }
+    try { globeRef.current.renderer().setPixelRatio(Math.min(dpr, zoomedIn ? 3 : 1.75)); } catch { /* not ready */ }
   }, [ready, zoomedIn]);
 
   // The first zoom-in swaps in the 8K map and lights (about 2.2 MB, fetched only then),
