@@ -22,6 +22,12 @@ const EARTH_URL = "/earth-night-artium-v4.jpg";
 const LIGHTS_URL = "/earth-lights-artium-v4.jpg";
 const EARTH_HD_URL = "/earth-night-artium-hd-v4.jpg";     // 8192 x 4096
 const LIGHTS_HD_URL = "/earth-lights-artium-hd-v4.jpg";   // 8192 x 4096
+// Regional HD tiles (scripts/globe-hd-tiles.py): 15 x 15 degree squares at
+// 2048 px, about 6x the 8K map, laid over the globe where you zoom past what
+// the 8K map can show sharply. Only land squares exist; the list is index.json.
+const TILE_BASE = "/globe-tiles/v1/";
+const TILE_ALT = 0.55;     // below this altitude the tiles take over
+const TILE_MAX = 8;        // at most this many in memory (each ~40 MB on the GPU)
 const MINT = "#42C9B8";
 // The five continents' names, floating over each one (gold, spaced caps).
 const CONTINENTS = [
@@ -226,9 +232,7 @@ export default function NetworkGlobe({ members, links = [], conservatories, focu
     const c = g.controls();
     if (c) {
       c.enableZoom = true;
-      // No closer than the 8K map can stay sharp (about 2x its pixels on
-      // screen at 3x density); closer, it turns visibly soft.
-      c.minDistance = 145;
+      c.minDistance = 110;   // with the regional HD tiles the map stays sharp this close
       c.maxDistance = 420;
       c.zoomSpeed = 0.7;
       c.rotateSpeed = 0.55;
@@ -305,6 +309,109 @@ export default function NetworkGlobe({ members, links = [], conservatories, focu
     });
   }, [ready, zoomedIn, material]);
 
+  // Regional HD tiles: when zoomed in past TILE_ALT, load the 15-degree
+  // squares that cover the view and lay each one exactly over its patch of
+  // the globe (same lighting and material as the globe itself), a hair above
+  // the surface. Least recently seen tiles are freed past TILE_MAX.
+  const tiles = React.useRef(new Map());       // "row_col" -> { mesh, seen }
+  const tileIndex = React.useRef(null);        // Set of tile names, or false if unavailable
+  const pov = React.useRef(null);
+  const tileTick = React.useRef(0);
+  const updateTiles = React.useCallback(() => {
+    const g = globeRef.current; const p = pov.current;
+    if (!g || !p) return;
+    const map = tiles.current;
+    if (p.altitude > TILE_ALT) { for (const t of map.values()) t.mesh.visible = false; return; }
+    if (tileIndex.current === null) {
+      tileIndex.current = false;
+      fetch(TILE_BASE + "index.json").then((r) => r.json()).then((d) => { tileIndex.current = new Set(d.tiles || []); updateTiles(); }).catch(() => {});
+      return;
+    }
+    if (!tileIndex.current) return;
+    let renderer; try { renderer = g.renderer(); } catch { return; }
+    if ((renderer.capabilities.maxTextureSize || 0) < 2048) return;
+    // The view's half-size in degrees, with a margin (about 26 x altitude).
+    const half = 30 * p.altitude + 2;
+    const cosLat = Math.max(0.2, Math.cos((p.lat * Math.PI) / 180));
+    const want = new Set();
+    const r0 = Math.max(0, Math.floor((90 - (p.lat + half)) / 15)), r1 = Math.min(9, Math.floor((90 - (p.lat - half)) / 15));
+    const span = Math.min(180, half / cosLat);
+    for (let r = r0; r <= r1; r++) {
+      for (let lng = p.lng - span; lng <= p.lng + span + 15; lng += 15) {
+        const c = ((Math.floor((Math.min(lng, p.lng + span) + 180) / 15) % 24) + 24) % 24;
+        const name = `${r}_${c}`;
+        if (tileIndex.current.has(name)) want.add(name);
+      }
+    }
+    const now = ++tileTick.current;
+    for (const [name, t] of map) { t.mesh.visible = want.has(name); if (t.mesh.visible) t.seen = now; }
+    const scene = g.scene();
+    for (const name of want) {
+      if (map.has(name)) continue;
+      const [row, col] = name.split("_").map(Number);
+      const lng0 = -180 + col * 15, lat1 = 90 - row * 15, N = 24;
+      const pos = [], nrm = [], uv = [], idx = [];
+      for (let j = 0; j <= N; j++) {
+        for (let i = 0; i <= N; i++) {
+          const c = g.getCoords(lat1 - (15 * j) / N, lng0 + (15 * i) / N, 0.0008);
+          const l = Math.hypot(c.x, c.y, c.z) || 1;
+          pos.push(c.x, c.y, c.z); nrm.push(c.x / l, c.y / l, c.z / l); uv.push(i / N, 1 - j / N);
+        }
+      }
+      for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
+        const a = j * (N + 1) + i, b = a + 1, c = a + N + 1, d = c + 1;
+        idx.push(a, c, b, b, c, d);
+      }
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+      geo.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2));
+      geo.setAttribute("normal", new THREE.Float32BufferAttribute(nrm, 3));   // straight out, as on the globe
+      geo.setIndex(idx);
+      const mat = new THREE.MeshPhongMaterial({
+        color: new THREE.Color("#FFFFFF"), emissive: new THREE.Color("#FFFFFF"), emissiveIntensity: 1.3,
+        shininess: 8, specular: new THREE.Color("#0E3B37"), transparent: true, opacity: 0, side: THREE.DoubleSide,
+        polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
+      });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.renderOrder = 1; mesh.visible = true;
+      const t = { mesh, seen: now };
+      map.set(name, t);
+      scene.add(mesh);
+      // Shown once both images are in, so a half-loaded tile never flashes.
+      const loader = new THREE.TextureLoader();
+      const aniso = renderer.capabilities.getMaxAnisotropy();
+      const prep = (tex) => { tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = aniso; return tex; };
+      let n = 0;
+      const done = () => { if (++n === 2 && map.get(name) === t) { mat.opacity = 1; mat.transparent = false; mat.needsUpdate = true; } };
+      loader.load(`${TILE_BASE}${name}-night.jpg`, (tex) => { mat.map = prep(tex); mat.needsUpdate = true; done(); });
+      loader.load(`${TILE_BASE}${name}-lights.jpg`, (tex) => { mat.emissiveMap = prep(tex); mat.needsUpdate = true; done(); });
+    }
+    // Free the least recently seen beyond the cap.
+    if (map.size > TILE_MAX) {
+      const old = [...map.entries()].filter(([n2]) => !want.has(n2)).sort((a, b) => a[1].seen - b[1].seen);
+      for (const [n2, t] of old.slice(0, map.size - TILE_MAX)) {
+        scene.remove(t.mesh); t.mesh.geometry.dispose();
+        t.mesh.material.map?.dispose(); t.mesh.material.emissiveMap?.dispose(); t.mesh.material.dispose();
+        map.delete(n2);
+      }
+    }
+  }, []);
+  const tileRaf = React.useRef(0);
+  const onPov = React.useCallback((p) => {
+    pov.current = p;
+    if (tileRaf.current) return;
+    tileRaf.current = requestAnimationFrame(() => { tileRaf.current = 0; updateTiles(); });
+  }, [updateTiles]);
+  React.useEffect(() => () => {
+    cancelAnimationFrame(tileRaf.current);
+    let scene = null; try { scene = globeRef.current?.scene(); } catch { /* gone */ }
+    for (const t of tiles.current.values()) {
+      scene?.remove(t.mesh); t.mesh.geometry.dispose();
+      t.mesh.material.map?.dispose(); t.mesh.material.emissiveMap?.dispose(); t.mesh.material.dispose();
+    }
+    tiles.current.clear();
+  }, []);
+
   // Fly to whatever the page asks for (a carousel pick, a recenter).
   React.useEffect(() => {
     if (!ready || !globeRef.current || !focus) return;
@@ -376,7 +483,7 @@ export default function NetworkGlobe({ members, links = [], conservatories, focu
   // Zoomed in, the lines would swell and the travelling dots jump many pixels
   // a frame. In three zoom bands (so the lines are not rebuilt on every zoom
   // step) they get thinner and slower in map terms, about the same on screen.
-  const arcScale = altitude > 0.95 ? 1 : altitude > 0.5 ? 0.5 : 0.28;
+  const arcScale = altitude > 0.95 ? 1 : altitude > 0.5 ? 0.5 : altitude > 0.25 ? 0.28 : 0.14;
 
   // Each arc is drawn twice: a faint steady line, and over it a string of
   // bright dots travelling along it. Where arcs land, a glow ripples out.
@@ -421,9 +528,10 @@ export default function NetworkGlobe({ members, links = [], conservatories, focu
           rendererConfig={{ antialias: true, alpha: true, powerPreference: "low-power" }}
           animateIn={!reduced}
           onGlobeReady={() => setReady(true)}
-          onZoom={(pov) => {
-            const a = Math.round(pov.altitude * 20) / 20;
-            setAltitude((p) => (p === a ? p : a));
+          onZoom={(p) => {
+            const a = Math.round(p.altitude * 50) / 50;
+            setAltitude((prev) => (prev === a ? prev : a));
+            onPov(p);
           }}
           globeMaterial={material}
           globeImageUrl={EARTH_URL}

@@ -58,6 +58,16 @@ export default defineConfig({
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         runtimeCaching: [
           {
+            // The globe's regional HD tiles: only the ones someone zoomed into,
+            // in their own cache so they never push out the app's photos.
+            urlPattern: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith("/globe-tiles/"),
+            handler: "CacheFirst",
+            options: {
+              cacheName: "artium-globe-tiles",
+              expiration: { maxEntries: 40, maxAgeSeconds: 60 * 60 * 24 * 60 },
+            },
+          },
+          {
             // The imagery evicted from the precache: webp/jpg photos and the
             // globe's satellite texture + country-borders json. Cache-first
             // and effectively immutable (hashed or replaced wholesale).
