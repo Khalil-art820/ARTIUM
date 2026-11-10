@@ -192,6 +192,7 @@ export default function NetworkGlobe({ members, links = [], conservatories, focu
   const [ready, setReady] = React.useState(false);
   const [altitude, setAltitude] = React.useState(DEFAULT_POV.altitude);
   const idleTimer = React.useRef(null);
+  const baseAlt = React.useRef(DEFAULT_POV.altitude);   // the whole-globe view's altitude
 
   // Size from the container (react-globe.gl needs explicit pixels).
   React.useEffect(() => {
@@ -221,6 +222,7 @@ export default function NetworkGlobe({ members, links = [], conservatories, focu
   React.useEffect(() => {
     if (!ready || !globeRef.current) return;
     const g = globeRef.current;
+    baseAlt.current = fitAltitude(size.w, size.h);
     g.pointOfView({ ...DEFAULT_POV, altitude: fitAltitude(size.w, size.h) }, 0);
     try { g.renderer().setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75)); } catch { /* older three */ }
     // Up/down swipes scroll the page, sideways swipes spin the globe, pinch
@@ -239,9 +241,15 @@ export default function NetworkGlobe({ members, links = [], conservatories, focu
       c.autoRotate = !prefersReducedMotion();
       c.autoRotateSpeed = 0.22;
       const hold = () => { c.autoRotate = false; clearTimeout(idleTimer.current); };
+      // The slow spin resumes only once you are back out at the whole-globe
+      // view; zoomed in, the globe stays exactly where you left it.
       const release = () => {
         clearTimeout(idleTimer.current);
-        if (!prefersReducedMotion()) idleTimer.current = setTimeout(() => { c.autoRotate = true; }, 7000);
+        if (prefersReducedMotion()) return;
+        idleTimer.current = setTimeout(() => {
+          const alt = pov.current?.altitude ?? 9;
+          if (alt >= baseAlt.current * 0.95) c.autoRotate = true;
+        }, 7000);
       };
       c.addEventListener("start", hold);
       c.addEventListener("end", release);
@@ -399,6 +407,11 @@ export default function NetworkGlobe({ members, links = [], conservatories, focu
   const tileRaf = React.useRef(0);
   const onPov = React.useCallback((p) => {
     pov.current = p;
+    // Zooming in stops the slow spin at once, so the view never drifts.
+    if (p.altitude < baseAlt.current * 0.95) {
+      try { const c = globeRef.current?.controls(); if (c) c.autoRotate = false; } catch { /* not ready */ }
+      clearTimeout(idleTimer.current);
+    }
     if (tileRaf.current) return;
     tileRaf.current = requestAnimationFrame(() => { tileRaf.current = 0; updateTiles(); });
   }, [updateTiles]);
@@ -462,10 +475,16 @@ export default function NetworkGlobe({ members, links = [], conservatories, focu
   // other (links: [idA, idB] pairs), and only when they stand apart.
   // Lines join two connected people only while each stands alone on the
   // globe (a single face, not folded into a bubble), so they follow the zoom.
-  const singlesKey = React.useMemo(() => markers.filter((d) => d.kind === "member").map((d) => d.id).sort().join(","), [markers]);
+  // Each single face's displayed position (after any nudge), rounded so a face
+  // that does not move never rebuilds the lines.
+  const singlesKey = React.useMemo(() => markers.filter((d) => d.kind === "member")
+    .map((d) => `${d.id}@${d.lat.toFixed(3)}@${d.lng.toFixed(3)}`).sort().join(","), [markers]);
   const arcs = React.useMemo(() => {
-    const single = new Set(singlesKey ? singlesKey.split(",") : []);
-    const byId = new Map(members.filter((m) => single.has(m.id)).map((m) => [m.id, m]));
+    // Lines (and the rings where they land) start and end at the centre of
+    // each face, exactly where it is drawn.
+    const byId = new Map((singlesKey ? singlesKey.split(",") : []).map((e) => {
+      const [id, lat, lng] = e.split("@"); return [id, { lat: +lat, lng: +lng }];
+    }));
     const seen = new Set();
     const out = [];
     for (const [ia, ib] of links) {
@@ -477,7 +496,7 @@ export default function NetworkGlobe({ members, links = [], conservatories, focu
       if (out.length >= 40) break;
     }
     return out;
-  }, [members, links, singlesKey]);
+  }, [links, singlesKey]);
 
   const reduced = prefersReducedMotion();
   // Zoomed in, the lines would swell and the travelling dots jump many pixels

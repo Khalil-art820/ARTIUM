@@ -1435,3 +1435,10 @@ html.theme-modern .ng-place.ng-place-solo{margin:0;pointer-events:none}
 /* Globe markers never catch a touch: swipes reach the globe, taps are
    resolved by the globe's own wrapper (see NetworkGlobe). */
 html.theme-modern .ng-wrap .ng-marker{pointer-events:none !important}
+/* Globe markers: the marker's box is exactly the face, so the face sits dead
+   centre on its point (and on the pulsing ring there); the city label hangs
+   below and the +N to the right without moving it. */
+html.theme-modern .ng-marker{display:block}
+html.theme-modern .ng-marker > .ng-place{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:3px}
+html.theme-modern .ng-marker .ng-group{position:relative;display:block}
+html.theme-modern .ng-marker .ng-group > .ng-more{position:absolute;left:100%;top:50%;transform:translateY(-50%);margin-left:-6px}
