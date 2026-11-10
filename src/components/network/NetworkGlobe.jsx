@@ -54,12 +54,12 @@ const prefersReducedMotion = () => {
 //    than one bubble's width to a bigger one joins its bubble, so bubbles never
 //    overlap. Zoomed out that makes one bubble per region; zooming in splits
 //    them into cities;
-//  - zoomed in, a place with up to FAN_MAX people shows each face; more
-//    stays one bubble with the city's name, whose counter opens the list;
+//  - two or more people in one city always share one bubble with the city's
+//    name (up to three faces and a +N), whose counter opens the list;
 //  - never more than MAX_MARKERS markers: the merge distance grows until the
 //    count fits, so a busy network stays smooth on an older phone.
 // On screen, one degree is about PX_PER_DEG / altitude pixels at the centre.
-const FAN_MAX = 2;          // a city of 3 or more stays one named bubble, even zoomed in
+const FAN_MAX = 1;          // two or more in one city always share one named bubble
 const FAN_ALTITUDE = 0.95;   // the same "zoomed in" as the HD map swap
 const MAX_MARKERS = 60;
 const PX_PER_DEG = 7.2;
