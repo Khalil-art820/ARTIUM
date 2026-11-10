@@ -305,11 +305,8 @@ export default function NetworkGlobe({ members, links = [], conservatories, focu
     ...groupMarkers(members, altitude, selectedId),
   ], [members, altitude, selectedId]);
 
-  // Mint points at every conservatory (real places), brighter where members are.
-  const memberCons = React.useMemo(() => new Set(members.map((m) => m.conservatoryId)), [members]);
-  const points = React.useMemo(() => conservatories
-    .filter((c) => Number.isFinite(c.lat) && Number.isFinite(c.lng))
-    .map((c) => ({ lat: c.lat, lng: c.lng, on: memberCons.has(c.id) })), [conservatories, memberCons]);
+  // No dots for the conservatories: the globe shows people, not schools.
+  const points = [];
 
   // Arcs: only between two members shown here who are connected to each
   // other (links: [idA, idB] pairs), and only when they stand apart.
