@@ -89,7 +89,9 @@ function placeLabel(places) {
 // Push markers apart (in degrees, longitude shrunk toward the poles) until no
 // two overlap: each needs its own radius plus the other's. A few passes are
 // enough for a city's neighbours; nothing moves when nothing overlaps.
-function relax(items, altitude) {
+function relax(items, altitude, capPx = Infinity) {
+  for (const it of items) { it.oLat = it.lat; it.oLng = it.lng; }
+  const cap = degFor(capPx, altitude);
   for (let pass = 0; pass < 40; pass++) {
     let moved = false;
     for (let a = 0; a < items.length; a++) {
@@ -105,19 +107,29 @@ function relax(items, altitude) {
         const ux = dx / d, uy = dy / d;
         A.lat -= uy * push; A.lng -= (ux * push) / cosLat;
         B.lat += uy * push; B.lng += (ux * push) / cosLat;
+        // never further than the cap from its true place
+        for (const P of [A, B]) {
+          const cl = Math.max(0.15, Math.cos((P.oLat * Math.PI) / 180));
+          const ex = (P.lng - P.oLng) * cl, ey = P.lat - P.oLat, e = Math.hypot(ex, ey);
+          if (e > cap) { P.lat = P.oLat + (ey / e) * cap; P.lng = P.oLng + (ex / e) * cap / cl; }
+        }
         moved = true;
       }
     }
     if (!moved) break;
   }
 }
-function groupMarkers(members, altitude, selectedId) {
+function groupMarkers(members, altitude, selectedId, linked = new Set()) {
   const out = [];
   const byPlace = new Map();
   let selected = null;
+  const solos = [];
   for (const m of members) {
     // The selected member always stands on their own, highlighted.
     if (m.id === selectedId) { selected = m; continue; }
+    // Someone connected to another of your connections always stands alone,
+    // so the line between the two can be drawn.
+    if (linked.has(m.id)) { solos.push(m); continue; }
     const key = m.placeKey || `${m.lat},${m.lng}`;
     if (!byPlace.has(key)) byPlace.set(key, { key, name: m.placeName || "", lat: m.lat, lng: m.lng, members: [] });
     byPlace.get(key).members.push(m);
@@ -144,13 +156,32 @@ function groupMarkers(members, altitude, selectedId) {
     c.ringPx = Math.max(30, (n * 33) / (2 * Math.PI));   // room for the city name in the middle
     c.rPx = n === 1 ? 22 : c.ring ? c.ringPx + 18 : 28;   // face (+label) or one-face bubble
   }
+  // The linked faces, each its own marker at its own place.
+  const soloItems = solos.map((m) => ({ lat: m.lat, lng: m.lng, members: [m], places: [{ key: m.placeKey, name: m.placeName || "" }], rPx: 22, solo: true }));
+  clusters = clusters.concat(soloItems);
   const items = selected ? [{ lat: selected.lat, lng: selected.lng, rPx: 24, fixed: true }, ...clusters] : clusters;
-  if (zoomedIn) relax(items, altitude);
+  // Nudge overlapping markers apart: always once linked faces stand alone
+  // among the bubbles, otherwise only zoomed in.
+  // With linked faces about, a face moves at most about a face's width from
+  // its city (a crowd may overlap a little rather than drift away).
+  if (zoomedIn || soloItems.length) relax(items, altitude, soloItems.length ? (zoomedIn ? 40 : 26) : Infinity);
   if (selected) out.push({ kind: "member", id: selected.id, lat: items[0].lat, lng: items[0].lng, member: selected, selected: true, place: selected.placeName || "" });
+  const named = new Set();
+  // Places that already have their own bubble (which carries the name).
+  const bubbled = new Set(clusters.filter((c) => !c.solo && c.members.length > 1 && c.places.length === 1).map((c) => c.places[0].key));
   for (const c of clusters) {
     const list = c.members;
     const n = list.length;
-    if (n === 1) { out.push({ kind: "member", id: list[0].id, lat: c.lat, lng: c.lng, member: list[0], selected: false, place: c.places[0].name || "" }); continue; }
+    if (n === 1) {
+      // Each city's name shows once: on its bubble if it has one, else on the
+      // first face there. Linked faces stay unlabelled when zoomed out.
+      let place = c.places[0].name || "";
+      const k = c.places[0].key || place;
+      if ((c.solo && !zoomedIn) || named.has(k) || bubbled.has(k)) place = "";
+      named.add(k);
+      out.push({ kind: "member", id: list[0].id, lat: c.lat, lng: c.lng, member: list[0], selected: false, place });
+      continue;
+    }
     if (c.ring) {
       const r = degFor(c.ringPx, altitude);
       const cosLat = Math.max(0.15, Math.cos((c.lat * Math.PI) / 180));
@@ -473,10 +504,17 @@ export default function NetworkGlobe({ members, links = [], conservatories, focu
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, [ready]);
+  // Everyone on the globe who is connected to another person on it.
+  const linkedIds = React.useMemo(() => {
+    const here = new Set(members.map((m) => m.id));
+    const out = new Set();
+    for (const [a, b] of links) if (here.has(a) && here.has(b) && a !== b) { out.add(a); out.add(b); }
+    return out;
+  }, [members, links]);
   const markers = React.useMemo(() => [
     ...CONTINENTS.map((c) => ({ kind: "label", id: `c:${c.name}`, ...c })),
-    ...groupMarkers(members, altitude, selectedId),
-  ], [members, altitude, selectedId]);
+    ...groupMarkers(members, altitude, selectedId, linkedIds),
+  ], [members, altitude, selectedId, linkedIds]);
 
   // No dots for the conservatories: the globe shows people, not schools.
   const points = [];
