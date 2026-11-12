@@ -127,9 +127,10 @@ function groupMarkers(members, altitude, selectedId, linked = new Set()) {
   for (const m of members) {
     // The selected member always stands on their own, highlighted.
     if (m.id === selectedId) { selected = m; continue; }
-    // Someone connected to another of your connections always stands alone,
-    // so the line between the two can be drawn.
-    if (linked.has(m.id)) { solos.push(m); continue; }
+    // Zoomed in, someone connected to another of your connections stands
+    // alone, so the line between the two can be drawn. Zoomed out they stay
+    // in their bubble.
+    if (altitude < FAN_ALTITUDE && linked.has(m.id)) { solos.push(m); continue; }
     const key = m.placeKey || `${m.lat},${m.lng}`;
     if (!byPlace.has(key)) byPlace.set(key, { key, name: m.placeName || "", lat: m.lat, lng: m.lng, members: [] });
     byPlace.get(key).members.push(m);
