@@ -5693,12 +5693,9 @@ export default function App() {
               {netHeader}
               {myProfile && (
                 MODERN ? (
-                  <div className="tm-hello">
-                    <div className="tm-hello-l">
-                      <p className="tm-hello-eyebrow">Welcome back,</p>
-                      <h2 className="tm-hello-name" data-no-translate="">{myProfile.name.split(" ")[0]}</h2>
-                    </div>
-                  </div>
+                  // No greeting: the page opens on the connections counter
+                  // (in NetworkExplorer), as in the owner's design.
+                  null
                 ) : (
                 <div className="pb-2 tm-net-hello" style={MODERN ? { padding: "16px 16px 8px" } : { paddingTop: 30, paddingLeft: 24, paddingRight: 24 }}>
                   {/* Greeting on the left, the conservatory mark beside it in
@@ -12003,7 +12000,31 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
     <div className="nx">
       {/* Filters */}
       <div className="nx-filters" role="toolbar" aria-label={learnerMode ? "Filter teachers" : "Filter musicians"}>
-        <p className="nx-sort-title"><span>{learnerMode ? "Sort teachers by:" : useConn ? "My connections" : "Sort musicians by:"}</span></p>
+        {useConn && !learnerMode ? (
+          // How many connections: a burgundy pair of people in a gold crescent,
+          // a gold rule, the number in large burgundy serif.
+          <div className="nx-conn-head">
+            <span className="nx-conn-mark" aria-hidden="true">
+              <svg viewBox="0 0 120 120" width="96" height="96">
+                <defs>
+                  <linearGradient id="nxGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#F3DCA4" /><stop offset=".55" stopColor="#D9B26A" /><stop offset="1" stopColor="#B88A3E" /></linearGradient>
+                  <linearGradient id="nxWine" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#9C2A48" /><stop offset="1" stopColor="#6E0F27" /></linearGradient>
+                </defs>
+                <path d="M96 22 A50 50 0 1 0 96 98" fill="none" stroke="url(#nxGold)" strokeWidth="4.5" strokeLinecap="round" />
+                <circle cx="46" cy="44" r="13" fill="url(#nxWine)" />
+                <circle cx="76" cy="44" r="13" fill="url(#nxWine)" />
+                <path d="M22 86c0-15 11-25 24-25 7 0 13 3 17 8 4-5 10-8 17-8 13 0 24 10 24 25v4H83v-4c0-8-5-14-12-15-3 6-5 13-5 19H62c0-6-2-13-5-19-7 1-12 7-12 15v4H22z" fill="url(#nxWine)" />
+              </svg>
+            </span>
+            <span className="nx-conn-rule" aria-hidden="true" />
+            <span className="nx-conn-count">
+              <b>{filterBase.length}</b>
+              <em>{filterBase.length === 1 ? "connection" : "connections"}</em>
+            </span>
+          </div>
+        ) : (
+          <p className="nx-sort-title"><span>{learnerMode ? "Sort teachers by:" : "Sort musicians by:"}</span></p>
+        )}
         <div className="nx-filter-row">
           {FILTERS.map(({ key, label }) => (
             <button key={key} type="button" className={`nx-fchip nx-fcard${filters[key].length ? " is-on" : ""}`} onClick={() => setSheet(key)} aria-haspopup="dialog">
@@ -12068,7 +12089,14 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
           <div className="nx-globe-fallback"><Globe2 size={28} /><p>The 3D globe needs WebGL, which this browser doesn't offer. Browse the musicians below.</p></div>
         )}
         <button type="button" className="nx-recenter" onClick={() => { setSelectedId(null); setFocus({ reset: true, at: Date.now() }); }} aria-label="Recenter the globe">
-          <Compass size={19} strokeWidth={1.7} />
+          {/* A burgundy globe: a solid disc with white meridians. */}
+          <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">
+            <circle cx="12" cy="12" r="10" fill="#7E1630" />
+            <g fill="none" stroke="#FFFFFF" strokeWidth="1.3" strokeLinecap="round">
+              <ellipse cx="12" cy="12" rx="4.3" ry="10" />
+              <path d="M2.4 9h19.2M2.4 15h19.2" />
+            </g>
+          </svg>
         </button>
       </div>
 
