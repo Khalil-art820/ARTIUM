@@ -11716,8 +11716,18 @@ function NxPeopleYouMayKnow({ members: realMembers, myId, conn, consById, onOpen
   const realMutual = useMutualConnections(myId);
   // Demo on: the made-up suggestions and their mutual connections join in,
   // plus a few who share something with you (for "Suggestions for you").
+  // In the demo, "you" always has something to match on: your own profile
+  // where it has it, else a stand-in (favourite composers, a city, a piece),
+  // since an account that isn't a listed student has no row here at all.
   const meReal = realMembers.find((x) => x.id === myId);
-  const members = React.useMemo(() => (demo ? [...realMembers, ...DEMO_SUGGEST, ...demoCommonFor(meReal)] : realMembers), [realMembers, demo, meReal]);
+  const meDemo = React.useMemo(() => (demo ? {
+    ...(meReal || {}), id: myId,
+    tastes: meReal?.tastes?.length ? meReal.tastes : ["Chopin", "Debussy", "Brahms"],
+    pieces: (meReal?.pieces || []).some((p) => p && p.composer) ? meReal.pieces : [{ title: "", composer: "Rachmaninoff" }],
+    placeName: meReal?.placeName || "Paris",
+    instrumentList: meReal?.instrumentList || [], levels: meReal?.levels || [],
+  } : null), [demo, meReal, myId]);
+  const members = React.useMemo(() => (demo ? [...realMembers, ...DEMO_SUGGEST, ...demoCommonFor(meDemo)] : realMembers), [realMembers, demo, meDemo]);
   const mutualMap = React.useMemo(() => (demo ? { ...realMutual, ...DEMO_MUTUAL } : realMutual), [realMutual, demo]);
   const dismissKey = `artium_pymk_dismissed_${myId}`;
   const [dismissed, setDismissed] = useState(() => { try { return new Set(JSON.parse(localStorage.getItem(dismissKey) || "[]")); } catch { return new Set(); } });
@@ -11728,7 +11738,7 @@ function NxPeopleYouMayKnow({ members: realMembers, myId, conn, consById, onOpen
   });
   const [open, setOpen] = useState({});
   const seen = useRef(new Set());
-  const me = members.find((x) => x.id === myId);
+  const me = meDemo || members.find((x) => x.id === myId);
   const byId = React.useMemo(() => Object.fromEntries([...members, ...(demo ? DEMO_GLOBE : [])].map((x) => [x.id, x])), [members, demo]);
   const sections = React.useMemo(() => {
     // Someone you connect with stays on screen as Connected until you leave;
