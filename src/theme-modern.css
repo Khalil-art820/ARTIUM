@@ -1412,8 +1412,8 @@ html.theme-modern .artium-net-bar .artium-net-puck.artium-net-puck:not(.tm-back-
 html.theme-modern .artium-net-bar .tm-hm-n.tm-hm-n{
   background:linear-gradient(165deg,#D58A97 0%,#B45E6D 42%,#A8505F 60%,#8A3B49 100%) !important;color:#FFFFFF !important;border-color:transparent !important;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.55),inset 0 -2px 4px rgba(70,15,30,.28),0 2px 6px -2px rgba(110,40,55,.45) !important}
-/* The globe dimmed to 60%: the white page softens its colours. */
-html.theme-modern .ng-wrap canvas{opacity:.6}
+/* The globe at full strength (no dimming). */
+html.theme-modern .ng-wrap canvas{opacity:1}
 /* Globe: a group bubble's place name under its faces. */
 html.theme-modern .ng-marker{display:flex;flex-direction:column;align-items:center}
 html.theme-modern .ng-place{margin-top:3px;padding:1px 7px;border-radius:999px;background:rgba(10,30,28,.72);color:#FFFFFF;font:600 10.5px/1.4 'Fira Sans',system-ui,sans-serif;white-space:nowrap;pointer-events:none}
