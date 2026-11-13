@@ -5573,10 +5573,11 @@ export default function App() {
             <header className="artium-net-bar">
               {onBackFn && (
                 <button className={`artium-net-puck${MODERN ? " tm-back-plain" : ""}`} onClick={onBackFn} aria-label="Back">
-                  <ChevronLeft size={17} strokeWidth={2} />
+                  {/* The globe page, like the welcome page: a full back arrow, no menu. */}
+                  {appTab === "map" ? <ArrowLeft size={18} strokeWidth={2} /> : <ChevronLeft size={17} strokeWidth={2} />}
                 </button>
               )}
-              {MODERN && netAvatar}
+              {MODERN && appTab !== "map" && netAvatar}
               <span className="artium-net-word" aria-label="ARTIUM">
                 <svg viewBox="0 0 720 700" aria-hidden="true">
                   <path d="M0 700L316 0H404L720 700H570L360 235L150 700Z" fill="currentColor" />
@@ -14468,10 +14469,10 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
         {(appTab !== "profile" || learnerPrevTab.current) && (
           <button className={`artium-net-puck${MODERN ? " tm-back-plain" : ""}`} aria-label="Back"
             onClick={appTab === "profile" && learnerPrevTab.current ? () => { const t = learnerPrevTab.current; learnerPrevTab.current = null; setAppTab(t); } : onBack}>
-            <ChevronLeft size={17} strokeWidth={2} />
+            {appTab === "map" ? <ArrowLeft size={18} strokeWidth={2} /> : <ChevronLeft size={17} strokeWidth={2} />}
           </button>
         )}
-        {MODERN && learnerAvatar}
+        {MODERN && appTab !== "map" && learnerAvatar}
         <span className="artium-net-word" aria-label="ARTIUM">
           <svg viewBox="0 0 720 700" aria-hidden="true">
             <path d="M0 700L316 0H404L720 700H570L360 235L150 700Z" fill="currentColor" />
