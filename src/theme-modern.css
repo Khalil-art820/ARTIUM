@@ -1611,4 +1611,5 @@ html.theme-modern .nx-demo-seg{padding:2px}
 html.theme-modern .nx-demo-seg button{height:25px;padding:0 13px;font-size:12px}
 /* The back arrow keeps its own proportions and stroke inside the plain back
    button (which sizes other icons as 26px squares). */
-html.theme-modern .artium-net-puck.tm-back-plain svg.back-arrow{width:32px;height:auto;aspect-ratio:24/17.26;stroke-width:2.17}
+html.theme-modern .artium-net-puck.tm-back-plain{display:flex !important;align-items:center;justify-content:center;align-self:center}
+html.theme-modern .artium-net-puck.tm-back-plain svg.back-arrow{width:24px;height:17.26px;stroke-width:2.17;margin:0}
