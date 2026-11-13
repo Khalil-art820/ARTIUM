@@ -1516,3 +1516,11 @@ html.theme-modern .nx-sheet.is-filter .nx-grow em{font-size:14px;color:#717171 !
 html.theme-modern .nx-sheet.is-filter .nx-grow > svg:last-child{color:#B0B0B0;flex:none}
 html.theme-modern .nx-sheet.is-filter .nx-grow .nx-face{background:#EDEDEA !important;color:#5F6B6E !important;box-shadow:none !important}
 html.theme-modern .nx-sheet.is-filter .nx-grow .nx-face b{color:#5F6B6E !important;font-size:15px}
+/* The four chips always fit across the screen: no sideways scroll; each takes
+   its share of the row, sized to its label. */
+html.theme-modern .nx-chips{overflow:visible;margin:0;padding:2px 0 4px;gap:6px;flex-wrap:nowrap}
+html.theme-modern .nx-chip{flex:1 1 auto;min-width:0;justify-content:center;gap:3px;height:36px;padding:0 8px 0 10px;font-size:13px}
+html.theme-modern .nx-chip svg{width:12px;height:12px;flex:none}
+/* A chip in use shows its count instead of the down-arrow, so the row never overflows. */
+html.theme-modern .nx-chip.is-on svg{display:none}
+html.theme-modern .nx-chip-n{min-width:16px;height:16px;font-size:10.5px;margin-left:2px}
