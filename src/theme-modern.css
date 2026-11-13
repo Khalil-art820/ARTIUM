@@ -1540,3 +1540,5 @@ html.theme-modern:has(.tm-tab-map),html.theme-modern:has(.tm-tab-map) body,html.
 html.theme-modern .tm-tab-map,html.theme-modern .tm-tab-map .artium-net-bar,html.theme-modern .tm-tab-map .nx,
 html.theme-modern .tm-tab-map .nx-filters,html.theme-modern .tm-tab-map .nx-stage,html.theme-modern .tm-tab-map .ng-wrap,
 html.theme-modern .tm-tab-map .nx-empty{background:#FFFFFF !important;background-image:none !important}
+/* "More musicians on Artium" (and the other people sections) on plain white too. */
+html.theme-modern .pk,html.theme-modern .pk-sec,html.theme-modern .pk .mc-list{background:#FFFFFF !important}
