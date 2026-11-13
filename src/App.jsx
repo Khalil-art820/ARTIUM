@@ -11442,7 +11442,7 @@ function nxLevels(st) {
   const p = parseStudy(st.year);
   return [...p.levels, ...(p.graduated ? [GRADUATED] : [])];
 }
-function NxSheet({ title, onClose, children, footer }) {
+function NxSheet({ title, onClose, children, footer, variant = "" }) {
   React.useEffect(() => {
     const onKey = (e) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", onKey);
@@ -11450,7 +11450,7 @@ function NxSheet({ title, onClose, children, footer }) {
   }, [onClose]);
   return ReactDOM.createPortal(
     <div className="nx-sheet-wrap" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="nx-sheet" role="dialog" aria-modal="true" aria-label={title}>
+      <div className={`nx-sheet${variant ? ` is-${variant}` : ""}`} role="dialog" aria-modal="true" aria-label={title}>
         <div className="nx-sheet-head">
           <span className="nx-sheet-grip" aria-hidden="true" />
           <p>{title}</p>
@@ -12088,13 +12088,10 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
           <div className="nx-globe-fallback"><Globe2 size={28} /><p>The 3D globe needs WebGL, which this browser doesn't offer. Browse the musicians below.</p></div>
         )}
         <button type="button" className="nx-recenter" onClick={() => { setSelectedId(null); setFocus({ reset: true, at: Date.now() }); }} aria-label="Recenter the globe">
-          {/* A burgundy globe: a solid disc with white meridians. */}
-          <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">
-            <circle cx="12" cy="12" r="10" fill="#7E1630" />
-            <g fill="none" stroke="#FFFFFF" strokeWidth="1.3" strokeLinecap="round">
-              <ellipse cx="12" cy="12" rx="4.3" ry="10" />
-              <path d="M2.4 9h19.2M2.4 15h19.2" />
-            </g>
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#222222" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" />
+            <ellipse cx="12" cy="12" rx="3.8" ry="9" />
+            <path d="M3 12h18" />
           </svg>
         </button>
       </div>
@@ -12160,7 +12157,7 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
 
       {/* Filter sheets */}
       {FILTERS.some((f) => f.key === sheet) && (
-        <NxSheet title={FILTERS.find((f) => f.key === sheet).label} onClose={() => setSheet(null)}
+        <NxSheet variant="filter" title={FILTERS.find((f) => f.key === sheet).label} onClose={() => setSheet(null)}
           footer={<>
             <button type="button" className="nx-clear" onClick={() => setFilters((f) => ({ ...f, [sheet]: [] }))}>Clear</button>
             <button type="button" className="nx-done" onClick={() => setSheet(null)}>{useConn
@@ -12174,7 +12171,7 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
             const on = filters[sheet].includes(o.v);
             return (
               <button key={o.v} type="button" className={`nx-opt${on ? " is-on" : ""}`} onClick={() => toggle(sheet, o.v)} aria-pressed={on}>
-                <span>{o.label}</span><em>{o.n}</em>{on ? <Check size={16} /> : <span className="nx-opt-box" aria-hidden="true" />}
+                <span>{o.label}</span><em>{o.n}</em><span className="nx-opt-box" aria-hidden="true">{on && <Check size={14} strokeWidth={3} />}</span>
               </button>
             );
           })}

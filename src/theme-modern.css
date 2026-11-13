@@ -1483,3 +1483,27 @@ html.theme-modern .nx-chip{flex:none;display:inline-flex;align-items:center;gap:
 html.theme-modern .nx-chip:hover{border-color:#222222 !important}
 html.theme-modern .nx-chip.is-on{background:#222222 !important;border-color:#222222 !important;color:#FFFFFF !important}
 html.theme-modern .nx-chip-n{min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#FFFFFF;color:#222222;font-size:11px;font-weight:600;display:inline-grid;place-items:center}
+/* ---- Design 21, continued: recentre button, filter sheet, active tags ---- */
+html.theme-modern .nx-recenter{width:40px !important;height:40px !important;background:#FFFFFF !important;border:1px solid #DDDDDD !important;
+  box-shadow:0 1px 2px rgba(0,0,0,.08),0 4px 12px rgba(0,0,0,.06) !important;color:#222222 !important}
+/* Filter sheet: a clean white sheet, a centred title, plain rows with square
+   check boxes, an underlined Clear and a black Show button. */
+html.theme-modern .nx-sheet.is-filter{background:#FFFFFF !important;border-radius:20px 20px 0 0 !important;font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',Roboto,sans-serif}
+html.theme-modern .nx-sheet.is-filter .nx-sheet-head{position:relative;justify-content:center;border-bottom:1px solid #EBEBEB !important;padding:14px 16px !important}
+html.theme-modern .nx-sheet.is-filter .nx-sheet-head p{font:600 16px/1.3 inherit !important;font-family:inherit !important;color:#222222 !important;margin:0 auto;text-align:center;letter-spacing:0 !important;text-transform:none !important}
+html.theme-modern .nx-sheet.is-filter .nx-sheet-head button{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:50%;background:none !important;border:0 !important;color:#222222 !important;display:grid;place-items:center}
+html.theme-modern .nx-sheet.is-filter .nx-sheet-head button:hover{background:#F7F7F7 !important}
+html.theme-modern .nx-sheet.is-filter .nx-opt{display:flex;align-items:center;gap:10px;width:100%;min-height:52px;padding:0 20px !important;background:#FFFFFF !important;border:0 !important;border-bottom:1px solid #EBEBEB !important;border-radius:0 !important;
+  font:400 16px/1.3 inherit !important;font-family:inherit !important;color:#222222 !important;text-align:left;box-shadow:none !important}
+html.theme-modern .nx-sheet.is-filter .nx-opt > span:first-child{flex:1;min-width:0}
+html.theme-modern .nx-sheet.is-filter .nx-opt em{font-style:normal;font-size:14px;color:#717171 !important;background:none !important;padding:0 !important}
+html.theme-modern .nx-sheet.is-filter .nx-opt-box{flex:none;width:22px;height:22px;border-radius:6px;border:1px solid #B0B0B0;background:#FFFFFF;display:grid;place-items:center;color:#FFFFFF}
+html.theme-modern .nx-sheet.is-filter .nx-opt.is-on .nx-opt-box{background:#222222;border-color:#222222}
+html.theme-modern .nx-sheet.is-filter .nx-sheet-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 20px calc(14px + env(safe-area-inset-bottom)) !important;border-top:1px solid #EBEBEB !important;background:#FFFFFF !important}
+html.theme-modern .nx-sheet.is-filter .nx-clear{background:none !important;border:0 !important;padding:6px 2px !important;color:#222222 !important;font:600 16px/1 inherit !important;font-family:inherit !important;text-decoration:underline;text-underline-offset:3px}
+html.theme-modern .nx-sheet.is-filter .nx-done{background:#222222 !important;color:#FFFFFF !important;border:0 !important;border-radius:10px !important;height:48px;padding:0 22px !important;font:600 16px/1 inherit !important;font-family:inherit !important;box-shadow:none !important}
+/* Active filters under the chips: light grey tags, black text; Clear all underlined. */
+html.theme-modern .nx-active .nx-achip{background:#F7F7F7 !important;color:#222222 !important;border:1px solid #EBEBEB !important;border-radius:999px !important;height:30px;padding:0 10px 0 12px !important;
+  font:500 13px/1 -apple-system,BlinkMacSystemFont,'Inter','Segoe UI',Roboto,sans-serif !important;box-shadow:none !important;gap:6px}
+html.theme-modern .nx-active .nx-clear{background:none !important;color:#222222 !important;font:600 13px/1 -apple-system,BlinkMacSystemFont,'Inter','Segoe UI',Roboto,sans-serif !important;text-decoration:underline;text-underline-offset:3px;border:0 !important}
+html.theme-modern .nx-sheet.is-filter .nx-opt-box svg{color:#FFFFFF !important;stroke:#FFFFFF !important}
