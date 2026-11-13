@@ -5578,12 +5578,15 @@ export default function App() {
                 </button>
               )}
               {MODERN && appTab !== "map" && netAvatar}
+              {/* The globe page shows the back arrow only on the left. */}
+              {!(MODERN && appTab === "map") && (
               <span className="artium-net-word" aria-label="ARTIUM">
                 <svg viewBox="0 0 720 700" aria-hidden="true">
                   <path d="M0 700L316 0H404L720 700H570L360 235L150 700Z" fill="currentColor" />
                 </svg>
                 <span aria-hidden="true">RTIUM</span>
               </span>
+              )}
               <span className="artium-net-right">
                 <button type="button" className="artium-net-count tm-count-btn" onClick={myProfile ? goToProfile : undefined} disabled={!myProfile}
                   title={myProfile ? "My profile" : "Members"} aria-label={myProfile ? `My profile — ${myConnCount} connections` : "Your account"}>
@@ -6258,13 +6261,16 @@ function Landing({ myConnCount = 0, onLogout, onApply, onBack, onPreview, onProf
             <ArrowLeft size={18} strokeWidth={2} />
           </button>
         )}
-        {/* No menu in this bar (owner's call, 2026-11-13). */}
+        {/* No menu and no wordmark in this bar: the back arrow only on the
+            left (owner's call, 2026-11-13). */}
+        {!MODERN && (
         <span className="artium-lp-word" aria-label="ARTIUM">
           <svg className="artium-lp-word-a" viewBox="0 0 720 700" aria-hidden="true">
             <path d="M0 700L316 0H404L720 700H570L360 235L150 700Z" fill="currentColor" />
           </svg>
           <span aria-hidden="true">RTIUM</span>
         </span>
+        )}
         <div className="artium-lp-right">
           {/* Count first, then play, bell, avatar — and the play disc IS a
               .artium-net-puck now, the bell's own class, so the two can
@@ -14473,12 +14479,14 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
           </button>
         )}
         {MODERN && appTab !== "map" && learnerAvatar}
+        {!(MODERN && appTab === "map") && (
         <span className="artium-net-word" aria-label="ARTIUM">
           <svg viewBox="0 0 720 700" aria-hidden="true">
             <path d="M0 700L316 0H404L720 700H570L360 235L150 700Z" fill="currentColor" />
           </svg>
           <span aria-hidden="true">RTIUM</span>
         </span>
+        )}
         <span className="artium-net-right">
           <button type="button" className="artium-net-count tm-count-btn" onClick={openMyProfile}
             title="My profile" aria-label={`My profile — ${learnerTeacherCount} connections`}>
