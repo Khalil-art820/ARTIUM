@@ -11842,7 +11842,7 @@ function NxPeopleYouMayKnow({ members: realMembers, myId, conn, consById, onOpen
             </div>
             {sec.people.length > 4 && (
               <button type="button" className="pk-more" onClick={() => setOpen((o) => ({ ...o, [sec.key]: !o[sec.key] }))}>
-                {open[sec.key] ? "Show less" : "Show all"}
+                {open[sec.key] ? "Show less" : "Show more"}
               </button>
             )}
           </section>
