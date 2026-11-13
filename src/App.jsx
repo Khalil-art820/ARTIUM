@@ -11749,8 +11749,32 @@ function NxPeopleYouMayKnow({ members: realMembers, myId, conn, consById, onOpen
       myCons && take("cons", `People you may know from ${myCons}`, (x) => x.conservatoryId === me.conservatoryId),
       myInst && take("inst", `People you may know who play ${myInst}`, (x) => me.instrumentList.some((i) => x.instrumentList.includes(i))),
       me?.country && take("country", `People you may know in ${me.country}`, (x) => x.country === me.country),
-      take("more", "More musicians on Artium", () => true),
+      suggestions(),
     ].filter(Boolean);
+    // Suggestions for you: everyone not suggested above, the ones you have the
+    // most in common with first: favourite composers and eras, composers in
+    // your repertoires, your city, instrument, conservatory, level, country
+    // and the connections you share.
+    function suggestions() {
+      const norm = (v) => String(v || "").trim().toLowerCase();
+      const setOf = (arr) => new Set((arr || []).map(norm).filter(Boolean));
+      const repOf = (p) => setOf((p?.pieces || []).map((pc) => pc && pc.composer));
+      const myTastes = setOf(me?.tastes), myRep = repOf(me), myLevels = new Set(me?.levels || []);
+      const common = (x) => {
+        let n = 0;
+        setOf(x.tastes).forEach((t) => { if (myTastes.has(t) || myRep.has(t)) n += 3; });
+        repOf(x).forEach((c) => { if (myRep.has(c) || myTastes.has(c)) n += 2; });
+        if (me?.placeName && x.placeName === me.placeName) n += 4;
+        if (me?.conservatoryId && x.conservatoryId === me.conservatoryId) n += 3;
+        if (me?.instrumentList?.some((i) => (x.instrumentList || []).includes(i))) n += 3;
+        if ((x.levels || []).some((l) => myLevels.has(l))) n += 1;
+        if (me?.country && x.country === me.country) n += 1;
+        return n + 2 * (mutualMap[x.id]?.n || 0);
+      };
+      const people = pool.filter((x) => !used.has(x.id)).map((x) => [x, common(x)])
+        .sort((p, q) => q[1] - p[1] || rank(p[0], q[0])).map(([x]) => x);
+      return people.length ? { key: "more", title: "Suggestions for you", people } : null;
+    }
   }, [members, myId, dismissed, conn.byOther, mutualMap, me, consById]);
 
   if (!sections.length) return <div className="nx-empty"><p>You're connected with everyone so far — new musicians will show up here.</p></div>;
@@ -11760,13 +11784,7 @@ function NxPeopleYouMayKnow({ members: realMembers, myId, conn, consById, onOpen
         const shown = open[sec.key] ? sec.people : sec.people.slice(0, 4);
         return (
           <section key={sec.key} className="pk-sec">
-            <h3 className="pk-title">{sec.key === "more" ? (
-              // "Artium" as the top bar draws it: the crossbar-less A, then RTIUM.
-              <>More musicians on <span className="artium-net-word pk-word" aria-label="ARTIUM">
-                <svg viewBox="0 0 720 700" aria-hidden="true"><path d="M0 700L316 0H404L720 700H570L360 235L150 700Z" fill="currentColor" /></svg>
-                <span aria-hidden="true">RTIUM</span>
-              </span></>
-            ) : sec.title}</h3>
+            <h3 className="pk-title">{sec.title}</h3>
             <div className="mc-list" role="list">
               {shown.map((m) => {
                 const c = conn.byOther[m.id];
