@@ -1532,3 +1532,11 @@ html.theme-modern .nx-head-face.is-empty{background:#EBEBEB}
 html.theme-modern .nx-demo-seg{display:flex;width:max-content;margin:6px auto 4px;padding:3px;border-radius:999px;background:#F2F2F2;font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',Roboto,sans-serif}
 html.theme-modern .nx-demo-seg button{height:30px;padding:0 16px;border:0 !important;border-radius:999px;background:none !important;color:#717171 !important;font:500 13px/1 inherit;font-family:inherit;cursor:pointer;box-shadow:none !important}
 html.theme-modern .nx-demo-seg button.is-on{background:#FFFFFF !important;color:#222222 !important;box-shadow:0 1px 3px rgba(0,0,0,.12) !important}
+/* No shadow or rim darkening around the globe. */
+html.theme-modern .ng-shade{display:none !important}
+/* The globe page on plain white throughout: page, header, filters, globe
+   area and the section below. */
+html.theme-modern:has(.tm-tab-map),html.theme-modern:has(.tm-tab-map) body,html.theme-modern:has(.tm-tab-map) #root,
+html.theme-modern .tm-tab-map,html.theme-modern .tm-tab-map .artium-net-bar,html.theme-modern .tm-tab-map .nx,
+html.theme-modern .tm-tab-map .nx-filters,html.theme-modern .tm-tab-map .nx-stage,html.theme-modern .tm-tab-map .ng-wrap,
+html.theme-modern .tm-tab-map .nx-empty{background:#FFFFFF !important;background-image:none !important}
