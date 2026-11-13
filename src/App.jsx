@@ -11653,7 +11653,11 @@ function useMutualConnections(myId) {
 // the full profile.
 function NxMusicianCard({ m, reason = "", mutual = 0, sample, state, onOpen, onConnect, onCancel, onAccept, onDismiss }) {
   // Where they live: their home city when they gave one, else their school's.
-  const place = [m.placeName || m.city, m.placeCountry || m.country].filter(Boolean).join(", ");
+  // Not said twice: under "Also in Paris" the place line drops Paris, France;
+  // under "Also in France" it keeps just the city.
+  const city = m.placeName || m.city, ctry = m.placeCountry || m.country;
+  const place = reason && reason === `Also in ${city}` ? ""
+    : [city, reason && reason === `Also in ${ctry}` ? "" : ctry].filter(Boolean).join(", ");
   // Three tags at most: two instruments and a composer or era, or one
   // instrument and two of them.
   const tags = [...m.instrumentList.slice(0, 2), ...(m.tastes || []).slice(0, m.instrumentList.length >= 2 ? 1 : 2)].filter(Boolean);
