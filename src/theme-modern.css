@@ -1462,44 +1462,24 @@ html.theme-modern .ng-shade{position:absolute;left:50%;top:50%;transform:transla
 html.theme-modern .ng-wrap{overflow:hidden}
 /* The globe's +N counter in the same grey as faces without a photo. */
 html.theme-modern .ng-more{background:#EDEDEA !important;color:#5F6B6E !important}
-/* ---- Globe page, owner's design: connections counter, four pills, recentre ---- */
-/* Counter: burgundy pair in a gold crescent | gold rule | big burgundy number. */
-html.theme-modern .nx-conn-head{display:flex;align-items:center;justify-content:center;gap:18px;margin:6px 0 18px}
-html.theme-modern .nx-conn-mark{display:block;flex:none;width:96px;height:96px}
-html.theme-modern .nx-conn-mark svg{display:block;filter:drop-shadow(0 3px 6px rgba(110,15,39,.18))}
-html.theme-modern .nx-conn-rule{flex:none;width:2px;height:86px;border-radius:2px;background:linear-gradient(180deg,#F3DCA4,#C99A4E 50%,#F3DCA4)}
-html.theme-modern .nx-conn-count{display:flex;flex-direction:column;line-height:1}
-html.theme-modern .nx-conn-count b{font:700 58px/0.95 'Playfair Display',Georgia,serif;color:#7E1630;letter-spacing:-.01em}
-html.theme-modern .nx-conn-count em{font:400 25px/1.25 'Playfair Display',Georgia,serif;font-style:normal;color:#6B6B6B}
-/* Pills: cream with a gold rim and a soft shadow; line icon, serif label, arrow.
-   A pill in use turns burgundy with white icon and label. */
-html.theme-modern .nx .nx-filter-row{gap:12px !important}
-html.theme-modern .nx .nx-fcard{height:56px !important;min-height:56px;padding:0 16px 0 18px !important;border-radius:999px !important;
-  border:1.5px solid #E2C68C !important;background:linear-gradient(180deg,#FFFEFB 0%,#FBF4E8 100%) !important;
-  box-shadow:0 6px 14px -8px rgba(130,95,40,.38),inset 0 1px 0 #FFFFFF !important;color:#1C1C1C !important;gap:12px !important;align-items:center !important}
-html.theme-modern .nx .nx-fcard .nx-fbadge{background:none !important;box-shadow:none !important;width:auto !important;height:auto !important;color:#1C1C1C !important;border:0 !important}
-html.theme-modern .nx .nx-fcard .nx-fbadge svg{width:26px !important;height:26px !important;stroke-width:1.5 !important}
-html.theme-modern .nx .nx-fcard .nx-fsub{display:none !important}
-html.theme-modern .nx .nx-fcard .nx-flabel{font:500 17px/1.2 'Playfair Display',Georgia,serif !important;color:#1C1C1C !important;letter-spacing:0 !important;text-transform:none !important}
-html.theme-modern .nx .nx-fcard .nx-flabel i{display:none !important}
-html.theme-modern .nx .nx-fcard .nx-farrow{width:18px !important;height:18px !important;color:#1C1C1C !important;margin-left:auto}
-html.theme-modern .nx .nx-fcard.is-on{background:linear-gradient(170deg,#9C2A48 0%,#7E1630 55%,#650E25 100%) !important;border-color:#E2C68C !important;
-  box-shadow:0 8px 18px -8px rgba(110,15,39,.55),inset 0 1px 0 rgba(255,255,255,.25) !important}
-html.theme-modern .nx .nx-fcard.is-on .nx-fbadge,html.theme-modern .nx .nx-fcard.is-on .nx-flabel,html.theme-modern .nx .nx-fcard.is-on .nx-farrow{color:#FFFFFF !important}
 /* Recentre: a white disc with a gold halo, a burgundy globe inside. */
 html.theme-modern .nx-recenter{width:52px !important;height:52px !important;background:#FFFFFF !important;color:#7E1630 !important;border:0 !important;
   -webkit-backdrop-filter:none !important;backdrop-filter:none !important;
   box-shadow:-3px 0 0 0 #E6C887,-4px 2px 10px -2px rgba(201,154,78,.45),0 8px 18px -8px rgba(80,55,20,.4) !important}
-/* Pill icons in black (white on a pill in use); labels sized to fit beside the arrow. */
-html.theme-modern .nx .nx-fcard .nx-fbadge svg{color:#1C1C1C !important;stroke:#1C1C1C !important}
-html.theme-modern .nx .nx-fcard.is-on .nx-fbadge svg{color:#FFFFFF !important;stroke:#FFFFFF !important}
-html.theme-modern .nx .nx-fcard .nx-fbadge svg *{stroke:inherit}
-html.theme-modern .nx .nx-fcard{padding:0 12px 0 14px !important;gap:9px !important}
-html.theme-modern .nx .nx-fcard .nx-fbadge svg{width:22px !important;height:22px !important}
-html.theme-modern .nx .nx-fcard .nx-ftext{flex:1;min-width:0}
-html.theme-modern .nx .nx-fcard .nx-flabel{font-size:15px !important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
-html.theme-modern .nx .nx-fcard .nx-farrow{flex:none;width:16px !important;height:16px !important}
-html.theme-modern .nx .nx-fcard{padding:0 11px 0 13px !important;gap:8px !important}
-html.theme-modern .nx .nx-fcard .nx-flabel{font-size:14.5px !important;letter-spacing:-.005em !important}
-html.theme-modern .nx .nx-filter-row{gap:10px !important}
-html.theme-modern .nx .nx-fcard{padding:0 9px 0 12px !important}
+/* ---- Globe page header (design 21): faces + count, then outlined chips ---- */
+html.theme-modern .nx-head{display:flex;align-items:center;gap:12px;margin:4px 0 16px;font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',Roboto,sans-serif}
+html.theme-modern .nx-head-faces{display:flex;flex:none}
+html.theme-modern .nx-head-face{width:34px;height:34px;border-radius:50%;border:2px solid #FFFFFF;overflow:hidden;display:grid;place-items:center;background:#EDEDEA;box-sizing:border-box}
+html.theme-modern .nx-head-face + .nx-head-face{margin-left:-11px}
+html.theme-modern .nx-head-face img{width:100%;height:100%;object-fit:cover;display:block}
+html.theme-modern .nx-head-face b{font-size:11px;font-weight:600;color:#5F6B6E}
+html.theme-modern .nx-head-text{display:flex;flex-direction:column;min-width:0}
+html.theme-modern .nx-head-n{font-size:17px;font-weight:600;color:#222222;letter-spacing:-.01em;line-height:1.25}
+html.theme-modern .nx-head-sub{font-size:13px;color:#717171;line-height:1.3}
+html.theme-modern .nx-chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:2px 16px 4px;-webkit-overflow-scrolling:touch}
+html.theme-modern .nx-chips::-webkit-scrollbar{display:none}
+html.theme-modern .nx-chip{flex:none;display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 13px 0 15px;border-radius:999px;border:1px solid #DDDDDD !important;background:#FFFFFF !important;color:#222222 !important;
+  font:500 14px/1 -apple-system,BlinkMacSystemFont,'Inter','Segoe UI',Roboto,sans-serif;white-space:nowrap;cursor:pointer;transition:border-color .15s,background .15s}
+html.theme-modern .nx-chip:hover{border-color:#222222 !important}
+html.theme-modern .nx-chip.is-on{background:#222222 !important;border-color:#222222 !important;color:#FFFFFF !important}
+html.theme-modern .nx-chip-n{min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#FFFFFF;color:#222222;font-size:11px;font-weight:600;display:inline-grid;place-items:center}

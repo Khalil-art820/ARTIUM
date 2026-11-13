@@ -12001,51 +12001,50 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
       {/* Filters */}
       <div className="nx-filters" role="toolbar" aria-label={learnerMode ? "Filter teachers" : "Filter musicians"}>
         {useConn && !learnerMode ? (
-          // How many connections: a burgundy pair of people in a gold crescent,
-          // a gold rule, the number in large burgundy serif.
-          <div className="nx-conn-head">
-            <span className="nx-conn-mark" aria-hidden="true">
-              <svg viewBox="0 0 120 120" width="96" height="96">
-                <defs>
-                  <linearGradient id="nxGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#F3DCA4" /><stop offset=".55" stopColor="#D9B26A" /><stop offset="1" stopColor="#B88A3E" /></linearGradient>
-                  <linearGradient id="nxWine" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#9C2A48" /><stop offset="1" stopColor="#6E0F27" /></linearGradient>
-                </defs>
-                <path d="M96 22 A50 50 0 1 0 96 98" fill="none" stroke="url(#nxGold)" strokeWidth="4.5" strokeLinecap="round" />
-                <circle cx="46" cy="44" r="13" fill="url(#nxWine)" />
-                <circle cx="76" cy="44" r="13" fill="url(#nxWine)" />
-                <path d="M22 86c0-15 11-25 24-25 7 0 13 3 17 8 4-5 10-8 17-8 13 0 24 10 24 25v4H83v-4c0-8-5-14-12-15-3 6-5 13-5 19H62c0-6-2-13-5-19-7 1-12 7-12 15v4H22z" fill="url(#nxWine)" />
-              </svg>
-            </span>
-            <span className="nx-conn-rule" aria-hidden="true" />
-            <span className="nx-conn-count">
-              <b>{filterBase.length}</b>
-              <em>{filterBase.length === 1 ? "connection" : "connections"}</em>
-            </span>
-          </div>
+          // Your connections, as a premium app shows a group: a few faces,
+          // then the count and how many cities they are in.
+          (() => {
+            const n = filterBase.length;
+            const cities = new Set(filterBase.map((m) => m.placeName).filter(Boolean)).size;
+            const faces = [...filterBase].sort((a, b) => (b.photoUrl ? 1 : 0) - (a.photoUrl ? 1 : 0)).slice(0, 4);
+            return (
+              <div className="nx-head">
+                {faces.length > 0 && (
+                  <span className="nx-head-faces" aria-hidden="true">
+                    {faces.map((m) => (
+                      <span key={m.id} className="nx-head-face">
+                        {m.photoUrl ? <img src={m.photoUrl} alt="" /> : <b>{initials(m.name || "?")}</b>}
+                      </span>
+                    ))}
+                  </span>
+                )}
+                <span className="nx-head-text">
+                  <span className="nx-head-n">{n === 0 ? "No connections yet" : n === 1 ? "1 connection" : `${n} connections`}</span>
+                  {cities > 0 && <span className="nx-head-sub">{cities === 1 ? "in 1 city" : `in ${cities} cities`}</span>}
+                </span>
+              </div>
+            );
+          })()
         ) : (
           <p className="nx-sort-title"><span>{learnerMode ? "Sort teachers by:" : "Sort musicians by:"}</span></p>
         )}
-        <div className="nx-filter-row">
-          {FILTERS.map(({ key, label }) => (
-            <button key={key} type="button" className={`nx-fchip nx-fcard${filters[key].length ? " is-on" : ""}`} onClick={() => setSheet(key)} aria-haspopup="dialog">
-              <span className={`nx-fbadge nx-fbadge--${key}`} aria-hidden="true">{(() => { const Ic = FILTER_ICON[key]; return <Ic />; })()}</span>
-              <span className="nx-ftext">
-                <span className="nx-flabel">{label}{filters[key].length ? <i>{filters[key].length}</i> : null}</span>
-                <span className="nx-fsub">{subFor(key)}</span>
-              </span>
-              <ArrowRight size={15} strokeWidth={1.6} className="nx-farrow" aria-hidden="true" />
-            </button>
-          ))}
+        {/* One row of outlined chips (scrolls sideways on a narrow phone);
+            a chip in use turns black and shows how many are chosen. */}
+        <div className="nx-chips">
+          {FILTERS.map(({ key, label }) => {
+            const n = filters[key].length;
+            return (
+              <button key={key} type="button" className={`nx-chip${n ? " is-on" : ""}`} onClick={() => setSheet(key)} aria-haspopup="dialog">
+                {label}{n ? <span className="nx-chip-n">{n}</span> : null}
+                <ChevronDown size={14} strokeWidth={2} aria-hidden="true" />
+              </button>
+            );
+          })}
           {learnerMode && (
-          <button type="button" className={`nx-fchip nx-fcard nx-toggle${filters.teach ? " is-on" : ""}`} aria-pressed={filters.teach}
-            onClick={() => setFilters((f) => ({ ...f, teach: !f.teach }))}>
-            <span className="nx-fbadge nx-fbadge--teach" aria-hidden="true"><IconTeacher size={20} /></span>
-            <span className="nx-ftext">
-              <span className="nx-flabel">Open to teach</span>
-              <span className="nx-fsub">{filters.teach ? "Showing only these" : "Taking students now"}</span>
-            </span>
-            <span className="nx-dot" aria-hidden="true" />
-          </button>
+            <button type="button" className={`nx-chip${filters.teach ? " is-on" : ""}`} aria-pressed={filters.teach}
+              onClick={() => setFilters((f) => ({ ...f, teach: !f.teach }))}>
+              Open to teach
+            </button>
           )}
         </div>
         {activeCount > 0 && (
