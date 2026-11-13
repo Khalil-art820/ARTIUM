@@ -1688,5 +1688,7 @@
  "🔒 Modify locked (": "🔒 Modificación bloqueada (",
  "🔒 Unlocks once your video is approved": "🔒 Se desbloquea cuando se apruebe tu vídeo",
  "in 1 city": "en 1 ciudad",
- "in {0} cities": "en {0} ciudades"
+ "in {0} cities": "en {0} ciudades",
+ "My network": "Mi red",
+ "Demo": "Demo"
 }

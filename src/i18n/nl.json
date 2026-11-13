@@ -1688,5 +1688,7 @@
  "🔒 Modify locked (": "🔒 Wijzigen vergrendeld (",
  "🔒 Unlocks once your video is approved": "🔒 Ontgrendelt zodra je video is goedgekeurd",
  "in 1 city": "in 1 stad",
- "in {0} cities": "in {0} steden"
+ "in {0} cities": "in {0} steden",
+ "My network": "Mijn netwerk",
+ "Demo": "Demo"
 }

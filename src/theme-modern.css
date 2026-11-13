@@ -1528,3 +1528,7 @@ html.theme-modern .nx-chip-n{min-width:16px;height:16px;font-size:10.5px;margin-
 html.theme-modern .ng-continent{color:#FFFFFF !important;text-shadow:0 1px 3px rgba(0,30,26,.55) !important}
 /* An empty place in the connections stack: a plain grey circle. */
 html.theme-modern .nx-head-face.is-empty{background:#EBEBEB}
+/* Admin's globe data switch under the globe: a segmented control. */
+html.theme-modern .nx-demo-seg{display:flex;width:max-content;margin:6px auto 4px;padding:3px;border-radius:999px;background:#F2F2F2;font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',Roboto,sans-serif}
+html.theme-modern .nx-demo-seg button{height:30px;padding:0 16px;border:0 !important;border-radius:999px;background:none !important;color:#717171 !important;font:500 13px/1 inherit;font-family:inherit;cursor:pointer;box-shadow:none !important}
+html.theme-modern .nx-demo-seg button.is-on{background:#FFFFFF !important;color:#222222 !important;box-shadow:0 1px 3px rgba(0,0,0,.12) !important}

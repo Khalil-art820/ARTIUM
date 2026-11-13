@@ -12064,11 +12064,6 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
 
       {/* Globe */}
       <div className="nx-stage" id="nx-globe">
-        {canDemo && (
-          <button type="button" className={`nx-demo-tag${demoGlobe ? " is-on" : ""}`} onClick={toggleDemo}>
-            {demoGlobe ? "Demo globe on — tap to hide" : "Show demo globe"}
-          </button>
-        )}
         {webgl ? (
           <GlobeBoundary fallback={<div className="nx-globe-fallback"><Globe2 size={28} /><p>The 3D globe isn't available on this device. Browse the musicians below.</p></div>}>
             <Suspense fallback={<div className="nx-globe-skel" aria-label="Loading the globe"><span /></div>}>
@@ -12089,13 +12084,20 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
           <div className="nx-globe-fallback"><Globe2 size={28} /><p>The 3D globe needs WebGL, which this browser doesn't offer. Browse the musicians below.</p></div>
         )}
         <button type="button" className="nx-recenter" onClick={() => { setSelectedId(null); setFocus({ reset: true, at: Date.now() }); }} aria-label="Recenter the globe">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#222222" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="9" />
-            <ellipse cx="12" cy="12" rx="3.8" ry="9" />
-            <path d="M3 12h18" />
+          {/* Fit to view: corner brackets around a dot. */}
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#222222" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4" />
+            <circle cx="12" cy="12" r="3.4" />
           </svg>
         </button>
       </div>
+      {/* Admin only, under the globe: your real network or the demo. */}
+      {canDemo && (
+        <div className="nx-demo-seg" role="radiogroup" aria-label="Globe data">
+          <button type="button" role="radio" aria-checked={!demoGlobe} className={!demoGlobe ? "is-on" : ""} onClick={() => { if (demoGlobe) toggleDemo(); }}>My network</button>
+          <button type="button" role="radio" aria-checked={demoGlobe} className={demoGlobe ? "is-on" : ""} onClick={() => { if (!demoGlobe) toggleDemo(); }}>Demo</button>
+        </div>
+      )}
 
       {/* Students: people you may know (LinkedIn-style). Learners and guests:
           the teacher carousel as before. */}
