@@ -11652,7 +11652,8 @@ function useMutualConnections(myId) {
 // pending and connected states) and an X for Not interested. The card opens
 // the full profile.
 function NxMusicianCard({ m, reason = "", mutual = 0, sample, state, onOpen, onConnect, onCancel, onAccept, onDismiss }) {
-  const place = [m.city, m.country].filter(Boolean).join(", ");
+  // Where they live: their home city when they gave one, else their school's.
+  const place = [m.placeName || m.city, m.placeCountry || m.country].filter(Boolean).join(", ");
   // Three tags at most: two instruments and a composer or era, or one
   // instrument and two of them.
   const tags = [...m.instrumentList.slice(0, 2), ...(m.tastes || []).slice(0, m.instrumentList.length >= 2 ? 1 : 2)].filter(Boolean);
@@ -11725,6 +11726,7 @@ function NxPeopleYouMayKnow({ members: realMembers, myId, conn, consById, onOpen
     tastes: meReal?.tastes?.length ? meReal.tastes : ["Chopin", "Debussy", "Brahms"],
     pieces: (meReal?.pieces || []).some((p) => p && p.composer) ? meReal.pieces : [{ title: "", composer: "Rachmaninoff" }],
     placeName: meReal?.placeName || "Paris",
+    placeCountry: meReal?.placeName ? (meReal.placeCountry || meReal.country || "") : "France",
     instrumentList: meReal?.instrumentList || [], levels: meReal?.levels || [],
   } : null), [demo, meReal, myId]);
   const members = React.useMemo(() => (demo ? [...realMembers, ...DEMO_SUGGEST, ...demoCommonFor(meDemo)] : realMembers), [realMembers, demo, meDemo]);
@@ -11779,9 +11781,8 @@ function NxPeopleYouMayKnow({ members: realMembers, myId, conn, consById, onOpen
         let n = 0;
         setOf(x.tastes).forEach((t) => { if (myTastes.has(t) || myRep.has(t)) n += 3; });
         repOf(x).forEach((c) => { if (myRep.has(c) || myTastes.has(c)) n += 2; });
-        // Their city as their card shows it (their conservatory's), never their
-        // private home city, against where you are.
-        if (me?.placeName && x.city === me.placeName) n += 4;
+        // Their city as their card shows it (home city, else their school's).
+        if (me?.placeName && x.placeName === me.placeName) n += 4;
         if (me?.conservatoryId && x.conservatoryId === me.conservatoryId) n += 3;
         if (me?.instrumentList?.some((i) => (x.instrumentList || []).includes(i))) n += 3;
         if ((x.levels || []).some((l) => myLevels.has(l))) n += 1;
@@ -11793,7 +11794,7 @@ function NxPeopleYouMayKnow({ members: realMembers, myId, conn, consById, onOpen
       const reasonOf = (x) => {
         const loves = (x.tastes || []).filter((t) => myTastes.has(norm(t)) || myRep.has(norm(t)));
         if (loves.length) return `Also loves ${loves.slice(0, 2).join(" & ")}`;
-        if (me?.placeName && x.city === me.placeName) return `Also in ${x.city}`;
+        if (me?.placeName && x.placeName === me.placeName) return `Also in ${x.placeName}`;
         const plays = [...new Set((x.pieces || []).map((pc) => pc && pc.composer).filter((c) => c && (myRep.has(norm(c)) || myTastes.has(norm(c)))))];
         if (plays.length) return `Also plays ${plays.slice(0, 2).join(" & ")}`;
         const inst = (x.instrumentList || []).find((i) => me?.instrumentList?.includes(i));
@@ -11904,9 +11905,9 @@ const DEMO_MUTUAL = Object.fromEntries(DEMO_SUGGEST.map((p, i) => {
   return [p.id, row[0] ? { n: row[0], sample: `demo-${row[1]}` } : { n: 0 }];
 }));
 // Demo "Suggestions for you": made-up musicians who share something with
-// the admin's own profile (favourite composers, a repertoire composer) but
-// no connection, school, instrument or country, so that section and its
-// reason lines can be seen. Built from your profile.
+// the admin's own profile (favourite composers, your city, a repertoire
+// composer) but no connection, school, instrument or country, so that
+// section and its reason lines can be seen. Built from your profile.
 function demoCommonFor(me) {
   if (!me) return [];
   const tastes = (me.tastes || []).filter(Boolean);
@@ -11924,6 +11925,8 @@ function demoCommonFor(me) {
   };
   if (tastes[0]) add("Lena Hoffmann", "Vienna", { tastes: tastes.slice(0, 2) }, "/gate-cards/violin.webp");
   if (tastes[2] || tastes[0]) add("Mateo Ruiz", "Madrid", { tastes: [tastes[2] || tastes[0]] }, "");
+  // Lives in your city, studies abroad: her card shows your city.
+  if (me.placeName) add("Julia Novak", "Prague", { placeName: me.placeName, placeCountry: me.placeCountry || me.country || "" }, "/gate-cards/voice.webp");
   if (rep) add("Hana Sato", "Tokyo", { pieces: [{ title: "", composer: rep }] }, "/gate-cards/cello.webp");
   return out;
 }
@@ -11946,6 +11949,7 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
       lat: st.homeCity?.lat ?? c?.lat, lng: st.homeCity?.lng ?? c?.lng,
       atCity: !!st.homeCity, placeKey: st.homeCity ? `city:${st.homeCity.name}|${st.homeCity.country}` : `cons:${st.conservatoryId}`,
       placeName: st.homeCity ? st.homeCity.name : (c?.city || ""),
+      placeCountry: st.homeCity ? (st.homeCity.country || c?.country || "") : (c?.country || ""),
       city: c?.city || "", country: c?.country || "", consName: c?.name || "",
       instrumentLabel: instrumentLabel(st),
       instrumentList: instrumentsOf(st),
