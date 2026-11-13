@@ -1524,3 +1524,5 @@ html.theme-modern .nx-chip svg{width:12px;height:12px;flex:none}
 /* A chip in use shows its count instead of the down-arrow, so the row never overflows. */
 html.theme-modern .nx-chip.is-on svg{display:none}
 html.theme-modern .nx-chip-n{min-width:16px;height:16px;font-size:10.5px;margin-left:2px}
+/* Continent names in white, matching the glossy white coastlines. */
+html.theme-modern .ng-continent{color:#FFFFFF !important;text-shadow:0 1px 3px rgba(0,30,26,.55) !important}

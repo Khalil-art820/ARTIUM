@@ -1,4 +1,5 @@
-# Gold continent borders baked into the night globe (v3 -> v4 textures).
+# Continent borders baked into the night globe: gold (v3 -> v4) or, with
+# LINE=white SRC_DIR=<dir of the v3 maps>, glossy white (v3 -> v5).
 #
 # Usage:
 #   python3 scripts/globe-continents.py land16k-nolakes.png public 4096   (then 8192)
@@ -71,15 +72,24 @@ meet_a = np.asarray(Image.fromarray((meet * 255).astype(np.uint8)).filter(ImageF
 alpha = np.clip(np.maximum(coast, np.clip(meet_a * 2.2, 0, 1)), 0, 1)
 alpha = np.asarray(Image.fromarray((alpha * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(0.45))).astype(np.float32) / 255
 
-GOLD = np.array([226, 190, 85], np.float32) / 255
-tag_in, tag_out = ("hd-v3", "hd-v4") if W > 4096 else ("v3", "v4")
-base = np.asarray(Image.open(f"{out}/earth-night-artium-{tag_in}.jpg").convert("RGB")).astype(np.float32) / 255
+import os
+# LINE=white (v5): glossy white lines, a crisp white core with a soft white
+# sheen around it. Default: the original gold (v4).
+WHITE = os.environ.get("LINE") == "white"
+GOLD = np.array([255, 255, 255] if WHITE else [226, 190, 85], np.float32) / 255
+v = "v5" if WHITE else "v4"
+tag_in, tag_out = ("hd-v3", f"hd-{v}") if W > 4096 else ("v3", v)
+src = os.environ.get("SRC_DIR", out)
+base = np.asarray(Image.open(f"{src}/earth-night-artium-{tag_in}.jpg").convert("RGB")).astype(np.float32) / 255
+if WHITE:
+    sheen = np.asarray(Image.fromarray((alpha * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(2.2 * W / 4096))).astype(np.float32) / 255
+    base = base + np.array([0.86, 0.97, 0.94], np.float32) * np.clip(sheen * 0.55, 0, 1)[..., None]
 img = base * (1 - alpha[..., None]) + GOLD * alpha[..., None]
 Image.fromarray((np.clip(img, 0, 1) * 255).astype(np.uint8)).save(f"{out}/earth-night-artium-{tag_out}.jpg", quality=86, optimize=True, progressive=True)
 # The lines glow faintly on the night side too.
-lw, lh = Image.open(f"{out}/earth-lights-artium-{tag_in}.jpg").size
+lw, lh = Image.open(f"{src}/earth-lights-artium-{tag_in}.jpg").size
 a2 = np.asarray(Image.fromarray((alpha * 255).astype(np.uint8)).resize((lw, lh), Image.LANCZOS)).astype(np.float32) / 255
-lights = np.asarray(Image.open(f"{out}/earth-lights-artium-{tag_in}.jpg").convert("RGB")).astype(np.float32) / 255
+lights = np.asarray(Image.open(f"{src}/earth-lights-artium-{tag_in}.jpg").convert("RGB")).astype(np.float32) / 255
 lights = np.maximum(lights, GOLD * a2[..., None] * 0.45)
 Image.fromarray((np.clip(lights, 0, 1) * 255).astype(np.uint8)).save(f"{out}/earth-lights-artium-{tag_out}.jpg", quality=84, optimize=True)
 print("ok", tag_out)

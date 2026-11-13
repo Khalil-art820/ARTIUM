@@ -145,7 +145,9 @@ OCEAN = np.array([4, 40, 38]) / 255
 LANDC = np.array([31, 106, 85]) / 255
 COAST = np.array([0x3E, 0x8A, 0x72]) / 255
 GLOW = np.array([1.0, 0.82, 0.45]); CORE = np.array([1.0, 0.95, 0.78])
-GOLD = np.array([226, 190, 85], np.float32) / 255
+# Glossy white (v2 tiles), as the v5 maps; LINE=gold for the original v1.
+WHITE = os.environ.get("LINE", "white") == "white"
+GOLD = np.array([255, 255, 255] if WHITE else [226, 190, 85], np.float32) / 255
 # Matched to the 8K map over France and Benelux (500 m lights are sharper and
 # fainter at the edges than the 3 km source the 8K map was made from).
 LIGHT_LO, LIGHT_SPAN = float(os.environ.get("LIGHT_LO", 0.13)), float(os.environ.get("LIGHT_SPAN", 0.30))
@@ -181,6 +183,9 @@ def make_tile(row, col):
     # takes over from the 8K map
     alpha = np.asarray(Image.fromarray((alpha * 255).astype(np.uint8)).filter(ImageFilter.MaxFilter(3))).astype(np.float32) / 255
     alpha = blur(alpha, 0.8)
+    if WHITE:   # the sheen, at the same ground width as on the 8K map
+        sheen = blur(alpha, 2.2 * 2 * WORLD_W / 8192)
+        night = night + np.array([0.86, 0.97, 0.94]) * np.clip(sheen * 0.55, 0, 1)[..., None]
     night = night * (1 - alpha[..., None]) + GOLD * alpha[..., None]
     em = np.maximum(em, GOLD * alpha[..., None] * 0.45)
     c = (slice(M, M + T), slice(M, M + T))

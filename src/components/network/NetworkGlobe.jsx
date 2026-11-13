@@ -18,14 +18,14 @@ import * as THREE from "three";
  * own visibility test, so a face never floats through the sphere.
  */
 
-const EARTH_URL = "/earth-night-artium-v4.jpg";
-const LIGHTS_URL = "/earth-lights-artium-v4.jpg";
-const EARTH_HD_URL = "/earth-night-artium-hd-v4.jpg";     // 8192 x 4096
-const LIGHTS_HD_URL = "/earth-lights-artium-hd-v4.jpg";   // 8192 x 4096
+const EARTH_URL = "/earth-night-artium-v5.jpg";
+const LIGHTS_URL = "/earth-lights-artium-v5.jpg";
+const EARTH_HD_URL = "/earth-night-artium-hd-v5.jpg";     // 8192 x 4096
+const LIGHTS_HD_URL = "/earth-lights-artium-hd-v5.jpg";   // 8192 x 4096
 // Regional HD tiles (scripts/globe-hd-tiles.py): 15 x 15 degree squares at
 // 2048 px, about 6x the 8K map, laid over the globe where you zoom past what
 // the 8K map can show sharply. Only land squares exist; the list is index.json.
-const TILE_BASE = "/globe-tiles/v1/";
+const TILE_BASE = "/globe-tiles/v2/";   // glossy white lines (v1: gold)
 const TILE_ALT = 0.55;     // below this altitude the tiles take over
 const TILE_MAX = 8;        // at most this many in memory (each ~40 MB on the GPU)
 const MINT = "#42C9B8";
