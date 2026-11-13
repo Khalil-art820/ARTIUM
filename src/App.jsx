@@ -11701,8 +11701,11 @@ function NxMusicianCard({ m, mutual = 0, sample, state, onOpen, onConnect, onCan
     </article>
   );
 }
-function NxPeopleYouMayKnow({ members, myId, conn, consById, onOpen }) {
-  const mutualMap = useMutualConnections(myId);
+function NxPeopleYouMayKnow({ members: realMembers, myId, conn, consById, onOpen, demo = false }) {
+  const realMutual = useMutualConnections(myId);
+  // Demo on: the made-up suggestions and their mutual connections join in.
+  const members = React.useMemo(() => (demo ? [...realMembers, ...DEMO_SUGGEST] : realMembers), [realMembers, demo]);
+  const mutualMap = React.useMemo(() => (demo ? { ...realMutual, ...DEMO_MUTUAL } : realMutual), [realMutual, demo]);
   const dismissKey = `artium_pymk_dismissed_${myId}`;
   const [dismissed, setDismissed] = useState(() => { try { return new Set(JSON.parse(localStorage.getItem(dismissKey) || "[]")); } catch { return new Set(); } });
   const dismiss = (id) => setDismissed((d) => {
@@ -11713,7 +11716,7 @@ function NxPeopleYouMayKnow({ members, myId, conn, consById, onOpen }) {
   const [open, setOpen] = useState({});
   const seen = useRef(new Set());
   const me = members.find((x) => x.id === myId);
-  const byId = React.useMemo(() => Object.fromEntries(members.map((x) => [x.id, x])), [members]);
+  const byId = React.useMemo(() => Object.fromEntries([...members, ...(demo ? DEMO_GLOBE : [])].map((x) => [x.id, x])), [members, demo]);
   const sections = React.useMemo(() => {
     // Someone you connect with stays on screen as Connected until you leave;
     // already-connected people are not suggested again.
@@ -11754,8 +11757,10 @@ function NxPeopleYouMayKnow({ members, myId, conn, consById, onOpen }) {
                 const c = conn.byOther[m.id];
                 const mu = mutualMap[m.id];
                 return (
-                  <NxMusicianCard key={m.id} m={m} mutual={mu?.n || 0} sample={mu?.sample ? byId[mu.sample] : null} state={c?.state} onOpen={() => onOpen(m)}
-                    onConnect={() => conn.request(m.id)} onCancel={() => c && conn.remove(c.id)}
+                  <NxMusicianCard key={m.id} m={m} mutual={mu?.n || 0} sample={mu?.sample ? byId[mu.sample] : null} state={c?.state}
+                    // Demo people have no profile and nothing is ever sent for them.
+                    onOpen={() => { if (!m.demo) onOpen(m); }}
+                    onConnect={() => { if (!m.demo) conn.request(m.id); }} onCancel={() => c && conn.remove(c.id)}
                     onAccept={() => c && conn.accept(c.id)} onDismiss={() => dismiss(m.id)} />
                 );
               })}
@@ -11809,6 +11814,25 @@ const DEMO_GLOBE = DEMO_CITIES.flatMap(([city, country, lat, lng, n]) => Array.f
 // A dozen pairs who know each other, so lines cross Europe and beyond.
 const DEMO_GLOBE_LINKS = [[0, 5], [0, 9], [5, 14], [9, 12], [3, 16], [20, 24], [1, 26], [30, 33], [6, 22], [18, 28], [10, 35], [2, 31], [0, 40], [5, 39], [13, 38]]
   .filter(([a, b]) => a < DEMO_GLOBE.length && b < DEMO_GLOBE.length).map(([a, b]) => [`demo-${a}`, `demo-${b}`]);
+// Demo "people you may know": six made-up musicians you're not connected to,
+// most sharing connections with you (sample faces from the demo globe), so
+// the cards' mutual-connections line can be seen.
+const DEMO_SUGGEST = [
+  ["Clara Moreau", "Paris", "France", ["Piano"], ["Chopin"], "Masters, 2nd year", "/gate-cards/piano.webp", 4, 0],
+  ["Elias Brandt", "Vienna", "Austria", ["Violin"], ["Mozart"], "Bachelor, 3rd year", "/gate-cards/violin.webp", 1, 2],
+  ["Ines Duarte", "Lisbon", "Portugal", ["Voice"], ["Verdi"], "Masters, 1st year", "/gate-cards/voice.webp", 7, 4],
+  ["Tom Fischer", "Berlin", "Germany", ["Cello", "Piano"], ["Bach"], "Doctoral", "", 2, 9],
+  ["Ava Lindqvist", "Stockholm", "Sweden", ["Flute"], ["Debussy"], "Bachelor, 1st year", "/gate-cards/cello.webp", 0, null],
+  ["Marco Bellini", "Milan", "Italy", ["Trumpet"], ["Puccini"], "Masters, 2nd year", "/gate-cards/trumpet.webp", 12, 1],
+].map(([name, city, country, inst, tastes, year, photoUrl], i) => {
+  const c = CONSERVATORIES.find((k) => k.city === city) || CONSERVATORIES[i];
+  return { id: `demo-s${i}`, name, city, country, instrumentList: inst, instruments: inst, instrumentLabel: inst.join(" & "), tastes, year, photoUrl,
+    verified: true, conservatoryId: c.id, consName: c.name, placeName: city, levels: [], open: false, demo: true };
+});
+const DEMO_MUTUAL = Object.fromEntries(DEMO_SUGGEST.map((p, i) => {
+  const row = [[4, 0], [1, 2], [7, 4], [2, 9], [0, null], [12, 1]][i];
+  return [p.id, row[0] ? { n: row[0], sample: `demo-${row[1]}` } : { n: 0 }];
+}));
 
 function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStudent, onMessage, isGuest, onGuestClick, learnerMode = false, connectionsOverride = null }) {
   // Students connect; learners browse teachers as before.
@@ -12107,7 +12131,7 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
       {/* Students: people you may know (LinkedIn-style). Learners and guests:
           the teacher carousel as before. */}
       {useConn && !isGuest ? (
-        <NxPeopleYouMayKnow members={members} myId={myId} conn={conn} consById={consById} onOpen={(m) => (onOpenStudent ? onOpenStudent(m.id) : selectFromCarousel(m))} />
+        <NxPeopleYouMayKnow demo={demoGlobe} members={members} myId={myId} conn={conn} consById={consById} onOpen={(m) => (onOpenStudent ? onOpenStudent(m.id) : selectFromCarousel(m))} />
       ) : (<>
       <div className="nx-tabs" role="tablist" aria-label="Musicians">
         {(learnerMode ? [["featured", "Featured"], ["all", "All"]] : [["featured", "Featured"], ["nearby", "Nearby"], ["all", "All"]]).map(([v, t]) => (
