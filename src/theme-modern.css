@@ -1542,3 +1542,36 @@ html.theme-modern .tm-tab-map .nx-filters,html.theme-modern .tm-tab-map .nx-stag
 html.theme-modern .tm-tab-map .nx-empty{background:#FFFFFF !important;background-image:none !important}
 /* "More musicians on Artium" (and the other people sections) on plain white too. */
 html.theme-modern .pk,html.theme-modern .pk-sec,html.theme-modern .pk .mc-list{background:#FFFFFF !important}
+/* ---- Musician cards below the globe: two per row, listing style ----
+   Rounded photo across the top (the ✕ in a white circle on it), quiet lines
+   below, chips, and an outlined Connect across the card. */
+html.theme-modern .pk .mc-list{display:grid;grid-template-columns:1fr 1fr;gap:18px 12px}
+html.theme-modern .pk .mc{border:0;border-radius:0;padding:0;background:none;display:flex;flex-direction:column;
+  font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',Roboto,sans-serif;min-width:0}
+html.theme-modern .pk .mc-open{flex-direction:column;gap:0;padding:0 !important;flex:1}
+html.theme-modern .pk .mc-photo{width:100% !important;height:auto !important;aspect-ratio:1/0.92;border-radius:14px;background:#EDEDEA}
+html.theme-modern .pk .mc-photo img,html.theme-modern .pk .mc-photo b{border-radius:14px;font-size:28px}
+html.theme-modern .pk .mc-x{top:8px;right:8px;width:26px;height:26px;background:rgba(255,255,255,.94);color:#222222;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+html.theme-modern .pk .mc-main{width:100%;gap:1px;margin-top:9px}
+html.theme-modern .pk .mc-name{font:600 14px/1.3 inherit;font-family:inherit;color:#222222;gap:4px;padding-right:0 !important}
+html.theme-modern .pk .mc-name .nx-verified svg{width:14px;height:14px}
+html.theme-modern .pk .mc-school{font-size:12.5px;font-weight:400;color:#717171;padding-right:0 !important}
+html.theme-modern .pk .mc-meta{font-size:12.5px;font-weight:400;color:#717171}
+html.theme-modern .pk .mc-meta > span{flex-direction:column;flex-wrap:nowrap;margin-left:0}
+html.theme-modern .pk .mc-meta > span > span{display:flex;padding-left:0;gap:3px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+html.theme-modern .pk .mc-meta > span > span{display:block}
+html.theme-modern .pk .mc-meta svg{width:12px;height:12px;vertical-align:-1px;margin-right:3px}
+html.theme-modern .pk .mc-dot::before{content:none}
+html.theme-modern .pk .mc-tags{gap:4px;margin-top:7px}
+html.theme-modern .pk .mc-tag{height:22px;padding:0 8px;gap:3px;background:#F2F2F2;color:#222222;font-size:11px;font-weight:500}
+html.theme-modern .pk .mc-tag svg{width:11px;height:11px}
+html.theme-modern .pk .mc-bio{font-size:12px;font-weight:400;color:#717171;margin-top:6px}
+html.theme-modern .pk .mc-mutual{font-size:11.5px;font-weight:400;color:#717171;margin-top:6px}
+html.theme-modern .pk .mc-actions{position:static !important;margin:9px 0 0 !important;display:block}
+html.theme-modern .pk .mc-btn{width:100%;min-width:0;height:34px;padding:0 10px;border-radius:10px;font:600 13px/1 inherit;font-family:inherit;
+  background:#FFFFFF;border:1px solid #222222;color:#222222}
+html.theme-modern .pk .mc-btn.is-pending{background:#FFFFFF;border-color:#DDDDDD;color:#717171}
+html.theme-modern .pk .mc-btn.is-connected{background:#FFFFFF;border-color:#DDDDDD;color:#222222}
+@media (min-width:560px){
+  html.theme-modern .pk .mc-name,html.theme-modern .pk .mc-school{padding-right:0}
+}
