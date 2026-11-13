@@ -11672,8 +11672,13 @@ function NxMusicianCard({ m, mutual = 0, sample, state, onOpen, onConnect, onCan
           )}
           {m.bio && <span className="mc-bio" data-no-translate="">{m.bio}</span>}
           {mutual > 0 && (
+            // As on LinkedIn: a shared connection's face (a second, grey one
+            // behind it when there are more), then who.
             <span className="mc-mutual">
-              <span className="mc-mface">{sample ? <NxFace m={sample} size={20} /> : <Users size={13} />}</span>
+              <span className="mc-mfaces" aria-hidden="true">
+                <span className="mc-mface">{sample ? <NxFace m={sample} size={20} /> : <Users size={13} />}</span>
+                {mutual > 1 && <span className="mc-mface is-more" />}
+              </span>
               <span>{(() => {
                 const name = sample ? (sample.name || "").split(" ")[0] : "Someone";
                 return mutual === 1 ? `${name} is a mutual connection` : `${name} and ${mutual - 1} other mutual connections`;
