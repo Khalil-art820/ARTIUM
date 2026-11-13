@@ -11751,7 +11751,13 @@ function NxPeopleYouMayKnow({ members: realMembers, myId, conn, consById, onOpen
         const shown = open[sec.key] ? sec.people : sec.people.slice(0, 4);
         return (
           <section key={sec.key} className="pk-sec">
-            <h3 className="pk-title">{sec.title}</h3>
+            <h3 className="pk-title">{sec.key === "more" ? (
+              // "Artium" as the top bar draws it: the crossbar-less A, then RTIUM.
+              <>More musicians on <span className="artium-net-word pk-word" aria-label="ARTIUM">
+                <svg viewBox="0 0 15 15" aria-hidden="true"><path d="M7.5 0.9 L1.4 14.4 M7.5 0.9 L13.6 14.4" stroke="currentColor" strokeWidth="2.85" fill="none" /></svg>
+                <span aria-hidden="true">RTIUM</span>
+              </span></>
+            ) : sec.title}</h3>
             <div className="mc-list" role="list">
               {shown.map((m) => {
                 const c = conn.byOther[m.id];
