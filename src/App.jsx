@@ -7,7 +7,7 @@ import ReactDOM from "react-dom";
 import {
   Search, Send,
   ChevronRight, Check, X, Instagram, Facebook, Youtube,
-  Music2, Music, Users, MessageCircle, ArrowRight, ArrowLeft, Play, Pause,
+  Music2, Music, Users, MessageCircle, ArrowRight, Play, Pause,
   Pencil, Plus, Trash2, Home, Upload, Eye, EyeOff, ChevronLeft,
   Calendar, CreditCard, Video, Link2, Clock, Bell,
   Map, BookOpen, ListChecks, LayoutList, Megaphone, Check as CheckIcon, ShieldCheck, FileText, Lock,
@@ -75,6 +75,7 @@ import "leaflet/dist/leaflet.css";
 import "./theme-modern.css";
 import "./components/profile/musician-profile.css";
 import ArtiumWord from "./components/ArtiumWord";
+import BackArrow from "./components/BackArrow";
 import ArtiumMenu, { readLang } from "./components/ArtiumMenu.jsx";
 import ArtiumMark from "./components/ArtiumMark.jsx";
 import DirectMessages, { Thread as DmThread } from "./components/chat/DirectMessages.jsx";
@@ -5573,8 +5574,8 @@ export default function App() {
             <header className="artium-net-bar">
               {onBackFn && (
                 <button className={`artium-net-puck${MODERN ? " tm-back-plain" : ""}`} onClick={onBackFn} aria-label="Back">
-                  {/* The globe page, like the welcome page: a full back arrow, no menu. */}
-                  {appTab === "map" ? <ArrowLeft size={18} strokeWidth={2} /> : <ChevronLeft size={17} strokeWidth={2} />}
+                  {/* The globe page, like the welcome page: no menu. */}
+                  <BackArrow />
                 </button>
               )}
               {MODERN && appTab !== "map" && netAvatar}
@@ -6257,8 +6258,7 @@ function Landing({ myConnCount = 0, onLogout, onApply, onBack, onPreview, onProf
             "A" glyph as src/components/entrygate/ArtiumGate.jsx's header. */}
         {onBack && (
           <button className={`artium-net-puck${MODERN ? " tm-back-plain" : ""}`} onClick={onBack} aria-label="Back">
-            {/* A full back arrow (shaft and head) on this page. */}
-            <ArrowLeft size={18} strokeWidth={2} />
+            <BackArrow />
           </button>
         )}
         {/* No menu and no wordmark in this bar: the back arrow only on the
@@ -6631,7 +6631,7 @@ function HirerSignup({ authUser, onBack, onDone }) {
       <div className="max-w-3xl mx-auto px-6" style={{ paddingTop: "calc(20px + env(safe-area-inset-top, 0px))" }}>
         <div className="flex items-center gap-3">
           <button onClick={step === 0 ? (anythingFilled ? () => setConfirmLeave(true) : onBack) : () => setStep(step - 1)} className="artium-aw-round" aria-label="Back">
-            <ChevronLeft size={17} strokeWidth={2} />
+            <BackArrow />
           </button>
           <GateLogo word={20} />
         </div>
@@ -7155,7 +7155,7 @@ function ConcertConversation({ inquiryId, role, myId, myName, otherName, student
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", background: C.ink }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", borderBottom: `1px solid ${C.inkLine}`, flexShrink: 0 }}>
-        <button onClick={onBack} className="artium-aw-round" aria-label="Back"><ChevronLeft size={17} strokeWidth={2} /></button>
+        <button onClick={onBack} className="artium-aw-round" aria-label="Back"><BackArrow /></button>
         <p style={{ margin: 0, flex: 1, fontSize: 14, fontWeight: 600, color: C.ivory }}>{otherName || (role === "hirer" ? "The pianist" : "The hirer")}</p>
         {!closed && !confirmLeaveDeal && (
           <button onClick={() => setConfirmLeaveDeal(true)}
@@ -7376,7 +7376,7 @@ function HirerPianistProfile({ student, conservatory, onBack, onContact }) {
   );
   return (
     <div style={{ maxWidth: 640, margin: "0 auto", padding: "40px 24px" }}>
-      <button onClick={onBack} className="artium-aw-round" style={{ marginBottom: 20 }} aria-label="Back"><ChevronLeft size={17} strokeWidth={2} /></button>
+      <button onClick={onBack} className="artium-aw-round" style={{ marginBottom: 20 }} aria-label="Back"><BackArrow /></button>
       <div className="artium-pf-top" data-solo={student.coverPhotoUrl ? "0" : "1"}>
         <div>
           <div style={{ display: "flex", alignItems: "flex-start", gap: 16, marginBottom: 28 }}>
@@ -7436,7 +7436,7 @@ function ConcertInquiryForm({ pianist, hirerMeta, onSubmit, onCancel, submitting
 
   return (
     <div style={{ maxWidth: 560, margin: "0 auto", padding: "32px 24px 60px" }}>
-      <button onClick={onCancel} className="artium-aw-round" style={{ marginBottom: 20 }} aria-label="Back"><ChevronLeft size={17} strokeWidth={2} /></button>
+      <button onClick={onCancel} className="artium-aw-round" style={{ marginBottom: 20 }} aria-label="Back"><BackArrow /></button>
       <p style={{ fontFamily: FONT_MONO, fontSize: 11, letterSpacing: "0.06em", color: C.brassLabel, margin: "0 0 6px" }}>CONTACT {firstName.toUpperCase()}</p>
       <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600, color: C.ivory, margin: "0 0 24px" }}>Tell us about the engagement</h2>
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -7807,7 +7807,7 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
             className="artium-aw-round"
             aria-label={onDoorsBack ? "Back to the choices" : step === 0 ? "Leave sign-up" : "Back a step"}
           >
-            <ChevronLeft size={17} strokeWidth={2} />
+            <BackArrow />
           </button>
           {/* The gate's lockup, so the flow reads as the same product the
               visitor just came through rather than a form it handed them to. */}
@@ -10029,7 +10029,7 @@ function LoginScreen({ onSubmit, onBack, error, unfinished, onResume }) {
     <div className="min-h-full flex flex-col" style={{ background: MODERN ? C.ink : C.inkSoft, color: C.ivory }}>
       <div style={{ background: warm("0.05"), borderBottom: `1px solid ${C.inkLine}`, padding: "0 32px", height: 60, display: "flex", alignItems: "center" }}>
         <button onClick={onBack} style={{ color: C.ivoryDim, background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", padding: 0, marginRight: 12 }}>
-          <ChevronLeft size={18} />
+          <BackArrow />
         </button>
         <Logo size={20} />
       </div>
@@ -10318,7 +10318,7 @@ function NotifShell({ onClose, onMarkAll, panelStyle, header, children }) {
     <div className="tm-notif-page" role="dialog" aria-label="Notifications" style={{ bottom: tabH }} onMouseDown={(e) => e.stopPropagation()}>
       <div className="tm-notif-head">
         <button type="button" className="tm-notif-back" onClick={onClose} aria-label="Back">
-          <ChevronLeft size={24} strokeWidth={2.2} />
+          <BackArrow />
         </button>
         <h1>Notifications</h1>
         {onMarkAll && (
@@ -10919,7 +10919,7 @@ function AppShell({ children, appTab, setAppTab, myProfile, onApply, onHome, mus
         <div className="flex items-center gap-3">
           {(previewOnly || onBack) && (
             <button onClick={previewOnly ? onHome : onBack} style={{ color: C.ivoryDim, background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 2, padding: 0 }}>
-              <ChevronLeft size={18} />
+              <BackArrow />
               {backLabel && <span style={{ fontSize: 13, fontWeight: 500 }}>{backLabel}</span>}
             </button>
           )}
@@ -12400,7 +12400,7 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
           <>
             <div className="artium-aw-listhead">
               <button className="artium-aw-sort" style={{ marginLeft: 0 }} onClick={() => setSelectedConsId(null)}>
-                <ArrowLeft size={13} /> All Conservatories
+                <BackArrow size={16} /> All Conservatories
               </button>
             </div>
             <div className="artium-aw-row" style={{ cursor: "default", marginBottom: 12 }}>
@@ -12469,7 +12469,7 @@ function MapScreen({ students, studentsByCons, selectedConsId, setSelectedConsId
             {areaIds && (
               <div className="artium-aw-listhead">
                 <button className="artium-aw-sort" style={{ marginLeft: 0 }} onClick={() => setAreaIds(null)}>
-                  <ArrowLeft size={13} /> All Conservatories
+                  <BackArrow size={16} /> All Conservatories
                 </button>
                 <span>{areaIds.length} in this area</span>
               </div>
@@ -13589,7 +13589,7 @@ function TermsSheet({ onClose, doc: start = "terms", onAccept }) {
     <div className="terms-page" role="dialog" aria-modal="true" aria-label={title}>
       <div className="terms-sheet">
         <div className="terms-head">
-          <button type="button" className="terms-back" onClick={onClose} aria-label="Back"><ChevronLeft size={19} strokeWidth={2} /></button>
+          <button type="button" className="terms-back" onClick={onClose} aria-label="Back"><BackArrow /></button>
           <h2 data-no-translate="">{title}</h2>
           <span className="terms-lang" role="group" aria-label="Language" data-no-translate="">
             {langs.map((l) => <button key={l} type="button" className={lang === l ? "is-on" : ""} onClick={() => setLang(l)}>{l.slice(0, 2).toUpperCase()}</button>)}
@@ -13929,7 +13929,7 @@ function LearnerSignup({ onSubmit, onBack, error, authUser }) {
       <div className="max-w-2xl mx-auto px-6 pt-8">
         <div className="flex items-center gap-3">
           <button onClick={onBack} style={{ color: C.ivoryDim, background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", padding: 0 }}>
-            <ChevronLeft size={18} />
+            <BackArrow />
           </button>
           {MODERN ? <ArtiumLockup size={20} /> : <Logo slogan />}
         </div>
@@ -14475,7 +14475,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
         {(appTab !== "profile" || learnerPrevTab.current) && (
           <button className={`artium-net-puck${MODERN ? " tm-back-plain" : ""}`} aria-label="Back"
             onClick={appTab === "profile" && learnerPrevTab.current ? () => { const t = learnerPrevTab.current; learnerPrevTab.current = null; setAppTab(t); } : onBack}>
-            {appTab === "map" ? <ArrowLeft size={18} strokeWidth={2} /> : <ChevronLeft size={17} strokeWidth={2} />}
+            <BackArrow />
           </button>
         )}
         {MODERN && appTab !== "map" && learnerAvatar}
@@ -14601,7 +14601,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
             <>
               <div className="artium-aw-listhead">
                 <button className="artium-aw-sort" style={{ marginLeft: 0 }} onClick={() => setSelectedConsId(null)}>
-                  <ArrowLeft size={13} /> All teachers
+                  <BackArrow size={16} /> All teachers
                 </button>
               </div>
               <div className="artium-aw-row" style={{ cursor: "default", marginBottom: 12 }}>
@@ -14624,7 +14624,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
               {areaIds && (
                 <div className="artium-aw-listhead">
                   <button className="artium-aw-sort" style={{ marginLeft: 0 }} onClick={() => setAreaIds(null)}>
-                    <ArrowLeft size={13} /> All Conservatories
+                    <BackArrow size={16} /> All Conservatories
                   </button>
                   <span>{areaIds.length} in this area</span>
                 </div>
@@ -14691,7 +14691,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
             {/* This screen's own back — a different level than the header
                 puck above, which now always goes home. This one just
                 closes the teacher's profile and returns to the roster. */}
-            <button className="artium-aw-round" onClick={() => setSelectedId(null)} style={{ marginBottom: 20 }} aria-label="Back"><ChevronLeft size={17} strokeWidth={2} /></button>
+            <button className="artium-aw-round" onClick={() => setSelectedId(null)} style={{ marginBottom: 20 }} aria-label="Back"><BackArrow /></button>
             {/* Header */}
             <div style={{ display: "flex", alignItems: "flex-start", gap: 16, marginBottom: 28 }}>
               <div style={{ marginTop: 4 }}>
@@ -14800,7 +14800,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
             <div style={{ padding: "16px 20px 32px", background: PAGE_BG, minHeight: "100%" }}>
               <div className="artium-aw-listhead">
                 <button className="artium-aw-sort" style={{ marginLeft: 0 }} onClick={() => setLearnerRoomView("teachers")}>
-                  <ArrowLeft size={13} /> Lesson Room
+                  <BackArrow size={16} /> Lesson Room
                 </button>
               </div>
               {allSessions.length === 0 && (
@@ -16262,7 +16262,7 @@ function PromoteMe({ myProfile, authUser, focus }) {
             onClick={() => (view === "aclassicaltone" && promoMode ? setPromoMode(null) : setView(null))}
             style={{ alignSelf: "flex-start", display: "inline-flex", alignItems: "center", gap: 6, background: "none", border: "none", padding: 0, font: "inherit", fontSize: 15.6, fontWeight: 600, color: C.ivoryDim, cursor: "pointer" }}
           >
-            <ArrowLeft size={17} /> {view === "aclassicaltone" && promoMode ? "Free or €65" : "Back"}
+            <BackArrow size={20} /> {view === "aclassicaltone" && promoMode ? "Free or €65" : "Back"}
           </button>
         )}
 
@@ -16980,7 +16980,7 @@ function AdminComposers({ card }) {
       ) : (
         <>
           <button onClick={() => { setSel(null); setPieces([]); setNote(null); }} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "none", border: "none", padding: 0, cursor: "pointer", color: C.brassLabel, fontSize: 13, fontWeight: 700, marginBottom: 8 }}>
-            <ArrowLeft size={14} /> All composers
+            <BackArrow size={17} /> All composers
           </button>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
             {sel.photo_url ? <img src={sel.photo_url} alt="" style={{ width: 56, height: 56, borderRadius: 8, objectFit: "cover", objectPosition: "50% 22%" }} /> : <span style={{ width: 56, height: 56, borderRadius: 8, background: "#EFE6D6" }} />}

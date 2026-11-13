@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import BackArrow from "../BackArrow";
 import { supabase } from "../../lib/supabase";
 import "./DirectMessages.css";
 
@@ -73,8 +74,8 @@ function Face({ person, size }) {
 const Icon = ({ d, size = 24, sw = 2 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{d}</svg>
 );
-// Instagram's back arrow: a full arrow, not a chevron.
-const IconBack = () => <Icon d={<path d="M20 12H4.5M11 5l-7 7 7 7" />} size={26} sw={2} />;
+// Instagram's back arrow: the app's one BackArrow.
+const IconBack = () => <BackArrow />;
 // The verified mark beside a name: the app's scalloped emerald badge (the Connect button's colour).
 const Verified = () => (
   <svg className="dm-verified" width="19" height="19" viewBox="0 0 24 24" aria-label="Verified">

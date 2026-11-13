@@ -1,5 +1,5 @@
 import React from "react";
-import { ChevronLeft } from "lucide-react";
+import BackArrow from "../components/BackArrow";
 
 // Twelve, curated rather than exhaustive — a wall that names names instead
 // of trying to be a music history syllabus. Years and one line of legacy
@@ -39,7 +39,7 @@ export default function WallOfComposers({ onBack, modern, avatarNode }) {
         /* The app's shared teal header: back disc, your avatar, ARTIUM wordmark. */
         <header className="artium-net-bar">
           <button className="artium-net-puck tm-back-plain" onClick={onBack} aria-label="Back">
-            <ChevronLeft size={17} strokeWidth={2} />
+            <BackArrow />
           </button>
           {avatarNode}
           <span className="artium-net-word" aria-label="ARTIUM">
@@ -56,7 +56,7 @@ export default function WallOfComposers({ onBack, modern, avatarNode }) {
           aria-label="Back"
           className="flex h-9 w-9 items-center justify-center rounded-full border border-border text-gold transition-colors hover:border-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
         >
-          <ChevronLeft size={17} strokeWidth={2} />
+          <BackArrow />
         </button>
         <span className="flex items-center gap-2">
           <svg width="14" height="20" viewBox="0 0 28 40" aria-hidden="true">
