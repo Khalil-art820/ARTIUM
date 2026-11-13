@@ -2236,6 +2236,7 @@ function AccessGate({ onUnlock }) {
 function AuthWordmark({ size = 24 }) {
   return (
     <span
+      className="artium-wm"
       aria-label="ARTIUM"
       style={{
         display: "inline-flex", alignItems: "center", justifyContent: "center",
@@ -13801,7 +13802,7 @@ function ArtiumLockup({ size = 20 }) {
       <span aria-hidden="true" style={{ flex: "none", display: "grid", borderRadius: "50%", boxShadow: "0 4px 10px -4px rgba(0,0,0,.45)" }}>
         <ArtiumMark size={disc} />
       </span>
-      <span aria-hidden="true" style={{ display: "inline-flex", alignItems: "center", fontFamily: "'Jost', system-ui, sans-serif", fontWeight: 600,
+      <span className="artium-wm" aria-hidden="true" style={{ display: "inline-flex", alignItems: "center", fontFamily: "'Jost', system-ui, sans-serif", fontWeight: 600,
         fontSize: size * 0.95, letterSpacing: "0.2em", color: "#12352E", lineHeight: 1 }}>
         <svg width={size * 0.95 * 0.72} height={size * 0.95 * 0.7} viewBox="0 0 720 700" style={{ marginRight: "0.16em", display: "block" }}>
           <path d="M0 700L316 0H404L720 700H570L360 235L150 700Z" fill="currentColor" />

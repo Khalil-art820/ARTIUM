@@ -91,3 +91,16 @@ body,
 .aw-mark{display:inline-flex;align-items:center;font-family:'Jost',system-ui,sans-serif;font-weight:700;font-style:normal;letter-spacing:.16em;text-transform:uppercase;font-size:.86em;line-height:1;vertical-align:-.02em;margin-right:-.1em;white-space:nowrap}
 .aw-mark svg{width:.72em;height:.7em;margin-right:.18em;display:block;flex:none}
 html.i18n-pending body{visibility:hidden}
+
+/* Every ARTIUM wordmark: the crossbar-less A stands on the text's baseline
+   like a letter (an inline image's foot sits on the baseline in every
+   browser), so RTIUM can never sit higher or lower than it. Each A is drawn
+   exactly as tall as Jost's capitals (.7em). Flex centring left it a little
+   low on Safari. */
+.artium-net-word, .artium-lp-word, .aw-mark, .am-word, .cg-word, .agate .wordmark, .artium-wm {
+  display: inline-block !important; vertical-align: baseline !important; white-space: nowrap;
+}
+.artium-net-word > svg, .artium-lp-word > svg, .aw-mark > svg, .am-word > svg, .cg-word > svg,
+.agate .wordmark > svg, .artium-wm > svg {
+  display: inline-block !important; vertical-align: baseline !important;
+}
