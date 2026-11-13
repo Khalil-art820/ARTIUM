@@ -12006,21 +12006,22 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
           (() => {
             const n = filterBase.length;
             const cities = new Set(filterBase.map((m) => m.placeName).filter(Boolean)).size;
+            // Always four places: your connections' faces first (photos
+            // first), empty grey circles for the rest until you have four.
             const faces = [...filterBase].sort((a, b) => (b.photoUrl ? 1 : 0) - (a.photoUrl ? 1 : 0)).slice(0, 4);
+            const slots = [...faces, ...Array.from({ length: 4 - faces.length }, (_, i) => ({ id: `empty-${i}`, empty: true }))];
             return (
               <div className="nx-head">
-                {faces.length > 0 && (
-                  <span className="nx-head-faces" aria-hidden="true">
-                    {faces.map((m) => (
-                      <span key={m.id} className="nx-head-face">
-                        {m.photoUrl ? <img src={m.photoUrl} alt="" /> : <b>{initials(m.name || "?")}</b>}
-                      </span>
-                    ))}
-                  </span>
-                )}
+                <span className="nx-head-faces" aria-hidden="true">
+                  {slots.map((m) => (
+                    <span key={m.id} className={`nx-head-face${m.empty ? " is-empty" : ""}`}>
+                      {m.empty ? null : m.photoUrl ? <img src={m.photoUrl} alt="" /> : <b>{initials(m.name || "?")}</b>}
+                    </span>
+                  ))}
+                </span>
                 <span className="nx-head-text">
-                  <span className="nx-head-n">{n === 0 ? "No connections yet" : n === 1 ? "1 connection" : `${n} connections`}</span>
-                  {cities > 0 && <span className="nx-head-sub">{cities === 1 ? "in 1 city" : `in ${cities} cities`}</span>}
+                  <span className="nx-head-n">{n === 1 ? "1 connection" : `${n} connections`}</span>
+                  <span className="nx-head-sub">{cities === 1 ? "in 1 city" : `in ${cities} cities`}</span>
                 </span>
               </div>
             );

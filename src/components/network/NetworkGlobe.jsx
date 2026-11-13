@@ -66,7 +66,8 @@ const prefersReducedMotion = () => {
 //    count fits, so a busy network stays smooth on an older phone.
 // On screen, one degree is about PX_PER_DEG / altitude pixels at the centre.
 const FAN_MAX = 1;          // two or more in one city always share one named bubble
-const FAN_ALTITUDE = 0.95;   // the same "zoomed in" as the HD map swap
+const FAN_ALTITUDE = 0.95;
+const DEEP_ALTITUDE = 0.3;   // every city its own marker below this   // the same "zoomed in" as the HD map swap
 const MAX_MARKERS = 60;
 const PX_PER_DEG = 7.2;
 const BUBBLE_PX = 52;        // a one-face bubble and its +N, with a margin
@@ -119,18 +120,13 @@ function relax(items, altitude, capPx = Infinity) {
     if (!moved) break;
   }
 }
-function groupMarkers(members, altitude, selectedId, linked = new Set()) {
+function groupMarkers(members, altitude, selectedId) {
   const out = [];
   const byPlace = new Map();
   let selected = null;
-  const solos = [];
   for (const m of members) {
     // The selected member always stands on their own, highlighted.
     if (m.id === selectedId) { selected = m; continue; }
-    // Zoomed in, someone connected to another of your connections stands
-    // alone, so the line between the two can be drawn. Zoomed out they stay
-    // in their bubble.
-    if (altitude < FAN_ALTITUDE && linked.has(m.id)) { solos.push(m); continue; }
     const key = m.placeKey || `${m.lat},${m.lng}`;
     if (!byPlace.has(key)) byPlace.set(key, { key, name: m.placeName || "", lat: m.lat, lng: m.lng, members: [] });
     byPlace.get(key).members.push(m);
@@ -138,12 +134,13 @@ function groupMarkers(members, altitude, selectedId, linked = new Set()) {
   // Biggest places first, so a city's bubble sits on the city, not a suburb.
   const places = [...byPlace.values()].sort((a, b) => b.members.length - a.members.length);
   const zoomedIn = altitude < FAN_ALTITUDE;
-  // Zoomed out, nearby places merge into one bubble ("5 cities"). Zoomed in,
-  // every place keeps its own marker and overlapping ones are nudged apart
-  // instead, so close cities (London and Paris, Vienna and Bratislava) always
-  // separate without zooming in past what the 8K map can show sharply.
+  // Places closer on screen than a bubble's width share one bubble ("5
+  // cities"), so markers never crowd. Only at deep zoom (DEEP_ALTITUDE) does
+  // every city get its own marker, with the rare overlap nudged apart, so a
+  // multi-city bubble disappears there instead of in a crowded middle zoom.
+  const deep = altitude < DEEP_ALTITUDE;
   let clusters;
-  if (zoomedIn && places.length <= MAX_MARKERS) {
+  if (deep && places.length <= MAX_MARKERS) {
     clusters = places.map((p) => ({ lat: p.lat, lng: p.lng, members: [...p.members], places: [p] }));
   } else {
     let reach = degFor(BUBBLE_PX, altitude);
@@ -157,28 +154,22 @@ function groupMarkers(members, altitude, selectedId, linked = new Set()) {
     c.ringPx = Math.max(30, (n * 33) / (2 * Math.PI));   // room for the city name in the middle
     c.rPx = n === 1 ? 22 : c.ring ? c.ringPx + 18 : 28;   // face (+label) or one-face bubble
   }
-  // The linked faces, each its own marker at its own place.
-  const soloItems = solos.map((m) => ({ lat: m.lat, lng: m.lng, members: [m], places: [{ key: m.placeKey, name: m.placeName || "" }], rPx: 22, solo: true }));
-  clusters = clusters.concat(soloItems);
   const items = selected ? [{ lat: selected.lat, lng: selected.lng, rPx: 24, fixed: true }, ...clusters] : clusters;
-  // Nudge overlapping markers apart: always once linked faces stand alone
-  // among the bubbles, otherwise only zoomed in.
-  // With linked faces about, a face moves at most about a face's width from
-  // its city (a crowd may overlap a little rather than drift away).
-  if (zoomedIn || soloItems.length) relax(items, altitude, soloItems.length ? (zoomedIn ? 40 : 26) : Infinity);
+  // At deep zoom the rare overlapping cities are nudged apart.
+  if (deep) relax(items, altitude);
   if (selected) out.push({ kind: "member", id: selected.id, lat: items[0].lat, lng: items[0].lng, member: selected, selected: true, place: selected.placeName || "" });
   const named = new Set();
   // Places that already have their own bubble (which carries the name).
-  const bubbled = new Set(clusters.filter((c) => !c.solo && c.members.length > 1 && c.places.length === 1).map((c) => c.places[0].key));
+  const bubbled = new Set(clusters.filter((c) => c.members.length > 1 && c.places.length === 1).map((c) => c.places[0].key));
   for (const c of clusters) {
     const list = c.members;
     const n = list.length;
     if (n === 1) {
       // Each city's name shows once: on its bubble if it has one, else on the
-      // first face there. Linked faces stay unlabelled when zoomed out.
+      // first face there.
       let place = c.places[0].name || "";
       const k = c.places[0].key || place;
-      if ((c.solo && !zoomedIn) || named.has(k) || bubbled.has(k)) place = "";
+      if (named.has(k) || bubbled.has(k)) place = "";
       named.add(k);
       out.push({ kind: "member", id: list[0].id, lat: c.lat, lng: c.lng, member: list[0], selected: false, place });
       continue;
@@ -329,7 +320,9 @@ export default function NetworkGlobe({ members, links = [], conservatories, focu
   // on devices whose GPU takes a texture that size. It stays for the visit.
   const hdLoaded = React.useRef(false);
   React.useEffect(() => {
-    if (!ready || !zoomedIn || hdLoaded.current || !globeRef.current) return;
+    // Loaded as soon as the globe is up (not on the first zoom), so the coast
+    // lines are the thin 8K ones from the start.
+    if (!ready || hdLoaded.current || !globeRef.current) return;
     const g = globeRef.current;
     let renderer;
     try { renderer = g.renderer(); } catch { return; }
@@ -505,17 +498,10 @@ export default function NetworkGlobe({ members, links = [], conservatories, focu
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, [ready]);
-  // Everyone on the globe who is connected to another person on it.
-  const linkedIds = React.useMemo(() => {
-    const here = new Set(members.map((m) => m.id));
-    const out = new Set();
-    for (const [a, b] of links) if (here.has(a) && here.has(b) && a !== b) { out.add(a); out.add(b); }
-    return out;
-  }, [members, links]);
   const markers = React.useMemo(() => [
     ...CONTINENTS.map((c) => ({ kind: "label", id: `c:${c.name}`, ...c })),
-    ...groupMarkers(members, altitude, selectedId, linkedIds),
-  ], [members, altitude, selectedId, linkedIds]);
+    ...groupMarkers(members, altitude, selectedId),
+  ], [members, altitude, selectedId]);
 
   // No dots for the conservatories: the globe shows people, not schools.
   const points = [];
