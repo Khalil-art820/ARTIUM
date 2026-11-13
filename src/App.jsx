@@ -11473,10 +11473,10 @@ function NxFace({ m, size = 56 }) {
     </span>
   );
 }
-function NxVerified({ size = 15, color = "#073D37" }) {
+function NxVerified({ size = 15, color = "#A8505F" }) {
   return (
     <span className="nx-verified" title="Conservatory verified" aria-label="Conservatory verified">
-      {/* Instagram's scalloped badge, in the Connect button's emerald. */}
+      {/* Instagram's scalloped badge, in old rose. */}
       <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true"><path d="M12.00 2.60Q15.25 -0.12 16.70 3.86Q20.87 3.13 20.14 7.30Q24.12 8.75 21.40 12.00Q24.12 15.25 20.14 16.70Q20.87 20.87 16.70 20.14Q15.25 24.12 12.00 21.40Q8.75 24.12 7.30 20.14Q3.13 20.87 3.86 16.70Q-0.12 15.25 2.60 12.00Q-0.12 8.75 3.86 7.30Q3.13 3.13 7.30 3.86Q8.75 -0.12 12.00 2.60Z" fill={color} /><path d="M7.7 12.2l2.9 2.9 5.8-5.9" stroke="#fff" strokeWidth="2.3" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
     </span>
   );
@@ -12914,7 +12914,7 @@ function MusicianProfile({ student, conservatory, connCount, onBack, onMessage, 
         <header className="mp-id">
           <div className={`mp-portrait${likes?.mine ? " is-liked" : ""}`}>{s.photoUrl ? <img src={s.photoUrl} alt="" /> : <span>{initials(s.name || "?")}</span>}</div>
           <div className="mp-who">
-            <h1 className="mp-name"><span data-no-translate="">{s.name}</span>{s.conservatoryVerified && <NxVerified size={20} color="#800020" />}</h1>
+            <h1 className="mp-name"><span data-no-translate="">{s.name}</span>{s.conservatoryVerified && <NxVerified size={20} />}</h1>
             <div className="mp-sub-row">
               {!owner && nConn != null && (
                 <button type="button" className="mp-conn-count" onClick={openConnections} disabled={!nConn}>
