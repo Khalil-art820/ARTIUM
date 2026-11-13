@@ -1605,3 +1605,7 @@ html.theme-modern .pk-title .pk-word{display:inline;white-space:nowrap;vertical-
 /* The A stands on the baseline like a letter (an inline image's foot sits on
    the baseline in every browser), exactly as tall as Jost's capitals. */
 html.theme-modern .pk-title .pk-word svg{width:.72em;height:.7em;margin-right:.2em;display:inline-block;vertical-align:baseline}
+
+/* My network | Demo switch, a little smaller. */
+html.theme-modern .nx-demo-seg{padding:2px}
+html.theme-modern .nx-demo-seg button{height:25px;padding:0 13px;font-size:12px}

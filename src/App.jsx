@@ -6253,10 +6253,11 @@ function Landing({ myConnCount = 0, onLogout, onApply, onBack, onPreview, onProf
             "A" glyph as src/components/entrygate/ArtiumGate.jsx's header. */}
         {onBack && (
           <button className={`artium-net-puck${MODERN ? " tm-back-plain" : ""}`} onClick={onBack} aria-label="Back">
-            <ChevronLeft size={17} strokeWidth={2} />
+            {/* A full back arrow (shaft and head) on this page. */}
+            <ArrowLeft size={18} strokeWidth={2} />
           </button>
         )}
-        {MODERN && lpAvatar}
+        {/* No menu in this bar (owner's call, 2026-11-13). */}
         <span className="artium-lp-word" aria-label="ARTIUM">
           <svg className="artium-lp-word-a" viewBox="0 0 720 700" aria-hidden="true">
             <path d="M0 700L316 0H404L720 700H570L360 235L150 700Z" fill="currentColor" />
