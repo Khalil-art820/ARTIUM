@@ -1580,3 +1580,5 @@ html.theme-modern .pk .mc-photo img,html.theme-modern .pk .mc-photo b{font-size:
 html.theme-modern .pk .mc-name{font:600 17px/1.25 'Fira Sans',system-ui,-apple-system,sans-serif !important;color:#000000 !important;
   height:1.25em;flex-wrap:nowrap;white-space:nowrap;margin-top:1px}
 html.theme-modern .pk .mc-name .nx-verified svg{width:16px;height:16px}
+/* Connect on the centred cards: solid black. */
+html.theme-modern .pk .mc-btn:not(.is-pending):not(.is-connected){background:#000000 !important;border-color:#000000 !important;color:#FFFFFF !important}
