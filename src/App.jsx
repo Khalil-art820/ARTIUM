@@ -11751,12 +11751,13 @@ function NxPeopleYouMayKnow({ members: realMembers, myId, conn, consById, onOpen
       myCons && take("cons", `People you may know from ${myCons}`, (x) => x.conservatoryId === me.conservatoryId),
       myInst && take("inst", `People you may know who play ${myInst}`, (x) => me.instrumentList.some((i) => x.instrumentList.includes(i))),
       me?.country && take("country", `People you may know in ${me.country}`, (x) => x.country === me.country),
-      suggestions(),
+      ...suggestions(),
     ].filter(Boolean);
-    // Suggestions for you: everyone not suggested above, the ones you have the
-    // most in common with first: favourite composers and eras, composers in
-    // your repertoires, your city, instrument, conservatory, level, country
-    // and the connections you share.
+    // Suggestions for you: everyone not suggested above who shares something
+    // with you, the most in common first: favourite composers and eras,
+    // composers in your repertoires, your city, instrument, conservatory,
+    // level, country and the connections you share. Everyone else follows
+    // under "More musicians around the world".
     function suggestions() {
       const norm = (v) => String(v || "").trim().toLowerCase();
       const setOf = (arr) => new Set((arr || []).map(norm).filter(Boolean));
@@ -11787,10 +11788,15 @@ function NxPeopleYouMayKnow({ members: realMembers, myId, conn, consById, onOpen
         if (me?.country && x.country === me.country) return `Also in ${x.country}`;
         return "";
       };
-      const people = pool.filter((x) => !used.has(x.id)).map((x) => [x, common(x)])
-        .sort((p, q) => q[1] - p[1] || rank(p[0], q[0])).map(([x]) => x);
+      const scored = pool.filter((x) => !used.has(x.id)).map((x) => [x, common(x)])
+        .sort((p, q) => q[1] - p[1] || rank(p[0], q[0]));
+      const people = scored.filter(([, n]) => n > 0).map(([x]) => x);
+      const rest = scored.filter(([, n]) => n === 0).map(([x]) => x);
       const reasons = Object.fromEntries(people.map((x) => [x.id, reasonOf(x)]));
-      return people.length ? { key: "more", title: "Suggestions for you", people, reasons } : null;
+      return [
+        people.length ? { key: "more", title: "Suggestions for you", people, reasons } : null,
+        rest.length ? { key: "world", title: "More musicians around the world", people: rest } : null,
+      ];
     }
   }, [members, myId, dismissed, conn.byOther, mutualMap, me, consById]);
 
