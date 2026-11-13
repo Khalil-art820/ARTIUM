@@ -11651,7 +11651,7 @@ function useMutualConnections(myId) {
 // place · year, instrument and style tags, a two-line bio; Connect (with its
 // pending and connected states) and an X for Not interested. The card opens
 // the full profile.
-function NxMusicianCard({ m, mutual = 0, sample, state, onOpen, onConnect, onCancel, onAccept, onDismiss }) {
+function NxMusicianCard({ m, reason = "", mutual = 0, sample, state, onOpen, onConnect, onCancel, onAccept, onDismiss }) {
   const place = [m.city, m.country].filter(Boolean).join(", ");
   // Three tags at most: two instruments and a composer or era, or one
   // instrument and two of them.
@@ -11668,6 +11668,8 @@ function NxMusicianCard({ m, mutual = 0, sample, state, onOpen, onConnect, onCan
         <span className="mc-main">
           <span className="mc-name"><span data-no-translate="">{m.name}</span>{m.verified && <NxVerified size={18} />}</span>
           {m.consName && <span className="mc-school" data-no-translate="">{m.consName}</span>}
+          {/* Suggestions for you: why this person (what you have in common). */}
+          {reason && <span className="mc-why">{reason}</span>}
           {(place || m.year) && (
             <span className="mc-meta"><span>
               {place && <span><MapPin size={14} strokeWidth={1.7} />{place}</span>}
@@ -11771,9 +11773,24 @@ function NxPeopleYouMayKnow({ members: realMembers, myId, conn, consById, onOpen
         if (me?.country && x.country === me.country) n += 1;
         return n + 2 * (mutualMap[x.id]?.n || 0);
       };
+      // The card's one-line reason: the strongest thing you share, composers
+      // first (in the other person's own spelling).
+      const reasonOf = (x) => {
+        const loves = (x.tastes || []).filter((t) => myTastes.has(norm(t)) || myRep.has(norm(t)));
+        if (loves.length) return `Also loves ${loves.slice(0, 2).join(" & ")}`;
+        if (me?.placeName && x.placeName === me.placeName) return `Also in ${x.placeName}`;
+        const plays = [...new Set((x.pieces || []).map((pc) => pc && pc.composer).filter((c) => c && (myRep.has(norm(c)) || myTastes.has(norm(c)))))];
+        if (plays.length) return `Also plays ${plays.slice(0, 2).join(" & ")}`;
+        const inst = (x.instrumentList || []).find((i) => me?.instrumentList?.includes(i));
+        if (inst) return `Also plays ${inst}`;
+        if (me?.conservatoryId && x.conservatoryId === me.conservatoryId && x.consName) return `Also at ${x.consName}`;
+        if (me?.country && x.country === me.country) return `Also in ${x.country}`;
+        return "";
+      };
       const people = pool.filter((x) => !used.has(x.id)).map((x) => [x, common(x)])
         .sort((p, q) => q[1] - p[1] || rank(p[0], q[0])).map(([x]) => x);
-      return people.length ? { key: "more", title: "Suggestions for you", people } : null;
+      const reasons = Object.fromEntries(people.map((x) => [x.id, reasonOf(x)]));
+      return people.length ? { key: "more", title: "Suggestions for you", people, reasons } : null;
     }
   }, [members, myId, dismissed, conn.byOther, mutualMap, me, consById]);
 
@@ -11790,7 +11807,7 @@ function NxPeopleYouMayKnow({ members: realMembers, myId, conn, consById, onOpen
                 const c = conn.byOther[m.id];
                 const mu = mutualMap[m.id];
                 return (
-                  <NxMusicianCard key={m.id} m={m} mutual={mu?.n || 0} sample={mu?.sample ? byId[mu.sample] : null} state={c?.state}
+                  <NxMusicianCard key={m.id} m={m} reason={sec.reasons?.[m.id] || ""} mutual={mu?.n || 0} sample={mu?.sample ? byId[mu.sample] : null} state={c?.state}
                     // Demo people have no profile and nothing is ever sent for them.
                     onOpen={() => { if (!m.demo) onOpen(m); }}
                     onConnect={() => { if (!m.demo) conn.request(m.id); }} onCancel={() => c && conn.remove(c.id)}

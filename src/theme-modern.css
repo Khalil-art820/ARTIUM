@@ -1613,3 +1613,6 @@ html.theme-modern .nx-demo-seg button{height:27.5px;padding:0 14.5px;font-size:1
    button (which sizes other icons as 26px squares). */
 html.theme-modern .artium-net-puck.tm-back-plain{display:flex !important;align-items:center;justify-content:center;align-self:center}
 html.theme-modern .artium-net-puck.tm-back-plain svg.back-arrow{width:24px;height:17.26px;stroke-width:2.17;margin:0}
+
+/* Suggestions for you: the one-line reason under the school, in old rose. */
+html.theme-modern .pk .mc-why{display:block;max-width:100%;margin-top:3px;font-size:12px;font-weight:500;line-height:1.3;color:#A8505F;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;text-align:center}
