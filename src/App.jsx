@@ -12180,7 +12180,7 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
 
       {/* Members at one place */}
       {sheet === "group" && (
-        <NxSheet title={learnerMode ? `${group.length} teachers here` : `${group.length} musicians here`} onClose={() => setSheet(null)}>
+        <NxSheet variant="filter" title={learnerMode ? `${group.length} teachers here` : `${group.length} musicians here`} onClose={() => setSheet(null)}>
           {group.map((m) => (
             <button key={m.id} type="button" className="nx-grow" onClick={() => { setSheet(null); setSelectedId(m.id); selectFromGlobe(m.id); }}>
               <NxFace m={m} size={44} />
