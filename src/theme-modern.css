@@ -1606,9 +1606,9 @@ html.theme-modern .pk-title .pk-word{display:inline;white-space:nowrap;vertical-
    the baseline in every browser), exactly as tall as Jost's capitals. */
 html.theme-modern .pk-title .pk-word svg{width:.72em;height:.7em;margin-right:.2em;display:inline-block;vertical-align:baseline}
 
-/* My network | Demo switch, a little smaller. */
-html.theme-modern .nx-demo-seg{padding:2px}
-html.theme-modern .nx-demo-seg button{height:25px;padding:0 13px;font-size:12px}
+/* My network | Demo switch: between its first size (30px) and the smaller one (25px). */
+html.theme-modern .nx-demo-seg{padding:2.5px}
+html.theme-modern .nx-demo-seg button{height:27.5px;padding:0 14.5px;font-size:12.5px}
 /* The back arrow keeps its own proportions and stroke inside the plain back
    button (which sizes other icons as 26px squares). */
 html.theme-modern .artium-net-puck.tm-back-plain{display:flex !important;align-items:center;justify-content:center;align-self:center}
