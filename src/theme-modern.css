@@ -1572,3 +1572,11 @@ html.theme-modern .pk .mc-btn{width:100%;min-width:0;height:34px;padding:0 10px;
   background:#173F3A;border:1px solid #173F3A;color:#FFFFFF}
 html.theme-modern .pk .mc-btn.is-pending{background:#FFFFFF;border-color:#DDDDDD;color:#717171}
 html.theme-modern .pk .mc-btn.is-connected{background:#FFFFFF;border-color:#DDDDDD;color:#222222}
+/* Centred cards: a slightly bigger portrait, and the name in the same type as
+   the one-per-row cards (Fira Sans 600, 17px, black), always on one line of a
+   fixed height so the names in a row sit on the same baseline. */
+html.theme-modern .pk .mc-photo{width:84px !important;height:84px !important}
+html.theme-modern .pk .mc-photo img,html.theme-modern .pk .mc-photo b{font-size:26px}
+html.theme-modern .pk .mc-name{font:600 17px/1.25 'Fira Sans',system-ui,-apple-system,sans-serif !important;color:#000000 !important;
+  height:1.25em;flex-wrap:nowrap;white-space:nowrap;margin-top:1px}
+html.theme-modern .pk .mc-name .nx-verified svg{width:16px;height:16px}
