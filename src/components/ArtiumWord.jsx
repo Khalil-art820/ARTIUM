@@ -7,8 +7,8 @@ import React from "react";
 export default function ArtiumWord({ className = "" }) {
   return (
     <span className={`aw-mark ${className}`.trim()} role="img" aria-label="Artium">
-      <svg viewBox="0 0 15 15" aria-hidden="true">
-        <path d="M7.5 0.9 L1.4 14.4 M7.5 0.9 L13.6 14.4" stroke="currentColor" strokeWidth="3.2" fill="none" />
+      <svg viewBox="0 0 720 700" aria-hidden="true">
+        <path d="M0 700L316 0H404L720 700H551L360 277L169 700Z" fill="currentColor" />
       </svg>
       <span aria-hidden="true">RTIUM</span>
     </span>

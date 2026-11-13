@@ -43,8 +43,8 @@ export default function WallOfComposers({ onBack, modern, avatarNode }) {
           </button>
           {avatarNode}
           <span className="artium-net-word" aria-label="ARTIUM">
-            <svg viewBox="0 0 15 15" aria-hidden="true">
-              <path d="M7.5 0.9 L1.4 14.4 M7.5 0.9 L13.6 14.4" stroke="currentColor" strokeWidth="2.85" fill="none" />
+            <svg viewBox="0 0 720 700" aria-hidden="true">
+              <path d="M0 700L316 0H404L720 700H570L360 235L150 700Z" fill="currentColor" />
             </svg>
             <span aria-hidden="true">RTIUM</span>
           </span>

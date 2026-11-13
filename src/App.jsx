@@ -2243,8 +2243,8 @@ function AuthWordmark({ size = 24 }) {
         fontSize: size, letterSpacing: "0.02em", color: C.ivory,
       }}
     >
-      <svg width={size * 0.62} height={size * 0.62} viewBox="0 0 15 15" aria-hidden="true" style={{ marginRight: 2 }}>
-        <path d="M7.5 0.9 L1.4 14.4 M7.5 0.9 L13.6 14.4" stroke="currentColor" strokeWidth="2.85" fill="none" />
+      <svg width={size * 0.72} height={size * 0.7} viewBox="0 0 720 700" aria-hidden="true" style={{ marginRight: 2 }}>
+        <path d="M0 700L316 0H404L720 700H570L360 235L150 700Z" fill="currentColor" />
       </svg>
       <span aria-hidden="true">RTIUM</span>
     </span>
@@ -4455,7 +4455,7 @@ export default function App() {
           letter-spacing: .18em; text-transform: uppercase;
           display: inline-flex; align-items: center; white-space: nowrap;
         }
-        .artium-net-word svg { width: .72em; height: .72em; margin-right: .2em; display: block; }
+        .artium-net-word svg { width: .72em; height: .7em; margin-right: .2em; display: block; }
         .artium-net-right { display: flex; align-items: center; gap: 12px; margin-left: auto; }
         .artium-net-count { display: inline-flex; align-items: center; gap: 7px; color: #6A7080; font-size: 14px; font-weight: 400; cursor: default; }
         .artium-net-count svg { color: #6A7080; }
@@ -5176,7 +5176,7 @@ export default function App() {
           letter-spacing: .2em; text-transform: uppercase;
           display: inline-flex; align-items: center;
         }
-        .artium-lp--light .artium-lp-word-a { width: .72em; height: .72em; margin-right: .2em; display: block; }
+        .artium-lp--light .artium-lp-word-a { width: .72em; height: .7em; margin-right: .2em; display: block; }
 
         /* The legacy playlist-button overrides that lived here forced the
            landing's play disc to 36px with !important — the one page where
@@ -5577,8 +5577,8 @@ export default function App() {
               )}
               {MODERN && netAvatar}
               <span className="artium-net-word" aria-label="ARTIUM">
-                <svg viewBox="0 0 15 15" aria-hidden="true">
-                  <path d="M7.5 0.9 L1.4 14.4 M7.5 0.9 L13.6 14.4" stroke="currentColor" strokeWidth="2.85" fill="none" />
+                <svg viewBox="0 0 720 700" aria-hidden="true">
+                  <path d="M0 700L316 0H404L720 700H570L360 235L150 700Z" fill="currentColor" />
                 </svg>
                 <span aria-hidden="true">RTIUM</span>
               </span>
@@ -6257,8 +6257,8 @@ function Landing({ myConnCount = 0, onLogout, onApply, onBack, onPreview, onProf
         )}
         {MODERN && lpAvatar}
         <span className="artium-lp-word" aria-label="ARTIUM">
-          <svg className="artium-lp-word-a" viewBox="0 0 15 15" aria-hidden="true">
-            <path d="M7.5 0.9 L1.4 14.4 M7.5 0.9 L13.6 14.4" stroke="currentColor" strokeWidth="2.85" fill="none" />
+          <svg className="artium-lp-word-a" viewBox="0 0 720 700" aria-hidden="true">
+            <path d="M0 700L316 0H404L720 700H570L360 235L150 700Z" fill="currentColor" />
           </svg>
           <span aria-hidden="true">RTIUM</span>
         </span>
@@ -7787,8 +7787,8 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
             /* Edit-profile mode wears the app's own wordmark, arrowless —
                the flow's footer buttons do all the walking. */
             <span className="artium-net-word" aria-label="ARTIUM">
-              <svg viewBox="0 0 15 15" aria-hidden="true">
-                <path d="M7.5 0.9 L1.4 14.4 M7.5 0.9 L13.6 14.4" stroke="currentColor" strokeWidth="2.85" fill="none" />
+              <svg viewBox="0 0 720 700" aria-hidden="true">
+                <path d="M0 700L316 0H404L720 700H570L360 235L150 700Z" fill="currentColor" />
               </svg>
               <span aria-hidden="true">RTIUM</span>
             </span>
@@ -11754,7 +11754,7 @@ function NxPeopleYouMayKnow({ members: realMembers, myId, conn, consById, onOpen
             <h3 className="pk-title">{sec.key === "more" ? (
               // "Artium" as the top bar draws it: the crossbar-less A, then RTIUM.
               <>More musicians on <span className="artium-net-word pk-word" aria-label="ARTIUM">
-                <svg viewBox="0 0 15 15" aria-hidden="true"><path d="M7.5 0.9 L1.4 14.4 M7.5 0.9 L13.6 14.4" stroke="currentColor" strokeWidth="2.85" fill="none" /></svg>
+                <svg viewBox="0 0 720 700" aria-hidden="true"><path d="M0 700L316 0H404L720 700H570L360 235L150 700Z" fill="currentColor" /></svg>
                 <span aria-hidden="true">RTIUM</span>
               </span></>
             ) : sec.title}</h3>
@@ -13803,8 +13803,8 @@ function ArtiumLockup({ size = 20 }) {
       </span>
       <span aria-hidden="true" style={{ display: "inline-flex", alignItems: "center", fontFamily: "'Jost', system-ui, sans-serif", fontWeight: 600,
         fontSize: size * 0.95, letterSpacing: "0.2em", color: "#12352E", lineHeight: 1 }}>
-        <svg width={size * 0.7} height={size * 0.7} viewBox="0 0 15 15" style={{ marginRight: "0.16em", display: "block" }}>
-          <path d="M7.5 0.9 L1.4 14.4 M7.5 0.9 L13.6 14.4" stroke="currentColor" strokeWidth="2.85" fill="none" />
+        <svg width={size * 0.95 * 0.72} height={size * 0.95 * 0.7} viewBox="0 0 720 700" style={{ marginRight: "0.16em", display: "block" }}>
+          <path d="M0 700L316 0H404L720 700H570L360 235L150 700Z" fill="currentColor" />
         </svg>
         RTIUM
       </span>
@@ -14471,8 +14471,8 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
         )}
         {MODERN && learnerAvatar}
         <span className="artium-net-word" aria-label="ARTIUM">
-          <svg viewBox="0 0 15 15" aria-hidden="true">
-            <path d="M7.5 0.9 L1.4 14.4 M7.5 0.9 L13.6 14.4" stroke="currentColor" strokeWidth="2.85" fill="none" />
+          <svg viewBox="0 0 720 700" aria-hidden="true">
+            <path d="M0 700L316 0H404L720 700H570L360 235L150 700Z" fill="currentColor" />
           </svg>
           <span aria-hidden="true">RTIUM</span>
         </span>

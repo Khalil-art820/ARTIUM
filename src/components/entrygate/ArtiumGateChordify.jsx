@@ -127,8 +127,8 @@ function InstallAppBanner() {
 // The top bar's wordmark, inline in running text.
 const ArtiumWord = () => (
   <span className="cg-word cg-word-inline" role="img" aria-label="Artium">
-    <svg className="cg-lambda" viewBox="0 0 15 15" aria-hidden="true">
-      <path d="M7.5 0.9 L1.4 14.4 M7.5 0.9 L13.6 14.4" stroke="currentColor" strokeWidth="2.85" fill="none" />
+    <svg className="cg-lambda" viewBox="0 0 720 700" aria-hidden="true">
+      <path d="M0 700L316 0H404L720 700H530L360 324L190 700Z" fill="currentColor" />
     </svg>
     <span aria-hidden="true">RTIUM</span>
   </span>
@@ -318,8 +318,8 @@ export default function ArtiumGateChordify({
           <div className="cg-word" aria-label="ARTIUM">
             {/* The house wordmark, kept from the original gate: Jost caps,
                 wide tracking, and the crossbar-less A drawn as a glyph. */}
-            <svg className="cg-lambda" viewBox="0 0 15 15" aria-hidden="true">
-              <path d="M7.5 0.9 L1.4 14.4 M7.5 0.9 L13.6 14.4" stroke="currentColor" strokeWidth="2.85" fill="none" />
+            <svg className="cg-lambda" viewBox="0 0 720 700" aria-hidden="true">
+              <path d="M0 700L316 0H404L720 700H570L360 235L150 700Z" fill="currentColor" />
             </svg>
             <span aria-hidden="true">RTIUM</span>
           </div>
