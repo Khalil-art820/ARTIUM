@@ -6631,7 +6631,7 @@ function HirerSignup({ authUser, onBack, onDone }) {
       <div className="max-w-3xl mx-auto px-6" style={{ paddingTop: "calc(20px + env(safe-area-inset-top, 0px))" }}>
         <div className="flex items-center gap-3">
           <button onClick={step === 0 ? (anythingFilled ? () => setConfirmLeave(true) : onBack) : () => setStep(step - 1)} className="artium-aw-round" aria-label="Back">
-            <BackArrow />
+            <BackArrow size={20} />
           </button>
           <GateLogo word={20} />
         </div>
@@ -7155,7 +7155,7 @@ function ConcertConversation({ inquiryId, role, myId, myName, otherName, student
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", background: C.ink }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", borderBottom: `1px solid ${C.inkLine}`, flexShrink: 0 }}>
-        <button onClick={onBack} className="artium-aw-round" aria-label="Back"><BackArrow /></button>
+        <button onClick={onBack} className="artium-aw-round" aria-label="Back"><BackArrow size={20} /></button>
         <p style={{ margin: 0, flex: 1, fontSize: 14, fontWeight: 600, color: C.ivory }}>{otherName || (role === "hirer" ? "The pianist" : "The hirer")}</p>
         {!closed && !confirmLeaveDeal && (
           <button onClick={() => setConfirmLeaveDeal(true)}
@@ -7376,7 +7376,7 @@ function HirerPianistProfile({ student, conservatory, onBack, onContact }) {
   );
   return (
     <div style={{ maxWidth: 640, margin: "0 auto", padding: "40px 24px" }}>
-      <button onClick={onBack} className="artium-aw-round" style={{ marginBottom: 20 }} aria-label="Back"><BackArrow /></button>
+      <button onClick={onBack} className="artium-aw-round" style={{ marginBottom: 20 }} aria-label="Back"><BackArrow size={20} /></button>
       <div className="artium-pf-top" data-solo={student.coverPhotoUrl ? "0" : "1"}>
         <div>
           <div style={{ display: "flex", alignItems: "flex-start", gap: 16, marginBottom: 28 }}>
@@ -7436,7 +7436,7 @@ function ConcertInquiryForm({ pianist, hirerMeta, onSubmit, onCancel, submitting
 
   return (
     <div style={{ maxWidth: 560, margin: "0 auto", padding: "32px 24px 60px" }}>
-      <button onClick={onCancel} className="artium-aw-round" style={{ marginBottom: 20 }} aria-label="Back"><BackArrow /></button>
+      <button onClick={onCancel} className="artium-aw-round" style={{ marginBottom: 20 }} aria-label="Back"><BackArrow size={20} /></button>
       <p style={{ fontFamily: FONT_MONO, fontSize: 11, letterSpacing: "0.06em", color: C.brassLabel, margin: "0 0 6px" }}>CONTACT {firstName.toUpperCase()}</p>
       <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600, color: C.ivory, margin: "0 0 24px" }}>Tell us about the engagement</h2>
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -7807,7 +7807,7 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
             className="artium-aw-round"
             aria-label={onDoorsBack ? "Back to the choices" : step === 0 ? "Leave sign-up" : "Back a step"}
           >
-            <BackArrow />
+            <BackArrow size={20} />
           </button>
           {/* The gate's lockup, so the flow reads as the same product the
               visitor just came through rather than a form it handed them to. */}
@@ -12939,8 +12939,7 @@ function MusicianProfile({ student, conservatory, connCount, onBack, onMessage, 
           {hasCover && <img className="mp-hero-img" src={s.coverPhotoUrl} alt="" onError={() => setBrokenCover(s.coverPhotoUrl)} />}
           {onBack && (
             <button type="button" className="mp-back" onClick={onBack} aria-label="Back">
-              {/* The conversation page's back arrow: a full arrow, not a chevron. */}
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 12H4.5M11 5l-7 7 7 7" /></svg>
+              <BackArrow size={24} />
             </button>
           )}
           {owner && (
@@ -13589,7 +13588,7 @@ function TermsSheet({ onClose, doc: start = "terms", onAccept }) {
     <div className="terms-page" role="dialog" aria-modal="true" aria-label={title}>
       <div className="terms-sheet">
         <div className="terms-head">
-          <button type="button" className="terms-back" onClick={onClose} aria-label="Back"><BackArrow /></button>
+          <button type="button" className="terms-back" onClick={onClose} aria-label="Back"><BackArrow size={22} /></button>
           <h2 data-no-translate="">{title}</h2>
           <span className="terms-lang" role="group" aria-label="Language" data-no-translate="">
             {langs.map((l) => <button key={l} type="button" className={lang === l ? "is-on" : ""} onClick={() => setLang(l)}>{l.slice(0, 2).toUpperCase()}</button>)}
@@ -14691,7 +14690,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
             {/* This screen's own back — a different level than the header
                 puck above, which now always goes home. This one just
                 closes the teacher's profile and returns to the roster. */}
-            <button className="artium-aw-round" onClick={() => setSelectedId(null)} style={{ marginBottom: 20 }} aria-label="Back"><BackArrow /></button>
+            <button className="artium-aw-round" onClick={() => setSelectedId(null)} style={{ marginBottom: 20 }} aria-label="Back"><BackArrow size={20} /></button>
             {/* Header */}
             <div style={{ display: "flex", alignItems: "flex-start", gap: 16, marginBottom: 28 }}>
               <div style={{ marginTop: 4 }}>
