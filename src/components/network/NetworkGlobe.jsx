@@ -216,6 +216,20 @@ function faceHTML(m, size, ring) {
     <b>${initials}</b>${inner}</span>`;
 }
 
+// Land is softened toward the white page (LAND_DIM = how far), oceans stay
+// at full strength. Land vs ocean is read from the map itself: the ocean is a
+// deep teal (green about 0.16 in sRGB), land is brighter (about 0.42).
+const LAND_DIM = 0.4;
+function dimLand(mat) {
+  mat.onBeforeCompile = (sh) => {
+    sh.fragmentShader = sh.fragmentShader
+      .replace("#include <map_fragment>", "#include <map_fragment>\n  float landK = smoothstep(0.035, 0.08, diffuseColor.g);")
+      .replace("#include <dithering_fragment>", `gl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(1.0), ${LAND_DIM.toFixed(2)} * landK);\n#include <dithering_fragment>`);
+  };
+  mat.customProgramCacheKey = () => `dimLand${LAND_DIM}`;
+  return mat;
+}
+
 export default function NetworkGlobe({ members, links = [], conservatories, focus, selectedId, onSelectMember, onSelectGroup, height = 330 }) {
   const wrapRef = React.useRef(null);
   const tapStart = React.useRef(null);
@@ -244,10 +258,10 @@ export default function NetworkGlobe({ members, links = [], conservatories, focu
   const material = React.useMemo(() => {
     const lights = new THREE.TextureLoader().load(LIGHTS_URL);
     lights.colorSpace = THREE.SRGBColorSpace;
-    return new THREE.MeshPhongMaterial({
+    return dimLand(new THREE.MeshPhongMaterial({
       color: new THREE.Color("#FFFFFF"), emissive: new THREE.Color("#FFFFFF"), emissiveMap: lights, emissiveIntensity: 1.3,
       shininess: 8, specular: new THREE.Color("#0E3B37"),
-    });
+    }));
   }, []);
   React.useEffect(() => () => { material.emissiveMap?.dispose(); material.dispose(); }, [material]);
 
@@ -408,11 +422,11 @@ export default function NetworkGlobe({ members, links = [], conservatories, focu
       geo.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2));
       geo.setAttribute("normal", new THREE.Float32BufferAttribute(nrm, 3));   // straight out, as on the globe
       geo.setIndex(idx);
-      const mat = new THREE.MeshPhongMaterial({
+      const mat = dimLand(new THREE.MeshPhongMaterial({
         color: new THREE.Color("#FFFFFF"), emissive: new THREE.Color("#FFFFFF"), emissiveIntensity: 1.3,
         shininess: 8, specular: new THREE.Color("#0E3B37"), transparent: true, opacity: 0, side: THREE.DoubleSide,
         polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
-      });
+      }));
       const mesh = new THREE.Mesh(geo, mat);
       mesh.renderOrder = 1; mesh.visible = true;
       const t = { mesh, seen: now };
