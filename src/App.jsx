@@ -11714,8 +11714,10 @@ function NxMusicianCard({ m, reason = "", mutual = 0, sample, state, onOpen, onC
 }
 function NxPeopleYouMayKnow({ members: realMembers, myId, conn, consById, onOpen, demo = false }) {
   const realMutual = useMutualConnections(myId);
-  // Demo on: the made-up suggestions and their mutual connections join in.
-  const members = React.useMemo(() => (demo ? [...realMembers, ...DEMO_SUGGEST] : realMembers), [realMembers, demo]);
+  // Demo on: the made-up suggestions and their mutual connections join in,
+  // plus a few who share something with you (for "Suggestions for you").
+  const meReal = realMembers.find((x) => x.id === myId);
+  const members = React.useMemo(() => (demo ? [...realMembers, ...DEMO_SUGGEST, ...demoCommonFor(meReal)] : realMembers), [realMembers, demo, meReal]);
   const mutualMap = React.useMemo(() => (demo ? { ...realMutual, ...DEMO_MUTUAL } : realMutual), [realMutual, demo]);
   const dismissKey = `artium_pymk_dismissed_${myId}`;
   const [dismissed, setDismissed] = useState(() => { try { return new Set(JSON.parse(localStorage.getItem(dismissKey) || "[]")); } catch { return new Set(); } });
@@ -11889,6 +11891,31 @@ const DEMO_MUTUAL = Object.fromEntries(DEMO_SUGGEST.map((p, i) => {
   const row = [[4, 0], [1, 2], [7, 4], [2, 9], [0, null], [12, 1]][i];
   return [p.id, row[0] ? { n: row[0], sample: `demo-${row[1]}` } : { n: 0 }];
 }));
+// Demo "Suggestions for you": made-up musicians who share something with
+// the admin's own profile (favourite composers, home city, a repertoire
+// composer) but no connection, school, instrument or country, so that
+// section and its reason lines can be seen. Built from your profile.
+function demoCommonFor(me) {
+  if (!me) return [];
+  const tastes = (me.tastes || []).filter(Boolean);
+  const rep = (me.pieces || []).map((p) => p && p.composer).find(Boolean);
+  const mine = me.instrumentList || [];
+  const inst = ["Harp", "Clarinet", "Viola", "Guitar", "Oboe", "Horn"].filter((i) => !mine.includes(i));
+  const away = CONSERVATORIES.filter((c) => c.country !== me.country && c.id !== me.conservatoryId);
+  const pick = (city) => away.find((c) => c.city === city) || away[0];
+  const out = [];
+  const add = (name, city, extra, photoUrl) => {
+    const c = pick(city), i = out.length;
+    out.push({ id: `demo-c${i}`, name, city: c.city, country: c.country, placeName: c.city, conservatoryId: c.id, consName: c.name,
+      instrumentList: [inst[i % inst.length]], instruments: [inst[i % inst.length]], instrumentLabel: inst[i % inst.length],
+      tastes: [], pieces: [], year: "Masters, 1st year", levels: [], photoUrl, verified: true, open: false, demo: true, ...extra });
+  };
+  if (tastes[0]) add("Lena Hoffmann", "Vienna", { tastes: tastes.slice(0, 2) }, "/gate-cards/violin.webp");
+  if (tastes[2] || tastes[0]) add("Mateo Ruiz", "Madrid", { tastes: [tastes[2] || tastes[0]] }, "");
+  if (me.placeName) add("Julia Novak", "Prague", { placeName: me.placeName }, "/gate-cards/voice.webp");
+  if (rep) add("Hana Sato", "Tokyo", { pieces: [{ title: "", composer: rep }] }, "/gate-cards/cello.webp");
+  return out;
+}
 
 function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStudent, onMessage, isGuest, onGuestClick, learnerMode = false, connectionsOverride = null }) {
   // Students connect; learners browse teachers as before.
