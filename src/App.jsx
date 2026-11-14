@@ -11823,7 +11823,10 @@ function NxPeopleYouMayKnow({ members: realMembers, myId, conn, consById, onOpen
   return (
     <div className="pk">
       {sections.map((sec) => {
-        const shown = open[sec.key] ? sec.people : sec.people.slice(0, 4);
+        // Four at first, four more each "Show more"; "Show less" once all are out.
+        const count = Math.min(sec.people.length, open[sec.key] || 4);
+        const shown = sec.people.slice(0, count);
+        const allOut = count >= sec.people.length;
         return (
           <section key={sec.key} className="pk-sec">
             <h3 className="pk-title">{sec.title}</h3>
@@ -11841,8 +11844,8 @@ function NxPeopleYouMayKnow({ members: realMembers, myId, conn, consById, onOpen
               })}
             </div>
             {sec.people.length > 4 && (
-              <button type="button" className="pk-more" onClick={() => setOpen((o) => ({ ...o, [sec.key]: !o[sec.key] }))}>
-                {open[sec.key] ? "Show less" : "Show more"}
+              <button type="button" className="pk-more" onClick={() => setOpen((o) => ({ ...o, [sec.key]: allOut ? 4 : count + 4 }))}>
+                {allOut ? "Show less" : "Show more"}
               </button>
             )}
           </section>
