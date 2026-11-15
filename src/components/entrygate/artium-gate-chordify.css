@@ -822,3 +822,11 @@ html.theme-modern .cgate button.cg-btn.cg-btn.cg-btn,html.theme-modern .cgate bu
    line; the short "Welcome back, {name}" clearly bigger. */
 html.theme-modern .cgate .cg-student button.cg-btn.cg-btn.cg-btn{font-size:clamp(14.5px,4.3vw,19.5px);padding-left:10px;padding-right:10px}
 html.theme-modern .cgate .cg-student button.cg-btn.cg-btn.cg-btn.cg-btn--welcome{font-size:clamp(18px,5.2vw,21px)}
+/* Owner, 2026-11-16: the name band across each card's foot is straight
+   (no arched top) on solid black; the word "Connect." in the app icon's
+   gradient (magenta to indigo) instead of old rose. */
+html.theme-modern .cgate .cf-cap.cf-cap-row,html.theme-modern .cgate .cf-card.is-on .cf-cap.cf-cap-row,html.theme-modern .cgate .cf-card:not(.is-on) .cf-cap.cf-cap-row{
+  border-radius:0 !important;background:#000000 !important;-webkit-backdrop-filter:none !important;backdrop-filter:none !important;box-shadow:none !important}
+html.theme-modern .cgate .cg-hero h1 span.cg-accent.cg-accent.cg-accent{
+  background:linear-gradient(45deg,#AD2868 0%,#8E2E70 30%,#6C3578 55%,#4B3C7F 78%,#2B4385 100%) !important;
+  -webkit-background-clip:text !important;background-clip:text !important;-webkit-text-fill-color:transparent !important;color:#6C3578 !important}
