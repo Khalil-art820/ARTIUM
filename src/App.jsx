@@ -10634,10 +10634,11 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
           return next;
         })}
         aria-label="Notifications"
-        className={puck ? "artium-net-puck" : undefined}
+        className={puck ? "artium-net-puck tm-notif-btn" : undefined}
         style={puck ? undefined : { position: "relative", background: "none", border: "none", cursor: "pointer", padding: 4, display: "flex", alignItems: "center", justifyContent: "center" }}
       >
-        <IconBellRef size={20} strokeWidth={puck ? 2 : 1.8} color={puck ? "currentColor" : (totalCount > 0 ? C.brass : C.ivoryDim)} />
+        {/* Modern: the notifications page's double tick, no disc. */}
+        {MODERN && puck ? <CheckCheck size={24} strokeWidth={2} /> : <IconBellRef size={20} strokeWidth={puck ? 2 : 1.8} color={puck ? "currentColor" : (totalCount > 0 ? C.brass : C.ivoryDim)} />}
         {totalCount > 0 && (
           <span
             className={puck ? "artium-net-bell-badge" : undefined}
@@ -14334,9 +14335,9 @@ function LearnerNotificationBell({ authUser, teachers, learnerSessionsByTeacher,
       <button
         onClick={() => setOpen((o) => !o)}
         aria-label="Notifications"
-        className="artium-net-puck"
+        className="artium-net-puck tm-notif-btn"
       >
-        <IconBellRef size={20} strokeWidth={2} color="currentColor" />
+        {MODERN ? <CheckCheck size={24} strokeWidth={2} /> : <IconBellRef size={20} strokeWidth={2} color="currentColor" />}
         {totalCount > 0 && (
           <span className="artium-net-bell-badge">{totalCount}</span>
         )}

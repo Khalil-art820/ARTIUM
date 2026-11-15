@@ -1661,3 +1661,23 @@ html.theme-modern .tm-notif-page .tm-conn-yes,html.theme-modern .tm-notif-page .
 html.theme-modern .tm-notif-page .tm-conn-yes{background:#0866FF !important;color:#FFFFFF !important}
 html.theme-modern .tm-notif-page .tm-conn-no{background:#E4E6EB !important;color:#050505 !important}
 html.theme-modern .tm-notif-page .tm-nempty{order:4;color:#65676B !important}
+
+/* ==== Top-bar notifications and radio buttons, everywhere (top bars, the
+   welcome page, the learner bar, the entry gate): no old-rose disc. The bell
+   is the notifications page's double tick, black; the red counter stays.
+   The radio keeps its five wave bars, black. Repeated classes outrank the
+   layered disc rules (theme-modern.css, artium-gate-chordify.css). ==== */
+html.theme-modern button.tm-notif-btn.tm-notif-btn.tm-notif-btn.tm-notif-btn.tm-notif-btn.tm-notif-btn.tm-notif-btn,
+html.theme-modern button.tm-notif-btn.tm-notif-btn.tm-notif-btn.tm-notif-btn.tm-notif-btn.tm-notif-btn.tm-notif-btn:hover,
+html.theme-modern button.tm-play.tm-play.tm-play.tm-play.tm-play.tm-play.tm-play,
+html.theme-modern button.tm-play.tm-play.tm-play.tm-play.tm-play.tm-play.tm-play:hover,
+html.theme-modern button.tm-play.tm-play.tm-play.tm-play.tm-play.tm-play.tm-play.is-on,
+html.theme-modern .cgate .cg-actions button.cg-round.cg-round.cg-round.cg-round.cg-round.cg-round.cg-round,
+html.theme-modern .cgate .cg-actions button.cg-round.cg-round.cg-round.cg-round.cg-round.cg-round.cg-round:hover,
+html.theme-modern .cgate .cg-actions button.cg-round.cg-round.cg-round.cg-round.cg-round.cg-round.cg-round.is-on{
+  background:none !important;background-image:none !important;box-shadow:none !important;border:0 !important;filter:none !important;color:#050505 !important}
+html.theme-modern button.tm-notif-btn.tm-notif-btn.tm-notif-btn.tm-notif-btn.tm-notif-btn.tm-notif-btn.tm-notif-btn svg{width:24px !important;height:24px !important;fill:none !important;stroke:currentColor !important;stroke-width:2 !important;color:#050505 !important}
+html.theme-modern button.tm-play.tm-play.tm-play.tm-play.tm-play.tm-play.tm-play svg,
+html.theme-modern .cgate .cg-actions button.cg-round.cg-round.cg-round.cg-round.cg-round.cg-round.cg-round svg{color:#050505 !important;stroke:#050505 !important}
+html.theme-modern button.tm-play.tm-play.tm-play.tm-play.tm-play.tm-play.tm-play svg *,
+html.theme-modern .cgate .cg-actions button.cg-round.cg-round.cg-round.cg-round.cg-round.cg-round.cg-round svg *{stroke:#050505 !important}
