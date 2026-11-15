@@ -11996,14 +11996,16 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
   // counts and results never come from people you aren't connected with.
   // The cards below the globe (Featured / Nearby / All) are for finding new
   // people and are not filtered. Learners: everything filters, as before.
-  // The admin account: the is_admin flag, or the owner's admin email. It gets
-  // a switch on the globe for the demo (remembered on this device).
-  const { profile: authMe, user: authUserMe } = useAuth();
-  const canDemo = !learnerMode && (authMe?.is_admin === true || isAdminEmail(authUserMe?.email));
+  // Every student gets a switch on the globe for the demo (remembered on this
+  // device), to get familiar with the globe on a full network.
+  const canDemo = !learnerMode;
   const [demoPref, setDemoPref] = React.useState(demoGlobeOn);
   const demoGlobe = canDemo && demoPref;
+  // In the demo, a hint to rotate the globe sideways first, until they do.
+  const [spun, setSpun] = useState(false);
   const toggleDemo = () => {
     const next = !demoPref; setDemoPref(next);
+    if (next) setSpun(false);
     try { if (next) localStorage.setItem(DEMO_GLOBE_KEY, "1"); else localStorage.removeItem(DEMO_GLOBE_KEY); } catch { /* storage blocked */ }
   };
   // With the demo on, the filter cards (and so the globe) work on the demo's
@@ -12197,7 +12199,15 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
       </div>
 
       {/* Globe */}
-      <div className="nx-stage" id="nx-globe">
+      <div className="nx-stage" id="nx-globe" onPointerDown={demoGlobe && !spun ? () => setSpun(true) : undefined}>
+        {demoGlobe && !spun && (
+          <div className="nx-spin-hint" role="status">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M7 8l-4 4 4 4M17 8l4 4-4 4M3 12h18" />
+            </svg>
+            Rotate the globe sideways first
+          </div>
+        )}
         {webgl ? (
           <GlobeBoundary fallback={<div className="nx-globe-fallback"><Globe2 size={28} /><p>The 3D globe isn't available on this device. Browse the musicians below.</p></div>}>
             <Suspense fallback={<div className="nx-globe-skel" aria-label="Loading the globe"><span /></div>}>
@@ -12225,13 +12235,14 @@ function NetworkExplorer({ students, allCons, myId, myConservatoryId, onOpenStud
           </svg>
         </button>
       </div>
-      {/* Admin only, under the globe: your real network or the demo. */}
+      {/* Under the globe: your real network or the demo. */}
       {canDemo && (
         <div className="nx-demo-seg" role="radiogroup" aria-label="Globe data">
           <button type="button" role="radio" aria-checked={!demoGlobe} className={!demoGlobe ? "is-on" : ""} onClick={() => { if (demoGlobe) toggleDemo(); }}>My network</button>
           <button type="button" role="radio" aria-checked={demoGlobe} className={demoGlobe ? "is-on" : ""} onClick={() => { if (!demoGlobe) toggleDemo(); }}>Demo</button>
         </div>
       )}
+      {demoGlobe && <p className="nx-demo-note">Demo: made-up musicians to try the globe. Nothing is sent.</p>}
 
       {/* Students: people you may know (LinkedIn-style). Learners and guests:
           the teacher carousel as before. */}

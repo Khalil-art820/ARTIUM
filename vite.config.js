@@ -10,7 +10,7 @@ export default defineConfig({
       // Registration lives in src/pwa.js, which also forces the reload that
       // autoUpdate on its own does not do for an already-open page.
       injectRegister: null,
-      includeAssets: ["icon-1024-v13.png", "icon-512-v13.png", "icon-192-v13.png", "icon-1024-maskable-v13.png", "icon-512-maskable-v13.png", "apple-touch-icon-v13.png"],
+      includeAssets: ["icon-1024-v14.png", "icon-512-v14.png", "icon-192-v14.png", "icon-1024-maskable-v14.png", "icon-512-maskable-v14.png", "apple-touch-icon-v14.png"],
       manifest: {
         name: "Artium — A World Connected by Music",
         short_name: "Artium",
@@ -18,7 +18,7 @@ export default defineConfig({
         // Android paints its bottom system bar from this; the top status bar
         // follows the page's theme-color meta (teal) instead.
         theme_color: "#000000",
-        background_color: "#A8505F",
+        background_color: "#6C3578",
         display: "standalone",
         orientation: "portrait",
         scope: "/",
@@ -27,11 +27,11 @@ export default defineConfig({
         // launch screen blows the icon up to ~800px on dense phones, and the
         // old 512px files went soft there.
         icons: [
-          { src: "icon-192-v13.png", sizes: "192x192", type: "image/png", purpose: "any" },
-          { src: "icon-512-v13.png", sizes: "512x512", type: "image/png", purpose: "any" },
-          { src: "icon-1024-v13.png", sizes: "1024x1024", type: "image/png", purpose: "any" },
-          { src: "icon-512-maskable-v13.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
-          { src: "icon-1024-maskable-v13.png", sizes: "1024x1024", type: "image/png", purpose: "maskable" },
+          { src: "icon-192-v14.png", sizes: "192x192", type: "image/png", purpose: "any" },
+          { src: "icon-512-v14.png", sizes: "512x512", type: "image/png", purpose: "any" },
+          { src: "icon-1024-v14.png", sizes: "1024x1024", type: "image/png", purpose: "any" },
+          { src: "icon-512-maskable-v14.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+          { src: "icon-1024-maskable-v14.png", sizes: "1024x1024", type: "image/png", purpose: "maskable" },
         ],
       },
       workbox: {

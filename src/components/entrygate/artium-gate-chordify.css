@@ -813,3 +813,12 @@ html.theme-modern .cgate .cg-hero h1 span.cg-accent.cg-accent{
   -webkit-background-clip:text !important;background-clip:text !important;-webkit-text-fill-color:transparent !important;color:#A8505F !important}
 /* The wordmark a little closer to the menu lines. */
 html.theme-modern .cgate .cg-head .cg-brand,.cgate .cg-head .cg-brand{gap:4px !important}
+/* The join / welcome button in the Lyon Airport app icon's colours: magenta
+   bottom-left to indigo top-right; its text a little bigger. */
+html.theme-modern .cgate button.cg-btn.cg-btn.cg-btn,html.theme-modern .cgate button.cg-btn.cg-btn.cg-btn:hover:not(:disabled){
+  background:linear-gradient(45deg,#AD2868 0%,#8E2E70 25%,#6C3578 50%,#4B3C7F 75%,#2B4385 100%) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 3px 10px -4px rgba(60,30,100,.55) !important}
+/* "Join as a Conservatory Student or Graduate" as big as still fits on one
+   line; the short "Welcome back, {name}" clearly bigger. */
+html.theme-modern .cgate .cg-student button.cg-btn.cg-btn.cg-btn{font-size:clamp(14.5px,4.3vw,19.5px);padding-left:10px;padding-right:10px}
+html.theme-modern .cgate .cg-student button.cg-btn.cg-btn.cg-btn.cg-btn--welcome{font-size:clamp(18px,5.2vw,21px)}

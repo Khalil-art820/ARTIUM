@@ -1616,3 +1616,11 @@ html.theme-modern .artium-net-puck.tm-back-plain svg.back-arrow{width:24px;heigh
 
 /* Suggestions for you: the one-line reason under the school, in old rose. */
 html.theme-modern .pk .mc-why{display:block;max-width:100%;margin-top:3px;font-size:12px;font-weight:500;line-height:1.3;color:#A8505F;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;text-align:center}
+/* Demo: a hint over the globe to rotate it sideways first (goes once they
+   touch the globe), and a note under the switch. */
+html.theme-modern .nx-spin-hint{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:4;display:inline-flex;align-items:center;gap:6px;
+  padding:7px 12px;border-radius:999px;background:rgba(17,17,17,.82);color:#FFFFFF;font:500 12.5px/1.2 'Fira Sans',system-ui,sans-serif;white-space:nowrap;pointer-events:none;
+  box-shadow:0 4px 12px rgba(0,0,0,.18);animation:nxSpinHint 1.6s ease-in-out infinite}
+@keyframes nxSpinHint{0%,100%{transform:translateX(-50%)}50%{transform:translateX(calc(-50% + 6px))}}
+@media (prefers-reduced-motion:reduce){html.theme-modern .nx-spin-hint{animation:none}}
+html.theme-modern .nx-demo-note{margin:6px auto 0;text-align:center;font:400 12px/1.35 'Fira Sans',system-ui,sans-serif;color:#717171}
