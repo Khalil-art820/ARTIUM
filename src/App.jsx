@@ -12,7 +12,7 @@ import {
   Calendar, CreditCard, Video, Link2, Clock, Bell,
   Map, BookOpen, ListChecks, LayoutList, Megaphone, Check as CheckIcon, ShieldCheck, FileText, Lock,
   ScanLine, ArrowUpRight, Globe2, MapPin, GraduationCap, User, Paperclip,
-  Compass, Briefcase, Feather, CheckCircle2, ChevronDown, RotateCcw, SlidersHorizontal,
+  Compass, Briefcase, Feather, CheckCircle2, CheckCheck, ChevronDown, RotateCcw, SlidersHorizontal,
   Globe as GlobeIcon, Piano, Landmark, ChartNoAxesColumnIncreasing, UserPlus, Info,
 } from "lucide-react";
 import { useAuth } from "./contexts/AuthContext";
@@ -10287,6 +10287,9 @@ function formatTimeUntilLabel(msUntil) {
 // a back arrow; the phone's back gesture closes it too.
 function NotifShell({ onClose, onMarkAll, panelStyle, header, children }) {
   const [tabH, setTabH] = React.useState(0);
+  // Facebook's layout: All / Unread pills; unread rows under "New", the rest
+  // under "Earlier" (sorted by CSS order, see theme-modern.css).
+  const [onlyUnread, setOnlyUnread] = React.useState(false);
   React.useLayoutEffect(() => {
     if (!MODERN) return;
     const bar = document.querySelector(".artium-aw-tabs");
@@ -10322,12 +10325,21 @@ function NotifShell({ onClose, onMarkAll, panelStyle, header, children }) {
         </button>
         <h1>Notifications</h1>
         {onMarkAll && (
-          <button type="button" className="tm-notif-markall" onClick={() => onMarkAll()}>
-            <CheckCircle2 size={15} strokeWidth={2} /> Mark all as read
+          <button type="button" className="tm-notif-markall" onClick={() => onMarkAll()} aria-label="Mark all as read" title="Mark all as read">
+            <CheckCheck size={25} strokeWidth={2} />
           </button>
         )}
       </div>
-      <div className="tm-notif-list">{children}</div>
+      <div className="tm-notif-pills" role="tablist" aria-label="Show">
+        <button type="button" role="tab" aria-selected={!onlyUnread} className={!onlyUnread ? "is-on" : ""} onClick={() => setOnlyUnread(false)}>All</button>
+        <button type="button" role="tab" aria-selected={onlyUnread} className={onlyUnread ? "is-on" : ""} onClick={() => setOnlyUnread(true)}>Unread</button>
+      </div>
+      <div className={`tm-notif-list${onlyUnread ? " is-only-unread" : ""}`}>
+        <h2 className="tm-nh tm-nh-new">New</h2>
+        <h2 className="tm-nh tm-nh-earlier">Earlier</h2>
+        {children}
+        <p className="tm-ncaught">You're all caught up</p>
+      </div>
     </div>,
     document.body
   );
@@ -10596,7 +10608,7 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
           <p className="tm-ntitle" style={{ margin: 0, fontSize: 15, fontWeight: 600, color: C.ivory, lineHeight: 1.3 }}>{title}</p>
           <p className="tm-nsub" style={{ margin: "2px 0 0", fontSize: 13, color: C.ivoryDim, lineHeight: 1.3 }}>{active ? activeText : inactiveText}</p>
         </span>
-        <span style={{ display: "flex", alignItems: "center", gap: 3, flexShrink: 0 }}>
+        <span className="tm-ncount" style={{ display: "flex", alignItems: "center", gap: 3, flexShrink: 0 }}>
           <span style={{ fontSize: 15, fontWeight: 700, color: active ? tileColor : C.ivoryDim }}>{count}</span>
           <ChevronRight size={15} color={C.ivoryDim} />
         </span>
@@ -10616,7 +10628,9 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
           // Opening acks the four feeds, but NOT promotion verdicts — their
           // badge number must survive until the row is clicked or the
           // explicit "Mark all as read" is pressed.
-          if (next) acknowledgeAll(false);
+          // Facebook's way: while the page is open its new rows stay under
+          // "New"; leaving it is what marks them seen.
+          if (!next) acknowledgeAll(false);
           return next;
         })}
         aria-label="Notifications"
@@ -10635,7 +10649,7 @@ function NotificationBell({ myProfile, onGoToLessonRoom, authUser, isAdmin, onGo
       </button>
       {open && (
         <NotifShell
-          onClose={() => setOpen(false)}
+          onClose={() => { acknowledgeAll(false); setOpen(false); }}
           onMarkAll={networkFeeds ? acknowledgeAll : null}
           panelStyle={{ position: "absolute", right: 0, top: "calc(100% + 8px)", width: 320, background: networkFeeds ? "#FFFFFF" : warm("0.05"), borderRadius: networkFeeds ? (MODERN ? 12 : 20) : 12, boxShadow: networkFeeds ? PANEL.boxShadow : "0 8px 32px rgba(0,0,0,0.14)", border: `1px solid ${C.inkLine}`, zIndex: 200, overflow: "hidden", maxHeight: 460, overflowY: "auto" }}
           header={networkFeeds ? (
