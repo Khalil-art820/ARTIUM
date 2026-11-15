@@ -1685,3 +1685,9 @@ html.theme-modern .cgate .cg-actions button.cg-round.cg-round.cg-round.cg-round.
 html.theme-modern button.tm-notif-btn.tm-notif-btn.tm-notif-btn.tm-notif-btn.tm-notif-btn.tm-notif-btn.tm-notif-btn svg{width:27px !important;height:27px !important}
 html.theme-modern button.tm-play.tm-play.tm-play.tm-play.tm-play.tm-play.tm-play svg,
 html.theme-modern .cgate .cg-actions button.cg-round.cg-round.cg-round.cg-round.cg-round.cg-round.cg-round svg{width:23px !important;height:23px !important}
+/* The avatar's +N connection counter, every top bar and the entry gate:
+   the app icon's magenta-to-indigo gradient (owner, 2026-11-16); the thin
+   white ring that parts it from the avatar stays. */
+html.theme-modern .tm-hm-n.tm-hm-n.tm-hm-n.tm-hm-n.tm-hm-n{
+  background:linear-gradient(45deg,#AD2868 0%,#8E2E70 30%,#6C3578 55%,#4B3C7F 78%,#2B4385 100%) !important;
+  color:#FFFFFF !important;border-color:transparent !important;box-shadow:0 0 0 2px #FFFFFF !important}
