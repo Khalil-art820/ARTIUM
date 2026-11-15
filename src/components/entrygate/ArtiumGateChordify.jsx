@@ -173,17 +173,18 @@ const FAN_CARDS = [
 // ry its turn, s its size, mx where its mark sits (% from its left edge: at
 // the start of the part that shows).
 const FAN_SLOTS = {
-  "-2": { x: -1.162, ry: -18, s: 0.70, z: 2, mx: 13 },
-  "-1": { x: -0.643, ry: -16, s: 0.826, z: 3, mx: 11 },
+  // Owner's pick no. 10: 68% of the reference spacing, 1.3x its turn.
+  "-2": { x: -0.790, ry: -23.4, s: 0.70, z: 2, mx: 13 },
+  "-1": { x: -0.437, ry: -20.8, s: 0.826, z: 3, mx: 11 },
   "0": { x: 0, ry: 0, s: 1, z: 5, mx: 9 },
-  "1": { x: 0.527, ry: 16, s: 0.886, z: 3, mx: 60 },
-  "2": { x: 1.063, ry: 19, s: 0.743, z: 2, mx: 45 },
-  "3": { x: 1.36, ry: 17, s: 0.66, z: 1, mx: 66 },
+  "1": { x: 0.358, ry: 20.8, s: 0.886, z: 3, mx: 74 },
+  "2": { x: 0.723, ry: 24.7, s: 0.743, z: 2, mx: 61 },
+  "3": { x: 0.925, ry: 22.1, s: 0.66, z: 1, mx: 75 },
 };
 const FAN_MAX = 6;
 // Centres the whole spread in the panel: the reference's two-left / three-
 // right spread sits 0.09 card widths left of the panel's middle.
-const fanShift = (n) => (n >= 6 ? -0.092 : n === 5 ? 0.042 : -0.18);
+const fanShift = (n) => (n >= 6 ? -0.063 : n === 5 ? 0.027 : -0.118);
 // The owner's featured students come first (their photo, name and
 // instrument); the instrument photos fill whatever is left of the four.
 // Stock cards never carry a name — they aren't Artium members.
