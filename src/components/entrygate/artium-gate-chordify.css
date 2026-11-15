@@ -830,3 +830,5 @@ html.theme-modern .cgate .cf-cap.cf-cap-row,html.theme-modern .cgate .cf-card.is
 html.theme-modern .cgate .cg-hero h1 span.cg-accent.cg-accent.cg-accent{
   background:linear-gradient(45deg,#AD2868 0%,#8E2E70 30%,#6C3578 55%,#4B3C7F 78%,#2B4385 100%) !important;
   -webkit-background-clip:text !important;background-clip:text !important;-webkit-text-fill-color:transparent !important;color:#6C3578 !important}
+/* "Discover. Connect. Elevate." a little smaller (90%), owner 2026-11-16. */
+html.theme-modern .cgate .cg-hero h1{font-size:clamp(27px,8.1vw,41px)}

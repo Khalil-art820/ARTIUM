@@ -215,6 +215,13 @@ function CardFan({ active, onActive, cards = FAN_CARDS }) {
         <filter id="cf-white" colorInterpolationFilters="sRGB">
           <feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 3 0" />
         </filter>
+        {/* The verified seal in the app icon's gradient: magenta bottom left
+            to indigo top right. */}
+        <linearGradient id="cf-seal-grad" x1="0" y1="1" x2="1" y2="0">
+          <stop offset="0" stopColor="#AD2868" />
+          <stop offset="0.5" stopColor="#6C3578" />
+          <stop offset="1" stopColor="#2B4385" />
+        </linearGradient>
       </svg>
       {cards.map((c, i) => {
         // Offset from the chosen card: -1..2 for four, -2..3 for six.
@@ -254,10 +261,10 @@ function CardFan({ active, onActive, cards = FAN_CARDS }) {
               ))}
               {c.name && <span className="cf-person">{on ? c.name : c.name.split(" ")[0]}</span>}
               {c.name && (
-                // Verified member: the old-rose seal, small, right after the name.
+                // Verified member: the seal in the app icon's gradient, small, right after the name.
                 <span className="cf-verified" title="Verified conservatory member" aria-label="Verified">
                   <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M12.00 0.70 L14.38 3.11 L17.65 2.21 L18.51 5.49 L21.79 6.35 L20.89 9.62 L23.30 12.00 L20.89 14.38 L21.79 17.65 L18.51 18.51 L17.65 21.79 L14.38 20.89 L12.00 23.30 L9.62 20.89 L6.35 21.79 L5.49 18.51 L2.21 17.65 L3.11 14.38 L0.70 12.00 L3.11 9.62 L2.21 6.35 L5.49 5.49 L6.35 2.21 L9.62 3.11Z" fill="#A8505F" />
+                    <path d="M12.00 0.70 L14.38 3.11 L17.65 2.21 L18.51 5.49 L21.79 6.35 L20.89 9.62 L23.30 12.00 L20.89 14.38 L21.79 17.65 L18.51 18.51 L17.65 21.79 L14.38 20.89 L12.00 23.30 L9.62 20.89 L6.35 21.79 L5.49 18.51 L2.21 17.65 L3.11 14.38 L0.70 12.00 L3.11 9.62 L2.21 6.35 L5.49 5.49 L6.35 2.21 L9.62 3.11Z" fill="url(#cf-seal-grad)" />
                     <path d="M7.7 12.2l2.9 2.9 5.8-5.9" fill="none" stroke="#FFFFFF" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </span>
