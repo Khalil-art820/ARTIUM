@@ -13,7 +13,7 @@ export default defineConfig({
       includeAssets: ["icon-1024-v14.png", "icon-512-v14.png", "icon-192-v14.png", "icon-1024-maskable-v14.png", "icon-512-maskable-v14.png", "apple-touch-icon-v14.png"],
       manifest: {
         name: "Artium — A World Connected by Music",
-        short_name: "ARTIUM",
+        short_name: "Artium",
         description: "Connect with conservatory musicians worldwide",
         // Android paints its bottom system bar from this; the top status bar
         // follows the page's theme-color meta (teal) instead.
