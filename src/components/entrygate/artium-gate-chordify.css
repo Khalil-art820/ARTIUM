@@ -835,3 +835,9 @@ html.theme-modern .cgate .cg-hero h1{font-size:clamp(27px,8.1vw,41px)}
 /* Get the Android / iPhone app: solid black (owner, 2026-11-16). */
 html.theme-modern .cgate button.cg-app-btn.cg-app-btn,.cgate button.cg-app-btn.cg-app-btn{background:#000000 !important;background-image:none !important;color:#FFFFFF !important;box-shadow:none !important}
 html.theme-modern .cgate button.cg-app-btn.cg-app-btn:hover,.cgate button.cg-app-btn.cg-app-btn:hover{background:#1C1C1C !important}
+/* Owner, 2026-11-16: the Welcome back / Join button solid black; the name
+   band on the student cards in the app icon's magenta-to-indigo gradient. */
+html.theme-modern .cgate button.cg-btn.cg-btn.cg-btn.cg-btn,html.theme-modern .cgate button.cg-btn.cg-btn.cg-btn.cg-btn:hover:not(:disabled){
+  background:#000000 !important;background-image:none !important;box-shadow:none !important;color:#FFFFFF !important}
+html.theme-modern .cgate .cf .cf-cap.cf-cap-row.cf-cap-row,html.theme-modern .cgate .cf .cf-card.is-on .cf-cap.cf-cap-row.cf-cap-row,html.theme-modern .cgate .cf .cf-card:not(.is-on) .cf-cap.cf-cap-row.cf-cap-row{
+  background:linear-gradient(45deg,#AD2868 0%,#8E2E70 30%,#6C3578 55%,#4B3C7F 78%,#2B4385 100%) !important}
