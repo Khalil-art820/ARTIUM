@@ -166,17 +166,24 @@ const FAN_CARDS = [
 ];
 // Slot for each distance from the chosen card: x in card widths, tilt, size.
 // Up to six: two on the left, the chosen one, three on the right.
+// Measured off the owner's reference: sharp portrait cards (1 : 1.40), all
+// on one horizontal centre line, no tilt; each side card a step smaller and
+// turned in 3D to face the middle (its outer edge ~6% shorter than its inner
+// one), overlapping the next. x is the card's centre in centre-card widths,
+// ry its turn, s its size, mx where its mark sits (% from its left edge: at
+// the start of the part that shows).
 const FAN_SLOTS = {
-  "-2": { x: -0.74, r: -10, s: 0.66, z: 2 },
-  "-1": { x: -0.46, r: -6, s: 0.84, z: 3 },
-  "0": { x: 0, r: 0, s: 1.02, z: 5 },
-  "1": { x: 0.46, r: 6, s: 0.84, z: 3 },
-  "2": { x: 0.78, r: 10, s: 0.66, z: 2 },
-  "3": { x: 0.98, r: 13, s: 0.52, z: 1 },
+  "-2": { x: -1.162, ry: -18, s: 0.70, z: 2, mx: 13 },
+  "-1": { x: -0.643, ry: -16, s: 0.826, z: 3, mx: 11 },
+  "0": { x: 0, ry: 0, s: 1, z: 5, mx: 9 },
+  "1": { x: 0.527, ry: 16, s: 0.886, z: 3, mx: 60 },
+  "2": { x: 1.063, ry: 19, s: 0.743, z: 2, mx: 45 },
+  "3": { x: 1.36, ry: 17, s: 0.66, z: 1, mx: 66 },
 };
 const FAN_MAX = 6;
-// Centres the asymmetric spread in the panel (4 cards lean right; 6 a little).
-const fanShift = (n) => (n >= 6 ? -0.11 : n === 5 ? -0.03 : -0.18);
+// Centres the whole spread in the panel: the reference's two-left / three-
+// right spread sits 0.09 card widths left of the panel's middle.
+const fanShift = (n) => (n >= 6 ? -0.092 : n === 5 ? 0.042 : -0.18);
 // The owner's featured students come first (their photo, name and
 // instrument); the instrument photos fill whatever is left of the four.
 // Stock cards never carry a name — they aren't Artium members.
@@ -224,7 +231,8 @@ function CardFan({ active, onActive, cards = FAN_CARDS }) {
           <button key={c.key} type="button" className={`cf-card${on ? " is-on" : ""}${o > 0 ? " is-right" : ""}${Math.abs(o) > 1 ? " is-outer" : ""}`} tabIndex={-1}
             aria-label={c.name ? `${c.name}, ${c.label}` : c.label} aria-current={on || undefined}
             style={{
-              transform: `translateX(${(slot.x + fanShift(n)) * 100}%) rotate(${slot.r}deg) scale(${slot.s})`,
+              "--t": `translateX(${(slot.x + fanShift(n)) * 100}%) rotateY(${slot.ry}deg) scale(${slot.s})`,
+              "--mx": `${slot.mx}%`,
               zIndex: slot.z,
             }}
             onClick={() => { if (!on) onActive(i); }}>
@@ -240,8 +248,8 @@ function CardFan({ active, onActive, cards = FAN_CARDS }) {
               </span>
             )}
             {/* Caption: the member's name in white; an instrument card shows its mark. */}
-            <span className={`cf-cap cf-cap-row${c.name ? "" : " is-solo"}`}>
-              {!c.name && (c.icon ? (
+            <span className={`cf-cap cf-cap-row${c.name && on ? "" : " is-solo"}`}>
+              {(!c.name || !on) && (c.icon ? (
                 // The instrument drawing as a mask filled in solid gold, so it
                 // reads crisply at small sizes on any photo.
                 <span className="cf-mark" aria-hidden="true" style={{ WebkitMaskImage: `url(${c.icon})`, maskImage: `url(${c.icon})` }} />
@@ -250,8 +258,8 @@ function CardFan({ active, onActive, cards = FAN_CARDS }) {
                   <path d="M2.5 9.5 12 5l9.5 4.5L12 14z" /><path d="M6.5 11.5v4c1.6 1.4 3.4 2 5.5 2s3.9-.6 5.5-2v-4" /><path d="M21.5 9.5v5" />
                 </svg>
               ))}
-              {c.name && <span className="cf-person">{on ? c.name : c.name.split(" ")[0]}</span>}
-              {c.name && (
+              {c.name && on && <span className="cf-person">{c.name}</span>}
+              {c.name && on && (
                 // Verified member: the yellow seal, small, right after the name.
                 <span className="cf-verified" title="Verified conservatory member" aria-label="Verified">
                   <svg viewBox="0 0 24 24" aria-hidden="true">

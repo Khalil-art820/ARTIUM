@@ -822,3 +822,43 @@ html.theme-modern .cgate button.cg-btn.cg-btn.cg-btn,html.theme-modern .cgate bu
    line; the short "Welcome back, {name}" clearly bigger. */
 html.theme-modern .cgate .cg-student button.cg-btn.cg-btn.cg-btn{font-size:clamp(14.5px,4.3vw,19.5px);padding-left:10px;padding-right:10px}
 html.theme-modern .cgate .cg-student button.cg-btn.cg-btn.cg-btn.cg-btn--welcome{font-size:clamp(18px,5.2vw,21px)}
+
+/* ==== The card fan, as the owner's reference (2026-11-15) ==== 
+   Sharp rectangles 1 : 1.40, a shared 3D view (perspective 4 card widths),
+   every card on one centre line; the side cards turned to face the middle
+   (FAN_SLOTS). A thin gold ring behind, a faint floor reflection below.
+   Side cards carry only their gold mark, bottom left; the front card its
+   instrument pill top left and the name, seal and a short gold rule. */
+html.theme-modern .cgate .cf,.cgate .cf{--cw:clamp(96px,29.6vw,150px);height:calc(var(--cw) * 1.4 + var(--cw) * .34);
+  perspective:calc(var(--cw) * 4);perspective-origin:50% calc(var(--cw) * .7)}
+.cgate .cf::before{content:"";position:absolute;left:50%;top:calc(var(--cw) * .7 + 2px);width:calc(var(--cw) * 1.87);height:calc(var(--cw) * 1.87);
+  transform:translate(-50%,-50%);border-radius:50%;border:1px solid rgba(201,163,96,.5);pointer-events:none;z-index:0}
+html.theme-modern .cgate .cf .cf-card,html.theme-modern .cgate .cf .cf-card.is-on,.cgate .cf .cf-card{
+  top:2px;width:var(--cw);height:calc(var(--cw) * 1.4);margin-left:calc(var(--cw) / -2);
+  border-radius:0 !important;border:0 !important;outline:0 !important;background:#141018;
+  transform-origin:50% 50%;transform:var(--t);transform-style:flat;backface-visibility:hidden;
+  box-shadow:0 14px 22px -16px rgba(0,0,0,.55) !important;
+  -webkit-box-reflect:below 2px linear-gradient(to bottom,rgba(0,0,0,0) 76%,rgba(0,0,0,.12) 100%)}
+html.theme-modern .cgate .cf .cf-card.is-on{box-shadow:0 22px 30px -18px rgba(0,0,0,.6) !important}
+html.theme-modern .cgate .cf .cf-card:active{transform:var(--t) !important}
+html.theme-modern .cgate .cf .cf-card.is-on:active{transform:var(--t) scale(.985) !important}
+/* light at the foot, as the reference: no band, a soft dark fade only */
+html.theme-modern .cgate .cf .cf-shade{background:linear-gradient(180deg,rgba(0,0,0,0) 62%,rgba(8,6,12,.55) 100%) !important}
+html.theme-modern .cgate .cf .cf-cap.cf-cap-row,html.theme-modern .cgate .cf .cf-card.is-on .cf-cap.cf-cap-row,html.theme-modern .cgate .cf .cf-card:not(.is-on) .cf-cap.cf-cap-row{
+  left:0 !important;right:0 !important;bottom:0 !important;padding:0 0 9% var(--mx,9%) !important;border-radius:0 !important;
+  background:none !important;-webkit-backdrop-filter:none !important;backdrop-filter:none !important;box-shadow:none !important;
+  justify-content:flex-start !important;align-items:center;gap:6px !important;flex-wrap:wrap}
+html.theme-modern .cgate .cf .cf-cap-row::before{display:none !important}
+html.theme-modern .cgate .cf .cf-card:not(.is-on) .cf-mark{width:13px !important;height:13px !important}
+html.theme-modern .cgate .cf .cf-card.is-on .cf-cap-row.is-solo .cf-mark{width:20px !important;height:20px !important}
+html.theme-modern .cgate .cf .cf-card.is-on .cf-person{font-family:'Cormorant Garamond','Playfair Display',Georgia,serif !important;font-weight:600 !important;
+  font-size:calc(var(--cw) * .118) !important;letter-spacing:.01em;-webkit-text-stroke:0 !important;text-shadow:0 1px 3px rgba(0,0,0,.45) !important;white-space:nowrap}
+html.theme-modern .cgate .cf .cf-card.is-on .cf-cap-row:not(.is-solo)::after{content:"";flex-basis:100%;height:0}
+html.theme-modern .cgate .cf .cf-card.is-on .cf-cap-row:not(.is-solo){padding-bottom:calc(9% + 7px) !important}
+html.theme-modern .cgate .cf .cf-card.is-on .cf-cap-row:not(.is-solo) .cf-person{position:relative}
+html.theme-modern .cgate .cf .cf-card.is-on .cf-cap-row:not(.is-solo) .cf-person::after{content:"";position:absolute;left:0;bottom:-6px;width:calc(var(--cw) * .14);height:1px;background:rgba(214,178,110,.85)}
+html.theme-modern .cgate .cf .cf-card.is-on .cf-cap-row .cf-verified{width:calc(var(--cw) * .085) !important;height:calc(var(--cw) * .085) !important}
+html.theme-modern .cgate .cf .cf-card.is-on .cf-inst-pill{top:6%;left:6%}
+html.theme-modern .cgate .cf .cf-card.is-on .cf-cap-row:not(.is-solo) .cf-person{overflow:visible !important;text-overflow:clip !important}
+html.theme-modern .cgate .cf .cf-card:not(.is-on) .cf-shade{background:linear-gradient(180deg,rgba(0,0,0,0) 55%,rgba(8,6,12,.72) 100%) !important}
+html.theme-modern .cgate .cf .cf-card:not(.is-on) .cf-mark{width:15px !important;height:15px !important}
