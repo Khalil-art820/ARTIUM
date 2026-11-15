@@ -829,7 +829,7 @@ html.theme-modern .cgate .cg-student button.cg-btn.cg-btn.cg-btn.cg-btn--welcome
    (FAN_SLOTS).
    Side cards carry only their gold mark, bottom left; the front card its
    instrument pill top left and the name, seal and a short gold rule. */
-html.theme-modern .cgate .cf,.cgate .cf{--cw:clamp(118px,37.5vw,190px);height:calc(var(--cw) * 1.4 + var(--cw) * .34);
+html.theme-modern .cgate .cf,.cgate .cf{--cw:clamp(104px,32vw,162px);height:calc(var(--cw) * 1.4 + var(--cw) * .34);
   perspective:calc(var(--cw) * 4);perspective-origin:50% calc(var(--cw) * .7)}
 .cgate .cf::before{content:"";position:absolute;left:50%;top:calc(var(--cw) * .7 + 2px);width:calc(var(--cw) * 1.87);height:calc(var(--cw) * 1.87);
   transform:translate(-50%,-50%);border-radius:50%;border:1px solid rgba(201,163,96,.5);pointer-events:none;z-index:0}
