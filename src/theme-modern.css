@@ -1681,3 +1681,7 @@ html.theme-modern button.tm-play.tm-play.tm-play.tm-play.tm-play.tm-play.tm-play
 html.theme-modern .cgate .cg-actions button.cg-round.cg-round.cg-round.cg-round.cg-round.cg-round.cg-round svg{color:#050505 !important;stroke:#050505 !important}
 html.theme-modern button.tm-play.tm-play.tm-play.tm-play.tm-play.tm-play.tm-play svg *,
 html.theme-modern .cgate .cg-actions button.cg-round.cg-round.cg-round.cg-round.cg-round.cg-round.cg-round svg *{stroke:#050505 !important}
+/* A little bigger: double tick 24 -> 27px, radio bars 20 -> 23px. */
+html.theme-modern button.tm-notif-btn.tm-notif-btn.tm-notif-btn.tm-notif-btn.tm-notif-btn.tm-notif-btn.tm-notif-btn svg{width:27px !important;height:27px !important}
+html.theme-modern button.tm-play.tm-play.tm-play.tm-play.tm-play.tm-play.tm-play svg,
+html.theme-modern .cgate .cg-actions button.cg-round.cg-round.cg-round.cg-round.cg-round.cg-round.cg-round svg{width:23px !important;height:23px !important}
