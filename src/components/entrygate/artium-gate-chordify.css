@@ -562,7 +562,7 @@
 .cgate .cf-emblem{filter:brightness(1.7) saturate(1.2) drop-shadow(0 1px 2px rgba(0,0,0,.8))}
 
 /* ---- Compact caption + 20% larger cards ---- */
-.cgate .cf{--cw:clamp(110px,34.2vw,158px)}
+.cgate .cf{--cw:clamp(132px,41vw,190px)}   /* 20% bigger (owner, 2026-11-15); was clamp(110px,34.2vw,158px) */
 .cgate .cf-shade{background:linear-gradient(180deg,rgba(0,0,0,0) 58%,rgba(10,8,16,.55) 78%,rgba(10,8,16,.88) 100%)}
 .cgate .cf-cap{bottom:10px}
 .cgate .cf-person{-webkit-line-clamp:1;white-space:nowrap;text-overflow:ellipsis;display:block;font-size:13px;margin-bottom:4px;line-height:1.1}
