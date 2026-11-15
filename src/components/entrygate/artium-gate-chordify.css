@@ -832,3 +832,6 @@ html.theme-modern .cgate .cg-hero h1 span.cg-accent.cg-accent.cg-accent{
   -webkit-background-clip:text !important;background-clip:text !important;-webkit-text-fill-color:transparent !important;color:#6C3578 !important}
 /* "Discover. Connect. Elevate." a little smaller (90%), owner 2026-11-16. */
 html.theme-modern .cgate .cg-hero h1{font-size:clamp(27px,8.1vw,41px)}
+/* Get the Android / iPhone app: solid black (owner, 2026-11-16). */
+html.theme-modern .cgate button.cg-app-btn.cg-app-btn,.cgate button.cg-app-btn.cg-app-btn{background:#000000 !important;background-image:none !important;color:#FFFFFF !important;box-shadow:none !important}
+html.theme-modern .cgate button.cg-app-btn.cg-app-btn:hover,.cgate button.cg-app-btn.cg-app-btn:hover{background:#1C1C1C !important}
