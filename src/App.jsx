@@ -3076,35 +3076,16 @@ export default function App() {
   // reshuffle under the viewer on every render.
   const photoStudentIds = students.filter((st) => st.photoUrl).map((st) => st.id).join(",");
   const headerFaces = React.useMemo(() => students.filter((st) => st.photoUrl).slice(0, 2), [photoStudentIds]);
-  // The owner's picks for the gate's four cards (Admin → Gate cards):
-  // approved students with a photo, in the order chosen.
-  const [featuredIds, setFeaturedIds] = useState([]);
-  React.useEffect(() => {
-    if (!authUser?.id) return;
-    let live = true;
-    const load = () => supabase.from("platform_settings").select("value").eq("key", "gate_featured").maybeSingle()
-      .then(({ data }) => { if (live) setFeaturedIds(Array.isArray(data?.value?.ids) ? data.value.ids : []); });
-    load();
-    window.addEventListener("artium-gate-featured-change", load);
-    return () => { live = false; window.removeEventListener("artium-gate-featured-change", load); };
-  }, [authUser?.id]);
-  // The gate's six cards rank by likes (top_liked_profiles): the most liked
-  // first. Fewer than six with likes, the owner's picks fill the rest.
-  const [likedIds, setLikedIds] = useState([]);
-  React.useEffect(() => {
-    if (!authUser?.id) return;
-    let live = true;
-    supabase.rpc("top_liked_profiles", { p_limit: 12 }).then(({ data, error }) => {
-      if (live && !error && Array.isArray(data)) setLikedIds(data.map((r) => r.profile_id));
-    });
-    return () => { live = false; };
-  }, [authUser?.id]);
-  const gateFeatured = React.useMemo(() => [...new Set([...likedIds, ...featuredIds])]
-    .map((id) => students.find((st) => st.id === id))
-    .filter((st) => st && st.photoUrl)
-    .slice(0, 6)
-    .map((st) => ({ id: st.id, name: st.name, photoUrl: st.photoUrl, instrument: instrumentLabel(st) || "Musician", icon: instrumentIcons(st)[0] || null, icons: instrumentIcons(st).slice(0, 3) })),
-  [likedIds, featuredIds, students]);
+  // The gate's cards (owner's rule, 2026-11-16): pianists only, and only
+  // those with a photo, in a random order drawn once per visit. No student
+  // without a photo is ever shown; fewer than six such pianists, stock
+  // instrument photos (no names) fill the rest.
+  const gatePianistIds = students.filter((st) => st.photoUrl && instrumentsOf(st).includes("Piano")).map((st) => st.id).sort().join(",");
+  const gateFeatured = React.useMemo(() => {
+    const pool = students.filter((st) => st.photoUrl && instrumentsOf(st).includes("Piano"));
+    for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+    return pool.slice(0, 6).map((st) => ({ id: st.id, name: st.name, photoUrl: st.photoUrl, instrument: instrumentLabel(st) || "Pianist" }));
+  }, [gatePianistIds]); // eslint-disable-line react-hooks/exhaustive-deps
   const deckFaces = React.useMemo(() => {
     const pool = students.filter((st) => st.photoUrl);
     for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }

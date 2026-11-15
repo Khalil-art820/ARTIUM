@@ -239,26 +239,10 @@ function CardFan({ active, onActive, cards = FAN_CARDS }) {
             onClick={() => { if (!on) onActive(i); }}>
             <img className="cf-photo" src={c.photo} alt="" draggable={false} style={{ objectPosition: c.pos }} />
             <span className="cf-shade" aria-hidden="true" />
-            {/* A member's instruments: a pill at the photo's top left holding each
-                instrument's mark in solid white (no words). */}
-            {c.name && (c.icons || []).length > 0 && (
-              <span className="cf-inst-pill" title={c.label} aria-label={c.label}>
-                {c.icons.map((src) => (
-                  <img key={src} className="cf-inst-ic" src={src} alt="" draggable={false} />
-                ))}
-              </span>
-            )}
-            {/* Caption: the member's name in white; an instrument card shows its mark. */}
-            <span className={`cf-cap cf-cap-row${c.name ? "" : " is-solo"}`}>
-              {!c.name && (c.icon ? (
-                // The instrument drawing as a mask filled in solid gold, so it
-                // reads crisply at small sizes on any photo.
-                <span className="cf-mark" aria-hidden="true" style={{ WebkitMaskImage: `url(${c.icon})`, maskImage: `url(${c.icon})` }} />
-              ) : (
-                <svg className="cf-mark cf-mark-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M2.5 9.5 12 5l9.5 4.5L12 14z" /><path d="M6.5 11.5v4c1.6 1.4 3.4 2 5.5 2s3.9-.6 5.5-2v-4" /><path d="M21.5 9.5v5" />
-                </svg>
-              ))}
+            {/* Caption: the pianist's name in white (no instrument logos,
+                owner 2026-11-16); a stock photo card carries no caption. */}
+            {c.name && (
+            <span className="cf-cap cf-cap-row">
               {c.name && <span className="cf-person">{on ? c.name : c.name.split(" ")[0]}</span>}
               {c.name && (
                 // Verified member: the seal in the app icon's gradient, small, right after the name.
@@ -270,6 +254,7 @@ function CardFan({ active, onActive, cards = FAN_CARDS }) {
                 </span>
               )}
             </span>
+            )}
           </button>
         );
       })}
