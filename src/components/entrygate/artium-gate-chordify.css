@@ -826,7 +826,7 @@ html.theme-modern .cgate .cg-student button.cg-btn.cg-btn.cg-btn.cg-btn--welcome
 /* ==== The card fan, as the owner's reference (2026-11-15) ==== 
    Sharp rectangles 1 : 1.40, a shared 3D view (perspective 4 card widths),
    every card on one centre line; the side cards turned to face the middle
-   (FAN_SLOTS).
+   (FAN_SLOTS). A thin gold ring behind, a faint floor reflection below.
    Side cards carry only their gold mark, bottom left; the front card its
    instrument pill top left and the name, seal and a short gold rule. */
 html.theme-modern .cgate .cf,.cgate .cf{--cw:clamp(104px,32vw,162px);height:calc(var(--cw) * 1.4 + var(--cw) * .34);
@@ -836,8 +836,10 @@ html.theme-modern .cgate .cf,.cgate .cf{--cw:clamp(104px,32vw,162px);height:calc
 html.theme-modern .cgate .cf .cf-card,html.theme-modern .cgate .cf .cf-card.is-on,.cgate .cf .cf-card{
   top:2px;width:var(--cw);height:calc(var(--cw) * 1.4);margin-left:calc(var(--cw) / -2);
   border-radius:0 !important;border:0 !important;outline:0 !important;background:#141018;
-  transform-origin:50% 50%;transform:var(--t);transform-style:flat;
-  box-shadow:none !important}
+  transform-origin:50% 50%;transform:var(--t);transform-style:flat;backface-visibility:hidden;
+  box-shadow:0 14px 22px -16px rgba(0,0,0,.55) !important;
+  -webkit-box-reflect:below 2px linear-gradient(to bottom,rgba(0,0,0,0) 76%,rgba(0,0,0,.12) 100%)}
+html.theme-modern .cgate .cf .cf-card.is-on{box-shadow:0 22px 30px -18px rgba(0,0,0,.6) !important}
 html.theme-modern .cgate .cf .cf-card:active{transform:var(--t) !important}
 html.theme-modern .cgate .cf .cf-card.is-on:active{transform:var(--t) scale(.985) !important}
 /* light at the foot, as the reference: no band, a soft dark fade only */
@@ -862,12 +864,3 @@ html.theme-modern .cgate .cf .cf-card:not(.is-on) .cf-shade{background:linear-gr
 html.theme-modern .cgate .cf .cf-card:not(.is-on) .cf-mark{width:15px !important;height:15px !important}
 /* The fan may run past its panel to the screen edges (it is 3.1 card widths). */
 html.theme-modern .cgate .cg-illo.cg-illo-fan,html.theme-modern .cgate .cg-card.cg-student{overflow:visible !important}
-/* Owner, 2026-11-15: no gold ring, no shadows or reflection; a smooth,
-   quick swap: transform only, one GPU layer per card (no extra photo layer,
-   no backface or paint containment, no blur behind the pill), measured at a
-   steady 60 fps. */
-html.theme-modern .cgate .cf::before{display:none !important}
-html.theme-modern .cgate .cf .cf-card,html.theme-modern .cgate .cf .cf-card.is-on{box-shadow:none !important;
-  transition:transform .42s cubic-bezier(.25,.8,.3,1) !important;will-change:transform}
-html.theme-modern .cgate .cf{height:calc(var(--cw) * 1.4 + 6px) !important}
-html.theme-modern .cgate .cf .cf-inst-pill{-webkit-backdrop-filter:none !important;backdrop-filter:none !important;background:rgba(20,16,24,.62) !important}
