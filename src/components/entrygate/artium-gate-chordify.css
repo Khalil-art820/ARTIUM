@@ -883,3 +883,5 @@ html.theme-modern .cgate .cf .cf-card.is-on .cf-cap-row.cf-cap-row.cf-cap-row .c
    which blurred the curves). */
 html.theme-modern .cgate .cf .cf-card.is-on .cf-cap-row.cf-cap-row.cf-cap-row .cf-person.cf-person.cf-person{
   text-shadow:.3px 0 0 #111111,-.3px 0 0 #111111 !important}
+/* The dots share the fan's card width, to follow its offset. */
+html.theme-modern .cgate .cg-deck-dots{--cw:clamp(132px,41vw,190px)}

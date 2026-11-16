@@ -387,7 +387,8 @@ export default function ArtiumGateChordify({
           <div className="cg-illo cg-illo-fan">
             <CardFan active={fanActive} onActive={setFanActive} cards={cards} />
           </div>
-          <div className="cg-deck-dots cf-dots" aria-hidden="true">
+          {/* Centred under the front photo: shifted by the fan's own offset. */}
+          <div className="cg-deck-dots cf-dots" aria-hidden="true" style={{ transform: `translateX(calc(var(--cw) * ${fanShift(cards.length)}))` }}>
             {cards.map((c, i) => <i key={c.key} className={i === fanActive ? "is-on" : undefined} />)}
           </div>
           {/* Same button and action; an approved member is greeted by name. */}
