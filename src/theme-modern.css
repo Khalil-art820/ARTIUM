@@ -1691,3 +1691,12 @@ html.theme-modern .cgate .cg-actions button.cg-round.cg-round.cg-round.cg-round.
 html.theme-modern .tm-hm-n.tm-hm-n.tm-hm-n.tm-hm-n.tm-hm-n{
   background:#000000 !important;background-image:none !important;
   color:#FFFFFF !important;border-color:transparent !important;box-shadow:0 0 0 2px #FFFFFF !important}
+/* Top bars where the menu leads (entry gate, app bars without a back
+   arrow): the three lines further left, ARTIUM a little closer to them
+   (owner, 2026-11-16). */
+html.theme-modern .cgate .cg-brand > .am-burger:first-child,
+html.theme-modern .artium-net-bar > .am-burger:first-child,
+html.theme-modern .artium-lp-bar > .am-burger:first-child{margin-left:-8px}
+html.theme-modern .cgate .cg-brand > .am-burger:first-child + .cg-word,
+html.theme-modern .artium-net-bar > .am-burger:first-child + .artium-net-word,
+html.theme-modern .artium-lp-bar > .am-burger:first-child + .artium-lp-word{margin-left:-5px}
