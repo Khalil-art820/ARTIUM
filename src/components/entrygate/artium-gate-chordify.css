@@ -840,3 +840,7 @@ html.theme-modern .cgate button.cg-app-btn.cg-app-btn:hover,.cgate button.cg-app
 html.theme-modern .cgate .cf .cf-cap.cf-cap-row.cf-cap-row,html.theme-modern .cgate .cf .cf-card.is-on .cf-cap.cf-cap-row.cf-cap-row,html.theme-modern .cgate .cf .cf-card:not(.is-on) .cf-cap.cf-cap-row.cf-cap-row{
   border-top:4px solid #FFFFFF !important}
 html.theme-modern .cgate .cf .cf-card:not(.is-on) .cf-cap.cf-cap-row.cf-cap-row{border-top-width:3px !important}
+/* Smaller rounded corners on the cards (owner, 2026-11-16): 18 -> 13px on
+   the side cards, 22 -> 16px on the front one. */
+html.theme-modern .cgate .cf .cf-card.cf-card{border-radius:13px !important}
+html.theme-modern .cgate .cf .cf-card.cf-card.is-on{border-radius:16px !important}
