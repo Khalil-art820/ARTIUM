@@ -835,3 +835,8 @@ html.theme-modern .cgate .cg-hero h1{font-size:clamp(27px,8.1vw,41px)}
 /* Get the Android / iPhone app: solid black (owner, 2026-11-16). */
 html.theme-modern .cgate button.cg-app-btn.cg-app-btn,.cgate button.cg-app-btn.cg-app-btn{background:#000000 !important;background-image:none !important;color:#FFFFFF !important;box-shadow:none !important}
 html.theme-modern .cgate button.cg-app-btn.cg-app-btn:hover,.cgate button.cg-app-btn.cg-app-btn:hover{background:#1C1C1C !important}
+/* A thick white line between the photo and the name band, so the band
+   reads as a separate strip (owner, 2026-11-16). */
+html.theme-modern .cgate .cf .cf-cap.cf-cap-row.cf-cap-row,html.theme-modern .cgate .cf .cf-card.is-on .cf-cap.cf-cap-row.cf-cap-row,html.theme-modern .cgate .cf .cf-card:not(.is-on) .cf-cap.cf-cap-row.cf-cap-row{
+  border-top:4px solid #FFFFFF !important}
+html.theme-modern .cgate .cf .cf-card:not(.is-on) .cf-cap.cf-cap-row.cf-cap-row{border-top-width:3px !important}
