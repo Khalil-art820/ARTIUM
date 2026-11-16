@@ -863,3 +863,9 @@ html.theme-modern .cgate .cf .cf-card.is-on .cf-cap-row.cf-cap-row .cf-person{fo
 html.theme-modern .cgate .cf .cf-card.is-on .cf-cap-row.cf-cap-row .cf-verified{width:clamp(18px,5.2vw,23px) !important;height:clamp(18px,5.2vw,23px) !important;margin-left:4px}
 html.theme-modern .cgate .cf .cf-card.is-on .cf-cap-row.cf-cap-row:not(.is-solo)::before{width:clamp(22px,6.2vw,27px) !important}
 html.theme-modern .cgate .cf{height:calc(var(--cw) * 1.38 + 58px)}
+/* Name + seal a little smaller, and centred as one under the photo (no
+   spacer balancing the seal any more). Owner, 2026-11-16. */
+html.theme-modern .cgate .cf .cf-card.is-on .cf-cap-row.cf-cap-row.cf-cap-row .cf-person{font-size:clamp(17px,5.2vw,23px) !important;-webkit-text-stroke:.6px #111111 !important}
+html.theme-modern .cgate .cf .cf-card.is-on .cf-cap-row.cf-cap-row.cf-cap-row .cf-verified{width:clamp(15px,4.5vw,20px) !important;height:clamp(15px,4.5vw,20px) !important;margin-left:5px}
+html.theme-modern .cgate .cf .cf-card.is-on .cf-cap-row.cf-cap-row.cf-cap-row::before{display:none !important}
+html.theme-modern .cgate .cf .cf-card.is-on .cf-cap.cf-cap-row.cf-cap-row.cf-cap-row{left:-40px !important;right:-40px !important;justify-content:center !important;gap:0 !important}
