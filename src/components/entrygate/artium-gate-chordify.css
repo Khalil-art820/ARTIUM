@@ -874,3 +874,7 @@ html.theme-modern .cgate .cf .cf-card.is-on .cf-cap-row.cf-cap-row.cf-cap-row .c
   max-width:none !important;flex:none !important;width:auto !important}
 /* The seal after the name smaller (about 17 -> 13px), owner 2026-11-16. */
 html.theme-modern .cgate .cf .cf-card.is-on .cf-cap-row.cf-cap-row.cf-cap-row .cf-verified.cf-verified{width:clamp(12px,3.5vw,15px) !important;height:clamp(12px,3.5vw,15px) !important;margin-left:4px}
+/* Same font, size and weight as before (Cormorant Garamond 700), without
+   the outline stroke that blurred the letters; drawn crisply. */
+html.theme-modern .cgate .cf .cf-card.is-on .cf-cap-row.cf-cap-row.cf-cap-row .cf-person.cf-person{
+  -webkit-text-stroke:0 !important;text-shadow:none !important;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility}
