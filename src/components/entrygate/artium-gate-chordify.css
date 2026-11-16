@@ -878,3 +878,8 @@ html.theme-modern .cgate .cf .cf-card.is-on .cf-cap-row.cf-cap-row.cf-cap-row .c
    the outline stroke that blurred the letters; drawn crisply. */
 html.theme-modern .cgate .cf .cf-card.is-on .cf-cap-row.cf-cap-row.cf-cap-row .cf-person.cf-person{
   -webkit-text-stroke:0 !important;text-shadow:none !important;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility}
+/* A little bolder (owner, 2026-11-16): Cormorant's 700 is its heaviest, so
+   the strokes are widened sideways by a fraction of a pixel (no outline,
+   which blurred the curves). */
+html.theme-modern .cgate .cf .cf-card.is-on .cf-cap-row.cf-cap-row.cf-cap-row .cf-person.cf-person.cf-person{
+  text-shadow:.3px 0 0 #111111,-.3px 0 0 #111111 !important}
