@@ -837,3 +837,9 @@ html.theme-modern .cgate button.cg-app-btn.cg-app-btn,.cgate button.cg-app-btn.c
 html.theme-modern .cgate button.cg-app-btn.cg-app-btn:hover,.cgate button.cg-app-btn.cg-app-btn:hover{background:#1C1C1C !important}
 /* "DISCOVER. CONNECT. ELEVATE." in capitals, 25% smaller (owner, 2026-11-16). */
 html.theme-modern .cgate .cg-hero h1.cg-hero-h1,html.theme-modern .cgate .cg-hero h1{font-size:clamp(20px,6.1vw,31px);text-transform:uppercase;letter-spacing:.01em}
+/* Headline, owner's pick no. 21 (2026-11-16): Airbnb style. Plus Jakarta
+   Sans (the closest free match to Airbnb Cereal), extra-bold, tight, near
+   black, in sentence case; "Connect." keeps the app icon's gradient. */
+html.theme-modern .cgate .cg-hero h1.cg-hero-h1,html.theme-modern .cgate .cg-hero h1{
+  font-family:'Plus Jakarta Sans',system-ui,-apple-system,sans-serif;font-weight:800;font-size:clamp(26px,8.85vw,44px);
+  letter-spacing:-.025em;line-height:1.12;text-transform:none;color:#222222}
