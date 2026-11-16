@@ -869,3 +869,6 @@ html.theme-modern .cgate .cf .cf-card.is-on .cf-cap-row.cf-cap-row.cf-cap-row .c
 html.theme-modern .cgate .cf .cf-card.is-on .cf-cap-row.cf-cap-row.cf-cap-row .cf-verified{width:clamp(15px,4.5vw,20px) !important;height:clamp(15px,4.5vw,20px) !important;margin-left:5px}
 html.theme-modern .cgate .cf .cf-card.is-on .cf-cap-row.cf-cap-row.cf-cap-row::before{display:none !important}
 html.theme-modern .cgate .cf .cf-card.is-on .cf-cap.cf-cap-row.cf-cap-row.cf-cap-row{left:-40px !important;right:-40px !important;justify-content:center !important;gap:0 !important}
+/* A very long name may take two centred lines under the photo. */
+html.theme-modern .cgate .cf .cf-card.is-on .cf-cap-row.cf-cap-row.cf-cap-row .cf-person{text-align:center;overflow:visible !important;text-overflow:clip !important;
+  max-width:none !important;flex:none !important;width:auto !important}

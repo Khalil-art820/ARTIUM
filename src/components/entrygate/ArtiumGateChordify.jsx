@@ -196,9 +196,32 @@ function fanCards(featured = []) {
 function CardFan({ active, onActive, cards = FAN_CARDS }) {
   const n = cards.length;
   const start = React.useRef(null);
+  const root = React.useRef(null);
   const go = (d) => onActive((active + d + n) % n);
+  // The front card's name fits its space under the photo: its full size
+  // when it fits, else a half pixel smaller at a time down to 13px, and only
+  // then onto two lines at 15.5px (very long names).
+  React.useLayoutEffect(() => {
+    const fit = () => {
+      const cap = root.current && root.current.querySelector(".cf-card.is-on .cf-cap");
+      const p = cap && cap.querySelector(".cf-person");
+      if (!p) return;
+      p.style.removeProperty("font-size"); p.style.removeProperty("white-space"); p.style.removeProperty("flex");
+      let fs = parseFloat(getComputedStyle(p).fontSize);
+      while (cap.scrollWidth > cap.clientWidth + 0.5 && fs > 13) { fs -= 0.5; p.style.setProperty("font-size", `${fs}px`, "important"); }
+      // Too long even at 13px: two lines instead, at a readable 15.5px.
+      if (cap.scrollWidth > cap.clientWidth + 0.5) {
+        p.style.setProperty("white-space", "normal", "important"); p.style.setProperty("flex", "0 1 auto", "important");
+        p.style.setProperty("font-size", "15.5px", "important");
+      }
+    };
+    fit();
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+    window.addEventListener("resize", fit);
+    return () => window.removeEventListener("resize", fit);
+  }, [active, cards]);
   return (
-    <div className="cf" role="group" aria-roledescription="carousel" aria-label="Instruments and degrees on Artium"
+    <div className="cf" ref={root} role="group" aria-roledescription="carousel" aria-label="Instruments and degrees on Artium"
       tabIndex={0}
       onClick={(e) => e.stopPropagation()}
       onKeyDown={(e) => { e.stopPropagation(); if (e.key === "ArrowRight") go(1); if (e.key === "ArrowLeft") go(-1); }}
