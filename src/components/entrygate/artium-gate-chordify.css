@@ -843,3 +843,16 @@ html.theme-modern .cgate .cg-hero h1.cg-hero-h1,html.theme-modern .cgate .cg-her
 html.theme-modern .cgate .cg-hero h1.cg-hero-h1,html.theme-modern .cgate .cg-hero h1{
   font-family:'Plus Jakarta Sans',system-ui,-apple-system,sans-serif;font-weight:800;font-size:clamp(23px,7.95vw,39px);
   letter-spacing:-.025em;line-height:1.12;text-transform:none;color:#222222}
+/* Owner, 2026-11-16: the photo fills the whole card (no name band on it);
+   the front card's name sits under the photo in black, with the seal in the
+   app icon's gradient. Side cards overlap, so they carry no name. */
+html.theme-modern .cgate .cf{height:calc(var(--cw) * 1.38 + 48px)}
+html.theme-modern .cgate .cf .cf-card{overflow:visible !important;background:transparent !important}
+html.theme-modern .cgate .cf .cf-photo,html.theme-modern .cgate .cf .cf-shade{border-radius:inherit}
+html.theme-modern .cgate .cf .cf-shade{display:none}
+html.theme-modern .cgate .cf .cf-card:not(.is-on) .cf-cap{display:none !important}
+html.theme-modern .cgate .cf .cf-card.is-on .cf-cap.cf-cap-row.cf-cap-row{
+  position:absolute;top:calc(100% + 8px);bottom:auto !important;left:-30px !important;right:-30px !important;
+  background:none !important;border:0 !important;border-radius:0 !important;padding:0 !important;justify-content:center !important;
+  -webkit-backdrop-filter:none !important;backdrop-filter:none !important;box-shadow:none !important}
+html.theme-modern .cgate .cf .cf-card.is-on .cf-cap-row .cf-person{color:#111111 !important;text-shadow:none !important;-webkit-text-stroke:0 !important;white-space:nowrap}
