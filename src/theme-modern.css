@@ -1700,3 +1700,7 @@ html.theme-modern .artium-lp-bar > .am-burger:first-child{margin-left:-8px}
 html.theme-modern .cgate .cg-brand > .am-burger:first-child + .cg-word,
 html.theme-modern .artium-net-bar > .am-burger:first-child + .artium-net-word,
 html.theme-modern .artium-lp-bar > .am-burger:first-child + .artium-lp-word{margin-left:-5px}
+/* Top-bar ARTIUM wordmark: the I and the M in the app icon's
+   magenta-to-indigo gradient (owner, 2026-11-16). */
+html.theme-modern .aw-g{background:linear-gradient(45deg,#AD2868 0%,#6C3578 50%,#2B4385 100%);-webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;color:#6C3578}
