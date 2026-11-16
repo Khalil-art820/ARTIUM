@@ -46,7 +46,7 @@ export default function WallOfComposers({ onBack, modern, avatarNode }) {
             <svg viewBox="0 0 720 700" aria-hidden="true">
               <path d="M0 700L316 0H404L720 700H570L360 235L150 700Z" fill="currentColor" />
             </svg>
-            <span aria-hidden="true">RT<span className="aw-g">I</span>U<span className="aw-g">M</span></span>
+            <span aria-hidden="true">RT<span className="aw-g">IUM</span></span>
           </span>
         </header>
       ) : (
