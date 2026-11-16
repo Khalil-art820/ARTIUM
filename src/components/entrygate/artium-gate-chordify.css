@@ -841,7 +841,7 @@ html.theme-modern .cgate .cg-hero h1.cg-hero-h1,html.theme-modern .cgate .cg-her
    Sans (the closest free match to Airbnb Cereal), extra-bold, tight, near
    black, in sentence case; "Connect." keeps the app icon's gradient. */
 html.theme-modern .cgate .cg-hero h1.cg-hero-h1,html.theme-modern .cgate .cg-hero h1{
-  font-family:'Plus Jakarta Sans',system-ui,-apple-system,sans-serif;font-weight:800;font-size:clamp(23px,7.95vw,39px);
+  font-family:'Plus Jakarta Sans',system-ui,-apple-system,sans-serif;font-weight:800;font-size:clamp(21px,7.15vw,35px);
   letter-spacing:-.025em;line-height:1.12;text-transform:none;color:#222222}
 /* Owner, 2026-11-16: the photo fills the whole card (no name band on it);
    the front card's name sits under the photo in black, with the seal in the
