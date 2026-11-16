@@ -841,5 +841,5 @@ html.theme-modern .cgate .cg-hero h1.cg-hero-h1,html.theme-modern .cgate .cg-her
    Sans (the closest free match to Airbnb Cereal), extra-bold, tight, near
    black, in sentence case; "Connect." keeps the app icon's gradient. */
 html.theme-modern .cgate .cg-hero h1.cg-hero-h1,html.theme-modern .cgate .cg-hero h1{
-  font-family:'Plus Jakarta Sans',system-ui,-apple-system,sans-serif;font-weight:800;font-size:clamp(26px,8.85vw,44px);
+  font-family:'Plus Jakarta Sans',system-ui,-apple-system,sans-serif;font-weight:800;font-size:clamp(23px,7.95vw,39px);
   letter-spacing:-.025em;line-height:1.12;text-transform:none;color:#222222}
