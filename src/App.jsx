@@ -91,7 +91,18 @@ const SERVER_ERR_MSG = {
   payment_in_progress: "A payment for this lesson is already in progress. Please wait a moment.",
   invalid_session: "This lesson can't be paid yet — it must be confirmed first.",
   not_eligible_no_show: "This lesson can't be reported as a no-show.",
+  country_not_available: "Artium isn't available in your country yet.",
+  country_payment_restricted: "Payments aren't available from your country yet.",
+  country_required: "Please choose your country.",
+  country_check_failed: "Payment couldn't start. Please try again.",
 };
+// A profile write the database refused for the country rule raises a message
+// containing the code; turn it into the plain sentence.
+const dbErrMsg = (m) => {
+  const hit = String(m || "").match(/country_not_available|country_required/);
+  return hit ? SERVER_ERR_MSG[hit[0]] : m;
+};
+const isCountryErr = (m) => /country_not_available|country_required/.test(String(m || ""));
 const serverErrMsg = (code, fallback) => SERVER_ERR_MSG[String(code || "")] || fallback;
 const isKnownErrMsg = (m) => Object.values(SERVER_ERR_MSG).includes(m);
 // Returning from a cancelled Stripe checkout: drop every pending-pay flag
@@ -838,7 +849,7 @@ function friendlyAuthError(message) {
 // the thing that is wrong, so it goes; retrying without dropping it just
 // walks into the same constraint.
 async function friendlyProfileError(error) {
-  const message = String(error?.message || "");
+  const message = dbErrMsg(String(error?.message || ""));
   if (error?.code === "23503" || /profiles_id_fkey/i.test(message)) {
     await supabase.auth.signOut().catch(() => {});
     return "You were signed in as an account that no longer exists, so we've signed you out. Please start the signup again.";
@@ -2724,7 +2735,7 @@ export default function App() {
     }
     if (authProfile) {
       if (authProfile.role === "learner") {
-        setLearnerProfile({ name: authProfile.name, location: authProfile.location, instrument: authProfile.instrument, bio: authProfile.bio, photoUrl: authProfile.photo_url });
+        setLearnerProfile({ name: authProfile.name, location: authProfile.location, countryCode: authProfile.country_code || null, instrument: authProfile.instrument, bio: authProfile.bio, photoUrl: authProfile.photo_url });
         setLearnerLoggedOut(false);
         if (["entry", "landing", "login", "confirmEmail", "learnerSignup"].includes(screen) && !kept) {
           setLearnerStartTab("map");
@@ -2784,10 +2795,21 @@ export default function App() {
           setAppTabPersist("map");
         });
       } else if (pendingLearner) {
-        supabase.from("profiles").insert({ id: authUser.id, role: "learner", name: pendingLearner.name, location: pendingLearner.location, instrument: pendingLearner.instrument, bio: pendingLearner.motivation, photo_url: pendingLearner.photoUrl || null, approved: true, ...(pendingLearner.termsAcceptedAt ? { terms_accepted_at: pendingLearner.termsAcceptedAt, terms_version: TERMS_VERSION } : {}) }).then(({ error }) => {
-          if (error) { setAuthError(error.message); return; }
+        supabase.from("profiles").insert({ id: authUser.id, role: "learner", name: pendingLearner.name, location: pendingLearner.location, country_code: pendingLearner.countryCode || null, instrument: pendingLearner.instrument, bio: pendingLearner.motivation, photo_url: pendingLearner.photoUrl || null, approved: true, ...(pendingLearner.termsAcceptedAt ? { terms_accepted_at: pendingLearner.termsAcceptedAt, terms_version: TERMS_VERSION } : {}) }).then(({ error }) => {
+          if (error) {
+            setAuthError(dbErrMsg(error.message));
+            // The account exists but the profile was refused for its country:
+            // open the signup form (it writes the profile against this live
+            // session) with what they typed, so they can fix it and retry.
+            if (isCountryErr(error.message) && pendingLearnerFailed.current !== authUser.id) {
+              pendingLearnerFailed.current = authUser.id;
+              setLearnerRetry({ ...pendingLearner, _uid: authUser.id });
+              setScreen("learnerSignup");
+            }
+            return;
+          }
           supabase.auth.updateUser({ data: { pendingLearner: null } });
-          setLearnerProfile({ name: pendingLearner.name, location: pendingLearner.location, instrument: pendingLearner.instrument, bio: pendingLearner.motivation, photoUrl: pendingLearner.photoUrl || null });
+          setLearnerProfile({ name: pendingLearner.name, location: pendingLearner.location, countryCode: pendingLearner.countryCode || null, instrument: pendingLearner.instrument, bio: pendingLearner.motivation, photoUrl: pendingLearner.photoUrl || null });
           setLearnerStartTab("map");
           setLearnerStartTab("map");
       setScreen("learnerMap");
@@ -2857,6 +2879,8 @@ export default function App() {
 
   const [learnerProfile, setLearnerProfile] = useState(null);
   const [learnerLoggedOut, setLearnerLoggedOut] = useState(false);
+  const [learnerRetry, setLearnerRetry] = useState(null);
+  const pendingLearnerFailed = React.useRef(null); // user id the retry route already fired for
   const [studentLoggedOut, setStudentLoggedOut] = useState(false);
   const [learnerGoogleName, setLearnerGoogleName] = useState("");
   // Read Google role eagerly on mount so it's available before auth state fires
@@ -3329,7 +3353,8 @@ export default function App() {
     if (learnerLoggedOut) { startLogin(); return; }
     setLearnerProfile(null); setAuthError(""); setScreen("learnerSignup");
   }
-  async function submitLearner({ name, location, email, password, instrument, motivation, photoUrl, termsAcceptedAt }) {
+  async function submitLearner({ name, location, countryCode, email, password, instrument, motivation, photoUrl, termsAcceptedAt }) {
+    const cc = { country_code: countryCode || null };
     const terms = termsAcceptedAt ? { terms_accepted_at: termsAcceptedAt, terms_version: TERMS_VERSION } : {};
     setAuthError("");
     if (authUser) {
@@ -3337,10 +3362,15 @@ export default function App() {
       // the profile row against the live session, whichever way it signed in.
       const { data: { user: authUser } } = await supabase.auth.getUser();
       if (!authUser) { setAuthError("Session expired. Please try again."); return; }
-      const { error: insertError } = await supabase.from("profiles").insert({ id: authUser.id, role: "learner", name, location, instrument, bio: motivation, photo_url: photoUrl || null, approved: true, ...terms });
+      const { data: insertedRow, error: insertError } = await supabase.from("profiles").insert({ id: authUser.id, role: "learner", name, location, ...cc, instrument, bio: motivation, photo_url: photoUrl || null, approved: true, ...terms }).select().single();
       if (insertError) { setAuthError(await friendlyProfileError(insertError)); return; }
+      // Same as the pendingStudent path: tell the context about the new row
+      // first (once a profile exists the auth effect returns early), then
+      // drop any stored pendingLearner so a token refresh can't insert again.
+      if (insertedRow) setAuthProfile(insertedRow);
+      if (authUser.user_metadata?.pendingLearner) { try { await supabase.auth.updateUser({ data: { pendingLearner: null } }); } catch { /* harmless: the profile now exists */ } }
       setLearnerGoogleName("");
-      setLearnerProfile({ name, location, instrument, bio: motivation, photoUrl: photoUrl || null });
+      setLearnerProfile({ name, location, countryCode: countryCode || null, instrument, bio: motivation, photoUrl: photoUrl || null });
       setLearnerLoggedOut(false);
       setLearnerStartTab("map");
       setScreen("learnerMap");
@@ -3349,19 +3379,19 @@ export default function App() {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { pendingLearner: { name, location, instrument, motivation, photoUrl, termsAcceptedAt } } },
+      options: { data: { pendingLearner: { name, location, countryCode: countryCode || null, instrument, motivation, photoUrl, termsAcceptedAt } } },
     });
     if (error) { setAuthError(friendlyAuthError(error.message)); return; }
     if (data.session && data.user) {
-      const { error: insertError } = await supabase.from("profiles").insert({ id: data.user.id, role: "learner", name, location, instrument, bio: motivation, photo_url: photoUrl || null, approved: true, ...terms });
+      const { error: insertError } = await supabase.from("profiles").insert({ id: data.user.id, role: "learner", name, location, ...cc, instrument, bio: motivation, photo_url: photoUrl || null, approved: true, ...terms });
       if (insertError) { setAuthError(await friendlyProfileError(insertError)); return; }
       await supabase.auth.updateUser({ data: { pendingLearner: null } });
-      setLearnerProfile({ name, location, instrument, bio: motivation, photoUrl: photoUrl || null });
+      setLearnerProfile({ name, location, countryCode: countryCode || null, instrument, bio: motivation, photoUrl: photoUrl || null });
       setLearnerLoggedOut(false);
       setLearnerStartTab("map");
       setScreen("learnerMap");
     } else {
-      setLearnerProfile({ name, location, instrument, bio: motivation, photoUrl: photoUrl || null });
+      setLearnerProfile({ name, location, countryCode: countryCode || null, instrument, bio: motivation, photoUrl: photoUrl || null });
       setPendingEmail(email);
       setScreen("confirmEmail");
     }
@@ -5445,7 +5475,7 @@ export default function App() {
           onProfile={myProfile ? goToProfile : learnerProfile ? () => { setLearnerStartTab("profile"); setScreen("learnerMap"); } : undefined}
           onLogout={myProfile ? handleLogout : learnerProfile ? learnerLogout : undefined} />
       } />}
-      {view === "learnerSignup" && <LearnerSignup onSubmit={submitLearner} onBack={backToEntry} authUser={authUser} error={authError} />}
+      {view === "learnerSignup" && <LearnerSignup onSubmit={submitLearner} onBack={backToEntry} authUser={authUser} error={authError} initial={learnerRetry && learnerRetry._uid === authUser?.id ? learnerRetry : null} />}
       {view === "learnerMap" && (
         <LearnerScreen
           lessonDot={tabAttention.lessons}
@@ -5463,20 +5493,23 @@ export default function App() {
           onSendTo={sendMessageTo}
           dmActions={dmActions}
           onBack={backToEntry}
-          onUpdateProfile={(updates) => {
-            setLearnerProfile((p) => ({ ...p, ...updates }));
+          onUpdateProfile={async (updates) => {
+            // Resolves to "" on success or a plain message (the country rule
+            // is enforced by the database, so the save has to be awaited).
             if (authUser?.id) {
               const dbUpdates = {};
               if ("name" in updates) dbUpdates.name = updates.name;
               if ("location" in updates) dbUpdates.location = updates.location;
+              if ("countryCode" in updates) dbUpdates.country_code = updates.countryCode;
               if ("photoUrl" in updates) dbUpdates.photo_url = updates.photoUrl;
               if (Object.keys(dbUpdates).length) {
-                supabase.from("profiles").update(dbUpdates).eq("id", authUser.id).then(({ error }) => {
-                  if (error) console.error("learner profile save failed", error.message);
-                });
+                const { error } = await supabase.from("profiles").update(dbUpdates).eq("id", authUser.id);
+                if (error) { console.error("learner profile save failed", error.message); return isCountryErr(error.message) ? dbErrMsg(error.message) : "Your changes couldn't be saved. Please try again."; }
                 setAuthProfile((p) => (p ? { ...p, ...dbUpdates } : p));
               }
             }
+            setLearnerProfile((p) => ({ ...p, ...updates }));
+            return "";
           }}
           onLogout={learnerLogout}
           onDeleteAccount={async () => {
@@ -7994,6 +8027,115 @@ function Field({ label, children, req, opt }) {
 // re-tinted. The focus ring is a CSS rule further down — an inline style
 // cannot express :focus.
 const inputStyle = { width: "100%", background: "#FFFFFF", border: MODERN ? "1px solid #E8E2DC" : `1px solid ${warm("0.30")}`, borderRadius: MODERN ? 10 : 11, padding: "12px 15px", color: MODERN ? "#1C1C1C" : C.ivory, fontFamily: FONT_BODY, fontSize: 15, outline: "none", boxShadow: "none" };
+
+/* ---- Countries: the learner's City + Country (international onboarding, stage 1) ----
+   Rows come from the list_countries RPC. The country is required by the
+   database (country_required), so there is no free-text fallback: if the list
+   can't load, the form shows a Retry and submit stays blocked. */
+let _countriesPromise = null;
+function loadCountries() {
+  if (!_countriesPromise) {
+    _countriesPromise = Promise.resolve(supabase.rpc("list_countries")).then(({ data, error }) => {
+      if (error || !Array.isArray(data) || data.length === 0) throw error || new Error("no countries");
+      return data;
+    }).catch((e) => { _countriesPromise = null; throw e; });
+  }
+  return _countriesPromise;
+}
+function countryLabel(row, lang) {
+  try {
+    const n = new Intl.DisplayNames([lang || "en"], { type: "region" }).of(row.iso2);
+    // An unknown region comes back as the bare code: use the DB name instead.
+    return !n || n.toUpperCase() === String(row.iso2).toUpperCase() ? row.name : n;
+  } catch { return row.name; }
+}
+function browserRegion() {
+  try {
+    for (const l of (navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language])) {
+      const r = new Intl.Locale(l).region;
+      if (r) return r.toUpperCase();
+    }
+  } catch { /* old browser */ }
+  return "";
+}
+// "Paris, France" -> city "Paris", rest "France". A country-only location
+// (no comma, country_code set) is all "rest".
+function splitLocation(loc, hasCode) {
+  const l = String(loc || "");
+  const k = l.lastIndexOf(",");
+  if (k >= 0) return { city: l.slice(0, k).trim(), rest: l.slice(k + 1).trim() };
+  return hasCode ? { city: "", rest: l.trim() } : { city: l.trim(), rest: "" };
+}
+// edit: the profile form. Nothing is blocked or rewritten unless the member
+// actually changed the City or Country; an untouched country (even a closed
+// one, or one whose list failed to load) never stops a save.
+function useLocationField({ city: city0 = "", country: country0 = "", rest: rest0 = "", preselect = true, edit = false } = {}) {
+  const [list, setList] = useState(null);
+  const [failed, setFailed] = useState(false);
+  const [city, setCityRaw] = useState(city0);
+  const [country, setCountryRaw] = useState(country0);
+  const touched = useRef(false);
+  const [attempt, setAttempt] = useState(0);
+  useEffect(() => {
+    let live = true;
+    setFailed(false);
+    loadCountries().then((d) => { if (live) setList(d); }).catch(() => { if (live) setFailed(true); });
+    return () => { live = false; };
+  }, [attempt]);
+  useEffect(() => {
+    if (!list || !preselect || touched.current || country) return;
+    const r = browserRegion();
+    if (r && list.some((c) => c.iso2 === r)) setCountryRaw(r);
+    // eslint-disable-next-line
+  }, [list]);
+  const lang = currentLanguage();
+  const row = list ? list.find((c) => c.iso2 === country) || null : null;
+  const cityT = city.trim();
+  const cityChanged = cityT !== city0.trim();
+  const countryChanged = country !== country0;
+  const changed = cityChanged || countryChanged;
+  const closed = !!row && row.learner_registration_enabled === false;
+  const blocked = closed && (!edit || countryChanged);
+  const payRestricted = !!row && !closed && row.learner_payment_enabled === false && (!edit || countryChanged);
+  const countryText = row ? countryLabel(row, lang) : (edit ? rest0 : "");
+  const location = [cityT, countryText].filter(Boolean).join(", ");
+  const ok = edit
+    ? (!countryChanged || (!!row && !blocked)) && (!cityChanged || !!location)
+    : !!list && !blocked && !!row;
+  return {
+    list, failed, loading: !list && !failed, city, country, row, blocked, payRestricted, location, ok,
+    cityChanged, countryChanged, changed,
+    retry: () => { setFailed(false); setAttempt((n) => n + 1); },
+    setCity: setCityRaw,
+    setCountry: (v) => { touched.current = true; setCountryRaw(v); },
+    countryCode: row ? row.iso2 : null,
+  };
+}
+// Native select (type-to-search works in every browser), names in the UI language.
+function CountrySelect({ f, style, noEmpty }) {
+  const lang = currentLanguage();
+  const opts = React.useMemo(() => (f.list || []).map((c) => ({ iso2: c.iso2, label: countryLabel(c, lang) }))
+    .sort((a, b) => a.label.localeCompare(b.label, lang)), [f.list, lang]);
+  if (f.failed) {
+    return (
+      <p style={{ margin: "2px 2px 0", fontSize: 13, lineHeight: 1.5, color: C.ivoryDim }}>
+        Couldn't load the country list.{" "}
+        <button type="button" onClick={f.retry} style={{ background: "none", border: "none", padding: 0, cursor: "pointer", color: C.brassLabel, fontWeight: 600, textDecoration: "underline", fontSize: 13 }}>Retry</button>
+      </p>
+    );
+  }
+  return (
+    <>
+      <select style={{ ...inputStyle, background: C.inkSoft, ...style }} value={f.country} disabled={f.loading}
+        onChange={(e) => f.setCountry(e.target.value)} aria-label="Country">
+        {(!noEmpty || !f.country) && <option value="">{f.loading ? "Loading countries…" : "Select a country…"}</option>}
+        {opts.map((o) => <option key={o.iso2} value={o.iso2} translate="no">{o.label}</option>)}
+      </select>
+      {f.blocked && <p style={{ margin: "8px 2px 0", fontSize: 13, lineHeight: 1.5, color: C.ivoryDim }}>Artium isn't available in your country yet.</p>}
+      {f.payRestricted && <p style={{ margin: "8px 2px 0", fontSize: 13, lineHeight: 1.5, color: C.ivoryDim }}>You can join Artium, but payments aren't available from your country yet.</p>}
+    </>
+  );
+}
 
 function PasswordField({ value, onChange, placeholder, autoComplete }) {
   const [visible, setVisible] = useState(false);
@@ -13994,29 +14136,48 @@ function GateLogo({ word = 27, markScale = 1.0 }) {
 }
 
 /* ---- Learner: signup form ---- */
-function LearnerSignup({ onSubmit, onBack, error, authUser }) {
+// Rebuild the form's fields from a stored pendingLearner (the retry after a
+// country error). Only what the metadata carries is filled.
+function seedLearnerForm(init) {
+  if (!init) return {};
+  const m = String(init.motivation || "");
+  const behalf = m.match(/^On behalf of ([\s\S]*?)(?: \(age (\d+)\))?\. Level: ([\s\S]*?)\. Goals: ([\s\S]*)$/);
+  const { city, rest } = splitLocation(init.location, !!init.countryCode);
+  const known = INSTRUMENTS.some((i) => i.name === init.instrument);
+  const inst = init.instrument ? (known ? { pick: init.instrument, other: "" } : { pick: "Other", other: init.instrument }) : { pick: "", other: "" };
+  const levels = ["Complete beginner", "Early beginner", "Intermediate", "Advanced"];
+  return {
+    forWhom: behalf ? "other" : "self", city, country: init.countryCode || "", inst,
+    photoUrl: init.photoUrl || "", name: init.name || "",
+    motivation: behalf ? "" : m,
+    learnerName: behalf ? behalf[1] : "", learnerAge: behalf ? behalf[2] || "" : "",
+    learnerLevel: behalf && levels.includes(behalf[3]) ? behalf[3] : "", learnerGoals: behalf ? behalf[4] : "",
+  };
+}
+function LearnerSignup({ onSubmit, onBack, error, authUser, initial }) {
   // One signup for the whole app: whoever reaches this screen already has a
   // session (the access gate no longer lets anyone this far signed out —
   // see AuthPrompt), so there is no account step here any more — just the
   // one real question this flow ever asked on top of it.
-  const [forWhom, setForWhom] = useState("");
+  const seed = React.useMemo(() => seedLearnerForm(initial), []); // eslint-disable-line react-hooks/exhaustive-deps
+  const [forWhom, setForWhom] = useState(seed.forWhom || "");
 
   // "for me" fields
-  const [name, setName] = useState(authUser?.user_metadata?.full_name || authUser?.user_metadata?.name || "");
-  const [location, setLocation] = useState("");
-  const [instrument, setInstrument] = useState("");
-  const [instrumentOther, setInstrumentOther] = useState("");
-  const [motivation, setMotivation] = useState("");
-  const [photoUrl, setPhotoUrl] = useState("");
+  const [name, setName] = useState((!seed.learnerName && seed.name) || authUser?.user_metadata?.full_name || authUser?.user_metadata?.name || "");
+  const locSelf = useLocationField(seed.forWhom === "self" ? { city: seed.city, country: seed.country } : {});
+  const [instrument, setInstrument] = useState(seed.forWhom === "self" ? seed.inst.pick : "");
+  const [instrumentOther, setInstrumentOther] = useState(seed.forWhom === "self" ? seed.inst.other : "");
+  const [motivation, setMotivation] = useState(seed.motivation || "");
+  const [photoUrl, setPhotoUrl] = useState(seed.photoUrl || "");
 
   // "on behalf" fields
-  const [learnerName, setLearnerName] = useState("");
-  const [learnerAge, setLearnerAge] = useState("");
-  const [learnerLocation, setLearnerLocation] = useState("");
-  const [learnerInstrument, setLearnerInstrument] = useState("");
-  const [learnerInstrumentOther, setLearnerInstrumentOther] = useState("");
-  const [learnerLevel, setLearnerLevel] = useState("");
-  const [learnerGoals, setLearnerGoals] = useState("");
+  const [learnerName, setLearnerName] = useState(seed.learnerName || "");
+  const [learnerAge, setLearnerAge] = useState(seed.learnerAge || "");
+  const locOther = useLocationField(seed.forWhom === "other" ? { city: seed.city, country: seed.country } : {});
+  const [learnerInstrument, setLearnerInstrument] = useState(seed.forWhom === "other" ? seed.inst.pick : "");
+  const [learnerInstrumentOther, setLearnerInstrumentOther] = useState(seed.forWhom === "other" ? seed.inst.other : "");
+  const [learnerLevel, setLearnerLevel] = useState(seed.learnerLevel || "");
+  const [learnerGoals, setLearnerGoals] = useState(seed.learnerGoals || "");
 
   const [submitting, setSubmitting] = useState(false);
 
@@ -14025,22 +14186,23 @@ function LearnerSignup({ onSubmit, onBack, error, authUser }) {
   const resolvedInstrument = instrument === "Other" ? instrumentOther.trim() : instrument;
   const resolvedLearnerInstrument = learnerInstrument === "Other" ? learnerInstrumentOther.trim() : learnerInstrument;
 
-  const readySelf = name.trim().length > 1 && location.trim().length > 1 && resolvedInstrument.length > 0 && motivation.trim().length > 5;
-  const readyOther = learnerName.trim().length > 1 && learnerLocation.trim().length > 1 && resolvedLearnerInstrument.length > 0 && learnerGoals.trim().length > 5;
+  const readySelf = name.trim().length > 1 && locSelf.ok && resolvedInstrument.length > 0 && motivation.trim().length > 5;
+  const readyOther = learnerName.trim().length > 1 && locOther.ok && resolvedLearnerInstrument.length > 0 && learnerGoals.trim().length > 5;
   const [termsOk, setTermsOk] = useState(false);
   const ready = forWhom !== "" && (isForOther ? readyOther : readySelf) && termsOk;
 
   async function handleSubmit() {
     setSubmitting(true);
     const submitName = isForOther ? learnerName.trim() : name.trim();
-    const submitLocation = isForOther ? learnerLocation.trim() : location.trim();
+    const locF = isForOther ? locOther : locSelf;
+    const submitLocation = locF.location;
     const submitInstrument = isForOther ? resolvedLearnerInstrument : resolvedInstrument;
     const submitMotivation = isForOther
       ? `On behalf of ${learnerName.trim()}${learnerAge ? ` (age ${learnerAge})` : ""}. Level: ${learnerLevel || "beginner"}. Goals: ${learnerGoals.trim()}`
       : motivation.trim();
     // email/password no longer come from this form — submitLearner writes
     // against the session that got them here.
-    await onSubmit({ name: submitName, location: submitLocation, email: authUser?.email || "", password: "", instrument: submitInstrument, motivation: submitMotivation, photoUrl, termsAcceptedAt: new Date().toISOString() });
+    await onSubmit({ name: submitName, location: submitLocation, countryCode: locF.countryCode, email: authUser?.email || "", password: "", instrument: submitInstrument, motivation: submitMotivation, photoUrl, termsAcceptedAt: new Date().toISOString() });
     setSubmitting(false);
   }
 
@@ -14095,8 +14257,11 @@ function LearnerSignup({ onSubmit, onBack, error, authUser }) {
             <Field label="Learner's age" opt>
               <input style={inputStyle} value={learnerAge} onChange={(e) => setLearnerAge(e.target.value)} placeholder="e.g. 10" autoComplete="off" />
             </Field>
-            <Field label="Where is the learner based?" req>
-              <input style={inputStyle} value={learnerLocation} onChange={(e) => setLearnerLocation(e.target.value)} placeholder="City, country" autoComplete="off" />
+            <Field label="City" opt>
+              <input style={inputStyle} value={locOther.city} onChange={(e) => locOther.setCity(e.target.value)} placeholder="e.g. Paris" autoComplete="off" />
+            </Field>
+            <Field label="Country" req>
+              <CountrySelect f={locOther} />
             </Field>
             <Field label="Which instrument would they like to learn?" req>
               <InstrumentPicker value={learnerInstrument} onChange={setLearnerInstrument} allowOther />
@@ -14133,8 +14298,11 @@ function LearnerSignup({ onSubmit, onBack, error, authUser }) {
             <Field label="Your full name" req>
               <input style={inputStyle} value={name} onChange={(e) => setName(e.target.value)} placeholder="Your full name" autoComplete="off" autoFocus />
             </Field>
-            <Field label="Where are you based?" req>
-              <input style={inputStyle} value={location} onChange={(e) => setLocation(e.target.value)} placeholder="City, country" autoComplete="off" />
+            <Field label="City" opt>
+              <input style={inputStyle} value={locSelf.city} onChange={(e) => locSelf.setCity(e.target.value)} placeholder="e.g. Paris" autoComplete="off" />
+            </Field>
+            <Field label="Country" req>
+              <CountrySelect f={locSelf} />
             </Field>
             <Field label="Which instrument would you like to learn?" req>
               <InstrumentPicker value={instrument} onChange={setInstrument} allowOther />
@@ -14490,7 +14658,12 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
 
   // profile editing state
   const [editName, setEditName] = useState(learner?.name || "");
-  const [editLocation, setEditLocation] = useState(learner?.location || "");
+  // City + Country; a learner with no country_code yet sees the picker empty.
+  const locF = useLocationField({
+    ...splitLocation(learner?.location, !!learner?.countryCode),
+    country: learner?.countryCode || "", preselect: false, edit: true,
+  });
+  const [saveError, setSaveError] = useState("");
   const [editPhotoUrl, setEditPhotoUrl] = useState(learner?.photoUrl || "");
   const [saved, setSaved] = useState(false);
   const [editingProfile, setEditingProfile] = useState(false);
@@ -14593,10 +14766,20 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
   // room's teacher, so opening a profile never pops a chat open).
   const [dmPeer, setDmPeer] = useTabState("artium_learner_dm", null);
 
-  function saveProfile() {
-    onUpdateProfile({ name: editName.trim(), location: editLocation.trim(), photoUrl: editPhotoUrl });
+  async function saveProfile() {
+    setSaveError("");
+    // The stored location/country are only rewritten when the member changed
+    // them; a name-only edit leaves both exactly as they were.
+    const err = await onUpdateProfile({
+      name: editName.trim(),
+      ...(locF.changed ? { location: locF.location } : {}),
+      ...(locF.countryChanged && locF.countryCode ? { countryCode: locF.countryCode } : {}),
+      photoUrl: editPhotoUrl,
+    });
+    if (err) { setSaveError(err); return false; }
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
+    return true;
   }
 
   // The menu leads the bar; your profile is on the member counter.
@@ -15174,16 +15357,23 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
                     placeholder="Your name" />
                 </div>
                 <div>
-                  <label className="block mb-1.5 text-xs" style={{ fontFamily: FONT_MONO, color: C.ivoryDim }}>LOCATION</label>
-                  <input value={editLocation} onChange={(e) => { setEditLocation(e.target.value); setSaved(false); }}
+                  <label className="block mb-1.5 text-xs" style={{ fontFamily: FONT_MONO, color: C.ivoryDim }}>CITY</label>
+                  <input value={locF.city} onChange={(e) => { locF.setCity(e.target.value); setSaved(false); }}
                     className="w-full rounded-xl px-4 py-3 text-sm"
                     style={{ background: C.inkSoft, border: `1px solid ${C.inkLine}`, color: C.inkText, outline: "none" }}
-                    placeholder="City, Country" />
+                    placeholder="City" />
                 </div>
+                {(
+                  <div onChange={() => setSaved(false)}>
+                    <label className="block mb-1.5 text-xs" style={{ fontFamily: FONT_MONO, color: C.ivoryDim }}>COUNTRY</label>
+                    <CountrySelect f={locF} noEmpty={!!learner?.countryCode} style={{ borderRadius: 12, padding: "12px 16px", fontSize: 14, border: `1px solid ${C.inkLine}`, color: C.inkText }} />
+                  </div>
+                )}
+                {saveError && <p style={{ margin: 0, fontSize: 13, color: C.burgundy }}>{saveError}</p>}
                 <div style={{ display: "flex", gap: 8 }}>
-                  <button onClick={() => { saveProfile(); setEditingProfile(false); }} disabled={!editName.trim() || !editLocation.trim()}
+                  <button onClick={async () => { if (await saveProfile()) setEditingProfile(false); }} disabled={!editName.trim() || !locF.ok}
                     className="rounded-xl py-3 px-6 text-sm font-semibold"
-                    style={{ background: C.brass, color: C.inkText, opacity: !editName.trim() || !editLocation.trim() ? 0.5 : 1 }}>
+                    style={{ background: C.brass, color: C.inkText, opacity: !editName.trim() || !locF.ok ? 0.5 : 1 }}>
                     {saved ? "Saved ✓" : "Save changes"}
                   </button>
                   <button onClick={() => setEditingProfile(false)}
@@ -16331,7 +16521,7 @@ function PromoteMe({ myProfile, authUser, focus }) {
         }),
       });
       const data = await res.json();
-      if (!res.ok || !data?.url) throw new Error(data?.error || "Could not start checkout");
+      if (!res.ok || !data?.url) throw new Error(serverErrMsg(data?.error, data?.error || "Could not start checkout"));
       window.location.href = data.url;
     } catch (e) { setPayError(e.message); setPayLoading(false); }
   }
@@ -16807,7 +16997,7 @@ function AdminScreen({ authUser, onlineCount, listProps }) {
 
         {/* Section toggle */}
         <div style={MODERN ? { display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" } : { display: "flex", gap: 8, justifyContent: "center" }}>
-          {[{ v: "verifications", t: "Student verifications" }, { v: "conservatories", t: "Conservatories" }, { v: "conslist", t: "Conservatory list" }, { v: "tracks", t: "Recordings" }, { v: "promotions", t: "Promotions" }, { v: "partners", t: "Partnerships" }, { v: "composers", t: "Composers & pieces" }].map(({ v, t }) => (
+          {[{ v: "verifications", t: "Student verifications" }, { v: "conservatories", t: "Conservatories" }, { v: "conslist", t: "Conservatory list" }, { v: "tracks", t: "Recordings" }, { v: "promotions", t: "Promotions" }, { v: "partners", t: "Partnerships" }, { v: "composers", t: "Composers & pieces" }, { v: "countries", t: "Countries" }, { v: "audit", t: "Audit log" }].map(({ v, t }) => (
             <button key={v} onClick={() => setSection(v)}
               style={{ padding: "9px 18px", borderRadius: MODERN ? 10 : 999, fontSize: 13, fontWeight: 700, cursor: "pointer", background: section === v ? BRASS_GRAD : (MODERN ? "#FFFFFF" : warm("0.07")), color: section === v ? C.brassText : C.ivoryDim, border: section === v ? "none" : `1px solid ${C.inkLine}` }}>{t}</button>
           ))}
@@ -16815,6 +17005,8 @@ function AdminScreen({ authUser, onlineCount, listProps }) {
 
         {section === "verifications" && <AdminVerifications card={card} STATUS_COLOR={STATUS_COLOR} />}
         {section === "conservatories" && <AdminConservatories card={card} />}
+        {section === "countries" && <AdminCountries card={card} />}
+        {section === "audit" && <AdminAuditLog card={card} />}
         {section === "conslist" && listProps && (
           <div style={{ ...card, padding: 0, overflow: "hidden" }}>
             <MapScreen listOnly {...listProps} />
@@ -17408,6 +17600,239 @@ function AdminTracks({ card, STATUS_COLOR, authUser }) {
 // roster carries what shipped, and an approved row overrides it. So clearing a
 // school's domains here does not leave it with none — it falls back to the
 // built-in, which is said out loud below rather than left to be discovered.
+/* ---- Admin: Countries (international onboarding, stage 1) ----
+   Reads/writes the `countries` table (admin-only RLS). The booleans derived
+   from the status columns are shown read-only: a DB trigger owns them. */
+const LEARNER_STATUSES = ["ENABLED", "PAYMENT_RESTRICTED", "DISABLED"];
+const TEACHER_STATUSES = ["ENABLED", "PENDING_STRIPE_APPROVAL", "PENDING_LEGAL_REVIEW", "DISABLED"];
+const STRIPE_APPROVALS = ["to_verify", "confirmed", "not_supported", "pending"];
+const flagEmoji = (iso2) => /^[A-Za-z]{2}$/.test(iso2 || "") ? String.fromCodePoint(...[...iso2.toUpperCase()].map((c) => 127397 + c.charCodeAt(0))) : "";
+const statusLabel = (v) => String(v || "").toLowerCase().replace(/_/g, " ");
+const COUNTRY_EDIT_FIELDS = ["learner_status", "teacher_status", "teacher_registration_enabled", "stripe_connect_supported", "stripe_approval_status", "payout_currency", "tax_identifier_description", "professional_registration_required", "manual_verification_required", "onboarding_notes", "admin_notes", "last_verified_at"];
+
+function AdminCountries({ card }) {
+  const [rows, setRows] = useState(null);
+  const [err, setErr] = useState("");
+  const [q, setQ] = useState("");
+  const [filter, setFilter] = useState("all");
+  const [openIso, setOpenIso] = useState(null);
+
+  async function load() {
+    const { data, error } = await supabase.from("countries").select("*").order("name");
+    if (error) { setErr(error.message); setRows([]); return; }
+    setErr(""); setRows(data || []);
+  }
+  React.useEffect(() => { load(); }, []);
+
+  const chipC = (v) => v === "ENABLED" ? OK_C : v === "DISABLED" ? C.burgundy : (MODERN ? AMBER_D : C.brassLabel);
+  const chip = (label, v) => (
+    <span style={{ fontSize: 10.5, fontWeight: 700, padding: "3px 8px", borderRadius: 999, border: `1px solid ${chipC(v)}`, color: chipC(v), whiteSpace: "nowrap" }}>{label}</span>
+  );
+
+  const shown = React.useMemo(() => {
+    const needle = normalizeName(q);
+    let list = (rows || []).filter((r) => !needle || normalizeName(r.name).includes(needle) || r.iso2.toLowerCase() === needle);
+    if (filter === "pending") list = list.filter((r) => String(r.teacher_status).startsWith("PENDING"));
+    else if (filter === "enabled") list = list.filter((r) => r.teacher_status === "ENABLED");
+    else if (filter === "learner") list = list.filter((r) => r.learner_status !== "ENABLED");
+    const rank = (r) => (String(r.teacher_status).startsWith("PENDING") ? 0 : 1);
+    return [...list].sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name));
+  }, [rows, q, filter]);
+
+  const FILTERS = [{ v: "all", t: "All" }, { v: "pending", t: "Pending teacher approval" }, { v: "enabled", t: "Enabled for teachers" }, { v: "learner", t: "Learner restrictions" }];
+  const open = rows && openIso ? rows.find((r) => r.iso2 === openIso) : null;
+
+  return (
+    <div style={{ ...card }}>
+      <p style={{ margin: "0 0 4px", fontFamily: FONT_DISPLAY, fontSize: 19, fontWeight: 600, color: C.ivory }}>Countries</p>
+      <p className="text-sm" style={{ margin: "0 0 14px", color: C.ivoryDim, lineHeight: 1.5 }}>
+        Where learners can register and pay, and where teachers can take paid lessons.
+      </p>
+      {open ? (
+        <CountryEditor key={open.iso2} row={open} chip={chip} onClose={() => setOpenIso(null)} onSaved={(r) => setRows((all) => all.map((x) => (x.iso2 === r.iso2 ? r : x)))} />
+      ) : (
+        <>
+          <span className="artium-aw-field" style={{ marginBottom: 10 }}>
+            <Search size={15} strokeWidth={2} />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by country or code" />
+          </span>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
+            {FILTERS.map(({ v, t }) => (
+              <button key={v} onClick={() => setFilter(v)} style={{ padding: "5px 11px", borderRadius: 999, fontSize: 12, fontWeight: 600, cursor: "pointer",
+                border: `1px solid ${filter === v ? C.brassLabel : C.inkLine}`, background: filter === v ? warm("0.12") : "transparent", color: filter === v ? C.ivory : C.ivoryDim }}>{t}</button>
+            ))}
+          </div>
+          {err && <p className="text-sm" style={{ color: C.burgundy }}>{err}</p>}
+          {rows === null && <p className="text-sm" style={{ color: C.ivoryDim }}>Loading…</p>}
+          {rows && !err && shown.length === 0 && <p className="text-sm" style={{ color: C.ivoryDim }}>No country matches that.</p>}
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {shown.map((r) => (
+              <button key={r.iso2} onClick={() => setOpenIso(r.iso2)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 10, border: `1px solid ${C.inkLine}`, background: warm("0.03"), cursor: "pointer", textAlign: "left" }}>
+                <span style={{ fontSize: 20, lineHeight: 1 }}>{flagEmoji(r.iso2)}</span>
+                {/* Name on its own line, chips below: long names never run
+                    into the chips on a phone. */}
+                <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 5 }}>
+                  <span style={{ fontWeight: 600, fontSize: 14, color: C.ivory, overflowWrap: "anywhere" }}>{r.name}</span>
+                  <span style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
+                    {chip(`Learners: ${statusLabel(r.learner_status)}`, r.learner_status)}
+                    {chip(`Teachers: ${statusLabel(r.teacher_status)}`, r.teacher_status)}
+                  </span>
+                </span>
+              </button>
+            ))}
+          </div>
+          {rows && <p className="text-sm" style={{ margin: "12px 0 0", color: C.ivoryDim }}>{shown.length} of {rows.length} countries</p>}
+        </>
+      )}
+    </div>
+  );
+}
+
+function CountryEditor({ row, chip, onClose, onSaved }) {
+  const [d, setD] = useState({});           // changed fields only
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState(null);
+  const v = (k) => (k in d ? d[k] : row[k]);
+  const set = (k, val, force) => setD((x) => {
+    const n = { ...x };
+    if (val === row[k] && !force) delete n[k]; else n[k] = val;
+    return n;
+  });
+  const dirty = Object.keys(d).length > 0;
+  const ls = v("learner_status"), ts = v("teacher_status");
+  // Mirrors the trigger, for display only.
+  const learnerReg = ls !== "DISABLED", learnerPay = ls === "ENABLED";
+  const paid = ts === "ENABLED";
+  // The trigger turns registration on when a DISABLED country is re-opened
+  // (unless the admin sets it in the same save).
+  const reopening = row.teacher_status === "DISABLED" && ts !== "DISABLED" && !("teacher_registration_enabled" in d);
+  const regOn = ts === "DISABLED" ? false : reopening ? true : v("teacher_registration_enabled");
+  const [cur, setCur] = useState(row.payout_currency || "");
+  const curBad = cur !== "" && !/^[A-Z]{3}$/.test(cur);
+
+  const lab = { display: "block", fontSize: 11.5, fontWeight: 700, color: C.ivoryDim, margin: "12px 0 5px", textTransform: "uppercase", letterSpacing: "0.05em" };
+  const inp = { ...inputStyle, fontSize: 13, padding: "8px 11px", background: C.inkSoft };
+  const ro = (on) => <span style={{ fontSize: 12.5, fontWeight: 600, color: on ? OK_C : C.ivoryDim }}>{on ? "On" : "Off"}</span>;
+  const toggle = (k, text, disabled) => (
+    <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: C.ivory, marginTop: 10, opacity: disabled ? 0.5 : 1 }}>
+      <input type="checkbox" checked={!!(k === "teacher_registration_enabled" ? regOn : v(k))} disabled={disabled} onChange={(e) => set(k, e.target.checked, k === "teacher_registration_enabled" && reopening)} />
+      {text}
+    </label>
+  );
+
+  async function save() {
+    if (curBad) return;
+    const stripeSt = v("stripe_approval_status");
+    if ("teacher_status" in d && d.teacher_status === "ENABLED" &&
+      !window.confirm(`Teachers in ${row.name} will be able to take paid lessons once Stripe confirms. Did you verify this country in the Stripe Dashboard?` + (stripeSt !== "confirmed" ? `\n\nStripe approval is still marked '${stripeSt}'.` : ""))) return;
+    setBusy(true); setMsg(null);
+    const { error } = await supabase.from("countries").update(d).eq("iso2", row.iso2);
+    if (error) { setBusy(false); setMsg({ bad: true, text: error.message }); return; }
+    const { data, error: e2 } = await supabase.from("countries").select("*").eq("iso2", row.iso2).single();
+    setBusy(false);
+    if (e2 || !data) { setMsg({ bad: true, text: e2?.message || "Saved, but the row couldn't be re-read. Reload the list." }); return; }
+    setD({}); onSaved(data); setMsg({ bad: false, text: "Saved." });
+  }
+
+  return (
+    <div>
+      <button onClick={onClose} style={{ background: "none", border: "none", color: C.ivoryDim, fontSize: 13, cursor: "pointer", padding: 0, marginBottom: 8 }}>← All countries</button>
+      <p style={{ margin: 0, fontFamily: FONT_DISPLAY, fontSize: 20, fontWeight: 600, color: C.ivory }}>{flagEmoji(row.iso2)} {row.name} <span style={{ fontFamily: FONT_MONO, fontSize: 12, color: C.ivoryDim }}>{row.iso2}</span></p>
+
+      <span style={lab}>Learners</span>
+      <select style={inp} value={ls} onChange={(e) => set("learner_status", e.target.value)}>
+        {LEARNER_STATUSES.map((s) => <option key={s} value={s}>{statusLabel(s)}</option>)}
+      </select>
+      <div style={{ display: "flex", gap: 18, marginTop: 8, fontSize: 12.5, color: C.ivoryDim }}>
+        <span>Registration {ro(learnerReg)}</span><span>Payment {ro(learnerPay)}</span>
+        <span style={{ fontStyle: "italic" }}>derived from status</span>
+      </div>
+
+      <span style={lab}>Teachers</span>
+      <select style={inp} value={ts} onChange={(e) => set("teacher_status", e.target.value)}>
+        {TEACHER_STATUSES.map((s) => <option key={s} value={s}>{statusLabel(s)}</option>)}
+      </select>
+      {toggle("teacher_registration_enabled", "Teacher registration open", ts === "DISABLED")}
+      <div style={{ marginTop: 8, fontSize: 12.5, color: C.ivoryDim }}>Paid lessons {ro(paid)} <span style={{ fontStyle: "italic" }}>derived from status</span></div>
+
+      <span style={lab}>Stripe</span>
+      {toggle("stripe_connect_supported", "Stripe Connect supported")}
+      <span style={lab}>Approval status</span>
+      <select style={inp} value={v("stripe_approval_status") || ""} onChange={(e) => set("stripe_approval_status", e.target.value)}>
+        {STRIPE_APPROVALS.map((s) => <option key={s} value={s}>{statusLabel(s)}</option>)}
+      </select>
+      <span style={lab}>Payout currency</span>
+      <input style={inp} value={cur} onChange={(e) => { const x = e.target.value.toUpperCase().replace(/[^A-Z]/g, "").slice(0, 3); setCur(x); if (x === "") set("payout_currency", row.payout_currency ? null : row.payout_currency); else if (x.length === 3) set("payout_currency", x); }} placeholder="e.g. EUR" maxLength={3} />
+      {curBad && <p style={{ margin: "5px 0 0", fontSize: 12, color: C.burgundy }}>Use a 3-letter currency code (for example EUR), or leave it empty.</p>}
+
+      <span style={lab}>Tax identifier description</span>
+      <input style={inp} value={v("tax_identifier_description") || ""} onChange={(e) => set("tax_identifier_description", e.target.value)} />
+      {toggle("professional_registration_required", "Professional registration required")}
+      {toggle("manual_verification_required", "Manual verification required")}
+
+      <span style={lab}>Onboarding notes</span>
+      <textarea style={{ ...inp, minHeight: 70, resize: "vertical" }} value={v("onboarding_notes") || ""} onChange={(e) => set("onboarding_notes", e.target.value)} />
+      <span style={lab}>Admin notes</span>
+      <textarea style={{ ...inp, minHeight: 70, resize: "vertical" }} value={v("admin_notes") || ""} onChange={(e) => set("admin_notes", e.target.value)} />
+
+      <span style={lab}>Last verified</span>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+        <span style={{ fontSize: 13, color: C.ivory }}>{v("last_verified_at") ? new Date(v("last_verified_at")).toLocaleDateString("en-GB") : "Never"}</span>
+        <button onClick={() => set("last_verified_at", new Date().toISOString())} style={{ padding: "6px 12px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: warm("0.05"), color: C.ivoryDim, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Mark verified today</button>
+      </div>
+
+      {msg && <p className="text-sm" style={{ margin: "14px 0 0", color: msg.bad ? C.burgundy : OK_C }}>{msg.text}</p>}
+      <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
+        <button onClick={save} disabled={!dirty || busy || curBad} style={{ padding: "9px 18px", borderRadius: 8, border: "none", fontSize: 13, fontWeight: 700, background: dirty ? BRASS_GRAD : warm("0.05"), color: dirty ? C.brassText : C.ivoryDim, cursor: dirty ? "pointer" : "not-allowed" }}>{busy ? "Saving…" : "Save"}</button>
+        <button onClick={onClose} style={{ padding: "9px 14px", borderRadius: 8, border: `1px solid ${C.inkLine}`, background: "transparent", color: C.ivoryDim, fontSize: 13, cursor: "pointer" }}>Cancel</button>
+      </div>
+    </div>
+  );
+}
+
+/* ---- Admin: Audit log (latest 200 admin_audit_log entries) ---- */
+function AdminAuditLog({ card }) {
+  const [rows, setRows] = useState(null);
+  const [names, setNames] = useState({});
+  const [err, setErr] = useState("");
+  React.useEffect(() => {
+    (async () => {
+      const { data, error } = await supabase.from("admin_audit_log").select("*").order("created_at", { ascending: false }).limit(200);
+      if (error) { setErr(error.message); setRows([]); return; }
+      setRows(data || []);
+      const ids = [...new Set((data || []).map((r) => r.actor_id).filter(Boolean))];
+      if (ids.length) {
+        const { data: ps } = await supabase.from("profiles").select("id, name").in("id", ids);
+        setNames(Object.fromEntries((ps || []).map((p) => [p.id, p.name])));
+      }
+    })();
+  }, []);
+  const show = (x) => (x === null || x === undefined || x === "" ? "—" : typeof x === "object" ? JSON.stringify(x) : String(x));
+  return (
+    <div style={{ ...card }}>
+      <p style={{ margin: "0 0 4px", fontFamily: FONT_DISPLAY, fontSize: 19, fontWeight: 600, color: C.ivory }}>Audit log</p>
+      <p className="text-sm" style={{ margin: "0 0 14px", color: C.ivoryDim }}>The latest 200 admin changes, newest first.</p>
+      {err && <p className="text-sm" style={{ color: C.burgundy }}>{err}</p>}
+      {rows === null && <p className="text-sm" style={{ color: C.ivoryDim }}>Loading…</p>}
+      {rows && !err && rows.length === 0 && <p className="text-sm" style={{ color: C.ivoryDim }}>Nothing logged yet.</p>}
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {(rows || []).map((r) => (
+          <div key={r.id} style={{ border: `1px solid ${C.inkLine}`, borderRadius: 10, padding: "9px 12px", background: warm("0.03") }}>
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap", fontSize: 11.5, color: C.ivoryDim }}>
+              <span>{new Date(r.created_at).toLocaleString("en-GB")}</span>
+              <span>{r.actor_id ? (names[r.actor_id] || "Unknown user") : "SQL editor / server"}</span>
+            </div>
+            <p style={{ margin: "4px 0 0", fontSize: 13, color: C.ivory }}><b>{r.action}</b> <span style={{ fontFamily: FONT_MONO, fontSize: 12, color: C.ivoryDim }}>{r.entity} {r.entity_id}</span></p>
+            {r.changes && Object.entries(r.changes).map(([k, c]) => (
+              <p key={k} style={{ margin: "2px 0 0", fontSize: 12, color: C.ivoryDim, wordBreak: "break-word" }}>{k}: {show(c?.from)} → {show(c?.to)}</p>
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function AdminConservatories({ card }) {
   const [roster, setRoster] = useState([]);
   const [approved, setApproved] = useState([]);

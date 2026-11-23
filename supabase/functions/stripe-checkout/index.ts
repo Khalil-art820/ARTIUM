@@ -199,6 +199,37 @@ Deno.serve(async (req) => {
         return new Response(JSON.stringify({ error: "invalid_session" }), { status: 400, headers: { ...CORS, "Content-Type": "application/json" } });
       }
 
+      // Country gate on the paying learner. A null country_code (every
+      // learner from before countries existed) is unrestricted; a country an
+      // admin has set to learner_payment_enabled = false stops the payment.
+      // Fails closed: if either lookup errors, or a set country has no row,
+      // we can't tell whether this payment is allowed, so it is refused.
+      // Checked before any pending row is resumed so a country closed
+      // mid-checkout can't be paid through an old Stripe page.
+      const { data: learnerProfile, error: learnerProfileError } = await adminClient
+        .from("profiles")
+        .select("country_code")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (learnerProfileError) {
+        console.error("stripe-checkout country lookup failed", learnerProfileError.message);
+        return new Response(JSON.stringify({ error: "country_check_failed", code: "country_check_failed" }), { status: 503, headers: { ...CORS, "Content-Type": "application/json" } });
+      }
+      if (learnerProfile?.country_code) {
+        const { data: learnerCountry, error: learnerCountryError } = await adminClient
+          .from("countries")
+          .select("learner_payment_enabled")
+          .eq("iso2", learnerProfile.country_code)
+          .maybeSingle();
+        if (learnerCountryError || !learnerCountry) {
+          console.error("stripe-checkout country check failed", learnerCountryError?.message ?? "no countries row");
+          return new Response(JSON.stringify({ error: "country_check_failed", code: "country_check_failed" }), { status: 503, headers: { ...CORS, "Content-Type": "application/json" } });
+        }
+        if (learnerCountry.learner_payment_enabled !== true) {
+          return new Response(JSON.stringify({ error: "country_payment_restricted", code: "country_payment_restricted" }), { status: 403, headers: { ...CORS, "Content-Type": "application/json" } });
+        }
+      }
+
       // One live checkout per session: a second click on "Pay" resumes the
       // open Stripe page instead of creating another payments row.
       const { data: pendingRows } = await adminClient
