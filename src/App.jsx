@@ -8085,7 +8085,7 @@ function useLocationField({ city: city0 = "", country: country0 = "", rest: rest
   useEffect(() => {
     if (!list || !preselect || touched.current || country) return;
     const r = browserRegion();
-    if (r && list.some((c) => c.iso2 === r)) setCountryRaw(r);
+    if (r && list.some((c) => c.iso2 === r && c.learner_registration_enabled !== false)) setCountryRaw(r);
     // eslint-disable-next-line
   }, [list]);
   const lang = currentLanguage();
@@ -8112,10 +8112,15 @@ function useLocationField({ city: city0 = "", country: country0 = "", rest: rest
   };
 }
 // Native select (type-to-search works in every browser), names in the UI language.
+// Countries closed to learners (admin Countries: learner status disabled) are
+// left out of the list entirely, as the owner asked. The member's own current
+// country stays listed so an existing profile still shows it.
 function CountrySelect({ f, style, noEmpty }) {
   const lang = currentLanguage();
-  const opts = React.useMemo(() => (f.list || []).map((c) => ({ iso2: c.iso2, label: countryLabel(c, lang) }))
-    .sort((a, b) => a.label.localeCompare(b.label, lang)), [f.list, lang]);
+  const opts = React.useMemo(() => (f.list || [])
+    .filter((c) => c.learner_registration_enabled !== false || c.iso2 === f.country)
+    .map((c) => ({ iso2: c.iso2, label: countryLabel(c, lang) }))
+    .sort((a, b) => a.label.localeCompare(b.label, lang)), [f.list, f.country, lang]);
   if (f.failed) {
     return (
       <p style={{ margin: "2px 2px 0", fontSize: 13, lineHeight: 1.5, color: C.ivoryDim }}>
