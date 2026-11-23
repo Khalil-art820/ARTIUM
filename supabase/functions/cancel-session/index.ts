@@ -109,6 +109,11 @@ Deno.serve(async (req) => {
       .select("id, status, payment_intent_id, gross_amount_cents, commission_cents, teacher_amount_cents, refunded_cents")
       .eq("lesson_session_id", sessionId)
       .eq("kind", "lesson")
+      // Only the live charge: a stale pending/expired/failed checkout row
+      // for the same session must not shadow (or break) the paid one.
+      .in("status", ["paid", "partially_refunded"])
+      .order("created_at", { ascending: false })
+      .limit(1)
       .maybeSingle();
     if (paymentError || !payment) return json({ error: "Payment record not found for this session." }, 404);
     if (payment.status !== "paid") {
@@ -204,7 +209,9 @@ Deno.serve(async (req) => {
     await adminClient
       .from("lesson_sessions")
       .update({ status: "cancelled", updated_at: nowIso })
-      .eq("id", sessionId);
+      .eq("id", sessionId)
+      // Only a live confirmed row: never overwrite another outcome.
+      .eq("status", "confirmed");
 
     // Abuse guard (cancellation_events): every learner-caused late tier —
     // whether a partial or a zero refund — logs one row. stripe-checkout
@@ -259,6 +266,8 @@ Deno.serve(async (req) => {
       lateCancelCount,
     });
   } catch (err) {
-    return json({ error: err.message }, 500);
+    // Never hand Stripe / Postgres text to the client.
+    console.error("cancel-session failed", err?.message);
+    return json({ error: "server_error", message: "Something went wrong. Please try again." }, 500);
   }
 });

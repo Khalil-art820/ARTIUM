@@ -69,11 +69,16 @@ Deno.serve(async (req) => {
 
     const { data: profile, error: profileError } = await adminClient
       .from("profiles")
-      .select("id, name, conservatory_email")
+      .select("id, name, conservatory_email, role, approved")
       .eq("id", user.id)
       .single();
     if (profileError || !profile) {
       return new Response(JSON.stringify({ error: "No profile found for this account" }), { status: 404, headers: { ...CORS, "Content-Type": "application/json" } });
+    }
+    // Only an approved teacher (role 'student') may open a Stripe account;
+    // learners and accounts still awaiting approval must not create one.
+    if (profile.role !== "student" || profile.approved !== true) {
+      return new Response(JSON.stringify({ error: "not_eligible" }), { status: 403, headers: { ...CORS, "Content-Type": "application/json" } });
     }
     const { data: priv } = await adminClient
       .from("profile_private")
@@ -90,6 +95,9 @@ Deno.serve(async (req) => {
     let accountId = existing?.stripe_account_id;
 
     if (!accountId) {
+      // TODO(stage 4): set country, service agreement, capabilities and
+      // business type explicitly — see docs/international-teacher-onboarding-plan.md
+      // §2 and §5. Until then Stripe defaults the account to the platform's country.
       const account = await stripe.accounts.create({
         type: "express",
         email: priv?.conservatory_email || profile.conservatory_email || undefined,
@@ -106,7 +114,8 @@ Deno.serve(async (req) => {
           updated_at: new Date().toISOString(),
         });
       if (upsertError) {
-        return new Response(JSON.stringify({ error: upsertError.message }), { status: 500, headers: { ...CORS, "Content-Type": "application/json" } });
+        console.error("stripe-connect-onboard upsert failed", upsertError.message);
+        return new Response(JSON.stringify({ error: "server_error" }), { status: 500, headers: { ...CORS, "Content-Type": "application/json" } });
       }
     } else {
       await adminClient
@@ -126,7 +135,8 @@ Deno.serve(async (req) => {
       headers: { ...CORS, "Content-Type": "application/json" },
     });
   } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), {
+    console.error("stripe-connect-onboard failed", err?.message);
+    return new Response(JSON.stringify({ error: "server_error" }), {
       status: 500,
       headers: { ...CORS, "Content-Type": "application/json" },
     });

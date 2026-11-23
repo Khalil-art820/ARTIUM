@@ -82,6 +82,28 @@ import DirectMessages, { Thread as DmThread } from "./components/chat/DirectMess
 import { setLanguage, currentLanguage } from "./i18n/runtime.js";
 // Dates in the chosen language (English keeps the day-month British order).
 const DATE_LOCALES = { en: "en-GB", de: "de-DE", es: "es-ES", fr: "fr-FR", nl: "nl-NL", it: "it-IT", "pt-BR": "pt-BR", pl: "pl-PL" };
+// Stable server error codes -> plain messages (never raw server/Stripe text).
+const SERVER_ERR_MSG = {
+  teacher_not_ready: "This teacher isn't taking paid bookings yet.",
+  not_eligible: "This teacher isn't taking paid bookings yet.",
+  booking_restricted: "Booking is temporarily restricted on this account. Please contact the Artium team.",
+  already_paid: "This lesson is already paid.",
+  payment_in_progress: "A payment for this lesson is already in progress. Please wait a moment.",
+  invalid_session: "This lesson can't be paid yet — it must be confirmed first.",
+  not_eligible_no_show: "This lesson can't be reported as a no-show.",
+};
+const serverErrMsg = (code, fallback) => SERVER_ERR_MSG[String(code || "")] || fallback;
+const isKnownErrMsg = (m) => Object.values(SERVER_ERR_MSG).includes(m);
+// Returning from a cancelled Stripe checkout: drop every pending-pay flag
+// (once, at load) and clean the param out of the URL.
+try {
+  const u = new URL(window.location.href);
+  if (u.searchParams.get("payment") === "cancel") {
+    Object.keys(sessionStorage).filter((k) => k.startsWith("artium_pending_pay_")).forEach((k) => sessionStorage.removeItem(k));
+    u.searchParams.delete("payment");
+    window.history.replaceState({}, "", u.pathname + (u.search || "") + u.hash);
+  }
+} catch {}
 const dateLocale = () => DATE_LOCALES[currentLanguage()] || DATE_LOCALES[readLang()] || "en-GB";
 // The whole app in the visitor's language from the first paint on: the page
 // stays hidden (at most a second) until the dictionary is in.
@@ -2762,7 +2784,7 @@ export default function App() {
           setAppTabPersist("map");
         });
       } else if (pendingLearner) {
-        supabase.from("profiles").insert({ id: authUser.id, role: "learner", name: pendingLearner.name, location: pendingLearner.location, instrument: pendingLearner.instrument, bio: pendingLearner.motivation, photo_url: pendingLearner.photoUrl || null, approved: true }).then(({ error }) => {
+        supabase.from("profiles").insert({ id: authUser.id, role: "learner", name: pendingLearner.name, location: pendingLearner.location, instrument: pendingLearner.instrument, bio: pendingLearner.motivation, photo_url: pendingLearner.photoUrl || null, approved: true, ...(pendingLearner.termsAcceptedAt ? { terms_accepted_at: pendingLearner.termsAcceptedAt, terms_version: TERMS_VERSION } : {}) }).then(({ error }) => {
           if (error) { setAuthError(error.message); return; }
           supabase.auth.updateUser({ data: { pendingLearner: null } });
           setLearnerProfile({ name: pendingLearner.name, location: pendingLearner.location, instrument: pendingLearner.instrument, bio: pendingLearner.motivation, photoUrl: pendingLearner.photoUrl || null });
@@ -3327,7 +3349,7 @@ export default function App() {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { pendingLearner: { name, location, instrument, motivation, photoUrl } } },
+      options: { data: { pendingLearner: { name, location, instrument, motivation, photoUrl, termsAcceptedAt } } },
     });
     if (error) { setAuthError(friendlyAuthError(error.message)); return; }
     if (data.session && data.user) {
@@ -7926,7 +7948,7 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
           </button>
         ) : (
           // The last step's Next opens the submit window.
-          <SuNextButton ok={!!canNext} onGo={() => { update({ termsAcceptedAt: null }); setConfirmSubmit(true); }} hint={stepHints[step]}>
+          <SuNextButton ok={!!canNext} onGo={() => { update({ termsAcceptedAt: null, termsAcceptedNow: false }); setConfirmSubmit(true); }} hint={stepHints[step]}>
             Next <ChevronRight size={17} strokeWidth={2.2} />
           </SuNextButton>
         )}
@@ -7938,7 +7960,7 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
             <p className="text-sm" style={{ margin: "10px 0 0", color: C.ivoryDim, lineHeight: 1.6 }}>
               You can still edit and update your profile at any time after submitting.
             </p>
-            <TermsCheck checked={!!draft.termsAcceptedAt} onChange={(v) => update({ termsAcceptedAt: v ? new Date().toISOString() : null })} />
+            <TermsCheck checked={!!draft.termsAcceptedAt} onChange={(v) => update({ termsAcceptedAt: v ? new Date().toISOString() : null, termsAcceptedNow: !!v })} />
             <div style={{ display: "flex", gap: 9, marginTop: 20 }}>
               <button type="button" disabled={submitting} onClick={() => setConfirmSubmit(false)}
                 style={{ flex: "0 0 auto", padding: "11px 16px", borderRadius: 10, border: `1px solid ${C.inkLine}`, background: "#FFFFFF", color: C.ivoryDim, fontFamily: FONT_BODY, fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
@@ -13524,8 +13546,10 @@ function TeachingPayoutsPanel({ profileId }) {
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.access_token}` },
         body: JSON.stringify({ refreshUrl: base + "?payouts=refresh", returnUrl: base + "?payouts=return" }),
       });
-      const data = await res.json();
-      if (!res.ok || !data?.url) throw new Error(data?.error || "Could not start payout setup");
+      const data = await res.json().catch(() => ({}));
+      // Plain words, never the server's raw error text.
+      if (data?.error === "not_eligible") throw new Error("Payouts open once your conservatory verification is approved.");
+      if (!res.ok || !data?.url) throw new Error("Payout setup couldn't start. Please try again.");
       window.location.href = data.url;
     } catch (e) {
       setError(e.message); setLoading(false);
@@ -14434,6 +14458,29 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
     const id = setInterval(load, 15000);
     return () => { live = false; clearInterval(id); };
   }, [authUser?.id]);
+  // Which teachers can actually receive payments (payout account verified).
+  // Others stay visible and contactable but are not bookable. null = not
+  // loaded yet, treated as "not ready" so payment is never offered early.
+  const [payReadyIds, setPayReadyIds] = useState(null);
+  const teacherIdsKey = teachers.map((t) => t.id).filter(Boolean).sort().join(",");
+  React.useEffect(() => {
+    if (!authUser?.id || !teacherIdsKey) return;
+    let live = true;
+    (async () => {
+      try {
+        const ids = teacherIdsKey.split(",");
+        const ready = new Set();
+        for (let i = 0; i < ids.length; i += 500) {
+          const { data, error } = await supabase.rpc("teachers_taking_payments", { p_ids: ids.slice(i, i + 500) });
+          if (error) throw error;
+          (data || []).forEach((r) => { const v = typeof r === "string" ? r : r?.teachers_taking_payments; if (v) ready.add(v); });
+        }
+        if (live) setPayReadyIds(ready);
+      } catch { if (live) setPayReadyIds(new Set()); }
+    })();
+    return () => { live = false; };
+  }, [authUser?.id, teacherIdsKey]);
+  const isPayReady = (id) => !!payReadyIds && payReadyIds.has(id);
   const selected = teachers.find((t) => t.id === selectedId);
   const status = selectedId ? teachRequests[selectedId] : undefined;
   const acceptedTeachers = teachers.filter((t) => teachRequests[t.id] === "accepted");
@@ -14457,7 +14504,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
     setPayError("");
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { setPayError("Please sign in again to book a lesson."); setPayLoading(false); return; }
+      if (!session) { setPayError("Please sign in again to book a lesson."); setPayLoading(false); return false; }
       const res = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stripe-checkout`,
         {
@@ -14479,11 +14526,14 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
         }
       );
       const data = await res.json();
-      if (!res.ok || !data?.url) throw new Error(data?.error || "This teacher can't accept paid bookings yet.");
+      if (!res.ok || !data?.url) throw new Error(serverErrMsg(data?.error, "Payment couldn't start. Please try again."));
       window.location.href = data.url;
+      return true;
     } catch (e) {
-      setPayError(e.message);
+      setPayError(isKnownErrMsg(e?.message) || e?.message === "Payment couldn't start. Please try again." ? e.message : "Payment couldn't start. Please try again.");
       setPayLoading(false);
+      try { sessionStorage.removeItem(`artium_pending_pay_${teacher.id}`); } catch {}
+      return false;
     }
   }
   const [deleteError, setDeleteError] = useState("");
@@ -14854,7 +14904,12 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
               )}
               {selected.top && <Row label="Recent win">{selected.top}</Row>}
               {selected.flop && <Row label="Current challenge">{selected.flop}</Row>}
-              <Row label="Teaching"><TeachingCell teaching={selected.teaching} /></Row>
+              <Row label="Teaching">
+                <TeachingCell teaching={selected.teaching} />
+                {selected.teaching?.open && payReadyIds && !isPayReady(selected.id) && (
+                  <p style={{ fontSize: 12, color: "#717171", margin: "6px 0 0", lineHeight: 1.4 }}>Not taking paid bookings yet</p>
+                )}
+              </Row>
             </div>
 
             {status === "accepted" && (
@@ -15013,6 +15068,7 @@ function LearnerScreen({ entryFocus, learner, teachers, teachRequests, onSendReq
                 onSend={(t) => (onSendTo ? onSendTo(activeLessonTeacher.id, t) : onSend(t))}
                 dmActions={dmActions}
                 onPayLesson={payForLesson}
+                teacherPayReady={payReadyIds ? isPayReady(activeLessonTeacher.id) : null}
                 payLoading={payLoading}
                 payError={payError}
                 authUser={authUser}
@@ -15263,7 +15319,7 @@ function VideoSessionTab({ sessions, teacher, zoomLink, meetLink }) {
   );
 }
 
-function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payError, authUser, focusSession, dmActions }) {
+function LessonRoom({ teacher, messages, onSend, onPayLesson, teacherPayReady, payLoading, payError, authUser, focusSession, dmActions }) {
   const [tab, setTab] = useTabState("artium_lesson_tab", "chat");
   // A bell notification can ask this room to open straight onto one session
   // card — Schedule & Payments tab, that session selected. Keyed on `at` so
@@ -15330,7 +15386,13 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
   // below. Never itself the source of truth for `paid`.
   const [pendingPayId, setPendingPayId] = useState(() => {
     if (!teacher) return null;
-    try { return sessionStorage.getItem(`artium_pending_pay_${teacher.id}`) || null; } catch { return null; }
+    try {
+      const raw = sessionStorage.getItem(`artium_pending_pay_${teacher.id}`);
+      if (!raw) return null;
+      const [id, ts] = raw.split("|");
+      if (!ts || Date.now() - Number(ts) > 31 * 60 * 1000) { sessionStorage.removeItem(`artium_pending_pay_${teacher.id}`); return null; }
+      return id || null;
+    } catch { return null; }
   });
   React.useEffect(() => {
     if (pendingPayId == null) return;
@@ -15470,7 +15532,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
         body: JSON.stringify({ sessionId: id }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Could not cancel this session.");
+      if (!res.ok) throw new Error(serverErrMsg(data?.error, "Something went wrong. Please try again."));
       persistSessions(sessions.map((x) => x.id === id ? { ...x, status: "cancelled" } : x));
       let msg = `Cancelled — €${euroAmount(data.refundedCents)} refunded.`;
       // The server counts this account's late cancellations in the trailing
@@ -15482,7 +15544,7 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
       }
       window.alert(msg);
     } catch (e) {
-      window.alert(e.message);
+      window.alert(isKnownErrMsg(e?.message) ? e.message : "Something went wrong. Please try again.");
     } finally {
       setCancelBusy(false);
     }
@@ -15501,11 +15563,11 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
         body: JSON.stringify({ sessionId: id }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Could not report this session.");
+      if (!res.ok) throw new Error(serverErrMsg(data?.error, "Something went wrong. Please try again."));
       persistSessions(sessions.map((x) => x.id === id ? { ...x, status: "no_show" } : x));
       window.alert(`Reported — €${euroAmount(data.refundedCents)} refunded in full.`);
     } catch (e) {
-      window.alert(e.message);
+      window.alert(isKnownErrMsg(e?.message) ? e.message : "Something went wrong. Please try again.");
     } finally {
       setNoShowBusy(false);
     }
@@ -15712,6 +15774,14 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
                       <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, background: warm("0.12"), color: C.brassLabel, fontSize: 12, fontWeight: 600, marginBottom: 8 }}>
                         Payment processing…
                       </span>
+                    ) : teacherPayReady == null ? (
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, border: `1px solid ${C.inkLine}`, color: "#717171", fontSize: 12, fontWeight: 600, marginBottom: 8, opacity: 0.7 }}>
+                        Checking…
+                      </span>
+                    ) : !teacherPayReady ? (
+                      <p style={{ fontSize: 12, color: "#717171", lineHeight: 1.5, margin: "0 0 8px" }}>
+                        This teacher isn't taking paid bookings yet — you'll be able to pay once their payouts are verified.
+                      </p>
                     ) : (
                       <button onClick={() => {
                         // No optimistic write: lesson_sessions.paid is set
@@ -15720,9 +15790,14 @@ function LessonRoom({ teacher, messages, onSend, onPayLesson, payLoading, payErr
                         // was revoked). Remember which session we're paying
                         // for so the "processing" hint survives the round
                         // trip to Stripe and back.
-                        try { sessionStorage.setItem(`artium_pending_pay_${teacher.id}`, String(sel.id)); } catch {}
+                        try { sessionStorage.setItem(`artium_pending_pay_${teacher.id}`, `${sel.id}|${Date.now()}`); } catch {}
                         setPendingPayId(sel.id);
-                        onPayLesson(teacher, sel.id);
+                        Promise.resolve(onPayLesson(teacher, sel.id)).then((ok) => {
+                          if (ok === false) {
+                            try { sessionStorage.removeItem(`artium_pending_pay_${teacher.id}`); } catch {}
+                            setPendingPayId(null);
+                          }
+                        });
                       }} disabled={payLoading}
                         style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, background: "none", border: `1px solid ${C.brass}`, color: C.brassLabel, fontSize: 12, fontWeight: 600, cursor: payLoading ? "not-allowed" : "pointer", opacity: payLoading ? 0.6 : 1, marginBottom: 8 }}>
                         <CreditCard size={13} />
@@ -18493,11 +18568,11 @@ function TeacherLessonRoom({ teacherId, roomView, setRoomView, focus, conversati
         body: JSON.stringify({ sessionId: id }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Could not cancel this session.");
+      if (!res.ok) throw new Error(serverErrMsg(data?.error, "Something went wrong. Please try again."));
       setSessions((prev) => prev.map((x) => x.id === id ? { ...x, status: "cancelled" } : x));
       window.alert(`Cancelled — €${euroAmount(data.refundedCents)} refunded.`);
     } catch (e) {
-      window.alert(e.message);
+      window.alert(isKnownErrMsg(e?.message) ? e.message : "Something went wrong. Please try again.");
     } finally {
       setCancelBusy(false);
     }

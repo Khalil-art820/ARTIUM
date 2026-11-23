@@ -132,7 +132,7 @@ Deno.serve(async (req) => {
 
     if (kind === "lesson") {
       if (!teacherId) {
-        return new Response(JSON.stringify({ error: "Missing teacherId" }), { status: 400, headers: { ...CORS, "Content-Type": "application/json" } });
+        return new Response(JSON.stringify({ error: "invalid_session" }), { status: 400, headers: { ...CORS, "Content-Type": "application/json" } });
       }
 
       // Abuse guard: repeated late cancellations (12–24h or <12h before a
@@ -146,10 +146,10 @@ Deno.serve(async (req) => {
         .from("cancellation_events")
         .select("id", { count: "exact", head: true })
         .eq("learner_id", user.id)
-        .eq("kind", "late_cancel")
+        .in("kind", ["late_cancel", "no_show_report"])
         .gte("created_at", thirtyDaysAgoIso);
       if ((lateCancelCount ?? 0) >= 5) {
-        return new Response(JSON.stringify({ error: "Booking temporarily restricted after repeated late cancellations — try again later." }), { status: 403, headers: { ...CORS, "Content-Type": "application/json" } });
+        return new Response(JSON.stringify({ error: "booking_restricted" }), { status: 403, headers: { ...CORS, "Content-Type": "application/json" } });
       }
 
       const { data: teacher, error: teacherError } = await adminClient
@@ -158,11 +158,11 @@ Deno.serve(async (req) => {
         .eq("id", teacherId)
         .single();
       if (teacherError || !teacher) {
-        return new Response(JSON.stringify({ error: "Teacher not found" }), { status: 404, headers: { ...CORS, "Content-Type": "application/json" } });
+        return new Response(JSON.stringify({ error: "teacher_not_ready" }), { status: 404, headers: { ...CORS, "Content-Type": "application/json" } });
       }
       const price = parseFloat(String(teacher.teaching_price ?? "").replace(/[^0-9.]/g, ""));
       if (!teacher.teaching_open || !price) {
-        return new Response(JSON.stringify({ error: "This teacher hasn't set a lesson price yet." }), { status: 400, headers: { ...CORS, "Content-Type": "application/json" } });
+        return new Response(JSON.stringify({ error: "teacher_not_ready" }), { status: 400, headers: { ...CORS, "Content-Type": "application/json" } });
       }
 
       const { data: payout } = await adminClient
@@ -171,31 +171,78 @@ Deno.serve(async (req) => {
         .eq("profile_id", teacherId)
         .maybeSingle();
       if (!payout || payout.payout_status !== "ready" || !payout.stripe_account_id) {
-        return new Response(JSON.stringify({ error: "This teacher can't accept paid bookings yet." }), { status: 400, headers: { ...CORS, "Content-Type": "application/json" } });
+        return new Response(JSON.stringify({ error: "teacher_not_ready" }), { status: 400, headers: { ...CORS, "Content-Type": "application/json" } });
       }
 
-      // Optional: pay for a specific lesson_sessions row rather than an
-      // untracked one-off charge. If a sessionId is given it must be a real
-      // uuid, belong to this teacher/learner pair, and not already be paid —
-      // otherwise the webhook has nothing legitimate to flip paid=true on,
-      // or would be double-charging an already-paid session.
-      if (sessionId !== undefined && sessionId !== null) {
-        if (typeof sessionId !== "string" || !UUID_RE.test(sessionId)) {
-          return new Response(JSON.stringify({ error: "Invalid sessionId" }), { status: 400, headers: { ...CORS, "Content-Type": "application/json" } });
+      // A lesson charge is always tied to one lesson_sessions row — an
+      // untracked charge has nothing for the webhook to flip paid=true on and
+      // nothing for cancel-session / report-no-show to refund against. The
+      // session must be a real uuid, belong to this teacher/learner pair, be
+      // confirmed by both sides, and not already be paid.
+      if (typeof sessionId !== "string" || !UUID_RE.test(sessionId)) {
+        return new Response(JSON.stringify({ error: "invalid_session" }), { status: 400, headers: { ...CORS, "Content-Type": "application/json" } });
+      }
+      const { data: lessonSession, error: lessonSessionError } = await adminClient
+        .from("lesson_sessions")
+        .select("id, paid, status")
+        .eq("id", sessionId)
+        .eq("teacher_id", teacherId)
+        .eq("learner_id", user.id)
+        .maybeSingle();
+      if (lessonSessionError || !lessonSession) {
+        return new Response(JSON.stringify({ error: "invalid_session" }), { status: 400, headers: { ...CORS, "Content-Type": "application/json" } });
+      }
+      if (lessonSession.paid) {
+        return new Response(JSON.stringify({ error: "already_paid" }), { status: 400, headers: { ...CORS, "Content-Type": "application/json" } });
+      }
+      if (lessonSession.status !== "confirmed") {
+        return new Response(JSON.stringify({ error: "invalid_session" }), { status: 400, headers: { ...CORS, "Content-Type": "application/json" } });
+      }
+
+      // One live checkout per session: a second click on "Pay" resumes the
+      // open Stripe page instead of creating another payments row.
+      const { data: pendingRows } = await adminClient
+        .from("payments")
+        .select("id, status, checkout_session_id, created_at")
+        .eq("lesson_session_id", sessionId)
+        .eq("kind", "lesson")
+        // 'failed' too: one failed card attempt doesn't close the Stripe
+        // page (the customer can retry there), so its row may still be live.
+        .in("status", ["pending", "failed"]);
+      for (const row of pendingRows ?? []) {
+        if (row.checkout_session_id) {
+          let existingCheckout: Stripe.Checkout.Session | null = null;
+          try {
+            existingCheckout = await stripe.checkout.sessions.retrieve(row.checkout_session_id);
+          } catch (retrieveErr) {
+            // Unknown to Stripe: nothing can be paid through it, so the row
+            // is dead; fall through to expire it.
+            console.error("stripe-checkout retrieve failed for", row.checkout_session_id, retrieveErr?.message);
+          }
+          if (existingCheckout?.status === "open") {
+            if (existingCheckout.url) {
+              return new Response(JSON.stringify({ url: existingCheckout.url }), { headers: { ...CORS, "Content-Type": "application/json" } });
+            }
+            // Open but no url to hand back: don't expire a live checkout.
+            return new Response(JSON.stringify({ error: "payment_in_progress" }), { status: 409, headers: { ...CORS, "Content-Type": "application/json" } });
+          }
+          if (existingCheckout?.status === "complete" && row.status === "pending") {
+            // Paid (or an async method still settling) and the webhook hasn't
+            // landed yet. Marking it expired would race the webhook, and a
+            // second charge is exactly what this must prevent.
+            return new Response(JSON.stringify({ error: "payment_in_progress" }), { status: 409, headers: { ...CORS, "Content-Type": "application/json" } });
+          }
+        } else if (Date.now() - new Date(row.created_at).getTime() < 2 * 60 * 1000) {
+          // Another request is still between inserting the row and creating
+          // its Stripe session; leave it alone.
+          return new Response(JSON.stringify({ error: "payment_in_progress" }), { status: 409, headers: { ...CORS, "Content-Type": "application/json" } });
         }
-        const { data: lessonSession, error: lessonSessionError } = await adminClient
-          .from("lesson_sessions")
-          .select("id, paid")
-          .eq("id", sessionId)
-          .eq("teacher_id", teacherId)
-          .eq("learner_id", user.id)
-          .maybeSingle();
-        if (lessonSessionError || !lessonSession) {
-          return new Response(JSON.stringify({ error: "Session not found" }), { status: 400, headers: { ...CORS, "Content-Type": "application/json" } });
-        }
-        if (lessonSession.paid) {
-          return new Response(JSON.stringify({ error: "This session is already paid." }), { status: 400, headers: { ...CORS, "Content-Type": "application/json" } });
-        }
+        // Expired, or a row whose Stripe session was never created.
+        await adminClient
+          .from("payments")
+          .update({ status: "expired", updated_at: new Date().toISOString() })
+          .eq("id", row.id)
+          .in("status", ["pending", "failed"]);
       }
 
       grossCents = Math.round(price * 100);
@@ -223,7 +270,7 @@ Deno.serve(async (req) => {
         .eq("status", "paid")
         .limit(1);
       if (alreadyPaid && alreadyPaid.length) {
-        return new Response(JSON.stringify({ error: "This promotion is already paid." }), { status: 409, headers: { ...CORS, "Content-Type": "application/json" } });
+        return new Response(JSON.stringify({ error: "already_paid" }), { status: 409, headers: { ...CORS, "Content-Type": "application/json" } });
       }
       grossCents = await promoTotalCents(adminClient);
       const rate = await commissionRateFor(adminClient, null, "promotion");
@@ -251,18 +298,40 @@ Deno.serve(async (req) => {
         gross_amount_cents: grossCents,
         commission_cents: commissionCents,
         teacher_amount_cents: teacherAmountCents,
-        lesson_session_id: kind === "lesson" ? (sessionId || null) : null,
+        lesson_session_id: kind === "lesson" ? sessionId : null,
         status: "pending",
       })
       .select()
       .single();
+    if (paymentError?.code === "23505") {
+      // The partial unique index on pending payments: a concurrent click won.
+      return new Response(JSON.stringify({ error: "payment_in_progress" }), { status: 409, headers: { ...CORS, "Content-Type": "application/json" } });
+    }
     if (paymentError || !payment) {
-      return new Response(JSON.stringify({ error: paymentError?.message || "Could not record payment" }), { status: 500, headers: { ...CORS, "Content-Type": "application/json" } });
+      console.error("stripe-checkout payment insert failed", paymentError?.message);
+      return new Response(JSON.stringify({ error: "server_error" }), { status: 500, headers: { ...CORS, "Content-Type": "application/json" } });
     }
 
     sessionParams.metadata = { payment_id: payment.id, kind, teacherId: teacherId || "" };
+    // So payment_intent.payment_failed (which carries no checkout session id)
+    // can find this row before checkout.session.completed has ever run.
+    sessionParams.payment_intent_data = { ...sessionParams.payment_intent_data, metadata: { payment_id: payment.id } };
+    // Stripe's minimum is 30 minutes after creation; 31 leaves room for the
+    // time between computing this and Stripe receiving the request.
+    sessionParams.expires_at = Math.floor(Date.now() / 1000) + 31 * 60;
 
-    const session = await stripe.checkout.sessions.create(sessionParams);
+    let session: Stripe.Checkout.Session;
+    try {
+      session = await stripe.checkout.sessions.create(sessionParams);
+    } catch (createErr) {
+      // Don't leave a pending row with no Stripe session behind: it would
+      // hold the one-pending-per-session slot.
+      await adminClient
+        .from("payments")
+        .update({ status: "expired", updated_at: new Date().toISOString() })
+        .eq("id", payment.id);
+      throw createErr;
+    }
 
     await adminClient
       .from("payments")
@@ -273,7 +342,8 @@ Deno.serve(async (req) => {
       headers: { ...CORS, "Content-Type": "application/json" },
     });
   } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), {
+    console.error("stripe-checkout failed", err?.message);
+    return new Response(JSON.stringify({ error: "server_error" }), {
       status: 500,
       headers: { ...CORS, "Content-Type": "application/json" },
     });

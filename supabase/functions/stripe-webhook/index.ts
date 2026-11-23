@@ -27,6 +27,26 @@ async function markPayment(sessionOrPaymentId: { sessionId?: string; paymentId?:
   return query.eq("checkout_session_id", sessionOrPaymentId.sessionId);
 }
 
+// Cancels the linked lesson when its money is gone. Only a 'confirmed' row is
+// touched (never overwrite cancelled / no_show), and not while another live
+// payment still covers the session (e.g. the duplicate-payment refund below
+// must not cancel the lesson the first payment legitimately bought).
+async function cancelSessionIfUnfunded(lessonSessionId: string | null | undefined) {
+  if (!lessonSessionId) return;
+  const { data: live } = await adminClient
+    .from("payments")
+    .select("id")
+    .eq("lesson_session_id", lessonSessionId)
+    .in("status", ["paid", "partially_refunded", "disputed"])
+    .limit(1);
+  if (live && live.length) return;
+  await adminClient
+    .from("lesson_sessions")
+    .update({ status: "cancelled", updated_at: new Date().toISOString() })
+    .eq("id", lessonSessionId)
+    .eq("status", "confirmed");
+}
+
 Deno.serve(async (req) => {
   if (req.method !== "POST") {
     return new Response("Method not allowed", { status: 405 });
@@ -49,34 +69,72 @@ Deno.serve(async (req) => {
 
   try {
     switch (event.type) {
-      case "checkout.session.completed": {
+      case "checkout.session.completed":
+      case "checkout.session.async_payment_succeeded": {
         const session = event.data.object as Stripe.Checkout.Session;
+        // Delayed methods (SEPA debit, etc.) complete the Checkout while the
+        // money is still 'unpaid'; the row stays pending until
+        // async_payment_succeeded (same handler) or async_payment_failed.
+        if (session.payment_status !== "paid") break;
         const paymentId = session.metadata?.payment_id;
         const paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id;
 
-        await markPayment(
-          { paymentId, sessionId: session.id },
-          { status: "paid", payment_intent_id: paymentIntentId || null }
-        );
+        // Mark paid only from a not-yet-settled state, so a replayed or late
+        // event can never resurrect a refunded / disputed payment. Matched by
+        // metadata.payment_id, falling back to the Checkout id for older rows.
+        const paidQuery = adminClient
+          .from("payments")
+          .update({ status: "paid", payment_intent_id: paymentIntentId || null, updated_at: new Date().toISOString() })
+          .in("status", ["pending", "failed", "expired"]);
+        const { data: updatedRows, error: paidError } = await (paymentId
+          ? paidQuery.eq("id", paymentId)
+          : paidQuery.eq("checkout_session_id", session.id)
+        ).select("id, lesson_session_id");
+
+        if (paidError) {
+          if (paidError.code === "23505") {
+            // A second payment for a session that is already paid (two
+            // Checkouts completed). The money is real, so give it back, and
+            // do NOT touch lesson_sessions.paid on its behalf.
+            console.error("DUPLICATE PAYMENT for a session already paid — refunding", { paymentId, checkout: session.id, paymentIntentId });
+            if (paymentIntentId) {
+              await stripe.refunds.create({
+                payment_intent: paymentIntentId,
+                reverse_transfer: true,
+                refund_application_fee: true,
+              });
+            }
+            await adminClient
+              .from("payments")
+              .update({ status: "refunded", payment_intent_id: paymentIntentId || null, refunded_cents: session.amount_total ?? 0, updated_at: new Date().toISOString() })
+              .match(paymentId ? { id: paymentId } : { checkout_session_id: session.id });
+            break;
+          }
+          throw new Error(paidError.message);
+        }
 
         // Flip the lesson_sessions row itself — this is the only place
         // lesson_sessions.paid is ever set (the client's UPDATE grant on
         // that column was revoked; see 20260902400000_payments_link_session).
-        // Look the row up by whichever identifier we have and only touch it
-        // if it's actually a lesson payment with a linked session, and only
-        // if it isn't already paid — keeps this handler idempotent across
-        // Stripe retries.
+        // Idempotent across Stripe retries: a replay updates no payment row
+        // above, so look the row up again and only flip when it is this
+        // payment's own, still-'paid' row.
         {
-          const { data: paymentRow } = await adminClient
-            .from("payments")
-            .select("lesson_session_id")
-            .match(paymentId ? { id: paymentId } : { checkout_session_id: session.id })
-            .maybeSingle();
-          if (paymentRow?.lesson_session_id) {
+          let lessonSessionId: string | null | undefined = updatedRows?.[0]?.lesson_session_id;
+          if (!updatedRows || updatedRows.length === 0) {
+            const { data: existingRow } = await adminClient
+              .from("payments")
+              .select("lesson_session_id, status, payment_intent_id")
+              .match(paymentId ? { id: paymentId } : { checkout_session_id: session.id })
+              .maybeSingle();
+            lessonSessionId = existingRow && existingRow.status === "paid" && existingRow.payment_intent_id === (paymentIntentId || null)
+              ? existingRow.lesson_session_id : null;
+          }
+          if (lessonSessionId) {
             await adminClient
               .from("lesson_sessions")
               .update({ paid: true, updated_at: new Date().toISOString() })
-              .eq("id", paymentRow.lesson_session_id)
+              .eq("id", lessonSessionId)
               .eq("paid", false);
           }
         }
@@ -114,6 +172,23 @@ Deno.serve(async (req) => {
         break;
       }
 
+      case "checkout.session.async_payment_failed": {
+        const session = event.data.object as Stripe.Checkout.Session;
+        await markPayment({ paymentId: session.metadata?.payment_id, sessionId: session.id }, { status: "failed" });
+        break;
+      }
+
+      case "checkout.session.expired": {
+        const session = event.data.object as Stripe.Checkout.Session;
+        // Only a row still waiting: never downgrade a paid/refunded one.
+        await adminClient
+          .from("payments")
+          .update({ status: "expired", updated_at: new Date().toISOString() })
+          .eq("checkout_session_id", session.id)
+          .in("status", ["pending", "failed"]);
+        break;
+      }
+
       case "payment_intent.payment_failed": {
         const intent = event.data.object as Stripe.PaymentIntent;
         // payment_intent.payment_failed doesn't carry the checkout session id
@@ -122,10 +197,15 @@ Deno.serve(async (req) => {
         // before that — fall back to matching on payment_intent_id, and if
         // nothing matches yet there's nothing to mark (the pending row will
         // simply never be completed).
+        // Checkout stamps metadata.payment_id on the PaymentIntent, so a
+        // failure before checkout.session.completed can still find its row.
+        const failedPaymentId = intent.metadata?.payment_id;
         await adminClient
           .from("payments")
           .update({ status: "failed", payment_intent_id: intent.id, updated_at: new Date().toISOString() })
-          .eq("payment_intent_id", intent.id);
+          .or(failedPaymentId ? `id.eq.${failedPaymentId},payment_intent_id.eq.${intent.id}` : `payment_intent_id.eq.${intent.id}`)
+          // A failed attempt must never overwrite a settled payment.
+          .in("status", ["pending", "failed"]);
         break;
       }
 
@@ -150,7 +230,73 @@ Deno.serve(async (req) => {
               refunded_cents: charge.amount_refunded,
               updated_at: new Date().toISOString(),
             })
-            .eq("payment_intent_id", paymentIntentId);
+            .eq("payment_intent_id", paymentIntentId)
+            // An open dispute keeps its marker until charge.dispute.closed.
+            .neq("status", "disputed");
+
+          // A refund issued from the Stripe dashboard must not leave a live
+          // paid session behind: once the whole charge is back, the lesson
+          // is cancelled (only if still confirmed, so cancel-session's own
+          // 'cancelled' / 'no_show' outcome is never overwritten).
+          if (fullyRefunded) {
+            const { data: refundedRow } = await adminClient
+              .from("payments")
+              .select("lesson_session_id")
+              .eq("payment_intent_id", paymentIntentId)
+              .limit(1)
+              .maybeSingle();
+            await cancelSessionIfUnfunded(refundedRow?.lesson_session_id);
+          }
+        }
+        break;
+      }
+
+      case "charge.dispute.created": {
+        const dispute = event.data.object as Stripe.Dispute;
+        const paymentIntentId = typeof dispute.payment_intent === "string" ? dispute.payment_intent : dispute.payment_intent?.id;
+        if (paymentIntentId) {
+          await adminClient
+            .from("payments")
+            .update({ status: "disputed", updated_at: new Date().toISOString() })
+            .eq("payment_intent_id", paymentIntentId)
+            .in("status", ["paid", "partially_refunded"]);
+        }
+        break;
+      }
+
+      case "charge.dispute.closed": {
+        const dispute = event.data.object as Stripe.Dispute;
+        const paymentIntentId = typeof dispute.payment_intent === "string" ? dispute.payment_intent : dispute.payment_intent?.id;
+        if (paymentIntentId) {
+          const { data: row } = await adminClient
+            .from("payments")
+            .select("refunded_cents, lesson_session_id")
+            .eq("payment_intent_id", paymentIntentId)
+            .maybeSingle();
+          if (dispute.status === "won" || dispute.status === "warning_closed") {
+            // Funds stay with us (a closed warning never became a dispute).
+            // If part of the charge had been refunded before, it still is.
+            await adminClient
+              .from("payments")
+              .update({ status: (row?.refunded_cents ?? 0) > 0 ? "partially_refunded" : "paid", updated_at: new Date().toISOString() })
+              .eq("payment_intent_id", paymentIntentId)
+              .eq("status", "disputed");
+          } else if (dispute.status === "charge_refunded") {
+            // We refunded the charge ourselves to settle it.
+            await adminClient
+              .from("payments")
+              .update({ status: "refunded", updated_at: new Date().toISOString() })
+              .eq("payment_intent_id", paymentIntentId)
+              .in("status", ["disputed", "paid", "partially_refunded"]);
+          } else if (dispute.status === "lost") {
+            await adminClient
+              .from("payments")
+              .update({ status: "refunded", refunded_cents: dispute.amount, updated_at: new Date().toISOString() })
+              .eq("payment_intent_id", paymentIntentId)
+              .in("status", ["disputed", "paid", "partially_refunded"]);
+            // The money is gone, so the lesson can't stay a live paid one.
+            await cancelSessionIfUnfunded(row?.lesson_session_id);
+          }
         }
         break;
       }

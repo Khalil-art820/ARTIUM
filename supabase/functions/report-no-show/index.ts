@@ -105,11 +105,27 @@ Deno.serve(async (req) => {
       return json({ error: "This session is too old to report — no-shows must be reported within 7 days." }, 400);
     }
 
+    // Abuse cap: three no-show reports in 90 days and further reports are
+    // refused (stripe-checkout also counts these toward its booking guard).
+    const ninetyDaysAgoIso = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
+    const { count: recentReports } = await adminClient
+      .from("cancellation_events")
+      .select("id", { count: "exact", head: true })
+      .eq("learner_id", user.id)
+      .eq("kind", "no_show_report")
+      .gte("created_at", ninetyDaysAgoIso);
+    if ((recentReports ?? 0) >= 3) return json({ error: "booking_restricted" }, 403);
+
     const { data: payment, error: paymentError } = await adminClient
       .from("payments")
       .select("id, status, payment_intent_id, gross_amount_cents, refunded_cents")
       .eq("lesson_session_id", sessionId)
       .eq("kind", "lesson")
+      // Only the live charge: a stale pending/expired/failed checkout row
+      // for the same session must not shadow (or break) the paid one.
+      .in("status", ["paid", "partially_refunded"])
+      .order("created_at", { ascending: false })
+      .limit(1)
       .maybeSingle();
     if (paymentError || !payment) return json({ error: "Payment record not found for this session." }, 404);
     if (payment.status !== "paid") {
@@ -118,6 +134,16 @@ Deno.serve(async (req) => {
     if (!payment.payment_intent_id) {
       return json({ error: "No payment intent on record for this session." }, 400);
     }
+
+    // A lesson paid for at or after its start time can't have been "missed"
+    // by the teacher: that is the learner booking a past slot, paying, and
+    // claiming a refund. Payment time is the Stripe charge's creation time
+    // — payments.updated_at is also touched later by the fee backfill, and
+    // created_at is when the checkout was opened, so neither is reliable.
+    const intent = await stripe.paymentIntents.retrieve(payment.payment_intent_id, { expand: ["latest_charge"] });
+    const charge = intent.latest_charge as Stripe.Charge | null;
+    const paidAtMs = (charge?.created ?? intent.created) * 1000;
+    if (paidAtMs >= sessionInstantUtc.getTime()) return json({ error: "not_eligible_no_show" }, 409);
 
     // Always a full refund — no tier math, unlike a learner-initiated
     // cancellation. The teacher didn't show, so there is no fee to keep.
@@ -142,7 +168,9 @@ Deno.serve(async (req) => {
     await adminClient
       .from("lesson_sessions")
       .update({ status: "no_show", updated_at: nowIso })
-      .eq("id", sessionId);
+      .eq("id", sessionId)
+      // Only a live confirmed row: never overwrite another outcome.
+      .eq("status", "confirmed");
 
     await adminClient.from("cancellation_events").insert({
       learner_id: user.id,
@@ -165,6 +193,8 @@ Deno.serve(async (req) => {
 
     return json({ refundedCents: grossCents, status: "refunded" });
   } catch (err) {
-    return json({ error: err.message }, 500);
+    // Never hand Stripe / Postgres text to the client.
+    console.error("report-no-show failed", err?.message);
+    return json({ error: "server_error", message: "Something went wrong. Please try again." }, 500);
   }
 });

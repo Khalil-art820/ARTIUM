@@ -84,8 +84,12 @@ export function toDbProfile(draft, id) {
       concert_formats: draft.concerts.open ? (draft.concerts.formats || []) : [],
       concert_fee: draft.concerts.open ? (String(draft.concerts.fee || "").trim() || null) : null,
     } : {}),
-    // Terms acceptance, stamped once at sign-up and kept on later edits.
-    ...(draft.termsAcceptedAt ? { terms_accepted_at: draft.termsAcceptedAt, terms_version: TERMS_VERSION } : {}),
+    // Terms acceptance is written only when the draft carries a fresh tick
+    // (termsAcceptedNow, set by the sign-up submit dialog's TermsCheck).
+    // draft.termsAcceptedAt alone isn't enough: an edit draft is built from
+    // the stored profile, so it carries the old date, and sending it would
+    // stamp the CURRENT TERMS_VERSION onto terms the person never re-read.
+    ...(draft.termsAcceptedNow === true && draft.termsAcceptedAt ? { terms_accepted_at: draft.termsAcceptedAt, terms_version: TERMS_VERSION } : {}),
     // Home city (optional), only to place them on the globe; never shown on
     // the profile. Written only once they touch the field, so a save from
     // before the columns existed never sends them.

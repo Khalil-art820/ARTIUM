@@ -1,4 +1,10 @@
+import Stripe from "https://esm.sh/stripe@14?target=deno";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
+  apiVersion: "2024-06-20",
+  httpClient: Stripe.createFetchHttpClient(),
+});
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -36,6 +42,80 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
   );
+
+  // Refuse while money is on the line. Deleting the account cascades
+  // lesson_sessions away with no refund and no transfer, leaving the other
+  // party out of pocket, so the person must cancel (running the refund
+  // policy) or wait. Runs before anything is deleted so a refusal changes
+  // nothing. Two checks:
+  //  1. a paid session that is still live, or whose 7-day no-show window
+  //     (report-no-show) could still open: session_date from 8 days ago on,
+  //     counted in Europe/Paris like the rest of the session maths;
+  //  2. any payment tied to one of their sessions that still holds or may
+  //     yet hold money (pending checkout, paid, partially refunded,
+  //     disputed) while that session isn't cancelled / no_show.
+  const parisToday = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris" }).format(new Date());
+  const windowStart = new Date(new Date(parisToday + "T00:00:00Z").getTime() - 8 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const mine = `teacher_id.eq.${user.id},learner_id.eq.${user.id}`;
+  const { count: upcomingPaid, error: upcomingError } = await adminClient
+    .from("lesson_sessions")
+    .select("id", { count: "exact", head: true })
+    .or(mine)
+    .eq("paid", true)
+    .in("status", ["confirmed", "teacher_proposed", "student_proposed"])
+    .gte("session_date", windowStart);
+  if (upcomingError) {
+    console.error("delete-account session check failed", upcomingError.message);
+    return new Response(JSON.stringify({ error: "server_error" }), {
+      status: 500,
+      headers: { ...CORS, "Content-Type": "application/json" },
+    });
+  }
+  let blocked = (upcomingPaid ?? 0) > 0;
+  if (!blocked) {
+    const { data: theirSessions, error: sessionsError } = await adminClient
+      .from("lesson_sessions")
+      .select("id")
+      .or(mine)
+      .not("status", "in", "(cancelled,no_show)");
+    if (sessionsError) {
+      console.error("delete-account session list failed", sessionsError.message);
+      return new Response(JSON.stringify({ error: "server_error" }), {
+        status: 500,
+        headers: { ...CORS, "Content-Type": "application/json" },
+      });
+    }
+    const ids = (theirSessions || []).map((r: { id: string }) => r.id);
+    if (ids.length > 0) {
+      const { count: openPayments, error: paymentsError } = await adminClient
+        .from("payments")
+        .select("id", { count: "exact", head: true })
+        .in("lesson_session_id", ids)
+        .in("status", ["pending", "paid", "partially_refunded", "disputed"]);
+      if (paymentsError) {
+        console.error("delete-account payment check failed", paymentsError.message);
+        return new Response(JSON.stringify({ error: "server_error" }), {
+          status: 500,
+          headers: { ...CORS, "Content-Type": "application/json" },
+        });
+      }
+      blocked = (openPayments ?? 0) > 0;
+    }
+  }
+  if (blocked) {
+    return new Response(JSON.stringify({ error: "upcoming_paid_sessions" }), {
+      status: 409,
+      headers: { ...CORS, "Content-Type": "application/json" },
+    });
+  }
+
+  // The Stripe account id has to be read now: teacher_payout_accounts
+  // cascades from profiles, so after the deletion the only link is gone.
+  const { data: payoutRow } = await adminClient
+    .from("teacher_payout_accounts")
+    .select("stripe_account_id")
+    .eq("profile_id", user.id)
+    .maybeSingle();
 
   // The uploaded proof goes first, and it has to go first.
   //
@@ -79,6 +159,17 @@ Deno.serve(async (req) => {
       status: 500,
       headers: { ...CORS, "Content-Type": "application/json" },
     });
+  }
+
+  // Close the teacher's connected account so it isn't orphaned. Stripe
+  // refuses while the account still holds a balance; that is not worth
+  // failing a deletion that already happened, so log it and move on.
+  if (payoutRow?.stripe_account_id) {
+    try {
+      await stripe.accounts.del(payoutRow.stripe_account_id);
+    } catch (stripeErr) {
+      console.error("could not delete Stripe account", payoutRow.stripe_account_id, "for", user.id, stripeErr.message);
+    }
   }
 
   return new Response(JSON.stringify({ success: true }), {
