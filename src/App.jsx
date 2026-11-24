@@ -893,6 +893,8 @@ const emptyDraft = () => ({
   photoUrl: "",
   coverVideoUrl: "", coverPhotoUrl: "",
   teaching: { open: false, mode: "", price: "", pitch: "" },
+  // Private teacher details (teacher_compliance + profile_private.phone), never part of the profile row.
+  compliance: { residence: "", establishment: "", taxResidence: "", sameEst: true, sameTax: true, phone: "" },
   concerts: { answered: false, open: false, regions: [], formats: [], fee: "" },
 });
 
@@ -2696,12 +2698,46 @@ export default function App() {
   // silent void (non-uuid ids fail every insert).
   const [students, setStudents] = useState([]);
   const [myProfile, setMyProfile] = useState(null);
+  // The teacher's own "where you work from" (teacher_compliance + the private
+  // phone), loaded beside myProfile. loaded stays false if either read fails
+  // (migration not run), which keeps the banners quiet rather than wrong.
+  const [myCompliance, setMyCompliance] = useState(null);
+  const [teacherNotice, setTeacherNotice] = useState("");
 
   // Returning signed-in user: load their profile and skip straight to the app
   // (conservatory students) or the teacher map (piano-enthusiast learners).
   // Newly-confirmed user (clicked the email link): their profiles row doesn't
   // exist yet — create it now from the draft we stashed in their auth metadata
   // at signup time (stored server-side, so it survives the confirmation link
+  useEffect(() => {
+    const id = myProfile?.id;
+    if (!id || authProfile?.role === "learner") { setMyCompliance(null); return; }
+    let live = true;
+    (async () => {
+      try {
+        const [c, p] = await Promise.all([
+          supabase.from("teacher_compliance").select("profile_id, residence_country, establishment_country, tax_residence_country").eq("profile_id", id).maybeSingle(),
+          supabase.from("profile_private").select("phone").eq("id", id).maybeSingle(),
+        ]);
+        if (!live) return;
+        if (c.error || p.error) { setMyCompliance((cur) => (cur && cur.loaded ? cur : null)); return; }
+        setMyCompliance({ ...complianceFromRows(c.data, p.data?.phone), loaded: true });
+      } catch { /* leave unknown */ }
+    })();
+    return () => { live = false; };
+  }, [myProfile?.id, authProfile?.role]);
+  // Writes the signup/edit form's teacher details; a failure is said plainly
+  // and never stops the signup (the banner prompts them to finish later).
+  async function persistCompliance(userId, d) {
+    const msg = await saveTeacherCompliance(userId, d);
+    if (msg) setTeacherNotice(msg);
+    else if (d?.teaching?.open && compOf(d).residence) {
+      const e = effCompliance(compOf(d));
+      const ph = normalizePhone(compOf(d).phone);
+      setMyCompliance((cur) => ({ ...(cur || {}), ...e, sameEst: e.establishment === e.residence, sameTax: e.taxResidence === e.residence, phone: validPhone(ph) ? ph : (cur?.phone || ""), loaded: true }));
+    }
+    return msg;
+  }
   // Realtime presence — track how many browser tabs are on the site
   useEffect(() => {
     if (!unlocked) return;
@@ -2779,6 +2815,7 @@ export default function App() {
       if (pendingStudent) {
         supabase.from("profiles").insert(toDbProfile(pendingStudent, authUser.id)).select().single().then(async ({ data: insertedProfile, error }) => {
           if (error) { setAuthError(error.message); return; }
+          await persistCompliance(authUser.id, pendingStudent);
           // Same reason as the other two inserts: the context fetched a
           // profile that did not exist yet, so it must be told about this one.
           if (insertedProfile) setAuthProfile(insertedProfile);
@@ -3187,7 +3224,8 @@ export default function App() {
     // An untouched form is not progress worth restoring.
     if (!draft.email && !draft.name && !instrumentsOf(draft).length) return;
     const { password, confirmPassword, photoUrl, ...rest } = draft;
-    const body = { at: Date.now(), step, draft: { ...rest, photoUrl: String(photoUrl || "").startsWith("data:") ? "" : photoUrl } };
+    // The phone stays out of the stored draft too (asked for again on resume).
+    const body = { at: Date.now(), step, draft: { ...rest, compliance: { ...compOf(rest), phone: "" }, photoUrl: String(photoUrl || "").startsWith("data:") ? "" : photoUrl } };
     try { localStorage.setItem(DRAFT_KEY, JSON.stringify(body)); } catch {}
   }, [screen, editingProfile, draft, step]);
 
@@ -3489,8 +3527,10 @@ export default function App() {
       if (!needsReview(draft)) await supabase.from("profiles").update({ conservatory_email: null, conservatory_id: null }).eq("id", authUser.id);
       const { data: row, error } = await supabase.from("profiles").update(toDbProfile(draft, authUser.id)).eq("id", authUser.id).select().single();
       if (error) { setAuthError(await friendlyProfileError(error)); return; }
+      await persistCompliance(authUser.id, draft);
       if (needsReview(draft)) await insertVerificationRequest(authUser.id, draft);
       clearSavedDraft();
+      setDraft((d) => ({ ...d, compliance: { ...compOf(d), phone: "" } }));
       if (row) setAuthProfile(row);
       setReapply(null);
       setScreen(row?.approved ? "app" : "pendingReview");
@@ -3499,9 +3539,15 @@ export default function App() {
     if (editingProfile) {
       const { error } = await supabase.from("profiles").update(toDbProfile(draft, myProfile.id)).eq("id", myProfile.id);
       if (error) { setAuthError(error.message); return; }
-      const updated = { ...myProfile, ...draft };
+      // Private teacher details stay out of the roster copy of the profile.
+      const { compliance: _c, complianceLegacy: _l, savedCompliance: _s, ...pub } = draft;
+      const updated = { ...myProfile, ...pub };
       setMyProfile(updated);
       setStudents((arr) => arr.map((s) => (s.id === myProfile.id ? updated : s)));
+      // The profile is saved either way; if the private details failed, say so
+      // here and stay on the form so they can be corrected and saved again.
+      const cmsg = await persistCompliance(myProfile.id, draft);
+      if (cmsg) { setTeacherNotice(""); setAuthError(cmsg); return; }
       setScreen("app"); setAppTabPersist("profile");
     } else if (authUser) {
       // Security-review hardening: key this branch on the session alone. The
@@ -3528,16 +3574,20 @@ export default function App() {
       const { data: insertedProfile, error: insertError } = await supabase
         .from("profiles").insert(toDbProfile(draft, authUser.id)).select().single();
       if (insertError) { setAuthError(await friendlyProfileError(insertError)); return; }
+      await persistCompliance(authUser.id, draft);
       if (insertedProfile) setAuthProfile(insertedProfile);
       clearSavedDraft();
       if (needsReview(draft)) { await insertVerificationRequest(authUser.id, draft); }
-      setDraft((d) => ({ ...d, id: authUser.id }));
+      setDraft((d) => ({ ...d, id: authUser.id, compliance: { ...compOf(d), phone: "" } }));
       finishSignup(authUser.id, authUser.email || draft.email, needsReview(draft) ? "document" : draft.verifyMethod);
     } else {
       const { data, error } = await supabase.auth.signUp({
         email: draft.email,
         password: draft.password,
-        options: { data: { pendingProfile: draft } },
+        // user_metadata is copied into every access token, so the private
+        // phone stays out of it: the countries go, the phone is re-entered
+        // from Edit profile (banner) after the email is confirmed.
+        options: { data: { pendingProfile: { ...draft, compliance: { ...compOf(draft), phone: "" } } } },
       });
       if (error) { setAuthError(friendlyAuthError(error.message)); return; }
       // Supabase will not say "that address is taken" — that would let anyone
@@ -3560,11 +3610,12 @@ export default function App() {
         const { data: insertedProfile, error: insertError } = await supabase
           .from("profiles").insert(toDbProfile(draft, data.user.id)).select().single();
         if (insertError) { setAuthError(await friendlyProfileError(insertError)); return; }
+        await persistCompliance(data.user.id, draft);
         if (insertedProfile) setAuthProfile(insertedProfile);
         clearSavedDraft();
         await supabase.auth.updateUser({ data: { pendingProfile: null } });
         if (needsReview(draft)) { await insertVerificationRequest(data.user.id, draft); }
-        setDraft((d) => ({ ...d, id: data.user.id }));
+        setDraft((d) => ({ ...d, id: data.user.id, compliance: { ...compOf(d), phone: "" } }));
         finishSignup(data.user.id, data.user.email || draft.email, needsReview(draft) ? "document" : draft.verifyMethod);
       } else {
         // Email confirmation required — the draft is stored server-side in the
@@ -3608,8 +3659,20 @@ export default function App() {
     setPreviewOnly(false);
     setScreen("app"); setAppTabPersist("map");
   }
+  // Opens Edit profile on the Teaching step, then scrolls to a section of it.
+  function editProfileAt(targetId) {
+    editProfile(5);
+    let tries = 0;
+    const t = setInterval(() => {
+      const el = document.getElementById(targetId);
+      if (el) { el.scrollIntoView({ behavior: "smooth", block: "center" }); clearInterval(t); }
+      else if (++tries > 20) clearInterval(t);
+    }, 100);
+  }
   function editProfile(atStep) {
-    setDraft({ ...emptyDraft(), ...myProfile, instruments: instrumentsOf(myProfile), years: myProfile.year || "", pieces: myProfile.pieces || [], tastes: myProfile.tastes || [], composerDay: myProfile.composerDay || "" });
+    setDraft({ ...emptyDraft(), ...myProfile, instruments: instrumentsOf(myProfile), years: myProfile.year || "", pieces: myProfile.pieces || [], tastes: myProfile.tastes || [], composerDay: myProfile.composerDay || "",
+      // Teaching already open before this release: the new fields never block their saves.
+      compliance: { ...emptyCompliance(), ...(myCompliance || {}) }, complianceLegacy: !!myProfile.teaching?.open, savedCompliance: myCompliance });
     setStep(typeof atStep === "number" ? atStep : 0); setEditingProfile(true); setScreen("signup");
   }
   // Remember where this tab is (see readNav) on every move.
@@ -5470,6 +5533,12 @@ export default function App() {
           onTab={(k) => { if (k === "home") return; setScreen("app"); setAppTabPersist(k); }}
         />
       )}
+      {teacherNotice && (
+        <div role="status" style={{ position: "fixed", left: 12, right: 12, bottom: 16, zIndex: 80, maxWidth: 460, margin: "0 auto", padding: "12px 14px", borderRadius: 12, background: "#FFFFFF", border: `1px solid ${C.inkLine}`, boxShadow: "0 8px 24px rgba(0,0,0,0.14)", display: "flex", alignItems: "center", gap: 12 }}>
+          <p style={{ margin: 0, flex: 1, fontSize: 13, lineHeight: 1.5, color: C.inkText }}>{teacherNotice}</p>
+          <button type="button" onClick={() => setTeacherNotice("")} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600, color: C.brassLabel }}>Got it</button>
+        </div>
+      )}
       {view === "composers" && <WallOfComposers onBack={backToEntry} modern={MODERN} avatarNode={
         <ArtiumMenu legalSheet={TermsSheet}
           onProfile={myProfile ? goToProfile : learnerProfile ? () => { setLearnerStartTab("profile"); setScreen("learnerMap"); } : undefined}
@@ -5847,6 +5916,11 @@ export default function App() {
             <>
               {/* The profile draws its own back button over the cover photo. */}
               {!MODERN && netHeaderWith(backFromMyProfile)}
+              {myProfile.teaching?.open && authProfile?.role !== "learner" && (
+                <div style={{ maxWidth: 760, margin: "0 auto", padding: "14px 16px 0" }}>
+                  <TeacherStatusBanner profileId={myProfile.id} compliance={myCompliance} onFill={() => editProfileAt("teacher-where-you-work")} onPayout={() => editProfileAt("teacher-payouts")} />
+                </div>
+              )}
               <MyProfile profile={myProfile} onEdit={editProfile} onLogout={handleLogout}
                 connections={MODERN && appConn.ready ? (() => {
                   const person = (id, connId) => {
@@ -7715,7 +7789,8 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
     (editing || !!draft.teaching.answered) && (!draft.teaching.open || (!!draft.teaching.mode
       && (draft.teaching.mode === "online" || (draft.teaching.cities || []).length > 0)
       // The price is what learners pay through Stripe — no price, no paid lessons.
-      && Number(draft.teaching.price) > 0)),
+      && Number(draft.teaching.price) > 0)
+      && !complianceProblem(draft, editing)),
     // Concerts: an answer, and where they can perform if yes.
     (() => { const c = concertsOf(draft); return (editing || c.answered) && (!c.open || c.regions.length > 0); })(),
   ].filter((v) => v !== null);
@@ -7753,7 +7828,8 @@ function SignupFlow({ draft, update, toggleTaste, step, setStep, editing, onSubm
     !draft.teaching.answered && !editing ? "Tell us whether you're open to teaching."
       : !draft.teaching.mode ? "Choose how you'd like to teach."
       : draft.teaching.mode !== "online" && !(draft.teaching.cities || []).length ? "Add at least one city where you can teach in person."
-      : "Set your price per session.",
+      : !(Number(draft.teaching.price) > 0) ? "Set your price per session."
+      : COMPLIANCE_HINT[complianceProblem(draft, editing)] || "",
     !concertsOf(draft).answered && !editing ? "Tell us whether you're open to giving concerts." : "Choose at least one region where you can perform.",
   ].filter((v) => v !== null);
   // Saving from the header skips the remaining steps, so it has to answer for
@@ -8033,10 +8109,12 @@ const inputStyle = { width: "100%", background: "#FFFFFF", border: MODERN ? "1px
    database (country_required), so there is no free-text fallback: if the list
    can't load, the form shows a Retry and submit stays blocked. */
 let _countriesPromise = null;
+let _countryRows = null;   // last loaded list, for checks outside React
 function loadCountries() {
   if (!_countriesPromise) {
     _countriesPromise = Promise.resolve(supabase.rpc("list_countries")).then(({ data, error }) => {
       if (error || !Array.isArray(data) || data.length === 0) throw error || new Error("no countries");
+      _countryRows = data;
       return data;
     }).catch((e) => { _countriesPromise = null; throw e; });
   }
@@ -8115,12 +8193,14 @@ function useLocationField({ city: city0 = "", country: country0 = "", rest: rest
 // Countries closed to learners (admin Countries: learner status disabled) are
 // left out of the list entirely, as the owner asked. The member's own current
 // country stays listed so an existing profile still shows it.
-function CountrySelect({ f, style, noEmpty }) {
+// teacher: the teacher side of the same list, filtered on
+// teacher_registration_enabled instead of the learner flag.
+function CountrySelect({ f, style, noEmpty, teacher }) {
   const lang = currentLanguage();
   const opts = React.useMemo(() => (f.list || [])
-    .filter((c) => c.learner_registration_enabled !== false || c.iso2 === f.country)
+    .filter((c) => (teacher ? c.teacher_registration_enabled : c.learner_registration_enabled) !== false || c.iso2 === f.country)
     .map((c) => ({ iso2: c.iso2, label: countryLabel(c, lang) }))
-    .sort((a, b) => a.label.localeCompare(b.label, lang)), [f.list, f.country, lang]);
+    .sort((a, b) => a.label.localeCompare(b.label, lang)), [f.list, f.country, lang, teacher]);
   if (f.failed) {
     return (
       <p style={{ margin: "2px 2px 0", fontSize: 13, lineHeight: 1.5, color: C.ivoryDim }}>
@@ -8139,6 +8219,188 @@ function CountrySelect({ f, style, noEmpty }) {
       {f.blocked && <p style={{ margin: "8px 2px 0", fontSize: 13, lineHeight: 1.5, color: C.ivoryDim }}>Artium isn't available in your country yet.</p>}
       {f.payRestricted && <p style={{ margin: "8px 2px 0", fontSize: 13, lineHeight: 1.5, color: C.ivoryDim }}>You can join Artium, but payments aren't available from your country yet.</p>}
     </>
+  );
+}
+
+/* ---- Teachers: where they work from (international onboarding, stage 2) ----
+   Residence, professional establishment and tax residence (ISO2) land in
+   teacher_compliance; the phone lands in profile_private. Only role 'student'
+   accounts ever write these: a learner has no write access to either. */
+const PHONE_RE = /^\+[1-9][0-9]{6,14}$/;
+function normalizePhone(raw) {
+  // "+33 (0)6 ..." : the (0) is a national trunk prefix, not part of the number.
+  let s = String(raw || "").trim().replace(/^\+(\d{1,3})\s*\(0\)/, "+$1").replace(/[\s\-.()]/g, "");
+  if (s.startsWith("00")) s = "+" + s.slice(2);
+  return s;
+}
+const validPhone = (raw) => PHONE_RE.test(normalizePhone(raw));
+const emptyCompliance = () => ({ residence: "", establishment: "", taxResidence: "", sameEst: true, sameTax: true, phone: "" });
+const compOf = (d) => ({ ...emptyCompliance(), ...(d && d.compliance) });
+// What is stored -> the form's shape. "Same as residence" is on when the
+// stored country equals residence (or nothing is stored).
+function complianceFromRows(row, phone) {
+  const res = row?.residence_country || "";
+  const est = row?.establishment_country || "";
+  const tax = row?.tax_residence_country || "";
+  return { residence: res, establishment: est, taxResidence: tax, sameEst: !est || est === res, sameTax: !tax || tax === res, phone: phone || "" };
+}
+function effCompliance(c) {
+  const res = c.residence || "";
+  return { residence: res, establishment: c.sameEst ? res : (c.establishment || ""), taxResidence: c.sameTax ? res : (c.taxResidence || "") };
+}
+// Unknown (list not loaded) counts as open: the database is the real check.
+const teacherCountryOpen = (iso) => {
+  const r = _countryRows && _countryRows.find((c) => c.iso2 === iso);
+  return !r || r.teacher_registration_enabled !== false;
+};
+// "" when fine, else which hint to show. A teacher who already had teaching
+// open before this release (draft.complianceLegacy, editing) is never blocked
+// on the fields being empty: they get the banner instead.
+function complianceProblem(draft, editing) {
+  if (!draft.teaching || !draft.teaching.open) return "";
+  const c = compOf(draft), e = effCompliance(c);
+  const legacy = editing && !!draft.complianceLegacy;
+  if (c.phone.trim() && !validPhone(c.phone)) return "phone";
+  // Only a newly picked closed country counts: one already saved stays valid
+  // (the database allows unchanged values), so old teachers can still save.
+  const sv = draft.savedCompliance || {};
+  if ([[e.residence, sv.residence], [e.establishment, sv.establishment], [e.taxResidence, sv.taxResidence]].some(([x, was]) => x && x !== was && !teacherCountryOpen(x))) return "closed";
+  if (legacy) return "";
+  if (!e.residence || !e.establishment || !e.taxResidence) return "countries";
+  if (!validPhone(c.phone)) return "phone";
+  return "";
+}
+const COMPLIANCE_HINT = {
+  countries: "Choose your country of residence, establishment and tax residence.",
+  phone: "Add a valid phone number with its country code.",
+  closed: "Artium isn't available in your country yet.",
+};
+const PHONE_ERR_MSG = "Enter your phone number with its country code, for example +33 6 12 34 56 78.";
+// Writes both; returns "" or a plain message (never raw database text).
+async function saveTeacherCompliance(profileId, d) {
+  if (!profileId || !d || !d.teaching || !d.teaching.open) return "";
+  const c = compOf(d), e = effCompliance(c);
+  // Editing: only what changed since it was loaded is written.
+  const sv = d.savedCompliance || null;
+  const countriesChanged = !sv || e.residence !== (sv.residence || "") || e.establishment !== (sv.establishment || "") || e.taxResidence !== (sv.taxResidence || "");
+  const phoneChanged = !sv || normalizePhone(c.phone) !== normalizePhone(sv.phone);
+  let msg = "";
+  if (e.residence && countriesChanged) {
+    const { error } = await supabase.from("teacher_compliance").upsert({
+      profile_id: profileId,
+      residence_country: e.residence,
+      establishment_country: e.establishment || null,
+      tax_residence_country: e.taxResidence || null,
+    }, { onConflict: "profile_id" });
+    if (error) msg = isCountryErr(error.message) ? dbErrMsg(error.message) : "We couldn't save where you work from. You can add it later from Edit profile.";
+  }
+  if (c.phone.trim() && phoneChanged) {
+    if (!validPhone(c.phone)) msg = msg || PHONE_ERR_MSG;
+    else {
+      const { error } = await supabase.from("profile_private").upsert({ id: profileId, phone: normalizePhone(c.phone) }, { onConflict: "id" });
+      if (error) msg = msg || (error.code === "23514" || /profile_private_phone_e164/.test(String(error.message || "")) ? PHONE_ERR_MSG : "We couldn't save your phone number. You can add it later from Edit profile.");
+    }
+  }
+  return msg;
+}
+// A calm notice for the teacher's own teaching area. One at a time:
+// missing details, then country not enabled, then payouts not ready.
+function TeacherStatusBanner({ profileId, compliance, onFill, onPayout }) {
+  const [list, setList] = useState(null);
+  const [payout, setPayout] = useState(undefined);   // undefined = loading, null = none
+  useEffect(() => { let live = true; loadCountries().then((d) => { if (live) setList(d); }).catch(() => {}); return () => { live = false; }; }, []);
+  const complete = !!(compliance && compliance.loaded && compliance.residence && compliance.establishment && compliance.taxResidence && validPhone(compliance.phone));
+  useEffect(() => {
+    if (!complete || !profileId) return;
+    let live = true;
+    Promise.resolve(supabase.from("teacher_payout_accounts").select("payout_status").eq("profile_id", profileId).maybeSingle())
+      .then(({ data, error }) => { if (live) setPayout(!error && data ? data : null); }, () => { if (live) setPayout(null); });
+    return () => { live = false; };
+  }, [complete, profileId]);
+  if (!compliance || !compliance.loaded) return null;
+  let text = "", btn = "", act = null;
+  if (!complete) { text = "Add where you work from to finish your teaching profile."; btn = "Add details"; act = onFill; }
+  else {
+    if (!list) return null;
+    const row = list.find((c) => c.iso2 === compliance.establishment);
+    if (!row || row.teacher_status !== "ENABLED") text = "Your country is not currently enabled for teacher payouts on Artium. You can still create your profile. We will notify you when payment activation becomes available.";
+    else if (payout === undefined) return null;
+    else if (!payout || payout.payout_status !== "ready") { text = "Your profile is ready. Complete your professional and payment verification to start receiving paid bookings."; btn = "Set up payouts"; act = onPayout; }
+    else return null;
+  }
+  return (
+    <div role="status" style={{ margin: "0 0 16px", padding: "12px 14px", borderRadius: 10, border: `1px solid ${C.inkLine}`, background: warm("0.05"), display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10 }}>
+      <p style={{ margin: 0, flex: "1 1 240px", fontSize: 13, lineHeight: 1.55, color: C.ivoryDim }}>{text}</p>
+      {btn && act && (
+        <button type="button" onClick={act}
+          style={{ fontSize: 12.5, fontWeight: 700, borderRadius: MODERN ? 10 : 999, padding: "8px 15px", border: "none", cursor: "pointer", color: C.brassText, background: BRASS_GRAD }}>
+          {btn}
+        </button>
+      )}
+    </div>
+  );
+}
+function ComplianceSection({ draft, update, editing }) {
+  const c = compOf(draft);
+  const legacy = editing && !!draft.complianceLegacy;
+  const set = (p) => update((d) => ({ compliance: { ...compOf(d), ...p } }));
+  const [list, setList] = useState(null);
+  const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+  const [phoneSeen, setPhoneSeen] = useState(false);
+  const touched = useRef(false);
+  useEffect(() => {
+    let live = true;
+    setFailed(false);
+    loadCountries().then((d) => { if (live) setList(d); }).catch(() => { if (live) setFailed(true); });
+    return () => { live = false; };
+  }, [attempt]);
+  // Suggest the browser's region, only if that country is open to teachers.
+  useEffect(() => {
+    if (!list || legacy || touched.current || c.residence) return;
+    const r = browserRegion();
+    if (r && list.some((x) => x.iso2 === r && x.teacher_registration_enabled !== false)) set({ residence: r });
+    // eslint-disable-next-line
+  }, [list]);
+  const mk = (value, onChange) => ({ list, failed, loading: !list && !failed, country: value, setCountry: onChange, retry: () => setAttempt((n) => n + 1), blocked: false, payRestricted: false });
+  const problem = complianceProblem(draft, editing);
+  const phoneBad = c.phone.trim() && !validPhone(c.phone);
+  const groupLabel = { fontFamily: FONT_BODY, fontSize: 12.5, fontWeight: 600, letterSpacing: "0.01em", color: MODERN ? "#333333" : "#CFCFCF" };
+  const same = (key) => (
+    <label style={{ display: "flex", alignItems: "center", gap: 10, minHeight: 36, marginBottom: c[key] ? 0 : 8, fontSize: 13.5, color: C.ivoryDim, fontWeight: 400, cursor: "pointer" }}>
+      <input type="checkbox" checked={c[key]} onChange={(e) => set({ [key]: e.target.checked })} style={{ width: 18, height: 18, accentColor: C.brassLabel }} />
+      Same as country of residence
+    </label>
+  );
+  return (
+    <div id="teacher-where-you-work" style={{ marginTop: 18, marginBottom: 8 }}>
+      <h3 style={{ margin: "0 0 6px", fontFamily: FONT_BODY, fontSize: 15, fontWeight: 700, color: C.ivory }}>Where you work from</h3>
+      <p style={{ margin: "0 0 16px", fontSize: 13, lineHeight: 1.55, color: C.ivoryDim }}>
+        Used to set up paid lessons correctly for your country. Nationality doesn't matter — where you live and work does.
+      </p>
+      <Field label="Country of residence" req={!legacy}>
+        <CountrySelect teacher f={mk(c.residence, (v) => { touched.current = true; set({ residence: v }); })} />
+      </Field>
+      {/* A div, not Field's <label>: a label would turn a tap on its caption into a tap on the checkbox. */}
+      <div className="mb-5">
+        <span className="block mb-2 fld-label" style={groupLabel}>Country of professional establishment{!legacy && <b className="fld-req" aria-label="required">*</b>}</span>
+        {same("sameEst")}
+        {!c.sameEst && <CountrySelect teacher f={mk(c.establishment, (v) => set({ establishment: v }))} />}
+      </div>
+      <div className="mb-5">
+        <span className="block mb-2 fld-label" style={groupLabel}>Country of tax residence{!legacy && <b className="fld-req" aria-label="required">*</b>}</span>
+        {same("sameTax")}
+        {!c.sameTax && <CountrySelect teacher f={mk(c.taxResidence, (v) => set({ taxResidence: v }))} />}
+      </div>
+      <Field label="Phone number" req={!legacy}>
+        <input style={inputStyle} type="tel" inputMode="tel" autoComplete="tel" value={c.phone}
+          onChange={(e) => set({ phone: e.target.value })} onBlur={() => setPhoneSeen(true)}
+          placeholder="+33 6 12 34 56 78" />
+        <p className="text-xs mt-1.5" style={{ color: C.ivoryDim }}>Private — never shown on your profile.</p>
+        {phoneSeen && phoneBad && <p style={{ margin: "6px 2px 0", fontSize: 13, lineHeight: 1.5, color: C.burgundy }}>{PHONE_ERR_MSG}</p>}
+      </Field>
+      {problem === "closed" && <p style={{ margin: "0 2px 10px", fontSize: 13, lineHeight: 1.5, color: C.ivoryDim }}>Artium isn't available in your country yet.</p>}
+    </div>
   );
 }
 
@@ -13996,8 +14258,17 @@ function StepConcerts({ draft, update, editing }) {
 function StepTeaching({ draft, update, editing }) {
   const t = draft.teaching;
   const setT = (partial) => update({ teaching: { ...t, ...partial } });
+  // The banner follows what the form says once the details are complete,
+  // and what is saved until then.
+  const live = effCompliance(compOf(draft));
+  const liveOk = !!(live.residence && live.establishment && live.taxResidence && validPhone(compOf(draft).phone));
+  const bannerComp = liveOk ? { ...live, phone: normalizePhone(compOf(draft).phone), loaded: true } : draft.savedCompliance;
+  const goTo = (id) => () => { const el = document.getElementById(id); if (el) el.scrollIntoView({ behavior: "smooth", block: "center" }); };
   return (
     <div>
+      {editing && draft.id && t.open && (
+        <TeacherStatusBanner profileId={draft.id} compliance={bannerComp} onFill={goTo("teacher-where-you-work")} onPayout={goTo("teacher-payouts")} />
+      )}
       <p className="text-sm mb-6" style={{ color: C.ivoryDim, lineHeight: 1.6 }}>
         Artium also connects piano enthusiasts with conservatory students who teach.
         Let learners know whether you're available — and on your terms.
@@ -14049,9 +14320,10 @@ function StepTeaching({ draft, update, editing }) {
               Optional · {(t.pitch || "").length}/{TEACHING_PITCH_MAX}
             </p>
           </Field>
+          <ComplianceSection draft={draft} update={update} editing={editing} />
           {/* Only once there's a real profile row to attach a Stripe account
               to — during initial signup draft.id doesn't exist yet. */}
-          {editing && draft.id && <TeachingPayoutsPanel profileId={draft.id} />}
+          {editing && draft.id && <div id="teacher-payouts"><TeachingPayoutsPanel profileId={draft.id} /></div>}
         </>
       )}
     </div>
